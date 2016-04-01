@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.TriangleFileUtils module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.TriangleTools module" href="proteus.TriangleTools.html" />
+    <link rel="prev" title="proteus.TransportCoefficients module" href="proteus.TransportCoefficients.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.TriangleFileUtils module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.TransportCoefficients.html" title="Previous Chapter: proteus.TransportCoefficients module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Trans...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.TriangleTools.html" title="Next Chapter: proteus.TriangleTools module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Trian... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.TriangleFileUtils">
+<span id="proteus-trianglefileutils-module"></span><h1>proteus.TriangleFileUtils module<a class="headerlink" href="#module-proteus.TriangleFileUtils" title="Permalink to this headline">¶</a></h1>
+<p>A collection of functions for reading and manipulating files so that I
+can try to read and write files in the format that Triangle expects</p>
+<dl class="function">
+<dt id="proteus.TriangleFileUtils.checkFileExists">
+<code class="descclassname">proteus.TriangleFileUtils.</code><code class="descname">checkFileExists</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleFileUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleFileUtils.checkFileExists" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleFileUtils.checkDataRead">
+<code class="descclassname">proteus.TriangleFileUtils.</code><code class="descname">checkDataRead</code><span class="sig-paren">(</span><em>dataArray</em>, <em>notReadVal</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleFileUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleFileUtils.checkDataRead" title="Permalink to this definition">¶</a></dt>
+<dd><p>just go through data variable and check to make sure
+no values are equal to a special value to which data
+should have been initialized before it was read</p>
+<p>returns boolean for ok or not</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleFileUtils.generateDefaultFormatPattern">
+<code class="descclassname">proteus.TriangleFileUtils.</code><code class="descname">generateDefaultFormatPattern</code><span class="sig-paren">(</span><em>recInfo</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleFileUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleFileUtils.generateDefaultFormatPattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>generate the initial line format for the Triangle data files
+based on the variable types specified in recInfo</p>
+<dl class="docutils">
+<dt>This is in most cases a line that looks like</dt>
+<dd>Nentries NumEntriesInRec0 NumEntriesInRec1 ....</dd>
+</dl>
+<p>In some cases (e.g., segments) the number of entries in a segment
+is omitted so that the default format doesn&#8217;t follow</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleFileUtils.findInitialFormatLine">
+<code class="descclassname">proteus.TriangleFileUtils.</code><code class="descname">findInitialFormatLine</code><span class="sig-paren">(</span><em>lines</em>, <em>recInfo</em>, <em>formatpattern</em>, <em>commchar='#'</em>, <em>nbase=0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleFileUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleFileUtils.findInitialFormatLine" title="Permalink to this definition">¶</a></dt>
+<dd><p>find the line for the Triangle data files, specified in
+formatpattern.</p>
+<p>Generate dataInfo dictionary that should specify</p>
+<blockquote>
+<div><p>dataInfo[&#8216;nEntries&#8217;]    : number of entries in the file
+dataInfo[&#8216;recordSizes&#8217;] : size of each record per entry (can be 0)
+dataInfo[&#8216;dataStartLineNumber&#8217;]    : line where actual data entries may</p>
+<blockquote>
+<div>start</div></blockquote>
+<dl class="docutils">
+<dt>dataInfo[&#8216;recordLocationsPerLine&#8217;] <span class="classifier-delimiter">:</span> <span class="classifier">array of indeces saying</span></dt>
+<dd>where each record
+should start on a valid entry line
+record I is in entries
+recStart[I]:recStart[I+1]</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleFileUtils.readSimpleFormattedDataEntries">
+<code class="descclassname">proteus.TriangleFileUtils.</code><code class="descname">readSimpleFormattedDataEntries</code><span class="sig-paren">(</span><em>lines</em>, <em>recInfo</em>, <em>dataInfo</em>, <em>commchar='#'</em>, <em>nbase=0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleFileUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleFileUtils.readSimpleFormattedDataEntries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to read some data consisting of records
+stored in lines. The records are described in recInfo.
+The basic thing I need is the possible number of records
+per line and the type for each one.</p>
+<p>I&#8217;ll go ahead and assume the file looks like a series of blank
+lines or commented lines and then the first meaningful line which
+gives the file format that should be the same as what I&#8217;m
+expecting ...</p>
+<p>Nentries NumEntriesInRec0 NumEntriesInRec1 ....</p>
+<p>The regex format for this line is given in formatpattern.</p>
+<p>After that comes Nentry values with the basic format</p>
+<p>Entry Num. Rec0 Rec1 ...</p>
+<p>If NumEntriesInRecI is 0 then that record shouldn&#8217;t appear</p>
+<dl class="docutils">
+<dt>returns</dt>
+<dd>data     : what was read
+ilast    : index of last line read</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleFileUtils.readSimpleFormattedDataEntriesLastOptional">
+<code class="descclassname">proteus.TriangleFileUtils.</code><code class="descname">readSimpleFormattedDataEntriesLastOptional</code><span class="sig-paren">(</span><em>lines</em>, <em>recInfo</em>, <em>dataInfo</em>, <em>commchar='#'</em>, <em>nbase=0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleFileUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleFileUtils.readSimpleFormattedDataEntriesLastOptional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to read some data consisting of records
+stored in lines. The records are described in recInfo.
+The basic thing I need is the possible number of records
+per line and the type for each one.</p>
+<dl class="docutils">
+<dt>This version allows the last data entry to be omitted so that I</dt>
+<dd>can read the regions list. I need to generalize to allow
+a given entry to not be found I guess</dd>
+</dl>
+<p>I&#8217;ll go ahead and assume the file looks like a series of blank
+lines or commented lines and then the first meaningful line which
+gives the file format that should be the same as what I&#8217;m
+expecting ...</p>
+<p>Nentries NumEntriesInRec0 NumEntriesInRec1 ....</p>
+<p>The regex format for this line is given in formatpattern.</p>
+<p>After that comes Nentry values with the basic format</p>
+<p>Entry Num. Rec0 Rec1 ...</p>
+<p>If NumEntriesInRecI is 0 then that record shouldn&#8217;t appear</p>
+<dl class="docutils">
+<dt>returns</dt>
+<dd>data     : what was read
+ilast    : index of last line read</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

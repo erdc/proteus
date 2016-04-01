@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.TimeIntegration module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.Transport module" href="proteus.Transport.html" />
+    <link rel="prev" title="proteus.SubsurfaceTransportCoefficients module" href="proteus.SubsurfaceTransportCoefficients.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.TimeIntegration module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.SubsurfaceTransportCoefficients.html" title="Previous Chapter: proteus.SubsurfaceTransportCoefficients module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Subsu...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.Transport.html" title="Next Chapter: proteus.Transport module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Trans... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.TimeIntegration">
+<span id="proteus-timeintegration-module"></span><h1>proteus.TimeIntegration module<a class="headerlink" href="#module-proteus.TimeIntegration" title="Permalink to this headline">¶</a></h1>
+<p>A class hierarchy of time discretizations</p>
+<dl class="class">
+<dt id="proteus.TimeIntegration.TI_base">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">TI_base</code><span class="sig-paren">(</span><em>transport</em>, <em>integrateInterpolationPoints=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base class for time discretizations of tightly coupled systems
+of transport equations.</p>
+<p>The purpose of time integration objects is to construct
+approximations:</p>
+<p>m_t, dm_t &#8211; the time derivatives and their derivatives  w.r.t. u
+u_*, du_* &#8211; the solution variables and their derivatives w.r.t. u
+f_*, df_*,... &#8211;the coefficients and their derivatives w.r.t. u</p>
+<p>The objects provide a set_dt function for setting the time step as
+well as functions for SUGGESTING the time step. The StepController
+objects have the final responsibility for choosing the time step
+(by calling set_dt).</p>
+<p>The objects can also enforce a tolerance on an a posteriori error estimate
+using the lastStepErrorOK member function.</p>
+<p>If any of the coefficient approximations are not implicit, a flag
+can be set to pass that information to the transport object.</p>
+<p>This base class implements no time integration
+method and results in the steady state scalar
+transport equation:</p>
+<p>deld ( f - a grad phi) + r = 0</p>
+<p>NoIntegration is an alias for this class.</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.calculateU">
+<code class="descname">calculateU</code><span class="sig-paren">(</span><em>u</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate u_*</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate m_t, and dm_t and recalculate any of the other coefficients on element interiors</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.calculateElementBoundaryCoefficients">
+<code class="descname">calculateElementBoundaryCoefficients</code><span class="sig-paren">(</span><em>ebq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate m_t, and dm_t and recalculate any of the other coefficients on element boundaries</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.calculateExteriorElementBoundaryCoefficients">
+<code class="descname">calculateExteriorElementBoundaryCoefficients</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateExteriorElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate m_t, and dm_t and recalculate any of the other coefficients on global element boundaries</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.calculateStrongElementSpatialResidual">
+<code class="descname">calculateStrongElementSpatialResidual</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateStrongElementSpatialResidual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recalculate the part of the element residual due to spatial terms</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.calculateElementSpatialResidual">
+<code class="descname">calculateElementSpatialResidual</code><span class="sig-paren">(</span><em>elementResidual</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateElementSpatialResidual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recalculate the part of the element residual due to spatial terms</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.calculateElementSpatialJacobian">
+<code class="descname">calculateElementSpatialJacobian</code><span class="sig-paren">(</span><em>elementJacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateElementSpatialJacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recalculate the part of the element Jacobian due to the spatial terms</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.calculateElementSpatialBoundaryJacobian">
+<code class="descname">calculateElementSpatialBoundaryJacobian</code><span class="sig-paren">(</span><em>elementBoundaryJacobian</em>, <em>elementBoundaryJacobian_eb</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateElementSpatialBoundaryJacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recalculate the part of the element Jacobian due to the spatial terms
+along element boundaries</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.calculateExteriorElementSpatialBoundaryJacobian">
+<code class="descname">calculateExteriorElementSpatialBoundaryJacobian</code><span class="sig-paren">(</span><em>exteriorElementBoundaryJacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateExteriorElementSpatialBoundaryJacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recalculate the part of the element Jacobian due to the spatial terms
+along element boundaries</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.calculateGeneralizedInterpolationCoefficients">
+<code class="descname">calculateGeneralizedInterpolationCoefficients</code><span class="sig-paren">(</span><em>cip</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateGeneralizedInterpolationCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate m_t, and dm_t and recalculate any of the other coefficients on element interiors</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.initialize_dt">
+<code class="descname">initialize_dt</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em>, <em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.initialize_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.set_dt">
+<code class="descname">set_dt</code><span class="sig-paren">(</span><em>DTSET</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.set_dt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.generateSubsteps">
+<code class="descname">generateSubsteps</code><span class="sig-paren">(</span><em>tList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.generateSubsteps" title="Permalink to this definition">¶</a></dt>
+<dd><p>create list of substeps over time values given in tList.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.initializeSpaceHistory">
+<code class="descname">initializeSpaceHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.initializeSpaceHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push necessary information into time history arrays</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.resetTimeHistory">
+<code class="descname">resetTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.resetTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.initializeTimeHistory">
+<code class="descname">initializeTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push necessary information into time history arrays</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.updateStage">
+<code class="descname">updateStage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.updateStage" title="Permalink to this definition">¶</a></dt>
+<dd><p>increment stage counters and push necessary information
+into stage arrays</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.setInitialStageValues">
+<code class="descname">setInitialStageValues</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.setInitialStageValues" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the stage values assuming this is the first step
+after a problem reset</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.setInitialGuess">
+<code class="descname">setInitialGuess</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.setInitialGuess" title="Permalink to this definition">¶</a></dt>
+<dd><p>set an initial guess for the next step</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.setLastSolveFailed">
+<code class="descname">setLastSolveFailed</code><span class="sig-paren">(</span><em>lastSolveFailed</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.setLastSolveFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>tell integrator last attempted time step failed or not</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.lastStepErrorOk">
+<code class="descname">lastStepErrorOk</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.lastStepErrorOk" title="Permalink to this definition">¶</a></dt>
+<dd><p>was the last time step acceptable or not</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.calculateCoefs">
+<code class="descname">calculateCoefs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateCoefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate any coefficients that depend on new time step</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.TI_base.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.TimeIntegration.NoIntegration">
+<code class="descclassname">proteus.TimeIntegration.</code><code class="descname">NoIntegration</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.NoIntegration" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#proteus.TimeIntegration.TI_base" title="proteus.TimeIntegration.TI_base"><code class="xref py py-class docutils literal"><span class="pre">TI_base</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.BackwardEuler">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">BackwardEuler</code><span class="sig-paren">(</span><em>transport</em>, <em>integrateInterpolationPoints=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.BackwardEuler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.TI_base" title="proteus.TimeIntegration.TI_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.TI_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.BackwardEuler.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.BackwardEuler.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.BackwardEuler.calculateGeneralizedInterpolationCoefficients">
+<code class="descname">calculateGeneralizedInterpolationCoefficients</code><span class="sig-paren">(</span><em>cip</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.BackwardEuler.calculateGeneralizedInterpolationCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.BackwardEuler.initializeTimeHistory">
+<code class="descname">initializeTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.BackwardEuler.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push necessary information into time history arrays</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.BackwardEuler.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.BackwardEuler.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.BackwardEuler.calculateCoefs">
+<code class="descname">calculateCoefs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.BackwardEuler.calculateCoefs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.BackwardEuler_cfl">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">BackwardEuler_cfl</code><span class="sig-paren">(</span><em>transport</em>, <em>runCFL=0.9</em>, <em>integrateInterpolationPoints=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.BackwardEuler_cfl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.BackwardEuler" title="proteus.TimeIntegration.BackwardEuler"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.BackwardEuler</span></code></a></p>
+<p>Take a fraction of the max (over all components and elements)</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.BackwardEuler_cfl.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.BackwardEuler_cfl.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.BackwardEuler_cfl.initialize_dt">
+<code class="descname">initialize_dt</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em>, <em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.BackwardEuler_cfl.initialize_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.BackwardEuler_cfl.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.BackwardEuler_cfl.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.BackwardEuler_cfl.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.BackwardEuler_cfl.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.FLCBDF">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">FLCBDF</code><span class="sig-paren">(</span><em>transport</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.TI_base" title="proteus.TimeIntegration.TI_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.TI_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.FLCBDF.initialize_dt">
+<code class="descname">initialize_dt</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em>, <em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF.initialize_dt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.FLCBDF.initializeTimeHistory">
+<code class="descname">initializeTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.FLCBDF.calculateCoefs">
+<code class="descname">calculateCoefs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF.calculateCoefs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.FLCBDF.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.FLCBDF.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.FLCBDF.set_dt">
+<code class="descname">set_dt</code><span class="sig-paren">(</span><em>DTSET</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF.set_dt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.FLCBDF.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.FLCBDF.updateStage">
+<code class="descname">updateStage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF.updateStage" title="Permalink to this definition">¶</a></dt>
+<dd><p>increment stage counters and push necessary information
+into stage arrays</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.FLCBDF.setInitialStageValues">
+<code class="descname">setInitialStageValues</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF.setInitialStageValues" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the all stage values assuming this is the first step
+after a problem reset</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.FLCBDF.lastStepErrorOk">
+<code class="descname">lastStepErrorOk</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF.lastStepErrorOk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.TimeIntegration.FLCBDF.flcbdfWrappers">
+<code class="descname">flcbdfWrappers</code><em class="property"> = &lt;module 'proteus.flcbdfWrappers' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/flcbdfWrappers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF.flcbdfWrappers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.PsiTCtte">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">PsiTCtte</code><span class="sig-paren">(</span><em>transport</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.BackwardEuler_cfl" title="proteus.TimeIntegration.BackwardEuler_cfl"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.BackwardEuler_cfl</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte.initializeTimeHistory">
+<code class="descname">initializeTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte.psiTCtteDT">
+<code class="descname">psiTCtteDT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte.psiTCtteDT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pseudo-transient continuation TTE time step selection strategy</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.PsiTCtte_new">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">PsiTCtte_new</code><span class="sig-paren">(</span><em>transport</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte_new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.BackwardEuler" title="proteus.TimeIntegration.BackwardEuler"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.BackwardEuler</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte_new.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte_new.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte_new.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte_new.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte_new.resetTimeHistory">
+<code class="descname">resetTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte_new.resetTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte_new.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte_new.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte_new.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte_new.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.PsiTCtte_new.psiTCtteDT">
+<code class="descname">psiTCtteDT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.PsiTCtte_new.psiTCtteDT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pseudo-transient continuation TTE time step selection strategy</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.ForwardEuler">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">ForwardEuler</code><span class="sig-paren">(</span><em>transport</em>, <em>runCFL=0.45</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.TI_base" title="proteus.TimeIntegration.TI_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.TI_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.calculateElementSpatialJacobian">
+<code class="descname">calculateElementSpatialJacobian</code><span class="sig-paren">(</span><em>elementJacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.calculateElementSpatialJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.calculateElementBoundaryCoefficients">
+<code class="descname">calculateElementBoundaryCoefficients</code><span class="sig-paren">(</span><em>ebq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.calculateElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate m_t, and dm_t and recalculate any of the other coefficients on element boundaries
+do I need these to be synchronized with q or do the elementBoundary quad values get
+lagged in the spatial residual</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.calculateElementSpatialBoundaryJacobian">
+<code class="descname">calculateElementSpatialBoundaryJacobian</code><span class="sig-paren">(</span><em>elementBoundaryJacobian</em>, <em>elementBoundaryJacobian_eb</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.calculateElementSpatialBoundaryJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.calculateExteriorElementSpatialBoundaryJacobian">
+<code class="descname">calculateExteriorElementSpatialBoundaryJacobian</code><span class="sig-paren">(</span><em>elementBoundaryJacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.calculateExteriorElementSpatialBoundaryJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.calculateStrongElementSpatialResidual">
+<code class="descname">calculateStrongElementSpatialResidual</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.calculateStrongElementSpatialResidual" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.calculateElementSpatialResidual">
+<code class="descname">calculateElementSpatialResidual</code><span class="sig-paren">(</span><em>elementResidual</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.calculateElementSpatialResidual" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.initialize_dt">
+<code class="descname">initialize_dt</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em>, <em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.initialize_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.initializeSpaceHistory">
+<code class="descname">initializeSpaceHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.initializeSpaceHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.ForwardEuler_A">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">ForwardEuler_A</code><span class="sig-paren">(</span><em>transport</em>, <em>runCFL=0.45</em>, <em>limiterType=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_A" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.TI_base" title="proteus.TimeIntegration.TI_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.TI_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_A.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_A.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_A.calculateElementBoundaryCoefficients">
+<code class="descname">calculateElementBoundaryCoefficients</code><span class="sig-paren">(</span><em>ebq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_A.calculateElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_A.calculateExteriorElementBoundaryCoefficients">
+<code class="descname">calculateExteriorElementBoundaryCoefficients</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_A.calculateExteriorElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_A.initialize_dt">
+<code class="descname">initialize_dt</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em>, <em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_A.initialize_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_A.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_A.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt
+mwf needs to be checked</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_A.updateStage">
+<code class="descname">updateStage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_A.updateStage" title="Permalink to this definition">¶</a></dt>
+<dd><p>if using limiting</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_A.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_A.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_A.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_A.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_A.initializeSpaceHistory">
+<code class="descname">initializeSpaceHistory</code><span class="sig-paren">(</span><em>resetFromDOF=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_A.initializeSpaceHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_A.initializeTimeHistory">
+<code class="descname">initializeTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_A.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push necessary information into time history arrays</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.ForwardEuler_H">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">ForwardEuler_H</code><span class="sig-paren">(</span><em>transport</em>, <em>runCFL=0.45</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_H" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.TI_base" title="proteus.TimeIntegration.TI_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.TI_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_H.calculateU">
+<code class="descname">calculateU</code><span class="sig-paren">(</span><em>u</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_H.calculateU" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_H.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_H.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_H.calculateElementBoundaryCoefficients">
+<code class="descname">calculateElementBoundaryCoefficients</code><span class="sig-paren">(</span><em>ebq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_H.calculateElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_H.calculateElementSpatialResidual">
+<code class="descname">calculateElementSpatialResidual</code><span class="sig-paren">(</span><em>elementResidual</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_H.calculateElementSpatialResidual" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_H.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_H.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt
+mwf needs to be checked</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_H.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_H.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_H.initializeSpaceHistory">
+<code class="descname">initializeSpaceHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_H.initializeSpaceHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_H.updateStage">
+<code class="descname">updateStage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_H.updateStage" title="Permalink to this definition">¶</a></dt>
+<dd><p>increment stage counters and push necessary information
+into stage arrays</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_H.setInitialStageValues">
+<code class="descname">setInitialStageValues</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_H.setInitialStageValues" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the all stage values assuming this is the first step
+after a problem reset</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardEuler_H.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardEuler_H.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.OuterTheta">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">OuterTheta</code><span class="sig-paren">(</span><em>transport</em>, <em>runCFL=0.9</em>, <em>thetaAdvection=0.5</em>, <em>thetaDiffusion=0.5</em>, <em>thetaReaction=0.5</em>, <em>thetaHamiltonian=0.5</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.OuterTheta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.TI_base" title="proteus.TimeIntegration.TI_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.TI_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.OuterTheta.calculateU">
+<code class="descname">calculateU</code><span class="sig-paren">(</span><em>u</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.OuterTheta.calculateU" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.OuterTheta.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.OuterTheta.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.OuterTheta.calculateElementBoundaryCoefficients">
+<code class="descname">calculateElementBoundaryCoefficients</code><span class="sig-paren">(</span><em>ebq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.OuterTheta.calculateElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.OuterTheta.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.OuterTheta.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt
+mwf needs to be checked</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.OuterTheta.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.OuterTheta.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.OuterTheta.initializeSpaceHistory">
+<code class="descname">initializeSpaceHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.OuterTheta.initializeSpaceHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.OuterTheta.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.OuterTheta.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.TimeIntegration.IMEX_AD_Euler">
+<code class="descclassname">proteus.TimeIntegration.</code><code class="descname">IMEX_AD_Euler</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.IMEX_AD_Euler" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#proteus.TimeIntegration.ForwardEuler_A" title="proteus.TimeIntegration.ForwardEuler_A"><code class="xref py py-class docutils literal"><span class="pre">ForwardEuler_A</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.TimeIntegration.IMEX_HJ_Euler">
+<code class="descclassname">proteus.TimeIntegration.</code><code class="descname">IMEX_HJ_Euler</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.IMEX_HJ_Euler" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#proteus.TimeIntegration.ForwardEuler_H" title="proteus.TimeIntegration.ForwardEuler_H"><code class="xref py py-class docutils literal"><span class="pre">ForwardEuler_H</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.VBDF">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">VBDF</code><span class="sig-paren">(</span><em>transport</em>, <em>timeOrder=2</em>, <em>integrateInterpolationPoints=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.TI_base" title="proteus.TimeIntegration.TI_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.TI_base</span></code></a></p>
+<p>Variable coefficient bdf&#8217;s just first and second order</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.initialize_dt">
+<code class="descname">initialize_dt</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em>, <em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.initialize_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>This routine is bad right now, because we don&#8217;t want to compute an internal dt anymore
+just the error estimates</p>
+<p>Controller now has to take care of self.t and self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>This routine is bad right now, because we don&#8217;t want to compute an internal dt anymore
+just the error estimates</p>
+<p>Controller now has to take care of self.t and self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.setInitialGuess">
+<code class="descname">setInitialGuess</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.setInitialGuess" title="Permalink to this definition">¶</a></dt>
+<dd><p>set an initial guess for the next step
+need to figure out how to synchronize this</p>
+<p>predictor necessary for error estimates</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.lastStepErrorOk">
+<code class="descname">lastStepErrorOk</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.lastStepErrorOk" title="Permalink to this definition">¶</a></dt>
+<dd><p>was the last time step acceptable or not
+This routine now just computes the error estimate ...</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.initializeTimeHistory">
+<code class="descname">initializeTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.computeErrorEstimate">
+<code class="descname">computeErrorEstimate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.computeErrorEstimate" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>calculate</div></blockquote>
+<dl class="docutils">
+<dt>ec{e}^{n+1}</dt>
+<dd><p class="first">depending on order of approximation
+To be consistent, this must be called after step taken but before
+update time history</p>
+<p class="last">Initially, use (</p>
+</dd>
+</dl>
+<p>ec y^{n+1}-
+ec y^{n+1,p})/2 for first order</p>
+<blockquote>
+<div>and
+r/(1+r)(</div></blockquote>
+<p>ec y^{n+1}-(1+r)
+ec y^{n}+r
+ec y^{n-1}) for second order</p>
+<blockquote>
+<div>sets variables
+error_estimate</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.calculatePredictor">
+<code class="descname">calculatePredictor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.calculatePredictor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.calculateCoefs">
+<code class="descname">calculateCoefs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.calculateCoefs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.chooseOrder">
+<code class="descname">chooseOrder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.chooseOrder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.VBDF.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.ExplicitRK_base">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">ExplicitRK_base</code><span class="sig-paren">(</span><em>transport</em>, <em>timeOrder=1</em>, <em>nStages=1</em>, <em>runCFL=0.1</em>, <em>usingDTinMass=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.TI_base" title="proteus.TimeIntegration.TI_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.TI_base</span></code></a></p>
+<p>base class for explicit RK schemes which can be written in
+the Shu Osher 88 (Cockburn Shu 89) style generic formula</p>
+<p>u^0 = u^n
+u^l = sum_{k=0}^{l-1}lpha_{l,k}u^k + eta_{l,k} Delta t L(u^{k},t^n + d_{k} Delta t^n)
+u^{n+1} = u^{m}</p>
+<p>We will try to include these schemes in a Rothe framework rather than MOL</p>
+<p>so in calculate element coefficients, at stage number l, u_t will be replaced with</p>
+<blockquote>
+<div>u_t &#8211;&gt; (u - sum_{k=0}^{l-1} lpha_{l,k} u^k)/Delta t</div></blockquote>
+<p>or</p>
+<blockquote>
+<div>u_t &#8211;&gt;  (u - sum_{k=0}^{l-1} lpha_{l,k} u^k)</div></blockquote>
+<p>depending on whether Delta t is assumed to be in the mass matrix or not</p>
+<p>The spatial residual at stage l will be replaced with (in calculateElementSpatialResidual)</p>
+<blockquote>
+<div>r &#8211;&gt; sum_{k=0,l-1} eta_{l,k} r_k</div></blockquote>
+<p>or</p>
+<blockquote>
+<div>r &#8211;&gt; Delta t sum_{k=0,l-1} eta_{l,k} r_k</div></blockquote>
+<p>depending on whether Delta t is assumed to be in the mass matrix or not
+Here r_k corresponds to</p>
+<blockquote>
+<div>L(u^{k},t^n + d_{k} Delta t^n)</div></blockquote>
+<p>Substeps in NumericalSolution framework correspond to stage values
+in the RK integration. These are setup in generateSubsteps. The
+indexing is a little confusing, since the residuals are &#8216;cached&#8217;
+when they come into calculateElementResidual in order to be used
+at the next stage. This means the time levels in substep have to
+be for the following stage level.  This is modulo the number of
+stages so t^{n+1} at the last stage &#8211;&gt; t^n for the next time step</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.set_dt">
+<code class="descname">set_dt</code><span class="sig-paren">(</span><em>DTSET</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.set_dt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.resetOrder">
+<code class="descname">resetOrder</code><span class="sig-paren">(</span><em>order</em>, <em>stages</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.resetOrder" title="Permalink to this definition">¶</a></dt>
+<dd><p>resize and reinitialize if necessary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.setCoefficients">
+<code class="descname">setCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.setCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>set alpha,beta, d for</p>
+<p>u^0 = u^n
+u^l = sum_{k=0}^{l-1}lpha_{l,k}u^k + eta_{l,k} Delta t L(u^{k},t^n + d_{k} Delta t^n)
+u^{n+1} = u^{m}</p>
+<p>must be implemented in derived class
+Note that</p>
+<blockquote>
+<div>alpha[l,k] &#8211;&gt;  alpha_{l+1,k}
+beta[l,k]  &#8211;&gt;  beta_{l+1,k}
+dcoefs[k]  &#8211;&gt;  d_{k+1} because of the whole cachingdelayed eval deal</div></blockquote>
+<p>second index (k) is actual level</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.updateStage">
+<code class="descname">updateStage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.updateStage" title="Permalink to this definition">¶</a></dt>
+<dd><p>increment stage counter by 1.
+lstage here is last stage completed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>set m_t as</p>
+<blockquote>
+<div>m_t &#8211;&gt; (m - sum_{k=0}^{l-1} lpha_{l,k} m^k)/Delta t</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.calculateElementCoefficientsNoDtInMass">
+<code class="descname">calculateElementCoefficientsNoDtInMass</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.calculateElementCoefficientsNoDtInMass" title="Permalink to this definition">¶</a></dt>
+<dd><p>set m_t as</p>
+<blockquote>
+<div>m_t &#8211;&gt; (m - sum_{k=0}^{l-1} lpha_{l,k} m^k)</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.calculateElementSpatialResidual">
+<code class="descname">calculateElementSpatialResidual</code><span class="sig-paren">(</span><em>elementResidual</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.calculateElementSpatialResidual" title="Permalink to this definition">¶</a></dt>
+<dd><p>The spatial residual at stage l will be replaced with (in calculateElementSpatialResidual)</p>
+<blockquote>
+<div>r &#8211;&gt; sum_{k=0,l-1} eta_{l,k} r_k</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.calculateElementSpatialResidualNoDtInMass">
+<code class="descname">calculateElementSpatialResidualNoDtInMass</code><span class="sig-paren">(</span><em>elementResidual</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.calculateElementSpatialResidualNoDtInMass" title="Permalink to this definition">¶</a></dt>
+<dd><p>The spatial residual at stage l will be replaced with (in calculateElementSpatialResidual)</p>
+<blockquote>
+<div>r &#8211;&gt; Delta t sum_{k=0,l-1} eta_{l,k} r_k</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.calculateElementSpatialJacobian">
+<code class="descname">calculateElementSpatialJacobian</code><span class="sig-paren">(</span><em>elementJacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.calculateElementSpatialJacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recalculate the part of the element Jacobian due to the spatial terms</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.calculateElementBoundaryCoefficients">
+<code class="descname">calculateElementBoundaryCoefficients</code><span class="sig-paren">(</span><em>ebq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.calculateElementBoundaryCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate m_t, and dm_t and recalculate any of the other coefficients on element boundaries
+do I need these to be synchronized with q or do the elementBoundary quad values get
+lagged in the spatial residual</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.calculateElementSpatialBoundaryJacobian">
+<code class="descname">calculateElementSpatialBoundaryJacobian</code><span class="sig-paren">(</span><em>elementBoundaryJacobian</em>, <em>elementBoundaryJacobian_eb</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.calculateElementSpatialBoundaryJacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recalculate the part of the element Jacobian due to the spatial terms
+along element boundaries</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.calculateExteriorElementSpatialBoundaryJacobian">
+<code class="descname">calculateExteriorElementSpatialBoundaryJacobian</code><span class="sig-paren">(</span><em>elementBoundaryJacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.calculateExteriorElementSpatialBoundaryJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.initialize_dt">
+<code class="descname">initialize_dt</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em>, <em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.initialize_dt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.choose_dt">
+<code class="descname">choose_dt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.choose_dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.dt</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.generateSubsteps">
+<code class="descname">generateSubsteps</code><span class="sig-paren">(</span><em>tList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.generateSubsteps" title="Permalink to this definition">¶</a></dt>
+<dd><p>create list of substeps over time values given in tList. These correspond to stages
+so need to have the right number set. For the SSP RK schemes here, t^m = t^{n+1} for
+all the stages except the first, I believe</p>
+<p>The order here is a little confusing. Since the residuals are &#8216;cached&#8217; when they
+come into calculateElementResidual in order to be used at the next stage, the
+time levels have to be for the next stage
+This is modulo the number of stages so t^{n+1} at the last stage &#8211;&gt; t^n for the
+next time step</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.setInitialStageValues">
+<code class="descname">setInitialStageValues</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.setInitialStageValues" title="Permalink to this definition">¶</a></dt>
+<dd><p>setup all the stage values if we assume that the initial condition
+has been loaded into lstage+1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.initializeTimeHistory">
+<code class="descname">initializeTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>setup for next time step, cycle U^s &#8211;&gt; U^0</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ExplicitRK_base.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.LinearSSPRKintegration">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">LinearSSPRKintegration</code><span class="sig-paren">(</span><em>transport</em>, <em>order=1</em>, <em>runCFL=0.1</em>, <em>usingSSPRKNewton=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.LinearSSPRKintegration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.ExplicitRK_base" title="proteus.TimeIntegration.ExplicitRK_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.ExplicitRK_base</span></code></a></p>
+<blockquote>
+<div><p>implementation of Explicit RK schemes for ODE that are SSP for
+linear operators (aka) spatial discretizations in</p>
+<p>od{</p>
+</div></blockquote>
+<p>ec y}{t} = mat{L}
+ec y</p>
+<blockquote>
+<div><p>See Gottlieb, Shu, Tadmor siam review article and notes</p>
+<p>Their formulation for this scheme is</p>
+<blockquote>
+<div><p>u^0 = u^n
+u^l = u^{l-1} + Delta t L(u^{l-1}) l = 1,...,m-1
+u^m = sum_{k=0}^{l-1}lpha_{m,k}u^k +</p>
+<blockquote>
+<div>lpha_{m,m-1} Delta t L(u^{m-1})</div></blockquote>
+<p>u^{n+1} = u^m</p>
+<dl class="docutils">
+<dt>so lpha_{l,l-1} = 1, eta_{l,l-1} = 1.0  l &lt; m,</dt>
+<dd>eta_{m,m-1}  = lph_{m,m-1}</dd>
+<dt>Apparently,</dt>
+<dd>d_{l} = l Delta t l &lt; m,
+d_m = 1.0</dd>
+</dl>
+<p>which doesn&#8217;t make a lot of sense for time dependent problems</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="method">
+<dt id="proteus.TimeIntegration.LinearSSPRKintegration.setCoefficients">
+<code class="descname">setCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.LinearSSPRKintegration.setCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>alpha matrix in Gottlieb, Shu, Tadmor review paper</p>
+<blockquote>
+<div>u^{l} = sum_{k=0}^{l-1}lpha_{l,k}u^k</div></blockquote>
+<p>so lpha_{l,l-1} = 1  for l &lt; m</p>
+<dl class="docutils">
+<dt>beta matrix multiplies</dt>
+<dd>eta_{l,k} Delta t L(u^{k},t^n + d_{k} Delta t^n)</dd>
+<dt>so</dt>
+<dd>eta_{l,l-1} = 1.0 for l &lt; m
+eta_{m,m-1}   = lpha_{m,m-1}</dd>
+<dt>Note that</dt>
+<dd>alpha[l,k] &#8211;&gt;  alpha_{l+1,k}
+beta[l,k]  &#8211;&gt;  beta_{l+1,k}
+dcoefs[k]  &#8211;&gt;  d_{k+1} because of the whole cachingdelayed eval deal</dd>
+</dl>
+<p>second index (k) is actual level</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.LinearSSPRKintegration.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.LinearSSPRKintegration.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.SSPRKPIintegration">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">SSPRKPIintegration</code><span class="sig-paren">(</span><em>transport</em>, <em>order=1</em>, <em>runCFL=0.1</em>, <em>limiterType=None</em>, <em>usingSSPRKNewton=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SSPRKPIintegration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.ExplicitRK_base" title="proteus.TimeIntegration.ExplicitRK_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.ExplicitRK_base</span></code></a></p>
+<blockquote>
+<div><p>So called SSP RK integration with limiting step at end of each
+phase This one holds the original TVD RK schemes up to 3rd order
+1st order is Forward Euler</p>
+<p>2nd order
+u^1 = u^n + Delta t L(u^n)
+u^2 = 0.5(u^n + u^1) + 0.5Delta t L(u^1,t^n + Delta t^n), same stage values etc linear SSPRK</p>
+<p>3rd order
+u^1 =  u^n + Delta t L(u^n,t^n)
+u^2 = 0.75 u^n + 0.25u^1  + 0.25Delta t L(u^1,t^n + Delta t^n),
+u^3 = 1/3 u^n + 2/3 u^2 + 2/3 Delta t L(u^2,t^n + 0.5Delta t^n)</p>
+<p>generic formula is
+u^0 = u^n
+u^l = sum_{k=0}^{l-1}lpha_{l,k}u^k + eta_l Delta t L(u^{l-1},t^n + d_{l-1} Delta t^n)
+u^{n+1} = u^{m}</p>
+<p>so beta_l &#8211;&gt; beta_{l,k-1} in our basic framework
+Try to put this into Rothe paradigm with linear implicit mass matrix evaluation
+by saying at stage l</p>
+<p>m_t pprox</p>
+</div></blockquote>
+<p>rac{u^l - sum_{k=0}^{l-1}lpha_{l,k}u^k}{Delta t}</p>
+<blockquote>
+<div><p>spatial residual &#8211;&gt; spatial residual * beta_l</p>
+<p>and solve system for u^l</p>
+<p>The limiting right now assumes same space for each component</p>
+</div></blockquote>
+<dl class="method">
+<dt id="proteus.TimeIntegration.SSPRKPIintegration.setCoefficients">
+<code class="descname">setCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SSPRKPIintegration.setCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>See Cockburn and Hou and Shu</p>
+<p>For TVD schemes beta_{l,k} = 0  k &lt; l-1
+Note that</p>
+<blockquote>
+<div>alpha[l,k] &#8211;&gt;  alpha_{l+1,k}
+beta[l,k]  &#8211;&gt;  beta_{l+1,k}
+dcoefs[k]  &#8211;&gt;  d_{k+1} because of the whole cachingdelayed eval deal</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.SSPRKPIintegration.updateStage">
+<code class="descname">updateStage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SSPRKPIintegration.updateStage" title="Permalink to this definition">¶</a></dt>
+<dd><p>increment stage counter by 1.
+lstage here is last stage completed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.SSPRKPIintegration.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SSPRKPIintegration.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.LinearSSPRKPIintegration">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">LinearSSPRKPIintegration</code><span class="sig-paren">(</span><em>transport</em>, <em>order=1</em>, <em>runCFL=0.1</em>, <em>limiterType=None</em>, <em>usingSSPRKNewton=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.LinearSSPRKPIintegration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.LinearSSPRKintegration" title="proteus.TimeIntegration.LinearSSPRKintegration"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.LinearSSPRKintegration</span></code></a></p>
+<p>Linear SSP RK integration with limiting step at end of each phase, this one
+just uses linear SSP RK coefficients so not really correct NL SSP (TVD) RK
+for 3rd order (or higher)</p>
+<p>Way limiter right now assumes same space for everything</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.LinearSSPRKPIintegration.updateStage">
+<code class="descname">updateStage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.LinearSSPRKPIintegration.updateStage" title="Permalink to this definition">¶</a></dt>
+<dd><p>increment stage counter by 1.
+lstage here is last stage completed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.LinearSSPRKPIintegration.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.LinearSSPRKPIintegration.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange1d">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterP1Lagrange1d</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>limiterFlag=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>canonical (I hope) 1d DG limiting procedure when original
+local approximation space has P1 Lagrange basis
+assumes all solution fem spaces are identical</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange1d.initializeMeshInfo">
+<code class="descname">initializeMeshInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange1d.initializeMeshInfo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange1d.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange1d.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange1d.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange1d.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply limiting procedure directly using dofs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange1d.applyDGlimitingP1Lagrange1d">
+<code class="descname">applyDGlimitingP1Lagrange1d</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange1d.applyDGlimitingP1Lagrange1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>simple 1d DG limiting assuming P1 Lagrange local rep</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange1d">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterP2Lagrange1d</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>limiterFlag=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>canonical (I hope) 1d DG limiting procedure when original
+local approximation space has P2 Lagrange basis</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange1d.initializeMeshInfo">
+<code class="descname">initializeMeshInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d.initializeMeshInfo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange1d.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange1d.projectToLimitedSpace">
+<code class="descname">projectToLimitedSpace</code><span class="sig-paren">(</span><em>solndofs</em>, <em>ci=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d.projectToLimitedSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>project fem function from femSpaceSolution with dofs held in solndofs to
+ulim which is DG_AffineQuadraticOnSimplexWithNodalBasis</p>
+<p>nodal interpolant will not preserve mass necessarily</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange1d.projectFromLimitedSpace">
+<code class="descname">projectFromLimitedSpace</code><span class="sig-paren">(</span><em>solndofs</em>, <em>limdofs</em>, <em>tag</em>, <em>ci=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d.projectFromLimitedSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>project to fem function from femSpaceSolution with dofs held in solndofs from
+ulim which is DG_AffineQuadraticOnSimplexWithNodalBasis
+Don&#8217;t overwrite solution if tag == 1</p>
+<p>start with nodal interpolant, since this will preserve mass</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange1d.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply limiting procedure directly using dofs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange1d.applyDGlimitingP1Lagrange1d">
+<code class="descname">applyDGlimitingP1Lagrange1d</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d.applyDGlimitingP1Lagrange1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>simple 1d DG limiting assuming P1 Lagrange local rep</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial1d">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterPkMonomial1d</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>limiterFlag=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>canonical (I hope) 1d DG limiting procedure when original
+local approximation space has Pk monomial basis</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial1d.initializeMeshInfo">
+<code class="descname">initializeMeshInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d.initializeMeshInfo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial1d.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial1d.projectToLimitedSpace">
+<code class="descname">projectToLimitedSpace</code><span class="sig-paren">(</span><em>solndofs</em>, <em>ci=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d.projectToLimitedSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>project fem function from femSpaceSolution with dofs held in solndofs to
+ulim which is DG_LinearQuadraticOnSimplexWithNodalBasis</p>
+<p>try more or less generic L2 projection on reference element</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial1d.projectFromLimitedSpace">
+<code class="descname">projectFromLimitedSpace</code><span class="sig-paren">(</span><em>solndofs</em>, <em>limdofs</em>, <em>tag</em>, <em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d.projectFromLimitedSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>project to fem function from femSpaceSolution with dofs held in solndofs from
+ulim which is DG_AffineLinearOnSimplexWithNodalBasis
+Don&#8217;t overwrite solution if tag == 1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial1d.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply limiting procedure directly using dofs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial1d.applyDGlimitingP1Lagrange1d">
+<code class="descname">applyDGlimitingP1Lagrange1d</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d.applyDGlimitingP1Lagrange1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>simple 1d DG limiting assuming P1 Lagrange local rep</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.UnstructuredLimiter_base">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">UnstructuredLimiter_base</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.UnstructuredLimiter_base" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="proteus.TimeIntegration.UnstructuredLimiter_base.initializeMeshInfo">
+<code class="descname">initializeMeshInfo</code><span class="sig-paren">(</span><em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.UnstructuredLimiter_base.initializeMeshInfo" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><dl class="docutils">
+<dt>elementNeighborShapeGradients stores local gradients for simpleces formed from</dt>
+<dd>an element&#8217;s barycenter and neighboring element baryceners</dd>
+<dt>elementNeighborShapeGradients[eN,i] &lt;&#8212; local simplex formed from</dt>
+<dd>(ar{</dd>
+</dl>
+</div></blockquote>
+<p>ec x}_{eN},ar{
+ec x}^i_{eN},ar{
+ec x}^{i+1}_{eN})</p>
+<blockquote>
+<div>where i goes over local numbering of faces, ar{</div></blockquote>
+<dl class="docutils">
+<dt>ec x}^{i}_{eN} is the barycenter</dt>
+<dd><blockquote class="first">
+<div>of the neighbor across from face i.</div></blockquote>
+<p class="last">Local numbering for the neighboring simplex is always in that order</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.UnstructuredLimiter_base.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.UnstructuredLimiter_base.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.UnstructuredLimiter_base.computeElementNeighborShapeGradients">
+<code class="descname">computeElementNeighborShapeGradients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.UnstructuredLimiter_base.computeElementNeighborShapeGradients" title="Permalink to this definition">¶</a></dt>
+<dd><p>compute local shape functions using neighboring element barycenters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.CockburnNotesLimiter2d_base">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">CockburnNotesLimiter2d_base</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.CockburnNotesLimiter2d_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.UnstructuredLimiter_base" title="proteus.TimeIntegration.UnstructuredLimiter_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.UnstructuredLimiter_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.CockburnNotesLimiter2d_base.computeAlphaCoefs">
+<code class="descname">computeAlphaCoefs</code><span class="sig-paren">(</span><em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.CockburnNotesLimiter2d_base.computeAlphaCoefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>loop through each element and element face midpoint, compute barycentric coordinates
+for face midpoint using triangles formed by neighboring barycenters
+accept first nonnegative pair of coordinates</p>
+<p>write lambda_i = 1 + (x-x_i).grad lambda_i</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.CockburnNotesLimiter2d_base.computeCockburnDGlimiterArrays2d">
+<code class="descname">computeCockburnDGlimiterArrays2d</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.CockburnNotesLimiter2d_base.computeCockburnDGlimiterArrays2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>compute alpha coefficients for dg limiter from Cockburn&#8217;s notes</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange2d">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterP1Lagrange2d</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>nu=1.5</em>, <em>M=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.CockburnNotesLimiter2d_base" title="proteus.TimeIntegration.CockburnNotesLimiter2d_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.CockburnNotesLimiter2d_base</span></code></a></p>
+<p>apply standard, Cockburn RKDG limiter in 2d (maybe)</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange2d.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange2d.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange2d.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange2d.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange2d.applyCockburnDGlimiterP1Lagrange2d">
+<code class="descname">applyCockburnDGlimiterP1Lagrange2d</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange2d.applyCockburnDGlimiterP1Lagrange2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>apply 2d dg limiter from Cockburn&#8217;s notes</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange2d">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterP2Lagrange2d</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>nu=1.5</em>, <em>M=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.CockburnNotesLimiter2d_base" title="proteus.TimeIntegration.CockburnNotesLimiter2d_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.CockburnNotesLimiter2d_base</span></code></a></p>
+<p>canonical (I hope) 2d DG limiting procedure when original
+local approximation space has P2 Lagrange basis
+go ahead and use a generic L2 projection though</p>
+<dl class="docutils">
+<dt>TODO</dt>
+<dd>move projection steps to c</dd>
+</dl>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange2d.projectToLimitedSpace">
+<code class="descname">projectToLimitedSpace</code><span class="sig-paren">(</span><em>solndofs</em>, <em>ci=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange2d.projectToLimitedSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>project fem function from femSpaceSolution with dofs held in solndofs to
+ulim which is DG_AffineLinearOnSimplexWithNodalBasis</p>
+<p>try more or less generic L2 projection on reference element</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange2d.projectFromLimitedSpace">
+<code class="descname">projectFromLimitedSpace</code><span class="sig-paren">(</span><em>solndofs</em>, <em>limdofs</em>, <em>tag</em>, <em>ci=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange2d.projectFromLimitedSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>project to fem function from femSpaceSolution with dofs held in solndofs from
+ulim which is DG_AffineLinearOnSimplexWithNodalBasis
+Don&#8217;t overwrite solution if tag == 1</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange2d.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange2d.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply limiting procedure directly using dofs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange2d.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange2d.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange2d.applyCockburnDGlimiterP1Lagrange2d">
+<code class="descname">applyCockburnDGlimiterP1Lagrange2d</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange2d.applyCockburnDGlimiterP1Lagrange2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>apply 2d dg limiter from Cockburn&#8217;s notes</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial2d">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterPkMonomial2d</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>nu=1.5</em>, <em>M=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.CockburnNotesLimiter2d_base" title="proteus.TimeIntegration.CockburnNotesLimiter2d_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.CockburnNotesLimiter2d_base</span></code></a></p>
+<p>canonical (I hope) 2d DG limiting procedure when original
+local approximation space has Pk monomial basis</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial2d.projectToLimitedSpace">
+<code class="descname">projectToLimitedSpace</code><span class="sig-paren">(</span><em>solndofs</em>, <em>ci=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial2d.projectToLimitedSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>project fem function from femSpaceSolution with dofs held in solndofs to
+ulim which is DG_AffineQuadraticOnSimplexWithNodalBasis</p>
+<p>try more or less generic L2 projection on reference element</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial2d.projectFromLimitedSpace">
+<code class="descname">projectFromLimitedSpace</code><span class="sig-paren">(</span><em>solndofs</em>, <em>limdofs</em>, <em>tag</em>, <em>ci=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial2d.projectFromLimitedSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>project to fem function from femSpaceSolution with dofs held in solndofs from
+ulim which is DG_AffineQuadraticOnSimplexWithNodalBasis
+Don&#8217;t overwrite solution if tag == 1</p>
+<p>start with nodal interpolant, since this will preserve mass</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial2d.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial2d.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply limiting procedure directly using dofs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial2d.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial2d.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial2d.applyCockburnDGlimiterP1Lagrange2d">
+<code class="descname">applyCockburnDGlimiterP1Lagrange2d</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial2d.applyCockburnDGlimiterP1Lagrange2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>apply 2d dg limiter from Cockburn&#8217;s notes</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterDurlofskyP1Lagrange2d</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>killExtrema=1</em>, <em>allowMinWithUndershoot=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.UnstructuredLimiter_base" title="proteus.TimeIntegration.UnstructuredLimiter_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.UnstructuredLimiter_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d.applyDurlofskyDGlimiterP1Lagrange2d">
+<code class="descname">applyDurlofskyDGlimiterP1Lagrange2d</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d.applyDurlofskyDGlimiterP1Lagrange2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>apply 2d dg limiter based on Durlofsky, Enquist and Osher JCP 92</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange3d">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterDurlofskyP1Lagrange3d</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>killExtrema=1</em>, <em>allowMinWithUndershoot=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.UnstructuredLimiter_base" title="proteus.TimeIntegration.UnstructuredLimiter_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.UnstructuredLimiter_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange3d.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange3d.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange3d.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange3d.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange3d.applyDurlofskyDGlimiterP1Lagrange3d">
+<code class="descname">applyDurlofskyDGlimiterP1Lagrange3d</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange3d.applyDurlofskyDGlimiterP1Lagrange3d" title="Permalink to this definition">¶</a></dt>
+<dd><p>apply 3d dg limiter based on Durlofsky, Enquist and Osher JCP 92</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange1d_Sw">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterP1Lagrange1d_Sw</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>limiterFlag=0</em>, <em>h_eps=0.001</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange1d_Sw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.DGlimiterP1Lagrange1d" title="proteus.TimeIntegration.DGlimiterP1Lagrange1d"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.DGlimiterP1Lagrange1d</span></code></a></p>
+<dl class="docutils">
+<dt>DGP1 version of limiting that applies minmod limiting for h &lt; h_eps</dt>
+<dd>and more aggressive limiting elsewhere</dd>
+</dl>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange1d_Sw.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange1d_Sw.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply limiting procedure directly using dofs using standard approach
+Then go through and eliminate negative values of water height</p>
+<dl class="docutils">
+<dt>for cells that have average (h_bar &lt; h_eps)</dt>
+<dd><p class="first">if average height is negative, then zero
+if both vertices are positive leave alone (could kill slope)
+if one of the vertices is negative</p>
+<blockquote>
+<div>choose slope so that this value is exactly zero
+zero discharge at this vertex</div></blockquote>
+<p class="last">May need to add additional step that limits discharge where h is much less than h_eps</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange1d_Sw.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange1d_Sw.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP1Lagrange1d_Sw.applyDGlimitingP1Lagrange1d_withVacuumTol">
+<code class="descname">applyDGlimitingP1Lagrange1d_withVacuumTol</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange1d_Sw.applyDGlimitingP1Lagrange1d_withVacuumTol" title="Permalink to this definition">¶</a></dt>
+<dd><p>simple 1d DG limiting assuming P1 Lagrange local rep and enforcing more conservative limiting around u=0 state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange1d_Sw">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterP2Lagrange1d_Sw</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>limiterFlag=0</em>, <em>h_eps=0.01</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d_Sw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d" title="proteus.TimeIntegration.DGlimiterP2Lagrange1d"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.DGlimiterP2Lagrange1d</span></code></a></p>
+<dl class="docutils">
+<dt>DGP1 version of limiting that applies minmod limiting for h &lt; h_eps</dt>
+<dd>and more aggressive limiting elsewhere</dd>
+</dl>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange1d_Sw.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d_Sw.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply limiting procedure directly using dofs using standard approach
+Then go through and eliminate negative values of water height</p>
+<dl class="docutils">
+<dt>for cells that have average (h_bar &lt; h_eps)</dt>
+<dd><p class="first">if average height is negative, then zero
+if both vertices are positive leave alone (could kill slope)
+if one of the vertices is negative</p>
+<blockquote>
+<div>choose slope so that this value is exactly zero
+zero discharge at this vertex</div></blockquote>
+<p class="last">May need to add additional step that limits discharge where h is much less than h_eps</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange1d_Sw.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d_Sw.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterP2Lagrange1d_Sw.applyDGlimitingP1Lagrange1d_withVacuumTol">
+<code class="descname">applyDGlimitingP1Lagrange1d_withVacuumTol</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d_Sw.applyDGlimitingP1Lagrange1d_withVacuumTol" title="Permalink to this definition">¶</a></dt>
+<dd><p>simple 1d DG limiting assuming P1 Lagrange local rep and enforcing more conservative limiting around u=0 state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial1d_Sw">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterPkMonomial1d_Sw</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>limiterFlag=0</em>, <em>h_eps=0.1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d_Sw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d" title="proteus.TimeIntegration.DGlimiterPkMonomial1d"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.DGlimiterPkMonomial1d</span></code></a></p>
+<dl class="docutils">
+<dt>DGPk version of limiting that applies minmod limiting for h &lt; h_eps</dt>
+<dd>and more aggressive limiting elsewhere</dd>
+</dl>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial1d_Sw.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d_Sw.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply limiting procedure directly using dofs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial1d_Sw.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d_Sw.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterPkMonomial1d_Sw.applyDGlimitingP1Lagrange1d_withVacuumTol">
+<code class="descname">applyDGlimitingP1Lagrange1d_withVacuumTol</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterPkMonomial1d_Sw.applyDGlimitingP1Lagrange1d_withVacuumTol" title="Permalink to this definition">¶</a></dt>
+<dd><p>simple 1d DG limiting assuming P1 Lagrange local rep and enforcing more conservative limiting around u=0 state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d_Sw">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">DGlimiterDurlofskyP1Lagrange2d_Sw</code><span class="sig-paren">(</span><em>mesh</em>, <em>nSpace</em>, <em>u</em>, <em>transport=None</em>, <em>killExtrema=1</em>, <em>allowMinWithUndershoot=0</em>, <em>h_eps=0.02</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d_Sw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d" title="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d_Sw.applySlopeLimiting">
+<code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d_Sw.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d_Sw.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d_Sw.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d_Sw.applyDurlofskyDGlimiterP1Lagrange2d_withVacuumTol">
+<code class="descname">applyDurlofskyDGlimiterP1Lagrange2d_withVacuumTol</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterDurlofskyP1Lagrange2d_Sw.applyDurlofskyDGlimiterP1Lagrange2d_withVacuumTol" title="Permalink to this definition">¶</a></dt>
+<dd><p>apply 2d dg limiter based on Durlofsky, Enquist and Osher JCP 92 for Sw equations</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.ForwardIntegrator">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">ForwardIntegrator</code><span class="sig-paren">(</span><em>mlvtran</em>, <em>mlnl</em>, <em>dtMeth</em>, <em>nOptions</em>, <em>stepExact=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardIntegrator" title="Permalink to this definition">¶</a></dt>
+<dd><p>class that is responsible for basic process of integrating a problem
+forward in time given a VectorTranport Problem, Nonlinear Solver,
+and a Time Integration method</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardIntegrator.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><em>DTSET=None</em>, <em>t0=0.0</em>, <em>T=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardIntegrator.initialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardIntegrator.calculateSolution">
+<code class="descname">calculateSolution</code><span class="sig-paren">(</span><em>tIn</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardIntegrator.calculateSolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move forward from time tIn to time tOut
+For now doesn&#8217;t worry about potential mismatch between tIn and
+last time value used by model</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.ForwardIntegrator.writeProgress">
+<code class="descname">writeProgress</code><span class="sig-paren">(</span><em>tn</em>, <em>dt</em>, <em>T</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardIntegrator.writeProgress" title="Permalink to this definition">¶</a></dt>
+<dd><p>just echo to screen what new and final time levels are</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.SteadyStateIntegrator">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">SteadyStateIntegrator</code><span class="sig-paren">(</span><em>mlvtran</em>, <em>mlnl</em>, <em>dtMeth</em>, <em>nOptions</em>, <em>ssatol=0.001</em>, <em>ssrtol=0.001</em>, <em>maxsteps=50</em>, <em>stepExact=True</em>, <em>ignoreFailure=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SteadyStateIntegrator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.ForwardIntegrator" title="proteus.TimeIntegration.ForwardIntegrator"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.ForwardIntegrator</span></code></a></p>
+<p>apply some form of pseudo-transient continuation or direct solve to
+compute steady state solution regardless of requested time step</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.SteadyStateIntegrator.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><em>DTSET=None</em>, <em>t0=0.0</em>, <em>T=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SteadyStateIntegrator.initialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.SteadyStateIntegrator.calculateSolution">
+<code class="descname">calculateSolution</code><span class="sig-paren">(</span><em>tIn</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SteadyStateIntegrator.calculateSolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>integrate to steady state regardless of what tIn and tOut are</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.SteadyStateIntegrator.writeProgress">
+<code class="descname">writeProgress</code><span class="sig-paren">(</span><em>tn</em>, <em>dt</em>, <em>res</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SteadyStateIntegrator.writeProgress" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.SignedDistanceIntegrator">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">SignedDistanceIntegrator</code><span class="sig-paren">(</span><em>mlvtran</em>, <em>mlnl</em>, <em>dtMeth</em>, <em>nOptions</em>, <em>stepExact=False</em>, <em>nSteps=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SignedDistanceIntegrator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.ForwardIntegrator" title="proteus.TimeIntegration.ForwardIntegrator"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.ForwardIntegrator</span></code></a></p>
+<p>apply some form of pseudo-transient continuation or direct solve to
+compute steady state solution regardless of requested time step</p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.SignedDistanceIntegrator.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><em>DTSET=None</em>, <em>t0=0.0</em>, <em>T=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SignedDistanceIntegrator.initialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.SignedDistanceIntegrator.calculateSolution">
+<code class="descname">calculateSolution</code><span class="sig-paren">(</span><em>tIn</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SignedDistanceIntegrator.calculateSolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>take a couple of steps toward steady state</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.SignedDistanceIntegrator.writeProgress">
+<code class="descname">writeProgress</code><span class="sig-paren">(</span><em>tn</em>, <em>dt</em>, <em>res</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SignedDistanceIntegrator.writeProgress" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.FLCBDF_TwophaseDarcy_fc">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">FLCBDF_TwophaseDarcy_fc</code><span class="sig-paren">(</span><em>transport</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF_TwophaseDarcy_fc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.FLCBDF" title="proteus.TimeIntegration.FLCBDF"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.FLCBDF</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.FLCBDF_TwophaseDarcy_fc.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.FLCBDF_TwophaseDarcy_fc.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TimeIntegration.CentralDifference_2ndD">
+<em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">CentralDifference_2ndD</code><span class="sig-paren">(</span><em>transport</em>, <em>integrateInterpolationPoints=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.CentralDifference_2ndD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.TI_base" title="proteus.TimeIntegration.TI_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.TI_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TimeIntegration.CentralDifference_2ndD.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.CentralDifference_2ndD.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.CentralDifference_2ndD.calculateGeneralizedInterpolationCoefficients">
+<code class="descname">calculateGeneralizedInterpolationCoefficients</code><span class="sig-paren">(</span><em>cip</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.CentralDifference_2ndD.calculateGeneralizedInterpolationCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.CentralDifference_2ndD.initializeTimeHistory">
+<code class="descname">initializeTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.CentralDifference_2ndD.initializeTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Push necessary information into time history arrays</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.CentralDifference_2ndD.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.CentralDifference_2ndD.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TimeIntegration.CentralDifference_2ndD.calculateCoefs">
+<code class="descname">calculateCoefs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.CentralDifference_2ndD.calculateCoefs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

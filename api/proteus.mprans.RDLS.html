@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.mprans.RDLS module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus.mprans package" href="proteus.mprans.html" />
+    <link rel="next" title="proteus.mprans.SW2D module" href="proteus.mprans.SW2D.html" />
+    <link rel="prev" title="proteus.mprans.RANS3PCorrPres module" href="proteus.mprans.RANS3PCorrPres.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.mprans.RDLS module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.mprans.RANS3PCorrPres.html" title="Previous Chapter: proteus.mprans.RANS3PCorrPres module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.mpran...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.mprans.SW2D.html" title="Next Chapter: proteus.mprans.SW2D module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.mpran... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.mprans.RDLS">
+<span id="proteus-mprans-rdls-module"></span><h1>proteus.mprans.RDLS module<a class="headerlink" href="#module-proteus.mprans.RDLS" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="proteus.mprans.RDLS.SubgridError">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RDLS.</code><code class="descname">SubgridError</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.SubgridError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.SubgridError.html#proteus.SubgridError.SGE_base" title="proteus.SubgridError.SGE_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SubgridError.SGE_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.RDLS.SubgridError.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.SubgridError.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.SubgridError.calculateSubgridError">
+<code class="descname">calculateSubgridError</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.SubgridError.calculateSubgridError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.SubgridError.updateSubgridErrorHistory">
+<code class="descname">updateSubgridErrorHistory</code><span class="sig-paren">(</span><em>initializationPhase=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.SubgridError.updateSubgridErrorHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.RDLS.ShockCapturing">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RDLS.</code><code class="descname">ShockCapturing</code><span class="sig-paren">(</span><em>coefficients</em>, <em>nd</em>, <em>shockCapturingFactor=0.25</em>, <em>lag=True</em>, <em>nStepsToDelay=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.ShockCapturing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.ShockCapturing.html#proteus.ShockCapturing.ShockCapturing_base" title="proteus.ShockCapturing.ShockCapturing_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.ShockCapturing.ShockCapturing_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.RDLS.ShockCapturing.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>mesh</em>, <em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.ShockCapturing.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.ShockCapturing.updateShockCapturingHistory">
+<code class="descname">updateShockCapturingHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.ShockCapturing.updateShockCapturingHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.RDLS.PsiTC">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RDLS.</code><code class="descname">PsiTC</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.PsiTC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.StepControl.html#proteus.StepControl.SC_base" title="proteus.StepControl.SC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.StepControl.SC_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.RDLS.PsiTC.stepExact_model">
+<code class="descname">stepExact_model</code><span class="sig-paren">(</span><em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.PsiTC.stepExact_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.PsiTC.initialize_dt_model">
+<code class="descname">initialize_dt_model</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.PsiTC.initialize_dt_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.PsiTC.updateSubstep">
+<code class="descname">updateSubstep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.PsiTC.updateSubstep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.PsiTC.choose_dt_model">
+<code class="descname">choose_dt_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.PsiTC.choose_dt_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.RDLS.Coefficients">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RDLS.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>applyRedistancing=True</em>, <em>epsFact=2.0</em>, <em>nModelId=None</em>, <em>u0=None</em>, <em>rdModelId=0</em>, <em>penaltyParameter=0.0</em>, <em>useMetrics=0.0</em>, <em>useConstantH=False</em>, <em>weakDirichletFactor=10.0</em>, <em>backgroundDiffusionFactor=0.01</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.RDLS.Coefficients.attachModels">
+<code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.Coefficients.initializeMesh">
+<code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.Coefficients.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.Coefficients.initializeElementBoundaryQuadrature">
+<code class="descname">initializeElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebq</em>, <em>cebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.initializeElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature">
+<code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.Coefficients.preStep">
+<code class="descname">preStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.preStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.Coefficients.postStep">
+<code class="descname">postStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.Coefficients.getICDofs">
+<code class="descname">getICDofs</code><span class="sig-paren">(</span><em>cj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.getICDofs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.Coefficients.updateToMovingDomain">
+<code class="descname">updateToMovingDomain</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.updateToMovingDomain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.Coefficients.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="proteus.mprans.RDLS.Coefficients.setZeroLSweakDirichletBCs">
+<em class="property">static </em><code class="descname">setZeroLSweakDirichletBCs</code><span class="sig-paren">(</span><em>vt</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.setZeroLSweakDirichletBCs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="proteus.mprans.RDLS.Coefficients.setZeroLSweakDirichletBCs2">
+<em class="property">static </em><code class="descname">setZeroLSweakDirichletBCs2</code><span class="sig-paren">(</span><em>vt</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.setZeroLSweakDirichletBCs2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="proteus.mprans.RDLS.Coefficients.setZeroLSweakDirichletBCs3">
+<em class="property">static </em><code class="descname">setZeroLSweakDirichletBCs3</code><span class="sig-paren">(</span><em>vt</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.setZeroLSweakDirichletBCs3" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.Coefficients.redistanceLevelSetCoefficientsEvaluate">
+<code class="descname">redistanceLevelSetCoefficientsEvaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.Coefficients.redistanceLevelSetCoefficientsEvaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate the coefficients for level set redistancing equation</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.RDLS.LevelModel">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RDLS.</code><code class="descname">LevelModel</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressTraceBoundaryConditionsSetterDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='defaultName'</em>, <em>reuse_trial_and_test_quadrature=True</em>, <em>sd=True</em>, <em>movingDomain=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.Transport.html#proteus.Transport.OneLevelTransport" title="proteus.Transport.OneLevelTransport"><code class="xref py py-class docutils literal"><span class="pre">proteus.Transport.OneLevelTransport</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.mprans.RDLS.LevelModel.nCalls">
+<code class="descname">nCalls</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.nCalls" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.calculateCoefficients">
+<code class="descname">calculateCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.calculateCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.calculateElementResidual">
+<code class="descname">calculateElementResidual</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.calculateElementResidual" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.getResidual">
+<code class="descname">getResidual</code><span class="sig-paren">(</span><em>u</em>, <em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.getResidual" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.getJacobian">
+<code class="descname">getJacobian</code><span class="sig-paren">(</span><em>jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.getJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.getJacobianNew">
+<code class="descname">getJacobianNew</code><span class="sig-paren">(</span><em>jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.getJacobianNew" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.calculateElementQuadrature">
+<code class="descname">calculateElementQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.calculateElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the physical location and weights of the quadrature rules
+and the shape information at the quadrature points.</p>
+<p>This function should be called only when the mesh changes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.calculateElementBoundaryQuadrature">
+<code class="descname">calculateElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.calculateElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.calculateExteriorElementBoundaryQuadrature">
+<code class="descname">calculateExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.calculateExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the physical location and weights of the quadrature rules
+and the shape information at the quadrature points on global element boundaries.</p>
+<p>This function should be called only when the mesh changes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.estimate_mt">
+<code class="descname">estimate_mt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.estimate_mt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.calculateSolutionAtQuadrature">
+<code class="descname">calculateSolutionAtQuadrature</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.calculateSolutionAtQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.calculateAuxiliaryQuantitiesAfterStep">
+<code class="descname">calculateAuxiliaryQuantitiesAfterStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.calculateAuxiliaryQuantitiesAfterStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RDLS.LevelModel.updateAfterMeshMotion">
+<code class="descname">updateAfterMeshMotion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.LevelModel.updateAfterMeshMotion" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.mprans.RDLS.setZeroLSweakDirichletBCs">
+<code class="descclassname">proteus.mprans.RDLS.</code><code class="descname">setZeroLSweakDirichletBCs</code><span class="sig-paren">(</span><em>RDLSvt</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.setZeroLSweakDirichletBCs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.mprans.RDLS.setZeroLSweakDirichletBCsSimple">
+<code class="descclassname">proteus.mprans.RDLS.</code><code class="descname">setZeroLSweakDirichletBCsSimple</code><span class="sig-paren">(</span><em>RDLSvt</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RDLS.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RDLS.setZeroLSweakDirichletBCsSimple" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

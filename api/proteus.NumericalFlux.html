@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.NumericalFlux module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.NumericalSolution module" href="proteus.NumericalSolution.html" />
+    <link rel="prev" title="proteus.Norms module" href="proteus.Norms.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.NumericalFlux module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.Norms.html" title="Previous Chapter: proteus.Norms module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Norms...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.NumericalSolution.html" title="Next Chapter: proteus.NumericalSolution module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Numer... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.NumericalFlux">
+<span id="proteus-numericalflux-module"></span><h1>proteus.NumericalFlux module<a class="headerlink" href="#module-proteus.NumericalFlux" title="Permalink to this headline">¶</a></h1>
+<p>A class hierarchy for numerical flux (numerical trace) computations</p>
+<dl class="class">
+<dt id="proteus.NumericalFlux.NF_base">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">NF_base</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>parallelPeriodic=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="proteus.NumericalFlux.NF_base.useWeakDirichletConditions">
+<code class="descname">useWeakDirichletConditions</code><em class="property"> = True</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.useWeakDirichletConditions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.NF_base.useStrongDirichletConstraints">
+<code class="descname">useStrongDirichletConstraints</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.useStrongDirichletConstraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.NF_base.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = True</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.NF_base.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.NF_base.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.NF_base.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.NF_base.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.NF_base.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.DoNothing">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">DoNothing</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DoNothing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.DoNothing.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DoNothing.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DoNothing.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DoNothing.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.NoFlux">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">NoFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>parallelPeriodic=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NoFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.NoFlux.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NoFlux.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.NoFlux.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NoFlux.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.StrongDirichlet">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">StrongDirichlet</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StrongDirichlet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.StrongDirichlet.useWeakDirichletConditions">
+<code class="descname">useWeakDirichletConditions</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StrongDirichlet.useWeakDirichletConditions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.StrongDirichlet.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StrongDirichlet.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.StrongDirichlet.setFluxBoundaryConditions">
+<code class="descname">setFluxBoundaryConditions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StrongDirichlet.setFluxBoundaryConditions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.StrongDirichlet.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StrongDirichlet.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.StrongDirichlet.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StrongDirichlet.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.NumericalFlux.StrongDirichletFactory">
+<code class="descclassname">proteus.NumericalFlux.</code><code class="descname">StrongDirichletFactory</code><span class="sig-paren">(</span><em>fluxBoundaryConditionsDict={}</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StrongDirichletFactory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Advection_DiagonalUpwind</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Advection_Diagonal_average">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Advection_Diagonal_average</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_Diagonal_average" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_Diagonal_average.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_Diagonal_average.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_Diagonal_average.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_Diagonal_average.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_Diagonal_average.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_Diagonal_average.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_Diagonal_average.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_Diagonal_average.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Advection_DiagonalUpwind_Diffusion_IIPG</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Advection_DiagonalUpwind_Diffusion_SIPG</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG" title="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_NIPG">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Advection_DiagonalUpwind_Diffusion_NIPG</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_NIPG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG" title="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Advection_DiagonalUpwind_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Advection_DiagonalUpwind" title="proteus.NumericalFlux.Advection_DiagonalUpwind"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Advection_DiagonalUpwind_Diffusion_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">ConstantAdvection_Diffusion_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.ConstantAdvection_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">ConstantAdvection_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.ConstantAdvection_exterior.useStrongDirichletConstraints">
+<code class="descname">useStrongDirichletConstraints</code><em class="property"> = True</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_exterior.useStrongDirichletConstraints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.ConstantAdvection_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ConstantAdvection_exterior.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_exterior.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ConstantAdvection_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ConstantAdvection_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ConstantAdvection_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ConstantAdvection_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.MixedDarcy_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">MixedDarcy_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.MixedDarcy_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.MixedDarcy_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.MixedDarcy_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.MixedDarcy_exterior.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.MixedDarcy_exterior.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.MixedDarcy_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.MixedDarcy_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.MixedDarcy_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.MixedDarcy_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.MixedDarcy_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.MixedDarcy_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.MixedDarcy_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.MixedDarcy_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_NIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Advection_DiagonalUpwind_Diffusion_NIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_NIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior" title="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Advection_DiagonalUpwind_Diffusion_SIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior" title="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.ConstantAdvection_Diffusion_NIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">ConstantAdvection_Diffusion_NIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_Diffusion_NIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior" title="proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">ConstantAdvection_Diffusion_SIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConstantAdvection_Diffusion_SIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior" title="proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.ConstantAdvection_Diffusion_IIPG_exterior</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Advection_DiagonalUpwind_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Curvature_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Curvature_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Curvature_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.Curvature_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Curvature_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Curvature_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Curvature_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Curvature_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Curvature_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Curvature_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Curvature_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Curvature_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Curvature_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>To use with regular Stokes, takes advantage of existence of &#8216;advectiveFlux&#8217; flag
+even when there is no advective term</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Weak boundary fluxes for StokesP</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.StokesP_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">NavierStokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior" title="proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Diffusion_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Diffusion_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.Diffusion_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Diffusion_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Diffusion_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Diffusion_SIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Diffusion_SIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_SIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Diffusion_IIPG_exterior" title="proteus.NumericalFlux.Diffusion_IIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Diffusion_IIPG_exterior</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">DarcySplitPressure_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>weak dirichlet boundary conditions for Twophase_split_pressure class
+Diffusion_IIPG_exterior is ok except for need to switch between
+psi_w and psi_n bc types
+TODO:</p>
+<blockquote>
+<div>put in bc that switches flux and dirichlet types</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Diffusion_LDG">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Diffusion_LDG</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_LDG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<p>initial LDG numerical flux  for pure diffusion</p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.Diffusion_LDG.calculateDiffusionSplittings">
+<code class="descname">calculateDiffusionSplittings</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_LDG.calculateDiffusionSplittings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Diffusion_LDG.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_LDG.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Diffusion_LDG.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_LDG.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Diffusion_LDG.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_LDG.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Diffusion_LDG.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Diffusion_LDG.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Advection_DiagonalUpwind_Diffusion_LDG</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Diffusion_LDG" title="proteus.NumericalFlux.Diffusion_LDG"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Diffusion_LDG</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">RusanovNumericalFlux_Diagonal</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux_Diagonal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Advection_DiagonalUpwind" title="proteus.NumericalFlux.Advection_DiagonalUpwind"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind</span></code></a></p>
+<p>apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-ar{lambda}(b-a) where
+lambda &gt;= max <a href="#id1"><span class="problematic" id="id2">|f^{\prime}|</span></a> for a&lt;= u &lt;= b
+this one applies flux to each component of flux separately</p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux_Diagonal.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux_Diagonal.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal_Diffusion_IIPG">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">RusanovNumericalFlux_Diagonal_Diffusion_IIPG</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux_Diagonal_Diffusion_IIPG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG" title="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG</span></code></a></p>
+<p>apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-ar{lambda}(b-a) where
+lambda &gt;= max <a href="#id3"><span class="problematic" id="id4">|f^{\prime}|</span></a> for a&lt;= u &lt;= b
+this one applies flux to each component of flux separately</p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal_Diffusion_IIPG.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux_Diagonal_Diffusion_IIPG.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal_Diffusion_IIPG.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux_Diagonal_Diffusion_IIPG.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.ConvexOneSonicPointNumericalFlux">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">ConvexOneSonicPointNumericalFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions</em>, <em>sonicPoint=0.0</em>, <em>sonicFlux=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConvexOneSonicPointNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Advection_DiagonalUpwind" title="proteus.NumericalFlux.Advection_DiagonalUpwind"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind</span></code></a></p>
+<dl class="docutils">
+<dt>basic Godunov flux f_{num}(a,b) = max_{b&lt;= u &lt;= a} f(u) if a &gt;= b</dt>
+<dd>= min_{a&lt;= u &lt;= b} f(u) otherwise</dd>
+</dl>
+<p>where there is only one sonic point, u_s with f^{prime}(u_s) = 0 and
+f is convex so f(u_s) is a minimum</p>
+<p>This class typically has to be &#8220;wrapped&#8221; for a given problem to specify the
+correct sonic point and sonic flux</p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.ConvexOneSonicPointNumericalFlux.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConvexOneSonicPointNumericalFlux.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">HamiltonJacobi_DiagonalLesaintRaviart</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>speedEvaluationType=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>speedEvaluationType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>speedEvaluationType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Diffusion_SIPG_exterior" title="proteus.NumericalFlux.Diffusion_SIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Diffusion_SIPG_exterior</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_Pressure_DiagonalLesaintRaviart_Diffusion_SIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">HamiltonJacobi_Pressure_DiagonalLesaintRaviart_Diffusion_SIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>speedEvaluationType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_Pressure_DiagonalLesaintRaviart_Diffusion_SIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior" title="proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_Pressure_DiagonalLesaintRaviart_Diffusion_SIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_Pressure_DiagonalLesaintRaviart_Diffusion_SIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.DarcyFCFF_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">DarcyFCFF_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCFF_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>weak dirichlet boundary conditions for Twophase_fc_ff class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.DarcyFC_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">DarcyFC_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFC_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.DarcyFC_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFC_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>weak dirichlet boundary conditions for Twophase_fc class
+TODO:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>put in nonlinear bc for setting psi_n = psi_n^b</dt>
+<dd>dofFlag = 2</dd>
+</dl>
+<p>put in bc that switches flux and dirichlet types</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFC_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFC_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFC_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFC_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFC_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFC_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFC_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFC_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.DarcyFCPP_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">DarcyFCPP_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCPP_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>weak dirichlet boundary conditions for Twophase_fc class
+TODO:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>put in nonlinear bc for setting psi_n = psi_n^b</dt>
+<dd>dofFlag = 2</dd>
+</dl>
+<p>put in bc that switches flux and dirichlet types</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.ShallowWater_1D">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">ShallowWater_1D</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>h_eps=1e-08</em>, <em>tol_u=1e-08</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWater_1D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWater_1D.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWater_1D.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWater_1D.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWater_1D.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWater_1D.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWater_1D.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWater_1D.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWater_1D.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.ShallowWaterHLL_1D">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">ShallowWaterHLL_1D</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>h_eps=1e-08</em>, <em>tol_u=1e-08</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWaterHLL_1D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWaterHLL_1D.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWaterHLL_1D.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWaterHLL_1D.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWaterHLL_1D.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWaterHLL_1D.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWaterHLL_1D.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWaterHLL_1D.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWaterHLL_1D.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.ShallowWater_2D">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">ShallowWater_2D</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>h_eps=1e-08</em>, <em>tol_u=1e-08</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWater_2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWater_2D.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWater_2D.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWater_2D.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWater_2D.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWater_2D.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWater_2D.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWater_2D.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWater_2D.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.ShallowWater_2D.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ShallowWater_2D.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.RusanovNumericalFlux">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">RusanovNumericalFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.RusanovNumericalFlux_Diagonal" title="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.RusanovNumericalFlux_Diagonal</span></code></a></p>
+<blockquote>
+<div>Base class for Rusanov scheme for generic systems, relies on a user-specified estimate for the
+maximum (magnitude) eigenvalue for the system. Default is to take ar{lamda}= max |</div></blockquote>
+<dl class="docutils">
+<dt>ec f^{prime} . n|</dt>
+<dd><p class="first">Then we just apply
+apply numerical flux f_{num}(a,b) = 1/2(f(a)+f(b)-ar{lambda}(b-a)</p>
+<p class="last">For now, we will try to piggy back on the cfl calculation, assuming the user has implemented this
+correctly for the system in question</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="proteus.NumericalFlux.RusanovNumericalFlux.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.RusanovNumericalFlux.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.RusanovLDG">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">RusanovLDG</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovLDG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Diffusion_LDG" title="proteus.NumericalFlux.Diffusion_LDG"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Diffusion_LDG</span></code></a></p>
+<p>combine Rusanov flux for advection and LDG for diffusion
+right now advection jacobian is not calculated</p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.RusanovLDG.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovLDG.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.RusanovLDG.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovLDG.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalChengShu">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">HamiltonJacobi_DiagonalChengShu</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>speedEvaluationType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalChengShu" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalChengShu.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalChengShu.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalChengShu.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalChengShu.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalChengShu.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalChengShu.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.HamiltonJacobi_DiagonalChengShu.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.HamiltonJacobi_DiagonalChengShu.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Stress_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Stress_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stress_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.Stress_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stress_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Stress_IIPG_exterior.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stress_IIPG_exterior.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Stress_IIPG_exterior.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stress_IIPG_exterior.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Stress_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stress_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Stress_IIPG_exterior.updateInteriorNumericalFluxJacobian">
+<code class="descname">updateInteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em>, <em>dphi</em>, <em>fluxJacobian</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stress_IIPG_exterior.updateInteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Stress_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stress_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Stress_SIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Stress_SIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stress_SIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Stress_IIPG_exterior" title="proteus.NumericalFlux.Stress_IIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Stress_IIPG_exterior</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.Stress_SIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Stress_SIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Richards_IIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Richards_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Richards_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.Richards_IIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Richards_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Richards_IIPG_exterior.setDirichletValues">
+<code class="descname">setDirichletValues</code><span class="sig-paren">(</span><em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Richards_IIPG_exterior.setDirichletValues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Richards_IIPG_exterior.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Richards_IIPG_exterior.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalFlux.Richards_IIPG_exterior.updateExteriorNumericalFluxJacobian">
+<code class="descname">updateExteriorNumericalFluxJacobian</code><span class="sig-paren">(</span><em>l2g</em>, <em>inflowFlag</em>, <em>q</em>, <em>ebqe</em>, <em>dphi</em>, <em>fluxJacobian_exterior</em>, <em>fluxJacobian_eb</em>, <em>fluxJacobian_hj</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Richards_IIPG_exterior.updateExteriorNumericalFluxJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.NumericalFlux.Richards_SIPG_exterior">
+<em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">Richards_SIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Richards_SIPG_exterior" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Richards_IIPG_exterior" title="proteus.NumericalFlux.Richards_IIPG_exterior"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Richards_IIPG_exterior</span></code></a></p>
+<dl class="attribute">
+<dt id="proteus.NumericalFlux.Richards_SIPG_exterior.hasInterior">
+<code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.Richards_SIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

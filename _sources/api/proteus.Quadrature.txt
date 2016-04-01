@@ -1,0 +1,7 @@
+proteus.Quadrature module
+=========================
+
+.. automodule:: proteus.Quadrature
+    :members:
+    :undoc-members:
+    :show-inheritance:

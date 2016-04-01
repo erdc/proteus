@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.TriangleTools module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.TriangleUtils module" href="proteus.TriangleUtils.html" />
+    <link rel="prev" title="proteus.TriangleFileUtils module" href="proteus.TriangleFileUtils.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.TriangleTools module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.TriangleFileUtils.html" title="Previous Chapter: proteus.TriangleFileUtils module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Trian...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.TriangleUtils.html" title="Next Chapter: proteus.TriangleUtils module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Trian... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.TriangleTools">
+<span id="proteus-triangletools-module"></span><h1>proteus.TriangleTools module<a class="headerlink" href="#module-proteus.TriangleTools" title="Permalink to this headline">¶</a></h1>
+<p>Collect functionality to make a lightweight interface for
+Shewchuk&#8217;s Triangle package. Follow the ellipt2d example in some
+respects</p>
+<dl class="class">
+<dt id="proteus.TriangleTools.TriangleBaseMesh">
+<em class="property">class </em><code class="descclassname">proteus.TriangleTools.</code><code class="descname">TriangleBaseMesh</code><span class="sig-paren">(</span><em>baseFlags='zen'</em>, <em>nbase=0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.TriangleBaseMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is basically a wrapper for the triangulateio interface
+that should be able to create a triangle mesh in different ways</p>
+<blockquote>
+<div>from .ele and .node files
+from a .poly file
+from a proteus mesh</div></blockquote>
+<p>It should also be able to generate a proteus mesh from the
+triangle representation and allow the user to access the basic
+data arrays in triangle</p>
+<dl class="method">
+<dt id="proteus.TriangleTools.TriangleBaseMesh.resetDefaultTrirep">
+<code class="descname">resetDefaultTrirep</code><span class="sig-paren">(</span><em>index=0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.TriangleBaseMesh.resetDefaultTrirep" title="Permalink to this definition">¶</a></dt>
+<dd><p>reset the Triangle mesh representation if it has been set to something nontrivial</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TriangleTools.TriangleBaseMesh.resetDefaultVorrep">
+<code class="descname">resetDefaultVorrep</code><span class="sig-paren">(</span><em>index=0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.TriangleBaseMesh.resetDefaultVorrep" title="Permalink to this definition">¶</a></dt>
+<dd><p>reset the Triangle mesh Voronoi representation if it has
+been set to something nontrivial</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TriangleTools.TriangleBaseMesh.convertToProteusMesh">
+<code class="descname">convertToProteusMesh</code><span class="sig-paren">(</span><em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.TriangleBaseMesh.convertToProteusMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a representation in the format expected by
+proteus.</p>
+<dl class="docutils">
+<dt>Need to make sure the triangle mesh has generated</dt>
+<dd>nodes
+elements (triangles)
+edges
+neighbors</dd>
+<dt>First set the _global arrays for</dt>
+<dd>nodes
+elements</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TriangleTools.TriangleBaseMesh.convertFromProteusMesh">
+<code class="descname">convertFromProteusMesh</code><span class="sig-paren">(</span><em>meshin</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.TriangleBaseMesh.convertFromProteusMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>generate a Triangle mesh representation from an proteus mesh.
+This version will copy over the nodes and elements from the
+proteus mesh.</p>
+<p>Deletes the existing Triangle mesh and regenerates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TriangleTools.TriangleBaseMesh.readFromNodeFile">
+<code class="descname">readFromNodeFile</code><span class="sig-paren">(</span><em>filebase</em>, <em>flagsAdd=''</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.TriangleBaseMesh.readFromNodeFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>read triangle representation from filebase.node
+files. assumes the nbase data member is set appropriately</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TriangleTools.TriangleBaseMesh.readFromNodeAndEleFiles">
+<code class="descname">readFromNodeAndEleFiles</code><span class="sig-paren">(</span><em>filebase</em>, <em>flagsAdd=''</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.TriangleBaseMesh.readFromNodeAndEleFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>read triangle representation from filebase.node and filebase.ele
+files. assumes the nbase data member is set appropriately</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TriangleTools.TriangleBaseMesh.readFromPolyFile">
+<code class="descname">readFromPolyFile</code><span class="sig-paren">(</span><em>filebase</em>, <em>flagsAdd=''</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.TriangleBaseMesh.readFromPolyFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>read triangle representation from filebase.poly file
+assumes the nbase data member is set appropriately</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TriangleTools.TriangleBaseMesh.writeToFile">
+<code class="descname">writeToFile</code><span class="sig-paren">(</span><em>filebase</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.TriangleBaseMesh.writeToFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Just write out basic files for triangulateion
+Still need to write out Voronoi diagram</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TriangleTools.TriangleBaseMesh.viewShowme">
+<code class="descname">viewShowme</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.TriangleBaseMesh.viewShowme" title="Permalink to this definition">¶</a></dt>
+<dd><p>just call showme for the mesh held in rep, uses meshshow-tmp file</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleTools.TriangleCall3">
+<code class="descclassname">proteus.TriangleTools.</code><code class="descname">TriangleCall3</code><span class="sig-paren">(</span><em>filebase='trimesh'</em>, <em>baseFlags='zen'</em>, <em>flagsAdd=''</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.TriangleCall3" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleTools.exProteusMesh0">
+<code class="descclassname">proteus.TriangleTools.</code><code class="descname">exProteusMesh0</code><span class="sig-paren">(</span><em>filebase='trimesh'</em>, <em>baseFlags='zen'</em>, <em>flagsAdd=''</em>, <em>viewMesh=1</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.exProteusMesh0" title="Permalink to this definition">¶</a></dt>
+<dd><p>create a Triangle mesh representation
+read it in from a file and initialize
+convert to an proteusMesh</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleTools.exProteusMesh1">
+<code class="descclassname">proteus.TriangleTools.</code><code class="descname">exProteusMesh1</code><span class="sig-paren">(</span><em>baseFlags='zen'</em>, <em>viewMesh=1</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.exProteusMesh1" title="Permalink to this definition">¶</a></dt>
+<dd><p>create an proteusMesh for a rectangle
+create a Triangle mesh representation
+convert the proteusMesh mesh to the Triangle mesh representation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleTools.exProteusLaplace1">
+<code class="descclassname">proteus.TriangleTools.</code><code class="descname">exProteusLaplace1</code><span class="sig-paren">(</span><em>filebase='trimesh'</em>, <em>baseFlags='zen'</em>, <em>flagsAdd=''</em>, <em>viewMesh=1</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.exProteusLaplace1" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleTools.testGenerateTriangulationFromPointSet">
+<code class="descclassname">proteus.TriangleTools.</code><code class="descname">testGenerateTriangulationFromPointSet</code><span class="sig-paren">(</span><em>points</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.testGenerateTriangulationFromPointSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>input: point-set</p>
+<p>generate triangle representation of the points</p>
+<p>output: an array contaning the points, and element to Node connectivity</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleTools.testGenerateSSIPtriangulation">
+<code class="descclassname">proteus.TriangleTools.</code><code class="descname">testGenerateSSIPtriangulation</code><span class="sig-paren">(</span><em>points</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleTools.testGenerateSSIPtriangulation" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>input: vertices and SSIP points belonging to a single element</p>
+<p>generate triangle representation of the points</p>
+<p>output: an array contaning the points, and element quadrature weights for the points</p>
+<p>test with input</p>
+</div></blockquote>
+<p>import numpy
+from proteus import TriangleTools
+points = numpy.array([[0.0,0.0,0.0],[0.5,0.4,0.],[1.0,0.0,0.0],[0.2,0.3,0.0],[0.0,1.0,0.0]])
+dV,x = TriangleTools.testGenerateSSIPtriangulation(points)</p>
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

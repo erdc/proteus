@@ -1,0 +1,7 @@
+proteus.NumericalFlux module
+============================
+
+.. automodule:: proteus.NumericalFlux
+    :members:
+    :undoc-members:
+    :show-inheritance:

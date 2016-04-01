@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.testStuff module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.util module" href="proteus.util.html" />
+    <link rel="prev" title="proteus.subsurfaceTransportFunctions module" href="proteus.subsurfaceTransportFunctions.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.testStuff module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.subsurfaceTransportFunctions.html" title="Previous Chapter: proteus.subsurfaceTransportFunctions module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.subsu...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.util.html" title="Next Chapter: proteus.util module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.util ... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.testStuff">
+<span id="proteus-teststuff-module"></span><h1>proteus.testStuff module<a class="headerlink" href="#module-proteus.testStuff" title="Permalink to this headline">¶</a></h1>
+<p>just add a place to put things I&#8217;m testing out before they are ready for
+including in proteus</p>
+<dl class="class">
+<dt id="proteus.testStuff.ExplicitLevelSetSolver">
+<em class="property">class </em><code class="descclassname">proteus.testStuff.</code><code class="descname">ExplicitLevelSetSolver</code><span class="sig-paren">(</span><em>nDOF_global</em>, <em>RKorder=2</em>, <em>solnComponent=0</em>, <em>redistance=False</em>, <em>enforceWeakDir=False</em>, <em>redEpsFact=2.0</em>, <em>redCFL=0.1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.ExplicitLevelSetSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement explicit, stabilized P^1 C^0 HJ level set algorithm from Barth and Sethian 98 (5.2)</p>
+<dl class="method">
+<dt id="proteus.testStuff.ExplicitLevelSetSolver.advanceStage">
+<code class="descname">advanceStage</code><span class="sig-paren">(</span><em>phiIn</em>, <em>phiOut</em>, <em>wOut</em>, <em>q</em>, <em>ebq</em>, <em>l2g</em>, <em>elementDiameters</em>, <em>elementQuadratureWeights</em>, <em>dt</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.ExplicitLevelSetSolver.advanceStage" title="Permalink to this definition">¶</a></dt>
+<dd><p>apply P^1, C^0 FE discretization with GLS style stablization and mass lumping
+to move level set function forward one RK stage</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.testStuff.ExplicitLevelSetSolver.computeSolution">
+<code class="descname">computeSolution</code><span class="sig-paren">(</span><em>vtran</em>, <em>dt</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.ExplicitLevelSetSolver.computeSolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>compute phi^n &#8211;&gt; phi^{n+1}, for Delta t= t^{n+1}-t^n</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.testStuff.ExplicitLevelSetIntegrator">
+<em class="property">class </em><code class="descclassname">proteus.testStuff.</code><code class="descname">ExplicitLevelSetIntegrator</code><span class="sig-paren">(</span><em>mlvtran</em>, <em>mlnl</em>, <em>dtMeth</em>, <em>nOptions</em>, <em>stepExact=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.ExplicitLevelSetIntegrator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TimeIntegration.html#proteus.TimeIntegration.ForwardIntegrator" title="proteus.TimeIntegration.ForwardIntegrator"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.ForwardIntegrator</span></code></a></p>
+<p>put in manual integration to play with level-set redistancing</p>
+<dl class="method">
+<dt id="proteus.testStuff.ExplicitLevelSetIntegrator.calculateSolution">
+<code class="descname">calculateSolution</code><span class="sig-paren">(</span><em>tIn</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.ExplicitLevelSetIntegrator.calculateSolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>manually step forward with fixed steps for now</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.testStuff.projectToFinestLevel">
+<code class="descclassname">proteus.testStuff.</code><code class="descname">projectToFinestLevel</code><span class="sig-paren">(</span><em>mlTransport</em>, <em>level</em>, <em>tsim=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.projectToFinestLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>use multilevel transport prolongation to get fine grid information
+starting at level.</p>
+<p>returns quadrature dictionary of projected values on fine grid</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.testStuff.generateParentInfo">
+<code class="descclassname">proteus.testStuff.</code><code class="descname">generateParentInfo</code><span class="sig-paren">(</span><em>mlMesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.generateParentInfo" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>get array P[l,e] = e_c, where element e_c is the parent of element e</dt>
+<dd>P[0,:] = -1</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.testStuff.getIntegrationPointsOnCoarseGrid">
+<code class="descclassname">proteus.testStuff.</code><code class="descname">getIntegrationPointsOnCoarseGrid</code><span class="sig-paren">(</span><em>xf</em>, <em>lf</em>, <em>P</em>, <em>lc</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.getIntegrationPointsOnCoarseGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>given array of points N^f_e x n_q x 3 on level lf
+generate dictionary on coarse
+grid that&#8217;s N^c_e x n_q^c(e_c) x 3 and holds the integration points
+assigned to the correct coarse grid element. If using uniform refinement
+should have the same number of integration points per coarse grid element
+but the number depends on the level of refinement eg  n_q^4(lf-lc).
+In general the number won&#8217;t be the same for nonuniform refinement</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.testStuff.getCoarseGridBasisValuesOnFinePointsUniform">
+<code class="descclassname">proteus.testStuff.</code><code class="descname">getCoarseGridBasisValuesOnFinePointsUniform</code><span class="sig-paren">(</span><em>uc</em>, <em>xc</em>, <em>invJc</em>, <em>nEf</em>, <em>nq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.getCoarseGridBasisValuesOnFinePointsUniform" title="Permalink to this definition">¶</a></dt>
+<dd><p>assuming have collection of points in physical space on mesh xc with same number  of points
+per element, map these back to reference element, then calculate shape function values there
+and return in a fine grid array</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.testStuff.getCoarseGridValuesOnFineUniform">
+<code class="descclassname">proteus.testStuff.</code><code class="descname">getCoarseGridValuesOnFineUniform</code><span class="sig-paren">(</span><em>uc</em>, <em>vcArray</em>, <em>xc</em>, <em>nEf</em>, <em>nq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.getCoarseGridValuesOnFineUniform" title="Permalink to this definition">¶</a></dt>
+<dd><p>given basis representation for coarse grid at fine grid points compute fem function values
+and return in fine grid array</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.testStuff.projectToFinestLevelNC">
+<code class="descclassname">proteus.testStuff.</code><code class="descname">projectToFinestLevelNC</code><span class="sig-paren">(</span><em>mlTransport</em>, <em>level</em>, <em>ci=0</em>, <em>tsim=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.projectToFinestLevelNC" title="Permalink to this definition">¶</a></dt>
+<dd><p>use brute force evaluation to get coarse grid quantities on fine grid
+starting at level.</p>
+<p>returns quadrature dictionary of projected values on fine grid</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.testStuff.projectVelocityToFinestLevelNC">
+<code class="descclassname">proteus.testStuff.</code><code class="descname">projectVelocityToFinestLevelNC</code><span class="sig-paren">(</span><em>mlTransport</em>, <em>level</em>, <em>ci=0</em>, <em>tsim=0.0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.projectVelocityToFinestLevelNC" title="Permalink to this definition">¶</a></dt>
+<dd><p>use brute force evaluation to get coarse grid quantities on fine grid
+starting at level.</p>
+<p>returns quadrature dictionary of projected values on fine grid</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.testStuff.MultilevelProjectionOperatorsNC">
+<em class="property">class </em><code class="descclassname">proteus.testStuff.</code><code class="descname">MultilevelProjectionOperatorsNC</code><span class="sig-paren">(</span><em>multiLevelMesh</em>, <em>femSpaceDictList</em>, <em>offsetListList</em>, <em>strideListList</em>, <em>dofBoundaryConditionsDictList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.MultilevelProjectionOperatorsNC" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class that takes a hierarchical (multiLevel) mesh and generates
+the interpolation and restriction operators.</p>
+<p>restrictList/prolongList &#8211; projection and restriction at only the free nodes
+restrict_bcList/prolong_bcList &#8211; includes dirichlet boundaries as well</p>
+<p>By default this is set up for conforming spaces. Since the spaces
+are conforming the coarse basis functions are in the fine space so we
+need only find the coefficients of the fine space basis functions that
+yield the coarse space basis functions. This is the matrix of the
+trivial injection from coarse to fine and it is used as the projection
+operator. Restriction is taken as the matrix of the adjoint of the
+injection, which is simply the transpose of the projection matrix. These
+operators fall out if you try to solve for the error on the coarse grid:
+Starting with u_f we have a(u_f+e_f,w_f) = &lt;f,w_f&gt;, and we want to
+solve instead  a(e_c,w_c) = &lt;f - a(u_f,w_f),w_c&gt; on the coarse grid
+Using the injection i we can express this in the fine space as
+a(i e_c, i w_c) = &lt;f - a(u_f,w_f),i w_c&gt; writing
+this in matrix form yields p^t A_f p E = p^t R_f</p>
+<p>&#8212; P1 nonconforming space &#8212;-
+Try to set up now for nonconforming P1 approximation following Chen_96b.
+Setup prolongation by evaluating coarse grid basis functions at
+fine grid interpolation condition points (face barycenters).</p>
+<p>Then, just need to know if fine grid interpolationCondition point falls on
+interface of coarse grid elements or not. If so, use average value of coarse
+grid quantity on fine grid. Otherwise just evaluate it</p>
+<p>Use this simple interpolation from coarse to fine as the projection operator.
+Restriction is taken as the matrix of the adjoint of the
+injection, which is simply the transpose of the projection matrix.</p>
+<p>I don&#8217;t think these fall out as nicely since they&#8217;re nonconforming.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.testStuff.AdaptiveForwardIntegrator">
+<em class="property">class </em><code class="descclassname">proteus.testStuff.</code><code class="descname">AdaptiveForwardIntegrator</code><span class="sig-paren">(</span><em>mlvtran</em>, <em>mlnl</em>, <em>dtMeth</em>, <em>nOptions</em>, <em>stepExact=True</em>, <em>stepAdapt=True</em>, <em>resetAfterNLfail=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.AdaptiveForwardIntegrator" title="Permalink to this definition">¶</a></dt>
+<dd><p>class that is responsible for basic process of integrating a problem
+forward in time given a VectorTranport Problem, Nonlinear Solver,
+and a Time Integration method</p>
+<dl class="method">
+<dt id="proteus.testStuff.AdaptiveForwardIntegrator.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><em>DTSET=None</em>, <em>t0=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.AdaptiveForwardIntegrator.initialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.testStuff.AdaptiveForwardIntegrator.calculateSolution">
+<code class="descname">calculateSolution</code><span class="sig-paren">(</span><em>tIn</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.AdaptiveForwardIntegrator.calculateSolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move forward from time tIn to time tOut
+For now doesn&#8217;t worry about potential mismatch between tIn and
+last time value used by model</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.testStuff.AdaptiveForwardIntegrator.writeProgress">
+<code class="descname">writeProgress</code><span class="sig-paren">(</span><em>tn</em>, <em>dt</em>, <em>T</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.AdaptiveForwardIntegrator.writeProgress" title="Permalink to this definition">¶</a></dt>
+<dd><p>just echo to screen what new and final time levels are</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.testStuff.AdaptiveForwardIntegrator.chooseDT">
+<code class="descname">chooseDT</code><span class="sig-paren">(</span><em>t</em>, <em>tOut</em>, <em>nlSolveFailed</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.AdaptiveForwardIntegrator.chooseDT" title="Permalink to this definition">¶</a></dt>
+<dd><p>try to pick dt for next time step solve. If adapting, lets
+finest level time integrator determine if error is acceptable
+and pick the output time step</p>
+<p>otherwise, just sets time step to be uniform one</p>
+<p>includes adjustment if stepping exactly to output as well</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.testStuff.AdaptiveBackwardEuler">
+<em class="property">class </em><code class="descclassname">proteus.testStuff.</code><code class="descname">AdaptiveBackwardEuler</code><span class="sig-paren">(</span><em>vectorTransport</em>, <em>runCFL=0.9</em>, <em>atol=0.001</em>, <em>rtol=0.001</em>, <em>errorType='LI_global'</em>, <em>dtRatioMax=2</em>, <em>dtRatioMin=0.1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.AdaptiveBackwardEuler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TimeIntegration.html#proteus.TimeIntegration.BackwardEuler" title="proteus.TimeIntegration.BackwardEuler"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.BackwardEuler</span></code></a></p>
+<dl class="method">
+<dt id="proteus.testStuff.AdaptiveBackwardEuler.calculateElementCoefficients">
+<code class="descname">calculateElementCoefficients</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.AdaptiveBackwardEuler.calculateElementCoefficients" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.testStuff.AdaptiveBackwardEuler.chooseDT">
+<code class="descname">chooseDT</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.AdaptiveBackwardEuler.chooseDT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify self.DT
+mwf needs to be checked</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.testStuff.AdaptiveBackwardEuler.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><em>resetFromDOF=False</em>, <em>vectorTransport=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.AdaptiveBackwardEuler.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.testStuff.AdaptiveBackwardEuler.setLastSolveFailed">
+<code class="descname">setLastSolveFailed</code><span class="sig-paren">(</span><em>lastSolveFailed</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.AdaptiveBackwardEuler.setLastSolveFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>tell integrator last attempted time step failed or not</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.testStuff.AdaptiveBackwardEuler.lastStepErrorOk">
+<code class="descname">lastStepErrorOk</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.AdaptiveBackwardEuler.lastStepErrorOk" title="Permalink to this definition">¶</a></dt>
+<dd><p>was the last time step acceptable or not</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.testStuff.stupidSort">
+<code class="descclassname">proteus.testStuff.</code><code class="descname">stupidSort</code><span class="sig-paren">(</span><em>A</em>, <em>hit=-12345</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.stupidSort" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.testStuff.checkOrder">
+<code class="descclassname">proteus.testStuff.</code><code class="descname">checkOrder</code><span class="sig-paren">(</span><em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.checkOrder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="proteus.testStuff.RusanovNumericalFlux_Diagonal_Diffusion_LDG">
+<em class="property">class </em><code class="descclassname">proteus.testStuff.</code><code class="descname">RusanovNumericalFlux_Diagonal_Diffusion_LDG</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.RusanovNumericalFlux_Diagonal_Diffusion_LDG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.NumericalFlux.html#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG" title="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG</span></code></a></p>
+<p>apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-ar{lambda}(b-a) where
+lambda &gt;= max <a href="#id1"><span class="problematic" id="id2">|f^{\prime}|</span></a> for a&lt;= u &lt;= b
+this one applies flux to each component of flux separately</p>
+<dl class="method">
+<dt id="proteus.testStuff.RusanovNumericalFlux_Diagonal_Diffusion_LDG.calculateInteriorNumericalFlux">
+<code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.RusanovNumericalFlux_Diagonal_Diffusion_LDG.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.testStuff.RusanovNumericalFlux_Diagonal_Diffusion_LDG.calculateExteriorNumericalFlux">
+<code class="descname">calculateExteriorNumericalFlux</code><span class="sig-paren">(</span><em>inflowFlag</em>, <em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.RusanovNumericalFlux_Diagonal_Diffusion_LDG.calculateExteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.testStuff.SSPRKNewton">
+<em class="property">class </em><code class="descclassname">proteus.testStuff.</code><code class="descname">SSPRKNewton</code><span class="sig-paren">(</span><em>linearSolver</em>, <em>F</em>, <em>J=None</em>, <em>du=None</em>, <em>par_du=None</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>rtol_du=0.0001</em>, <em>atol_du=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=True</em>, <em>fullNewton=True</em>, <em>directSolver=False</em>, <em>EWtol=True</em>, <em>maxLSits=100</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.SSPRKNewton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.NonlinearSolvers.html#proteus.NonlinearSolvers.Newton" title="proteus.NonlinearSolvers.Newton"><code class="xref py py-class docutils literal"><span class="pre">proteus.NonlinearSolvers.Newton</span></code></a></p>
+<p>A simple iterative solver that is Newton&#8217;s method
+if you give it the right Jacobian</p>
+<dl class="method">
+<dt id="proteus.testStuff.SSPRKNewton.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_r=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.SSPRKNewton.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.testStuff.SSPRKNewton.resetFactorization">
+<code class="descname">resetFactorization</code><span class="sig-paren">(</span><em>needToRefactor=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/testStuff.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.testStuff.SSPRKNewton.resetFactorization" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.SplitOperator module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.StepControl module" href="proteus.StepControl.html" />
+    <link rel="prev" title="proteus.SpatialTools module" href="proteus.SpatialTools.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.SplitOperator module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.SpatialTools.html" title="Previous Chapter: proteus.SpatialTools module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Spati...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.StepControl.html" title="Next Chapter: proteus.StepControl module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.StepC... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.SplitOperator">
+<span id="proteus-splitoperator-module"></span><h1>proteus.SplitOperator module<a class="headerlink" href="#module-proteus.SplitOperator" title="Permalink to this headline">¶</a></h1>
+<p>A class hierarchy for split operator methods.</p>
+<dl class="class">
+<dt id="proteus.SplitOperator.System">
+<em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">System</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.System" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="proteus.SplitOperator.SO_base">
+<em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">SO_base</code><span class="sig-paren">(</span><em>modelList</em>, <em>system=&lt;proteus.SplitOperator.System instance&gt;</em>, <em>stepExact=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for operating splitting methods for systems.</p>
+<p>The base class implements sequential splitting with a fixed time
+step based on the list of time intervals.</p>
+<p>Here each model take the same fixed time step</p>
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.converged">
+<code class="descname">converged</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.converged" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.stepExact_system">
+<code class="descname">stepExact_system</code><span class="sig-paren">(</span><em>tExact</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.stepExact_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.choose_dt_system">
+<code class="descname">choose_dt_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.choose_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.initialize_dt_system">
+<code class="descname">initialize_dt_system</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.initialize_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.retryModelStep_solverFailure">
+<code class="descname">retryModelStep_solverFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.retryModelStep_solverFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.retryModelStep_errorFailure">
+<code class="descname">retryModelStep_errorFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.retryModelStep_errorFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.ignoreSequenceStepFailure">
+<code class="descname">ignoreSequenceStepFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.ignoreSequenceStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.retrySequence_modelStepFailure">
+<code class="descname">retrySequence_modelStepFailure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.retrySequence_modelStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.modelStepTaken">
+<code class="descname">modelStepTaken</code><span class="sig-paren">(</span><em>model</em>, <em>t_stepSequence</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.modelStepTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.sequenceStepTaken">
+<code class="descname">sequenceStepTaken</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.sequenceStepTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.sequenceTaken">
+<code class="descname">sequenceTaken</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.sequenceTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.SysNorm">
+<code class="descname">SysNorm</code><span class="sig-paren">(</span><em>rSys=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.SysNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the maximum discrete residual value from both models</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SO_base.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>soOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.SplitOperator.Sequential_FixedStep">
+<code class="descclassname">proteus.SplitOperator.</code><code class="descname">Sequential_FixedStep</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#proteus.SplitOperator.SO_base" title="proteus.SplitOperator.SO_base"><code class="xref py py-class docutils literal"><span class="pre">SO_base</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple">
+<em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">Sequential_FixedStep_Simple</code><span class="sig-paren">(</span><em>modelList</em>, <em>system=&lt;proteus.SplitOperator.System instance&gt;</em>, <em>stepExact=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SplitOperator.SO_base" title="proteus.SplitOperator.SO_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SplitOperator.SO_base</span></code></a></p>
+<p>Base class for operating splitting methods for systems.</p>
+<p>The base class implements sequential splitting with a fixed time
+step based on the list of time intervals.</p>
+<p>Here each model take the same fixed time step</p>
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.converged">
+<code class="descname">converged</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.converged" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.stepExact_system">
+<code class="descname">stepExact_system</code><span class="sig-paren">(</span><em>tExact</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.stepExact_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.choose_dt_system">
+<code class="descname">choose_dt_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.choose_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.initialize_dt_system">
+<code class="descname">initialize_dt_system</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.initialize_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.updateTimeHistory">
+<code class="descname">updateTimeHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.updateTimeHistory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.retryModelStep_solverFailure">
+<code class="descname">retryModelStep_solverFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.retryModelStep_solverFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.retryModelStep_errorFailure">
+<code class="descname">retryModelStep_errorFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.retryModelStep_errorFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.ignoreSequenceStepFailure">
+<code class="descname">ignoreSequenceStepFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.ignoreSequenceStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.retrySequence_modelStepFailure">
+<code class="descname">retrySequence_modelStepFailure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.retrySequence_modelStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.SplitOperator.Sequential_NonUniformFixedStep">
+<em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">Sequential_NonUniformFixedStep</code><span class="sig-paren">(</span><em>modelList</em>, <em>system=&lt;proteus.SplitOperator.System instance&gt;</em>, <em>stepExact=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_NonUniformFixedStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SplitOperator.SO_base" title="proteus.SplitOperator.SO_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SplitOperator.SO_base</span></code></a></p>
+<p>Just step to system output time levels, allowing models to
+substep if necessary to system steps</p>
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_NonUniformFixedStep.stepExact_system">
+<code class="descname">stepExact_system</code><span class="sig-paren">(</span><em>tExact</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_NonUniformFixedStep.stepExact_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_NonUniformFixedStep.choose_dt_system">
+<code class="descname">choose_dt_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_NonUniformFixedStep.choose_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_NonUniformFixedStep.modelStepTaken">
+<code class="descname">modelStepTaken</code><span class="sig-paren">(</span><em>model</em>, <em>t_stepSequence</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_NonUniformFixedStep.modelStepTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_NonUniformFixedStep.sequenceTaken">
+<code class="descname">sequenceTaken</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_NonUniformFixedStep.sequenceTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.SplitOperator.Sequential_MinModelStep">
+<em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">Sequential_MinModelStep</code><span class="sig-paren">(</span><em>modelList</em>, <em>system=&lt;proteus.SplitOperator.System instance&gt;</em>, <em>stepExact=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinModelStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SplitOperator.SO_base" title="proteus.SplitOperator.SO_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SplitOperator.SO_base</span></code></a></p>
+<p>Look at the minimum model step and make that the system step as
+well as all the model steps</p>
+<dl class="docutils">
+<dt>Force models to step exactly to each with substepping if necessary,</dt>
+<dd>but this isn&#8217;t strictly necessary</dd>
+</dl>
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinModelStep.converged">
+<code class="descname">converged</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinModelStep.converged" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinModelStep.stepExact_system">
+<code class="descname">stepExact_system</code><span class="sig-paren">(</span><em>tExact</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinModelStep.stepExact_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinModelStep.choose_dt_system">
+<code class="descname">choose_dt_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinModelStep.choose_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinModelStep.initialize_dt_system">
+<code class="descname">initialize_dt_system</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinModelStep.initialize_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep">
+<em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">Sequential_MinFLCBDFModelStep</code><span class="sig-paren">(</span><em>modelList</em>, <em>system=&lt;proteus.SplitOperator.System instance&gt;</em>, <em>stepExact=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SplitOperator.SO_base" title="proteus.SplitOperator.SO_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SplitOperator.SO_base</span></code></a></p>
+<p>Look at the minimum model step and make that the system step as
+well as all the model steps</p>
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep.converged">
+<code class="descname">converged</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep.converged" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep.stepExact_system">
+<code class="descname">stepExact_system</code><span class="sig-paren">(</span><em>tExact</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep.stepExact_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep.choose_dt_system">
+<code class="descname">choose_dt_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep.choose_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep.initialize_dt_system">
+<code class="descname">initialize_dt_system</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep.initialize_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep.retryModelStep_solverFailure">
+<code class="descname">retryModelStep_solverFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep.retryModelStep_solverFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep.retryModelStep_errorFailure">
+<code class="descname">retryModelStep_errorFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep.retryModelStep_errorFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep.ignoreSequenceStepFailure">
+<code class="descname">ignoreSequenceStepFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep.ignoreSequenceStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep.retrySequence_modelStepFailure">
+<code class="descname">retrySequence_modelStepFailure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep.retrySequence_modelStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep.modelStepTaken">
+<code class="descname">modelStepTaken</code><span class="sig-paren">(</span><em>model</em>, <em>t_stepSequence</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep.modelStepTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep.sequenceStepTaken">
+<code class="descname">sequenceStepTaken</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep.sequenceStepTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinFLCBDFModelStep.sequenceTaken">
+<code class="descname">sequenceTaken</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep.sequenceTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep">
+<em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">Sequential_MinAdaptiveModelStep</code><span class="sig-paren">(</span><em>modelList</em>, <em>system=&lt;proteus.SplitOperator.System instance&gt;</em>, <em>stepExact=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SplitOperator.SO_base" title="proteus.SplitOperator.SO_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SplitOperator.SO_base</span></code></a></p>
+<p>Look at the minimum model step and make that the system step as
+well as all the model steps</p>
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep.converged">
+<code class="descname">converged</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep.converged" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep.stepExact_system">
+<code class="descname">stepExact_system</code><span class="sig-paren">(</span><em>tExact</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep.stepExact_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep.choose_dt_system">
+<code class="descname">choose_dt_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep.choose_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep.initialize_dt_system">
+<code class="descname">initialize_dt_system</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep.initialize_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep.retryModelStep_solverFailure">
+<code class="descname">retryModelStep_solverFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep.retryModelStep_solverFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep.retryModelStep_errorFailure">
+<code class="descname">retryModelStep_errorFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep.retryModelStep_errorFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep.ignoreSequenceStepFailure">
+<code class="descname">ignoreSequenceStepFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep.ignoreSequenceStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep.retrySequence_modelStepFailure">
+<code class="descname">retrySequence_modelStepFailure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep.retrySequence_modelStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep.modelStepTaken">
+<code class="descname">modelStepTaken</code><span class="sig-paren">(</span><em>model</em>, <em>t_stepSequence</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep.modelStepTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep.sequenceStepTaken">
+<code class="descname">sequenceStepTaken</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep.sequenceStepTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep.sequenceTaken">
+<code class="descname">sequenceTaken</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep.sequenceTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep">
+<em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">ISO_fixed_MinAdaptiveModelStep</code><span class="sig-paren">(</span><em>modelList</em>, <em>system=&lt;proteus.SplitOperator.System instance&gt;</em>, <em>stepExact=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SplitOperator.SO_base" title="proteus.SplitOperator.SO_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SplitOperator.SO_base</span></code></a></p>
+<p>Look at the minimum model step and make that the system step as
+well as all the model steps</p>
+<dl class="method">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.converged">
+<code class="descname">converged</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.converged" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.stepExact_system">
+<code class="descname">stepExact_system</code><span class="sig-paren">(</span><em>tExact</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.stepExact_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.choose_dt_system">
+<code class="descname">choose_dt_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.choose_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.initialize_dt_system">
+<code class="descname">initialize_dt_system</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.initialize_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.retryModelStep_solverFailure">
+<code class="descname">retryModelStep_solverFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.retryModelStep_solverFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.retryModelStep_errorFailure">
+<code class="descname">retryModelStep_errorFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.retryModelStep_errorFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.ignoreSequenceStepFailure">
+<code class="descname">ignoreSequenceStepFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.ignoreSequenceStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.retrySequence_modelStepFailure">
+<code class="descname">retrySequence_modelStepFailure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.retrySequence_modelStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.modelStepTaken">
+<code class="descname">modelStepTaken</code><span class="sig-paren">(</span><em>model</em>, <em>t_stepSequence</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.modelStepTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.sequenceStepTaken">
+<code class="descname">sequenceStepTaken</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.sequenceStepTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.sequenceTaken">
+<code class="descname">sequenceTaken</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.ISO_fixed_MinAdaptiveModelStep.sequenceTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS">
+<em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">Sequential_MinAdaptiveModelStep_SS</code><span class="sig-paren">(</span><em>modelList</em>, <em>system=&lt;proteus.SplitOperator.System instance&gt;</em>, <em>stepExact=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SplitOperator.SO_base" title="proteus.SplitOperator.SO_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SplitOperator.SO_base</span></code></a></p>
+<p>Look at the minimum model step and make that the system step as
+well as all the model steps</p>
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.converged">
+<code class="descname">converged</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.converged" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.stepExact_system">
+<code class="descname">stepExact_system</code><span class="sig-paren">(</span><em>tExact</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.stepExact_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.choose_dt_system">
+<code class="descname">choose_dt_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.choose_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.initialize_dt_system">
+<code class="descname">initialize_dt_system</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.initialize_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.retryModelStep_solverFailure">
+<code class="descname">retryModelStep_solverFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.retryModelStep_solverFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.retryModelStep_errorFailure">
+<code class="descname">retryModelStep_errorFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.retryModelStep_errorFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.ignoreSequenceStepFailure">
+<code class="descname">ignoreSequenceStepFailure</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.ignoreSequenceStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.retrySequence_modelStepFailure">
+<code class="descname">retrySequence_modelStepFailure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.retrySequence_modelStepFailure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.modelStepTaken">
+<code class="descname">modelStepTaken</code><span class="sig-paren">(</span><em>model</em>, <em>t_stepSequence</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.modelStepTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.sequenceStepTaken">
+<code class="descname">sequenceStepTaken</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.sequenceStepTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.sequenceTaken">
+<code class="descname">sequenceTaken</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep_SS.sequenceTaken" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.SplitOperator.SequentialNotInOrder_MinFLCBDFModelStep">
+<em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">SequentialNotInOrder_MinFLCBDFModelStep</code><span class="sig-paren">(</span><em>modelList, modelSequenceList=[1], system=&lt;proteus.SplitOperator.System instance&gt;, stepExact=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SequentialNotInOrder_MinFLCBDFModelStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SplitOperator.Sequential_MinFLCBDFModelStep" title="proteus.SplitOperator.Sequential_MinFLCBDFModelStep"><code class="xref py py-class docutils literal"><span class="pre">proteus.SplitOperator.Sequential_MinFLCBDFModelStep</span></code></a></p>
+<p>loop through the models in some specified order</p>
+<dl class="method">
+<dt id="proteus.SplitOperator.SequentialNotInOrder_MinFLCBDFModelStep.stepExact_system">
+<code class="descname">stepExact_system</code><span class="sig-paren">(</span><em>tExact</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SequentialNotInOrder_MinFLCBDFModelStep.stepExact_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SequentialNotInOrder_MinFLCBDFModelStep.choose_dt_system">
+<code class="descname">choose_dt_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SequentialNotInOrder_MinFLCBDFModelStep.choose_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SequentialNotInOrder_MinFLCBDFModelStep.initialize_dt_system">
+<code class="descname">initialize_dt_system</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SequentialNotInOrder_MinFLCBDFModelStep.initialize_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.SplitOperator.SequentialNotInOrder_MinAdaptiveModelStep">
+<em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">SequentialNotInOrder_MinAdaptiveModelStep</code><span class="sig-paren">(</span><em>modelList, modelSequenceList=[1], system=&lt;proteus.SplitOperator.System instance&gt;, stepExact=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SequentialNotInOrder_MinAdaptiveModelStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.SplitOperator.Sequential_MinAdaptiveModelStep" title="proteus.SplitOperator.Sequential_MinAdaptiveModelStep"><code class="xref py py-class docutils literal"><span class="pre">proteus.SplitOperator.Sequential_MinAdaptiveModelStep</span></code></a></p>
+<p>loop through the models in some specified order</p>
+<dl class="method">
+<dt id="proteus.SplitOperator.SequentialNotInOrder_MinAdaptiveModelStep.stepExact_system">
+<code class="descname">stepExact_system</code><span class="sig-paren">(</span><em>tExact</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SequentialNotInOrder_MinAdaptiveModelStep.stepExact_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SequentialNotInOrder_MinAdaptiveModelStep.choose_dt_system">
+<code class="descname">choose_dt_system</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SequentialNotInOrder_MinAdaptiveModelStep.choose_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.SequentialNotInOrder_MinAdaptiveModelStep.initialize_dt_system">
+<code class="descname">initialize_dt_system</code><span class="sig-paren">(</span><em>t0</em>, <em>tOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SequentialNotInOrder_MinAdaptiveModelStep.initialize_dt_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

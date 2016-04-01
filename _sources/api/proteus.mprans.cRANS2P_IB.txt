@@ -1,0 +1,7 @@
+proteus.mprans.cRANS2P_IB module
+================================
+
+.. automodule:: proteus.mprans.cRANS2P_IB
+    :members:
+    :undoc-members:
+    :show-inheritance:

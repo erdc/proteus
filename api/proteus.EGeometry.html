@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.EGeometry module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.ErrorEstimators module" href="proteus.ErrorEstimators.html" />
+    <link rel="prev" title="proteus.Domain module" href="proteus.Domain.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.EGeometry module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.Domain.html" title="Previous Chapter: proteus.Domain module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Domai...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.ErrorEstimators.html" title="Next Chapter: proteus.ErrorEstimators module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Error... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.EGeometry">
+<span id="proteus-egeometry-module"></span><h1>proteus.EGeometry module<a class="headerlink" href="#module-proteus.EGeometry" title="Permalink to this headline">¶</a></h1>
+<p>A simple implementation of basic 3D Euclidean Geometry</p>
+<dl class="function">
+<dt id="proteus.EGeometry.EVec">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">EVec</code><span class="sig-paren">(</span><em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.EVec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.enorm">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">enorm</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.enorm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.norm">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">norm</code><span class="sig-paren">(</span><em>v</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.norm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.edot">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">edot</code><span class="sig-paren">(</span><em>v0</em>, <em>v1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.edot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.dot">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">dot</code><span class="sig-paren">(</span><em>v0</em>, <em>v1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.dot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.ecross">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">ecross</code><span class="sig-paren">(</span><em>v0</em>, <em>v1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.ecross" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.etriple">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">etriple</code><span class="sig-paren">(</span><em>v0</em>, <em>v1</em>, <em>v2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.etriple" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.eListDaxpy">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">eListDaxpy</code><span class="sig-paren">(</span><em>aList</em>, <em>vList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.eListDaxpy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.ETen">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">ETen</code><span class="sig-paren">(</span><em>rx=array([ 0.</em>, <em>0.</em>, <em>0.])</em>, <em>ry=array([ 0.</em>, <em>0.</em>, <em>0.])</em>, <em>rz=array([ 0.</em>, <em>0.</em>, <em>0.])</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.ETen" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.etensor">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">etensor</code><span class="sig-paren">(</span><em>u</em>, <em>v</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.etensor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.etrans">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">etrans</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.etrans" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.trans">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">trans</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.trans" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.edet">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">edet</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.edet" title="Permalink to this definition">¶</a></dt>
+<dd><p>The determinant of the the 3x3 tensor [v0,v1,v2].</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.det">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">det</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.det" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.ecof">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">ecof</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.ecof" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.cof">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">cof</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.cof" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.eadj">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">eadj</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.eadj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.adj">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">adj</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.adj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.einv">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">einv</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.einv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.inv">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">inv</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.inv" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.etenten">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">etenten</code><span class="sig-paren">(</span><em>r</em>, <em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.etenten" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.etenvec">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">etenvec</code><span class="sig-paren">(</span><em>t</em>, <em>v</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.etenvec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.tenvec">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">tenvec</code><span class="sig-paren">(</span><em>t</em>, <em>v</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.tenvec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.EGeometry.etenvecdotvec">
+<code class="descclassname">proteus.EGeometry.</code><code class="descname">etenvecdotvec</code><span class="sig-paren">(</span><em>t</em>, <em>v</em>, <em>w</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/EGeometry.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.EGeometry.etenvecdotvec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

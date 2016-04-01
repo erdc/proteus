@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.TwophaseDarcyCoefficients module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.UnstructuredFMMandFSWsolvers module" href="proteus.UnstructuredFMMandFSWsolvers.html" />
+    <link rel="prev" title="proteus.TriangleUtils module" href="proteus.TriangleUtils.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.TwophaseDarcyCoefficients module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.TriangleUtils.html" title="Previous Chapter: proteus.TriangleUtils module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Trian...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.UnstructuredFMMandFSWsolvers.html" title="Next Chapter: proteus.UnstructuredFMMandFSWsolvers module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Unstr... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.TwophaseDarcyCoefficients">
+<span id="proteus-twophasedarcycoefficients-module"></span><h1>proteus.TwophaseDarcyCoefficients module<a class="headerlink" href="#module-proteus.TwophaseDarcyCoefficients" title="Permalink to this headline">¶</a></h1>
+<p>An extension of the TransportCoefficients module for two-phase flow in porous media</p>
+<dl class="class">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base">
+<em class="property">class </em><code class="descclassname">proteus.TwophaseDarcyCoefficients.</code><code class="descname">TwophaseDarcyFlow_base</code><span class="sig-paren">(</span><em>g=9.8</em>, <em>rhon=1.0</em>, <em>rhow=0.0</em>, <em>mun=1.0</em>, <em>muw=1.0</em>, <em>Ksw=1.0</em>, <em>psk_model='VGM'</em>, <em>vg_alpha=5.0</em>, <em>vg_m=0.75</em>, <em>bc_pd=0.18281535648994515</em>, <em>bc_lambda=0.5</em>, <em>omega=1.0</em>, <em>Sw_max=1.0</em>, <em>Sw_min=0.0</em>, <em>density_w_model='Constant'</em>, <em>density_n_model='Constant'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.setMaterialTypes">
+<code class="descname">setMaterialTypes</code><span class="sig-paren">(</span><em>Ksw_types=[1.0], omega_types=[0.4], Sw_max_types=[1.0], Sw_min_types=[0.0], bc_lambda_types=None, bc_pd_types=None, vg_alpha_types=None, vg_m_types=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.setMaterialTypes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.setMaterialFunction">
+<code class="descname">setMaterialFunction</code><span class="sig-paren">(</span><em>setParams</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.setMaterialFunction" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.initializeMesh">
+<code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.initializeMesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature">
+<code class="descname">initializeElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebq</em>, <em>cebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature">
+<code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.initializeGeneralizedInterpolationPointQuadrature">
+<code class="descname">initializeGeneralizedInterpolationPointQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cip</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base.initializeGeneralizedInterpolationPointQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc">
+<em class="property">class </em><code class="descclassname">proteus.TwophaseDarcyCoefficients.</code><code class="descname">TwophaseDarcy_fc</code><span class="sig-paren">(</span><em>g=9.8</em>, <em>rhon=1.0</em>, <em>rhow=0.0</em>, <em>mun=1.0</em>, <em>muw=1.0</em>, <em>Ksw=1.0</em>, <em>psk_model='VGM'</em>, <em>vg_alpha=5.0</em>, <em>vg_m=0.75</em>, <em>bc_pd=0.18281535648994515</em>, <em>bc_lambda=0.5</em>, <em>omega=1.0</em>, <em>Sw_max=1.0</em>, <em>Sw_min=0.0</em>, <em>density_w_parameters=None</em>, <em>density_n_parameters=None</em>, <em>diagonalHet=False</em>, <em>sparseDiffusionTensors={}</em>, <em>sd=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.evaluate_sd_diagonal">
+<code class="descname">evaluate_sd_diagonal</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.evaluate_sd_diagonal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.twophaseDarcy_fc">
+<code class="descname">twophaseDarcy_fc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.twophaseDarcy_fc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the fully coupled formulation of incompressible, two-phase Darcy flow</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.twophaseDarcy_fc_het_matType">
+<code class="descname">twophaseDarcy_fc_het_matType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.twophaseDarcy_fc_het_matType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the fully coupled formulation of incompressible, two-phase Darcy flow for a heterogeneous medium</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.twophaseDarcy_fc_sd_diag">
+<code class="descname">twophaseDarcy_fc_sd_diag</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.twophaseDarcy_fc_sd_diag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the fully coupled formulation of incompressible, two-phase Darcy flow, sparse diffusion rep. assuming isotropic Ks</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.twophaseDarcy_fc_sd_diag_het_matType">
+<code class="descname">twophaseDarcy_fc_sd_diag_het_matType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc.twophaseDarcy_fc_sd_diag_het_matType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the fully coupled formulation of incompressible, two-phase Darcy flow for a heterogeneous medium, sparse diffusion rep. assuming isotropic Ks</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff">
+<em class="property">class </em><code class="descclassname">proteus.TwophaseDarcyCoefficients.</code><code class="descname">TwophaseDarcy_fc_ff</code><span class="sig-paren">(</span><em>g=9.8</em>, <em>rhon=1.0</em>, <em>rhow=0.0</em>, <em>mun=1.0</em>, <em>muw=1.0</em>, <em>Ksw=1.0</em>, <em>psk_model='VGM'</em>, <em>vg_alpha=5.0</em>, <em>vg_m=0.75</em>, <em>bc_pd=0.18281535648994515</em>, <em>bc_lambda=0.5</em>, <em>omega=1.0</em>, <em>Sw_max=1.0</em>, <em>Sw_min=0.0</em>, <em>diagonalHet=False</em>, <em>sparseDiffusionTensors={}</em>, <em>sd=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.evaluate_sd_diagonal">
+<code class="descname">evaluate_sd_diagonal</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.evaluate_sd_diagonal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.twophaseDarcy_fc_ff">
+<code class="descname">twophaseDarcy_fc_ff</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.twophaseDarcy_fc_ff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the fully coupled fractional flow formulation of incompressible, two-phase Darcy flow</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.twophaseDarcy_fc_ff_het_matType">
+<code class="descname">twophaseDarcy_fc_ff_het_matType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.twophaseDarcy_fc_ff_het_matType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the fully coupled fractional flow formulation of incompressible, two-phase Darcy flow for a heterogeneous medium</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.twophaseDarcy_fc_ff_sd_diag">
+<code class="descname">twophaseDarcy_fc_ff_sd_diag</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.twophaseDarcy_fc_ff_sd_diag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the fully coupled fractional flow formulation of incompressible, two-phase Darcy flow, sparse diff. diagonal het</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.twophaseDarcy_fc_ff_sd_diag_het_matType">
+<code class="descname">twophaseDarcy_fc_ff_sd_diag_het_matType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_fc_ff.twophaseDarcy_fc_ff_sd_diag_het_matType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the fully coupled fractional flow formulation of incompressible, two-phase Darcy flow for a heterogeneous medium, sparse diff. diagonal het</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure">
+<em class="property">class </em><code class="descclassname">proteus.TwophaseDarcyCoefficients.</code><code class="descname">TwophaseDarcy_split_pressure</code><span class="sig-paren">(</span><em>g=9.8</em>, <em>rhon=1.0</em>, <em>rhow=0.0</em>, <em>mun=1.0</em>, <em>muw=1.0</em>, <em>Ksw=1.0</em>, <em>psk_model='VGM'</em>, <em>vg_alpha=5.0</em>, <em>vg_m=0.75</em>, <em>bc_pd=0.18281535648994515</em>, <em>bc_lambda=0.5</em>, <em>omega=1.0</em>, <em>Sw_max=1.0</em>, <em>Sw_min=0.0</em>, <em>swConstant=0.5</em>, <em>capillaryDiffusionScaling=1.0</em>, <em>nModel=1</em>, <em>diagonalHet=False</em>, <em>sparseDiffusionTensors={}</em>, <em>sd=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.attachModels">
+<code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.attachModels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.initializeElementBoundaryQuadrature">
+<code class="descname">initializeElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebq</em>, <em>cebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.initializeElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.initializeGlobalExteriorElementBoundaryQuadrature">
+<code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.initializeGeneralizedInterpolationPointQuadrature">
+<code class="descname">initializeGeneralizedInterpolationPointQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cip</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.initializeGeneralizedInterpolationPointQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.evaluate_sd_diagonal">
+<code class="descname">evaluate_sd_diagonal</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.evaluate_sd_diagonal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.twophaseDarcy_split_pressure">
+<code class="descname">twophaseDarcy_split_pressure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.twophaseDarcy_split_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the split fractional flow formulation of incompressible, two-phase Darcy flow</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.twophaseDarcy_split_pressure_het_matType">
+<code class="descname">twophaseDarcy_split_pressure_het_matType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.twophaseDarcy_split_pressure_het_matType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the split fractional flow formulation of incompressible, two-phase Darcy flow for a heterogeneous medium</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.twophaseDarcy_split_sd_diag_pressure">
+<code class="descname">twophaseDarcy_split_sd_diag_pressure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.twophaseDarcy_split_sd_diag_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the split fractional flow formulation of incompressible, two-phase Darcy flow, sparse diffusion diagonal het</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.twophaseDarcy_split_sd_diag_pressure_het_matType">
+<code class="descname">twophaseDarcy_split_sd_diag_pressure_het_matType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_pressure.twophaseDarcy_split_sd_diag_pressure_het_matType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the split fractional flow formulation of incompressible, two-phase Darcy flow for a heterogeneous medium, sparse diffusion diagonal het</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation">
+<em class="property">class </em><code class="descclassname">proteus.TwophaseDarcyCoefficients.</code><code class="descname">TwophaseDarcy_split_saturation</code><span class="sig-paren">(</span><em>g=[9.8], rhon=1.0, rhow=1.0, mun=1.0, muw=1.0, Ksw=1.0, psk_model='VGM', vg_alpha=5.0, vg_m=0.75, bc_pd=0.18281535648994515, bc_lambda=0.5, omega=1.0, Sw_max=1.0, Sw_min=0.0, qScalarConstant=1.0, capillaryDiffusionScaling=1.0, nModel=0, diagonalHet=False, sparseDiffusionTensors={}, sd=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base" title="proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TwophaseDarcyCoefficients.TwophaseDarcyFlow_base</span></code></a></p>
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.twophaseDarcy_split_saturation">
+<code class="descname">twophaseDarcy_split_saturation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.twophaseDarcy_split_saturation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the split fractional flow formulation of incompressible, two-phase Darcy flow</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.twophaseDarcy_split_saturation_het_matType">
+<code class="descname">twophaseDarcy_split_saturation_het_matType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.twophaseDarcy_split_saturation_het_matType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the split fractional flow formulation of incompressible, two-phase Darcy flow for a heterogeneous medium</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.twophaseDarcy_split_sd_diag_saturation">
+<code class="descname">twophaseDarcy_split_sd_diag_saturation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.twophaseDarcy_split_sd_diag_saturation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the split fractional flow formulation of incompressible, two-phase Darcy flow, sparse diff. diagonal het</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.twophaseDarcy_split_sd_diag_saturation_het_matType">
+<code class="descname">twophaseDarcy_split_sd_diag_saturation_het_matType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.twophaseDarcy_split_sd_diag_saturation_het_matType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate  the coefficients of the split fractional flow formulation of incompressible, two-phase Darcy flow for a heterogeneous medium, sparse diffusion diagonal</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.attachModels">
+<code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.attachModels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.initializeElementBoundaryQuadrature">
+<code class="descname">initializeElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebq</em>, <em>cebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.initializeElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.initializeGlobalExteriorElementBoundaryQuadrature">
+<code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.initializeGeneralizedInterpolationPointQuadrature">
+<code class="descname">initializeGeneralizedInterpolationPointQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cip</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.initializeGeneralizedInterpolationPointQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.evaluate_sd_diagonal">
+<code class="descname">evaluate_sd_diagonal</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TwophaseDarcyCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TwophaseDarcyCoefficients.TwophaseDarcy_split_saturation.evaluate_sd_diagonal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

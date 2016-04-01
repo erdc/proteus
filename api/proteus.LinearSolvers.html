@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.LinearSolvers module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.MeshTools module" href="proteus.MeshTools.html" />
+    <link rel="prev" title="proteus.LinearAlgebraTools module" href="proteus.LinearAlgebraTools.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.LinearSolvers module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.LinearAlgebraTools.html" title="Previous Chapter: proteus.LinearAlgebraTools module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Linea...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.MeshTools.html" title="Next Chapter: proteus.MeshTools module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.MeshT... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.LinearSolvers">
+<span id="proteus-linearsolvers-module"></span><h1>proteus.LinearSolvers module<a class="headerlink" href="#module-proteus.LinearSolvers" title="Permalink to this headline">¶</a></h1>
+<p>A hierarchy of classes for linear algebraic system solvers.</p>
+<dl class="class">
+<dt id="proteus.LinearSolvers.LinearSolver">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">LinearSolver</code><span class="sig-paren">(</span><em>L</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>rtol_du=0.0001</em>, <em>atol_du=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base class for linear solvers.</p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.setResTol">
+<code class="descname">setResTol</code><span class="sig-paren">(</span><em>rtol</em>, <em>atol</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.setResTol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.prepare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.calculateEigenvalues">
+<code class="descname">calculateEigenvalues</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.calculateEigenvalues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.computeResidual">
+<code class="descname">computeResidual</code><span class="sig-paren">(</span><em>u</em>, <em>r</em>, <em>b</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.computeResidual" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.solveInitialize">
+<code class="descname">solveInitialize</code><span class="sig-paren">(</span><em>u</em>, <em>r</em>, <em>b</em>, <em>initialGuessIsZero=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.solveInitialize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.computeConvergenceRates">
+<code class="descname">computeConvergenceRates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.computeConvergenceRates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.converged">
+<code class="descname">converged</code><span class="sig-paren">(</span><em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.converged" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.failed">
+<code class="descname">failed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.failed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.computeAverages">
+<code class="descname">computeAverages</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.computeAverages" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.info">
+<code class="descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.printPerformance">
+<code class="descname">printPerformance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.printPerformance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><em>pc</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.setUp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LinearSolver.apply">
+<code class="descname">apply</code><span class="sig-paren">(</span><em>pc</em>, <em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LinearSolver.apply" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.LU">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">LU</code><span class="sig-paren">(</span><em>L</em>, <em>computeEigenvalues=False</em>, <em>computeEigenvectors=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.LinearSolver" title="proteus.LinearSolvers.LinearSolver"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearSolvers.LinearSolver</span></code></a></p>
+<p>A wrapper for pysparse&#8217;s wrapper for superlu.</p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.LU.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LU.prepare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LU.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_b=None</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LU.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.LU.calculateEigenvalues">
+<code class="descname">calculateEigenvalues</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.LU.calculateEigenvalues" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.PETSc">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">PETSc</code><span class="sig-paren">(</span><em>L</em>, <em>par_L</em>, <em>prefix=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.PETSc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.LinearSolver" title="proteus.LinearSolvers.LinearSolver"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearSolvers.LinearSolver</span></code></a></p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.PETSc.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.PETSc.prepare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.PETSc.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_b=None</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.PETSc.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.PETSc.useTrueResidualTest">
+<code class="descname">useTrueResidualTest</code><span class="sig-paren">(</span><em>par_u</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.PETSc.useTrueResidualTest" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.PETSc.printPerformance">
+<code class="descname">printPerformance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.PETSc.printPerformance" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.KSP_petsc4py">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">KSP_petsc4py</code><span class="sig-paren">(</span><em>L</em>, <em>par_L</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=False</em>, <em>prefix=None</em>, <em>Preconditioner=None</em>, <em>connectionList=None</em>, <em>linearSolverLocalBlockSize=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_petsc4py" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.LinearSolver" title="proteus.LinearSolvers.LinearSolver"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearSolvers.LinearSolver</span></code></a></p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.KSP_petsc4py.setResTol">
+<code class="descname">setResTol</code><span class="sig-paren">(</span><em>rtol</em>, <em>atol</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_petsc4py.setResTol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.KSP_petsc4py.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_petsc4py.prepare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.KSP_petsc4py.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_b=None</em>, <em>initialGuessIsZero=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_petsc4py.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.KSP_petsc4py.converged">
+<code class="descname">converged</code><span class="sig-paren">(</span><em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_petsc4py.converged" title="Permalink to this definition">¶</a></dt>
+<dd><p>decide on convention to match norms, convergence criteria</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.KSP_petsc4py.failed">
+<code class="descname">failed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_petsc4py.failed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.KSP_petsc4py.info">
+<code class="descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.KSP_petsc4py.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.SimpleNavierStokes3D">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">SimpleNavierStokes3D</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SimpleNavierStokes3D" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="proteus.LinearSolvers.SimpleNavierStokes3D.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SimpleNavierStokes3D.setUp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.SimpleNavierStokes2D">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">SimpleNavierStokes2D</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SimpleNavierStokes2D" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="proteus.LinearSolvers.SimpleNavierStokes2D.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SimpleNavierStokes2D.setUp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.NavierStokesPressureCorrection">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">NavierStokesPressureCorrection</code><span class="sig-paren">(</span><em>L</em>, <em>prefix=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokesPressureCorrection" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="proteus.LinearSolvers.NavierStokesPressureCorrection.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NavierStokesPressureCorrection.setUp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.SimpleDarcyFC">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">SimpleDarcyFC</code><span class="sig-paren">(</span><em>L</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SimpleDarcyFC" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="proteus.LinearSolvers.SimpleDarcyFC.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.SimpleDarcyFC.setUp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.Jacobi">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">Jacobi</code><span class="sig-paren">(</span><em>L</em>, <em>weight=1.0</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>rtol_du=0.0001</em>, <em>atol_du=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Jacobi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.LinearSolver" title="proteus.LinearSolvers.LinearSolver"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearSolvers.LinearSolver</span></code></a></p>
+<p>Damped Jacobi iteration.</p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.Jacobi.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Jacobi.prepare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.Jacobi.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_b=None</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Jacobi.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.LinearSolvers.Jacobi.csmoothers">
+<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.Jacobi.csmoothers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.GaussSeidel">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">GaussSeidel</code><span class="sig-paren">(</span><em>connectionList</em>, <em>L</em>, <em>weight=0.33</em>, <em>sym=False</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>rtol_du=0.0001</em>, <em>atol_du=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.GaussSeidel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.LinearSolver" title="proteus.LinearSolvers.LinearSolver"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearSolvers.LinearSolver</span></code></a></p>
+<p>Damped Gauss-Seidel.</p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.GaussSeidel.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.GaussSeidel.prepare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.GaussSeidel.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_b=None</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.GaussSeidel.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.LinearSolvers.GaussSeidel.csmoothers">
+<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.GaussSeidel.csmoothers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.StarILU">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">StarILU</code><span class="sig-paren">(</span><em>connectionList</em>, <em>L</em>, <em>weight=1.0</em>, <em>sym=False</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>rtol_du=0.0001</em>, <em>atol_du=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarILU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.LinearSolver" title="proteus.LinearSolvers.LinearSolver"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearSolvers.LinearSolver</span></code></a></p>
+<p>Alternating Schwarz Method on node stars.</p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.StarILU.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarILU.prepare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.StarILU.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_b=None</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarILU.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.LinearSolvers.StarILU.csmoothers">
+<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarILU.csmoothers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.StarBILU">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">StarBILU</code><span class="sig-paren">(</span><em>connectionList</em>, <em>L</em>, <em>bs=1</em>, <em>weight=1.0</em>, <em>sym=False</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>rtol_du=0.0001</em>, <em>atol_du=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarBILU" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.LinearSolver" title="proteus.LinearSolvers.LinearSolver"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearSolvers.LinearSolver</span></code></a></p>
+<p>Alternating Schwarz Method on &#8216;blocks&#8217; consisting of consectutive rows in system for things like dg ...</p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.StarBILU.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarBILU.prepare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.StarBILU.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_b=None</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarBILU.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.LinearSolvers.StarBILU.csmoothers">
+<code class="descname">csmoothers</code><em class="property"> = &lt;module 'proteus.csmoothers' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/csmoothers.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.StarBILU.csmoothers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.TwoLevel">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">TwoLevel</code><span class="sig-paren">(</span><em>prolong</em>, <em>restrict</em>, <em>coarseL</em>, <em>preSmoother</em>, <em>postSmoother</em>, <em>coarseSolver</em>, <em>L</em>, <em>prepareCoarse=False</em>, <em>rtol_r=0.0001</em>, <em>atol_r=1e-16</em>, <em>rtol_du=0.0001</em>, <em>atol_du=1e-16</em>, <em>maxIts=100</em>, <em>norm=&lt;function l2Norm&gt;</em>, <em>convergenceTest='r'</em>, <em>computeRates=True</em>, <em>printInfo=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.TwoLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.LinearSolver" title="proteus.LinearSolvers.LinearSolver"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearSolvers.LinearSolver</span></code></a></p>
+<p>A generic two-level multiplicative Schwarz solver.</p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.TwoLevel.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.TwoLevel.prepare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.TwoLevel.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_b=None</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.TwoLevel.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.MultilevelLinearSolver">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">MultilevelLinearSolver</code><span class="sig-paren">(</span><em>levelLinearSolverList</em>, <em>computeRates=False</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.MultilevelLinearSolver" title="Permalink to this definition">¶</a></dt>
+<dd><p>A generic multilevel solver.</p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.MultilevelLinearSolver.info">
+<code class="descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.MultilevelLinearSolver.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.MGM">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">MGM</code><span class="sig-paren">(</span><em>prolongList</em>, <em>restrictList</em>, <em>LList</em>, <em>preSmootherList</em>, <em>postSmootherList</em>, <em>coarseSolver</em>, <em>mgItsList=[]</em>, <em>printInfo=False</em>, <em>computeRates=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.MGM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.MultilevelLinearSolver" title="proteus.LinearSolvers.MultilevelLinearSolver"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearSolvers.MultilevelLinearSolver</span></code></a></p>
+<p>A generic multigrid W cycle.</p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.MGM.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.MGM.prepare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.MGM.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.MGM.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearSolvers.NI">
+<em class="property">class </em><code class="descclassname">proteus.LinearSolvers.</code><code class="descname">NI</code><span class="sig-paren">(</span><em>solverList</em>, <em>prolongList</em>, <em>restrictList</em>, <em>maxIts=None</em>, <em>tolList=None</em>, <em>atol=None</em>, <em>computeRates=True</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.LinearSolvers.MultilevelLinearSolver" title="proteus.LinearSolvers.MultilevelLinearSolver"><code class="xref py py-class docutils literal"><span class="pre">proteus.LinearSolvers.MultilevelLinearSolver</span></code></a></p>
+<p>A generic nested iteration solver.</p>
+<dl class="method">
+<dt id="proteus.LinearSolvers.NI.setResTol">
+<code class="descname">setResTol</code><span class="sig-paren">(</span><em>rtol</em>, <em>atol</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NI.setResTol" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.NI.prepare">
+<code class="descname">prepare</code><span class="sig-paren">(</span><em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NI.prepare" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.NI.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r=None</em>, <em>b=None</em>, <em>par_u=None</em>, <em>par_b=None</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NI.solve" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.NI.solveMultilevel">
+<code class="descname">solveMultilevel</code><span class="sig-paren">(</span><em>bList</em>, <em>uList</em>, <em>par_bList=None</em>, <em>par_uList=None</em>, <em>initialGuessIsZero=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NI.solveMultilevel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.NI.switchToResidualConvergence">
+<code class="descname">switchToResidualConvergence</code><span class="sig-paren">(</span><em>solver</em>, <em>rtol</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NI.switchToResidualConvergence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.NI.revertToFixedIteration">
+<code class="descname">revertToFixedIteration</code><span class="sig-paren">(</span><em>solver</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NI.revertToFixedIteration" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearSolvers.NI.info">
+<code class="descname">info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.NI.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearSolvers.multilevelLinearSolverChooser">
+<code class="descclassname">proteus.LinearSolvers.</code><code class="descname">multilevelLinearSolverChooser</code><span class="sig-paren">(</span><em>linearOperatorList</em>, <em>par_linearOperatorList</em>, <em>multilevelLinearSolverType=&lt;class proteus.LinearSolvers.NI&gt;</em>, <em>relativeToleranceList=None</em>, <em>absoluteTolerance=1e-08</em>, <em>solverConvergenceTest='r'</em>, <em>solverMaxIts=500</em>, <em>printSolverInfo=False</em>, <em>computeSolverRates=False</em>, <em>levelLinearSolverType=&lt;class proteus.LinearSolvers.MGM&gt;</em>, <em>printLevelSolverInfo=False</em>, <em>computeLevelSolverRates=False</em>, <em>smootherType=&lt;class proteus.LinearSolvers.Jacobi&gt;</em>, <em>prolongList=None</em>, <em>restrictList=None</em>, <em>connectivityListList=None</em>, <em>cycles=3</em>, <em>preSmooths=3</em>, <em>postSmooths=3</em>, <em>printSmootherInfo=False</em>, <em>computeSmootherRates=False</em>, <em>smootherConvergenceTest='its'</em>, <em>relaxationFactor=None</em>, <em>computeEigenvalues=False</em>, <em>parallelUsesFullOverlap=True</em>, <em>par_duList=None</em>, <em>solver_options_prefix=None</em>, <em>linearSolverLocalBlockSize=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearSolvers.multilevelLinearSolverChooser" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

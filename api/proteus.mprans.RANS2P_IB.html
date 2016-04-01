@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.mprans.RANS2P_IB module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus.mprans package" href="proteus.mprans.html" />
+    <link rel="next" title="proteus.mprans.RANS3P module" href="proteus.mprans.RANS3P.html" />
+    <link rel="prev" title="proteus.mprans.RANS2P module" href="proteus.mprans.RANS2P.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.mprans.RANS2P_IB module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.mprans.RANS2P.html" title="Previous Chapter: proteus.mprans.RANS2P module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.mpran...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.mprans.RANS3P.html" title="Next Chapter: proteus.mprans.RANS3P module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.mpran... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.mprans.RANS2P_IB">
+<span id="proteus-mprans-rans2p-ib-module"></span><h1>proteus.mprans.RANS2P_IB module<a class="headerlink" href="#module-proteus.mprans.RANS2P_IB" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="proteus.mprans.RANS2P_IB.Coefficients">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RANS2P_IB.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>epsFact=1.5, sigma=72.8, rho_0=998.2, nu_0=1.004e-06, rho_1=1.205, nu_1=1.5e-05, g=[0.0, 0.0, -9.8], nd=3, LS_model=None, VF_model=None, KN_model=None, Closure_0_model=None, Closure_1_model=None, epsFact_density=None, stokes=False, sd=True, movingDomain=False, useVF=0.0, useRBLES=0.0, useMetrics=0.0, useConstant_he=False, dragAlpha=0.01, dragBeta=0.0, setParamsFunc=None, dragAlphaTypes=None, dragBetaTypes=None, porosityTypes=None, killNonlinearDrag=False, waveFlag=None, waveHeight=0.01, waveCelerity=1.0, waveFrequency=1.0, waveNumber=2.0, waterDepth=0.5, Omega_s=[[0.45, 0.55], [0.2, 0.4], [0.0, 1.0]], epsFact_source=1.0, epsFact_solid=None, eb_adjoint_sigma=1.0, eb_penalty_constant=10.0, forceStrongDirichlet=False, turbulenceClosureModel=0, smagorinskyConstant=0.1, barycenters=None, beamLocation=[], beamLength=[], beamRadius=[], EI=[], GJ=[], nBeamElements=4, beam_quadOrder=3, beamFilename='Beams', beam_useSparse=False, beam_Cd=1.2, beam_nlTol=1e-05, beamRigid=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.mprans.RANS2P.html#proteus.mprans.RANS2P.Coefficients" title="proteus.mprans.RANS2P.Coefficients"><code class="xref py py-class docutils literal"><span class="pre">proteus.mprans.RANS2P.Coefficients</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.Coefficients.attachModels">
+<code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.attachModels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.Coefficients.initializeElementQuadrature">
+<code class="descname">initializeElementQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cq</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.initializeElementQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature">
+<code class="descname">initializeGlobalExteriorElementBoundaryQuadrature</code><span class="sig-paren">(</span><em>t</em>, <em>cebqe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.Coefficients.initializeMesh">
+<code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.Coefficients.postStep">
+<code class="descname">postStep</code><span class="sig-paren">(</span><em>t</em>, <em>firstStep=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.postStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.Coefficients.delta_h">
+<code class="descname">delta_h</code><span class="sig-paren">(</span><em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.delta_h" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.Coefficients.updateBeamLoad">
+<code class="descname">updateBeamLoad</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.updateBeamLoad" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.Coefficients.updateBeams">
+<code class="descname">updateBeams</code><span class="sig-paren">(</span><em>t</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.updateBeams" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.Coefficients.initializeBeams">
+<code class="descname">initializeBeams</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.Coefficients.initializeBeams" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.mprans.RANS2P_IB.LevelModel">
+<em class="property">class </em><code class="descclassname">proteus.mprans.RANS2P_IB.</code><code class="descname">LevelModel</code><span class="sig-paren">(</span><em>uDict</em>, <em>phiDict</em>, <em>testSpaceDict</em>, <em>matType</em>, <em>dofBoundaryConditionsDict</em>, <em>dofBoundaryConditionsSetterDict</em>, <em>coefficients</em>, <em>elementQuadrature</em>, <em>elementBoundaryQuadrature</em>, <em>fluxBoundaryConditionsDict=None</em>, <em>advectiveFluxBoundaryConditionsSetterDict=None</em>, <em>diffusiveFluxBoundaryConditionsSetterDictDict=None</em>, <em>stressTraceBoundaryConditionsSetterDictDict=None</em>, <em>stabilization=None</em>, <em>shockCapturing=None</em>, <em>conservativeFluxDict=None</em>, <em>numericalFluxType=None</em>, <em>TimeIntegrationClass=None</em>, <em>massLumping=False</em>, <em>reactionLumping=False</em>, <em>options=None</em>, <em>name='RANS2P'</em>, <em>reuse_trial_and_test_quadrature=True</em>, <em>sd=True</em>, <em>movingDomain=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.LevelModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="proteus.mprans.RANS2P.html#proteus.mprans.RANS2P.LevelModel" title="proteus.mprans.RANS2P.LevelModel"><code class="xref py py-class docutils literal"><span class="pre">proteus.mprans.RANS2P.LevelModel</span></code></a></p>
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.LevelModel.getResidual">
+<code class="descname">getResidual</code><span class="sig-paren">(</span><em>u</em>, <em>r</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.LevelModel.getResidual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the element residuals and add in to the global residual</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.LevelModel.getJacobian">
+<code class="descname">getJacobian</code><span class="sig-paren">(</span><em>jacobian</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.LevelModel.getJacobian" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.LevelModel.calculateAuxiliaryQuantitiesAfterStep">
+<code class="descname">calculateAuxiliaryQuantitiesAfterStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.LevelModel.calculateAuxiliaryQuantitiesAfterStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.mprans.RANS2P_IB.LevelModel.beamStep">
+<code class="descname">beamStep</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/RANS2P_IB.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.RANS2P_IB.LevelModel.beamStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

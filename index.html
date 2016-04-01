@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="#" />
+    <link rel="next" title="proteus" href="api/modules.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+<div class="jumbotron">
+  <div class="col-md-offset-2">
+</div>
+<div class="tb-container col-md-offset-2">
+    <p class="lead"><img src="_static/corps_logo_cross2.svg" alt="proteus triton"
+     style="height:1in;"> A Python toolkit for computational methods and simulation</p>
+    <div class="btn-group" role="group">
+      <a class="btn btn-success"
+          href="https://github.com/erdc-cm/proteus/archive/v0.9.0.tar.gz">
+            <span class="glyphicon glyphicon-download"></span> Download
+      </a>
+      <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+      <ul class="dropdown-menu">
+        <li><a https://github.com/erdc-cm/proteus/archive/v0.9.0.tar.gz">Version 0.9.0</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="api/proteus.html">API</a></li>
+                <li><a href="capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">proteus</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Introduction</a></li>
+<li><a class="reference internal" href="#obtaining-and-installing-proteus">Obtaining and Installing Proteus</a></li>
+<li><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li><a class="reference internal" href="#running">Running</a></li>
+<li><a class="reference internal" href="#capabilities">Capabilities</a></li>
+<li><a class="reference internal" href="#release-policy">Release Policy</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+<li><a class="reference internal" href="#source-code-documentation">Source Code Documentation</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="api/modules.html" title="Next Chapter: proteus"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="introduction">
+<span id="intro-sec"></span><h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>Proteus is a Python package for rapidly developing computer models and
+numerical methods. It is focused on models of continuum mechanical
+processes described by partial differential equations and on
+discretizations and solvers for computing approximate solutions to
+these equations. Proteus consists of a collection of Python modules
+and scripts. Proteus also uses several C, C++, and Fortran libraries,
+which are either external open source packages or part of Proteus, and
+several open source Python packages.</p>
+<p>The design of Proteus is organized around two goals:</p>
+<ul class="simple">
+<li>Make it easy to solve new model equations with existing numerical methods</li>
+<li>Make it easy to solve existing model equations with new numerical methods</li>
+</ul>
+<p>We want to improve the development process for models <em>and</em>
+methods. Proteus is not intended to be an expert system for solving
+partial differential equations. In fact, effective numerical methods
+are often physics-based. Nevertheless many physical models are
+mathematically represented by the same small set of differential
+operators, and effective numerical methods can be developed with minor
+adjustments to existing methods. The problem with much existing
+software is that the physics and numerics are completely intertwined,
+which makes it difficult to extend (and maintain). In Proteus the
+description of the physical model and initial-boundary value problems
+are nearly &#8220;method agnostic&#8221;.  This approach has been used in the
+developement of a variety of mathematical models and numerical
+methods, both of which are described in more detail below
+(<a class="reference internal" href="#capabilities-sec"><span>Capabilities</span></a>).</p>
+</div>
+<div class="section" id="obtaining-and-installing-proteus">
+<span id="obtaining-sec"></span><h1>Obtaining and Installing Proteus<a class="headerlink" href="#obtaining-and-installing-proteus" title="Permalink to this headline">¶</a></h1>
+<p>For now, Proteus is only available as source from our public <a class="reference external" href="https://github.com/erdc-cm/proteus">GitHub</a> repository  because we haven&#8217;t
+had the resources to devote to producing regular binary releases.  We
+use the <a class="reference external" href="https://hashdist.github.io/">HashDist</a> software environment
+installation tool to bootstrap any needed dependencies for you.  If
+you already have compilers and Git installed on your system, you can
+install Proteus with the following commands:</p>
+<p>More information is available on our <a class="reference external" href="https://github.com/erdc-cm/proteus/wiki">Wiki</a>, and you can ask for help on
+the <a class="reference external" href="https://groups.google.com/forum/#!forum/proteus-dev">Developers&#8217; Mailing List</a>.</p>
+</div>
+<div class="section" id="getting-started">
+<span id="getting-start-sec"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<p>The following IPython Notebooks provide a gentle introduction to
+getting started with Proteus, from setting up a model domain to
+solving your own problems with a comprehensive example.  The notebooks
+can all be downloaded as an <a class="reference external" href="https://github.com/erdc-cm/proteus-notebooks/archive/master.zip">archive</a>.</p>
+<ul class="simple">
+<li><a class="reference external" href="http://nbviewer.ipython.org/github/erdc-cm/proteus-notebooks/blob/master/Equation_Tutorial.ipynb">Defining the Model Equations</a></li>
+<li><a class="reference external" href="http://nbviewer.ipython.org/github/erdc-cm/proteus-notebooks/blob/master/Domain_Tutorial.ipynb">Defining a Model Domain</a></li>
+</ul>
+</div>
+<div class="section" id="running">
+<span id="running-sec"></span><h1>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h1>
+<p>If you have successfully compiled Proteus then you should be able to do:</p>
+<div class="highlight-python"><div class="highlight"><pre>%cd $PROTEUS/test
+%$PROTEUS_PREFIX/bin/parun poisson_3d_p.py poisson_3d_c0p1_n.py
+</pre></div>
+</div>
+<p>The solution will be saved in a file ending in .xmf, which can be
+opened with ParaView or Ensight.</p>
+</div>
+<div class="section" id="capabilities">
+<span id="capabilities-sec"></span><h1>Capabilities<a class="headerlink" href="#capabilities" title="Permalink to this headline">¶</a></h1>
+<p>Test problems and some analytical solutions have been implemented for</p>
+<ul class="simple">
+<li>Poisson&#8217;s equation</li>
+<li>The heat equation</li>
+<li>Linear advection-diffusion-reaction equations</li>
+<li>Singly degenerate nonlinear advection-diffusion-reaction equations (including various forms of Burger&#8217;s equation)</li>
+<li>Doubly degenerate nonlinear advection-diffusion-reaction equations</li>
+<li>The eikonal (signed distance) equation</li>
+<li>The diffusive wave equations for overland flow</li>
+<li>1D and 2D Shallow Water Equations</li>
+<li>Richards&#8217; equation (mass conservative head- and saturation-based)</li>
+<li>Two-phase flow in porous media with diffuse interface (fully coupled  and IMPES formulations)</li>
+<li>Two-phase flow in porous media with a sharp interface (level set formulation)</li>
+<li>Stokes equations</li>
+<li>Navier-Stokes equations</li>
+<li>Reynolds-Averged Navier-Stokes equations</li>
+<li>Two-phase Stokes/Navier-Stokes/RANS flow with a sharp interface (level set/VOF formulation)</li>
+<li>Linear elasticity</li>
+</ul>
+<p>These problems are solved on unstructured simplicial meshes. Simple
+meshes can be generated with tools included with Proteus, and more
+complex meshes can by imported from other mesh generators. The finite
+elements implemented are</p>
+<p>Classical and vartiational multiscale methods</p>
+<ul class="simple">
+<li><span class="math">\(C_0 P_1\)</span></li>
+<li><span class="math">\(C_0 P_2\)</span></li>
+<li><span class="math">\(C_0 Q_1\)</span></li>
+<li><span class="math">\(C_0 Q_2\)</span></li>
+</ul>
+<p>Discontinuous Galerkin methods</p>
+<ul class="simple">
+<li><span class="math">\(C_{-1} P_0\)</span></li>
+<li><span class="math">\(C_{-1} P_1\)</span>  (Lagrange Basis)</li>
+<li><span class="math">\(C_{-1} P_2\)</span>  (Lagrange Basis)</li>
+<li><span class="math">\(C_{-1} P_k\)</span>  (Monomial Basis)</li>
+</ul>
+<p>Non-conforming and mixed methods</p>
+<ul class="simple">
+<li><span class="math">\(P_1\)</span> non-conforming</li>
+<li><span class="math">\(C_0 P_1 C_0 P_2\)</span> Taylor-Hood</li>
+</ul>
+<p>The time integration methods are</p>
+<ul class="simple">
+<li>Backward Euler</li>
+<li>Forward Euler</li>
+<li><span class="math">\(\Theta\)</span> Methods</li>
+<li>Strong Stability Preserving Runge-Kutta Methods</li>
+<li>Adaptive BDF Methods</li>
+<li>Pseudo-transient continuation</li>
+</ul>
+<p>The linear solvers are</p>
+<ul class="simple">
+<li>Jacobi</li>
+<li>Gauss-Seidel</li>
+<li>Alternating Schwarz</li>
+<li>Full Multigrid</li>
+<li>Wrappers to LAPACK, SuperLU, and PETSc</li>
+</ul>
+<p>The nonlinear solvers are</p>
+<ul class="simple">
+<li>Jacobi</li>
+<li>Gauss-Seidel</li>
+<li>Alternating Schwarz</li>
+<li>Newton&#8217;s method</li>
+<li>Nonlinear Multigrid (Full Approximation Scheme)</li>
+<li>Fast Marching and Fast Sweeping</li>
+</ul>
+<p>Additional tools are included for pre- and post-processings meshes and
+solutions files generated by Proteus and other models, including methods for
+obtaining locally-conservative velocity fields from <span class="math">\(C_0\)</span> finite
+elements.</p>
+</div>
+<div class="section" id="release-policy">
+<span id="release-sec"></span><h1>Release Policy<a class="headerlink" href="#release-policy" title="Permalink to this headline">¶</a></h1>
+<p>The releases are numbered major.minor.revision</p>
+<ul class="simple">
+<li>A revision increment indicates a bug fix or extension that shouldn&#8217;t break any models working with the same major.minor number.</li>
+<li>A minor increment introduces significant new functionality but is mostly backward compatible</li>
+<li>A major increment may require changes to input files and significantly change the underlying Proteus implementation.</li>
+</ul>
+<p>These are not hard and fast rules, and there is no time table for releases.</p>
+</div>
+<div class="section" id="references">
+<h1>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference external" href="http://dx.doi.org/10.1016/j.advwatres.2012.01.002">Numerical modeling of drag for flow through vegetated domains and
+porous structures</a> (2012)
+S.A. Mattis, C. N. Dawson, C. E. Kees, and M. W. Farthing, <em>Advances
+in Water Resources</em>, 39, pp44-59</li>
+<li><a class="reference external" href="http://www.dlr.de/sc/en/Portaldata/15/Resources/dokumente/pyhpc2011/submissions/pyhpc2011_submission_11.pdf">Parallel Computational Methods and Simulation for Coastal and
+Hydraulic Applications Using the Proteus Toolkit</a>
+(2011) C. E. Kees and M. W. Farthing (2011) <em>Supercomputing11:
+Proceedings of the PyHPC11 Workshop</em></li>
+<li><a class="reference external" href="http://dx.doi.org/10.1016/j.jcp.2011.02.030">A Conservative Level Set Method for Variable-Order Approximations
+and Unstructured Meshes</a> (2011) C.E. Kees,
+I. Akkerman, Y. Bazilevs, and M. W. Farthing <em>Journal of
+Computational Physics</em> 230(12), pp4536–4558</li>
+<li><a class="reference external" href="http://dx.doi.org/10.1016/j.cma.2008.06.005">Locally Conservative, Stabilized Finite Element Methods For
+Variably Saturated Flow</a> (2008) Kees, C.E.,
+M. W. Farthing, and C. N. Dawson, <em>Computer Methods in Applied
+Mechanics and Engineering</em>, 197, pp4610-4625</li>
+<li><a class="reference external" href="http://chl.erdc.usace.army.mil/ERDC-CHL-TR-09-12">Locally Conservative, Stabilized Finite Element Methods for a Class
+of Variable Coefficient Navier-Stokes Equations</a> (2009)
+C. E. Kees, M. W. Farthing, and M. T. Fong, <em>ERDC/CHL TR-09-12</em></li>
+<li><a class="reference external" href="http://chl.erdc.usace.army.mil/ERDC-CHL-TR-09-11">Evaluating Finite Element Methods for the Level Set Equation</a> (2009)
+M. W. Farthing and C. E. Kees, <em>ERDC/CHL TR-09-11</em></li>
+<li><a class="reference external" href="http://chl.erdc.usace.army.mil/ERDC-CHL-TR-09-10">A Review of Methods for Moving Boundary Problems</a> (2009)
+C. E. Kees, M. W. Farthing, T. C. Lackey, and R. C. Berger,
+<em>ERDC/CHL TR-09-10</em></li>
+<li><a class="reference external" href="http://chl.erdc.usace.army.mil/library/publications/chetn/pdf/chetn-xiii-2.pdf">Implementation of Discontinuous Galerkin Methods for the Level Set
+Equation on Unstructured Meshes</a>
+(2008) M. W. Farthing and C. E. Kees, <em>ERDC/CHL CHETN-XIII-2</em></li>
+</ul>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
+</ul>
+</div>
+<div class="section" id="source-code-documentation">
+<h1>Source Code Documentation<a class="headerlink" href="#source-code-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">proteus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

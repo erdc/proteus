@@ -1,0 +1,7 @@
+proteus.UnstructuredFMMandFSWsolvers module
+===========================================
+
+.. automodule:: proteus.UnstructuredFMMandFSWsolvers
+    :members:
+    :undoc-members:
+    :show-inheritance:

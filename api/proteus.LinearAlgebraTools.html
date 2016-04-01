@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.LinearAlgebraTools module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.LinearSolvers module" href="proteus.LinearSolvers.html" />
+    <link rel="prev" title="proteus.LatexReport module" href="proteus.LatexReport.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.LinearAlgebraTools module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.LatexReport.html" title="Previous Chapter: proteus.LatexReport module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Latex...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.LinearSolvers.html" title="Next Chapter: proteus.LinearSolvers module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Linea... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.LinearAlgebraTools">
+<span id="proteus-linearalgebratools-module"></span><h1>proteus.LinearAlgebraTools module<a class="headerlink" href="#module-proteus.LinearAlgebraTools" title="Permalink to this headline">¶</a></h1>
+<p>Tools for n-dimensional linear algebra</p>
+<p>Vectors are just numpy arrays, as are dense matrices. Sparse matrices
+are CSR matrices. Parallel vector and matrix are built on top of those
+representations using PETSc.</p>
+<blockquote>
+<div>odo LinearAlgebraTools: make better use of numpy.linalg and petsc4py to provide the needed functionality and improve test suite</div></blockquote>
+<dl class="class">
+<dt id="proteus.LinearAlgebraTools.ParVec">
+<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">ParVec</code><span class="sig-paren">(</span><em>array</em>, <em>blockSize</em>, <em>n</em>, <em>N</em>, <em>nghosts=None</em>, <em>subdomain2global=None</em>, <em>blockVecType='simple'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec" title="Permalink to this definition">¶</a></dt>
+<dd><p>A parallel vector built on top of daetk&#8217;s wrappers for petsc</p>
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.ParVec.scatter_forward_insert">
+<code class="descname">scatter_forward_insert</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec.scatter_forward_insert" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.ParVec.scatter_reverse_add">
+<code class="descname">scatter_reverse_add</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec.scatter_reverse_add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearAlgebraTools.ParVec_petsc4py">
+<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">ParVec_petsc4py</code><span class="sig-paren">(</span><em>array=None</em>, <em>bs=None</em>, <em>n=None</em>, <em>N=None</em>, <em>nghosts=None</em>, <em>subdomain2global=None</em>, <em>blockVecType='simple'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">petsc4py.PETSc.Vec</span></code></p>
+<p>Parallel vector using petsc4py&#8217;s wrappers for PETSc</p>
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.ParVec_petsc4py.scatter_forward_insert">
+<code class="descname">scatter_forward_insert</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py.scatter_forward_insert" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.ParVec_petsc4py.scatter_reverse_add">
+<code class="descname">scatter_reverse_add</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py.scatter_reverse_add" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.ParVec_petsc4py.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec_petsc4py.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves to disk using a PETSc binary viewer.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearAlgebraTools.ParMat_petsc4py">
+<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">ParMat_petsc4py</code><span class="sig-paren">(</span><em>ghosted_csr_mat</em>, <em>par_bs</em>, <em>par_n</em>, <em>par_N</em>, <em>par_nghost</em>, <em>subdomain2global</em>, <em>blockVecType='simple'</em>, <em>pde=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParMat_petsc4py" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">petsc4py.PETSc.Mat</span></code></p>
+<p>Parallel matrix based on petsc4py&#8217;s wrappers for PETSc.</p>
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.ParMat_petsc4py.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParMat_petsc4py.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves to disk using a PETSc binary viewer.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.Vec">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">Vec</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Vec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a vector of length n (using numpy)</p>
+<p>For example:
+&gt;&gt;&gt; Vec(3)
+array([ 0.,  0.,  0.])</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.Mat">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">Mat</code><span class="sig-paren">(</span><em>m</em>, <em>n</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Mat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build an m x n matrix (using numpy)</p>
+<p>For example:
+&gt;&gt;&gt; Mat(2,3)
+array([[ 0.,  0.,  0.],</p>
+<blockquote>
+<div>[ 0.,  0.,  0.]])</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.SparseMatFromDict">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">SparseMatFromDict</code><span class="sig-paren">(</span><em>nr</em>, <em>nc</em>, <em>aDict</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatFromDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a nr x nc sparse matrix from a dictionary representation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.SparseMat">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">SparseMat</code><span class="sig-paren">(</span><em>nr</em>, <em>nc</em>, <em>nnz</em>, <em>nzval</em>, <em>colind</em>, <em>rowptr</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a nr x nc sparse matrix from the CSR data structures</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearAlgebraTools.SparseMatShell">
+<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">SparseMatShell</code><span class="sig-paren">(</span><em>ghosted_csr_mat</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains)</p>
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.SparseMatShell.create">
+<code class="descname">create</code><span class="sig-paren">(</span><em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.SparseMatShell.mult">
+<code class="descname">mult</code><span class="sig-paren">(</span><em>A</em>, <em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell.mult" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.l2Norm">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">l2Norm</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l2Norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the parallel l_2 norm</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.l1Norm">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">l1Norm</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l1Norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the parallel <span class="math">\(l_1\)</span> norm</p>
+<p>The <span class="math">\(l_1\)</span> norm of a vector <span class="math">\(\mathbf{x} \in
+\mathbb{R}^n\)</span> is</p>
+<div class="math">
+\[\| \mathbf{x} \|_{1} = \sum_{i=0} |x_i|\]</div>
+<p>If Python is running in parallel, then the sum is over all
+dimensions on all processors so that the input must not contain
+&#8220;ghost&#8221; entries.</p>
+<p>This implemtation works for a distributed array with no ghost
+components (each component must be on a single processor).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong> &#8211; numpy array of length n</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.lInfNorm">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">lInfNorm</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.lInfNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the parallel <span class="math">\(l_{\infty}\)</span> norm</p>
+<p>The <span class="math">\(l_{\infty}\)</span> norm of a vector <span class="math">\(\mathbf{x} \in
+\mathbb{R}^n\)</span> is</p>
+<div class="math">
+\[\|x\|_{\infty} = \max_i |x_i|\]</div>
+<p>This implemtation works for a distributed array with no ghost
+components (each component must be on a single processor).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong> &#8211; numpy array of length n</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.wDot">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">wDot</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wDot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the parallel weighted dot product of vectors x and y using
+weight vector h.</p>
+<p>The weighted dot product is defined for a weight vector
+<span class="math">\(\mathbf{h}\)</span> as</p>
+<div class="math">
+\[(\mathbf{x},\mathbf{y})_h = \sum_{i} h_{i} x_{i} y_{i}\]</div>
+<p>All weight vector components should be positive.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x,y,h</strong> &#8211; numpy arrays for vectors and weight</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the weighted dot product</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.wl2Norm">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">wl2Norm</code><span class="sig-paren">(</span><em>x</em>, <em>h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wl2Norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the parallel weighted l_2 norm with weight h</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.wl1Norm">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">wl1Norm</code><span class="sig-paren">(</span><em>x</em>, <em>h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wl1Norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the parallel weighted l_1 norm with weight h</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.wlInfNorm">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">wlInfNorm</code><span class="sig-paren">(</span><em>x</em>, <em>h</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.wlInfNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the parallel weighted l_{infty} norm with weight h</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.energyDot">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">energyDot</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.energyDot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the &#8220;energy&#8221; dot product x^t A y (not parallel)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.energyNorm">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">energyNorm</code><span class="sig-paren">(</span><em>x</em>, <em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.energyNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the &#8220;energy&#8221; norm x^t A x (not parallel)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.l2NormAvg">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">l2NormAvg</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l2NormAvg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the arithmetic averaged l_2 norm (root mean squared norm)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.rmsNorm">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">rmsNorm</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.rmsNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the arithmetic averaged l_2 norm (root mean squared norm)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.l2Norm_local">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">l2Norm_local</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l2Norm_local" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the l_2 norm for just local (processor) system  (not parallel)</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.LinearAlgebraTools.WeightedNorm">
+<em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">WeightedNorm</code><span class="sig-paren">(</span><em>shape</em>, <em>atol</em>, <em>rtol</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.WeightedNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the weighted norm for time step control (not currently parallel)</p>
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.WeightedNorm.setWeight">
+<code class="descname">setWeight</code><span class="sig-paren">(</span><em>y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.WeightedNorm.setWeight" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.LinearAlgebraTools.WeightedNorm.norm">
+<code class="descname">norm</code><span class="sig-paren">(</span><em>y</em>, <em>type</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.WeightedNorm.norm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

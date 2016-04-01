@@ -1,0 +1,7 @@
+proteus.mprans.cKappa2D module
+==============================
+
+.. automodule:: proteus.mprans.cKappa2D
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,0 +1,7 @@
+proteus.Norms module
+====================
+
+.. automodule:: proteus.Norms
+    :members:
+    :undoc-members:
+    :show-inheritance:

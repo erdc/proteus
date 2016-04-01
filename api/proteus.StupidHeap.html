@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.StupidHeap module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.SubgridError module" href="proteus.SubgridError.html" />
+    <link rel="prev" title="proteus.StepControl module" href="proteus.StepControl.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.StupidHeap module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.StepControl.html" title="Previous Chapter: proteus.StepControl module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.StepC...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.SubgridError.html" title="Next Chapter: proteus.SubgridError module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Subgr... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.StupidHeap">
+<span id="proteus-stupidheap-module"></span><h1>proteus.StupidHeap module<a class="headerlink" href="#module-proteus.StupidHeap" title="Permalink to this headline">¶</a></h1>
+<p>A stupid implementation of a heap for fast marching methods</p>
+<dl class="class">
+<dt id="proteus.StupidHeap.StupidHeap">
+<em class="property">class </em><code class="descclassname">proteus.StupidHeap.</code><code class="descname">StupidHeap</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Min Heap</p>
+<p>heap   = [(key,val), ...] such that heap[i][1] &lt;= heap[2*i+1][1], heap[2*i+2][1]
+heapPos= {key:i} heap[heapPos[key]]=val</p>
+<dl class="attribute">
+<dt id="proteus.StupidHeap.StupidHeap.keyIndex">
+<code class="descname">keyIndex</code><em class="property"> = 0</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.keyIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.StupidHeap.StupidHeap.valIndex">
+<code class="descname">valIndex</code><em class="property"> = 1</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.valIndex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.StupidHeap.StupidHeap.isempty">
+<code class="descname">isempty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.isempty" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.StupidHeap.StupidHeap.insert">
+<code class="descname">insert</code><span class="sig-paren">(</span><em>key</em>, <em>val</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.insert" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.StupidHeap.StupidHeap.insertWithCheckForExistingKey">
+<code class="descname">insertWithCheckForExistingKey</code><span class="sig-paren">(</span><em>key</em>, <em>val</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.insertWithCheckForExistingKey" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.StupidHeap.StupidHeap.pop">
+<code class="descname">pop</code><span class="sig-paren">(</span><em>debugLevel=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>return smallest value in heap, maintain heap property</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.StupidHeap.StupidHeap.updateNode">
+<code class="descname">updateNode</code><span class="sig-paren">(</span><em>key</em>, <em>newval</em>, <em>debugLevel=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.updateNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>modify value associated with key and restore heap property
+requires that key exist in heap</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.StupidHeap.StupidHeap.updateNodeWithMin">
+<code class="descname">updateNodeWithMin</code><span class="sig-paren">(</span><em>key</em>, <em>newval</em>, <em>debugLevel=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.updateNodeWithMin" title="Permalink to this definition">¶</a></dt>
+<dd><p>modify value associated with key and restore heap property
+requires that key exist in heap</p>
+<p>this version only updates value if new value is less</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.StupidHeap.StupidHeap.upHeap">
+<code class="descname">upHeap</code><span class="sig-paren">(</span><em>pos</em>, <em>debugLevel=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.upHeap" title="Permalink to this definition">¶</a></dt>
+<dd><p>recursively move node at pos up the heap while it is less than its parent</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.StupidHeap.StupidHeap.downHeap">
+<code class="descname">downHeap</code><span class="sig-paren">(</span><em>pos</em>, <em>debugLevel=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.downHeap" title="Permalink to this definition">¶</a></dt>
+<dd><p>assume left and right children of pos are heap, but
+left or right child &lt; pos</p>
+<p>promote smaller of children of node at pos, then repeat on its subheap</p>
+<p>then put original value at pos and work back up</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.StupidHeap.StupidHeap.checkHeap">
+<code class="descname">checkHeap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.checkHeap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.StupidHeap.StupidHeap.printHeap">
+<code class="descname">printHeap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StupidHeap.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StupidHeap.StupidHeap.printHeap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+proteus.mprans.Dissipation module
+=================================
+
+.. automodule:: proteus.mprans.Dissipation
+    :members:
+    :undoc-members:
+    :show-inheritance:

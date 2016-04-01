@@ -1,0 +1,7 @@
+proteus.mprans.cRANS3P module
+=============================
+
+.. automodule:: proteus.mprans.cRANS3P
+    :members:
+    :undoc-members:
+    :show-inheritance:

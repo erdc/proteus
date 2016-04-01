@@ -1,0 +1,7 @@
+proteus.waveFunctions module
+============================
+
+.. automodule:: proteus.waveFunctions
+    :members:
+    :undoc-members:
+    :show-inheritance:

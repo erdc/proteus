@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.TriangleUtils module &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="next" title="proteus.TwophaseDarcyCoefficients module" href="proteus.TwophaseDarcyCoefficients.html" />
+    <link rel="prev" title="proteus.TriangleTools module" href="proteus.TriangleTools.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.TriangleUtils module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.TriangleTools.html" title="Previous Chapter: proteus.TriangleTools module"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.Trian...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.TwophaseDarcyCoefficients.html" title="Next Chapter: proteus.TwophaseDarcyCoefficients module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.Twoph... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.TriangleUtils">
+<span id="proteus-triangleutils-module"></span><h1>proteus.TriangleUtils module<a class="headerlink" href="#module-proteus.TriangleUtils" title="Permalink to this headline">¶</a></h1>
+<p>A collection of functions for manipulating triangleWrappers interface to
+Shewchuk&#8217;s Triangle package. There are a couple of different groups of
+functions.</p>
+<p>One is for writing out triangleWrappers data arrays in Triangle&#8217;s fileformat</p>
+<dl class="function">
+<dt id="proteus.TriangleUtils.writeOutTriangulation">
+<code class="descclassname">proteus.TriangleUtils.</code><code class="descname">writeOutTriangulation</code><span class="sig-paren">(</span><em>tri</em>, <em>filebase='mesh'</em>, <em>nbase=0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.writeOutTriangulation" title="Permalink to this definition">¶</a></dt>
+<dd><p>collect necessary steps to write out files for triangle data structures</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleUtils.printNodeFile">
+<code class="descclassname">proteus.TriangleUtils.</code><code class="descname">printNodeFile</code><span class="sig-paren">(</span><em>nodes</em>, <em>filebase='mesh'</em>, <em>attrib=None</em>, <em>markers=None</em>, <em>nbase=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.printNodeFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>print out nodes in triangle format, nbase is the numbering base</p>
+<p>file format that triangle is expecting</p>
+<p>First line:  &lt;# of vertices&gt; &lt;dimension (must be 2)&gt;  &lt;# of attributes&gt; &lt;# of boundary markers (0 or 1)&gt;</p>
+<p>Remaining lines: &lt;vertex #&gt; &lt;x&gt; &lt;y&gt;  [attributes] [boundary marker]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleUtils.printElemFile">
+<code class="descclassname">proteus.TriangleUtils.</code><code class="descname">printElemFile</code><span class="sig-paren">(</span><em>elems</em>, <em>filebase='mesh'</em>, <em>attrib=None</em>, <em>nbase=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.printElemFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>print out triangles/elements in the mesh</p>
+<p>file format that triangle is expecting
+First line: &lt;# of triangles&gt; &lt;nodes per triangle&gt;  &lt;# of attributes&gt;
+Remaining lines: &lt;triangle #&gt; &lt;node&gt; &lt;node&gt;  &lt;node&gt; ... [attributes]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleUtils.printPolyFile">
+<code class="descclassname">proteus.TriangleUtils.</code><code class="descname">printPolyFile</code><span class="sig-paren">(</span><em>nodes</em>, <em>segments</em>, <em>filebase='mesh'</em>, <em>pattrib=None</em>, <em>pmarkers=None</em>, <em>smarkers=None</em>, <em>holes=None</em>, <em>regions=None</em>, <em>nbase=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.printPolyFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>print out mesh info in triangle&#8217;s poly format, nbase is the numbering base</p>
+<p>First line: &lt;# of vertices&gt; &lt;dimension (must be 2)&gt;  &lt;# of attributes&gt; &lt;# of boundary markers (0 or 1)&gt;
+Following lines: &lt;vertex #&gt; &lt;x&gt; &lt;y&gt; [attributes] [boundary marker]
+One line: &lt;# of segments&gt; &lt;# of boundary markers (0 or 1)&gt;
+Following lines: &lt;segment #&gt; &lt;endpoint&gt; &lt;endpoint&gt; [boundary marker]
+One line: &lt;# of holes&gt;
+Following lines: &lt;hole #&gt; &lt;x&gt; &lt;y&gt;
+Optional line: &lt;# of regional attributes and/or area constraints&gt;
+Optional following lines: &lt;region #&gt; &lt;x&gt; &lt;y&gt; &lt;attribute&gt; &lt;maximum area&gt;</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleUtils.printAreaFile">
+<code class="descclassname">proteus.TriangleUtils.</code><code class="descname">printAreaFile</code><span class="sig-paren">(</span><em>elemAreas</em>, <em>filebase='mesh'</em>, <em>nbase=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.printAreaFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>print out area constraints</p>
+<p>file format that triangle is expecting
+First line: &lt;# of triangles&gt;
+Remaining lines: &lt;triangle #&gt; &lt;maximum area&gt;</p>
+<p>note, negative area means that the area is unconstrained</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleUtils.printEdgeFile">
+<code class="descclassname">proteus.TriangleUtils.</code><code class="descname">printEdgeFile</code><span class="sig-paren">(</span><em>edges</em>, <em>filebase='mesh'</em>, <em>markers=None</em>, <em>nbase=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.printEdgeFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>print out edges in the mesh</p>
+<p>file format that triangle is expecting
+First line: &lt;# of edges&gt; &lt;# of boundary markers (0 or 1)&gt;
+Following lines: &lt;edge #&gt; &lt;endpoint&gt; &lt;endpoint&gt; [boundary marker]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.TriangleUtils.printNeighborFile">
+<code class="descclassname">proteus.TriangleUtils.</code><code class="descname">printNeighborFile</code><span class="sig-paren">(</span><em>neigs</em>, <em>filebase='mesh'</em>, <em>nbase=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.printNeighborFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>print out elment neighbors  in the mesh</p>
+<p>file format that triangle is expecting
+First line: &lt;# of triangles&gt;  &lt;# of neighbors per triangle (always 3)&gt;
+Following lines: &lt;triangle #&gt; &lt;neighbor&gt; &lt;neighbor&gt; &lt;neighbor&gt;</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TriangleUtils.TriangleInputFileReader">
+<em class="property">class </em><code class="descclassname">proteus.TriangleUtils.</code><code class="descname">TriangleInputFileReader</code><span class="sig-paren">(</span><em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.TriangleInputFileReader" title="Permalink to this definition">¶</a></dt>
+<dd><p>collect format strings, specifiers and routines in a class so that
+I can keep track of them better</p>
+<dl class="method">
+<dt id="proteus.TriangleUtils.TriangleInputFileReader.readNodes">
+<code class="descname">readNodes</code><span class="sig-paren">(</span><em>filebase</em>, <em>commchar='#'</em>, <em>nbase=0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.TriangleInputFileReader.readNodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>read nodes specified in Triangle format
+see recordFormatDoc for format info</p>
+<p>returns dataInfo holding basic info about data read and array of data read</p>
+<p>data[0] = nodes
+data[1] = node attributes
+data[1] = node markers</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TriangleUtils.TriangleInputFileReader.readTriangles">
+<code class="descname">readTriangles</code><span class="sig-paren">(</span><em>filebase</em>, <em>commchar='#'</em>, <em>nbase=0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.TriangleInputFileReader.readTriangles" title="Permalink to this definition">¶</a></dt>
+<dd><p>read triangles specified in Triangle format
+see recordFormatDoc for format info</p>
+<p>returns dataInfo holding basic info about data read and array of data read</p>
+<p>data[0] = triangles
+data[1] = triangle attributes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TriangleUtils.TriangleInputFileReader.readPoly">
+<code class="descname">readPoly</code><span class="sig-paren">(</span><em>filebase</em>, <em>commchar='#'</em>, <em>nbase=0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TriangleUtils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TriangleUtils.TriangleInputFileReader.readPoly" title="Permalink to this definition">¶</a></dt>
+<dd><p>read nodes, segments, holes, and regions specified in Triangle format
+see recordFormatDoc for format info</p>
+<p>returns dataInfo holding basic info about data read and array of data read</p>
+<p>this function is more tedious because of variations in input formats</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

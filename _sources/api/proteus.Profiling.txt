@@ -1,0 +1,7 @@
+proteus.Profiling module
+========================
+
+.. automodule:: proteus.Profiling
+    :members:
+    :undoc-members:
+    :show-inheritance:

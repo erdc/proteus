@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus package &mdash; Proteus 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="up" title="proteus" href="modules.html" />
+    <link rel="next" title="proteus.config package" href="proteus.config.html" />
+    <link rel="prev" title="proteus" href="modules.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="#">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="">proteus package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="modules.html" title="Previous Chapter: proteus"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.config.html" title="Next Chapter: proteus.config package"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.confi... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="proteus-package">
+<h1>proteus package<a class="headerlink" href="#proteus-package" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-proteus"></span><p>Modules for computing numerical solutions of differential equations</p>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="proteus.config.html">proteus.config package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="proteus.config.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="proteus.config.centos.html">proteus.config.centos module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.config.copper.html">proteus.config.copper module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.config.default.html">proteus.config.default module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.config.garnet.html">proteus.config.garnet module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.config.lightning.html">proteus.config.lightning module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.config.spirit.html">proteus.config.spirit module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.config.stampede.html">proteus.config.stampede module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.config.tamucluster.html">proteus.config.tamucluster module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.config.viutill.html">proteus.config.viutill module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.mprans.html">proteus.mprans package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="proteus.mprans.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.ArchiveBeams.html">proteus.mprans.ArchiveBeams module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.BoundaryConditions.html">proteus.mprans.BoundaryConditions module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.Dissipation.html">proteus.mprans.Dissipation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.Kappa.html">proteus.mprans.Kappa module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.MCorr.html">proteus.mprans.MCorr module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.MoveMesh.html">proteus.mprans.MoveMesh module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.NCLS.html">proteus.mprans.NCLS module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.RANS2P.html">proteus.mprans.RANS2P module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.RANS2P_IB.html">proteus.mprans.RANS2P_IB module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.RANS3P.html">proteus.mprans.RANS3P module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.RANS3PCorrPres.html">proteus.mprans.RANS3PCorrPres module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.RDLS.html">proteus.mprans.RDLS module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.SW2D.html">proteus.mprans.SW2D module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.SW2DCV.html">proteus.mprans.SW2DCV module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.SpatialTools.html">proteus.mprans.SpatialTools module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="proteus.mprans.SpatialTools.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.VOF.html">proteus.mprans.VOF module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.beamFEM.html">proteus.mprans.beamFEM module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cDissipation.html">proteus.mprans.cDissipation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cDissipation2D.html">proteus.mprans.cDissipation2D module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cKappa.html">proteus.mprans.cKappa module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cKappa2D.html">proteus.mprans.cKappa2D module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cMCorr.html">proteus.mprans.cMCorr module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cMoveMesh.html">proteus.mprans.cMoveMesh module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cMoveMesh2D.html">proteus.mprans.cMoveMesh2D module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cNCLS.html">proteus.mprans.cNCLS module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cRANS2P.html">proteus.mprans.cRANS2P module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cRANS2P2D.html">proteus.mprans.cRANS2P2D module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cRANS2P_IB.html">proteus.mprans.cRANS2P_IB module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cRANS3P.html">proteus.mprans.cRANS3P module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cRDLS.html">proteus.mprans.cRDLS module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cSW2D.html">proteus.mprans.cSW2D module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cSW2DCV.html">proteus.mprans.cSW2DCV module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.mprans.cVOF.html">proteus.mprans.cVOF module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.tests.html">proteus.tests package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="proteus.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="proteus.tests.test_boundaryconditions.html">proteus.tests.test_boundaryconditions module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.tests.test_context.html">proteus.tests.test_context module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.tests.test_gauges.html">proteus.tests.test_gauges module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.tests.test_linear_algebra.html">proteus.tests.test_linear_algebra module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.tests.test_meshtools.html">proteus.tests.test_meshtools module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.tests.test_read_mesh_xml.html">proteus.tests.test_read_mesh_xml module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.tests.test_spatialtools.html">proteus.tests.test_spatialtools module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.tests.test_wavetools.html">proteus.tests.test_wavetools module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.tests.util.html">proteus.tests.util module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="proteus.ADR.html">proteus.ADR module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.AnalyticalSolutions.html">proteus.AnalyticalSolutions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Archiver.html">proteus.Archiver module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.AuxiliaryVariables.html">proteus.AuxiliaryVariables module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.BoundaryConditions.html">proteus.BoundaryConditions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Comm.html">proteus.Comm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Context.html">proteus.Context module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.DiagUtils.html">proteus.DiagUtils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Domain.html">proteus.Domain module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.EGeometry.html">proteus.EGeometry module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.ErrorEstimators.html">proteus.ErrorEstimators module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.FemTools.html">proteus.FemTools module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Gauges.html">proteus.Gauges module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.InputTranslators.html">proteus.InputTranslators module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Isosurface.html">proteus.Isosurface module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.LatexReport.html">proteus.LatexReport module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.LinearAlgebraTools.html">proteus.LinearAlgebraTools module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.LinearSolvers.html">proteus.LinearSolvers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.MeshTools.html">proteus.MeshTools module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.NonlinearSolvers.html">proteus.NonlinearSolvers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Norms.html">proteus.Norms module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.NumericalFlux.html">proteus.NumericalFlux module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.NumericalSolution.html">proteus.NumericalSolution module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.ObjectiveFunctions.html">proteus.ObjectiveFunctions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Optimizers.html">proteus.Optimizers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.PostProcessingTools.html">proteus.PostProcessingTools module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Profiling.html">proteus.Profiling module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Quadrature.html">proteus.Quadrature module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.RefUtils.html">proteus.RefUtils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.ShockCapturing.html">proteus.ShockCapturing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.SimTools.html">proteus.SimTools module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.SpatialTools.html">proteus.SpatialTools module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="proteus.SpatialTools.html#example">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.SplitOperator.html">proteus.SplitOperator module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.StepControl.html">proteus.StepControl module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.StupidHeap.html">proteus.StupidHeap module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.SubgridError.html">proteus.SubgridError module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.SubsurfaceTransportCoefficients.html">proteus.SubsurfaceTransportCoefficients module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.TimeIntegration.html">proteus.TimeIntegration module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Transport.html">proteus.Transport module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.TransportCoefficients.html">proteus.TransportCoefficients module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.TriangleFileUtils.html">proteus.TriangleFileUtils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.TriangleTools.html">proteus.TriangleTools module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.TriangleUtils.html">proteus.TriangleUtils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.TwophaseDarcyCoefficients.html">proteus.TwophaseDarcyCoefficients module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.UnstructuredFMMandFSWsolvers.html">proteus.UnstructuredFMMandFSWsolvers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.Viewers.html">proteus.Viewers module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.WaveTools.html">proteus.WaveTools module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.default_n.html">proteus.default_n module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.default_p.html">proteus.default_p module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.default_s.html">proteus.default_s module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.default_so.html">proteus.default_so module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.deim_utils.html">proteus.deim_utils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.iproteus.html">proteus.iproteus module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.subsurfaceTransportFunctions.html">proteus.subsurfaceTransportFunctions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.testStuff.html">proteus.testStuff module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.util.html">proteus.util module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.version.html">proteus.version module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="proteus.waveFunctions.html">proteus.waveFunctions module</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2016, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>
