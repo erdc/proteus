@@ -173,8 +173,9 @@ class TestWaveParameters(unittest.TestCase):
 #Checking dispersion calculation for a predicted wavelenght of 5.00m
     def test_dispersion(self):
         from proteus.WaveTools import dispersion
-        length = 2*pi/dispersion(2*pi/1.94,1.)
-        self.assertTrue(abs(length - 5.)/5.<0.001)
+        length = 2*pi/dispersion(2*pi/5.,4.)
+        lTheor = 27.958
+        self.assertTrue(abs(length - lTheor)/lTheor<0.001)
         length = 2*pi/dispersion([2*pi/1.94,2*pi/1.94,],1.)
         length-=5.
         length/=5
@@ -1145,7 +1146,7 @@ class VerifyTimeSeries(unittest.TestCase):
         norm = max(etaRef)
         err = (etaInt - etaTest)**2
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
-        print err
+#        print err
         self.assertTrue(err<1e-2 )     
 """
         from matplotlib import pyplot as plt
