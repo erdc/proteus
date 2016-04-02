@@ -73,13 +73,14 @@ q2refNodes.append(numpy.array([[-1.0],
                                [ 0.5]]))
 
 q2refNodes.append(numpy.array([[-1.0, -1.0],
-                               [ 1.0, -1.0],
-                               [ 1.0,  1.0],
                                [-1.0,  1.0],
-                               [ 0.0, -1.0],
-                               [ 1.0,  0.0],
+                               [ 1.0,  1.0],
+                               [ 1.0, -1.0],
+                               [-1.0,  0.0],
                                [ 0.0,  1.0],
-                               [-1.0,  0.0]]))
+                               [ 1.0,  0.0],
+                               [ 0.0, -1.0],
+                               [ 0.0,  0.0]]))
 
 q2refNodes.append(numpy.array([[-1.0,   -1.0,   -1.0],#nodes on bottom
                                [ 1.0,   -1.0,   -1.0],
@@ -114,6 +115,7 @@ q2refNodes.append(numpy.array([[-1.0,   -1.0,   -1.0],#nodes on bottom
                                [ 0.0,    0.0,    1.0],
 
                                [ 0.0,    0.0,    0.0]])) #node on element center
+
 
 #which local boundaries are ref nodes "on"
 p2tetrahedronLocalBoundaryLookup = {0:[1,2,3],
