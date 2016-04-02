@@ -790,8 +790,10 @@ namespace proteus
 		}
 	    }
 	}
-      //if ((y>.25*.4) && ( y< .75*.4))
-      netBeamDrag[0]+= dV*sqrt(mom_u_source*mom_u_source+mom_v_source*mom_v_source+mom_w_source*mom_w_source);
+      if ((y>.1) && ( y< 0.4) && (x >= 1.2) && (x <= 11.0))
+	{
+	  netBeamDrag[0]+= dV*sqrt(mom_u_source*mom_u_source+mom_v_source*mom_v_source+mom_w_source*mom_w_source);
+	}
     }
 inline
   void calculateBeamLoads(const int nBeams,
@@ -823,15 +825,15 @@ inline
       H_rho = smoothedHeaviside(eps_rho,phi);
       rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
       vel = sqrt(u*u+v*v+w*w);
-      //if (x > 0.25)
-      //{
-      vel_avg[0] += u*dV;
-      vel_avg[1] += v*dV;
-      vel_avg[2] += w*dV;
-      //}
+      if ((x >= 1.2) && (x <= 11.0) && (y >= 0.1) && (y<= 0.4))
+	{
+	  vel_avg[0] += rho*u*dV;
+	  vel_avg[1] += rho*v*dV;
+	  vel_avg[2] += rho*w*dV;
+	}
       for(int I=0; I<nBeams; I++)
 	{
-	  buoy=0.0 ;(rho - 368.0)*3.14159*beamRadius[I]*beamRadius[I];
+	  buoy=(rho - 1350.0)*3.14159*beamRadius[I]*beamRadius[I];
 	  for(int k=0;k<nBeamElements; k++)
 	    {
 	      for(int l=0;l<beam_quadOrder; l++)
