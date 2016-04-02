@@ -945,8 +945,6 @@ class ConstantAdvection_Diffusion_IIPG_exterior(NF_base):
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         pass
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
-        import pdb
-        pdb.set_trace()
         self.setDirichletValues(ebqe)
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         for ci in range(self.nc):
