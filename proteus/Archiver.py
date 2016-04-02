@@ -1298,6 +1298,7 @@ class XdmfWriter:
 #                pdb.set_trace()
 
                 e2s=[ [0,4,8,7], [7,8,6,3],  [4,1,5,8], [8,5,2,6] ]
+                nsubelements=4
 
                 l2g = numpy.zeros((4*mesh.nElements_global,4),'i')
                 for eN in range(mesh.nElements_global):
@@ -1356,7 +1357,7 @@ class XdmfWriter:
                         if init or meshChanged:
                             if ar.has_h5py:
                                 ar.create_dataset_sync('elements'+spaceSuffix+`tCount`,
-                                                       offsets = mesh.globalMesh.elementOffsets_subdomain_owned*nsubelements,
+                                                       offsets = [x*nsubelements for x in mesh.globalMesh.elementOffsets_subdomain_owned],
                                                        data = dofMap.subdomain2global[l2g[:mesh.nElements_owned*nsubelements]])
                             else:
                                 assert False, "global_sync not implemented for pytables"
@@ -1847,7 +1848,7 @@ class XdmfWriter:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_p"+"_t"+str(tCount)
                         ar.create_dataset_sync(vectorName+"_p"+"_t"+str(tCount),
-                                               offsets = uList[components[0]].femSpace.dofMap.dof_offsets_subdomain_owned*3,
+                                               offsets = uList[components[0]].femSpace.dofMap.dof_offsets_subdomain_owned,
                                                data = velocity)
                     else:
                         assert False, "global_sync not implemented  for pytables"

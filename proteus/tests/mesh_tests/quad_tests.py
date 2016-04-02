@@ -42,6 +42,7 @@ def test_2D_stokes():
     '''
     Runs a 2D Poiseulle Stokes problem on Quads with Taylor Hood elements
     ''' 
+    # import and run a small 2D poiseulle problem
     import stokes_2d_p
     import stokes_2d_n
     pList = [stokes_2d_p]
@@ -56,11 +57,17 @@ def test_2D_stokes():
     opts.gatherArchive=True
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('test1')
+    # test some generated file output
+    import filecmp
+    xmf_file = filecmp.cmp('poiseulleFlow.xmf','poiseulle_xmf.output')
+    assert xmf_file == True, '******** xmf_file compare failed **********'
+
 
 
 if __name__ == '__main__':
-   from proteus import Comm
-   comm = Comm.init()
-   import nose
-   nose.main()
+#    test_2D_stokes()
+    from proteus import Comm
+    comm = Comm.init()
+    import nose
+    nose.main()
 
