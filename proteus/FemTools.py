@@ -1530,31 +1530,21 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
         from RefUtils import fact
         from RefUtils import q2refNodes
         sdim  = referenceElement.dim
-        if sdim==3:
-            self.nInterpNodes = 27
-        elif sdim==2:
+        if sdim==2:
             self.nInterpNodes = 9
+        elif sdim==3:
+            self.nInterpNodes = 27
         InterpolationConditions.__init__(self,self.nInterpNodes,referenceElement)
         self.quadraturePointArray = numpy.zeros((self.nInterpNodes,3),'d')
-        for k in range(self.nInterpNodes):
-            for I in range(sdim):
-                self.quadraturePointArray[k,I] = q2refNodes[2][k,I]
         #self.nQuadraturePoints = len(self.quadraturePointArray)
-        if sdim==3:
+        if sdim==2:
             for k in range(self.nInterpNodes):
                 for I in range(sdim):
-                    self.quadraturePointArray[k,I] = q2refNodes[0][k,I]
-        elif sdim==2:
-            # Think of a better way to do this?
-            self.quadraturePointArray[0,] = [-1.,-1.,0.]
-            self.quadraturePointArray[1,] = [-1.,1.,0.]
-            self.quadraturePointArray[2,] = [1.,1.,0.]
-            self.quadraturePointArray[3,] = [1.,-1.,0.]
-            self.quadraturePointArray[4,] = [-1.,0.,0.]
-            self.quadraturePointArray[5,] = [0.,1.,0.]
-            self.quadraturePointArray[6,] = [1.,0.,0.]
-            self.quadraturePointArray[7,] = [0.,-1.,0.]
-            self.quadraturePointArray[8,] = [0.,0.,0.]
+                    self.quadraturePointArray[k,I] = q2refNodes[1][k,I]
+        elif sdim==3:
+            for k in range(self.nInterpNodes):
+                for I in range(sdim):
+                    self.quadraturePointArray[k,I] = q2refNodes[2][k,I]
         self.nQuadraturePoints = len(self.quadraturePointArray)
         self.nQuadraturePoints = self.quadraturePointArray.shape[0]
         for i in range(self.nQuadraturePoints):

@@ -4648,6 +4648,8 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                 self.meshList[0].nodeNumbering_subdomain2global.resize(self.meshList[0].nNodes_global)
                 self.meshList[0].elementNumbering_subdomain2global.resize(self.meshList[0].nElements_global)
                 self.meshList[0].nodeOffsets_subdomain_owned[-1] = self.meshList[0].nNodes_global
+                self.meshList[0].nNodes_owned = self.meshList[0].nNodes_global
+                self.meshList[0].elementOffsets_subdomain_owned[-1] = self.meshList[0].nElements_global
 
                 for node in range(self.meshList[0].nNodes_global):
                     self.meshList[0].nodeNumbering_subdomain2global.itemset(node,node)
@@ -4670,6 +4672,8 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
         self.meshList[-1].nodeNumbering_subdomain2global.resize(self.meshList[-1].nNodes_global)
         self.meshList[-1].elementNumbering_subdomain2global.resize(self.meshList[-1].nElements_global)
         self.meshList[-1].nodeOffsets_subdomain_owned[-1] = self.meshList[-1].nNodes_global
+        self.meshList[-1].nNodes_owned = self.meshList[-1].nNodes_global
+        self.meshList[-1].elementOffsets_subdomain_owned[-1] = self.meshList[-1].nElements_global
 
         for node in range(self.meshList[-1].nNodes_global):
             self.meshList[-1].nodeNumbering_subdomain2global.itemset(node,node)
