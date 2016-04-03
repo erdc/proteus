@@ -594,8 +594,8 @@ cpostprocessingSolveLocalBDM2projection(PyObject* self,
                        &w_dS_f,
                        &ebq_n,
 		       &w_interior_gradients,
-		       &q_velocity,
                        &ebq_velocity,
+		       &q_velocity,
 		       &q_vdofs))
     return NULL;
 
@@ -616,6 +616,47 @@ cpostprocessingSolveLocalBDM2projection(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
+
+static PyObject*
+cpostprocessingBuildBDM2rhs(PyObject* self,
+				      PyObject* args)
+{
+  
+  PyObject *w_dS_f,*ebq_n,*ebq_velocity,*q_vdofs,*BDMmat_element,*BDMmatPivots_element,*q_velocity,
+    *w_interior_gradients, *w_interior_divfree;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOO",
+		       &BDMmat_element,
+		       &BDMmatPivots_element,
+                       &w_dS_f,
+                       &ebq_n,
+		       &w_interior_gradients,
+		       &w_interior_divfree,
+                       &ebq_velocity,
+		       &q_velocity,
+		       &q_vdofs))
+    return NULL;
+
+  buildBDM2rhs(SHAPE(ebq_n)[0],
+	       SHAPE(ebq_n)[1],
+	       SHAPE(ebq_n)[2],
+	       SHAPE(q_velocity)[1],
+	       SHAPE(ebq_n)[3],
+	       SHAPE(w_dS_f)[3],
+	       SHAPE(BDMmat_element)[1],
+	       DDATA(BDMmat_element),
+	       IDATA(BDMmatPivots_element),
+	       DDATA(w_dS_f),
+	       DDATA(ebq_n),
+	       DDATA(w_interior_gradients),
+	       DDATA(w_interior_divfree),
+	       DDATA(ebq_velocity),
+	       DDATA(q_velocity),		
+	       DDATA(q_vdofs));
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
 
 static PyObject*
 cpostprocessingSolveLocalBDM1projectionFromFlux(PyObject* self,
@@ -2371,6 +2412,10 @@ static PyMethodDef cpostprocessingMethods[] = {
     cpostprocessingSolveLocalBDM2projection,
     METH_VARARGS, 
     "solve for local [P^1(E)]^d dofs using BDM1 projection assuming system already factored" },
+  { "buildBDM2rhs", 
+    cpostprocessingBuildBDM2rhs,
+    METH_VARARGS, 
+    "solve for local [P^1(E)]^d dofs using BDM2 projection assuming system already factored" },
   { "solveLocalBDM1projectionFromFlux", 
     cpostprocessingSolveLocalBDM1projectionFromFlux,
     METH_VARARGS, 

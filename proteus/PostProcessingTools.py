@@ -1071,9 +1071,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
             self.getConservationJacobianPWL(ci)
             self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
         
-        import pdb
-        pdb.set_trace()
-
         cpostprocessing.calculateConservationFluxPWL(self.nElements_DOF,
                                                      self.vt.internalNodesArray,
                                                      self.fluxBoundaryNodes[ci],
@@ -1092,8 +1089,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         """
         compute conservation resiudal using current guess for element boundary flux
         """
-        import pdb
-        pdb.set_trace()
         if correctFlux == True:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
 
@@ -1318,7 +1313,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
 
     """
     from cpostprocessing import buildLocalBDM2projectionMatrices,factorLocalBDM2projectionMatrices  #NEED TO CHANGE THESE TO BDM2 AS YOU PROGRESS
-    from cpostprocessing import solveLocalBDM2projection,getElementBDM2velocityValuesLagrangeRep
+    from cpostprocessing import solveLocalBDM2projection,getElementBDM2velocityValuesLagrangeRep,buildBDM2rhs
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VPP_PWL_RT1.__init__(self,vectorTransport=vectorTransport,vtComponents=vtComponents)
         self.postProcessingType = 'pwl-bdm2'
@@ -1445,22 +1440,16 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                                                   self.vt.nSpace_global),'d')
 #        num_component_basis_functions = len(self.q[('w',0)][0][0])
         for eN in range(self.vt.mesh.nElements_global):
-            for k in range(n_xi):
+            for k in range(self.vt.nQuadraturePoints_element):
                 for i in range(self.dim):
                     J_component = i%2
                     basis_function_component = i/2
                     self.piola_trial_function[eN,k,i,0] = self.q['J'][eN][k][0][J_component]*self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
                     self.piola_trial_function[eN,k,i,1] = self.q['J'][eN][k][1][J_component]*self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
-        import pdb 
-#        pdb.set_trace()
-
 
 
     def computeBDM2projectionMatrices(self):
-        import pdb
-#        import scipy.io
-        pdb.set_trace()
-
+        
         cpostprocessing.buildLocalBDM2projectionMatrices(self.degree,
                                                          self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
                                                          self.vt.ebq['n'],
@@ -1490,8 +1479,15 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
 #        ARB -- need to add an assert here
 #        assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
-        import pdb
-        pdb.set_trace()
+        self.buildBDM2rhs(self.BDMprojectionMat_element,
+                          self.BDMprojectionMatPivots_element,
+                          self.w_dS[ci],
+                          self.vt.ebq['n'],
+                          self.weightedInteriorTestGradients,
+                          self.weightedInteriorDivFreeElement,
+                          self.ebq[('velocity',ci)],
+                          self.q[('velocity',ci)],
+                          self.q[('velocity_dofs',ci)])
 
         self.solveLocalBDM2projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,
@@ -1501,6 +1497,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                                       self.ebq[('velocity',ci)],
                                       self.q[('velocity',ci)],
                                       self.q[('velocity_dofs',ci)])
+
+
 
         cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.qv[ci],
                                                                 self.q[('velocity_dofs',ci)],

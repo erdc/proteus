@@ -2538,9 +2538,6 @@ void buildLocalBDM1projectionMatrices_orig(int nElements_global,
 		    BDMprojectionMat_element[eN*nVDOFs_element2 + irow*nVDOFs_element + j] = 0.0;
 		  for (ibq = 0; ibq < nQuadraturePoints_elementBoundary; ibq++)
 		    {
-		      if (eN==0 && ibq==0){
-			printf("ebq_n = %.2f , ebq_v = %.2f , w_dS_f = %.2f , ebN = %d , j = %d ,  k = %d , kp = %d , l = %d, global index = %d, irow = %d \n",ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace + ebN*nQuadraturePoints_elementBoundary*nSpace+ibq*nSpace+ l],ebq_v[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_trial_element+ ebN*nQuadraturePoints_elementBoundary*nDOFs_trial_element+ibq*nDOFs_trial_element+k],	w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+ ibq*nDOFs_test_element+kp],ebN , j ,  k , kp , l , eN*nVDOFs_element2 + irow + j*nVDOFs_element,irow);
-		      }
 		      
 		      pval = 
 			ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
@@ -2669,17 +2666,7 @@ Input Variables
 		    BDMprojectionMat_element[eN*nVDOFs_element2 + irow*nVDOFs_element + j] = 0.0;
 		  for (ibq = 0; ibq < nQuadraturePoints_elementBoundary; ibq++)
 		    {
-		  // ARB TEMP
-		  if (eN==0){
-		  /*
- 		             printf("ebq_n: %.2f, eN: %d, ebN: %d,s: %d, ibq: %d, k: %d, l: %d, j: %d, nDOFs_test_element: %d, nDOFs_trial_element: %d\n",ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
-			     ebN*nQuadraturePoints_elementBoundary*nSpace+ibq*nSpace+l], eN,ebN,s,ibq,k,l,j,nDOFs_test_element,nDOFs_trial_element);*/
 
- 		    printf("ebq_n: %.2f, w_dS_f: %.2f, eN: %d, ebN: %d,s: %d, ibq: %d, k: %d, l: %d, j: %d, nDOFs_test_element: %d, nDOFs_trial_element: %d, kp: %d\n",ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
-		    ebN*nQuadraturePoints_elementBoundary*nSpace+ibq*nSpace+l],w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+ibq*nDOFs_test_element+kp], eN,ebN,s,ibq,k,l,j,nDOFs_test_element,nDOFs_trial_element,kp);
-
-                            }
-		  // ARB TEMP
 		      pval = 
 			ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
 			      ebN*nQuadraturePoints_elementBoundary*nSpace+
@@ -2739,7 +2726,9 @@ void buildLocalBDM2projectionMatrices(int degree,
 				      double * piola_trial_fun)
 {
   /***********************************************************************
-   WIP - This function builds the LocalBDM2projectionMatrices
+   This function builds the LocalBDM2projectionMatrices.  This includes
+   three boundary integrals per edge and three interior degrees of freedom.
+   NOTE - this function has only been tested for TRANSPOSE_FOR_LAPACK=1.
    ***********************************************************************/
 
   int eN,ebN,s,j,k,l,kp,irow,ibq,nSimplex;
@@ -2747,23 +2736,14 @@ void buildLocalBDM2projectionMatrices(int degree,
   double pval, pvalx, pvaly;
   nSimplex = nSpace+1;
   assert(nVDOFs_element == nSpace*(nSpace*3));
-  //  nVDOFs_element2 = nVDOFs_element*nVDOFs_element;
-  /*mwf debug
-    printf("build local BDM nE= %d nEb=%d nBq=%d nvd=%d nd=%d\n",
-    nElements_global,nElementBoundaries_element,nQuadraturePoints_elementBoundary,
-    nVDOFs_element,nSpace);
-  */
+
   // ToDo - Think of some clever asserts to replace these with.
   //  assert(nSimplex == nDOFs_trial_element);
   //  assert(nSimplex == nDOFs_test_element);
 
-  printf("nDOFs_trial_boundary_element = %d\n",nDOFs_trial_boundary_element);
-  printf("nDOFs_trial_interior_element = %d\n",nDOFs_trial_interior_element);
-  printf("nVDOFs_element = %d\n",nVDOFs_element);
-
   int interiorPspace = nDOFs_trial_interior_element;
   int boundaryPspace = degree+1; 
-  int edgeFlags[9] = {1,2,4,0,2,5,0,1,3}; //This is an edge flags list
+  int edgeFlags[9] = {1,2,4,0,2,5,0,1,3}; 
 
   // Specify the number of BDM degrees-of-freedom.
   int dof = (degree+1)*(degree+2);
@@ -2771,7 +2751,7 @@ void buildLocalBDM2projectionMatrices(int degree,
   int edge_dof = degree+1 ;
   int interior_dof = dof - boundary_dof;
 
-  // Calculate the DOF
+  // Begin populating the projection matrix
 
   // Loop over elements of the triangulation
   for (eN=0; eN < nElements_global; eN++)
@@ -2783,55 +2763,43 @@ void buildLocalBDM2projectionMatrices(int degree,
 	  for (s = 0; s < edge_dof; s++)
 	    {
 	      irow = ebN*boundaryPspace + s;
+
 	      for (j = 0; j < dof; j++)
 		{
+
 		  k = j / nSpace;
-		  l = j % nSpace;  // This needs to cycle through 0, and 1
+		  l = j % nSpace; 
 		  kp = edgeFlags[ebN*boundaryPspace+s];
-		  //		  kp= (ebN+s+1) % nSimplex; /*neighbor (s) of node k*/
+
 		  if (TRANSPOSE_FOR_LAPACK > 0)
-		    BDMprojectionMat_element[eN*dof*dof + irow + j*dof] = 0.0;
+		    BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element] = 0.;
 		  else
-		    BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j] = 0.0;
+		    BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j] = 0.;
 
 		  for (ibq = 0; ibq < nQuadraturePoints_elementBoundary; ibq++)
 		    {
-		      pval = 
-			ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
-			      ebN*nQuadraturePoints_elementBoundary*nSpace+
-			      ibq*nSpace+
-			      l]
-			*
-			w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+
-			       ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+
-			       ibq*nDOFs_test_element+
-			       kp]
-			*
-			ebq_v[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_trial_boundary_element+
-			      ebN*nQuadraturePoints_elementBoundary*nDOFs_trial_boundary_element+
-			      ibq*nDOFs_trial_boundary_element+
-			      k];
 
-		      /*
-		      if (eN==0){
-			printf("k = %d, l = %d, kp = %d, irow = %d, j = %d, nVDOFs_element = %d, matrix_entry = %d ebq_n = %.2f, w_dS_f = %.2f, ebq_v = %.2f\n", k, l, kp,  irow, j, nVDOFs_element, eN*dof*dof + irow + j*nVDOFs_element, 	ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
-			      ebN*nQuadraturePoints_elementBoundary*nSpace+
-			      ibq*nSpace+l],			
-			       w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+
-			       ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+
-			       ibq*nDOFs_test_element+
-				      kp],
-			ebq_v[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_trial_boundary_element+
-			      ebN*nQuadraturePoints_elementBoundary*nDOFs_trial_boundary_element+
-			      ibq*nDOFs_trial_boundary_element+
-			      k]);
-		      }
-		      */
+		      pval =
+		      	ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
+		      	      ebN*nQuadraturePoints_elementBoundary*nSpace+
+		      	      ibq*nSpace+
+		      	      l]
+		      	*
+		      	w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+
+		      	       ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+
+		      	       ibq*nDOFs_test_element+
+		      	       kp]
+		      	*
+		      	ebq_v[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_trial_boundary_element+
+		      	      ebN*nQuadraturePoints_elementBoundary*nDOFs_trial_boundary_element+
+		      	      ibq*nDOFs_trial_boundary_element+
+		      	      k];
+
 
 		      if (TRANSPOSE_FOR_LAPACK > 0)
-			BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element] += pval;						
+		      	BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element] += pval;
 		      else
-			BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j] += pval;
+		      	BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j] += pval;
 		      
 		    }/*ibq*/
 		}/*j*/
@@ -2840,100 +2808,82 @@ void buildLocalBDM2projectionMatrices(int degree,
 
       // **** Interior Integrals (two interior integrals come from gradients, one comes from div-free element) ****
 
-      // TODO - fix when TRANSPOSE_FOR_LAPACK == 0
-
       // **** Gradient Integrals ****
       for (s = 0; s < interiorPspace-1; s++){
-	// Iterate over interior polynomial test space      
-	irow = boundary_dof + s;
-	for (j=0; j < 6; j++){
+      	// Iterate over interior polynomial test space
+      	irow = boundary_dof + s;
+      	for (j=0; j < 6; j++){
 
-	// Iterate over trial functions
-	  if (TRANSPOSE_FOR_LAPACK > 0){
-	    BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element*2] = 0.0;
-	    BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element*2 + 12] = 0.0;
+      	// Iterate over trial functions
+      	  if (TRANSPOSE_FOR_LAPACK > 0){
+      	    BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element*2] = 0.0;
+      	    BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element*2 + 12] = 0.0;
+      	  }
+      	  else {
+      	    BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j] = 0.0;
+	    BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j + 1] = 0.0;
 	  }
-	  else
-	    BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j] = 0.0;
 
-	  for (ibq=0; ibq < nQuadraturePoints_elementInterior; ibq++){
-	  // Iterate over quadrature points
-	    if (eN==1){
-	      /*
-	      	      printf ("Values: eN=%d , s=%d, j=%d, ibq=%d , nVDOFs_element=%d, irow=%d, matrix_element=%d, q - basis function values: = %f, weighted interior test functions (x-component): = %f\n",
-			      eN , s , j , ibq , 
-			      nVDOFs_element, irow, eN*dof*dof + irow + j*nVDOFs_element*2, 
-			      q_basis_vals[eN*6*nQuadraturePoints_elementInterior + ibq*nDOFs_test_element + j],
-			      w_int_test_grads[eN*2*interiorPspace*nQuadraturePoints_elementInterior + s*2 + ibq*2*interiorPspace]);
-	      */
-	    } /* end if*/
+      	  for (ibq=0; ibq < nQuadraturePoints_elementInterior; ibq++){
+      	  // Iterate over quadrature points
 
-	      pvalx = q_basis_vals[eN*6*nQuadraturePoints_elementInterior +
-				  ibq*nDOFs_test_element + 
-				  j]
-		  * w_int_test_grads[eN*2*interiorPspace*nQuadraturePoints_elementInterior+
-				      s*2 +
-			              ibq*2*interiorPspace];
+      	      pvalx = q_basis_vals[eN*6*nQuadraturePoints_elementInterior +
+      				  ibq*nDOFs_test_element +
+      				  j]
+      		  * w_int_test_grads[eN*2*interiorPspace*nQuadraturePoints_elementInterior+
+      				      s*2 +
+      			              ibq*2*interiorPspace];
 
-	      pvaly = q_basis_vals[eN*6*nQuadraturePoints_elementInterior +
-				  ibq*nDOFs_test_element + 
-				  j]
-		  * w_int_test_grads[eN*2*interiorPspace*nQuadraturePoints_elementInterior+
-				      s*2 +
-			              ibq*2*interiorPspace + 1];
+      	      pvaly = q_basis_vals[eN*6*nQuadraturePoints_elementInterior +
+      				  ibq*nDOFs_test_element +
+      				  j]
+      		  * w_int_test_grads[eN*2*interiorPspace*nQuadraturePoints_elementInterior+
+      				      s*2 +
+      			              ibq*2*interiorPspace + 1];
 	  
             if (TRANSPOSE_FOR_LAPACK > 0){
-    		BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element*2]      += pvalx;
-    		BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element*2 + 12] += pvaly;
-	     }
-	    else
- 		BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j] += pval;
+      		BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element*2]      += pvalx;
+      		BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element*2 + 12] += pvaly;
+      	     }
+      	    else {
+      		BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j] += pval;
+      		BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j + 1] += pval;
+	    } 
 	
-	  }  /* end ibq */
+      	  }  /* end ibq */
         }   /* end j*/
       }    /* end s */
 
-      // **** DIV-FREE Integrals ****
+      /* // **** DIV-FREE Integrals **** */
       irow = boundary_dof + interiorPspace - 1;
       for (j=0; j<12; j++){
 
-	if (TRANSPOSE_FOR_LAPACK > 0){
-	  BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element] = 0.0;
-	}
-	else
+      	if (TRANSPOSE_FOR_LAPACK > 0){
+      	  BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element] = 0.0;
+      	}
+      	else
           BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j] = 0.0;
 
-	for (ibq=0; ibq<nQuadraturePoints_elementInterior; ibq++)
-	{
-	  
-	  if (eN==1){
-	    /*
-	    printf("w_int_div_free_0 = %.3f, piola_trial_fun_0 = %.3f , w_int_div_free_1 = %.3f, piola_trial_fun_1 = %.3f\n",
-		   w_int_div_free[eN * 2 * nQuadraturePoints_elementInterior +  2 * ibq] ,
-		   piola_trial_fun[eN * 12 * 2 * nQuadraturePoints_elementInterior +  ibq * 12 * 2 +   j * 2],
-		   w_int_div_free[eN * 2 * nQuadraturePoints_elementInterior +  2 * ibq + 1] ,
-		   piola_trial_fun[eN * 12 * 2 * nQuadraturePoints_elementInterior +  ibq * 12 * 2 +   j * 2 + 1]);
-	    */
-	  }
-	  
-            pval = w_int_div_free[eN * 2 * nQuadraturePoints_elementInterior + 
-				  2 * ibq]
-	         * piola_trial_fun[eN * 12 * 2 * nQuadraturePoints_elementInterior +
-				   ibq * 12 * 2 +
-				   j * 2]
-	         + 
-	          w_int_div_free[eN*2*nQuadraturePoints_elementInterior + 
-				2 * ibq + 1]
-	         * piola_trial_fun[eN* 12 * 2 * nQuadraturePoints_elementInterior +
-				   ibq * 12 * 2 +
-				   j * 2 + 1];
-	}
+      	for (ibq=0; ibq<nQuadraturePoints_elementInterior; ibq++)
+      	{
+	  	  
+            pval = w_int_div_free[eN * 2 * nQuadraturePoints_elementInterior +
+      				  2 * ibq]
+      	         * piola_trial_fun[eN * 12 * 2 * nQuadraturePoints_elementInterior +
+      				   ibq * 12 * 2 +
+      				   j * 2]
+      	         +
+      	          w_int_div_free[eN*2*nQuadraturePoints_elementInterior +
+      				2 * ibq + 1]
+      	         * piola_trial_fun[eN* 12 * 2 * nQuadraturePoints_elementInterior +
+      				   ibq * 12 * 2 +
+      				   j * 2 + 1];
  
-	if (TRANSPOSE_FOR_LAPACK > 0){
-	  BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element] += pval;
-	}
-	else
-          BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j] = 0.0;
+	    if (TRANSPOSE_FOR_LAPACK > 0)
+	      BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element] += pval;
+	    else
+	      BDMprojectionMat_element[eN*dof*dof + irow*nVDOFs_element + j] = 0.0;
+      	}
       }
     }/*eN*/ 
 }
@@ -2958,7 +2908,7 @@ void factorLocalBDM1projectionMatrices(int nElements_global,
               &pivots_element[0],
               &INFO);
       //     /*mwf debug
-	printf("factor local BDM eN=%d INFO=%d",eN,INFO);
+      //	printf("factor local BDM eN=%d INFO=%d",eN,INFO);
 	// */
       for (i = 0; i < nVDOFs_element; i++)
 	  BDMprojectionMatPivots_element[eN*nVDOFs_element+i] = (int) pivots_element[i];
@@ -2987,7 +2937,7 @@ void factorLocalBDM2projectionMatrices(int nElements_global,
               &pivots_element[0],
               &INFO);
      
-	printf("factor local BDM eN=%d INFO=%d\n",eN,INFO);
+      //	printf("factor local BDM eN=%d INFO=%d\n",eN,INFO);
      
       for (i = 0; i < nVDOFs_element; i++)
 	  BDMprojectionMatPivots_element[eN*nVDOFs_element+i] = (int) pivots_element[i];
@@ -3087,20 +3037,26 @@ void solveLocalBDM1projection(int nElements_global,
     }/*eN*/
 }
 
-void solveLocalBDM2projection(int nElements_global,
-			      int nElementBoundaries_element,
-			      int nQuadraturePoints_elementBoundary,
-			      int nSpace,
-			      int nDOFs_test_element,
-			      int nVDOFs_element,
-			      double * BDMprojectionMatFact_element,
-			      int* BDMprojectionMatPivots_element,
-			      double * w_dS_f,
-			      double * ebq_n,
-			      double * ebq_velocity,
-			      double * p1_velocity_dofs)
+void buildBDM2rhs(int nElements_global,
+                  int nElementBoundaries_element,
+	          int nQuadraturePoints_elementBoundary,
+		  int nQuadraturePoints_elementInterior,
+	          int nSpace,
+	          int nDOFs_test_element,
+	          int nVDOFs_element,
+	          double * BDMprojectionMatFact_element,
+	          int* BDMprojectionMatPivots_element,
+	          double * w_dS_f,
+	          double * ebq_n,
+		  double * w_interior_grads,
+		  double * w_interior_divfree,
+	          double * ebq_velocity,
+		  double * q_velocity,
+	          double * p1_velocity_dofs)
 {
   /***********************************************************************
+     NOTE - *b represents the constructed righthand side
+
      build right hand side for projection to BDM2 space and then solve
      the local projection system. 
 
@@ -3120,19 +3076,22 @@ void solveLocalBDM2projection(int nElements_global,
   PROTEUS_LAPACK_INTEGER INFO=0,NRHS=1;
   char TRANS='N';
   int eN,ebN,s,irow,kp,ibq,J,nSimplex,nVDOFs_element2;
-  double btmp;
+  double btmp,pvalx,pvaly;
   PROTEUS_LAPACK_INTEGER pivots_element[12]; /*maximum size for local space is ???*/
   PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER) nVDOFs_element);
 
   // temporary variables...these will be added as inputs
   int degree = 2;
   int boundaryPspace = degree + 1;
+  int interiorPspace = 3;
 
   // Specify the number of BDM degrees-of-freedom.
   int dof = (degree+1)*(degree+2);
   int boundary_dof = 3*(degree+1);
   int edge_dof = degree+1 ;
   int interior_dof = dof - boundary_dof;
+
+  int edgeFlags[9] = {1,2,4,0,2,5,0,1,3}; //This is an edge flags list
 
   nSimplex = nSpace+1;
   assert(nVDOFs_element == dof);
@@ -3148,12 +3107,29 @@ void solveLocalBDM2projection(int nElements_global,
   	  for (s = 0; s < edge_dof; s++)
   	    {
   	      irow = ebN*boundaryPspace + s;
-  	      kp = (ebN+s+1) % nSimplex;
+	      kp = edgeFlags[ebN*boundaryPspace+s];
   	      btmp = 0.0;
+
   	      for (ibq = 0; ibq < nQuadraturePoints_elementBoundary; ibq++)
   		{
-  		  for (J = 0; J < nSpace; J++)
-  		    {
+  		  for (J = 0; J < nSpace; J++) {
+  		    /* { */
+		    /*   if (ebN==0 && irow==2){ */
+		    /* 	printf("ebq_n=%.2f,ebq_velocity=%.2f,w_dS_f=%.2f\n", */
+		    /* 	       ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+ */
+		    /* 		     ebN*nQuadraturePoints_elementBoundary*nSpace+ */
+		    /* 		     ibq*nSpace+ */
+		    /* 		     J], */
+		    /* 	       ebq_velocity[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+ */
+		    /* 			    ebN*nQuadraturePoints_elementBoundary*nSpace+ */
+		    /* 			    ibq*nSpace+ */
+		    /* 			    J], */
+		    /* 	       w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+ */
+		    /* 		      ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+ */
+		    /* 		      ibq*nDOFs_test_element+ */
+		    /* 		      kp]); */
+		    /*   } */
+
   		      btmp +=
   			ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
   			      ebN*nQuadraturePoints_elementBoundary*nSpace+
@@ -3168,26 +3144,105 @@ void solveLocalBDM2projection(int nElements_global,
   				 ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+
   				 ibq*nDOFs_test_element+
   				 kp];
-  		    }/*J*/
-  		}/*ibq*/
+
+		  }/*J*/
+		}/*ibq*/
   	      p1_velocity_dofs[eN*nVDOFs_element+irow] = btmp;
-  	   }
-  	}/*ebN*/
+	    }
+	}/*ebN*/
       
-      // Interior Integrals
-      for (s = 0; s < interior_dof; s++)
-     {
-       irow = nElementBoundaries_element*edge_dof + s;
-       btmp = 0.0;
-       for (ibq = 0; ibq < 6 /*nQuadraturePoints_elementInterior*/; ibq++)
-  	 {
-  	   btmp += 0.;
-  	 }
-       p1_velocity_dofs[eN*nVDOFs_element + irow] = btmp;
-      }
+      // interior gradient integrals
+
+      for (s = 0; s < interior_dof-1; s++){
+	// Iterate over interior polynomial test space      
+	  irow = nElementBoundaries_element*edge_dof + s;
+	  btmp = 0.0;
+	
+	  for (ibq=0; ibq < nQuadraturePoints_elementInterior; ibq++){
+	  // Iterate over quadrature points
+
+	      pvalx = q_velocity[eN*6*nQuadraturePoints_elementInterior +
+				 ibq*nSpace + 
+				 0]
+		* w_interior_grads[eN*2*interiorPspace*nQuadraturePoints_elementInterior+
+				   s*2 +
+				   ibq*2*interiorPspace];
+
+	      pvaly = q_velocity[eN*6*nQuadraturePoints_elementInterior +
+				 ibq*nSpace + 
+				 1]
+		* w_interior_grads[eN*2*interiorPspace*nQuadraturePoints_elementInterior+
+				   s*2 +
+				   ibq*2*interiorPspace + 1];
+	
+	      btmp += pvalx + pvaly;
+
+	  }  /* end ibq */
+	    p1_velocity_dofs[eN*nVDOFs_element+irow] = btmp;
+      }    /* end s */
+
+      // div free element
+
+      btmp = 0.0;
+
+      for (ibq = 0; ibq < nQuadraturePoints_elementInterior; ibq++){
+
+	pvalx = q_velocity[eN*6*nQuadraturePoints_elementInterior +
+			   ibq*nSpace + 
+			   0 ]
+	  *   w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+
+				 ibq*nSpace +
+				 0 ];
+
+	pvaly = q_velocity[eN*6*nQuadraturePoints_elementInterior +
+			   ibq*nSpace + 
+			   1 ]	  * 	       
+                w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+
+				   ibq*nSpace +
+				   1 ];
+	
+	      btmp += pvalx + pvaly;
+ 
+	       //w_interior_divfree;
+       }
+      p1_velocity_dofs[eN*nVDOFs_element + (nVDOFs_element-1) ] = btmp;
       
+      
+    }/*eN*/
+
+}
+
+void solveLocalBDM2projection(int nElements_global,
+			      int nElementBoundaries_element,
+			      int nQuadraturePoints_elementBoundary,
+			      int nSpace,
+			      int nDOFs_test_element,
+			      int nVDOFs_element,
+			      double * BDMprojectionMatFact_element,
+			      int* BDMprojectionMatPivots_element,
+			      double * w_dS_f,
+			      double * ebq_n,
+			      double * ebq_velocity,
+			      double * p1_velocity_dofs)
+{
+  /***********************************************************************
+   Solve the BDM2 projection and save answer in p1_velocity_dofs vector.
+
+   ***********************************************************************/
+
+  PROTEUS_LAPACK_INTEGER INFO=0,NRHS=1;
+  char TRANS='N';
+  int eN,ebN,s,irow,kp,ibq,J,nSimplex,nVDOFs_element2;
+  double btmp;
+  PROTEUS_LAPACK_INTEGER pivots_element[12]; /*maximum size for local space is ???*/
+  PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER) nVDOFs_element);
+
+  for (eN = 0; eN < nElements_global; eN++)
+    {
+  
       for (irow = 0; irow < nVDOFs_element; irow++)
   	pivots_element[irow] = BDMprojectionMatPivots_element[eN*nVDOFs_element+irow];
+      
       dgetrs_(&TRANS,
   	      &nE_n,
   	      &NRHS,
@@ -3399,13 +3454,12 @@ void getElementBDM2velocityValuesLagrangeRep(int nElements_global,
 	      for (k = 0; k < nSpace+1; k++)
 		{
 		  j = k*nSpace+ id; /*id*(nSpace+1) + k;*/
-		  // ARB
-		  if (eN==0 && iq==0){  printf("k = %d, p1_index = %d , q_velocity_index = %d , q_v_index = %d \n", k , eN*nVDOF_element + j , eN*nQuadraturePoints_element*nSpace + iq*nSpace + id , eN*nQuadraturePoints_element*nDOF_trial_element + iq*nDOF_trial_element + k); }
-		  // ARB
+
 		  q_velocity[eN*nQuadraturePoints_element*nSpace + iq*nSpace + id] +=
 		    q_v[eN*nQuadraturePoints_element*nDOF_trial_element + iq*nDOF_trial_element + k]
 		    *
 		    p1_velocity_dofs[eN*nVDOF_element + j];
+
 		}/*k*/ 
 	    }/*id*/
 	}/*iq*/
@@ -4176,7 +4230,6 @@ void calculateConservationResidualPWL(int nElements_global,
   assert(nodeStarFactor);
   starR = nodeStarFactor->subdomain_R;
   starU = nodeStarFactor->subdomain_U;
-  printf("check point 0\n");
   /*initial residual with element residual*/
   for (eN=0;eN<nElements_global;eN++)
    {
@@ -4200,12 +4253,11 @@ void calculateConservationResidualPWL(int nElements_global,
 	 //	 */
        }
      //    /*mwf debug
-       printf("calcConsResPWL eN=%d consRes=%g\n",eN,
-       conservationResidual[eN]);
+     //       printf("calcConsResPWL eN=%d consRes=%g\n",eN,
+     //  conservationResidual[eN]);
      //  */
    }
   /*calculate interior element boundary fluxes and update residual*/
-  printf("check point 1\n");
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
     {
       ebN = interiorElementBoundaries[ebNI];
@@ -4304,7 +4356,6 @@ void calculateConservationResidualPWL(int nElements_global,
 	    }
 	}
     }
-  printf("check point 2\n");
   /*calculate fluxes on exterior element boundaries and update residual*/
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
     {
@@ -4395,7 +4446,6 @@ void calculateConservationResidualPWL(int nElements_global,
 	    }
 	}
     }
-  printf("check point 3\n");
   /*copy the global velocity onto the elements*/
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
     {
@@ -4438,7 +4488,7 @@ void calculateConservationResidualPWL(int nElements_global,
 
           }
     }
-    printf("check point 4\n");
+
   /*copy the global velocity onto the elements*/
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
     {
@@ -4467,7 +4517,6 @@ void calculateConservationResidualPWL(int nElements_global,
 
 	  }
     }
-  printf("check point 5\n");
   /*mwf debug
   for (eN=0; eN < nElements_global; eN++)
     {
@@ -4661,19 +4710,19 @@ void calculateConservationJacobianPWL(int nDOF_global,
               &INFO);
       
       /*mwf debug*/
-	if (INFO > 0)
-	  {
-            printf("velPP jac dgetrf INFO=%d nN=%d \n",(int)(INFO),nN);
-            for (ii=0;ii<nE_n;ii++)
-              {
-                for(jj=0;jj<nE_n;jj++)
-                  {
+	/* if (INFO > 0) */
+	/*   { */
+        /*     printf("velPP jac dgetrf INFO=%d nN=%d \n",(int)(INFO),nN); */
+        /*     for (ii=0;ii<nE_n;ii++) */
+        /*       { */
+        /*         for(jj=0;jj<nE_n;jj++) */
+        /*           { */
                     
-                    printf("%12.5e \t",starJacobian[nN][ii*nE_n + jj]);
-                  }
-                printf("\n");
-              }
-          }
+        /*             printf("%12.5e \t",starJacobian[nN][ii*nE_n + jj]); */
+        /*           } */
+        /*         printf("\n"); */
+        /*       } */
+        /*   } */
 	/*assert(INFO == 0);*//*need to turn off if use dgetc2*/
     }
 }
