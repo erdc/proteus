@@ -223,10 +223,15 @@ class Quadrilateral(Polygon):
 
     def sortNodes(self,nodeList):
         newList = [None] * 4
+        coordinate_list = [1,1,1]
+
+        # initialize coordinate mins and maxs
         xMin = nodeList[0].p[X]
         xMax = nodeList[0].p[X]
         yMin = nodeList[0].p[Y]
         yMax = nodeList[0].p[Y]
+        zMin = nodeList[0].p[Z]
+        zMax = nodeList[0].p[Z]
         for node in nodeList:
             if xMin > node.p[X]:
                 xMin = node.p[X]
@@ -236,15 +241,69 @@ class Quadrilateral(Polygon):
                 yMin = node.p[Y]
             if yMax < node.p[Y]:
                 yMax = node.p[Y]
+            if zMin > node.p[Z]:
+                zMin = node.p[Z]
+            if zMax < node.p[Z]:
+                zMax = node.p[Z]
+
+        # indentity degenerate coordinate space.  
+        # NOTE - this is not entirely accurate, but assumes 
+        # 2D quadrilateral objects are orthogonal to one of
+        # the cononical coordinate axes
+
+        if xMin==xMax:
+            coordinate_list[0] = 0
+        if yMin==yMax:
+            coordinate_list[1] = 0
+        if zMin==zMax:
+            coordinate_list[2] = 0
+        if sum(coordinate_list) !=2:
+            assert 0, 'Invalid 2D quadrilateral object'
+
+        for i, t in enumerate(coordinate_list):
+            if t == 0:
+                case = i
+
+        # x is degenerate variable
+        if case == 0:
+            var1 = 1        # y marked as first node
+            var2 = 2        # z marked as second
+            var1_min = yMin
+            var1_max = yMax
+            var2_min = zMin
+            var2_max = zMax
+        # y is degenerate variable
+        elif case == 1:
+            var1 = 0        # x marked as first node
+            var2 = 2        # z marked as second
+            var1_min = xMin
+            var1_max = xMax
+            var2_min = zMin
+            var2_max = zMax
+        # z is degenerate variable
+        elif case == 2:
+            var1 = 0        # x marked as first node
+            var2 = 1        # y marked as second
+            var1_min = xMin
+            var1_max = xMax
+            var2_min = yMin
+            var2_max = yMax
+        else:
+            assert 0, 'Invalide Quadrilateral Mesh Case'
+            
         for node in nodeList:
-            if node.p[X]==xMin and node.p[Y]==yMin:
+            if node.p[var1]==var1_min and node.p[var2]==var2_min:
                 newList[0] = node
-            elif node.p[X]==xMin and node.p[Y]==yMax:
+            elif node.p[var1]==var1_min and node.p[var2]==var2_max:
                 newList[1] = node
-            elif node.p[X]==xMax and node.p[Y]==yMax:
+            elif node.p[var1]==var1_max and node.p[var2]==var2_max:
                 newList[2] = node
-            elif node.p[X]==xMax and node.p[Y]==yMin:
+            elif node.p[var1]==var1_max and node.p[var2]==var2_min:
                 newList[3] = node
+
+#        import pdb
+#        pdb.set_trace()
+
         for i,item in enumerate(newList):
             if not newList[i]:
                 assert 0,'Quadrialteral Mesh Generation Error '+`newList`+" i = "+`i`
