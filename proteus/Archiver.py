@@ -583,12 +583,18 @@ class XdmfWriter:
                         #    for nN in range(Xdmf_NodesPerElement):
                         #        q_l2g[eN,nN] = eN*Xdmf_NodesPerElement + nN
                         #
-                        q_l2g = numpy.arange(mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank]*Xdmf_NodesPerElement,
-                                             mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank+1]*Xdmf_NodesPerElement,
+                        import pdb
+#                        pdb.set_trace()
+                        from proteus import Comm
+                        comm = Comm.get()
+                        q_l2g = numpy.arange(mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank()]*Xdmf_NodesPerElement,
+                                             mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank()+1]*Xdmf_NodesPerElement,
                                              dtype='i').reshape((mesh.nElements_owned,Xdmf_NodesPerElement))
                         if ar.has_h5py:
+#                            import pdb
+#                            pdb.set_trace()
                             ar.create_dataset_sync('elements'+spaceSuffix+`tCount`,
-                                                   offsets=mesh.globalMesh.elementOffsets_subdomain_owned*Xdmf_NodesPerElement,
+                                                   offsets=mesh.globalMesh.elementOffsets_subdomain_owned,
                                                    data = q_l2g)
                             ar.create_dataset_sync('nodes'+spaceSuffix+`tCount`,
                                                    offsets=mesh.globalMesh.elementOffsets_subdomain_owned*Xdmf_NodesPerElement,
@@ -677,7 +683,7 @@ class XdmfWriter:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_p"+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_p"+"_t"+str(tCount),
-                                           offsets = self.mesh.globalMesh.elementOffsets_subdomain_owned,
+                                           offsets = self.mesh.globalMesh.elementOffsets_subdomain_owned*u.shape[1], # verify
                                            data = u[:self.mesh.nElements_owned].flat)
                 else:
                     assert False, "global_sync not supported with pytables"
@@ -719,14 +725,14 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i %i" % (Xdmf_NodesGlobal,Xdmf_StorageDim)})#force 3d vector since points 3d
-            tmp = numpy.zeros((Xdmf_NodesGlobal,Xdmf_StorageDim),'d')
-            tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u[:self.mesh.nElementsOwned].flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
+            tmp = numpy.zeros((self.mesh.nElements_owned*u.shape[1],Xdmf_StorageDim),'d')
+            tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u[:self.mesh.nElements_owned].flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
 
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    values.text = ar.hdfFilename+":/"+name+"_p"+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_p"+"_t"+str(tCount),
-                                           offsets = self.mesh.globalMesh.elementOffsets_subdomain_owned*u.shape[1]*Xdmf_StorageDim,
+                                           offsets = self.mesh.globalMesh.elementOffsets_subdomain_owned*u.shape[1],
                                            data = tmp)
                 else:
                     assert False, "global_sync not supported  with pytables"
