@@ -56,7 +56,7 @@ html: source/api/modules.rst build/html/capi/html/files.html
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 source/api/modules.rst:
-	sphinx-apidoc --output-dir=source/api ../proteus --separate --force -M
+	sphinx-apidoc --output-dir=source/api ../proteus --separate -M
 
 build/html/capi/html/files.html:
 	-mkdir -p build/html/capi
