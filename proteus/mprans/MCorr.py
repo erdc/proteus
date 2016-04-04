@@ -600,10 +600,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
         log("Global residual",level=9,data=r)
-        if self.coefficients.checkMass:
-            self.coefficients.massConservationError = fabs(globalSum(sum(r.flat[:self.mesh.nNodes_owned])))
-            assert self.coefficients.massConservationError == fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
-            log("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
+        self.coefficients.massConservationError = fabs(globalSum(sum(r.flat[:self.mesh.nNodes_owned])))
+        assert self.coefficients.massConservationError == fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
+        log("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy == None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
