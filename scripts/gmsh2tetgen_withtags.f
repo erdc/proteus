@@ -103,7 +103,7 @@ program gmsh2tetgen_withtags
   write(*,*) "Writing ", fname  
   write(meshf,*) NElem, NSHL, 1
   do i = 1, NElem
-    write(meshf,'(6I8)') i, (IEN(i,j), j = 1, NSHL), IEMAT(i)
+    write(meshf,'(6I10.11)') i, (IEN(i,j), j = 1, NSHL), IEMAT(i)
   end do      
   close(meshf)
 
@@ -112,7 +112,7 @@ program gmsh2tetgen_withtags
   open(meshf, file = fname, status = 'unknown')
   write(meshf,*) NNode, NSD, 0,0 
   do i = 1, NNode
-    write(meshf,'(I8,x, 3E17.9)') i, (  xg(i,j), j = 1, NSD)
+    write(meshf,'(I10.11,x, 3E17.9)') i, (  xg(i,j), j = 1, NSD)
   end do  
   close(meshf)
 
@@ -121,7 +121,7 @@ program gmsh2tetgen_withtags
   open(meshf, file = fname, status = 'unknown')
   write(meshf,*) NFace,1  
   do i = 1, NFace
-    write(meshf,'(5I8)') i, (Face_IEN(i,j), j = 1, NSHLb), FaceID(i)
+    write(meshf,'(5I10.11)') i, (Face_IEN(i,j), j = 1, NSHLb), FaceID(i)
   end do       
   close(meshf)
 
@@ -138,20 +138,20 @@ program gmsh2tetgen_withtags
   write(meshf,'(a)') 'ASCII'
   write(meshf,'(a)') 'DATASET UNSTRUCTURED_GRID'
   
-  write(meshf,'(a,x,I10,x,a)') 'POINTS ',NNode, 'float'
+  write(meshf,'(a,x,I10.11,x,a)') 'POINTS ',NNode, 'float'
 
   do i = 1, NNode
     write(meshf,'(3E17.8)') (real(xg(i,j),4), j = 1, NSD)    
   end do
 
-  write(meshf,'(a,x,I10,x,I10)') 'CELLS ',NElem, NElem*5
+  write(meshf,'(a,x,I10.11,x,I10.11)') 'CELLS ',NElem, NElem*5
   do i = 1, NElem
-    write(meshf,'(5I10)') 4, (IEN(i,j)-1, j = 1, 4)
+    write(meshf,'(5I10.11)') 4, (IEN(i,j)-1, j = 1, 4)
   end do
 
-  write(meshf,'(a,x,I10)') 'CELL_TYPES',NElem
+  write(meshf,'(a,x,I10.11)') 'CELL_TYPES',NElem
   do i = 1, NElem
-    write(meshf,'(I10)') 10
+    write(meshf,'(I10.11)') 10
   enddo
 
   close(meshf)
@@ -174,7 +174,7 @@ program gmsh2tetgen_withtags
     if (hNFace.ge.1) then
       write(*,*) "Generate hull.vtk file ..."
       meshf = 99
-      write(fname,'(I8)') FACE_ID
+      write(fname,'(I10.11)') FACE_ID
       fname = trim('face.'// trim(adjustl(fname))//'.vtk')
       open(meshf, file=fname, status='unknown', form='formatted')
       
@@ -183,20 +183,20 @@ program gmsh2tetgen_withtags
       write(meshf,'(a)') 'ASCII'
       write(meshf,'(a)') 'DATASET UNSTRUCTURED_GRID'
   
-      write(meshf,'(a,x,I10,x,a)') 'POINTS ',NNode, 'float'
+      write(meshf,'(a,x,I10.11,x,a)') 'POINTS ',NNode, 'float'
 
       do i = 1, NNode
         write(meshf,'(3E17.8)') (real(xg(i,j)), j = 1, NSD)    
       end do
 
-      write(meshf,'(a,x,I10,x,I10)') 'CELLS ',hNFace, hNFace*4
+      write(meshf,'(a,x,I10.11,x,I10.11)') 'CELLS ',hNFace, hNFace*4
       do i = 1, hNFace
-        write(meshf,'(4I10)') 3, (hFace_IEN(i,j)-1, j = 1, NSHLb)
+        write(meshf,'(4I10.11)') 3, (hFace_IEN(i,j)-1, j = 1, NSHLb)
       end do
 
-      write(meshf,'(a,x,I10)') 'CELL_TYPES',hNFace
+      write(meshf,'(a,x,I10.11)') 'CELL_TYPES',hNFace
       do i = 1, hNFace
-        write(meshf,'(I10)') 5
+        write(meshf,'(I10.11)') 5
       enddo
 
       close(meshf)

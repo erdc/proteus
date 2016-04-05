@@ -834,10 +834,15 @@ namespace proteus
 					   double dmom_v_source[nSpace],
 					   double dmom_w_source[nSpace])
     {
-      double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
+      double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,H_rho,rho,rhoScale;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+
+      H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi)+useVF*fmin(1.0,fmax(0.0,vf));
+      rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
+      rhoScale = rho/fmax(rho_0,rho_1);
+
 #ifdef COMPRESSIBLE_FORM
       viscosity = mu;
 #else
@@ -852,16 +857,16 @@ namespace proteus
       duc_dv = v/(uc+1.0e-12);
       /* duc_dw = w/(uc+1.0e-12); */
 
-      mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s);
-      mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s);
+      mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s)*rhoScale;
+      mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s)*rhoScale;
       /* mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_s); */
 
-      dmom_u_source[0] = H_s*viscosity*(alpha + beta*(uc + u*duc_du));
-      dmom_u_source[1] = H_s*viscosity*beta*u*duc_dv;
+      dmom_u_source[0] = H_s*viscosity*(alpha + beta*(uc + u*duc_du))*rhoScale;
+      dmom_u_source[1] = H_s*viscosity*beta*u*duc_dv*rhoScale;
       /* dmom_u_source[2] = H_s*viscosity*beta*u*duc_dw; */
     
-      dmom_v_source[0] = H_s*viscosity*beta*v*duc_du;
-      dmom_v_source[1] = H_s*viscosity*(alpha + beta*(uc + v*duc_dv));
+      dmom_v_source[0] = H_s*viscosity*beta*v*duc_du*rhoScale;
+      dmom_v_source[1] = H_s*viscosity*(alpha + beta*(uc + v*duc_dv))*rhoScale;
       /* dmom_v_source[2] = H_s*viscosity*beta*w*duc_dw; */
 
       /* dmom_w_source[0] = H_s*viscosity*beta*w*duc_du; */
