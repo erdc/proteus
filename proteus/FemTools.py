@@ -1903,7 +1903,8 @@ class DiscontinuousGalerkinDOFMap(DOFMap):
         self.dof_offsets_subdomain_owned = numpy.zeros(globalMesh.nodeOffsets_subdomain_owned.shape,'i')
         self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
         self.subdomain2global = numpy.zeros((self.nDOF),'i')
-        (self.nDOF_all_processes,self.nDOF_subdomain,
+        (self.nDOF_all_processes,
+         self.nDOF_subdomain,
          self.max_dof_neighbors) = flcbdfWrappers.buildDiscontinuousGalerkinLocal2GlobalMappings(self.local_dim,
                                                                                                  globalMesh.cmesh,
                                                                                                  globalMesh.subdomainMesh.cmesh,
@@ -1991,22 +1992,23 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
         self.dof_offsets_subdomain_owned = numpy.zeros(globalMesh.nodeOffsets_subdomain_owned.shape,'i')
         self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
         self.subdomain2global = numpy.zeros((self.nDOF),'i')
-        (self.nDOF_all_processes,self.nDOF_subdomain,
+        (self.nDOF_all_processes,
+         self.nDOF_subdomain,
          self.max_dof_neighbors) = flcbdfWrappers.buildQuadraticCubeLocal2GlobalMappings(self.nd,
-                                                                                     globalMesh.cmesh,
-                                                                                     globalMesh.subdomainMesh.cmesh,
-                                                                                     globalMesh.elementOffsets_subdomain_owned,
-                                                                                     globalMesh.nodeOffsets_subdomain_owned,
-                                                                                     globalMesh.elementBoundaryOffsets_subdomain_owned,
-                                                                                     globalMesh.edgeOffsets_subdomain_owned,
-                                                                                     globalMesh.elementNumbering_subdomain2global,
-                                                                                     globalMesh.nodeNumbering_subdomain2global,
-                                                                                     globalMesh.elementBoundaryNumbering_subdomain2global,
-                                                                                     globalMesh.edgeNumbering_subdomain2global,
-                                                                                     self.dof_offsets_subdomain_owned,
-                                                                                     self.l2g,
-                                                                                     self.subdomain2global,
-                                                                                     self.lagrangeNodesArray)
+                                                                                         globalMesh.cmesh,
+                                                                                         globalMesh.subdomainMesh.cmesh,
+                                                                                         globalMesh.elementOffsets_subdomain_owned,
+                                                                                         globalMesh.nodeOffsets_subdomain_owned,
+                                                                                         globalMesh.elementBoundaryOffsets_subdomain_owned,
+                                                                                         globalMesh.edgeOffsets_subdomain_owned,
+                                                                                         globalMesh.elementNumbering_subdomain2global,
+                                                                                         globalMesh.nodeNumbering_subdomain2global,
+                                                                                         globalMesh.elementBoundaryNumbering_subdomain2global,
+                                                                                         globalMesh.edgeNumbering_subdomain2global,
+                                                                                         self.dof_offsets_subdomain_owned,
+                                                                                         self.l2g,
+                                                                                         self.subdomain2global,
+                                                                                         self.lagrangeNodesArray)
         assert self.nDOF == self.nDOF_subdomain
 #QuadraticDOFMap
 
@@ -3494,11 +3496,9 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                            offsets=self.dofMap.dof_offsets_subdomain_owned,
                                            data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -self.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
                 else:
-                    values.text = ar.hdfFilename+":/"+u.name+str(tCount)
-                    ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
+                    assert False, "global_sync not supported  with pytables"
             else:
-                numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
-                SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
+                assert False, "global_sync not supported with text heavy data"
         else:
             attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":u.name,
                                                                  "AttributeType":"Scalar",
@@ -3797,70 +3797,138 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
         return self.mesh.arGrid
 
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
-        attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":u.name,
-                                                 "AttributeType":"Scalar",
-                                                 "Center":"Node"})
-        values    = SubElement(attribute,"DataItem",
-                               {"Format":ar.dataItemFormat,
-                                "DataType":"Float",
-                                "Precision":"8",
-                                "Dimensions":"%i" % (self.mesh.nNodes_global,)})
-        if ar.hdfFile != None:
-            if ar.has_h5py:
-                values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
-            else:
-                values.text = ar.hdfFilename+":/"+u.name+str(tCount)
-                ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
-        else:
-            numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
-
-    def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
-        concatNow=True
-        if concatNow:
-            attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
-                                                                 "AttributeType":"Vector",
+        comm = Comm.get()
+        if ar.global_sync:
+            attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":u.name,
+                                                                 "AttributeType":"Scalar",
                                                                  "Center":"Node"})
             values    = SubElement(attribute,"DataItem",
                                    {"Format":ar.dataItemFormat,
                                     "DataType":"Float",
                                     "Precision":"8",
-                                    "Dimensions":"%i %i" % (self.mesh.nNodes_global,3)})
-            u_dof = uList[components[0]].dof
-            if len(components) < 2:
-                v_dof = numpy.zeros(u_dof.shape,dtype='d')
-            else:
-                v_dof = uList[components[1]].dof
-            if len(components) < 3:
-                w_dof = numpy.zeros(u_dof.shape,dtype='d')
-            else:
-                w_dof = uList[components[2]].dof
-            velocity = numpy.column_stack((u_dof,v_dof,w_dof))
+                                    "Dimensions":"%i" % (self.mesh.globalMesh.nNodes_global,)})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                    ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
+                    values.text = ar.hdfFilename+":/"+u.name+"_p"+"_t"+str(tCount)
+                    ar.create_dataset_sync(u.name+"_p"+"_t"+str(tCount),
+                                           offsets = self.dofMap.dof_offsets_subdomain_owned,
+                                           data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - self.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
                 else:
-                    values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
-                    ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
+                    assert False, "global_sync not supported  with pytables"
+            else:
+                assert False, "global_sync not supported with text heavy data"
         else:
-            attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
-                                                        "AttributeType":"Vector",
-                                                        "Center":"Node"})
-            if len(components) == 2:
+            attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":u.name,
+                                                                 "AttributeType":"Scalar",
+                                                                 "Center":"Node"})
+            values    = SubElement(attribute,"DataItem",
+                                   {"Format":ar.dataItemFormat,
+                                    "DataType":"Float",
+                                    "Precision":"8",
+                                    "Dimensions":"%i" % (self.mesh.nNodes_global,)})
+            if ar.hdfFile != None:
+                if ar.has_h5py:
+                    values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
+                else:
+                    values.text = ar.hdfFilename+":/"+u.name+str(tCount)
+                    ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
+            else:
+                numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
+                SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
+
+    def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
+        concatNow=True
+        if concatNow:
+            if ar.global_sync:
+                attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
+                                                                     "AttributeType":"Vector",
+                                                                     "Center":"Node"})
                 values    = SubElement(attribute,"DataItem",
-                                       {"ItemType":"Function",
-                                        "Function":"JOIN($0 , $1 , (0.0 * $1 ))",
-                                        "Dimensions":"%i %i" % (self.mesh.nNodes_global,3)})
-            elif len(components) == 3:
+                                       {"Format":ar.dataItemFormat,
+                                        "DataType":"Float",
+                                        "Precision":"8",
+                                        "Dimensions":"%i %i" % (self.mesh.globalMesh.nNodes_global,3)})
+                u_dof = uList[components[0]].dof
+                if len(components) < 2:
+                    v_dof = numpy.zeros(u_dof.shape,dtype='d')
+                else:
+                    v_dof = uList[components[1]].dof
+                if len(components) < 3:
+                    w_dof = numpy.zeros(u_dof.shape,dtype='d')
+                else:
+                    w_dof = uList[components[2]].dof
+                velocity = numpy.column_stack((u_dof,v_dof,w_dof))
+                if ar.hdfFile != None:
+                    if ar.has_h5py:
+                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+"_t"+str(tCount)
+                        ar.create_dataset_sync(vectorName+"_p"+"_t"+str(tCount),
+                                               offsets =self.mesh.globalMesh.nodeOffsets_subdomain_owned,
+                                               data = velocity[:self.mehs.nNodes_owned,:])
+                    else:
+                        assert "global_sync not supported  with pytables"
+            else:
+                attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
+                                                                     "AttributeType":"Vector",
+                                                                     "Center":"Node"})
                 values    = SubElement(attribute,"DataItem",
-                                       {"ItemType":"Function",
-                                        "Function":"JOIN($0 , $1 , $2)",
+                                       {"Format":ar.dataItemFormat,
+                                        "DataType":"Float",
+                                        "Precision":"8",
                                         "Dimensions":"%i %i" % (self.mesh.nNodes_global,3)})
-            for ci in components:
-                ReferenceString="/Xdmf/Domain/Grid/Grid[%i]/Attribute[%i]/DataItem" % (tCount+1,ci+1)
-                component = SubElement(values,"DataItem",{"Reference":ReferenceString})
+                u_dof = uList[components[0]].dof
+                if len(components) < 2:
+                    v_dof = numpy.zeros(u_dof.shape,dtype='d')
+                else:
+                    v_dof = uList[components[1]].dof
+                if len(components) < 3:
+                    w_dof = numpy.zeros(u_dof.shape,dtype='d')
+                else:
+                    w_dof = uList[components[2]].dof
+                velocity = numpy.column_stack((u_dof,v_dof,w_dof))
+                if ar.hdfFile != None:
+                    if ar.has_h5py:
+                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                        ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
+                    else:
+                        values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
+                        ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
+
+        else:
+            if ar.global_sync:
+                attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
+                                                            "AttributeType":"Vector",
+                                                            "Center":"Node"})
+                if len(components) == 2:
+                    values    = SubElement(attribute,"DataItem",
+                                           {"ItemType":"Function",
+                                            "Function":"JOIN($0 , $1 , (0.0 * $1 ))",
+                                            "Dimensions":"%i %i" % (self.mesh.globalMesh.nNodes_global,3)})
+                elif len(components) == 3:
+                    values    = SubElement(attribute,"DataItem",
+                                           {"ItemType":"Function",
+                                            "Function":"JOIN($0 , $1 , $2)",
+                                            "Dimensions":"%i %i" % (self.mesh.globalMesh.nNodes_global,3)})
+                for ci in components:
+                    ReferenceString="/Xdmf/Domain/Grid/Grid[%i]/Attribute[%i]/DataItem" % (tCount+1,ci+1)
+                    component = SubElement(values,"DataItem",{"Reference":ReferenceString})
+            else:
+                attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
+                                                                     "AttributeType":"Vector",
+                                                                     "Center":"Node"})
+                if len(components) == 2:
+                    values    = SubElement(attribute,"DataItem",
+                                           {"ItemType":"Function",
+                                            "Function":"JOIN($0 , $1 , (0.0 * $1 ))",
+                                            "Dimensions":"%i %i" % (self.mesh.nNodes_global,3)})
+                elif len(components) == 3:
+                    values    = SubElement(attribute,"DataItem",
+                                           {"ItemType":"Function",
+                                            "Function":"JOIN($0 , $1 , $2)",
+                                            "Dimensions":"%i %i" % (self.mesh.nNodes_global,3)})
+                for ci in components:
+                    ReferenceString="/Xdmf/Domain/Grid/Grid[%i]/Attribute[%i]/DataItem" % (tCount+1,ci+1)
+                    component = SubElement(values,"DataItem",{"Reference":ReferenceString})
 
 class C0_LagrangeOnCubeWithNodalBasis(C0_AffineLinearOnSimplexWithNodalBasis):
     """
@@ -4032,7 +4100,7 @@ class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpac
                                                       u.femSpace.interpolationPoints.shape[1]),'d')
         u.getValues(u.basisValuesAtInterpolationPoints,u.interpolationValuesArray)
 
-        return self.XdmfWriter.writeFunctionXdmf_MonomialDGPK(ar,u.interpolationValuesArray,u.name,tCount=tCount,init=init)
+        return self.XdmfWriter.writeFunctionXdmf_MonomialDGPK(ar,u.interpolationValuesArray,u.name,tCount=tCount,init=init, mesh=u.femSpace.mesh)
     #
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         """
@@ -4387,9 +4455,9 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                                           arGrid=arGrid,tCount=tCount)
     #def
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
-        self.XdmfWriter.writeFunctionXdmf_DGP1Lagrange(ar,u,tCount=tCount,init=init)
+        self.XdmfWriter.writeFunctionXdmf_DGP1Lagrange(ar,u,tCount=tCount,init=init, dofMap = self.dofMap)
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
-        self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"dgp1_Lagrange",tCount=tCount,init=init)
+        self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"dgp1_Lagrange",tCount=tCount,init=init, dofMap=self.dofMap)
 
     def getValuesAtMeshNodes(self,dof,nodalValues,isVector,dim_dof):
         """
@@ -5241,7 +5309,7 @@ class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                                           tCount=tCount)
     #def
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
-        self.XdmfWriter.writeFunctionXdmf_DGP2Lagrange(ar,u,tCount=tCount,init=init)
+        self.XdmfWriter.writeFunctionXdmf_DGP2Lagrange(ar,u,tCount=tCount,init=init, dofMap=self.dofMap)
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"dgp2_Lagrange",tCount=tCount,init=init)
 
@@ -5408,10 +5476,10 @@ class NC_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                                                arGrid=arGrid,tCount=tCount)
 
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
-        return self.XdmfWriter.writeFunctionXdmf_CrouzeixRaviartP1(ar,u,tCount=tCount,init=init)
+        return self.XdmfWriter.writeFunctionXdmf_CrouzeixRaviartP1(ar,u,tCount=tCount,init=init, dofMap=self.dofMap)
 
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
-        return self.XdmfWriter.writeVectorFunctionXdmf_CrouzeixRaviartP1(ar,uList,components,vectorName,tCount=tCount,init=init)
+        return self.XdmfWriter.writeVectorFunctionXdmf_CrouzeixRaviartP1(ar,uList,components,vectorName,tCount=tCount,init=init, dofMap=self.dofMap)
 
     def writeFunctionMatlab(self,u,output,append=True,storeMeshData=True,figureOffset=1):
         """
@@ -5753,7 +5821,7 @@ class C0_AffineP1P0BubbleOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                                       u.femSpace.interpolationPoints.shape[1]),'d')
         u.getValues(u.basisValuesAtInterpolationPoints,u.interpolationValuesArray)
 
-        return self.XdmfWriter.writeFunctionXdmf_MonomialDGPK(ar,u.interpolationValuesArray,u.name,tCount=tCount,init=init)
+        return self.XdmfWriter.writeFunctionXdmf_MonomialDGPK(ar,u.interpolationValuesArray,u.name,tCount=tCount,init=init,mesh=u.femSpace.mesh)
     #
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         """
@@ -6658,7 +6726,7 @@ class MultilevelProjectionOperators:
                 #end coarse_eN
                 for I in range(coarseSpace.dim):
                     for J in rbcColumnIndeces[I]:
-                        rbcSum[I] += rbc[(I,J)]
+                        rbcSum[I] += abs(rbc[(I,J)])
                         if rbc[(I,J)] > 1.0-1.0e-8 and rbc[(I,J)] < 1.0 + 1.0e-8:
                             interp_bc[(I,J)] = 1.0
                 for I in range(offsetListList[l][cj],offsetListList[l][cj]+coarseDOFBoundaryConditions.nFreeDOF_global,strideListList[l][cj]):
@@ -6666,7 +6734,10 @@ class MultilevelProjectionOperators:
                         rSum[I] += r[(I,J)]
                 for I in range(coarseSpace.dim):
                     for J in rbcColumnIndeces[I]:
-                        scaled_rbc[(I,J)] = rbc[(I,J)]/rbcSum[I]
+                        if rbc[(I,J)] > 0.0 - 1.0e-8 and rbc[(I,J)] < 0.0 + 1.0e-8:
+                            scaled_rbc[(I,J)] = 0.0
+                        else:
+                            scaled_rbc[(I,J)] = rbc[(I,J)]/rbcSum[I]
                 #now make real sparse matrices
                 (rbc,rbczval) = SparseMatFromDict(coarseSpace.dim,fineSpace.dim,rbc)
                 (scaled_rbc,scaled_rbczval) = SparseMatFromDict(coarseSpace.dim,fineSpace.dim,scaled_rbc)
