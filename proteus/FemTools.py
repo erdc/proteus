@@ -521,12 +521,6 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         elif nd == 2:
             for j in range(order+1):
                 for i in range(order+1):
-#                    basis.append(
-#                        lambda xi,i=1,j=j: self.fun[i](xi[0])*self.fun[j](xi[1]))
-#                    basisGradients.append(
-#                        lambda xi,i=i,j=j: numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
-#                                                        self. fun[i](xi[0])*self.dfun[j](xi[1])]))
-#            funMap=[0,4,1,  7,8,5,   3,6,2]
                     basis.append(lambda xi,i=i,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
                     basisGradients.append(lambda xi,i=i,j=j:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
                                                                               self. fun[i](xi[0])*self.dfun[j](xi[1])]))
@@ -3845,7 +3839,6 @@ class C0_LinearOnCubeWithNodalBasis(C0_AffineLinearOnSimplexWithNodalBasis):
                                                          localFunctionSpace.referenceElement,
                                                          LinearOnCubeWithNodalBasis(nd)),
                                               NodalDOFMap(mesh))
-
 class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
     """
     The standard linear CG space.
@@ -4003,6 +3996,8 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                     ReferenceString="/Xdmf/Domain/Grid/Grid[%i]/Attribute[%i]/DataItem" % (tCount+1,ci+1)
                     component = SubElement(values,"DataItem",{"Reference":ReferenceString})
 
+P1 = C0_AffineLinearOnSimplexWithNodalBasis
+
 class C0_LagrangeOnCubeWithNodalBasis(C0_AffineLinearOnSimplexWithNodalBasis):
     """
     The standard linear CG space.
@@ -4090,7 +4085,8 @@ def LagrangeCubeFactory(OrderIn):
             C0_AffineLagrangeOnCubeWithNodalBasis.__init__(self,mesh,nd,order=OrderIn)
     return LagrangeCubeOrderN
 
-# Q1 = LagrangeCubeFactory(1)
+# TODO - migrate Q1 to an instance of LagrangeCubeFactor
+Q1 = C0_AffineLinearOnCubeWithNodalBasis
 Q2 = LagrangeCubeFactory(2)
 
 class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpace):
@@ -5069,6 +5065,8 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             return nout
         #scalar
         return 0
+
+P2 = C0_AffineQuadraticOnSimplexWithNodalBasis
 
 class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
     """
