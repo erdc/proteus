@@ -69,7 +69,7 @@ def noFlowBCs(x,tag):
         return lambda x,t: 0.0
     if tag == boundaryTags['left'] and x[1] < L[1]*0.75:
         return lambda x,t: 0.0
-    
+
 class velEx:
     def __init__(self,duex,aex):
         self.duex = duex
@@ -110,7 +110,10 @@ class SinglePhaseDarcyCoefficients(TC_base):
                          diffusion,
                          potential,
                          reaction,
-                         hamiltonian)
+                         hamiltonian,
+                         useSparseDiffusion=True,
+                         sparseDiffusionTensors={0:(numpy.arange(start=0,stop=nd**2+1,step=nd,dtype='i'),
+                                                  numpy.array([range(nd) for row in range(nd)],dtype='i').flatten())})
     def initializeMesh(self,mesh):
         self.elementMaterialTypes = mesh.elementMaterialTypes
         self.exteriorElementBoundaryTypes =  numpy.zeros((mesh.nExteriorElementBoundaries_global),'i')
@@ -128,7 +131,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                 self.elementBoundaryTypes[ebN,1] = self.elementMaterialTypes[eN_right]
             else:
                 self.elementBoundaryTypes[ebN,1] = self.elementMaterialTypes[eN_left]
-            
+
     def initializeElementQuadrature(self,t,cq):
         for ci in range(self.nc):
             cq[('f',ci)].flat[:] = 0.0
@@ -137,7 +140,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                 for k in range(cq['x'].shape[1]):
                     cq[('a',ci,ci)][eN,k,:] = self.a_types[material](cq['x'][eN,k],t).flat
                     cq[('r',ci)][eN,k]        =-self.source_types[material](cq['x'][eN,k],t)
-        #ci                        
+        #ci
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         nd = self.nd
         #use harmonic average for a, arith average for f
@@ -205,7 +208,7 @@ dirichletConditions = {0:headBCs}
 
 analyticalSolutionVelocity = None
 
-coefficients = SinglePhaseDarcyCoefficients(hydraulicConductivities,sources,nc=1,nd=nd)   
+coefficients = SinglePhaseDarcyCoefficients(hydraulicConductivities,sources,nc=1,nd=2)
 
 fluxBoundaryConditions = {0:'setFlow'}
 
