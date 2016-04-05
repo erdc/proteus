@@ -57,8 +57,13 @@ def test_bdm_sshaped_region():
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts,simFlagsList)
     ns.calculateSolution('test1')
     #
-    expected = tables.openFile('test_bdm_sshaped_region_expected.h5','r')
-    actual = tables.openFile('poisson_bdm1_test.h5','r')
+    test_path = os.path.dirname(os.path.abspath(__file__))
+    expected = tables.openFile(
+        os.path.join(test_path,
+                     'test_bdm_sshaped_region_expected.h5'),'r')
+    actual = tables.openFile(
+        os.path.join(test_path,
+                     'poisson_bdm1_test.h5'),'r')
 
     assert np.allclose(expected.root.velocity_0_elementQuadrature_p_t1, \
                        actual.root.velocity_0_elementQuadrature_p_t1), \
