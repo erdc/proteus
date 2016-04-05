@@ -18,7 +18,7 @@ def test_bdm_sshaped_region():
     '''
     Tests a post-processed velocity field projected
     into bdm1 space.
-    ''' 
+    '''
     # import and run a small 2D poiseulle problem
     reload(default_so)
     reload(default_p)
@@ -41,7 +41,7 @@ def test_bdm_sshaped_region():
             pass
 
     pList = [sShaped_block_2d_p]
-    nList = [sShaped_block_2d_n]    
+    nList = [sShaped_block_2d_n]
     so = default_so
     so.tnList = [0.,1.]
     so.name = pList[0].name
@@ -62,7 +62,7 @@ def test_bdm_sshaped_region():
 
     assert np.allclose(expected.root.velocity_0_elementQuadrature_p_t1, \
                        actual.root.velocity_0_elementQuadrature_p_t1), \
-           'post-processed velocity field is no longer producing expectout out' 
-    
+           'post-processed velocity field is no longer producing expectout out'
+
     expected.close()
     actual.close()
