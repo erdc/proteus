@@ -1853,9 +1853,12 @@ class XdmfWriter:
                 if ar.hdfFile != None:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_p"+"_t"+str(tCount)
+                        comm = Comm.get()
+                        nDOF_owned = (uList[components[0]].femSpace.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -
+                                      uList[components[0]].femSpace.dofMap.dof_offsets_subdomain_owned[comm.rank()] )
                         ar.create_dataset_sync(vectorName+"_p"+"_t"+str(tCount),
                                                offsets = uList[components[0]].femSpace.dofMap.dof_offsets_subdomain_owned,
-                                               data = velocity)
+                                               data = velocity[:nDOF_owned])
                     else:
                         assert False, "global_sync not implemented  for pytables"
             else:
