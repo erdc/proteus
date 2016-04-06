@@ -3605,7 +3605,7 @@ class OneLevelTransport(NonlinearEquation):
                                                           self.elementQuadratureWeights[('u',ci)],
                                                           self.q[('dV_u',ci)])
 
-            # 
+            #
             if not self.q.has_key('dV') and self.q.has_key(('dV_u',ci)):
                 self.q['dV'] = self.q[('dV_u',ci)]
 

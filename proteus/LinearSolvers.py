@@ -464,7 +464,6 @@ class KSP_petsc4py(LinearSolver):
         #
         try:
             if self.preconditioner.hasNullSpace:
-                self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
                 self.petsc_L.setNullSpace(self.preconditioner.nsp)
                 self.ksp.setNullSpace(self.preconditioner.nsp)
         except:
@@ -800,12 +799,14 @@ class NavierStokes2D:
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
     def setUp(self):
-        if self.L.pde.pp_hasConstantNullSpace:
-            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                self.kspList = self.pc.getFieldSplitSubKSP()
-                self.kspList[1].setNullSpace(self.nsp)
-
+        try:
+            if self.L.pde.pp_hasConstantNullSpace:
+                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                    self.kspList = self.pc.getFieldSplitSubKSP()
+                    self.kspList[1].setNullSpace(self.nsp)
+        except:
+            pass
 SimpleNavierStokes2D = NavierStokes2D
 
 class NavierStokesPressureCorrection:
