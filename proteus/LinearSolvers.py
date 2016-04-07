@@ -763,29 +763,31 @@ class NavierStokes2D:
     def __init__(self,L,prefix=None):
         self.L=L
         L_sizes = L.getSizes()
-        L_range = L.getOwnershipRange()
-        neqns = L_sizes[0][0]
+        self.L_range = L.getOwnershipRange()
+        import pdb
+        pdb.set_trace()
+        self.neqns = L_sizes[0][0]
         rank = p4pyPETSc.COMM_WORLD.rank
         if self.L.pde.stride[0] == 1:#assume end to end
             pSpace = self.L.pde.u[0].femSpace
             pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
-            nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+nDOF_pressure,
+            self.nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
+            self.pressureDOF = numpy.arange(start=self.L_range[0],
+                                            stop=self.L_range[0]+self.nDOF_pressure,
                                             dtype="i")
-            self.velocityDOF = numpy.arange(start=L_range[0]+nDOF_pressure,
-                                            stop=L_range[0]+neqns,
+            self.velocityDOF = numpy.arange(start=self.L_range[0]+self.nDOF_pressure,
+                                            stop=self.L_range[0]+self.neqns,
                                             step=1,
                                             dtype="i")
         else: #assume blocked
-            self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+neqns,
+            self.pressureDOF = numpy.arange(start=self.L_range[0],
+                                            stop=self.L_range[0]+self.self.neqns,
                                             step=3,
                                             dtype="i")
             velocityDOF = []
             for start in range(1,3):
-                velocityDOF.append(numpy.arange(start=L_range[0]+start,
-                                                stop=L_range[0]+neqns,
+                velocityDOF.append(numpy.arange(start=self.L_range[0]+start,
+                                                stop=self.L_range[0]+self.neqns,
                                                 step=3,
                                                 dtype="i"))
                 self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
@@ -800,11 +802,27 @@ class NavierStokes2D:
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
     def setUp(self):
-        if self.L.pde.pp_hasConstantNullSpace:
-            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                self.kspList = self.pc.getFieldSplitSubKSP()
-                self.kspList[1].setNullSpace(self.nsp)
+        try:
+            if self.L.pde.pp_hasNullSpace:
+                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                    self.kspList = self.pc.getFieldSplitSubKSP()
+                    self.kspList[1].setNullSpace(self.nsp)
+                else:
+                    null_space = p4pyPETSc.Vec().createSeq(self.neqns)
+                    if self.L.pde.stride[0] == 1:
+                        for i in range(self.nDOF_pressure):
+                            null_space[i] = i
+                    else:
+                        range = [i for i in range(self.L_range[0]+self.neqns)]
+                        p_range = range[0:self.L_range[0]+self.neqns:3]
+                        for i in p_range:
+                            null_space[i] = 1
+                    null_space.normalize()
+                    null_space_basis = [null_space]
+                    self.nsp = p4pyPETSc.NullSpace().create(False,null_space_basis,comm=p4pyPETSc.COMM_WORLD)
+        except:
+            pass
 
 SimpleNavierStokes2D = NavierStokes2D
 
