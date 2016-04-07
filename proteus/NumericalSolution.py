@@ -80,7 +80,8 @@ class NS_base:  # (HasTraits):
             self.femSpaceWritten={}
             tmp  = Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
                                         gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart,
-                                        useGlobalXMF=(not opts.subdomainArchives))
+                                        useGlobalXMF=(not opts.subdomainArchives),
+                                        global_sync=opts.global_sync)
             self.ar = dict([(i,tmp) for i in range(len(self.pList))])
         elif len(self.pList) == 1:
             self.ar = {0:Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
@@ -171,12 +172,25 @@ class NS_base:  # (HasTraits):
                         nnx = n.nnx
                         nny = n.nny
                     log("Building %i x %i rectangular mesh for %s" % (nnx,nny,p.name))
-                    mlMesh = MeshTools.MultilevelTriangularMesh(nnx, nny, 1,
-                                                                p.domain.x[0], p.domain.x[1], 0.0,
-                                                                p.domain.L[0], p.domain.L[1], 1.0,
-                                                                refinementLevels=n.nLevels,
-                                                                nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                parallelPartitioningType=n.parallelPartitioningType)
+
+                    if not hasattr(n,'quad'):
+                        n.quad = False
+
+                    if (n.quad):
+                        mlMesh = MeshTools.MultilevelQuadrilateralMesh(nnx,nny,1,
+                                                                       p.domain.x[0], p.domain.x[1], 0.0,
+                                                                       p.domain.L[0],p.domain.L[1],1,
+                                                                       refinementLevels=n.nLevels,
+                                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                       parallelPartitioningType=n.parallelPartitioningType)
+                    else:
+                        mlMesh = MeshTools.MultilevelTriangularMesh(nnx,nny,1,
+                                                                    p.domain.x[0], p.domain.x[1], 0.0,
+                                                                    p.domain.L[0],p.domain.L[1],1,
+                                                                    refinementLevels=n.nLevels,
+                                                                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                    parallelPartitioningType=n.parallelPartitioningType)
+
                 elif p.domain.nd == 3:
                     if (n.nnx == n.nny == n.nnz ==None):
                         nnx = nny = nnz = n.nn
@@ -388,7 +402,6 @@ class NS_base:  # (HasTraits):
                 linTolList.append(n.linTolFac*fac)
 
             log("Setting up MultilevelTransport for "+p.name)
-
             model = Transport.MultilevelTransport(p,n,mlMesh,OneLevelTransportType=p.LevelModelType)
             self.modelList.append(model)
             model.name = p.name
