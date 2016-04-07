@@ -434,7 +434,7 @@ class LinearOnCubeWithNodalBasis(LocalFunctionSpace):
         self.referenceElement = ReferenceCube(nd)
         LocalFunctionSpace.__init__(self,2**nd,self.referenceElement)
         self.gradientList=[]
-    
+
         if nd == 1:
             #0
             self.basis.append(lambda xi: 0.5*(1.0 - xi[0]))
@@ -3930,7 +3930,7 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                         values.text = ar.hdfFilename+":/"+vectorName+"_p"+"_t"+str(tCount)
                         ar.create_dataset_sync(vectorName+"_p"+"_t"+str(tCount),
                                                offsets =self.mesh.globalMesh.nodeOffsets_subdomain_owned,
-                                               data = velocity[:self.mehs.nNodes_owned,:])
+                                               data = velocity[:self.mesh.nNodes_owned,:])
                     else:
                         assert "global_sync not supported  with pytables"
             else:
@@ -4040,7 +4040,7 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
         #     localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=1)
         #     interpolationConditions = CubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
         else:
-            raise NotImplementedError ("Lagrange factory only implemented for Q2" 
+            raise NotImplementedError ("Lagrange factory only implemented for Q2"
                     "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
         ParametricFiniteElementSpace.__init__(self,
                                               ReferenceFiniteElement(localFunctionSpace,
@@ -4048,7 +4048,7 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                               AffineMaps(mesh,
                                                          localGeometricSpace.referenceElement,
                                                          LinearOnCubeWithNodalBasis(nd)),
-                                              QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd)) 
+                                              QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
 
         for i in range(localFunctionSpace.dim):
             for j in range(localFunctionSpace.dim):
@@ -4069,7 +4069,7 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                                               dofMap=self.dofMap,t=t,init=init,meshChanged=meshChanged,
                                                               arGrid=arGrid,tCount=tCount)
         else:
-            raise NotImplementedError ("Lagrange factory only implemented for Q2" 
+            raise NotImplementedError ("Lagrange factory only implemented for Q2"
                     "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
 
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
