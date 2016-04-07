@@ -1,28 +1,36 @@
 """
 A class hierarchy and tools for building domains of PDE's.
 """
-import BC
+
 import numpy as np
+from proteus.MeshTools import MeshParallelPartitioningTypes as mpt
+
 
 class D_base:
     """
     The base class for domains
     """
-    def __init__(self,nd,g=None,name="defaultDomain",units="m"):
+    def __init__(self, nd, name="defaultDomain", units="m"):
         """
         Set dimensions (nd), name string, and units string
         """
         if nd not in [1,2,3]:
             raise RuntimeError("Domain object must have dimension 1,2, or 3")
-        self.nd=nd
-        self.name=name
-        self.units=units
-        self.x=[]#minx,miny,minz
-        self.L=[]#bounding box when self.x is origin
-        self.g=g
-        self.bc = [BC.BoundaryConditions()]
-        self.barycenters = np.array([[0., 0., 0.]])
+        self.nd = nd
+        self.name = name
+        self.units = units
+        # for bounding box
+        self.x = []
+        self.L = []
+        # list of shape instances (from proteus.SpatialTools.py)
+        self.shape_list = []
+        # list of boundary conditions
+        self.bc = []
+        # list of auxiliaryVariables
         self.auxiliaryVariables = []
+        # attach a MeshOption class
+        self.MeshOptions = MeshOptions(self.nd)
+
     def writeAsymptote(self, fileprefix):
         """
         Write a representation of the domain to file using the Asymptote vector graphics language.
@@ -38,25 +46,62 @@ class D_base:
         """
         Get the bounding box of a set of vertices.
         """
-        self.x = []
-        self.L = []
+        if self.x or self.L:
+            self.x = []
+            self.L = []
         for d in range(self.nd):
             xMax = max(row[d] for row in self.vertices)
             xMin = min(row[d] for row in self.vertices)
             self.x += [xMin]
             self.L += [xMax-xMin]
 
-    def setGravity(self, g='default'):
-        """
-        Sets gravity in the domain
-        """
-        if g == 'default':
-            if self.nd == 2:
-                self.g = [0., -9.81, 0.]
-            elif nd == 3:
-                self.g = [0., 0., -9.81]
-        else:
-            self.g = g
+
+class MeshOptions:
+    """
+    Mesh options for the domain
+    """
+    def __init__(self, nd):
+        self.nd = nd
+        self.he = None
+        self.genMesh = True
+        self.outputFiles = {'name': 'mesh',
+                            'poly': True,
+                            'ply': False,
+                            'asymptote': False}
+        self.restrictFineSolutionToAllMeshes = False
+        self.parallelPartitioningType = mpt.node
+        self.nLayersOfOverlapForParallel = 0
+        if self.nd == 2:
+            self.triangle_string = 'VApq30Dena'
+        if self.nd == 3:
+            self.triangle_string = 'VApq1.35q12feena'
+        self.triangleOptions = None  # defined when setTriangleOptions called
+
+    def elementSize(self, he, refinement_lvl=0.):
+        self.he = he*0.5**refinement_lvl
+
+    def parallelPartitioningType(self, type='node', layers_overlap=0):
+        if type == 'element' or 0:
+            self.parallelPartitioningType = mpt.element
+        if type == 'node' or 1:
+            self.parallelPartitioningType = mpt.node
+        self.nLayersOfOverlapForParallel = layers_overlap
+
+    def setTriangleOptions(self):
+        if self.he is None:
+            self.he = 1.
+        if self.nd == 2:
+            self.triangleOptions = self.triangle_string + '%8.8f' \
+                                   % (self.he**2/2.,)
+        elif self.nd == 3:
+            self.triangleOptions = self.triangle_string + '%21.16e' \
+                                   % (self.he**3/6.,)
+    def outputFiles(self, name='mesh', poly=True, ply=False, asymptote=False):
+        self.outputFiles['name'] = name
+        self.outputFiles['poly'] = poly
+        self.outputFiles['ply'] = ply
+        self.outputFiles['asymptote'] = asymptote
+
 
 class RectangularDomain(D_base):
     """
@@ -276,7 +321,6 @@ class PlanarStraightLineGraphDomain(D_base):
             self.segmentFlags = segmentFlags or []
             self.regionFlags = regionFlags or []
             self.regionConstraints = regionConstraints or []
-            self.bc = bc or self.bc
             self.update()
 
     def update(self):
@@ -721,8 +765,8 @@ class PiecewiseLinearComplexDomain(D_base):
     """
     3D domains desribed by closed surfaces made up of general polygonal facets.
     """
-    def __init__(self, fileprefix=None, vertices=None, segments=None, facets=None,
-                 facetHoles=None, holes=None, regions=None, vertexFlags=None, segmentFlags=None, facetFlags=None,
+    def __init__(self, fileprefix=None, vertices=None, facets=None,
+                 facetHoles=None, holes=None, regions=None, vertexFlags=None, facetFlags=None,
                  regionFlags=None, regionConstraints=None, bc=None, name="PLCDomain", units="m"):
         """
         Read  the PLC domain from lists. If no flags are given, then default flags of 0 are assigned.
@@ -736,19 +780,16 @@ class PiecewiseLinearComplexDomain(D_base):
         else:
             self.polyfile = None
             self.vertices = vertices or []
-            self.segments = segments or []
             self.facets = facets or []
             self.facetHoles = facetHoles or []
             self.holes = holes or []
             self.regions = regions or []
             self.vertexFlags = vertexFlags or []
-            self.segmentFlags = segmentFlags or []
             self.facetFlags = facetFlags or []
             self.regionFlags = regionFlags or []
             self.regionConstraints = regionConstraints or []
             self.regionLegend = {}
             self.boundaryFlags = {}
-            self.bc = bc or self.bc
             import numpy as np
             self.update()
 
@@ -1162,6 +1203,7 @@ dotfactor=12;
             pf.close()
         else:
             print "File already exists, not writing polyfile: " +`self.polyfile`
+
 
 
 
