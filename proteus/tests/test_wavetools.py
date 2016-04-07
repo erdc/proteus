@@ -382,10 +382,10 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
 
         for ii in range(len(YC)):
             jj+=1
-            etaRef+=YC[ii]*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/kw
-            uxRef += normDir[0]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/cosh(jj*kw*depth)
-            uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/cosh(jj*kw*depth)
-            uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/cosh(jj*kw*depth)
+            etaRef+=YC[ii]*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t + jj*phi0)/kw
+            uxRef += normDir[0]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
+            uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
+            uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
             
 #            uxRef+=  normDir[0]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
 #*jj*BC[ii]*normDir[0]*cosh(jj*kw*(z0+depth))*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - jj*omega * t +phi0)*tanh(jj*kw*depth)/sinh(jj*kw*depth)
