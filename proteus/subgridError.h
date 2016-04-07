@@ -262,12 +262,22 @@ extern void calculateSubgridErrorNavierStokes2D_GLS_tau(
   double *tau1,
   double *cfl
 );
-extern void calculateSubgridErrorStokes2D_GLS_tau(
+extern void calculateSubgridErrorStokes_GLS_tau(
   int nElements_global,
   int nQuadraturePoints_element,
   int nSpace,
   double *elementDiameter,
-  double *dmt,
+  double *dH,
+  double *a,
+  double *tau0,
+  double *tau1
+);
+extern void calculateSubgridErrorStokes_GLS_tau_sd(
+  int nElements_global,
+  int nQuadraturePoints_element,
+  int nSpace,
+  double *elementDiameter,
+  double *dH,
   double *a,
   double *tau0,
   double *tau1
