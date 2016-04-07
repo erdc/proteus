@@ -138,10 +138,10 @@ class NonlinearSolver:
         self.failedFlag = False
 
     def norm(self,u):
-        return self.norm_function(u[:self.F.dim_proc])
+        return self.norm_function(u[self.F.owned_local])
 
     def unorm(self,u):
-        return self.unorm_function(u[:self.F.dim_proc])
+        return self.unorm_function(u[self.F.owned_local])
 
     def fullNewtonOff(self):
         self.fullNewton=False
@@ -270,10 +270,8 @@ class NonlinearSolver:
 
     def converged(self,r):
         self.convergedFlag = False
-        if self.its:#else already computed norm_r
-            self.norm_r = self.norm(r)
-        if self.convergenceTest == 'u' or self.computeRates:
-            self.norm_du = self.unorm(self.du)
+        self.norm_r = self.norm(r)
+        self.norm_du = self.unorm(self.du)
         if self.computeRates ==  True:
             self.computeConvergenceRates()
         if self.convergenceTest == 'its' or self.convergenceTest == 'rits':
@@ -460,6 +458,7 @@ class Newton(NonlinearSolver):
                 #no overlap or overlap (until we compute norms over only owned dof)
                 par_r.scatter_forward_insert()
 
+        self.norm_r0 = self.norm(r)
         self.norm_r_hist = []
         self.norm_du_hist = []
         self.gammaK_max=0.0
@@ -493,13 +492,10 @@ class Newton(NonlinearSolver):
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
                 self.linearSolverFailed = self.linearSolver.failed()
-            #print self.du
             u-=self.du
             if par_u != None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)
-            #no overlap
-            #print "local r",r
             if par_r != None:
                 #no overlap
                 if not self.par_fullOverlap:
@@ -548,7 +544,7 @@ class Newton(NonlinearSolver):
                 print "norm_J",self.norm_2_J_current
                 print "lambda_min",min(self.linearSolver.eigenvalues_r)
                 print "lambda_i_min",min(self.linearSolver.eigenvalues_i)
-            if self.lineSearch and self.maxLSits:
+            if self.lineSearch:
                 norm_r_cur = self.norm(r)
                 ls_its = 0
                     #print norm_r_cur,self.atol_r,self.rtol_r
@@ -1245,6 +1241,8 @@ class NewtonNS(NonlinearSolver):
                 self.linearSolverFailed = self.linearSolver.failed()
             self.linearSolver.printPerformance()
             #print self.du
+            #if par_du != None:
+            #    par_du.scatter_forward_insert()
             u-=self.du
             if par_u != None:
                 par_u.scatter_forward_insert()
