@@ -389,7 +389,7 @@ class MonochromaticWaves:
             ii =0.
             for Y in self.Ycoeff:
                 ii+=1
-                HH+=eta_mode(x,t,ii*self.kDir,ii*self.omega,self.phi0,Y)
+                HH+=eta_mode(x,t,ii*self.kDir,ii*self.omega,ii*self.phi0,Y)
             return HH/self.k
 
     def u(self, x, t):
@@ -404,7 +404,7 @@ class MonochromaticWaves:
                 kmode = ii*self.k
                 kdir = self.waveDir*kmode
                 amp = tanh(kmode*self.depth)*sqrt(self.gAbs/self.k)*B/self.omega
-                Ufenton+= vel_mode(x,t,kdir,kmode,wmode,self.phi0,amp,self.mwl,self.depth,self.g,self.vDir)
+                Ufenton+= vel_mode(x,t,kdir,kmode,wmode,ii*self.phi0,amp,self.mwl,self.depth,self.g,self.vDir)
             return Ufenton # + self.meanVelocity[comp]
 
 
