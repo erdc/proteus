@@ -6418,6 +6418,7 @@ static PyObject* flcbdfWrappersGlobalMax(PyObject* self, PyObject* args)
                         "d",
                         &value))
     return NULL;
+
   MPI_Allreduce(&value,&value_new,1,MPI_DOUBLE,MPI_MAX,PROTEUS_COMM_WORLD);
   return Py_BuildValue("d",value_new);
 }
