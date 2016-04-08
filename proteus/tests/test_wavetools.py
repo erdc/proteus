@@ -937,6 +937,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             1. ,        
             np.array([1.,0,0]), 
             np.array([0,0,-9.81]),
+            0.025,
             False,
             {"Nwaves" : 5,"Tm":1, "Window":"costap"}
             
@@ -953,6 +954,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             1. ,        
             np.array([1.,0,0]), 
             np.array([0,0,-9.81]),
+            0.025,
             False,
             {"Nwaves" : 500,"Tm":1, "Window":"costap"}
             
@@ -971,6 +973,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Tm":1, "Window":"costap"}
             
@@ -992,6 +995,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Window":"costap"}
             
@@ -1010,6 +1014,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Tm":1}
             
@@ -1028,6 +1033,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Tm":1, "Window":"aargh"}
             
@@ -1047,6 +1053,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Tm":1, "Window":"costap", "Cutoff" : 0.4}
             
