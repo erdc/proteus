@@ -937,6 +937,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             1. ,        
             np.array([1.,0,0]), 
             np.array([0,0,-9.81]),
+            0.025,
             False,
             {"Nwaves" : 5,"Tm":1, "Window":"costap"}
             
@@ -953,6 +954,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             1. ,        
             np.array([1.,0,0]), 
             np.array([0,0,-9.81]),
+            0.025,
             False,
             {"Nwaves" : 500,"Tm":1, "Window":"costap"}
             
@@ -971,6 +973,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Tm":1, "Window":"costap"}
             
@@ -992,6 +995,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Window":"costap"}
             
@@ -1010,6 +1014,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Tm":1}
             
@@ -1028,6 +1033,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Tm":1, "Window":"aargh"}
             
@@ -1047,6 +1053,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Tm":1, "Window":"costap", "Cutoff" : 0.4}
             
@@ -1066,7 +1073,8 @@ class VerifyTimeSeries(unittest.TestCase):
             256,          #number of frequency bins
             1. ,        
             np.array([1,0,0]), 
-            np.array([0,0,-9.81])
+            np.array([0,0,-9.81]),
+            cutoffTotal=0.025
             )
         fid = open(path+"test_timeSeries.txt","r")
         data = np.loadtxt(fid)
@@ -1082,7 +1090,7 @@ class VerifyTimeSeries(unittest.TestCase):
         ii = -1
         for tt in timeInt:
             ii+=1
-            etaTest[ii] = aa.etaDirect([x, y, z], tt)
+            etaTest[ii] = aa.eta([x, y, z], tt)
 
         etaInt-=np.mean(etaInt)
         etaInt*=costap(len(data),0.025)
@@ -1121,9 +1129,9 @@ class VerifyTimeSeries(unittest.TestCase):
             1. ,        
             np.array([1,0,0]), 
             np.array([0,0,-9.81]),
+            0.025,
             False,
             {"Nwaves":3, "Tm":8, "Window":"costap"}
-           
             )
         fid = open(path+"test_timeSeries.txt","r")
         data = np.loadtxt(fid)
@@ -1139,7 +1147,7 @@ class VerifyTimeSeries(unittest.TestCase):
         ii = -1
         for tt in timeInt:
             ii+=1
-            etaTest[ii] = aa.etaWindow([x, y, z], tt)
+            etaTest[ii] = aa.eta([x, y, z], tt)
 
         etaInt-=np.mean(etaInt)
         etaInt*=costap(len(data),0.025)
