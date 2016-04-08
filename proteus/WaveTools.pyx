@@ -857,6 +857,12 @@ class TimeSeries:
         self.windows_handover = []
         self.windows_rec = []
 
+        if(self.rec_direct):
+            self.eta = self.etaDirect
+            self.u = self.uDirect
+        else:
+            self.eta =  self.etaWindow
+            self.u = self.uWindow
 
 
 
@@ -1083,12 +1089,6 @@ class TimeSeries:
             U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
 
-    if(self.rec_direct):
-        self.eta = self.etaDirect
-        self.u = self.uDirect
-    else:
-        self.eta =  self.etaWindow
-        self.u = self.uWindow
 
 
 
