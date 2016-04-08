@@ -1122,7 +1122,7 @@ class VerifyTimeSeries(unittest.TestCase):
             1. ,        
             np.array([1,0,0]), 
             np.array([0,0,-9.81]),
-            cutoffTotal=0.025,
+            0.025,
             False,
             {"Nwaves":3, "Tm":8, "Window":"costap"}
             )
