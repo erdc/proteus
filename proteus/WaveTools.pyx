@@ -754,9 +754,9 @@ class TimeSeries:
     :param mwl: mean water level [L]
     :param waveDir: wave Direction vector
     :param g: Gravitational acceleration vector (3 components required)
+    :cutoffTotal: Parameter for cutting off the first and the last part of the time series, given in ratio of the total duration (default 0.01)
     :param rec_direct: Logical variable, True for direct reconstruction, False for windowed reconstrunction
     :window_params: dictionary for window reconstruction parameters. Mandatory definition for Nwaves (how many waves per window) Tm (mean wave period), wind_filt (window filter name in string form). Optional: Overlap (window overlap as a percentage of window lenght), Cutoff (length of domain wher filter is applied, as a percentage of the 1/2 of window length)
-    :cutoffTotal: Parameter for cutting off the first and the last part of the time series, given in ratio of the total duration (default 0.01)
 
     """
 
@@ -769,9 +769,9 @@ class TimeSeries:
                  mwl ,        #mean water level
                  waveDir, 
                  g,
+                 cutoffTotal = 0.01,
                  rec_direct = True,
                  window_params = None #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Tm":Tm,"Window":wind_filt,"Overlap":overlap,"Cutoff":cutoff}
-                 cutoffTotal = 0.01
                  ):
 
         # Setting the depth
