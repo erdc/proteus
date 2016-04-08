@@ -1090,7 +1090,7 @@ class VerifyTimeSeries(unittest.TestCase):
         ii = -1
         for tt in timeInt:
             ii+=1
-            etaTest[ii] = aa.etaDirect([x, y, z], tt)
+            etaTest[ii] = aa.eta([x, y, z], tt)
 
         etaInt-=np.mean(etaInt)
         etaInt*=costap(len(data),0.025)
@@ -1147,7 +1147,7 @@ class VerifyTimeSeries(unittest.TestCase):
         ii = -1
         for tt in timeInt:
             ii+=1
-            etaTest[ii] = aa.etaWindow([x, y, z], tt)
+            etaTest[ii] = aa.eta([x, y, z], tt)
 
         etaInt-=np.mean(etaInt)
         etaInt*=costap(len(data),0.025)
