@@ -839,10 +839,10 @@ class TimeSeries:
         if(doInterp):
             logEvent("WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
             self.time = np.linspace(time_temp[0],time_temp[-1],len(time_temp))
-            self.etaTemp = np.interp(self.time,time_temp,tdata[:,1])
+            self.eta = np.interp(self.time,time_temp,tdata[:,1])
         else:
             self.time = time_temp
-            self.etaTemp = tdata[:,1]
+            self.eta = tdata[:,1]
 
         self.t0  = self.time[0]        
         # Remove mean level from raw data
