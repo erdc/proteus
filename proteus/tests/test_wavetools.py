@@ -1066,7 +1066,8 @@ class VerifyTimeSeries(unittest.TestCase):
             256,          #number of frequency bins
             1. ,        
             np.array([1,0,0]), 
-            np.array([0,0,-9.81])
+            np.array([0,0,-9.81]),
+            cutoffTotal=0.025
             )
         fid = open(path+"test_timeSeries.txt","r")
         data = np.loadtxt(fid)
@@ -1121,9 +1122,9 @@ class VerifyTimeSeries(unittest.TestCase):
             1. ,        
             np.array([1,0,0]), 
             np.array([0,0,-9.81]),
+            cutoffTotal=0.025,
             False,
             {"Nwaves":3, "Tm":8, "Window":"costap"}
-           
             )
         fid = open(path+"test_timeSeries.txt","r")
         data = np.loadtxt(fid)
