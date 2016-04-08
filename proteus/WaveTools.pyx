@@ -839,10 +839,10 @@ class TimeSeries:
         if(doInterp):
             logEvent("WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
             self.time = np.linspace(time_temp[0],time_temp[-1],len(time_temp))
-            self.eta = np.interp(self.time,time_temp,tdata[:,1])
+            self.etaTemp = np.interp(self.time,time_temp,tdata[:,1])
         else:
             self.time = time_temp
-            self.eta = tdata[:,1]
+            self.etaTemp = tdata[:,1]
 
         self.t0  = self.time[0]        
         # Remove mean level from raw data
@@ -857,17 +857,7 @@ class TimeSeries:
         self.windows_handover = []
         self.windows_rec = []
 
-        if(self.rec_direct):
-            self.eta = self.etaDirect
-            self.u = self.uDirect
-        else:
-            self.eta =  self.etaWindow
-            self.u = self.uWindow
-
-
-
-
-        # Direct decomposition of the time series for using at reconstruct_direct
+    # Direct decomposition of the time series for using at reconstruct_direct
         if (self.rec_direct):
             Nf = self.N
             self.nfft=len(self.time)
@@ -1005,7 +995,13 @@ class TimeSeries:
                 self.decompose_window.append(decomp)
                 
             
-
+        if(self.rec_direct):
+            self.eta = self.etaDirect
+            self.u = self.uDirect
+        else:
+            self.eta =  self.etaWindow
+            self.u = self.uWindow
+     
 #                if style == "k-":
 #                    style = "kx"
 #                else:
