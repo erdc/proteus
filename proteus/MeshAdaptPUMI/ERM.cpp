@@ -916,6 +916,12 @@ double err_est_total=0;
 double rel_err_total=0;
 double u_norm_total=0;
 double u_norm_augmented=0;
+double KE_adv_total = 0;
+double KE_total = 0;
+double PE_total=0;
+double PE_pres_total=0;
+double density_avg_total=0;
+double volume_total=0;
   while(ent = m->iterate(iter)){ //loop through all elements
     
     elem_type = m->getType(ent);
@@ -1141,8 +1147,13 @@ if(testcount==eID && comm_rank==0){
     double Acomp=0;
     double Bcomp=0;
     double visc_avg=0;
+    double density_avg=0;
     double interface_norm = 0;
     double u_norm = 0;
+    double KE_adv=0;
+    double KE = 0;
+    double PE = 0;
+    double PE_pres = 0;
     double rel_error;
     apf::Matrix3x3 phi_ij;
     apf::Matrix3x3 vel_ij;
@@ -1188,16 +1199,41 @@ if(comm_rank==0 && localNumber(ent)==eID){
       Acomp = Acomp + visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
       Bcomp = Bcomp + apf::getDiv(velo_elem,qpt)*apf::getDiv(velo_elem,qpt)*weight;
       visc_avg = visc_avg + visc_val*weight;
+      density_avg = density_avg + density*weight;
       interface_norm = interface_norm + grad_vof.getLength()*vel_vect.getLength()*weight;
       u_norm = u_norm + visc_val*getDotProduct(vel_ij,vel_ij+apf::transpose(vel_ij))*weight;
+///*
+      KE_adv = KE_adv + (vel_vect)*(vel_ij*vel_vect)*weight*density;
+      KE = KE + density*getDotProduct(vel_vect,vel_vect)*weight; 
+      apf::Vector3 xyz;
+      apf::mapLocalToGlobal(element,qpt,xyz);
+      PE += density*g[2]*xyz[2]*weight;
+      PE_pres += fabs(pres_val)*weight;
+//*/
+/*
+      KE_adv += (vel_vect)*(vel_ij*vel_vect)*weight;
+      KE += getDotProduct(vel_vect,vel_vect)*weight; 
+      apf::Vector3 xyz;
+      apf::mapLocalToGlobal(element,qpt,xyz);
+      PE += g[2]*xyz[2]*weight;
+      PE_pres += fabs(pres_val)*weight;
+*/
+
     } //end compute local error
     visc_avg = visc_avg*Jdet/apf::measure(element);
-    Acomp = Acomp*Jdet/visc_avg; //nondimensionalize with average viscosity, Jacobians can cancel out, but this is done for clarity
+    density_avg = density_avg*Jdet;
+    //Acomp = Acomp*Jdet/visc_avg; //nondimensionalize with average viscosity, Jacobians can cancel out, but this is done for clarity
+    Acomp = Acomp*Jdet; 
     Bcomp = Bcomp*Jdet;
-    interface_norm = interface_norm*Jdet;
-    u_norm = u_norm/visc_avg*Jdet;
-    err_est = sqrt(Acomp+Bcomp); 
-    //err_est = sqrt(Acomp); 
+    //interface_norm = interface_norm*Jdet;
+    //u_norm = u_norm/visc_avg*Jdet;
+    u_norm = u_norm*Jdet;
+    //err_est = sqrt(Acomp+Bcomp); 
+    err_est = sqrt(Acomp); 
+    KE_adv = KE_adv*Jdet;
+    KE = KE*Jdet;
+    PE = PE*Jdet;
+    PE_pres = PE_pres*Jdet;
 
 if(comm_rank==0 && localNumber(ent)==eID){
 std::cout<<"what is visc_avg "<<visc_avg<<std::endl;
@@ -1211,6 +1247,12 @@ std::cout<<"What is Acomp ? "<<Acomp<<std::endl;
     //err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
     err_est_total = err_est_total+(Acomp); //for tracking the upper bound
     u_norm_total = u_norm_total + u_norm;
+    KE_adv_total = KE_adv_total+ KE_adv;
+    KE_total = KE_total+ KE;
+    PE_total += PE;
+    PE_pres_total += PE_pres;
+    density_avg_total += density_avg;
+    volume_total += apf::measure(element);
    
     MatDestroy(&K); //destroy the matrix
     VecDestroy(&F); //destroy vector
@@ -1223,15 +1265,56 @@ testcount++;
 
   PCU_Add_Doubles(&err_est_total,1);
   PCU_Add_Doubles(&u_norm_total,1);
+  PCU_Add_Doubles(&KE_adv_total,1);
+  PCU_Add_Doubles(&KE_total,1);
+  PCU_Add_Doubles(&PE_total,1);
+  PCU_Add_Doubles(&PE_pres_total,1);
+  PCU_Add_Doubles(&density_avg_total,1);
+  PCU_Add_Doubles(&volume_total,1);
+  density_avg_total = density_avg_total/volume_total;
   u_norm_augmented = sqrt(err_est_total + u_norm_total);
   err_est_total = sqrt(err_est_total);
   u_norm_total = sqrt(u_norm_total);
+///*
+  KE_total /= density_avg_total;
+  KE_adv_total /= density_avg_total;
+  double temp_buffer = PE_total;
+  PE_total = fabs(PE_total);
+  PE_total /= density_avg_total;
+  PE_total_before = temp_buffer;
+  PE_pres_total /= delta_t*density_avg_total;
+//*/
+/* with delta_t scaling
+  KE_total /= delta_t*density_avg_total;
+  KE_adv_total /= density_avg_total;
+  double temp_buffer = PE_total;
+  PE_total = fabs(PE_total)-fabs(PE_total_before);
+  PE_total /= delta_t*density_avg_total;
+  PE_total_before = temp_buffer;
+  PE_pres_total /= delta_t*density_avg_total;
+*/
+
+/* without density scaling
+  KE_total /= delta_t;
+  double temp_buffer = PE_total;
+  PE_total = fabs(PE_total)-fabs(PE_total_before);
+  PE_total /= delta_t;
+  PE_total_before = temp_buffer;
+  PE_pres_total /= delta_t;
+*/
+
   setRelativeError(m,err_reg,rel_err,u_norm_total); //this needs to be fixed
   rel_err_total = err_est_total/u_norm_total;
 
 if(comm_rank==0){
 std::cout<<std::setprecision(10)<<std::endl;
-std::cout<<"Error estimate "<<err_est_total<<" Relative error "<<rel_err_total<<" u_norm "<<u_norm_total<<" u_norm_augmented "<<u_norm_augmented<<std::endl;
+std::cout<<"Error estimate^2 "<<err_est_total*err_est_total<<" Relative error "<<rel_err_total<<" u_norm^2 "<<u_norm_total*u_norm_total<<" u_norm_augmented^2 "<<u_norm_augmented*u_norm_augmented<<" KE_adv " << KE_adv_total<<" KE "<<KE_total<<" PE "<<PE_total<<" PE_pres "<<PE_pres_total<<std::endl;
+std::cout<<"Energy conservation? "<<KE_adv_total+PE_total<<" w/ KE " << KE_total+PE_total<<" w/ pressure "<<KE_total+PE_pres_total<<" Density Avg "<<density_avg_total<<" Time step "<<delta_t<<std::endl;
+std::ofstream myfile;
+myfile.open("energy_values.csv", std::ios::app );
+myfile <<err_est_total*err_est_total<<","<<u_norm_total*u_norm_total<<","<<u_norm_augmented*u_norm_augmented<<","<<KE_adv_total<<","<<KE_total<<","<<PE_total<<","<<PE_pres_total<<std::endl;
+myfile.close();
+
 }
   m->end(iter);
 
