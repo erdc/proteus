@@ -44,6 +44,34 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArr
     int i = localNumber(v);
     for(int j = 0; j < nVar; j++)
       tmp[j] = inArray[i * nVar + j];
+/*
+if(!strcmp(name,"p"))    
+  tmp[0] =0 ; //pressure   
+else if(!strcmp(name,"velocity")){   
+  apf::Vector3 pt;
+  m->getPoint(v,0,pt);    
+  double Lz = 0.05;    
+  double Uinf = 2e-3;    
+  tmp[0] =0; //u   
+  tmp[1] = Uinf*pt[2]/Lz;    
+  tmp[2] =0;   
+ }    
+*/
+/*
+apf::Vector3 pt;
+m->getPoint(v,0,pt);    
+double Lz = 1;    
+double Ly = 5;   
+double Umax =1.5;
+if(!strcmp(name,"p"))
+  tmp[0] = 0.6*(1-pt[1]/Ly); //pressure starts at 1 and goes to 0    
+else if(!strcmp(name,"velocity")){   
+  tmp[0] = 0;    
+  tmp[1] = 4/Lz/Lz*Umax*(pt[2]*Lz-pt[2]*pt[2]);  //dpdy = 1/Ly   
+  tmp[2] = 0;
+}
+*/
+
     apf::setComponents(f, v, 0, &tmp[0]); 
   }
   m->end(it);
@@ -72,11 +100,12 @@ int MeshAdaptPUMIDrvr::transferFieldToProteus(const char* name, double* outArray
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, double *g_p)
+int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, double *g_p,double deltaT)
 { 
  rho[0] = rho_p[0]; rho[1] = rho_p[1];
  nu[0] = nu_p[0]; nu[1] = nu_p[1];
  g[0] = g_p[0]; g[1] = g_p[1]; g[2] = g_p[2];
+ delta_t = deltaT; 
  return 0;
 }
 
