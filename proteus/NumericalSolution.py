@@ -900,7 +900,8 @@ class NS_base:  # (HasTraits):
                     nu = numpy.array([self.pList[0].nu_0,
                                       self.pList[0].nu_1])
                     g = numpy.asarray(self.pList[0].g)
-                    p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
+                    deltaT = self.tn-self.tn_last
+                    p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g,deltaT)
                     del rho, nu, g
                     #
                     # zhang-alvin's BC communication for N-S error estimation
