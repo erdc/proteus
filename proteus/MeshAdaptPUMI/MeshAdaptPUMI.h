@@ -20,7 +20,7 @@ class MeshAdaptPUMIDrvr{
 
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
-  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p);
+  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p, double deltaT);
   int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   int transferBCsToProteus();
   int commuSizeField();
@@ -42,6 +42,7 @@ class MeshAdaptPUMIDrvr{
   double hmax, hmin;
   int numIter;
   int nAdapt; //counter for number of adapt steps
+  double PE_total_before;
   int nsd; //number of spatial dimensions
 
   //Element Residual Method
@@ -73,6 +74,7 @@ class MeshAdaptPUMIDrvr{
 
   double rho[2], nu[2];
   double g[3];
+  double delta_t;
   apf::MeshTag* diffFlux;
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];

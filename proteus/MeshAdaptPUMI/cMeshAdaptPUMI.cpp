@@ -23,6 +23,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   hmin=Hmin; hmax=Hmax;
   numIter=NumIter;
   nAdapt=0;
+  PE_total_before=-1.1180;//-0.0074163; //based on specific case
   if(PCU_Comm_Self()==0)
      printf("MeshAdapt: Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
        hmax, hmin, numIter);
