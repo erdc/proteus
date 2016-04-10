@@ -7,7 +7,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*); 
+  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile);
@@ -106,6 +106,7 @@ class MeshAdaptPUMIDrvr{
   std::string size_field_config;
   std::string adapt_type_config;
   std::string logging_config;
+  double target_error;
 };
 
 
