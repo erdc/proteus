@@ -533,7 +533,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total,double rel_err_total)
   PCU_Add_Ints(&numel, 1);
 
   double err_dest = alpha*err_total/sqrt(numel);
-if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<err_dest<<std::endl;
+if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<err_dest<<" numel "<<numel<<std::endl;
   double err_curr = 0.0;
   double rel = 0.0;
   apf::Vector3 err_vect;
@@ -652,15 +652,17 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<e
     else
       apf::setScalar(clipped_vtx,v,0,0);
 
-    if(comm_rank==0)std::cout<<"Original Lambdas "<<lambda[0]<<" "<<lambda[1]<<" "<<lambda[2]<<std::endl;
+    //if(comm_rank==0)std::cout<<"Original Lambdas "<<lambda[0]<<" "<<lambda[1]<<" "<<lambda[2]<<std::endl;
     scaleFormulaERM(phi,hmin,hmax,apf::getScalar(size_iso,v,0),curve,lambda,eps_u,scale,adapt_type_config);
-    if(comm_rank==0) std::cout<<"Scales "<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<"Lambdas "<<lambda[0]<<" "<<lambda[1]<<" "<<lambda[2]<<std::endl;
+    //if(comm_rank==0) std::cout<<"Scales "<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<"Lambdas "<<lambda[0]<<" "<<lambda[1]<<" "<<lambda[2]<<std::endl;
     apf::setVector(size_scale,v,0,scale);
   }
   m->end(it);
+/*
   SmoothField(size_scale);
   SmoothField(size_scale);
   SmoothField(size_scale);
+*/
 
   if(logging_config=="on"){
     char namebuffer[20];
