@@ -505,8 +505,11 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total,double rel_err_total)
   double eps_u = 0.002; //distance from the interface
   double tolerance = 0.1;
   double alpha;
-  if(target_error!=0)
+  if(target_error!=0){
     alpha = target_error/err_total;
+//    if(alpha>1)
+//      alpha=1.0;
+  }
   else 
     alpha = tolerance/rel_err_total; //refinement constant
 
@@ -525,7 +528,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total,double rel_err_total)
   apf::Field* size_iso_reg = apf::createField(m, "iso_size",apf::SCALAR,apf::getConstant(nsd));
   size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
 
+  //Get total number of elements
   numel = m->count(nsd);
+  PCU_Add_Ints(&numel, 1);
+
   double err_dest = alpha*err_total/sqrt(numel);
 if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<err_dest<<std::endl;
   double err_curr = 0.0;
@@ -543,7 +549,10 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<e
     h_old = pow(apf::measure(element)*6*sqrt(2),1.0/3.0); //edge of a regular tet
     apf::getVector(err_reg,reg,0,err_vect);
     err_curr = err_vect[0];
-    h_new = h_old*sqrt(err_dest/err_curr);
+    if(alpha==1)
+      h_new = h_old;
+    else
+      h_new = h_old*sqrt(err_dest/err_curr);
     apf::setScalar(size_iso_reg,reg,0,h_new);
   }
   apf::destroyMeshElement(element);
