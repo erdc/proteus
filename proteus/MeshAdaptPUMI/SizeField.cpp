@@ -160,8 +160,9 @@ static apf::Field* computeMetricField(apf::Field* gradphi, apf::Field*grad2phi,a
                              gphi[0]*gphi[1], gphi[1]*gphi[1], gphi[1]*gphi[2],
                              gphi[0]*gphi[2], gphi[1]*gphi[2], gphi[2]*gphi[2]); 
     apf::Matrix3x3 hess = hessianFormula(g2phi);
+    apf::Matrix3x3 metric = hess;
     //apf::Matrix3x3 metric = gphigphit/(apf::getScalar(size_iso,v,0)*apf::getScalar(size_iso,v,0))+ hess/eps_u;
-    apf::Matrix3x3 metric(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
+    //apf::Matrix3x3 metric(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
     apf::setMatrix(metricf, v, 0, metric);
   }
   m->end(it);
@@ -261,20 +262,20 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
     double lambdamin = 1.0/(hmin*hmin);
     if(lambda[1] < 1e-10){lambda[1]=lambdamin; lambda[2]=lambdamin;}
     if(lambda[2] < 1e-10){lambda[2]=lambdamin;}
-    if(fabs(phi)<epsilon){
 ///* useful
     scale[0] = h_dest*pow((lambda[1]*lambda[2])/(lambda[0]*lambda[0]),1.0/6.0);
     scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
     scale[2] = sqrt(lambda[0]/lambda[2])*scale[0];
 //*/
 /*
+    if(fabs(phi)<epsilon){
       scale[0] = h_dest;
       scale[1] = sqrt(eps_u/fabs(curves[2]));
       scale[2] = sqrt(eps_u/fabs(curves[1]));
-*/
     }
     else
       scale = apf::Vector3(1,1,1) * h_dest; 
+*/
   }
   else{
     std::cerr << "unknown adapt type config " << adapt_type << '\n';
@@ -396,7 +397,6 @@ static apf::Field* getERMSizeFrames(apf::Field* hessians, apf::Field* gradphi,ap
     assert(ssa[2].wm >= ssa[1].wm);
     assert(ssa[1].wm >= ssa[0].wm);
     double firstEigenvalue = ssa[2].wm;
-    //apf::Matrix3x3 frame;
     frame[0] = dir;
     if (firstEigenvalue > 1e-16) {
       frame[0] = ssa[2].v;
@@ -503,7 +503,7 @@ static void SmoothField(apf::Field* f)
 int MeshAdaptPUMIDrvr::getERMSizeField(double err_total,double rel_err_total)
 {
   double eps_u = 0.002; //distance from the interface
-  double tolerance = 0.1;
+  double tolerance = 0.2;
   double alpha = tolerance/rel_err_total; //refinement constant
 
   freeField(size_frame);
@@ -574,9 +574,9 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<e
 //*
   it = m->begin(0);
   while((v=m->iterate(it))){
-    minToEntity(size_iso_reg, size_iso, v);
+    //minToEntity(size_iso_reg, size_iso, v);
     //volumeAverageToEntity(size_iso_reg, size_iso, v);
-    //averageToEntity(size_iso_reg, size_iso, v);
+    averageToEntity(size_iso_reg, size_iso, v);
   }
   m->end(it); 
 //*/
@@ -590,7 +590,8 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<e
   apf::Field* grad2Speed = apf::recoverGradientByVolume(gradSpeed);
   apf::Field* hess = computeHessianField(grad2phi);
   apf::Field* curves = getCurves(hess, gradphi);
-  apf::Field* metricf = computeMetricField(gradphi,grad2phi,size_iso,eps_u);
+  //apf::Field* metricf = computeMetricField(gradphi,grad2phi,size_iso,eps_u);
+  apf::Field* metricf = computeMetricField(gradSpeed,grad2Speed,size_iso,eps_u);
 
   apf::Field* frame_comps[3] = {apf::createLagrangeField(m, "frame_0", apf::VECTOR, 1),apf::createLagrangeField(m, "frame_1", apf::VECTOR, 1),apf::createLagrangeField(m, "frame_2", apf::VECTOR, 1)};
   //size_frame = getERMSizeFrames(hess, gradphi,frame_comps);
@@ -611,8 +612,8 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<e
     apf::Vector3 curve;
     apf::getVector(curves, v, 0, curve);
 
-    apf::Matrix3x3 hessian;
-    apf::getMatrix(hess, v, 0, hessian);
+    //apf::Matrix3x3 hessian;
+    //apf::getMatrix(hess, v, 0, hessian);
     apf::Matrix3x3 metric;
     apf::getMatrix(metricf, v, 0, metric);
     apf::Vector3 eigenVectors[3];
@@ -638,11 +639,15 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<e
     else
       apf::setScalar(clipped_vtx,v,0,0);
 
+    if(comm_rank==0)std::cout<<"Original Lambdas "<<lambda[0]<<" "<<lambda[1]<<" "<<lambda[2]<<std::endl;
     scaleFormulaERM(phi,hmin,hmax,apf::getScalar(size_iso,v,0),curve,lambda,eps_u,scale,adapt_type_config);
+    if(comm_rank==0) std::cout<<"Scales "<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<"Lambdas "<<lambda[0]<<" "<<lambda[1]<<" "<<lambda[2]<<std::endl;
     apf::setVector(size_scale,v,0,scale);
   }
   m->end(it);
-  //SmoothField(size_scale);
+  SmoothField(size_scale);
+  SmoothField(size_scale);
+  SmoothField(size_scale);
 
   if(logging_config=="on"){
     char namebuffer[20];
