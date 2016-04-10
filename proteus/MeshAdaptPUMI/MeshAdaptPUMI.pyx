@@ -16,7 +16,7 @@ cdef extern from "cmeshToolsModule.h":
 
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
-        MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*)
+        MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*,double)
         int numIter, numAdaptSteps
         int loadModelAndMesh(char *, char*)
         int getSimmetrixBC()
@@ -41,9 +41,9 @@ cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
     cdef double hmax, hmin
     cdef int numIter, numAdaptSteps
-    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="farhad",maType="isotropic",logType="off"):
+    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="farhad",maType="isotropic",logType="off",targetError=0):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
-        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType)
+        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType,targetError)
     def __dealloc__(self):
         del self.thisptr
     def loadModelAndMesh(self, geomName, meshName):

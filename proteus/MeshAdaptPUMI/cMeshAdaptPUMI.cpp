@@ -13,7 +13,7 @@
 #include "MeshAdaptPUMI.h"
 
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
-    const char* sfConfig, const char* maType,const char* logType)
+    const char* sfConfig, const char* maType,const char* logType, double targetError)
 {
   m = 0;
   PCU_Comm_Init();
@@ -43,6 +43,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   modelFileName = NULL; 
   adapt_type_config = maType;
   logging_config = logType;
+  target_error = targetError;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
