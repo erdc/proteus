@@ -503,8 +503,12 @@ static void SmoothField(apf::Field* f)
 int MeshAdaptPUMIDrvr::getERMSizeField(double err_total,double rel_err_total)
 {
   double eps_u = 0.002; //distance from the interface
-  double tolerance = 0.2;
-  double alpha = tolerance/rel_err_total; //refinement constant
+  double tolerance = 0.1;
+  double alpha;
+  if(target_error!=0)
+    alpha = target_error/err_total;
+  else 
+    alpha = tolerance/rel_err_total; //refinement constant
 
   freeField(size_frame);
   freeField(size_scale);
