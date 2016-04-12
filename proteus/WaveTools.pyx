@@ -396,7 +396,7 @@ class MonochromaticWaves:
         if self.waveType is "Linear":
             return vel_mode(x, t, self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,self.vDir)
         elif self.waveType is "Fenton":
-            Ufenton = self.meanVelocity
+            Ufenton = self.meanVelocity.copy()
             ii = 0
             for B in self.Bcoeff:
                 ii+=1
