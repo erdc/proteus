@@ -6030,6 +6030,12 @@ class MultilevelTransport:
         """read in the multilevel mesh, mesh independent boundary
         conditions, and types for test and trial spaces and the
         jacobian. Pass through the rest to the models on each mesh"""
+
+        if bool(TrialSpaceTypeDict) == False:
+            raise Exception,  'Proteus is trying to create a' \
+            ' Multilevel Transport object with no trial space.  Make' \
+            ' sure femSpaces is properly specified in your numerics.'
+        
         self.weakDirichletConditions=weakDirichletConditions
         self.jacobianList=[]
         self.par_jacobianList=[]
