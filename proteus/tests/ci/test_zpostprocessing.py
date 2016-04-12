@@ -63,8 +63,8 @@ def test_bdm_sshaped_region():
                      'test_bdm_sshaped_region_expected.h5'),'r')
     actual = tables.openFile('poisson_bdm1_test.h5','r')
 
-    assert np.allclose(expected.root.velocity_0_elementQuadrature_p_t1, \
-                       actual.root.velocity_0_elementQuadrature_p_t1), \
+    assert np.allclose(expected.root.velocity_0_elementQuadrature_t1, \
+                       actual.root.velocity_0_elementQuadrature_t1), \
            'post-processed velocity field is no longer producing expectout out'
 
     expected.close()
