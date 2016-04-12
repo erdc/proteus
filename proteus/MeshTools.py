@@ -246,8 +246,8 @@ class Quadrilateral(Polygon):
             if zMax < node.p[Z]:
                 zMax = node.p[Z]
 
-        # indentity degenerate coordinate space.  
-        # NOTE - this is not entirely accurate, but assumes 
+        # indentity degenerate coordinate space.
+        # NOTE - this is not entirely accurate, but assumes
         # 2D quadrilateral objects are orthogonal to one of
         # the cononical coordinate axes
 
@@ -290,7 +290,7 @@ class Quadrilateral(Polygon):
             var2_max = yMax
         else:
             assert 0, 'Invalide Quadrilateral Mesh Case'
-            
+
         for node in nodeList:
             if node.p[var1]==var1_min and node.p[var2]==var2_min:
                 newList[0] = node
@@ -921,14 +921,14 @@ class Mesh:
                                                            "Dimensions":"%i" % (self.globalMesh.nElementBoundaries_global,)})
                 if ar.hdfFile != None:
                     if ar.has_h5py:
-                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+"_t"+str(tCount)
-                        ar.create_dataset_sync("nodeMaterialTypes"+"_p"+"_t"+str(tCount), offsets=self.globalMesh.nodeOffsets_subdomain_owned, data=self.nodeMaterialTypes[:self.nNodes_owned])
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+"_t"+str(tCount)
-                        ar.create_dataset_sync("elementMaterialTypes"+"_p"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementMaterialTypes[:self.nElements_owned])
+                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
+                        ar.create_dataset_sync("nodeMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.nodeOffsets_subdomain_owned, data=self.nodeMaterialTypes[:self.nNodes_owned])
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
+                        ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementMaterialTypes[:self.nElements_owned])
                         if EB:
-                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+"_t"+str(tCount)
-                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+"_t"+str(tCount)
-                            ar.create_dataset_sync("elementBoundaryMaterialTypes"+"_p"+"_t"+str(tCount), offsets = self.globalMesh.elementBoundaryOffsets_subdomain_owned, data=self.elementBoundaryMaterialTypes[:self.nElementBoundaries_owned])
+                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
+                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_t"+str(tCount)
+                            ar.create_dataset_sync("elementBoundaryMaterialTypes"+"_t"+str(tCount), offsets = self.globalMesh.elementBoundaryOffsets_subdomain_owned, data=self.elementBoundaryMaterialTypes[:self.nElementBoundaries_owned])
                     else:
                         assert False, "global_sync not supported  with pytables"
                 else:
@@ -3114,7 +3114,7 @@ class Mesh2DM(Mesh):
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+"_t"+str(tCount)
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
                         if init or meshChanged:
                             ar.create_dataset_sync('elements'+name+`tCount`,
                                                    offsets = self.globalMesh.elementOffsets_subdomain_owned,
@@ -3122,7 +3122,7 @@ class Mesh2DM(Mesh):
                             ar.create_dataset_sync('nodes'+name+`tCount`,
                                                    offsets = self.globalMesh.nodeOffsets_subdomain_owned,
                                                    data = self.nodeArray[:self.nNodes_owned])
-                            ar.create_dataset_sync("elementMaterialTypes"+"_p"+"_t"+str(tCount),
+                            ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
                                                    offsets = self.globalMesh.elementOffsets_subdomain_owned,
                                                    data = self.elementMaterialTypes[:self.nElements_owned])
                     else:
@@ -3481,7 +3481,7 @@ class Mesh3DM(Mesh):
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
-                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+"_t"+str(tCount)
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
                         if init or meshChanged:
                             ar.create_dataset_sync('elements'+name+`tCount`,
                                                    offsets = self.globalMesh.elementOffsets_subdomain_owned,
@@ -3489,7 +3489,7 @@ class Mesh3DM(Mesh):
                             ar.create_dataset_sync('nodes'+name+`tCount`,
                                                    offsets = self.globalMesh.nodeOffsets_subdomain_owned,
                                                    data = self.nodeArray[:self.nNodes_owned])
-                            ar.create_dataset_sync("elementMaterialTypes"+"_p"+"_t"+str(tCount),
+                            ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
                                                    offsets = self.globalMesh.elementOffsets_subdomain_owned,
                                                    data = self.elementMaterialTypes[:self.nElements_owned])
                     else:
