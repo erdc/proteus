@@ -497,6 +497,8 @@ def getInfoFromSTL(filename):
         elif "endfacet" in line:
             facets += [[facet]]
             facet = []
+        elif "endsolid" in line:
+            pass
         elif "solid" in line:
             word_list = line.split()
             name = word_list[1]
