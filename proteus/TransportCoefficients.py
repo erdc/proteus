@@ -1985,7 +1985,8 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                  stokes=False,
                  sd=True,
                  movingDomain=False,
-                 useRBLES=0.0):
+                 useRBLES=0.0,
+                 constPressure=False):
         self.useRBLES=useRBLES
         self.sd=sd
         if epsFact_density != None:
@@ -2007,6 +2008,7 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
         self.nu_1 = nu_1
         self.g = numpy.array(g)
         self.nd=nd
+        self.pp_hasNullSpace = constPressure
         #VRANS
         self.linearDragFactor    = 0.0
         self.nonlinearDragFactor = 0.0

@@ -473,7 +473,7 @@ class KSP_petsc4py(LinearSolver):
             if self.preconditioner.hasNullSpace:
                 self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
                 self.petsc_L.setNullSpace(self.preconditioner.nsp)
-                self.ksp.setNullSpace(self.preconditioner.nsp)
+              #  self.ksp.setNullSpace(self.preconditioner.nsp)
         except:
             pass
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
@@ -637,23 +637,24 @@ class NavierStokes3D:
         self.isv = p4pyPETSc.IS()
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
-        self.setUp()
-#        self.pc.setFromOptions()
-        import pdb
-#        pdb.set_trace()
-
-
+        self.pc.setFromOptions()
     def setUp(self):
-        import pdb
-#        pdb.set_trace()
-        # Temporary addition - Think this this should really be set in NavierStokes class
-        # ksp does not have a method setNullSpace...This this be applied to the system matrix perhaps?
-        self.L.pde.pp_hasConstantNullSpace = False
-        if self.L.pde.pp_hasConstantNullSpace:
-            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                self.kspList = self.pc.getFieldSplitSubKSP()
-                self.kspList[1].setNullSpace(self.nsp)
+        try:
+            if self.L.pde.coefficients.pp_hasNullSpace:
+                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                    self.kspList = self.pc.getFieldSplitSubKSP()
+                    self.kspList[1].setNullSpace(self.nsp)
+                else:
+                    null_space = p4pyPETSc.Vec().createSeq(self.neqns)
+                    import pdb
+                    pdb.set_trace()
+                    null_space[self.pressureDOF] = 1
+                    null_space.normalize()
+                    null_space_basis = [null_space]
+                    self.nsp = p4pyPETSc.NullSpace().create(False,null_space_basis,comm=p4pyPETSc.COMM_WORLD)
+        except:
+            pass
         if self.PCD:
             #modify the mass term in the continuity equation so the p-p block is Q
             rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
@@ -814,8 +815,13 @@ class NavierStokes2D:
     def __init__(self,L,prefix=None):
         self.L=L
         L_sizes = L.getSizes()
+<<<<<<< Updated upstream
         L_range = L.getOwnershipRange()
         neqns = L_sizes[0][0]
+=======
+        self.L_range = L.getOwnershipRange()
+        self.neqns = L_sizes[0][0]
+>>>>>>> Stashed changes
         rank = p4pyPETSc.COMM_WORLD.rank
         if self.L.pde.stride[0] == 1:#assume end to end
             pSpace = self.L.pde.u[0].femSpace
@@ -851,6 +857,7 @@ class NavierStokes2D:
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
     def setUp(self):
+<<<<<<< Updated upstream
         import pdb
 #        pdb.set_trace()
         self.L.pde.pp_hasConstantNullSpace = False
@@ -859,6 +866,31 @@ class NavierStokes2D:
                 self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
                 self.kspList = self.pc.getFieldSplitSubKSP()
                 self.kspList[1].setNullSpace(self.nsp)
+=======
+        try:
+            if self.L.pde.coefficients.pp_hasNullSpace:
+                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                    self.kspList = self.pc.getFieldSplitSubKSP()
+                    self.kspList[1].setNullSpace(self.nsp)
+                else:
+                    null_space = p4pyPETSc.Vec().createSeq(self.neqns)
+                    import pdb
+                    pdb.set_trace()
+                    if self.L.pde.stride[0] == 1:
+                        for i in range(self.nDOF_pressure):
+                            null_space[i] = i
+                    else:
+                        w_range = [i for i in range(self.L_range[0]+self.neqns)]
+                        p_range = w_range[0:self.L_range[0]+self.neqns:3]
+                        for i in p_range:
+                            null_space[i] = 1
+                    null_space.normalize()
+                    null_space_basis = [null_space]
+                    self.nsp = p4pyPETSc.NullSpace().create(False,null_space_basis,comm=p4pyPETSc.COMM_WORLD)
+        except:
+            pass
+>>>>>>> Stashed changes
 
 SimpleNavierStokes2D = NavierStokes2D
 
