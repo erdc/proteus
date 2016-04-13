@@ -2120,6 +2120,8 @@ class TetrahedralMesh(Mesh):
         self.tetrahedronList=[]
         self.oldToNewNode=[]
         self.boundaryMesh=TriangularMesh()
+    def meshType(self):
+        return 'simplex'
     def computeGeometricInfo(self):
         import cmeshTools
         cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
@@ -2709,7 +2711,8 @@ class HexahedralMesh(Mesh):
         self.elemList=[]
         self.oldToNewNode=[]
         self.boundaryMesh=QuadrilateralMesh()
-
+    def meshType(self):
+        return 'cuboid'
     def computeGeometricInfo(self):
         import cmeshTools
         print "no info yet for hexahedral mesh"
@@ -3747,6 +3750,8 @@ class TriangularMesh(Mesh):
         self.triangleDict={}
         self.triangleList=[]
         self.oldToNewNode=[]
+    def meshType(self):
+        return 'simplex'
     def computeGeometricInfo(self):
         import cmeshTools
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
@@ -4423,6 +4428,9 @@ class QuadrilateralMesh(Mesh):
                 e3 = Edge(nodes=[n3,n0])
                 self.newQuadrilateral([e0,e1,e2,e3])
         self.finalize()
+    
+    def meshType(self):
+        return 'cuboid'
 
     def meshInfo(self):
         minfo = """Number of quadrilaterals  : %d
