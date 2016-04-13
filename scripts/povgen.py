@@ -19,8 +19,8 @@ parser.add_argument("-s", "--steps", type=int, default=0,
 args = parser.parse_args()
 domain = Domain.RectangularDomain(L=args.L, x=args.x)
 comm = Comm.init()
-h5 = tables.openFile(args.prefix + repr(comm.rank()) + ".h5", "r")
-isosurface = Isosurface.Isosurface((('phi', (0.0,)),),
+h5 = tables.openFile(args.prefix + ".h5", "r")
+isosurface = Isosurface.Isosurface((('phi_p_t', (0.0,)),),
                                    domain,
                                    writeBoundary=False)
 for i in range(args.steps):
