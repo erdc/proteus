@@ -7023,7 +7023,8 @@ initflcbdfWrappers(void)
 
   // ensure PETSc, then DAETK, are initialized
   // PETSc first, via the proteus.Comm module
-  PyRun_SimpleString("from proteus import Comm; Comm.init()");
+  //this wasn't working anyway... 
+  //PyRun_SimpleString("proteus.Comm.init()");
 
   // DAETK, PETSc is initialized so only initialize subsystem
   Daetk::Petsc::Sys::initialized=true;
