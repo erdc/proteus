@@ -4,6 +4,7 @@ from proteus.mprans.cRANS2P_IB import *
 import numpy as np
 import beamFEM
 from ArchiveBeams import *
+from mpi4py import MPI
 
 class Coefficients(proteus.mprans.RANS2P.Coefficients):
     def __init__(self,
@@ -117,6 +118,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         self.beam_Cd = beam_Cd
         self.beam_nlTol = beam_nlTol
         self.beamRigid= beamRigid
+        self.beamIsLocal = np.zeros((len(self.beamLocation),1), dtype=np.bool)
 
     def attachModels(self,modelList):
         RANS2P.Coefficients.attachModels(self,modelList)
@@ -128,6 +130,18 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         self.q_dragBeam1 = numpy.zeros(cq[('u',1)].shape,'d')
         self.q_dragBeam2 = numpy.zeros(cq[('u',1)].shape,'d')
         self.q_dragBeam3 = numpy.zeros(cq[('u',1)].shape,'d')
+
+        for i in range(len(self.beamIsLocal)):
+            n1 = np.less(cq['x'][:,0]-self.beamLocation[i][0], self.beamLength[i])
+            n1 = np.logical_and(n1, np.greater(cq['x'][:,0]-self.beamLocation[i][0], -self.beamLength[i]))
+            n1 = np.logical_and(n1,np.less(cq['x'][:,1]-self.beamLocation[i][1], self.beamLength[i]))
+            n1 = np.logical_and(n1,np.greater(cq['x'][:,1]-self.beamLocation[i][1], -self.beamLength[i]))
+            n1 = np.logical_and(n1,np.less(cq['x'][:,2], self.beamLength[i]))
+            if n1.any():
+                self.beamIsLocal[i] = True
+            
+        
+                                    
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         RANS2P.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
@@ -212,9 +226,9 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                         self.beamDrag[0]+= self.Beam_Solver[I].Q3[0]
                         self.beamDrag[1]+= self.Beam_Solver[I].Q2[0]
                         self.beamDrag[2]+= self.Beam_Solver[I].Q1[0]
-        for i in range(3):
-            self.beamDrag.flat[i] = globalSum(self.beamDrag.flat[i])
- 
+        #for i in range(3):
+        #    self.beamDrag.flat[i] = globalSum(self.beamDrag.flat[i])
+        self.beamDrag = self.comm2.allreduce(self.beamDrag, op=MPI.SUM)
                                                                                                     
                     
     def updateBeams(self,t):
@@ -281,19 +295,25 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                     self.beamDrag[0]+= self.Beam_Solver[I].Q3[0]
                     self.beamDrag[1]+= self.Beam_Solver[I].Q2[0]
                     self.beamDrag[2]+= self.Beam_Solver[I].Q1[0]
-        self.beamDrag[0] = globalSum(self.beamDrag[0])
-        self.beamDrag[1] = globalSum(self.beamDrag[1])
-        self.beamDrag[2] = globalSum(self.beamDrag[2])
-                                     
+        #self.beamDrag[0] = globalSum(self.beamDrag[0])
+        #self.beamDrag[1] = globalSum(self.beamDrag[1])
+        #self.beamDrag[2] = globalSum(self.beamDrag[2])
+        self.beamDrag = self.comm2.allreduce(self.beamDrag, op=MPI.SUM)
         for i in range(self.nBeams*(self.nBeamElements+1)):
-            self.xv.flat[i] = globalSum(self.xv.flat[i])
-            self.yv.flat[i] = globalSum(self.yv.flat[i])
-            self.zv.flat[i] = globalSum(self.zv.flat[i])
+            #self.xv.flat[i] = globalSum(self.xv.flat[i])
+            #self.yv.flat[i] = globalSum(self.yv.flat[i])
+            #self.zv.flat[i] = globalSum(self.zv.flat[i])
+            self.xv = self.comm2.allreduce(self.xv, op=MPI.SUM)
+            self.yv = self.comm2.allreduce(self.yv, op=MPI.SUM)
+            self.zv = self.comm2.allreduce(self.zv, op=MPI.SUM)
+
         for i in range(self.nBeams*self.nBeamElements*self.beam_quadOrder):
-            self.xq.flat[i] = globalSum(self.xq.flat[i])
-            self.yq.flat[i] = globalSum(self.yq.flat[i])
-            self.zq.flat[i] = globalSum(self.zq.flat[i])
-                
+            #self.xq.flat[i] = globalSum(self.xq.flat[i])
+            #self.yq.flat[i] = globalSum(self.yq.flat[i])
+            #self.zq.flat[i] = globalSum(self.zq.flat[i])
+            self.xq = self.comm2.allreduce(self.xq, op=MPI.SUM)
+            self.yq = self.comm2.allreduce(self.yq, op=MPI.SUM)
+            self.zq = self.comm2.allreduce(self.zq, op=MPI.SUM)                
         
         if self.nBeams > 0 and self.comm.isMaster():
             Archive_time_step(Beam_x=self.xv,
@@ -323,7 +343,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
     def initializeBeams(self):
         comm = Comm.get()
         self.comm=comm
-
+        self.comm2 = MPI.COMM_WORLD
         bBox=[.25*.69, .69-.25*.69]
         self.centerBox=[]
 
@@ -1245,7 +1265,8 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.coefficients.q_dragBeam3,
             self.coefficients.ebqe_dragBeam1,
             self.coefficients.ebqe_dragBeam2,
-            self.coefficients.ebqe_dragBeam3)
+            self.coefficients.ebqe_dragBeam3,
+            self.coefficients.beamIsLocal)
 	from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
@@ -1458,7 +1479,8 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.coefficients.q_dragBeam3,
             self.coefficients.ebqe_dragBeam1,
             self.coefficients.ebqe_dragBeam2,
-            self.coefficients.ebqe_dragBeam3)
+            self.coefficients.ebqe_dragBeam3,
+            self.coefficients.beamIsLocal)
 
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof,numpy.inf),numpy.linalg.norm(self.u[2].dof,numpy.inf),numpy.linalg.norm(self.u[3].dof,numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace=True
@@ -1672,7 +1694,8 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.q2,
             self.q3,
             self.coefficients.vel_avg,
-            self.coefficients.netBeamDrag)
+            self.coefficients.netBeamDrag,
+            self.coefficients.beamIsLocal)
         #import pdb
         #pdb.set_trace()
  

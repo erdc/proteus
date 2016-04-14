@@ -162,7 +162,8 @@ namespace proteus
 				   double* q_dragBeam3,
 				   double* ebqe_dragBeam1,
 				   double* ebqe_dragBeam2,
-				   double* ebqe_dragBeam3)=0;
+				   double* ebqe_dragBeam3,
+				   int* beamIsLocal)=0;
     virtual void calculateBeams(//element
 				double* mesh_trial_ref,
 				double* mesh_grad_trial_ref,
@@ -329,7 +330,8 @@ namespace proteus
 				double* q2,
 				double* q3,
 				double* vel_avg,
-				double* netBeamDrag)=0;
+				double* netBeamDrag,
+				int* beamIsLocal)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -491,7 +493,8 @@ namespace proteus
 				   double* q_dragBeam3,
 				   double* ebqe_dragBeam1,
 				   double* ebqe_dragBeam2,
-				   double* ebqe_dragBeam3)=0;
+				   double* ebqe_dragBeam3,
+				   int* beamIsLocal)=0;
     virtual void calculateForce(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -751,7 +754,8 @@ namespace proteus
 			      double& mom_v_source,
 			      double& mom_w_source,
 			      const double dV,
-			      double* netBeamDrag)
+			      double* netBeamDrag,
+			      int* beamIsLocal)
     {
       double rho, H_rho, delt, vel;
       H_rho = smoothedHeaviside(eps_rho,phi);
@@ -762,6 +766,8 @@ namespace proteus
       mom_w_source = 0.0;
       for(int I=0; I<nBeams; I++)
 	{
+	  if (beamIsLocal[I])
+	    {
 	  for(int k=0;k<nBeamElements; k++)
 	    {
 	      for(int l=0;l<beam_quadOrder; l++)
@@ -788,6 +794,7 @@ namespace proteus
 		  /* q2[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += beam_Cd*rho*beamRadius[I]*v*vel*delt*dV; */
 		  /* q3[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += beam_Cd*rho*beamRadius[I]*w*vel*delt*dV; */
 		}
+	    }
 	    }
 	}
       if ((y>.1) && ( y< 0.4) && (x >= 1.2) && (x <= 11.0))
@@ -819,7 +826,8 @@ inline
 			  double *q2,
 			  double *q3,
 			  const double dV,
-			  double *vel_avg)
+			  double *vel_avg,
+			  int *beamIsLocal)
     {
       double rho, H_rho, delt, vel,h_save, buoy;
       H_rho = smoothedHeaviside(eps_rho,phi);
@@ -833,6 +841,8 @@ inline
 	}
       for(int I=0; I<nBeams; I++)
 	{
+	  if (beamIsLocal[I])
+	    {
 	  buoy=(rho - 1350.0)*3.14159*beamRadius[I]*beamRadius[I];
 	  for(int k=0;k<nBeamElements; k++)
 	    {
@@ -856,7 +866,7 @@ inline
 		      q3[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += (beam_Cd*rho*beamRadius[I]*w*vel+buoy)*delt*dV;
 		    }
 		}
-	    }
+	    }}
 	}
     }
    
@@ -2155,7 +2165,8 @@ inline
 			   double* q_dragBeam3,
 			   double* ebqe_dragBeam1,
 			   double* ebqe_dragBeam2,
-			   double* ebqe_dragBeam3 )
+			   double* ebqe_dragBeam3,
+			   int* beamIsLocal)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -2411,7 +2422,7 @@ inline
 				   dmom_w_ham_grad_p,
 				   q_dragBeam1[eN_k],
 				   q_dragBeam2[eN_k],
-				   q_dragBeam3[eN_k]);          
+				   q_dragBeam3[eN_k]);
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
@@ -3698,7 +3709,8 @@ inline
 			   double* q_dragBeam3,
 			   double* ebqe_dragBeam1,
 			   double* ebqe_dragBeam2,
-			   double* ebqe_dragBeam3)
+			   double* ebqe_dragBeam3,
+			   int* beamIsLocal)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -5798,7 +5810,8 @@ inline
 		       double* q2,
 		       double* q3,
 		       double* vel_avg,
-			double* netBeamDrag)
+		       double* netBeamDrag,
+		       int* beamIsLocal)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -6009,7 +6022,8 @@ inline
 				 q_dragBeam2[eN_k],
 				 q_dragBeam3[eN_k],
 				 dV,
-				 netBeamDrag);
+				 netBeamDrag,
+				 beamIsLocal);
 	      calculateBeamLoads(nBeams,
 				 nBeamElements,
 				 beam_quadOrder,
@@ -6033,7 +6047,8 @@ inline
 				 q2,
 				 q3,
 				 dV,
-				 vel_avg);
+				 vel_avg,
+				 beamIsLocal);
 	      
 	      // 
 	      
@@ -6271,7 +6286,8 @@ inline
 				 ebqe_dragBeam2[ebNE_kb],
 				 ebqe_dragBeam3[ebNE_kb],
 				 dS,
-				 junk);
+				 junk,
+				 beamIsLocal);
 	      //
 	      
 	    }//kb

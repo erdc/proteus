@@ -155,7 +155,8 @@ cdef extern from "RANS2P_IB.h" namespace "proteus":
 				   double* q_dragBeam3,
 				   double* ebqe_dragBeam1,
 				   double* ebqe_dragBeam2,
-				   double* ebqe_dragBeam3)
+				   double* ebqe_dragBeam3,
+				   int* beamIsLocal)
         void calculateBeams(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -320,7 +321,8 @@ cdef extern from "RANS2P_IB.h" namespace "proteus":
 				double* q2,
 				double* q3,
 				double* vel_avg,
-				double* netBeamDrag)       
+				double* netBeamDrag,
+				int* beamIsLocal)       
         void calculateJacobian(double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -480,7 +482,8 @@ cdef extern from "RANS2P_IB.h" namespace "proteus":
 				   double* q_dragBeam3,
 				   double* ebqe_dragBeam1,
 				   double* ebqe_dragBeam2,
-				   double* ebqe_dragBeam3)
+				   double* ebqe_dragBeam3,
+				   int* beamIsLocal)
         void calculateForce(double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -793,7 +796,8 @@ cdef class cRANS2P_IB_base:
 				   numpy.ndarray q_dragBeam3,
 				   numpy.ndarray ebqe_dragBeam1,
 				   numpy.ndarray ebqe_dragBeam2,
-				   numpy.ndarray ebqe_dragBeam3):			 
+				   numpy.ndarray ebqe_dragBeam3,
+				   numpy.ndarray beamIsLocal):			 
        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -943,7 +947,8 @@ cdef class cRANS2P_IB_base:
 				   <double*> q_dragBeam3.data,
 				   <double*> ebqe_dragBeam1.data,
 				   <double*> ebqe_dragBeam2.data,
-				   <double*> ebqe_dragBeam3.data)
+				   <double*> ebqe_dragBeam3.data,
+				   <int*> beamIsLocal.data)
 
    def calculateBeams(self,
                          numpy.ndarray mesh_trial_ref,
@@ -1110,7 +1115,8 @@ cdef class cRANS2P_IB_base:
 			 numpy.ndarray q2,
 			 numpy.ndarray q3,
 			 numpy.ndarray vel_avg,
-			 numpy.ndarray netBeamDrag):			 
+			 numpy.ndarray netBeamDrag,
+			 numpy.ndarray beamIsLocal):			 
        self.thisptr.calculateBeams(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -1275,7 +1281,8 @@ cdef class cRANS2P_IB_base:
 				       <double*> q2.data,
 				       <double*> q3.data,
 				       <double*> vel_avg.data,
-				       <double*> netBeamDrag.data)
+				       <double*> netBeamDrag.data,
+				       <int*> beamIsLocal.data)
 			       
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
@@ -1437,7 +1444,8 @@ cdef class cRANS2P_IB_base:
 				   numpy.ndarray q_dragBeam3,
 				   numpy.ndarray ebqe_dragBeam1,
 				   numpy.ndarray ebqe_dragBeam2,
-				   numpy.ndarray ebqe_dragBeam3):
+				   numpy.ndarray ebqe_dragBeam3,
+				   numpy.ndarray beamIsLocal):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
@@ -1599,7 +1607,8 @@ cdef class cRANS2P_IB_base:
 				   <double*> q_dragBeam3.data,
 				   <double*> ebqe_dragBeam1.data,
 				   <double*> ebqe_dragBeam2.data,
-				   <double*> ebqe_dragBeam3.data)
+				   <double*> ebqe_dragBeam3.data,
+				   <int*> beamIsLocal.data)
 
    def calculateForce(self,
                          numpy.ndarray mesh_trial_ref,
