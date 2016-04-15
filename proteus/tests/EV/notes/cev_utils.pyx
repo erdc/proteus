@@ -101,3 +101,12 @@ def apply_fct(np.ndarray Un, np.ndarray UL, np.ndarray row, np.ndarray col, np.n
     #
     return Rp,Rm
 
+def build_div_representation(np.ndarray row, np.ndarray col):
+    """
+    Given sparsity information for relating scalar spaces in operator like 
+    (phi_i,phi_j)_\Omega, phi_i \in W, phi_j \in V
+    compute sparsity information for a 'divergence' matrix
+    (phi_i,grad phi_j)_Omega 
+
+    """
+    pass
