@@ -228,7 +228,8 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                         self.beamDrag[2]+= self.Beam_Solver[I].Q1[0]
         #for i in range(3):
         #    self.beamDrag.flat[i] = globalSum(self.beamDrag.flat[i])
-        self.beamDrag = self.comm2.allreduce(self.beamDrag, op=MPI.SUM)
+        cbeamDrag = np.copy(self.beamDrag)
+        self.comm2.Allreduce([self.beamDrag,MPI.DOUBLE], [cbeamDrag, MPI.DOUBLE], op=MPI.SUM)
                                                                                                     
                     
     def updateBeams(self,t):
@@ -298,23 +299,38 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         #self.beamDrag[0] = globalSum(self.beamDrag[0])
         #self.beamDrag[1] = globalSum(self.beamDrag[1])
         #self.beamDrag[2] = globalSum(self.beamDrag[2])
-        self.beamDrag = self.comm2.allreduce(self.beamDrag, op=MPI.SUM)
-        for i in range(self.nBeams*(self.nBeamElements+1)):
-            #self.xv.flat[i] = globalSum(self.xv.flat[i])
-            #self.yv.flat[i] = globalSum(self.yv.flat[i])
-            #self.zv.flat[i] = globalSum(self.zv.flat[i])
-            self.xv = self.comm2.allreduce(self.xv, op=MPI.SUM)
-            self.yv = self.comm2.allreduce(self.yv, op=MPI.SUM)
-            self.zv = self.comm2.allreduce(self.zv, op=MPI.SUM)
+        cbeamDrag = np.copy(self.beamDrag)
+        self.comm2.Allreduce([self.beamDrag,MPI.DOUBLE], [cbeamDrag, MPI.DOUBLE], op=MPI.SUM)
+        #self.beamDrag = self.comm2.allreduce(self.beamDrag, op=MPI.SUM)
+        #for i in range(self.nBeams*(self.nBeamElements+1)):
+        #    #self.xv.flat[i] = globalSum(self.xv.flat[i])
+        #    #self.yv.flat[i] = globalSum(self.yv.flat[i])
+        #    #self.zv.flat[i] = globalSum(self.zv.flat[i])
+        cxv = np.copy(self.xv)
+        cyv = np.copy(self.yv)
+        czv = np.copy(self.zv)
+        self.comm2.Allreduce([self.xv, MPI.DOUBLE], [cxv, MPI.DOUBLE], op=MPI.SUM)
+        self.comm2.Allreduce([self.yv, MPI.DOUBLE], [cyv, MPI.DOUBLE], op=MPI.SUM)
+        self.comm2.Allreduce([self.zv, MPI.DOUBLE], [czv, MPI.DOUBLE], op=MPI.SUM)
 
-        for i in range(self.nBeams*self.nBeamElements*self.beam_quadOrder):
-            #self.xq.flat[i] = globalSum(self.xq.flat[i])
-            #self.yq.flat[i] = globalSum(self.yq.flat[i])
-            #self.zq.flat[i] = globalSum(self.zq.flat[i])
-            self.xq = self.comm2.allreduce(self.xq, op=MPI.SUM)
-            self.yq = self.comm2.allreduce(self.yq, op=MPI.SUM)
-            self.zq = self.comm2.allreduce(self.zq, op=MPI.SUM)                
-        
+                
+        #self.xv = self.comm2.allreduce(self.xv, op=MPI.SUM)
+        #self.yv = self.comm2.allreduce(self.yv, op=MPI.SUM)
+        #self.zv = self.comm2.allreduce(self.zv, op=MPI.SUM)
+
+        #for i in range(self.nBeams*self.nBeamElements*self.beam_quadOrder):
+        #    #self.xq.flat[i] = globalSum(self.xq.flat[i])
+        #    #self.yq.flat[i] = globalSum(self.yq.flat[i])
+        #    #self.zq.flat[i] = globalSum(self.zq.flat[i])
+        #    self.xq = self.comm2.allreduce(self.xq, op=MPI.SUM)
+        #    self.yq = self.comm2.allreduce(self.yq, op=MPI.SUM)
+        #    self.zq = self.comm2.allreduce(self.zq, op=MPI.SUM)                
+        cxq = np.copy(self.xq)
+        cyq = np.copy(self.yq)
+        czq = np.copy(self.zq)
+        self.comm2.Allreduce([self.xq, MPI.DOUBLE], [cxq, MPI.DOUBLE], op=MPI.SUM)
+        self.comm2.Allreduce([self.yq, MPI.DOUBLE], [cyq, MPI.DOUBLE], op=MPI.SUM)
+        self.comm2.Allreduce([self.zq, MPI.DOUBLE], [czq, MPI.DOUBLE], op=MPI.SUM)
         if self.nBeams > 0 and self.comm.isMaster():
             Archive_time_step(Beam_x=self.xv,
                               Beam_y=self.yv,
