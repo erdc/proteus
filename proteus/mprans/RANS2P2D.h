@@ -845,7 +845,8 @@ namespace proteus
 #endif
       double x = fmax(0.0, fmin( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
       
-      H_s = (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
+      H_s = 0.5*(1. - cos(M_PI*x));
+//H_s = (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
       //
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
