@@ -373,8 +373,8 @@ class Rectangle(Shape):
                                   'right': 2,
                                   'top': 3,
                                   'left': 4}
-        self.segmentFlags = np.array([bt['bottom'], bt['right'], bt['left'],
-                                      bt['top']])  # bottom, right, top, left
+        self.segmentFlags = np.array([bt['bottom'], bt['right'], bt['top'],
+                                      bt['left']])  # bottom, right, top, left
         self.vertexFlags = np.array([bt['bottom'], bt['bottom'], bt['top'],
                                      bt['top']])  # bottom, bottom, top, top
         self.regionFlags = np.array([1])
@@ -437,6 +437,7 @@ class CustomShape(Shape):
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
         self._checkFlags(boundaryTags.values())
+        self.boundaryTgs = boundaryTags
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)
         if segments:
@@ -473,6 +474,7 @@ class ShapeSTL(Shape):
         self.vertices, self.facets, self.facetnormals = getInfoFromSTL(self.filename)
         self.facetFlags = np.ones(len(self.facets))
         self.vertexFlags = np.ones(len(self.vertices))
+        self.boundaryTags = {'stl': 1}
         self.BC_dict = {'stl': self.BC_class(shape=self, name='stl')}
         self.BC_list = [self.BC_dict['stl']]
         self.BC = BCContainer(self.BC_dict)
