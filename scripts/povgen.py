@@ -20,7 +20,7 @@ args = parser.parse_args()
 domain = Domain.RectangularDomain(L=args.L, x=args.x)
 comm = Comm.init()
 h5 = tables.openFile(args.prefix + ".h5", "r")
-isosurface = Isosurface.Isosurface((('phi_p_t', (0.0,)),),
+isosurface = Isosurface.Isosurface((('phi_t', (0.0,)),),
                                    domain,
                                    writeBoundary=False)
 for i in range(args.steps):
