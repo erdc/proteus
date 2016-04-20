@@ -230,7 +230,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         #    self.beamDrag.flat[i] = globalSum(self.beamDrag.flat[i])
         cbeamDrag = np.copy(self.beamDrag)
         self.comm2.Allreduce([self.beamDrag,MPI.DOUBLE], [cbeamDrag, MPI.DOUBLE], op=MPI.SUM)
-                                                                                                    
+        self.beamDrag = cbeamDrag
                     
     def updateBeams(self,t):
         from proteus.flcbdfWrappers import globalSum
@@ -301,6 +301,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         #self.beamDrag[2] = globalSum(self.beamDrag[2])
         cbeamDrag = np.copy(self.beamDrag)
         self.comm2.Allreduce([self.beamDrag,MPI.DOUBLE], [cbeamDrag, MPI.DOUBLE], op=MPI.SUM)
+        self.beamDrag = cbeamDrag
         #self.beamDrag = self.comm2.allreduce(self.beamDrag, op=MPI.SUM)
         #for i in range(self.nBeams*(self.nBeamElements+1)):
         #    #self.xv.flat[i] = globalSum(self.xv.flat[i])
@@ -312,7 +313,9 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         self.comm2.Allreduce([self.xv, MPI.DOUBLE], [cxv, MPI.DOUBLE], op=MPI.SUM)
         self.comm2.Allreduce([self.yv, MPI.DOUBLE], [cyv, MPI.DOUBLE], op=MPI.SUM)
         self.comm2.Allreduce([self.zv, MPI.DOUBLE], [czv, MPI.DOUBLE], op=MPI.SUM)
-
+        self.xv = cxv
+        self.yv = cyv
+        self.zv = czv
                 
         #self.xv = self.comm2.allreduce(self.xv, op=MPI.SUM)
         #self.yv = self.comm2.allreduce(self.yv, op=MPI.SUM)
@@ -331,6 +334,9 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         self.comm2.Allreduce([self.xq, MPI.DOUBLE], [cxq, MPI.DOUBLE], op=MPI.SUM)
         self.comm2.Allreduce([self.yq, MPI.DOUBLE], [cyq, MPI.DOUBLE], op=MPI.SUM)
         self.comm2.Allreduce([self.zq, MPI.DOUBLE], [czq, MPI.DOUBLE], op=MPI.SUM)
+        self.xq = cxq
+        self.yq = cyq
+        self.zq = czq
         if self.nBeams > 0 and self.comm.isMaster():
             Archive_time_step(Beam_x=self.xv,
                               Beam_y=self.yv,
