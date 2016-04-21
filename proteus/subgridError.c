@@ -2632,17 +2632,17 @@ void calculateSubgridErrorNavierStokes2D_GLS_tauRes(int nElements_global,
 /**
    \brief Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the "l_1 norm formula"
 */
-void calculateSubgridErrorStokes2D_GLS_tau(int nElements_global,
-                                                 int nQuadraturePoints_element,
-                                                 int nSpace,
-                                                 double* elementDiameter,
-                                                 double* dmt,
-                                                 double* a,
-                                                 double* tau0,
-                                                 double* tau1)
+void calculateSubgridErrorStokes_GLS_tau(int nElements_global,
+                                         int nQuadraturePoints_element,
+                                         int nSpace,
+                                         double* elementDiameter,
+                                         double* pfac,
+                                         double* a,
+                                         double* tau0,
+                                         double* tau1)
 {
   int eN,k,nSpace2=nSpace*nSpace;
-  double h,viscosity;//caller should scale if kinematic viscosity
+  double h,viscosity,density;//caller should scale if kinematic viscosity
   for(eN=0;eN<nElements_global;eN++)
     {
       h = elementDiameter[eN];
@@ -2650,36 +2650,34 @@ void calculateSubgridErrorStokes2D_GLS_tau(int nElements_global,
         {
           viscosity =  a[eN*nQuadraturePoints_element*nSpace2 + 
                          k*nSpace2];
-          tau0[eN*nQuadraturePoints_element+k] = 1.0/(4.0*viscosity/(h*h) + 
-						      fabs(dmt[eN*nQuadraturePoints_element+k])+1.0e-8);
-          tau1[eN*nQuadraturePoints_element+k] = 4.0*viscosity + 
-	    fabs(dmt[eN*nQuadraturePoints_element+k])*h*h; 
+          density = pfac[eN*nQuadraturePoints_element*nSpace+k*nSpace+0];
+          tau0[eN*nQuadraturePoints_element+k] = 1.0/(4.0*viscosity/(h*h));
+          tau1[eN*nQuadraturePoints_element+k] = 4.0*viscosity/density;
          }
     }
 }
 
-void calculateSubgridErrorStokes2D_GLS_tau_sd(int nElements_global,
-                                                 int nQuadraturePoints_element,
-                                                 int nSpace,
-                                                 double* elementDiameter,
-                                                 double* dmt,
-                                                 double* a,
-                                                 double* tau0,
-                                                 double* tau1)
+void calculateSubgridErrorStokes_GLS_tau_sd(int nElements_global,
+                                            int nQuadraturePoints_element,
+                                            int nSpace,
+                                            double* elementDiameter,
+                                            double* pfac,
+                                            double* a,
+                                            double* tau0,
+                                            double* tau1)
 {
   int eN,k;
-  double h,viscosity;/*mwf need rho now to get right scaling?*/
+  double h,viscosity, density;
   for(eN=0;eN<nElements_global;eN++)
     {
       h = elementDiameter[eN];
       for (k=0;k<nQuadraturePoints_element;k++)
         {
-          viscosity =  a[eN*nQuadraturePoints_element*nSpace + 
-                         k*nSpace];
-          tau0[eN*nQuadraturePoints_element+k] = 1.0/(4.0*viscosity/(h*h) + 
-						      fabs(dmt[eN*nQuadraturePoints_element+k])+1.0e-8);
-          tau1[eN*nQuadraturePoints_element+k] = 4.0*viscosity + 
-	    fabs(dmt[eN*nQuadraturePoints_element+k])*h*h; 
+          viscosity =  a[eN*nQuadraturePoints_element*nSpace*nSpace + 
+                         k*nSpace*nSpace];
+          density = pfac[eN*nQuadraturePoints_element*nSpace+k*nSpace+0];
+          tau0[eN*nQuadraturePoints_element+k] = 1.0/(4.0*viscosity/(h*h));
+          tau1[eN*nQuadraturePoints_element+k] = 4.0*viscosity/density;
          }
     }
 }

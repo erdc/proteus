@@ -375,6 +375,7 @@ public:
           if(nodesIn[i] > nodesIn[j])
             position++;
         nodes[position]=nodesIn[i];
+        nodes_unsorted[i] = nodesIn[i];
       }
 //     for(int i=0;i<nNodes;i++)    
 //       nodes[i] = nodesIn[i];
@@ -383,9 +384,13 @@ public:
   inline NodeTuple(const NodeTuple<nNodes>& nt)
   {
     for(int i=0;i<nNodes;i++)
-      nodes[i]=nt.nodes[i]; 
+      {
+        nodes[i]=nt.nodes[i]; 
+        nodes_unsorted[i]=nt.nodes_unsorted[i];
+      }
   }
   int nodes[nNodes];
+  int nodes_unsorted[nNodes];
 };
 
 template<int nNodes>
