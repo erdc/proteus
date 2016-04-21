@@ -208,14 +208,106 @@ class Triangle(Polygon):
 
 class Quadrilateral(Polygon):
     """A 2D quadrilateral element"""
-    def __init__(self,quadrilateralNumber=0,edges=[]):
+    def __init__(self,quadrilateralNumber=0,edges=[],simple=True):
         Polygon.__init__(self,quadrilateralNumber)
         self.edges = edges
         nodeList = getNodesFromEdges(self.edges)
-        nodeList.sort()
+        nodeList = self.sortNodes(nodeList)
         self.nodes = tuple(nodeList)
         self.hasGeometricInfo = False
         self.elementBoundaries = self.edges
+        # This boolean flags whether the quadrilateral is simple
+        # (eg. a rectangle).  Certain features are more difficult
+        # to implement if this is not the case.
+        self.simple = True
+
+    def sortNodes(self,nodeList):
+        newList = [None] * 4
+        coordinate_list = [1,1,1]
+
+        # initialize coordinate mins and maxs
+        xMin = nodeList[0].p[X]
+        xMax = nodeList[0].p[X]
+        yMin = nodeList[0].p[Y]
+        yMax = nodeList[0].p[Y]
+        zMin = nodeList[0].p[Z]
+        zMax = nodeList[0].p[Z]
+        for node in nodeList:
+            if xMin > node.p[X]:
+                xMin = node.p[X]
+            if xMax < node.p[X]:
+                xMax = node.p[X]
+            if yMin > node.p[Y]:
+                yMin = node.p[Y]
+            if yMax < node.p[Y]:
+                yMax = node.p[Y]
+            if zMin > node.p[Z]:
+                zMin = node.p[Z]
+            if zMax < node.p[Z]:
+                zMax = node.p[Z]
+
+        # indentity degenerate coordinate space.
+        # NOTE - this is not entirely accurate, but assumes
+        # 2D quadrilateral objects are orthogonal to one of
+        # the cononical coordinate axes
+
+        if xMin==xMax:
+            coordinate_list[0] = 0
+        if yMin==yMax:
+            coordinate_list[1] = 0
+        if zMin==zMax:
+            coordinate_list[2] = 0
+        if sum(coordinate_list) !=2:
+            assert 0, 'Invalid 2D quadrilateral object'
+
+        for i, t in enumerate(coordinate_list):
+            if t == 0:
+                case = i
+
+        # x is degenerate variable
+        if case == 0:
+            var1 = 1        # y marked as first node
+            var2 = 2        # z marked as second
+            var1_min = yMin
+            var1_max = yMax
+            var2_min = zMin
+            var2_max = zMax
+        # y is degenerate variable
+        elif case == 1:
+            var1 = 0        # x marked as first node
+            var2 = 2        # z marked as second
+            var1_min = xMin
+            var1_max = xMax
+            var2_min = zMin
+            var2_max = zMax
+        # z is degenerate variable
+        elif case == 2:
+            var1 = 0        # x marked as first node
+            var2 = 1        # y marked as second
+            var1_min = xMin
+            var1_max = xMax
+            var2_min = yMin
+            var2_max = yMax
+        else:
+            assert 0, 'Invalide Quadrilateral Mesh Case'
+
+        for node in nodeList:
+            if node.p[var1]==var1_min and node.p[var2]==var2_min:
+                newList[0] = node
+            elif node.p[var1]==var1_min and node.p[var2]==var2_max:
+                newList[1] = node
+            elif node.p[var1]==var1_max and node.p[var2]==var2_max:
+                newList[2] = node
+            elif node.p[var1]==var1_max and node.p[var2]==var2_min:
+                newList[3] = node
+
+#        import pdb
+#        pdb.set_trace()
+
+        for i,item in enumerate(newList):
+            if not newList[i]:
+                assert 0,'Quadrialteral Mesh Generation Error '+`newList`+" i = "+`i`
+        return newList
 
     def computeGeometricInfo(self):
         if not self.hasGeometricInfo:
@@ -252,6 +344,28 @@ class Quadrilateral(Polygon):
             self.diameter = max(diagonal1.length,diagonal0.length)
             self.innerDiameter = 4.0*self.area/sum(
                 [e.length for e in self.edges])
+            # Calculate the coordinate of a simple quad
+            if self.simple==True:
+                self.xmin = self.nodes[0].p[X]
+                self.ymin = self.nodes[0].p[Y]
+                self.xmax = self.nodes[0].p[X]
+                self.ymax = self.nodes[0].p[Y]
+                for node in self.nodes:
+                    if node.p[X] < self.xmin:
+                        self.xmin = node.p[X]
+                    elif node.p[X] > self.xmax:
+                        self.xmax = node.p[X]
+                    else:
+                        pass
+                    if node.p[Y] < self.ymin:
+                        self.ymin = node.p[Y]
+                    elif node.p[Y] > self.ymax:
+                        self.ymax = node.p[Y]
+                    else:
+                        pass
+                self.xmid = (self.xmin+self.xmax)/2.
+                self.ymid = (self.ymin+self.ymax)/2.
+                self.zmid = 0.
 
 class Polyhedron(Element):
     """
@@ -626,40 +740,72 @@ class Mesh:
             #
             #topology and geometry
             #
-            self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
-            topology = SubElement(self.arGrid,"Topology",
-                                  {"Type":Xdmf_ElementTopology,
-                                   "NumberOfElements":str(self.nElements_owned)})
-            elements = SubElement(topology,"DataItem",
-                                  {"Format":ar.dataItemFormat,
-                                   "DataType":"Int",
-                                   "Dimensions":"%i %i" % (self.nElements_owned,self.nNodes_element)})
-            geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
-            nodes    = SubElement(geometry,"DataItem",
-                                  {"Format":ar.dataItemFormat,
-                                   "DataType":"Float",
-                                   "Precision":"8",
-                                   "Dimensions":"%i %i" % (self.nNodes_global,3)})
-            if ar.hdfFile != None:
-                if ar.has_h5py:
-                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
-                    nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
-                    if init or meshChanged:
-                        ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`,data=self.elementNodesArray[:self.nElements_owned])
-                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`,data=self.nodeArray)
+            if ar.global_sync:
+                self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                topology = SubElement(self.arGrid,"Topology",
+                                      {"Type":Xdmf_ElementTopology,
+                                       "NumberOfElements":str(self.globalMesh.nElements_global)})
+                elements = SubElement(topology,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Int",
+                                       "Dimensions":"%i %i" % (self.globalMesh.nElements_global,self.nNodes_element)})
+                geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
+                nodes    = SubElement(geometry,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Float",
+                                       "Precision":"8",
+                                       "Dimensions":"%i %i" % (self.globalMesh.nNodes_global,3)})
+                if ar.hdfFile != None:
+                    if ar.has_h5py:
+                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        if init or meshChanged:
+                            ar.create_dataset_sync('elements'+name+`tCount`,
+                                                    offsets=self.globalMesh.elementOffsets_subdomain_owned,
+                                                    data=self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
+                            ar.create_dataset_sync('nodes'+name+`tCount`,
+                                                   offsets=self.globalMesh.nodeOffsets_subdomain_owned,
+                                                   data=self.nodeArray[:self.nNodes_owned])
+                    else:
+                        assert False, "global_sync not supported  with pytables"
                 else:
-                    elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                    nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
-                    if init or meshChanged:
-                        ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
-                        ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                    assert False, "global_sync not  supported with text heavy data"
             else:
-                SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
-                SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
-                if init or meshChanged:
-                    np.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray[:self.nElements_owned],fmt='%d')
-                    np.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
+                self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                topology = SubElement(self.arGrid,"Topology",
+                                      {"Type":Xdmf_ElementTopology,
+                                       "NumberOfElements":str(self.nElements_owned)})
+                elements = SubElement(topology,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Int",
+                                       "Dimensions":"%i %i" % (self.nElements_owned,self.nNodes_element)})
+                geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
+                nodes    = SubElement(geometry,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Float",
+                                       "Precision":"8",
+                                       "Dimensions":"%i %i" % (self.nNodes_global,3)})
+                if ar.hdfFile != None:
+                    if ar.has_h5py:
+                        elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
+                        nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
+                        if init or meshChanged:
+                            ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`,data=self.elementNodesArray[:self.nElements_owned])
+                            ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`,data=self.nodeArray)
+                    else:
+                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        if init or meshChanged:
+                            ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                else:
+                    SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
+                    SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
+                    if init or meshChanged:
+                        numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray[:self.nElements_owned],fmt='%d')
+                        numpy.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
             #
             #element boundary topology and geometry
             #
@@ -698,54 +844,10 @@ class Mesh:
                     SubElement(ebnodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
                     if init or meshChanged:
                         np.savetxt(ar.textDataDir+"/elementBoundaries"+name+".txt",self.elementBoundaryNodesArray,fmt='%d')
-                        #np.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
-
-            #
-            #ghost nodes and elements
-            #
-            # ghostNodesSet = SubElement(self.arGrid,"Set",{"SetType":"Node",
-            #                                               "Ghost":"1"})
-            # nGhostNodes = self.nNodes_global-self.nNodes_owned
-            # ghostNodesArray = np.arange(self.nNodes_owned,self.nNodes_global,1,dtype='i')
-            # if nGhostNodes > 0:
-            #     ghostNodes = SubElement(ghostNodesSet,"DataItem",
-            #                             {"Format":ar.dataItemFormat,
-            #                              "DataType":"Int",
-            #                              "Dimensions":"%i" % (nGhostNodes,)})
-            # nGhostElements = self.nElements_global - self.nElements_owned
-            # ghostElementsArray = np.arange(self.nElements_owned,self.nElements_global,1,dtype='i')
-            # if nGhostElements > 0:
-            #     ghostElementsSet = SubElement(self.arGrid,"Set",{"SetType":"Cell",
-            #                                                      "Ghost":"1"})
-            #     ghostElements = SubElement(ghostElementsSet,"DataItem",
-            #                                {"Format":ar.dataItemFormat,
-            #                                 "DataType":"Int",
-            #                                 "Dimensions":"%i" % (self.nElements_global-self.nElements_owned,)})
-
-            # if ar.hdfFile != None:
-            #     if nGhostElements > 0:
-            #         ghostElements.text = ar.hdfFilename+":/ghostElements"+name+`tCount`
-            #     if nGhostNodes > 0:
-            #         ghostNodes.text = ar.hdfFilename+":/ghostNodes"+name+`tCount`
-            #     if init or meshChanged:
-            #         if nGhostElements > 0:
-            #             ar.hdfFile.createArray("/",'ghostElements'+name+`tCount`,ghostElementsArray)
-            #         if nGhostNodes > 0:
-            #             ar.hdfFile.createArray("/",'ghostNodes'+name+`tCount`,ghostNodesArray)
-            # else:
-            #     if nGhostElements > 0:
-            #         SubElement(ghostElements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/ghostElements"+name+".txt"})
-            #     if nGhostNodes > 0:
-            #         SubElement(ghostNodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/ghostNodes"+name+".txt"})
-            #     if init or meshChanged:
-            #         if nGhostElements > 0:
-            #             np.savetxt(ar.textDataDir+"/ghostElements"+name+".txt",ghostElementsArray,fmt='%d')
-            #         if nGhostNodes > 0:
-            #             np.savetxt(ar.textDataDir+"/ghostNodes"+name+".txt",ghostNodesArray,fmt='%d')
 
             # Add the local->global index maps for collect.py and for
             # reverse mapping in hotstarts from a global XDMF file.
-            if self.globalMesh != None:
+            if self.globalMesh != None and not ar.global_sync:
                 nodeMapAtt = SubElement(self.arGrid,"Attribute",
                                         {"Name":"NodeMapL2G",
                                          "AttributeType":"Scalar",
@@ -787,64 +889,105 @@ class Mesh:
             #
             #material types
             #
-            nodeMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"nodeMaterialTypes",
-                                                                    "AttributeType":"Scalar",
-                                                                    "Center":"Node"})
-            nodeMaterialTypesValues = SubElement(nodeMaterialTypes,"DataItem",
-                                                 {"Format":ar.dataItemFormat,
-                                                  "DataType":"Int",
-                                                  "Dimensions":"%i" % (self.nNodes_global,)})
-            elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
-                                                                       "AttributeType":"Scalar",
-                                                                       "Center":"Cell"})
-            # elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
-            #                                         {"Format":ar.dataItemFormat,
-            #                                          "DataType":"Int",
-            #                                          "Dimensions":"%i" % (self.nElements_global,)})
-            elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
-                                                    {"Format":ar.dataItemFormat,
-                                                     "DataType":"Int",
-                                                     "Dimensions":"%i" % (self.nElements_owned,)})
-            if EB:
-                ebnodeMaterialTypes = SubElement(self.arEBGrid,"Attribute",{"Name":"ebnodeMaterialTypes",
-                                                                      "AttributeType":"Scalar",
-                                                                      "Center":"Node"})
-                ebnodeMaterialTypesValues = SubElement(ebnodeMaterialTypes,"DataItem",
-                                                   {"Format":ar.dataItemFormat,
-                                                    "DataType":"Int",
-                                                    "Dimensions":"%i" % (self.nNodes_global,)})
-                elementBoundaryMaterialTypes = SubElement(self.arEBGrid,"Attribute",{"Name":"elementBoundaryMaterialTypes",
-                                                                                         "AttributeType":"Scalar",
-                                                                                         "Center":"Cell"})
-                elementBoundaryMaterialTypesValues = SubElement(elementBoundaryMaterialTypes,"DataItem",
-                                                      {"Format":ar.dataItemFormat,
-                                                       "DataType":"Int",
-                                                       "Dimensions":"%i" % (self.nElementBoundaries_global,)})
-            if ar.hdfFile != None:
-                if ar.has_h5py:
-                    nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                    ar.create_dataset_async("nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.nodeMaterialTypes)
-                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                    ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.elementMaterialTypes[:self.nElements_owned])
-                    if EB:
-                        ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                        elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                        ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
+            if ar.global_sync:
+                nodeMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"nodeMaterialTypes",
+                                                                        "AttributeType":"Scalar",
+                                                                        "Center":"Node"})
+                nodeMaterialTypesValues = SubElement(nodeMaterialTypes,"DataItem",
+                                                     {"Format":ar.dataItemFormat,
+                                                      "DataType":"Int",
+                                                      "Dimensions":"%i" % (self.globalMesh.nNodes_global,)})
+                elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
+                                                                           "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+                elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Int",
+                                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
+                if EB:
+                    ebnodeMaterialTypes = SubElement(self.arEBGrid,"Attribute",{"Name":"ebnodeMaterialTypes",
+                                                                          "AttributeType":"Scalar",
+                                                                          "Center":"Node"})
+                    ebnodeMaterialTypesValues = SubElement(ebnodeMaterialTypes,"DataItem",
+                                                       {"Format":ar.dataItemFormat,
+                                                        "DataType":"Int",
+                                                        "Dimensions":"%i" % (self.globalMesh.nNodes_global,)})
+                    elementBoundaryMaterialTypes = SubElement(self.arEBGrid,"Attribute",{"Name":"elementBoundaryMaterialTypes",
+                                                                                             "AttributeType":"Scalar",
+                                                                                             "Center":"Cell"})
+                    elementBoundaryMaterialTypesValues = SubElement(elementBoundaryMaterialTypes,"DataItem",
+                                                          {"Format":ar.dataItemFormat,
+                                                           "DataType":"Int",
+                                                           "Dimensions":"%i" % (self.globalMesh.nElementBoundaries_global,)})
+                if ar.hdfFile != None:
+                    if ar.has_h5py:
+                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
+                        ar.create_dataset_sync("nodeMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.nodeOffsets_subdomain_owned, data=self.nodeMaterialTypes[:self.nNodes_owned])
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
+                        ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.elementOffsets_subdomain_owned, data=self.elementMaterialTypes[:self.nElements_owned])
+                        if EB:
+                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
+                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_t"+str(tCount)
+                            ar.create_dataset_sync("elementBoundaryMaterialTypes"+"_t"+str(tCount), offsets = self.globalMesh.elementBoundaryOffsets_subdomain_owned, data=self.elementBoundaryMaterialTypes[:self.nElementBoundaries_owned])
+                    else:
+                        assert False, "global_sync not supported  with pytables"
                 else:
-                    nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
-                    ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
-                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                    ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
-                    if EB:
-                        ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
-                        #ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
-                        elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+str(tCount)
-                        ar.hdfFile.createArray("/","elementBoundaryMaterialTypes"+str(tCount),self.elementBoundaryMaterialTypes)
+                    assert False, "global_sync  not  supported with text heavy data"
             else:
-                np.savetxt(ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt",self.nodeMaterialTypes)
-                SubElement(nodeMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt"})
-                np.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes[:self.nElements_owned])
-                SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
+                nodeMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"nodeMaterialTypes",
+                                                                        "AttributeType":"Scalar",
+                                                                        "Center":"Node"})
+                nodeMaterialTypesValues = SubElement(nodeMaterialTypes,"DataItem",
+                                                     {"Format":ar.dataItemFormat,
+                                                      "DataType":"Int",
+                                                      "Dimensions":"%i" % (self.nNodes_global,)})
+                elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
+                                                                           "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+                elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Int",
+                                                         "Dimensions":"%i" % (self.nElements_owned,)})
+                if EB:
+                    ebnodeMaterialTypes = SubElement(self.arEBGrid,"Attribute",{"Name":"ebnodeMaterialTypes",
+                                                                          "AttributeType":"Scalar",
+                                                                          "Center":"Node"})
+                    ebnodeMaterialTypesValues = SubElement(ebnodeMaterialTypes,"DataItem",
+                                                       {"Format":ar.dataItemFormat,
+                                                        "DataType":"Int",
+                                                        "Dimensions":"%i" % (self.nNodes_global,)})
+                    elementBoundaryMaterialTypes = SubElement(self.arEBGrid,"Attribute",{"Name":"elementBoundaryMaterialTypes",
+                                                                                             "AttributeType":"Scalar",
+                                                                                             "Center":"Cell"})
+                    elementBoundaryMaterialTypesValues = SubElement(elementBoundaryMaterialTypes,"DataItem",
+                                                          {"Format":ar.dataItemFormat,
+                                                           "DataType":"Int",
+                                                           "Dimensions":"%i" % (self.nElementBoundaries_global,)})
+                if ar.hdfFile != None:
+                    if ar.has_h5py:
+                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                        ar.create_dataset_async("nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.nodeMaterialTypes)
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                        ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.elementMaterialTypes[:self.nElements_owned])
+                        if EB:
+                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                            ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
+                    else:
+                        nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
+                        ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
+                        ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                        if EB:
+                            ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
+                            #ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
+                            elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+str(tCount)
+                            ar.hdfFile.createArray("/","elementBoundaryMaterialTypes"+str(tCount),self.elementBoundaryMaterialTypes)
+                else:
+                    numpy.savetxt(ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt",self.nodeMaterialTypes)
+                    SubElement(nodeMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt"})
+                    numpy.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes[:self.nElements_owned])
+                    SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
             #done with material types
     def buildFromC(self,cmesh):
         import cmeshTools
@@ -1977,6 +2120,8 @@ class TetrahedralMesh(Mesh):
         self.tetrahedronList=[]
         self.oldToNewNode=[]
         self.boundaryMesh=TriangularMesh()
+    def meshType(self):
+        return 'simplex'
     def computeGeometricInfo(self):
         import cmeshTools
         cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
@@ -2566,7 +2711,8 @@ class HexahedralMesh(Mesh):
         self.elemList=[]
         self.oldToNewNode=[]
         self.boundaryMesh=QuadrilateralMesh()
-
+    def meshType(self):
+        return 'cuboid'
     def computeGeometricInfo(self):
         import cmeshTools
         print "no info yet for hexahedral mesh"
@@ -2942,92 +3088,100 @@ class Mesh2DM(Mesh):
             #
             #topology and geometry
             #
-            self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
-            topology = SubElement(self.arGrid,"Topology",
-                                  {"Type":Xdmf_ElementTopology,
-                                   "NumberOfElements":str(self.nElements_owned)})
-            elements = SubElement(topology,"DataItem",
-                                  {"Format":ar.dataItemFormat,
-                                   "DataType":"Int",
-                                   "Dimensions":"%i %i" % (self.nElements_owned,self.nNodes_element)})
-            geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
-            nodes    = SubElement(geometry,"DataItem",
-                                  {"Format":ar.dataItemFormat,
-                                   "DataType":"Float",
-                                   "Precision":"8",
-                                   "Dimensions":"%i %i" % (self.nNodes_global,3)})
-            #material types
-            elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
-                                                                       "AttributeType":"Scalar",
-                                                                       "Center":"Cell"})
-            elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
-                                                    {"Format":ar.dataItemFormat,
-                                                     "DataType":"Int",
-                                                     "Dimensions":"%i" % (self.nElements_owned,)})
-            if ar.hdfFile != None:
-                if ar.has_h5py:
-                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
-                    nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
-                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                    if init or meshChanged:
-                        ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`, data = self.elementNodesArray[:self.nElements_owned])
-                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
-                        ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
+            if ar.global_sync:
+                self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                topology = SubElement(self.arGrid,"Topology",
+                                      {"Type":Xdmf_ElementTopology,
+                                       "NumberOfElements":str(self.globalMesh.nElements_global)})
+                elements = SubElement(topology,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Int",
+                                       "Dimensions":"%i %i" % (self.globalMesh.nElements_global,
+                                                               self.nNodes_element)})
+                geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
+                nodes    = SubElement(geometry,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Float",
+                                       "Precision":"8",
+                                       "Dimensions":"%i %i" % (self.globalMesh.nNodes_global,3)})
+                #material types
+                elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
+                                                                           "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+                elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Int",
+                                                         "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
+                if ar.hdfFile != None:
+                    if ar.has_h5py:
+                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
+                        if init or meshChanged:
+                            ar.create_dataset_sync('elements'+name+`tCount`,
+                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                                   data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
+                            ar.create_dataset_sync('nodes'+name+`tCount`,
+                                                   offsets = self.globalMesh.nodeOffsets_subdomain_owned,
+                                                   data = self.nodeArray[:self.nNodes_owned])
+                            ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
+                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                                   data = self.elementMaterialTypes[:self.nElements_owned])
+                    else:
+                        assert False, "global_sync with pytables not supported"
                 else:
-                    elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                    nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
-                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                    if init or meshChanged:
-                        ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
-                        ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
-                        ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                    assert False, "global_sync with text heavy data not supported"
             else:
-                SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
-                SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
-                SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
-                if init or meshChanged:
-                    np.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray[:self.nElements_owned],fmt='%d')
-                    np.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
-                    np.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes[:self.nElements_owned])
-#      def writeBoundaryMeshEnsight(self,filename,description=None):
-#          base=1
-#          #write the casefile
-#          caseOut=open(filename+'Boundary.case','w')
-#          caseOut.write('FORMAT\n'+'type: ensight gold\n')
-#          caseOut.write('GEOMETRY\n'+'model: '+filename+'.geo\n')
-#          caseOut.close()
-#          meshOut=open(filename+'Boundary.geo','w')
-#          meshOut.write('Unstructured Triangular Surface Mesh\n\n')
-#          meshOut.write('node id given\n')
-#          meshOut.write('element id given\n')
-#          #extents = 'extents\n %12.5E %12.5E\n %12.5E %12.5E\n %12.5E %12.5E\n' % (self.xmin,self.xmax,self.ymin,self.ymax,self.zmin,self.zmax)
-#          #meshOut.write('extents\n'+`self.xmin`+' '+`self.xmax`+'\n')
-#          meshOut.write('part \n'+'%10i\n' % 1)
-#          if description:
-#              meshOut.write(description+'\n')
-#          else:
-#              meshOut.write('A Mesh\n')
-#          meshOut.write('coordinates\n'+'%10i\n' % self.nExteriorNodes_global)
-#          for nN in range(self.nExteriorNodes_global):
-#              ensightNodeNumber = (nN+base)
-#              meshOut.write('%10i\n' % ensightNodeNumber)
-#          for nN in range(self.nExteriorNodes_global):
-#              meshOut.write('%12.5E\n' % self.nodeArray[self.exteriorNodeArray[nN],0])
-#          for nN in range(self.nExteriorNodes_global):
-#              meshOut.write('%12.5E\n' % self.nodeArray[self.exteriorNodeArray[nN],1])
-#          for nN in range(self.nExteriorNodes_global):
-#              meshOut.write('%12.5E\n' % self.nodeArray[self.exteriorNodeArray[nN],2])
-#          meshOut.write('tria3\n'+'%10i\n' % self.nExteriorTriangles_global)
-#          for tN in range(self.nExteriorTriangles_global):
-#              ensightElementNumber = tN + base
-#              meshOut.write('%10i\n' % ensightElementNumber)
-#          tA = self.triangleArray
-#          for tN in range(self.nExteriorTriangles_global):
-#              meshOut.write('%10i%10i%10i\n' % (self.globalToExteriorNodeArray[tA[tN,0]]+base,
-#                                                self.globalToExteriorNodeArray[tA[tN,1]]+base,
-#                                                self.globalToExteriorNodeArray[tA[tN,2]]+base))
-#          meshOut.close()
+                self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                topology = SubElement(self.arGrid,"Topology",
+                                      {"Type":Xdmf_ElementTopology,
+                                       "NumberOfElements":str(self.nElements_owned)})
+                elements = SubElement(topology,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Int",
+                                       "Dimensions":"%i %i" % (self.nElements_owned,self.nNodes_element)})
+                geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
+                nodes    = SubElement(geometry,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Float",
+                                       "Precision":"8",
+                                       "Dimensions":"%i %i" % (self.nNodes_global,3)})
+                #material types
+                elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
+                                                                           "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+                elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Int",
+                                                         "Dimensions":"%i" % (self.nElements_owned,)})
+                if ar.hdfFile != None:
+                    if ar.has_h5py:
+                        elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
+                        nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                        if init or meshChanged:
+                            ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`, data = self.elementNodesArray[:self.nElements_owned])
+                            ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
+                            ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
+                    else:
+                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
+                        if init or meshChanged:
+                            ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                            ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                else:
+                    SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
+                    SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
+                    SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
+                    if init or meshChanged:
+                        np.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray[:self.nElements_owned],fmt='%d')
+                        np.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
+                        np.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes[:self.nElements_owned])
+
 
 class Mesh3DM(Mesh):
     """
@@ -3298,57 +3452,106 @@ class Mesh3DM(Mesh):
                                                                "GridType":"Collection",
                                                                "CollectionType":"Temporal"})
         if self.arGrid == None or self.arTime.get('Value') != str(t):
-            #
-            #topology and geometry
-            #
-            self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
-            topology = SubElement(self.arGrid,"Topology",
-                                  {"Type":Xdmf_ElementTopology,
-                                   "NumberOfElements":str(self.nElements_owned)})
-            elements = SubElement(topology,"DataItem",
-                                  {"Format":ar.dataItemFormat,
-                                   "DataType":"Int",
-                                   "Dimensions":"%i %i" % (self.nElements_owned,self.nNodes_element)})
-            geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
-            nodes    = SubElement(geometry,"DataItem",
-                                  {"Format":ar.dataItemFormat,
-                                   "DataType":"Float",
-                                   "Precision":"8",
-                                   "Dimensions":"%i %i" % (self.nNodes_global,3)})
-            #material types
-            elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
-                                                                       "AttributeType":"Scalar",
-                                                                       "Center":"Cell"})
-            elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
-                                                    {"Format":ar.dataItemFormat,
-                                                     "DataType":"Int",
-                                                     "Dimensions":"%i" % (self.nElements_owned,)})
-            if ar.hdfFile != None:
-                if ar.has_h5py:
-                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
-                    nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
-                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                    if init or meshChanged:
-                        ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`, data = self.elementNodesArray[:self.nElements_owned])
-                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
-                        ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
+            if ar.global_sync:
+                #
+                #topology and geometry
+                #
+                self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                topology = SubElement(self.arGrid,"Topology",
+                                      {"Type":Xdmf_ElementTopology,
+                                       "NumberOfElements":str(self.globalMesh.nElements_global)})
+                elements = SubElement(topology,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Int",
+                                       "Dimensions":"%i %i" % (self.globalMesh.nElements_owned,
+                                                               self.nNodes_element)})
+                geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
+                nodes    = SubElement(geometry,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Float",
+                                       "Precision":"8",
+                                       "Dimensions":"%i %i" % (self.globalMesh.nNodes_global,3)})
+                #material types
+                elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
+                                                                           "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+                elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Int",
+                                                         "Dimensions":"%i" % (self.globalMesh.nElements_owned,)})
+                if ar.hdfFile != None:
+                    if ar.has_h5py:
+                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_t"+str(tCount)
+                        if init or meshChanged:
+                            ar.create_dataset_sync('elements'+name+`tCount`,
+                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                                   data = self.globalMesh.nodeNumbering_subdomain2global[self.elementNodesArray[:self.nElements_owned]])
+                            ar.create_dataset_sync('nodes'+name+`tCount`,
+                                                   offsets = self.globalMesh.nodeOffsets_subdomain_owned,
+                                                   data = self.nodeArray[:self.nNodes_owned])
+                            ar.create_dataset_sync("elementMaterialTypes"+"_t"+str(tCount),
+                                                   offsets = self.globalMesh.elementOffsets_subdomain_owned,
+                                                   data = self.elementMaterialTypes[:self.nElements_owned])
+                    else:
+                        assert False, "global_sync  not supported with pytables"
                 else:
-                    elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                    nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
-                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                    if init or meshChanged:
-                        ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
-                        ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
-                        ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                    assert False, "global_sync not supported  with text heavy data"
             else:
-                SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
-                SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
-                SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
-                if init or meshChanged:
-                    np.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray[:self.nElements_owned],fmt='%d')
-                    np.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
-                    np.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes[:self.nElements_owned])
+                #
+                #topology and geometry
+                #
+                self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
+                self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
+                topology = SubElement(self.arGrid,"Topology",
+                                      {"Type":Xdmf_ElementTopology,
+                                       "NumberOfElements":str(self.nElements_owned)})
+                elements = SubElement(topology,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Int",
+                                       "Dimensions":"%i %i" % (self.nElements_owned,self.nNodes_element)})
+                geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
+                nodes    = SubElement(geometry,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Float",
+                                       "Precision":"8",
+                                       "Dimensions":"%i %i" % (self.nNodes_global,3)})
+                #material types
+                elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
+                                                                           "AttributeType":"Scalar",
+                                                                           "Center":"Cell"})
+                elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
+                                                        {"Format":ar.dataItemFormat,
+                                                         "DataType":"Int",
+                                                         "Dimensions":"%i" % (self.nElements_owned,)})
+                if ar.hdfFile != None:
+                    if ar.has_h5py:
+                        elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
+                        nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                        if init or meshChanged:
+                            ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`, data = self.elementNodesArray[:self.nElements_owned])
+                            ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
+                            ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
+                    else:
+                        elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                        nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
+                        if init or meshChanged:
+                            ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
+                            ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                            ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                else:
+                    SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
+                    SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
+                    SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
+                    if init or meshChanged:
+                        np.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray[:self.nElements_owned],fmt='%d')
+                        np.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
+                        np.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes[:self.nElements_owned])
+
 class MultilevelTetrahedralMesh(MultilevelMesh):
     """A hierarchical multilevel mesh with tetrahedral cells"""
     def __init__(self,
@@ -3489,8 +3692,6 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                     self.meshList[l].buildFromC(self.cmeshList[l])
                     self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
             else:
-                import pdb
-                pdb.set_trace()
                 grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.meshList.append(HexahedralMesh())
                 self.elementChildren=[]
@@ -3530,9 +3731,6 @@ class MultilevelHexahedralMesh(MultilevelMesh):
         for m in self.meshList:
             m.computeGeometricInfo()
 
-
-
-
 class TriangularMesh(Mesh):
     """A mesh of triangles
 
@@ -3552,6 +3750,8 @@ class TriangularMesh(Mesh):
         self.triangleDict={}
         self.triangleList=[]
         self.oldToNewNode=[]
+    def meshType(self):
+        return 'simplex'
     def computeGeometricInfo(self):
         import cmeshTools
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
@@ -4193,6 +4393,9 @@ class QuadrilateralMesh(Mesh):
         self.quadDict={}
         self.quadList=[]
         self.oldToNewNode=[]
+        # tempoaray
+        self.max_nNodeNeighbors_node = 4
+
 
     def buildFromSets(self,faceSet,edgeSet,nodeSet):
         self.nodeList = list(nodeSet)
@@ -4203,6 +4406,171 @@ class QuadrilateralMesh(Mesh):
         self.quadDict = dict([(t.nodes,t) for t in self.faceList])
         self.elementList = self.triangleList
         self.elementBoundaryList = self.edgeList
+
+    def rectangularToQuadrilateral(self,grid,x=0.0,y=0.0,z=0.0):
+        ''' WIP - I think this is the first function that needs to be
+            written so that MultilevelQuadrilateralMesh can work.  This
+            function does not call C functions.
+        '''
+        self.nodeList = [Node(n.N,n.p[X]+x,n.p[Y]+y,n.p[Z]+z) for n in grid.nodeList]
+        # Is the following line necessary?
+        self.nodeDict = dict([(n,n) for n in self.nodeList])
+        for i in range(grid.nHx):
+            for j in range(grid.nHy):
+                k=0
+                n0 = self.nodeList[grid.getNodeNumber(i,j,k)]
+                n1 = self.nodeList[grid.getNodeNumber(i,j+1,k)]
+                n2 = self.nodeList[grid.getNodeNumber(i+1,j+1,k)]
+                n3 = self.nodeList[grid.getNodeNumber(i+1,j,k)]
+                e0 = Edge(nodes=[n0,n1])
+                e1 = Edge(nodes=[n1,n2])
+                e2 = Edge(nodes=[n2,n3])
+                e3 = Edge(nodes=[n3,n0])
+                self.newQuadrilateral([e0,e1,e2,e3])
+        self.finalize()
+    
+    def meshType(self):
+        return 'cuboid'
+
+    def meshInfo(self):
+        minfo = """Number of quadrilaterals  : %d
+Number of edges : %d
+Number of nodes : %d\n""" % (self.nElements_global,
+                             self.nElementBoundaries_global,
+                             self.nNodes_global)
+        if self.subdomainMesh != self:
+            sinfo = self.subdomainMesh.meshInfo()
+            info = "*** Global ***\n" + minfo + "\n*** Local ***\n" + sinfo
+            return info
+        return minfo
+
+    def newQuadrilateral(self,edges):
+        q = Quadrilateral(len(self.quadDict),edges)
+        self.quadDict[q.nodes] = q
+        self.registerEdges(q)
+        return q
+
+    def registerEdges(self,q):
+        '''check if an edge is in the mesh dictionary
+           if it is, point to existing entry
+           otherwise, create a new entry
+        '''
+        for en,e in enumerate(q.edges):
+            if self.edgeDict.has_key(e.nodes):
+                q.edges[en]=self.edgeDict[e.nodes]
+            else:
+                eN=len(self.edgeDict)
+                e.N=eN
+                self.edgeDict[e.nodes]=e
+
+    def registerNode(self,node):
+        ''' check if a node is in the mesh dictionary
+            if it is, point to existing entry
+            otherwise, create a new entry
+        '''
+        if self.nodeDict.has_key(node):
+            node = self.nodeDict[node]
+        else:
+            node.N = len(self.nodeDict)
+            self.nodeDict[node] = node
+        return node
+
+    def refine(self,oldMesh):
+        log("Refining Using Standard Quadrilateral Refinement")
+        import pdb
+#        pdb.set_trace()
+        childrenDict={}
+        for q in oldMesh.quadDict.values():
+            qNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z]) for nN,n in enumerate(q.nodes)]
+            for lnN,n in enumerate(qNodes): qNodes[lnN] = self.registerNode(n)
+            q.computeGeometricInfo()
+
+            newNodeLeft = Node(len(self.nodeDict),q.xmin,q.ymid,q.zmid)
+            newNodeLeft = self.registerNode(newNodeLeft)
+            newNodeTop = Node(len(self.nodeDict),q.xmid,q.ymax,q.zmid)
+            newNodeTop = self.registerNode(newNodeTop)
+            newNodeRight = Node(len(self.nodeDict),q.xmax,q.ymid,q.zmid)
+            newNodeRight = self.registerNode(newNodeRight)
+            newNodeBottom = Node(len(self.nodeDict),q.xmid,q.ymin,q.zmid)
+            newNodeBottom = self.registerNode(newNodeBottom)
+            newNodeMid = Node(len(self.nodeDict),q.xmid,q.ymid,q.zmid)
+            newNodeMid = self.registerNode(newNodeMid)
+
+            e1 = Edge(nodes=[qNodes[0],newNodeLeft])
+            e2 = Edge(nodes=[newNodeLeft,newNodeMid])
+            e3 = Edge(nodes=[newNodeMid,newNodeBottom])
+            e4 = Edge(nodes=[newNodeBottom,qNodes[0]])
+            e5 = Edge(nodes=[newNodeLeft,qNodes[1]])
+            e6 = Edge(nodes=[qNodes[1],newNodeTop])
+            e7 = Edge(nodes=[newNodeTop,newNodeMid])
+            e8 = Edge(nodes=[newNodeTop,qNodes[2]])
+            e9 = Edge(nodes=[qNodes[2], newNodeRight])
+            e10 = Edge(nodes=[newNodeRight, newNodeMid])
+            e11 = Edge(nodes=[qNodes[3],newNodeBottom])
+            e12 = Edge(nodes=[newNodeRight,qNodes[3]])
+
+            q1 = self.newQuadrilateral([e1,e2,e3,e4])
+            self.registerEdges(q1)
+            q2 = self.newQuadrilateral([e5,e6,e7,e2])
+            self.registerEdges(q2)
+            q3 = self.newQuadrilateral([e3,e10,e12,e11])
+            self.registerEdges(q3)
+            q4 = self.newQuadrilateral([e7,e8,e9,e10])
+            self.registerEdges(q4)
+
+            childrenDict[q.N]=[q1,q2,q3,q4]
+        self.finalize()
+        return childrenDict
+
+
+    def generateQuadrialteralMeshFromRectangularGrid(self,nx,ny,Lx,Ly,triangleFlag=1):
+        ''' WIP - This function needs to be constructed to allow MultilevelQuadrilateralMesh
+            to run using C.  Implementing this will require some work to the mesh.cpp module. '''
+        pass
+
+
+    def finalize(self):
+        ''' WIP '''
+        self.buildLists()
+        self.buildArraysFromLists()
+
+    def buildLists(self):
+        ''' WIP '''
+        self.buildListsNodes()
+        self.buildListsEdges()
+        self.buildListsQuadrilaterals()
+        self.elementList = self.quadList
+        self.elementBoundaryList = self.edgeList
+
+    def buildListsNodes(self):
+        keyList = self.nodeDict.keys()
+        keyList.sort()
+        self.nodeList=[]
+        self.oldToNewNode=range(len(self.nodeDict))
+        for nN,k in enumerate(keyList):
+            self.oldToNewNode[self.nodeDict[k].N]=nN
+            self.nodeDict[k].N = nN
+            self.nodeList.append(self.nodeDict[k])
+
+    def buildListsEdges(self):
+        keyList = self.edgeDict.keys()
+        keyList.sort()
+        self.edgeList=[]
+        for eN,k in enumerate(keyList):
+            self.edgeDict[k].N = eN
+            self.edgeList.append(self.edgeDict[k])
+
+    def buildListsQuadrilaterals(self):
+        keyList = self.quadDict.keys()
+        keyList.sort()
+        self.quadList = []
+        for qN,q in enumerate(keyList):
+            self.quadDict[q].N = qN
+            self.quadList.append(self.quadDict[q])
+        self.polygonList = self.quadList
+
+    def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0,EB=False):
+        Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Quadrilateral",tCount,EB=EB)
 
 
 class MultilevelTriangularMesh(MultilevelMesh):
@@ -4313,6 +4681,73 @@ class MultilevelTriangularMesh(MultilevelMesh):
         else:
             print """locallyRefine not implemented for self.useC= %s """ % (self.useC)
         #
+
+class MultilevelQuadrilateralMesh(MultilevelMesh):
+    """ A heirarchical multilevel mesh of quadrilaterals
+       WIP """
+    def __init__(self,
+                 nx,ny,nz,
+                 x=0.0,y=0.0,z=0.0,
+                 Lx=1.0,Ly=1.0,Lz=1.0,
+                 refinementLevels=1,
+                 skipInit=False,
+                 nLayersOfOverlap=1,
+                 parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
+        import cmeshTools
+        MultilevelMesh.__init__(self)
+        self.useC = False   # Implementing with C will take a bit more work. Disabling for now.
+        self.nLayersOfOverlap=nLayersOfOverlap ; self.parallelPartitioningType = parallelPartitioningType
+        if not skipInit:
+            if self.useC:
+                raise NotImplementedError ("C functionality sill not enabled for 2D quads")
+            else:
+                grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
+                self.meshList.append(QuadrilateralMesh())
+                self.meshList[0].rectangularToQuadrilateral(grid,x,y,z)
+                self.meshList[0].subdomainMesh = self.meshList[0]
+                self.elementChildren=[]
+                log(self.meshList[0].meshInfo())
+                self.meshList[0].globalMesh = self.meshList[0]
+
+                # The following four lines should be called elsewhere...Most of this is don in
+                # the c-function calls that are not implemented yet for 2D quads
+                self.meshList[0].nElements_owned = self.meshList[0].nElements_global
+                self.meshList[0].nodeNumbering_subdomain2global.resize(self.meshList[0].nNodes_global)
+                self.meshList[0].elementNumbering_subdomain2global.resize(self.meshList[0].nElements_global)
+                self.meshList[0].nodeOffsets_subdomain_owned[-1] = self.meshList[0].nNodes_global
+                self.meshList[0].nNodes_owned = self.meshList[0].nNodes_global
+                self.meshList[0].elementOffsets_subdomain_owned[-1] = self.meshList[0].nElements_global
+
+                for node in range(self.meshList[0].nNodes_global):
+                    self.meshList[0].nodeNumbering_subdomain2global.itemset(node,node)
+                for element in range(self.meshList[0].nElements_global):
+                    self.meshList[0].elementNumbering_subdomain2global.itemset(element,element)
+                for l in range(1,refinementLevels):
+                    self.refine()
+                    self.meshList[l].subdomainMesh = self.meshList[l]
+                    log(self.meshList[-1].meshInfo())
+                self.buildArrayLists()
+
+    def refine(self):
+        self.meshList.append(QuadrilateralMesh())
+        self.meshList[-1].globalMesh = self.meshList[-1]
+        childrenDict = self.meshList[-1].refine(self.meshList[-2])
+
+        # The following four lines should be called elsewhere...Most of this is don in
+        # the c-function calls that are not implemented yet for 2D quads
+        self.meshList[-1].nElements_owned = self.meshList[-1].nElements_global
+        self.meshList[-1].nodeNumbering_subdomain2global.resize(self.meshList[-1].nNodes_global)
+        self.meshList[-1].elementNumbering_subdomain2global.resize(self.meshList[-1].nElements_global)
+        self.meshList[-1].nodeOffsets_subdomain_owned[-1] = self.meshList[-1].nNodes_global
+        self.meshList[-1].nNodes_owned = self.meshList[-1].nNodes_global
+        self.meshList[-1].elementOffsets_subdomain_owned[-1] = self.meshList[-1].nElements_global
+
+        for node in range(self.meshList[-1].nNodes_global):
+            self.meshList[-1].nodeNumbering_subdomain2global.itemset(node,node)
+        for element in range(self.meshList[-1].nElements_global):
+            self.meshList[-1].elementNumbering_subdomain2global.itemset(element,element)
+        self.elementChildren.append(childrenDict)
+
 
 class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
     """A triangular mesh that interpolates bathymetry from a point cloud"""
@@ -5313,7 +5748,7 @@ class MultilevelNURBSMesh(MultilevelMesh):
                 self.meshList[l].cmesh = self.cmeshList[l]
                 self.meshList[l].buildFromC(self.cmeshList[l])
                 self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
-            
+
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import cmeshTools
