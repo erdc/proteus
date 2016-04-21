@@ -6137,6 +6137,7 @@ static PyObject* flcbdfWrappersGlobalMax(PyObject* self, PyObject* args)
                         "d",
                         &value))
     return NULL;
+
   MPI_Allreduce(&value,&value_new,1,MPI_DOUBLE,MPI_MAX,PROTEUS_COMM_WORLD);
   return Py_BuildValue("d",value_new);
 }
@@ -7022,7 +7023,8 @@ initflcbdfWrappers(void)
 
   // ensure PETSc, then DAETK, are initialized
   // PETSc first, via the proteus.Comm module
-  PyRun_SimpleString("from proteus import Comm; Comm.init()");
+  //this wasn't working anyway... 
+  //PyRun_SimpleString("proteus.Comm.init()");
 
   // DAETK, PETSc is initialized so only initialize subsystem
   Daetk::Petsc::Sys::initialized=true;
