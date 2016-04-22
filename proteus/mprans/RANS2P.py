@@ -381,6 +381,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.comm = comm
     #initialize so it can run as single phase
     def initializeElementQuadrature(self,t,cq):
+        self.mom_u_source_aux = numpy.zeros(cq[('u',1)].shape,'d')
+        self.mom_v_source_aux = numpy.zeros(cq[('u',1)].shape,'d')
+        self.mom_w_source_aux = numpy.zeros(cq[('u',1)].shape,'d')
         #VRANS
         self.q_phi_solid = numpy.ones(cq[('u',1)].shape,'d')
         self.q_velocity_solid = numpy.zeros(cq[('velocity',0)].shape,'d')
@@ -463,6 +466,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 ebN_element = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
                 self.ebq_dragBeta[eN,ebN_element,:] = self.dragBetaTypes[self.elementMaterialTypes[eN]]
          #
+         # self.mom_u_source_aux = numpy.zeros(cq[('u',1)].shape,'d')
+         # self.mom_v_source_aux = numpy.zeros(cq[('u',1)].shape,'d')
+         # self.mom_w_source_aux = numpy.zeros(cq[('u',1)].shape,'d')
+         
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         #VRANS
         log("ebqe_global allocations in coefficients")
@@ -1441,7 +1448,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.wettedAreas,
             self.coefficients.netForces_p,
             self.coefficients.netForces_v,
-            self.coefficients.netMoments)
+            self.coefficients.netMoments,
+            self.coefficients.mom_u_source_aux,
+            self.coefficients.mom_v_source_aux,
+            self.coefficients.mom_w_source_aux)
 	from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
@@ -1656,7 +1666,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(3,1)],
             self.csrColumnOffsets_eb[(3,2)],
             self.csrColumnOffsets_eb[(3,3)],
-            self.mesh.elementMaterialTypes)
+            self.mesh.elementMaterialTypes,
+            self.coefficients.mom_u_source_aux,
+            self.coefficients.mom_v_source_aux,
+            self.coefficients.mom_w_source_aux)
 
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof,numpy.inf),numpy.linalg.norm(self.u[2].dof,numpy.inf),numpy.linalg.norm(self.u[3].dof,numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace=True

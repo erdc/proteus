@@ -153,7 +153,10 @@ cdef extern from "RANS2P.h" namespace "proteus":
 				   double* wettedAreas,
 				   double* netForces_p,
 				   double* netForces_v,
-				   double* netMoments)
+				   double* netMoments,
+				   double* mom_u_source_aux,
+				   double* mom_v_source_aux,
+				   double* mom_w_source_aux)
         void calculateJacobian(double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -310,7 +313,10 @@ cdef extern from "RANS2P.h" namespace "proteus":
 				   int* csrColumnOffsets_eb_w_u,
 				   int* csrColumnOffsets_eb_w_v,
 				   int* csrColumnOffsets_eb_w_w,
-				   int* elementFlags)
+				   int* elementFlags,
+				   double* mom_u_source_aux,
+				   double* mom_v_source_aux,
+				   double* mom_w_source_aux)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int* exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -507,7 +513,10 @@ cdef class cRANS2P_base:
 			 numpy.ndarray wettedAreas,
 			 numpy.ndarray netForces_p,
 			 numpy.ndarray netForces_v,
-			 numpy.ndarray netMoments):
+			 numpy.ndarray netMoments,
+			 numpy.ndarray mom_u_source_aux,
+			 numpy.ndarray mom_v_source_aux,	
+			 numpy.ndarray mom_w_source_aux):		
        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -655,7 +664,10 @@ cdef class cRANS2P_base:
 				       <double*> wettedAreas.data,
 				       <double*> netForces_p.data,
 				       <double*> netForces_v.data,
-				       <double*> netMoments.data)
+				       <double*> netMoments.data,
+				       <double*> mom_u_source_aux.data,
+				   <double*> mom_v_source_aux.data,
+				   <double*> mom_w_source_aux.data)
 
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
@@ -814,7 +826,10 @@ cdef class cRANS2P_base:
                          numpy.ndarray csrColumnOffsets_eb_w_u,
                          numpy.ndarray csrColumnOffsets_eb_w_v,
                          numpy.ndarray csrColumnOffsets_eb_w_w,
-			 numpy.ndarray elementFlags):
+			 numpy.ndarray elementFlags,
+			 numpy.ndarray mom_u_source_aux,
+			 numpy.ndarray mom_v_source_aux,	
+			 numpy.ndarray mom_w_source_aux):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
@@ -973,7 +988,10 @@ cdef class cRANS2P_base:
                                       <int*> csrColumnOffsets_eb_w_u.data,
                                       <int*> csrColumnOffsets_eb_w_v.data,
                                       <int*> csrColumnOffsets_eb_w_w.data,
-				      <int*> elementFlags.data)
+				      <int*> elementFlags.data,
+				       <double*> mom_u_source_aux.data,
+				   <double*> mom_v_source_aux.data,
+				   <double*> mom_w_source_aux.data)
    def calculateVelocityAverage(self,
                                 int nExteriorElementBoundaries_global,
                                 numpy.ndarray exteriorElementBoundariesArray,

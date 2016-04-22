@@ -163,7 +163,10 @@ namespace proteus
 				   double* wettedAreas,
 				   double* netForces_p,
 				   double* netForces_v,
-				   double* netMoments)=0;
+				   double* netMoments,
+				   double* mom_u_source_aux,
+				   double* mom_v_source_aux,
+				   double* mom_w_source_aux)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -322,7 +325,10 @@ namespace proteus
 				   int* csrColumnOffsets_eb_w_u,
 				   int* csrColumnOffsets_eb_w_v,
 				   int* csrColumnOffsets_eb_w_w,				   
-				   int* elementFlags)=0;
+				   int* elementFlags,
+				   double* mom_u_source_aux,
+				   double* mom_v_source_aux,
+				   double* mom_w_source_aux)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
     					  int* exteriorElementBoundariesArray,
     					  int nInteriorElementBoundaries_global,
@@ -832,7 +838,10 @@ namespace proteus
 					   double& mom_w_source,
 					   double dmom_u_source[nSpace],
 					   double dmom_v_source[nSpace],
-					   double dmom_w_source[nSpace])
+					   double dmom_w_source[nSpace],
+					   double mom_u_source_aux_local,
+					   double mom_v_source_aux_local,
+					   double mom_w_source_aux_local)
     {
       double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -852,9 +861,9 @@ namespace proteus
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
 
-      mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s);
-      mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s);
-      mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_s);
+      mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s) + mom_u_source_aux_local;
+      mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s) + mom_v_source_aux_local;
+      mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_s) + mom_w_source_aux_local;
 
       dmom_u_source[0] = H_s*viscosity*(alpha + beta*(uc + u*duc_du));
       dmom_u_source[1] = H_s*viscosity*beta*u*duc_dv;
@@ -1719,7 +1728,10 @@ namespace proteus
 			   double* wettedAreas,
 			   double* netForces_p,
 			   double* netForces_v,
-			   double* netMoments)
+			   double* netMoments,
+			   double* mom_u_source_aux,
+			   double* mom_v_source_aux,
+			   double* mom_w_source_aux)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -2025,7 +2037,10 @@ namespace proteus
 						mom_w_source,
 						dmom_u_source,
 						dmom_v_source,
-						dmom_w_source);
+						dmom_w_source,
+						mom_u_source_aux[eN_k],
+						mom_v_source_aux[eN_k],
+						mom_w_source_aux[eN_k]);
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -3305,7 +3320,10 @@ namespace proteus
 			   int* csrColumnOffsets_eb_w_u,
 			   int* csrColumnOffsets_eb_w_v,
 			   int* csrColumnOffsets_eb_w_w,
-			   int* elementFlags)
+			   int* elementFlags,
+			   double* mom_u_source_aux,
+			   double* mom_v_source_aux,
+			   double* mom_w_source_aux)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -3630,7 +3648,10 @@ namespace proteus
 						mom_w_source,
 						dmom_u_source,
 						dmom_v_source,
-						dmom_w_source);
+						dmom_w_source,
+						mom_u_source_aux[eN_k],
+						mom_v_source_aux[eN_k],
+						mom_w_source_aux[eN_k]);
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{
