@@ -59,7 +59,7 @@ PROTEUS_EXTRA_FC_LINK_ARGS=['-lblas']
 
 PROTEUS_SUPERLU_INCLUDE_DIR, PROTEUS_SUPERLU_LIB_DIR = get_flags('superlu')
 PROTEUS_SUPERLU_H   = r'"slu_ddefs.h"'
-PROTEUS_SUPERLU_LIB = 'superlu_4.3'
+PROTEUS_SUPERLU_LIB = 'superlu_4.1'
 
 PROTEUS_BLAS_INCLUDE_DIR   = '.'
 if platform_blas_h:
