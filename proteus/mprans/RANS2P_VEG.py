@@ -64,48 +64,48 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                  beamRigid = True):
 
         RANS2P.Coefficients.__init__(self,
-                 epsFact=1.5,
-                 sigma=72.8,
-                 rho_0=998.2,nu_0=1.004e-6,
-                 rho_1=1.205,nu_1=1.500e-5,
-                 g=[0.0,0.0,-9.8],
-                 nd=3,
-                 ME_model=0,
-                 LS_model=None,
-                 VF_model=None,
-                 KN_model=None,
-                 Closure_0_model=None, #Turbulence closure model
-                 Closure_1_model=None, #Second possible Turbulence closure model
-                 epsFact_density=None,
-                 stokes=False,
-                 sd=True,
-                 movingDomain=False,
-                 useVF=0.0,
-                 useRBLES=0.0,
-                 useMetrics=0.0,
-                 useConstant_he=False,
-                 dragAlpha=0.0,
-                 dragBeta =0.0,
-                 setParamsFunc=None,      #uses setParamsFunc if given
-                 dragAlphaTypes=None, #otherwise can use element constant values
-                 dragBetaTypes=None, #otherwise can use element constant values
-                 porosityTypes=None,
-                 killNonlinearDrag=False,
-                 waveFlag=None,
-                 waveHeight=0.01,
-                 waveCelerity=1.0,
-                 waveFrequency=1.0,
-                 waveNumber=2.0,
-                 waterDepth=0.5,
-                 Omega_s=[[0.45,0.55],[0.2,0.4],[0.0,1.0]],
-                 epsFact_source=1.,
-                 epsFact_solid=None,
-                 eb_adjoint_sigma=1.0,
-                 eb_penalty_constant=10.0,
-                 forceStrongDirichlet=False,
-                 turbulenceClosureModel=0, #0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega
-                 smagorinskyConstant=0.1,
-                 barycenters=None)
+                 epsFact,
+                 sigma,
+                 rho_0,nu_0,
+                 rho_1,nu_1,
+                 g,
+                 nd,
+                 ME_model,
+                 LS_model,
+                 VF_model,
+                 KN_model,
+                 Closure_0_model, #Turbulence closure model
+                 Closure_1_model, #Second possible Turbulence closure model
+                 epsFact_density,
+                 stokes,
+                 sd,
+                 movingDomain,
+                 useVF,
+                 useRBLES,
+                 useMetrics,
+                 useConstant_he,
+                 dragAlpha,
+                 dragBeta,
+                 setParamsFunc,      #uses setParamsFunc if given
+                 dragAlphaTypes, #otherwise can use element constant values
+                 dragBetaTypes, #otherwise can use element constant values
+                 porosityTypes,
+                 killNonlinearDrag,
+                 waveFlag,
+                 waveHeight,
+                 waveCelerity,
+                 waveFrequency,
+                 waveNumber,
+                 waterDepth,
+                 Omega_s,
+                 epsFact_source,
+                 epsFact_solid,
+                 eb_adjoint_sigma,
+                 eb_penalty_constant,
+                 forceStrongDirichlet,
+                 turbulenceClosureModel, #0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega
+                 smagorinskyConstant,
+                 barycenters)
         self.beamFilename = beamFilename
         self.beamLength=beamLength
         self.beamRadius=np.array(beamRadius)
@@ -129,9 +129,6 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
 
     def initializeElementQuadrature(self,t,cq):
         RANS2P.Coefficients.initializeElementQuadrature(self,t,cq)
-        # self.q_dragBeam1 = numpy.zeros(cq[('u',1)].shape,'d')
-        # self.q_dragBeam2 = numpy.zeros(cq[('u',1)].shape,'d')
-        # self.q_dragBeam3 = numpy.zeros(cq[('u',1)].shape,'d')
 
         for i in range(len(self.beamIsLocal)):
             n1 = np.less(cq['x'][:,0]-self.beamLocation[i][0], self.beamLength[i])
@@ -142,23 +139,6 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             if n1.any():
                 self.beamIsLocal[i] = True
             
-        
-    def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        RANS2P.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
-        self.ebqe_dragBeam1 = numpy.zeros(cebqe[('u',1)].shape,'d')
-        self.ebqe_dragBeam2 = numpy.zeros(cebqe[('u',1)].shape,'d')
-        self.ebqe_dragBeam3 = numpy.zeros(cebqe[('u',1)].shape,'d')
-
-    # def initializeMesh(self, mesh):
-    #     RANS2P.Coefficients.initializeMesh(self, mesh)
-    #     if self.comm.isMaster():
-    #         self.netForceHistory = open("netForceHistory.txt","w")
-    #         self.forceHistory_drag = open("forceHistory_drag.txt","w")
-    #         self.velocityAverage=open("velocityAverage.txt","w")
-    #         self.dragCoefficientHistory=open("dragCoefficientHistory.txt", "w")
-    #         self.beamDragHistory=open("dragBeamHistory.txt", "w")
-    #         if self.beamRigid==False:
-    #             self.deflectionHistory=open("deflectionHistory.txt", "w")
 
     def postStep(self,t,firstStep=False):
         
@@ -193,19 +173,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                 self.deflectionHistory.write("%21.16e %21.16e %21.16e %21.16e\n" %tuple([t, self.avgHeight, self.avgDeflection, self.avgAngle]))
                 self.deflectionHistory.flush()
 
-    # def delta_h(self, r):
-    #     if r <= -2.0:
-    #         return 0.0
-    #     elif r <= -1.0:
-    #         return 1.0/8.0*(5.0+2.0*r-(-7.0-12.0*r-4*r*r)**0.5)
-    #     elif r <= 0.0:
-    #         return 1.0/8.0*(3.0+2.0*r+(1.0-4.0*r-4.0*r*r)**0.5)
-    #     elif r <= 1.0:
-    #         return 1.0/8.0*(3.0-2.0*r+(1.0+4.0*r-4.0*r*r)**0.5)
-    #     elif r <= 2.0:
-    #         return 1.0/8.0*(5.0-2.0*r-(-7.0+12.0*r-4.0*r*r)**0.5)
-    #     else:
-    #         return 0.0
+
 
     def updateBeamLoad(self):
         from proteus.flcbdfWrappers import globalSum
@@ -456,6 +424,71 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
     pass
 
 class LevelModel(proteus.mprans.RANS2P.LevelModel):
+
+    def __init__(self,
+                 uDict,
+                 phiDict,
+                 testSpaceDict,
+                 matType,
+                 dofBoundaryConditionsDict,
+                 dofBoundaryConditionsSetterDict,
+                 coefficients,
+                 elementQuadrature,
+                 elementBoundaryQuadrature,
+                 fluxBoundaryConditionsDict=None,
+                 advectiveFluxBoundaryConditionsSetterDict=None,
+                 diffusiveFluxBoundaryConditionsSetterDictDict=None,
+                 stressTraceBoundaryConditionsSetterDictDict=None,
+                 stabilization=None,
+                 shockCapturing=None,
+                 conservativeFluxDict=None,
+                 numericalFluxType=None,
+                 TimeIntegrationClass=None,
+                 massLumping=False,
+                 reactionLumping=False,
+                 options=None,
+                 name='RANS2P',
+                 reuse_trial_and_test_quadrature=True,
+                 sd = True,
+                 movingDomain=False):
+        RANS2P.LevelModel.__init__(self,
+                                   uDict,
+                                   phiDict,
+                                   testSpaceDict,
+                                   matType,
+                                   dofBoundaryConditionsDict,
+                                   dofBoundaryConditionsSetterDict,
+                                   coefficients,
+                                   elementQuadrature,
+                                   elementBoundaryQuadrature,
+                                   fluxBoundaryConditionsDict,
+                                   advectiveFluxBoundaryConditionsSetterDict,
+                                   diffusiveFluxBoundaryConditionsSetterDictDict,
+                                   stressTraceBoundaryConditionsSetterDictDict,
+                                   stabilization,
+                                   shockCapturing,
+                                   conservativeFluxDict,
+                                   numericalFluxType,
+                                   TimeIntegrationClass,
+                                   massLumping,
+                                   reactionLumping,
+                                   options,
+                                   name,
+                                   reuse_trial_and_test_quadrature,
+                                   sd,
+                                   movingDomain)
+        compKernelFlag = 0
+        self.beams = cBEAMS_base(self.nSpace_global,
+                                       self.nQuadraturePoints_element,
+                                       self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
+                                       self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
+                                       self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
+                                       self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                       compKernelFlag)
+    
+
+                 
+    
     def calculateAuxiliaryQuantitiesAfterStep(self):
         RANS2P.LevelModel.calculateAuxiliaryQuantitiesAfterStep(self)
         self.beamStep()
@@ -469,159 +502,14 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.q2 = numpy.zeros(self.coefficients.q1.shape,'d')#.flat[:]
         self.q3 = numpy.zeros(self.coefficients.q1.shape,'d')#.flat[:]
         self.coefficients.netBeamDrag.flat[:]=0.0
-        self.rans2p.calculateBeams(#element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
-            self.mesh.nodeArray,
-            self.mesh.nodeVelocityArray,
-            self.MOVING_DOMAIN,
-            self.mesh.elementNodesArray,
-            self.elementQuadratureWeights[('u',0)],
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
-            self.u[1].femSpace.psi,
-            self.u[1].femSpace.grad_psi,
-            self.u[1].femSpace.psi,
-            self.u[1].femSpace.grad_psi,
-            #element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u',0)],
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[0].femSpace.psi_trace,
-            self.u[0].femSpace.grad_psi_trace,
-            self.u[1].femSpace.psi_trace,
-            self.u[1].femSpace.grad_psi_trace,
-            self.u[1].femSpace.psi_trace,
-            self.u[1].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
-            #physics
-            self.eb_adjoint_sigma,
-            self.elementDiameter,#mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.stabilization.hFactor,
+        self.beams.calculateBeams(
             self.mesh.nElements_global,
-            self.mesh.nElementBoundaries_owned,
-            self.coefficients.useRBLES,
-            self.coefficients.useMetrics,
-            self.timeIntegration.alpha_bdf,
-            self.coefficients.epsFact_density,
-            self.coefficients.epsFact,
-            self.coefficients.sigma,
             self.coefficients.rho_0,
-            self.coefficients.nu_0,
             self.coefficients.rho_1,
-            self.coefficients.nu_1,
-            self.coefficients.smagorinskyConstant,
-            self.coefficients.turbulenceClosureModel,
-            self.Ct_sge,
-            self.Cd_sge,
-            self.shockCapturing.shockCapturingFactor,
-            self.numericalFlux.penalty_constant,
-            #VRANS start
-            self.coefficients.epsFact_solid,
-            self.coefficients.q_phi_solid,
-            self.coefficients.q_velocity_solid,
-            self.coefficients.q_porosity,
-            self.coefficients.q_dragAlpha,
-            self.coefficients.q_dragBeta,
-            self.q[('r',0)],
-            self.coefficients.q_turb_var[0],
-            self.coefficients.q_turb_var[1],
-            self.coefficients.q_turb_var_grad[0],
-            #VRANS end
-            self.u[0].femSpace.dofMap.l2g,
-            self.u[1].femSpace.dofMap.l2g,
-            self.u[0].dof,
-            self.u[1].dof,
-            self.u[2].dof,
-            self.u[3].dof,
-            self.coefficients.g,
-            self.coefficients.useVF,
-            self.coefficients.q_vf,
             self.coefficients.q_phi,
-            self.coefficients.q_n,
-            self.coefficients.q_kappa,            
-            self.timeIntegration.m_tmp[1],
-            self.timeIntegration.m_tmp[2],
-            self.timeIntegration.m_tmp[3],
-            self.q[('f',0)],
-            self.timeIntegration.beta_bdf[1],
-            self.timeIntegration.beta_bdf[2],
-            self.timeIntegration.beta_bdf[3],
-            self.stabilization.v_last,
-            self.q[('cfl',0)],
-            self.q[('numDiff',1,1)], 
-            self.q[('numDiff',2,2)], 
-            self.q[('numDiff',3,3)],
-            self.shockCapturing.numDiff_last[1],
-            self.shockCapturing.numDiff_last[2],
-            self.shockCapturing.numDiff_last[3],
-            self.coefficients.sdInfo[(1,1)][0],self.coefficients.sdInfo[(1,1)][1],
-            self.coefficients.sdInfo[(1,2)][0],self.coefficients.sdInfo[(1,2)][1],
-            self.coefficients.sdInfo[(1,3)][0],self.coefficients.sdInfo[(1,3)][1],
-            self.coefficients.sdInfo[(2,2)][0],self.coefficients.sdInfo[(2,2)][1],
-            self.coefficients.sdInfo[(2,1)][0],self.coefficients.sdInfo[(2,1)][1],
-            self.coefficients.sdInfo[(2,3)][0],self.coefficients.sdInfo[(2,3)][1],
-            self.coefficients.sdInfo[(3,3)][0],self.coefficients.sdInfo[(3,3)][1],
-            self.coefficients.sdInfo[(3,1)][0],self.coefficients.sdInfo[(3,1)][1],
-            self.coefficients.sdInfo[(3,2)][0],self.coefficients.sdInfo[(3,2)][1],
-            self.offset[0],self.offset[1],self.offset[2],self.offset[3],
-            self.stride[0],self.stride[1],self.stride[2],self.stride[3],
-            self.r,
-            self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.coefficients.ebqe_vf,
-            self.coefficients.bc_ebqe_vf,
-            self.coefficients.ebqe_phi,
-            self.coefficients.bc_ebqe_phi,
-            self.coefficients.ebqe_n,
-            self.coefficients.ebqe_kappa,
-            #VRANS start
-            self.coefficients.ebqe_porosity,
-            self.coefficients.ebqe_turb_var[0],
-            self.coefficients.ebqe_turb_var[1],
-            #VRANS end
-            self.numericalFlux.isDOFBoundary[0],
-            self.numericalFlux.isDOFBoundary[1],
-            self.numericalFlux.isDOFBoundary[2],
-            self.numericalFlux.isDOFBoundary[3],
-            self.ebqe[('advectiveFlux_bc_flag',0)],
-            self.ebqe[('advectiveFlux_bc_flag',1)],
-            self.ebqe[('advectiveFlux_bc_flag',2)],
-            self.ebqe[('advectiveFlux_bc_flag',3)],
-            self.ebqe[('diffusiveFlux_bc_flag',1,1)],
-            self.ebqe[('diffusiveFlux_bc_flag',2,2)],
-            self.ebqe[('diffusiveFlux_bc_flag',3,3)],
-            self.numericalFlux.ebqe[('u',0)],
-            self.ebqe[('advectiveFlux_bc',0)],
-            self.ebqe[('advectiveFlux_bc',1)],
-            self.ebqe[('advectiveFlux_bc',2)],
-            self.ebqe[('advectiveFlux_bc',3)],
-            self.numericalFlux.ebqe[('u',1)],
-            self.ebqe[('diffusiveFlux_bc',1,1)],
-            self.ebqe['penalty'],
-            self.numericalFlux.ebqe[('u',2)],
-            self.ebqe[('diffusiveFlux_bc',2,2)],
-            self.numericalFlux.ebqe[('u',3)],
-            self.ebqe[('diffusiveFlux_bc',3,3)],
             self.q['x'],
             self.q[('velocity',0)],
-            self.ebqe[('velocity',0)],
-            self.ebq_global[('totalFlux',0)],
-            self.elementResidual[0],
-            self.mesh.elementBoundaryMaterialTypes,
-            self.coefficients.barycenters,
-            self.coefficients.wettedAreas,
-            self.coefficients.netForces_p,
-            self.coefficients.netForces_v,
-            self.coefficients.netMoments,
+            self.q['dV'],
             self.coefficients.mom_u_source_aux,
             self.coefficients.mom_v_source_aux,
             self.coefficients.mom_w_source_aux,
