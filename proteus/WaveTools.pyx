@@ -389,14 +389,14 @@ class MonochromaticWaves:
             ii =0.
             for Y in self.Ycoeff:
                 ii+=1
-                HH+=eta_mode(x,t,ii*self.kDir,ii*self.omega,self.phi0,Y)
+                HH+=eta_mode(x,t,ii*self.kDir,ii*self.omega,ii*self.phi0,Y)
             return HH/self.k
 
     def u(self, x, t):
         if self.waveType is "Linear":
             return vel_mode(x, t, self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,self.vDir)
         elif self.waveType is "Fenton":
-            Ufenton = self.meanVelocity
+            Ufenton = self.meanVelocity.copy()
             ii = 0
             for B in self.Bcoeff:
                 ii+=1
@@ -404,7 +404,7 @@ class MonochromaticWaves:
                 kmode = ii*self.k
                 kdir = self.waveDir*kmode
                 amp = tanh(kmode*self.depth)*sqrt(self.gAbs/self.k)*B/self.omega
-                Ufenton+= vel_mode(x,t,kdir,kmode,wmode,self.phi0,amp,self.mwl,self.depth,self.g,self.vDir)
+                Ufenton+= vel_mode(x,t,kdir,kmode,wmode,ii*self.phi0,amp,self.mwl,self.depth,self.g,self.vDir)
             return Ufenton # + self.meanVelocity[comp]
 
 
@@ -754,8 +754,10 @@ class TimeSeries:
     :param mwl: mean water level [L]
     :param waveDir: wave Direction vector
     :param g: Gravitational acceleration vector (3 components required)
+    :cutoffTotal: Parameter for cutting off the first and the last part of the time series, given in ratio of the total duration (default 0.01)
     :param rec_direct: Logical variable, True for direct reconstruction, False for windowed reconstrunction
     :window_params: dictionary for window reconstruction parameters. Mandatory definition for Nwaves (how many waves per window) Tm (mean wave period), wind_filt (window filter name in string form). Optional: Overlap (window overlap as a percentage of window lenght), Cutoff (length of domain wher filter is applied, as a percentage of the 1/2 of window length)
+
     """
 
     def __init__(self,
@@ -767,6 +769,7 @@ class TimeSeries:
                  mwl ,        #mean water level
                  waveDir, 
                  g,
+                 cutoffTotal = 0.01,
                  rec_direct = True,
                  window_params = None #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Tm":Tm,"Window":wind_filt,"Overlap":overlap,"Cutoff":cutoff}
                  ):
@@ -845,7 +848,7 @@ class TimeSeries:
         # Remove mean level from raw data
         self.eta -= np.mean(self.eta)
         # Filter out first 2.5 % and last 2.5% to make the signal periodic
-        self.eta *= costap(len(self.time),cutoff=0.025)
+        self.eta *= costap(len(self.time),cutoff=cutoffTotal)
         # clear tdata from memory
         del tdata
         # Calculate time lenght
@@ -854,11 +857,7 @@ class TimeSeries:
         self.windows_handover = []
         self.windows_rec = []
 
-
-
-
-
-        # Direct decomposition of the time series for using at reconstruct_direct
+    # Direct decomposition of the time series for using at reconstruct_direct
         if (self.rec_direct):
             Nf = self.N
             self.nfft=len(self.time)
@@ -996,7 +995,13 @@ class TimeSeries:
                 self.decompose_window.append(decomp)
                 
             
-
+        if(self.rec_direct):
+            self.eta = self.etaDirect
+            self.u = self.uDirect
+        else:
+            self.eta =  self.etaWindow
+            self.u = self.uWindow
+     
 #                if style == "k-":
 #                    style = "kx"
 #                else:
@@ -1079,7 +1084,6 @@ class TimeSeries:
             x1 = x-[self.x0, self.y0, self.z0]
             U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
-
 
 
 
