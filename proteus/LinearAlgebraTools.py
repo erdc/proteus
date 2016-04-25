@@ -23,6 +23,23 @@ def _petsc_view(obj, filename):
     viewer2.setFormat(1)
     viewer2(obj)
 
+def petsc4py_sparse_2_dense(sparse_matrix):
+    """
+    This function takes a CSR matrix representation created from a PETSc4Py matrix
+    and returns a dense numpyarray. 
+    Note - This function should not be used for a large matrix.
+    """
+    rowptr = sparse_matrix[0]
+    colptr = sparse_matrix[1]
+    data   = sparse_matrix[2]
+    row    = len(rowptr)-1
+    dense_matrix = numpy.zeros(shape = (row,row), dtype='float')
+    for idx in range(len(rowptr)-1):
+        row_vals = data[rowptr[idx]:rowptr[idx+1]]
+        for val_idx,j in enumerate(colptr[rowptr[idx]:rowptr[idx+1]]):
+            dense_matrix[idx][j] = row_vals[val_idx]
+    return dense_matrix
+
 class ParVec:
     """
     A parallel vector built on top of daetk's wrappers for petsc
@@ -247,7 +264,8 @@ def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
 
 class SparseMatShell:
     """
-    Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains)
+    Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains).
+    Input: ghosted_csr_mat must be a superluWrappers.SparseMatrix
     """
     def __init__(self,ghosted_csr_mat):
         self.ghosted_csr_mat=ghosted_csr_mat
@@ -257,6 +275,8 @@ class SparseMatShell:
     def create(self, A):
         pass
     def mult(self, A, x, y):
+        assert self.par_b!=None, "The parallel RHS vector par_b must be " \
+                            "initialized before using the mult function"
         logEvent("Using SparseMatShell in LinearSolver matrix multiply")
         if self.xGhosted == None:
             self.xGhosted = self.par_b.duplicate()
@@ -269,6 +289,28 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
 
+class QpShell:
+    """
+    Create a shell for a pressure mass matrix.
+    """
+    def __init__(self,Qp_matrix,nu):
+        """
+        Qp_matrix (input) - a petsc4py matrix object representing the pressure
+        mass matrix.
+        nu (input) - scalar value representing the operators viscosity
+        """
+        self.Qp = Qp_matrix
+        self.viscosity = nu
+    def create(self,A):
+        pass
+    def mult(self,A,x,y):
+        """
+        x (input) - valid petsc vector
+        y (output) - valid petsc vector
+        """
+        # TODO - Add some asserts
+        self.Qp.mult(x,y)
+        y.scale(1./self.viscosity)
 
 def l2Norm(x):
     """
