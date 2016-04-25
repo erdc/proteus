@@ -313,7 +313,7 @@ class Cuboid(Shape):
                         self.BC_dict['left'],
                         self.BC_dict['top']]
         self.BC = BCContainer(self.BC_dict)
-        self.barycenter = np.array(barycenter) or self.coords
+        self.barycenter = np.array(barycenter) or np.array(coords)
         self.It = np.array([[(W**2.+H**2.)/12., 0, 0],
                             [0, (L**2.+H**2.)/12., 0],
                             [0, 0, (W**2.+L**2.)/12.]])
@@ -466,7 +466,7 @@ class CustomShape(Shape):
         if barycenter is not None:
             self.barycenter = np.array(barycenter)
 
-        
+
 class ShapeSTL(Shape):
     def __init__(self, domain, filename):
         super(ShapeSTL, self).__init__(domain, nd=3)
