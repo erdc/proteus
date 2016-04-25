@@ -713,7 +713,7 @@ class schurOperatorConstructor:
         # where p represents the approximate solution of S p = b
         return self.Fp
     
-
+# ??? Question - Should this linearSmoother imply a Schur complement approach? 
 class NavierStokes3D:
     def __init__(self,L,prefix=None,schurPC=None):
         """
@@ -776,7 +776,6 @@ class NavierStokes3D:
         if self.schurPC == 'Qp':
             # Step-1: get the pressure mass matrix
             self.Qp = self.operator_constructor.getQp()
-
             # Step-2: Set up the PETSc operator.
             self.Qp_shell = p4pyPETSc.Mat().create()
             L_sizes = self.Qp.size
