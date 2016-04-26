@@ -19,10 +19,11 @@ from proteus.config import *
 ##\todo Finishing cleaning up setup.py/setup.cfg, config.py...
 from distutils import sysconfig
 cv = sysconfig.get_config_vars()
-cv["OPT"] = cv["OPT"].replace("-DNDEBUG","-DDEBUG")
-cv["OPT"] = cv["OPT"].replace("-O3","-g")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","-DDEBUG")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","-g")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-Wall","-w")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-Wstrict-prototypes","")
+
 
 PROTEUS_PETSC_EXTRA_LINK_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_LINK_ARGS', [])
 PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_ARGS', [])
