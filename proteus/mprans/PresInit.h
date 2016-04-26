@@ -1,5 +1,5 @@
-#ifndef PRESINC_H
-#define PRESINC_H
+#ifndef PRESINIT_H
+#define PRESINIT_H
 #include <cmath>
 #include <iostream>
 #include "CompKernel.h"
@@ -7,10 +7,10 @@
 
 namespace proteus
 {
-  class cppPresInc_base
+  class cppPresInit_base
   {
   public:
-    virtual ~cppPresInc_base(){}
+    virtual ~cppPresInit_base(){}
     virtual void calculateResidual(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -103,11 +103,11 @@ namespace proteus
 	   int nDOF_trial_element,
 	   int nDOF_test_element,
 	   int nQuadraturePoints_elementBoundary>
-  class cppPresInc : public cppPresInc_base
+  class cppPresInit : public cppPresInit_base
   {
   public:
     CompKernelType ck;
-    cppPresInc():ck()
+    cppPresInit():ck()
     {}
     inline double smoothedHeaviside(double eps, double phi)
     {
@@ -797,9 +797,9 @@ namespace proteus
 	    }//i
 	}//elements
     }//computeJacobian
-  };//cppPresInc
+  };//cppPresInit
 
-  inline cppPresInc_base* newPresInc(int nSpaceIn,
+  inline cppPresInit_base* newPresInit(int nSpaceIn,
                                  int nQuadraturePoints_elementIn,
                                  int nDOF_mesh_trial_elementIn,
                                  int nDOF_trial_elementIn,
@@ -808,7 +808,7 @@ namespace proteus
                                  int CompKernelFlag)
   {
     if (nSpaceIn == 2)
-      return proteus::chooseAndAllocateDiscretization2D<cppPresInc_base,cppPresInc,CompKernel>(nSpaceIn,
+      return proteus::chooseAndAllocateDiscretization2D<cppPresInit_base,cppPresInit,CompKernel>(nSpaceIn,
                                                                                                nQuadraturePoints_elementIn,
                                                                                                nDOF_mesh_trial_elementIn,
                                                                                                nDOF_trial_elementIn,
@@ -816,7 +816,7 @@ namespace proteus
                                                                                                nQuadraturePoints_elementBoundaryIn,
                                                                                                CompKernelFlag);
     else
-      return proteus::chooseAndAllocateDiscretization<cppPresInc_base,cppPresInc,CompKernel>(nSpaceIn,
+      return proteus::chooseAndAllocateDiscretization<cppPresInit_base,cppPresInit,CompKernel>(nSpaceIn,
                                                                                              nQuadraturePoints_elementIn,
                                                                                              nDOF_mesh_trial_elementIn,
                                                                                              nDOF_trial_elementIn,
