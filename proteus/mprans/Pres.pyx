@@ -18,8 +18,8 @@ from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 
-cdef extern from "mprans/PresInc.h" namespace "proteus":
-    cdef cppclass cppPresInc_base:
+cdef extern from "mprans/Pres.h" namespace "proteus":
+    cdef cppclass cppPres_base:
         void calculateResidual(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -97,7 +97,7 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                double * q_vos,
                                int * csrRowIndeces_u_u, int * csrColumnOffsets_u_u,
                                double * globalJacobian)
-    cppPresInc_base * newPresInc(int nSpaceIn,
+    cppPres_base * newPres(int nSpaceIn,
                                  int nQuadraturePoints_elementIn,
                                  int nDOF_mesh_trial_elementIn,
                                  int nDOF_trial_elementIn,
@@ -105,8 +105,8 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                  int nQuadraturePoints_elementBoundaryIn,
                                  int CompKernelFlag)
 
-cdef class PresInc:
-    cdef cppPresInc_base * thisptr
+cdef class Pres:
+    cdef cppPres_base * thisptr
 
     def __cinit__(self,
                   int nSpaceIn,
@@ -116,7 +116,7 @@ cdef class PresInc:
                   int nDOF_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
                   int CompKernelFlag):
-        self.thisptr = newPresInc(nSpaceIn,
+        self.thisptr = newPres(nSpaceIn,
                                   nQuadraturePoints_elementIn,
                                   nDOF_mesh_trial_elementIn,
                                   nDOF_trial_elementIn,
@@ -810,7 +810,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
         else:
             self.elementDiameter = self.mesh.elementDiametersArray
-        self.presinc = PresInc(
+        self.pres = Pres(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -838,7 +838,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setUnknowns(u)
 
         # no flux boundary conditions
-        self.presinc.calculateResidual(  # element
+        self.pres.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -898,7 +898,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian, jacobian)
-        self.presinc.calculateJacobian(  # element
+        self.pres.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
