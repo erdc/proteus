@@ -374,8 +374,6 @@ class KSP_petsc4py(LinearSolver):
                               computeRates=computeRates,
                               printInfo=printInfo)
         import petsc4py
-#        import pdb
-#        pdb.set_trace()
         self.pccontext = None
         self.preconditioner = None
         self.pc = None
@@ -434,6 +432,12 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
                 self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
+                self.pc = self.preconditioner.pc
+            elif Preconditioner == NavierStokes3D_Qp:
+                self.preconditioner = NavierStokes3D_Qp(par_L,prefix)
+                self.pc = self.preconditioner.pc
+            elif Preconditioner == NavierStokes3D_PCD:
+                self.preconditioner = NavierStokes3D_PCD(par_L,prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleNavierStokes2D:
                 self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
@@ -518,14 +522,18 @@ class KSP_petsc4py(LinearSolver):
             self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],p4pyPETSc.InsertMode.ADD_VALUES)
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
+        self.ksp.setOperators(self.petsc_L,self.petsc_L)
+        #self.ksp.setOperators(self.Lshell,self.petsc_L)
         if self.pc != None:
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
             if self.preconditioner:
-                self.preconditioner.setUp()
-        self.ksp.setOperators(self.petsc_L,self.petsc_L)
-        #self.ksp.setOperators(self.Lshell,self.petsc_L)
+                self.preconditioner.setUp(self.ksp)
         self.ksp.setUp()
+        self.ksp.pc.setUp()
+
+
+
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
@@ -648,7 +656,7 @@ class schurOperatorConstructor:
         self.L.pde.q[('df',0,0)][:] = 0.0
         self.L.pde.q[('df',0,1)][:] = 0.0
         self.L.pde.q[('df',0,2)][:] = 0.0
-        self.L.pde.q[('df',0,3)][:] = 0.0
+ #       self.L.pde.q[('df',0,3)][:] = 0.0
         self.L.pde.getSpatialJacobian(self.Asys)#notice switched to  Spatial
         self.Asys_petsc4py = self.L.duplicate()
         A_csr_rep_local = self.Asys.getSubMatCSRrepresentation(0,L_sizes[0][0])
@@ -684,7 +692,7 @@ class schurOperatorConstructor:
         self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
         self.L.pde.q[('df',0,0)][...,0] = self.L.pde.q[('u',1)]
         self.L.pde.q[('df',0,0)][...,1] = self.L.pde.q[('u',2)]
-        self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
+#        self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
         self.L.pde.getSpatialJacobian(self.Fsys)#notice, switched  to spatial
         self.Fsys_petsc4py = self.L.duplicate()
         F_csr_rep_local = self.Fsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
@@ -715,16 +723,11 @@ class schurOperatorConstructor:
     
 # ??? Question - Should this linearSmoother imply a Schur complement approach? 
 class NavierStokes3D:
-    def __init__(self,L,prefix=None,schurPC=None):
+    def __init__(self,L,prefix=None):
         """
         L (input) - provides the definition of the problem
-        schurPC (input) - string that tests what kind of schur operator
         """
-        if schurPC != 'Qp' and schurPC != None:
-            raise Exception, 'Currently the scaled pressure mass matrix is the' \
-            'only schur approximation supported'
         self.L = L
-        self.schurPC = schurPC
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
         neqns = L_sizes[0][0]
@@ -764,30 +767,76 @@ class NavierStokes3D:
         self.pc.setFromOptions()
         self.operator_constructor = schurOperatorConstructor(self, self.L ,'navier_stokes')
 
-    def setUp(self):
-        try:
-            if self.L.pde.pp_hasConstantNullSpace:
-                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                    self.kspList = self.pc.getFieldSplitSubKSP()
-                    self.kspList[1].setNullSpace(self.nsp)
-        except:
-            pass
-        if self.schurPC == 'Qp':
-            # Step-1: get the pressure mass matrix
-            self.Qp = self.operator_constructor.getQp()
-            # Step-2: Set up the PETSc operator.
-            self.Qp_shell = p4pyPETSc.Mat().create()
-            L_sizes = self.Qp.size
-            L_range = self.Qp.owner_range
-            self.Qp_shell.setSizes(L_sizes)
-            self.Qp_shell.setType('python')
-            # how to get the viscosity???
-            self.matcontext = QpShell(self.Qp,1)
-            self.Qp_shell.setPythonContext(self.matcontext)
-            self.Qp_shell.setUp()
+    def setUp(self,global_ksp):
+        pass
 
 SimpleNavierStokes3D = NavierStokes3D
+
+class NavierStokes3D_Qp(NavierStokes3D) :
+    def __init__(self,L,prefix=None):
+        """
+        L (input) - provides the definition of the problem
+        """
+        NavierStokes3D.__init__(self,L,prefix)
+
+    def setUp(self,global_ksp):
+        # Step-1: get the pressure mass matrix
+        self.Qp = self.operator_constructor.getQp()
+        # Step-2: Set up the PETSc operator.
+        self.Qp_shell = p4pyPETSc.Mat().create()
+        self.QpInv_shell = p4pyPETSc.Mat().create()
+        L_sizes = self.Qp.size
+        L_range = self.Qp.owner_range
+        self.Qp_shell.setSizes(L_sizes)
+        self.QpInv_shell.setSizes(L_sizes)
+        self.Qp_shell.setType('python')
+        self.QpInv_shell.setType('python')
+        # how to get the viscosity???
+        self.matcontext = QpShell(self.Qp,1.)
+        self.matcontext_inv = QpInvShell(self.Qp,1.)
+        self.Qp_shell.setPythonContext(self.matcontext)
+        self.QpInv_shell.setPythonContext(self.matcontext_inv)
+        self.Qp_shell.setUp()
+        self.QpInv_shell.setUp()
+#         global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].incRef()
+#        global_ksp.pc.getFieldSplitSubKSP()[1].setOperators(global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0],self.Qp_shell)
+        # Set the Pressure Block Operators for the Schur Complement
+#        global_ksp.pc.getFieldSplitSubKSP()[1].setOperators(self.Qp_shell,self.Qp)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+#        global_ksp.pc.setFieldSplitSchurPreType(3,self.Qp)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+
+
+class NavierStokes3D_PCD(NavierStokes3D) :
+    def __init__(self,L,prefix=None):
+        """
+        L (input) - provides the definition of the problem
+        """
+        NavierStokes3D.__init__(self,L,prefix)
+
+    def setUp(self,global_ksp):
+        # Step-1: get the pressure mass matrix
+        self.Qp = self.operator_constructor.getQp()
+        self.Fp = self.operator_constructor.getFp()
+        self.Ap = self.operator_constructor.getAp()
+        # Step-2: Set up the Shell for the  PETSc operator
+        # Qp
+        L_sizes = self.Qp.size
+        L_range = self.Qp.owner_range
+        self.PCDInv_shell = p4pyPETSc.Mat().create()
+        self.PCDInv_shell.setSizes(L_sizes)
+        self.PCDInv_shell.setType('python')
+        # ***
+        self.matcontext_inv = PCDInv_shell(self.Qp,self.Fp,self.Ap,)
+        self.PCDInv_shell.setPythonContext(self.matcontext_inv)
+#        self.PCD_shell.setUp()
+        self.PCDInv_shell.setUp()
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+
+
 
 class SimpleDarcyFC:
     def __init__(self,L):
