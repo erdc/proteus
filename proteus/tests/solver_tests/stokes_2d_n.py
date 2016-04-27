@@ -108,8 +108,6 @@ else:
     if solveIteratively:
         multilevelLinearSolver = KSP_petsc4py
         levelLinearSolver = KSP_petsc4py
-        petsc4py.PETSc.Options().setValue("ksp_type","fgmres")
-        petsc4py.PETSc.Options().setValue("pc_type","asm")
     else:
         multilevelLinearSolver = LU
         levelLinearSolver = LU

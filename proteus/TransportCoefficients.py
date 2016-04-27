@@ -2011,7 +2011,8 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
         hamiltonian={}
         if nd==2:
             variableNames=['p','u','v']
-            mass= {1:{1:'linear'},
+            mass= {0:{0:'linear'},
+                   1:{1:'linear'},
                    2:{2:'linear'}}
             advection = {0:{0:'linear',
                             1:'linear',
@@ -2022,9 +2023,12 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                          2:{0:'nonlinear',
                             1:'nonlinear',
                             2:'nonlinear'}}
-            diffusion  = {1:{1:{1:'constant'},2:{2:'constant'}},
+            diffusion  = {0:{0:{0:'constant'}},
+                          1:{1:{1:'constant'},2:{2:'constant'}},
                           2:{2:{2:'constant'},1:{1:'constant'}}}
-            sdInfo  = {(1,1):(numpy.array([0,1,2],dtype='i'),
+            sdInfo  = {(0,0):(numpy.array([0,1,2],dtype='i'),
+                             numpy.array([0,1],dtype='i')),
+                       (1,1):(numpy.array([0,1,2],dtype='i'),
                              numpy.array([0,1],dtype='i')),
                        (1,2):(numpy.array([0,0,1],dtype='i'),
                               numpy.array([0],dtype='i')),
@@ -2032,7 +2036,8 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                               numpy.array([0,1],dtype='i')),
                        (2,1):(numpy.array([0,1,1],dtype='i'),
                               numpy.array([1],dtype='i'))}
-            potential= {1:{1:'u'},
+            potential= {0:{0:'u'},
+                        1:{1:'u'},
                         2:{2:'u'}}
             reaction = {0:{0:'constant'},
                         1:{1:'nonlinear',2:'nonlinear'},
