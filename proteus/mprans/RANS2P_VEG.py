@@ -142,7 +142,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             else:
                 n1 = np.logical_and(n1,np.less(cq['x'][:,1]-self.beamLocation[i][1], self.beamLength[i]))
                 n1 = np.logical_and(n1,np.greater(cq['x'][:,1]-self.beamLocation[i][1], -self.beamLength[i]))
-                n1 = np.logical_and(n1,np.less(cq['x'][:,2], self.beamLength[i])))
+                n1 = np.logical_and(n1,np.less(cq['x'][:,2], self.beamLength[i]))
                                      
             if n1.any():
                 self.beamIsLocal[i] = True
@@ -510,7 +510,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.q2 = numpy.zeros(self.coefficients.q1.shape,'d')#.flat[:]
         self.q3 = numpy.zeros(self.coefficients.q1.shape,'d')#.flat[:]
         self.coefficients.netBeamDrag.flat[:]=0.0
-        if self.yVertical:
+        if self.coefficients.yVertical:
             self.beams.calculateBeams(
                 self.mesh.nElements_global,
                 self.coefficients.rho_0,
