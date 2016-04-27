@@ -291,13 +291,14 @@ class SparseMatShell:
 
 class QpShell:
     """
-    Create a shell for a pressure mass matrix.
+    Create a shell for a pressure mass matrix in a Schur complment 
+    preconditioner.
     """
     def __init__(self,Qp_matrix,nu):
         """
         Qp_matrix (input) - a petsc4py matrix object representing the pressure
         mass matrix.
-        nu (input) - scalar value representing the operators viscosity
+        nu (input) - viscosity (scalar value)
         """
         self.Qp = Qp_matrix
         self.viscosity = nu
@@ -311,6 +312,69 @@ class QpShell:
         # TODO - Add some asserts
         self.Qp.mult(x,y)
         y.scale(1./self.viscosity)
+
+class QpInvShell:
+    """
+    Create a shell for the pressure mass matrix inverse
+    """
+    def __init__(self,Qp_matrix,nu):
+        """
+        Qp_matrix (input) - a petsc4py matrix object representing the pressure
+        mass matrix.
+        nu (input) - scalar value representing the operators viscosity
+        """
+#        self.Qp = Qp_matrix.scale(1./nu)
+        self.Qp = Qp_matrix
+        self.ksp = p4pyPETSc.KSP().create()
+        self.ksp.setOperators(self.Qp,self.Qp)
+        self.ksp.setType('preonly')
+        self.ksp.pc.setType('lu')
+        self.ksp.setUp()
+        import pdb
+#        pdb.set_trace()
+    def create(self,A):
+        pass
+    def apply(self,A,x,y):
+        self.ksp.solve(x,y)
+
+class PCDInv_shell:
+    """
+    Create a shell for the PCD Inverse preconditioner
+    """
+    def __init__(self,Qp_matrix,Fp_matrix,Ap_matrix):
+        """
+        Initialize the PCD operator
+        """
+        self.Qp = Qp_matrix
+        self.Fp = Fp_matrix
+        self.Ap = Ap_matrix
+        # initialize kspAp
+        self.kspAp = p4pyPETSc.KSP().create()
+        self.kspAp.setOperators(self.Ap,self.Ap)
+        self.kspAp.setType('preonly')
+        self.kspAp.pc.setType('lu')
+        self.kspAp.setUp()
+        # initialize kspQp
+        self.kspQp = p4pyPETSc.KSP().create()
+        self.kspQp.setOperators(self.Qp,self.Qp)
+        self.kspQp.setType('preonly')
+        self.kspQp.pc.setType('lu')
+        self.kspQp.setUp()
+    def create(self,A):
+        pass
+    def apply(self,A,x,y):
+        """
+        Apply the PCD operator
+        """
+        temp1 = p4pyPETSc.Vec().create()
+        temp1.setType('seq')
+        temp2 = p4pyPETSc.Vec().create()
+        temp2.setType('seq')
+        temp1 = y.copy()
+        temp2 = y.copy()
+        self.kspAp.solve(x,temp1)
+        self.Fp.mult(temp1,temp2)
+        self.kspQp.solve(temp2,y)
 
 def l2Norm(x):
     """
