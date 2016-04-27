@@ -61,7 +61,8 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                  beam_useSparse = False,
                  beam_Cd = 1.2,
                  beam_nlTol= 1.0e-5,
-                 beamRigid = True):
+                 beamRigid = True,
+                 yVertical = False):
 
         RANS2P.Coefficients.__init__(self,
                  epsFact,
@@ -121,6 +122,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         self.beam_nlTol = beam_nlTol
         self.beamRigid= beamRigid
         self.beamIsLocal = np.zeros((len(self.beamLocation),1), dtype=np.bool)
+        self.yVertical = yVertical
 
     def attachModels(self,modelList):
         RANS2P.Coefficients.attachModels(self,modelList)
@@ -133,9 +135,15 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         for i in range(len(self.beamIsLocal)):
             n1 = np.less(cq['x'][:,0]-self.beamLocation[i][0], self.beamLength[i])
             n1 = np.logical_and(n1, np.greater(cq['x'][:,0]-self.beamLocation[i][0], -self.beamLength[i]))
-            n1 = np.logical_and(n1,np.less(cq['x'][:,1]-self.beamLocation[i][1], self.beamLength[i]))
-            n1 = np.logical_and(n1,np.greater(cq['x'][:,1]-self.beamLocation[i][1], -self.beamLength[i]))
-            n1 = np.logical_and(n1,np.less(cq['x'][:,2], self.beamLength[i]))
+            if self.yVertical:
+                 n1 = np.logical_and(n1,np.less(cq['x'][:,2]-self.beamLocation[i][1], self.beamLength[i]))
+                 n1 = np.logical_and(n1,np.greater(cq['x'][:,2]-self.beamLocation[i][1], -self.beamLength[i]))
+                 n1 = np.logical_and(n1,np.less(cq['x'][:,1], self.beamLength[i]))
+            else:
+                n1 = np.logical_and(n1,np.less(cq['x'][:,1]-self.beamLocation[i][1], self.beamLength[i]))
+                n1 = np.logical_and(n1,np.greater(cq['x'][:,1]-self.beamLocation[i][1], -self.beamLength[i]))
+                n1 = np.logical_and(n1,np.less(cq['x'][:,2], self.beamLength[i])))
+                                     
             if n1.any():
                 self.beamIsLocal[i] = True
             
@@ -502,33 +510,62 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         self.q2 = numpy.zeros(self.coefficients.q1.shape,'d')#.flat[:]
         self.q3 = numpy.zeros(self.coefficients.q1.shape,'d')#.flat[:]
         self.coefficients.netBeamDrag.flat[:]=0.0
-        self.beams.calculateBeams(
-            self.mesh.nElements_global,
-            self.coefficients.rho_0,
-            self.coefficients.rho_1,
-            self.coefficients.q_phi,
-            self.q['x'],
-            self.q[('velocity',0)],
-            self.q['dV'],
-            self.coefficients.mom_u_source_aux,
-            self.coefficients.mom_v_source_aux,
-            self.coefficients.mom_w_source_aux,
-            self.coefficients.nBeams,
-            self.coefficients.nBeamElements,
-            self.coefficients.beam_quadOrder,
-            self.coefficients.beam_Cd,
-            self.coefficients.beamRadius,
-            self.coefficients.xq, #.flat[:],
-            self.coefficients.yq, #.flat[:],
-            self.coefficients.zq, #.flat[:],
-            self.coefficients.Beam_h, #.flat[:],
-            self.coefficients.dV_beam, #.flat[:],
-            self.q1,
-            self.q2,
-            self.q3,
-            self.coefficients.vel_avg,
-            self.coefficients.netBeamDrag,
-            self.coefficients.beamIsLocal)
+        if self.yVertical:
+            self.beams.calculateBeams(
+                self.mesh.nElements_global,
+                self.coefficients.rho_0,
+                self.coefficients.rho_1,
+                self.coefficients.q_phi,
+                self.q['x'],
+                self.q[('velocity',0)],
+                self.q['dV'],
+                self.coefficients.mom_u_source_aux,
+                self.coefficients.mom_v_source_aux,
+                self.coefficients.mom_w_source_aux,
+                self.coefficients.nBeams,
+                self.coefficients.nBeamElements,
+                self.coefficients.beam_quadOrder,
+                self.coefficients.beam_Cd,
+                self.coefficients.beamRadius,
+                self.coefficients.xq, #.flat[:],
+                self.coefficients.zq, #.flat[:],
+                self.coefficients.yq, #.flat[:],
+                self.coefficients.Beam_h, #.flat[:],
+                self.coefficients.dV_beam, #.flat[:],
+                self.q1,
+                self.q3,
+                self.q2,
+                self.coefficients.vel_avg,
+                self.coefficients.netBeamDrag,
+                self.coefficients.beamIsLocal)
+        else:
+            self.beams.calculateBeams(
+                self.mesh.nElements_global,
+                self.coefficients.rho_0,
+                self.coefficients.rho_1,
+                self.coefficients.q_phi,
+                self.q['x'],
+                self.q[('velocity',0)],
+                self.q['dV'],
+                self.coefficients.mom_u_source_aux,
+                self.coefficients.mom_v_source_aux,
+                self.coefficients.mom_w_source_aux,
+                self.coefficients.nBeams,
+                self.coefficients.nBeamElements,
+                self.coefficients.beam_quadOrder,
+                self.coefficients.beam_Cd,
+                self.coefficients.beamRadius,
+                self.coefficients.xq, #.flat[:],
+                self.coefficients.yq, #.flat[:],
+                self.coefficients.zq, #.flat[:],
+                self.coefficients.Beam_h, #.flat[:],
+                self.coefficients.dV_beam, #.flat[:],
+                self.q1,
+                self.q2,
+                self.q3,
+                self.coefficients.vel_avg,
+                self.coefficients.netBeamDrag,
+                self.coefficients.beamIsLocal)
         #import pdb
         #pdb.set_trace()
  
