@@ -1,5 +1,8 @@
 """
 Collect higher level tools for running simulation, processing results, etc
+
+.. inheritance-diagram:: proteus.SimTools
+   :parts: 1
 """
 import Norms
 import numpy
