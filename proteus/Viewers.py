@@ -5,6 +5,9 @@ Some simple modules for doing runtime visualization
 
    Added support for image cache and some global data structure that provides a map into the image cache
    Clean up Viewers.py
+
+.. inheritance-diagram:: proteus.Viewers
+   :parts: 1
 """
 import  subprocess
 import numpy

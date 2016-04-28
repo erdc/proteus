@@ -1,5 +1,8 @@
 """
-Tools for creating and manipulating 1,2, and 3D meshes
+Tools for creating and manipulating 1,2, and 3D meshes.
+
+.. inheritance-diagram:: proteus.MeshTools
+   :parts: 1
 """
 from EGeometry import *
 import numpy as np

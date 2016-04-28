@@ -5,6 +5,9 @@ This module contains methods for solving
 
 The solution is the vector of components :math:`u=u_0,\ldots,u_{nc-1}`, and
 the nonlinear coefficients are :math:`m^i,f^i,a^{ik},\phi^k, H^i` and :math:`r^i`.
+
+.. inheritance-diagram:: proteus.Transport
+   :parts: 1
 """
 from math import *
 
