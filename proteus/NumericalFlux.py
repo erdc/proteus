@@ -2807,8 +2807,8 @@ class Advection_DiagonalUpwind_Diffusion_LDG(Diffusion_LDG):
 #mwf add some scalar numerical fluxes
 class RusanovNumericalFlux_Diagonal(Advection_DiagonalUpwind):
     """
-    apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a) where
-    \lambda >= max |f^{\prime}| for a<= u <= b
+    apply numerical flux :math:`f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)` where
+    :math:`\lambda >= max |f^{\prime}| for a<= u <= b`
     this one applies flux to each component of flux separately
     """
     def __init__(self,vt,getPointwiseBoundaryConditions,
@@ -2905,8 +2905,8 @@ class RusanovNumericalFlux_Diagonal(Advection_DiagonalUpwind):
                                                                                ebqe[('dadvectiveFlux_left',ci,ci)])
 class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diffusion_IIPG):
     """
-    apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a) where
-    \lambda >= max |f^{\prime}| for a<= u <= b
+    apply numerical flus :math:`f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)` where
+    :math:`\lambda >= max |f^{\prime}|` for :math:`a<= u <= b`
     this one applies flux to each component of flux separately
     """
     def __init__(self,vt,getPointwiseBoundaryConditions,
@@ -3048,10 +3048,9 @@ class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diff
                                                                                ebqe[('dadvectiveFlux_left',ci,ci)])
 class ConvexOneSonicPointNumericalFlux(Advection_DiagonalUpwind):
     """
-    basic Godunov flux f_{num}(a,b) = max_{b<= u <= a} f(u) if a >= b
-                                    = min_{a<= u <= b} f(u) otherwise
-    where there is only one sonic point, u_s with f^{\prime}(u_s) = 0 and
-    f is convex so f(u_s) is a minimum
+    basic Godunov flux :math:`f_{num}(a,b) = max_{b<= u <= a} f(u)` if :math:`a >= b = min_{a<= u <= b} f(u)` otherwise
+    where there is only one sonic point, :math:`u_s` with :math:`f^{\prime}(u_s) = 0` and
+    :math:`f` is convex so :math:`f(u_s)` is a minimum
 
     This class typically has to be "wrapped" for a given problem to specify the
     correct sonic point and sonic flux
@@ -4491,9 +4490,9 @@ class ShallowWater_2D(NF_base):
 class RusanovNumericalFlux(RusanovNumericalFlux_Diagonal):
     """
     Base class for Rusanov scheme for generic systems, relies on a user-specified estimate for the
-    maximum (magnitude) eigenvalue for the system. Default is to take \bar{\lamda}= max |\vec f^{\prime} . n|
+    maximum (magnitude) eigenvalue for the system. Default is to take :math:`\bar{\lamda}= max |\vec f^{\prime} . n|`
     Then we just apply
-    apply numerical flux f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)
+    apply numerical flux :math:`f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)`
 
     For now, we will try to piggy back on the cfl calculation, assuming the user has implemented this
     correctly for the system in question
