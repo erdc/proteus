@@ -1,5 +1,8 @@
 """
 A class hierarchy for numerical flux (numerical trace) computations
+
+.. inheritance-diagram:: proteus.NumericalFlux
+   :parts: 1
 """
 import cfemIntegrals,cnumericalFlux
 import numpy
