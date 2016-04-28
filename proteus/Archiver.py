@@ -1,5 +1,8 @@
 """
 Classes for archiving numerical solution data
+
+.. inheritance-diagram:: proteus.Archiver
+   :parts: 1
 """
 import Profiling
 import Comm
