@@ -51,7 +51,6 @@ extensions = [
     'sphinx.ext.linkcode',
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive',
-    'sphinxtogithub',
 ]
 
 autodoc_member_order = 'bysource'
