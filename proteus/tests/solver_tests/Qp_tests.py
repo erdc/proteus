@@ -15,6 +15,7 @@ from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 from nose.tools import set_trace
 from petsc4py import PETSc as p4pyPETSc
+
 from scipy.sparse import csr_matrix
 import numpy as np
 
