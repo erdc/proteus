@@ -7,10 +7,10 @@
     
     <title>proteus.FemTools module &mdash; Proteus 1.0.0 documentation</title>
     
-    <link rel="stylesheet" href="../static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -21,15 +21,15 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../static/jquery.js"></script>
-    <script type="text/javascript" src="../static/underscore.js"></script>
-    <script type="text/javascript" src="../static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="../static/js/jquery-1.11.0.min.js"></script>
-    <script type="text/javascript" src="../static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="../static/bootstrap-sphinx.js"></script>
-    <link rel="shortcut icon" href="../static/tritonBorder.ico"/>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
     <link rel="up" title="proteus package" href="proteus.html" />
     <link rel="next" title="proteus.Gauges module" href="proteus.Gauges.html" />
@@ -78,7 +78,6 @@
 <li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
 </ul>
 </ul>
 </li>
@@ -139,6 +138,9 @@
   <div class="section" id="module-proteus.FemTools">
 <span id="proteus-femtools-module"></span><h1>proteus.FemTools module<a class="headerlink" href="#module-proteus.FemTools" title="Permalink to this headline">¶</a></h1>
 <p>Class hierarchies for constructing and working with finite element spaces</p>
+<p class="graphviz">
+<img src="../_images/inheritance-7a54dd3df5bde406bd91e898974dd8a6f00362e1.svg" alt="Inheritance diagram of proteus.FemTools" class="inheritance"/>
+</p>
 <dl class="class">
 <dt id="proteus.FemTools.ReferenceElement">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ReferenceElement</code><span class="sig-paren">(</span><em>dim=0</em>, <em>nNodes=0</em>, <em>nElementBoundaries=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ReferenceElement" title="Permalink to this definition">¶</a></dt>
@@ -375,6 +377,27 @@ can just use functionals interface</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="proteus.FemTools.CubeNodalInterpolationConditions">
+<em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">CubeNodalInterpolationConditions</code><span class="sig-paren">(</span><em>referenceElement</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.CubeNodalInterpolationConditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.NodalInterpolationConditions" title="proteus.FemTools.NodalInterpolationConditions"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.NodalInterpolationConditions</span></code></a></p>
+<dl class="method">
+<dt id="proteus.FemTools.CubeNodalInterpolationConditions.definedOnLocalElementBoundary">
+<code class="descname">definedOnLocalElementBoundary</code><span class="sig-paren">(</span><em>k</em>, <em>ebN_local</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.CubeNodalInterpolationConditions.definedOnLocalElementBoundary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.CubeNodalInterpolationConditions.hexahedronLocalBoundaryLookup">
+<code class="descname">hexahedronLocalBoundaryLookup</code><em class="property"> = {0: [0, 1, 4], 1: [0, 1, 2], 2: [0, 2, 3], 3: [0, 3, 4], 4: [1, 4, 5], 5: [1, 2, 5], 6: [2, 3, 5], 7: [3, 4, 5]}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.CubeNodalInterpolationConditions.hexahedronLocalBoundaryLookup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.CubeNodalInterpolationConditions.quadrilateralLocalBoundaryLookup">
+<code class="descname">quadrilateralLocalBoundaryLookup</code><em class="property"> = {0: [3, 0], 1: [0, 1], 2: [1, 2], 3: [2, 3]}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.CubeNodalInterpolationConditions.quadrilateralLocalBoundaryLookup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="proteus.FemTools.QuadraticLagrangeNodalInterpolationConditions">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">QuadraticLagrangeNodalInterpolationConditions</code><span class="sig-paren">(</span><em>referenceElement</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.QuadraticLagrangeNodalInterpolationConditions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.InterpolationConditions" title="proteus.FemTools.InterpolationConditions"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.InterpolationConditions</span></code></a></p>
@@ -440,6 +463,16 @@ can just use functionals interface</p>
 <code class="descname">fmod</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.QuadraticLagrangeCubeNodalInterpolationConditions.fmod" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return fmod(x, y), according to platform C.  x % y may differ.</p>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.QuadraticLagrangeCubeNodalInterpolationConditions.q2hexahedronLocalBoundaryLookup">
+<code class="descname">q2hexahedronLocalBoundaryLookup</code><em class="property"> = {0: [0, 1, 4], 1: [0, 1, 2], 2: [0, 2, 3], 3: [0, 3, 4], 4: [1, 4, 5], 5: [1, 2, 5], 6: [2, 3, 5], 7: [3, 4, 5], 8: [3, 4, 5], 9: [3, 4, 5], 10: [3, 4, 5], 11: [3, 4, 5], 12: [3, 4, 5], 13: [3, 4, 5], 14: [3, 4, 5], 15: [3, 4, 5], 16: [3, 4, 5], 17: [3, 4, 5], 18: [3, 4, 5], 19: [3, 4, 5], 20: [3, 4, 5], 21: [3, 4, 5], 22: [3, 4, 5], 23: [3, 4, 5], 24: [3, 4, 5], 25: [3, 4, 5], 26: []}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.QuadraticLagrangeCubeNodalInterpolationConditions.q2hexahedronLocalBoundaryLookup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.QuadraticLagrangeCubeNodalInterpolationConditions.q2quadrilateralLocalBoundaryLookup">
+<code class="descname">q2quadrilateralLocalBoundaryLookup</code><em class="property"> = {0: [3, 0], 1: [0, 1], 2: [1, 2], 3: [2, 3], 4: [0], 5: [1], 6: [2], 7: [3], 8: []}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.QuadraticLagrangeCubeNodalInterpolationConditions.q2quadrilateralLocalBoundaryLookup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -1121,6 +1154,12 @@ a linear affine mapping. The nodal basis is used on the reference simplex.</p>
 
 </dd></dl>
 
+<dl class="attribute">
+<dt id="proteus.FemTools.P1">
+<code class="descclassname">proteus.FemTools.</code><code class="descname">P1</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineLinearOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal"><span class="pre">C0_AffineLinearOnSimplexWithNodalBasis</span></code></a></p>
+</dd></dl>
+
 <dl class="class">
 <dt id="proteus.FemTools.C0_LagrangeOnCubeWithNodalBasis">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">C0_LagrangeOnCubeWithNodalBasis</code><span class="sig-paren">(</span><em>mesh</em>, <em>nd=3</em>, <em>order=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_LagrangeOnCubeWithNodalBasis" title="Permalink to this definition">¶</a></dt>
@@ -1154,6 +1193,23 @@ a linear affine mapping. The nodal basis is used on the reference simplex.</p>
 <code class="descname">writeVectorFunctionXdmf</code><span class="sig-paren">(</span><em>ar</em>, <em>uList</em>, <em>components</em>, <em>vectorName</em>, <em>tCount=0</em>, <em>init=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.C0_AffineLagrangeOnCubeWithNodalBasis.writeVectorFunctionXdmf" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.FemTools.LagrangeCubeFactory">
+<code class="descclassname">proteus.FemTools.</code><code class="descname">LagrangeCubeFactory</code><span class="sig-paren">(</span><em>OrderIn</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.LagrangeCubeFactory" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.Q1">
+<code class="descclassname">proteus.FemTools.</code><code class="descname">Q1</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.Q1" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#proteus.FemTools.C0_AffineLinearOnCubeWithNodalBasis" title="proteus.FemTools.C0_AffineLinearOnCubeWithNodalBasis"><code class="xref py py-class docutils literal"><span class="pre">C0_AffineLinearOnCubeWithNodalBasis</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.Q2">
+<code class="descclassname">proteus.FemTools.</code><code class="descname">Q2</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.Q2" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">LagrangeCubeOrderN</span></code></p>
 </dd></dl>
 
 <dl class="class">
@@ -1416,6 +1472,12 @@ The nodal basis is used on the reference simplex.</p>
 returns number of function representations written</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="attribute">
+<dt id="proteus.FemTools.P2">
+<code class="descclassname">proteus.FemTools.</code><code class="descname">P2</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P2" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis" title="proteus.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis"><code class="xref py py-class docutils literal"><span class="pre">C0_AffineQuadraticOnSimplexWithNodalBasis</span></code></a></p>
 </dd></dl>
 
 <dl class="class">

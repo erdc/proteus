@@ -7,10 +7,10 @@
     
     <title>proteus.MeshTools module &mdash; Proteus 1.0.0 documentation</title>
     
-    <link rel="stylesheet" href="../static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -21,15 +21,15 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../static/jquery.js"></script>
-    <script type="text/javascript" src="../static/underscore.js"></script>
-    <script type="text/javascript" src="../static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="../static/js/jquery-1.11.0.min.js"></script>
-    <script type="text/javascript" src="../static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="../static/bootstrap-sphinx.js"></script>
-    <link rel="shortcut icon" href="../static/tritonBorder.ico"/>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
     <link rel="up" title="proteus package" href="proteus.html" />
     <link rel="next" title="proteus.NonlinearSolvers module" href="proteus.NonlinearSolvers.html" />
@@ -78,7 +78,6 @@
 <li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
 </ul>
 </ul>
 </li>
@@ -138,7 +137,10 @@
       
   <div class="section" id="module-proteus.MeshTools">
 <span id="proteus-meshtools-module"></span><h1>proteus.MeshTools module<a class="headerlink" href="#module-proteus.MeshTools" title="Permalink to this headline">¶</a></h1>
-<p>Tools for creating and manipulating 1,2, and 3D meshes</p>
+<p>Tools for creating and manipulating 1,2, and 3D meshes.</p>
+<p class="graphviz">
+<img src="../_images/inheritance-b94553e64a69cec083e4c7c3ea2214e79d50831f.svg" alt="Inheritance diagram of proteus.MeshTools" class="inheritance"/>
+</p>
 <dl class="class">
 <dt id="proteus.MeshTools.Node">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>nodeNumber=0</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Node" title="Permalink to this definition">¶</a></dt>
@@ -279,9 +281,14 @@ long as the nodes aren&#8217;t later modified.</p>
 
 <dl class="class">
 <dt id="proteus.MeshTools.Quadrilateral">
-<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Quadrilateral</code><span class="sig-paren">(</span><em>quadrilateralNumber=0</em>, <em>edges=[]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Quadrilateral" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Quadrilateral</code><span class="sig-paren">(</span><em>quadrilateralNumber=0</em>, <em>edges=[]</em>, <em>simple=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Quadrilateral" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Polygon" title="proteus.MeshTools.Polygon"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Polygon</span></code></a></p>
 <p>A 2D quadrilateral element</p>
+<dl class="method">
+<dt id="proteus.MeshTools.Quadrilateral.sortNodes">
+<code class="descname">sortNodes</code><span class="sig-paren">(</span><em>nodeList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Quadrilateral.sortNodes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="proteus.MeshTools.Quadrilateral.computeGeometricInfo">
 <code class="descname">computeGeometricInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Quadrilateral.computeGeometricInfo" title="Permalink to this definition">¶</a></dt>
@@ -673,6 +680,11 @@ give a lexicographic ordering.</p>
 <p>The mesh can be generated from a rectangular grid and refined using either
 4T or Freudenthal-Bey global refinement.</p>
 <dl class="method">
+<dt id="proteus.MeshTools.TetrahedralMesh.meshType">
+<code class="descname">meshType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.TetrahedralMesh.meshType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="proteus.MeshTools.TetrahedralMesh.computeGeometricInfo">
 <code class="descname">computeGeometricInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.TetrahedralMesh.computeGeometricInfo" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -841,6 +853,11 @@ the edges and nodes from the boundary triangles.</p>
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">HexahedralMesh</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.HexahedralMesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.Mesh" title="proteus.MeshTools.Mesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.Mesh</span></code></a></p>
 <p>A mesh of hexahedra.</p>
+<dl class="method">
+<dt id="proteus.MeshTools.HexahedralMesh.meshType">
+<code class="descname">meshType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.HexahedralMesh.meshType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="proteus.MeshTools.HexahedralMesh.computeGeometricInfo">
 <code class="descname">computeGeometricInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.HexahedralMesh.computeGeometricInfo" title="Permalink to this definition">¶</a></dt>
@@ -1050,6 +1067,11 @@ give a lexicographic ordering.</p>
 <p>The mesh can be generated from a rectangular grid and refined using either
 3t or Freudenthal-Bey global refinement.</p>
 <dl class="method">
+<dt id="proteus.MeshTools.TriangularMesh.meshType">
+<code class="descname">meshType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.TriangularMesh.meshType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="proteus.MeshTools.TriangularMesh.computeGeometricInfo">
 <code class="descname">computeGeometricInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.TriangularMesh.computeGeometricInfo" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1231,6 +1253,89 @@ give a lexicographic ordering.</p>
 <code class="descname">buildFromSets</code><span class="sig-paren">(</span><em>faceSet</em>, <em>edgeSet</em>, <em>nodeSet</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.buildFromSets" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.rectangularToQuadrilateral">
+<code class="descname">rectangularToQuadrilateral</code><span class="sig-paren">(</span><em>grid</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.rectangularToQuadrilateral" title="Permalink to this definition">¶</a></dt>
+<dd><p>WIP - I think this is the first function that needs to be
+written so that MultilevelQuadrilateralMesh can work.  This
+function does not call C functions.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.meshType">
+<code class="descname">meshType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.meshType" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.meshInfo">
+<code class="descname">meshInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.meshInfo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.newQuadrilateral">
+<code class="descname">newQuadrilateral</code><span class="sig-paren">(</span><em>edges</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.newQuadrilateral" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.registerEdges">
+<code class="descname">registerEdges</code><span class="sig-paren">(</span><em>q</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.registerEdges" title="Permalink to this definition">¶</a></dt>
+<dd><p>check if an edge is in the mesh dictionary
+if it is, point to existing entry
+otherwise, create a new entry</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.registerNode">
+<code class="descname">registerNode</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.registerNode" title="Permalink to this definition">¶</a></dt>
+<dd><p>check if a node is in the mesh dictionary
+if it is, point to existing entry
+otherwise, create a new entry</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.refine">
+<code class="descname">refine</code><span class="sig-paren">(</span><em>oldMesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.refine" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.generateQuadrialteralMeshFromRectangularGrid">
+<code class="descname">generateQuadrialteralMeshFromRectangularGrid</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>Lx</em>, <em>Ly</em>, <em>triangleFlag=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.generateQuadrialteralMeshFromRectangularGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>WIP - This function needs to be constructed to allow MultilevelQuadrilateralMesh
+to run using C.  Implementing this will require some work to the mesh.cpp module.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.finalize">
+<code class="descname">finalize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.finalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>WIP</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.buildLists">
+<code class="descname">buildLists</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.buildLists" title="Permalink to this definition">¶</a></dt>
+<dd><p>WIP</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.buildListsNodes">
+<code class="descname">buildListsNodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.buildListsNodes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.buildListsEdges">
+<code class="descname">buildListsEdges</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.buildListsEdges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.buildListsQuadrilaterals">
+<code class="descname">buildListsQuadrilaterals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.buildListsQuadrilaterals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.MeshTools.QuadrilateralMesh.writeMeshXdmf">
+<code class="descname">writeMeshXdmf</code><span class="sig-paren">(</span><em>ar</em>, <em>name=''</em>, <em>t=0.0</em>, <em>init=False</em>, <em>meshChanged=False</em>, <em>tCount=0</em>, <em>EB=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.QuadrilateralMesh.writeMeshXdmf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -1263,6 +1368,19 @@ give a lexicographic ordering.</p>
 <dl class="attribute">
 <dt id="proteus.MeshTools.MultilevelTriangularMesh.cmeshTools">
 <code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.MeshTools.MultilevelQuadrilateralMesh">
+<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelQuadrilateralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em>, <em>triangleFlag=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelQuadrilateralMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
+<p>A heirarchical multilevel mesh of quadrilaterals
+WIP</p>
+<dl class="method">
+<dt id="proteus.MeshTools.MultilevelQuadrilateralMesh.refine">
+<code class="descname">refine</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelQuadrilateralMesh.refine" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>

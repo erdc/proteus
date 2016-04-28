@@ -1,0 +1,7 @@
+proteus
+=======
+
+.. toctree::
+   :maxdepth: 4
+
+   proteus

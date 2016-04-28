@@ -1,0 +1,7 @@
+proteus.EGeometry module
+========================
+
+.. automodule:: proteus.EGeometry
+    :members:
+    :undoc-members:
+    :show-inheritance:

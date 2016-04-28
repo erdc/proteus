@@ -1,0 +1,7 @@
+proteus.mprans.cDissipation2D module
+====================================
+
+.. automodule:: proteus.mprans.cDissipation2D
+    :members:
+    :undoc-members:
+    :show-inheritance:

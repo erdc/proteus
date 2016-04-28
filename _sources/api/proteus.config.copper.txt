@@ -1,0 +1,7 @@
+proteus.config.copper module
+============================
+
+.. automodule:: proteus.config.copper
+    :members:
+    :undoc-members:
+    :show-inheritance:

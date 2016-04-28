@@ -1,7 +1,0 @@
-proteus.mprans.RANS3P module
-============================
-
-.. automodule:: proteus.mprans.RANS3P
-    :members:
-    :undoc-members:
-    :show-inheritance:

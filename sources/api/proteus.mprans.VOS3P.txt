@@ -1,0 +1,7 @@
+proteus.mprans.VOS3P module
+===========================
+
+.. automodule:: proteus.mprans.VOS3P
+    :members:
+    :undoc-members:
+    :show-inheritance:

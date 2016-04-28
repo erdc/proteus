@@ -1,0 +1,7 @@
+proteus.mprans.SW2D module
+==========================
+
+.. automodule:: proteus.mprans.SW2D
+    :members:
+    :undoc-members:
+    :show-inheritance:

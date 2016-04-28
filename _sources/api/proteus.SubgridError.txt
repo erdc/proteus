@@ -1,0 +1,7 @@
+proteus.SubgridError module
+===========================
+
+.. automodule:: proteus.SubgridError
+    :members:
+    :undoc-members:
+    :show-inheritance:

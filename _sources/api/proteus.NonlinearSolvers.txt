@@ -1,0 +1,7 @@
+proteus.NonlinearSolvers module
+===============================
+
+.. automodule:: proteus.NonlinearSolvers
+    :members:
+    :undoc-members:
+    :show-inheritance:

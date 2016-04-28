@@ -1,0 +1,7 @@
+proteus.mprans.MCorr module
+===========================
+
+.. automodule:: proteus.mprans.MCorr
+    :members:
+    :undoc-members:
+    :show-inheritance:

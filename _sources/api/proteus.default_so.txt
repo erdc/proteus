@@ -1,0 +1,7 @@
+proteus.default_so module
+=========================
+
+.. automodule:: proteus.default_so
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,0 +1,7 @@
+proteus.AuxiliaryVariables module
+=================================
+
+.. automodule:: proteus.AuxiliaryVariables
+    :members:
+    :undoc-members:
+    :show-inheritance:

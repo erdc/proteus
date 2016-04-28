@@ -7,10 +7,10 @@
     
     <title>proteus.TransportCoefficients module &mdash; Proteus 1.0.0 documentation</title>
     
-    <link rel="stylesheet" href="../static/basic.css" type="text/css" />
-    <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
-    <link rel="stylesheet" href="../static/bootstrap-sphinx.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -21,15 +21,15 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../static/jquery.js"></script>
-    <script type="text/javascript" src="../static/underscore.js"></script>
-    <script type="text/javascript" src="../static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <script type="text/javascript" src="../static/js/jquery-1.11.0.min.js"></script>
-    <script type="text/javascript" src="../static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="../static/bootstrap-sphinx.js"></script>
-    <link rel="shortcut icon" href="../static/tritonBorder.ico"/>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
     <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
     <link rel="up" title="proteus package" href="proteus.html" />
     <link rel="next" title="proteus.TriangleFileUtils module" href="proteus.TriangleFileUtils.html" />
@@ -78,7 +78,6 @@
 <li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../cfiles.html">C/C++/Fortran</a></li>
 </ul>
 </ul>
 </li>
@@ -141,6 +140,9 @@
 <p>Classes for implementing the coefficients of transport equations.</p>
 <p>TC_base defines the interface. The classes derived from TC_base in
 this module define common PDE&#8217;s.</p>
+<p class="graphviz">
+<img src="../_images/inheritance-0afdbb2aaf63c8468ff094fce4e7900b64f24d38.svg" alt="Inheritance diagram of proteus.TransportCoefficients" class="inheritance"/>
+</p>
 <dl class="class">
 <dt id="proteus.TransportCoefficients.TC_base">
 <em class="property">class </em><code class="descclassname">proteus.TransportCoefficients.</code><code class="descname">TC_base</code><span class="sig-paren">(</span><em>nc=2</em>, <em>mass={}</em>, <em>advection={}</em>, <em>diffusion={}</em>, <em>potential={}</em>, <em>reaction={}</em>, <em>hamiltonian={}</em>, <em>variableNames=None</em>, <em>stress={}</em>, <em>sparseDiffusionTensors={}</em>, <em>useSparseDiffusion=True</em>, <em>movingDomain=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.TC_base" title="Permalink to this definition">¶</a></dt>
@@ -510,6 +512,11 @@ a = 1/3 for Mannings law &#8211;&gt; bedFrictionPower</p>
 <em class="property">class </em><code class="descclassname">proteus.TransportCoefficients.</code><code class="descname">Stokes</code><span class="sig-paren">(</span><em>rho=998.2, nu=1.004e-06, g=[0.0, 9.8], nd=2, steady=True, weakBoundaryConditions=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.Stokes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
 <p>The coefficients for the Stokes equations.</p>
+<dl class="method">
+<dt id="proteus.TransportCoefficients.Stokes.attachModels">
+<code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.Stokes.attachModels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="proteus.TransportCoefficients.Stokes.evaluate">
 <code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.Stokes.evaluate" title="Permalink to this definition">¶</a></dt>

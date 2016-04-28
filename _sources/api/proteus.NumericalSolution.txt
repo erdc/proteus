@@ -1,0 +1,7 @@
+proteus.NumericalSolution module
+================================
+
+.. automodule:: proteus.NumericalSolution
+    :members:
+    :undoc-members:
+    :show-inheritance:

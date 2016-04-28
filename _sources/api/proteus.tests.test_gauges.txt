@@ -1,0 +1,7 @@
+proteus.tests.test_gauges module
+================================
+
+.. automodule:: proteus.tests.test_gauges
+    :members:
+    :undoc-members:
+    :show-inheritance:

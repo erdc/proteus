@@ -1,7 +1,0 @@
-proteus.mprans.RANS3PCorrPres module
-====================================
-
-.. automodule:: proteus.mprans.RANS3PCorrPres
-    :members:
-    :undoc-members:
-    :show-inheritance:

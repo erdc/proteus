@@ -1,0 +1,7 @@
+proteus.testStuff module
+========================
+
+.. automodule:: proteus.testStuff
+    :members:
+    :undoc-members:
+    :show-inheritance:
