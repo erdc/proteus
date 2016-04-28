@@ -242,3 +242,4 @@ check:
 
 doc: install
 	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
+	-sensible-browser ../proteus-website/index.html
