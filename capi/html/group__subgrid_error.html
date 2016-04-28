@@ -30,7 +30,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">proteus
-   &#160;<span id="projectnumber">1.0.0</span>
+   &#160;<span id="projectnumber">1.1.0</span>
    </div>
    <div id="projectbrief">C/C++/Fortran libraries</div>
   </td>
@@ -145,9 +145,11 @@ Functions</h2></td></tr>
 <tr class="memitem:ga57653d84de0b215d83923c5cb6bd4aa6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#ga57653d84de0b215d83923c5cb6bd4aa6">calculateSubgridErrorNavierStokes2D_GLS_tau</a> (int nElements_global, int nQuadraturePoints_element, int nSpace, double hFactor, double *elementDiameter, double *dmt, double *dm, double *<a class="el" href="group__analytical_solutions.html#ga5f01b1fc0e3cb358aa6411861cedc62c">f</a>, double *a, double *tau0, double *tau1, double *cfl)</td></tr>
 <tr class="memdesc:ga57653d84de0b215d83923c5cb6bd4aa6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the "l_1 norm formula".  <a href="#ga57653d84de0b215d83923c5cb6bd4aa6">More...</a><br /></td></tr>
 <tr class="separator:ga57653d84de0b215d83923c5cb6bd4aa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga6da2ef39a50e97ce939de5e204234a6c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#ga6da2ef39a50e97ce939de5e204234a6c">calculateSubgridErrorStokes2D_GLS_tau</a> (int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *a, double *tau0, double *tau1)</td></tr>
-<tr class="memdesc:ga6da2ef39a50e97ce939de5e204234a6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the "l_1 norm formula".  <a href="#ga6da2ef39a50e97ce939de5e204234a6c">More...</a><br /></td></tr>
-<tr class="separator:ga6da2ef39a50e97ce939de5e204234a6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7521a7ee9c8a56c0db7c38cce5c11dec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#ga7521a7ee9c8a56c0db7c38cce5c11dec">calculateSubgridErrorStokes_GLS_tau</a> (int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dH, double *a, double *tau0, double *tau1)</td></tr>
+<tr class="memdesc:ga7521a7ee9c8a56c0db7c38cce5c11dec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the "l_1 norm formula".  <a href="#ga7521a7ee9c8a56c0db7c38cce5c11dec">More...</a><br /></td></tr>
+<tr class="separator:ga7521a7ee9c8a56c0db7c38cce5c11dec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadd765a125b63b789fe545c6909d88ff8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#gadd765a125b63b789fe545c6909d88ff8">calculateSubgridErrorStokes_GLS_tau_sd</a> (int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dH, double *a, double *tau0, double *tau1)</td></tr>
+<tr class="separator:gadd765a125b63b789fe545c6909d88ff8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6a59597ab29928775b48be851b328506"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#ga6a59597ab29928775b48be851b328506">calculateSubgridErrorStokes2D_GLS_tauRes</a> (int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *tau0, double *tau1, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv)</td></tr>
 <tr class="memdesc:ga6a59597ab29928775b48be851b328506"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the "l_1 norm formula".  <a href="#ga6a59597ab29928775b48be851b328506">More...</a><br /></td></tr>
 <tr class="separator:ga6a59597ab29928775b48be851b328506"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -189,8 +191,6 @@ Functions</h2></td></tr>
 <tr class="memitem:gabb5f44066bdf220976bbc0c43fd1b5df"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#gabb5f44066bdf220976bbc0c43fd1b5df">calculateSubgridErrorNavierStokes2D_GLS_tauRes</a> (int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *tau0, double *tau1, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *dpdeResidualU_dv, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_du, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *dsubgridErrorU_dv, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_du, double *dsubgridErrorV_dv)</td></tr>
 <tr class="memdesc:gabb5f44066bdf220976bbc0c43fd1b5df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the "l_1 norm formula".  <a href="#gabb5f44066bdf220976bbc0c43fd1b5df">More...</a><br /></td></tr>
 <tr class="separator:gabb5f44066bdf220976bbc0c43fd1b5df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga73fe2de3e760ca1e5ad6b9a07eaa8bd4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#ga73fe2de3e760ca1e5ad6b9a07eaa8bd4">calculateSubgridErrorStokes2D_GLS_tau_sd</a> (int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *a, double *tau0, double *tau1)</td></tr>
-<tr class="separator:ga73fe2de3e760ca1e5ad6b9a07eaa8bd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga51194e5ab8e3a306279ffc4859841765"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#ga51194e5ab8e3a306279ffc4859841765">calculateSubgridErrorNavierStokes3D_GLS_tauRes</a> (int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *tau0, double *tau1, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *dpdeResidualP_dw, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *dpdeResidualU_dv, double *dpdeResidualU_dw, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_du, double *dpdeResidualV_dv, double *dpdeResidualV_dw, double *pdeResidualW, double *dpdeResidualW_dp, double *dpdeResidualW_du, double *dpdeResidualW_dv, double *dpdeResidualW_dw, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *dsubgridErrorP_dw, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *dsubgridErrorU_dv, double *dsubgridErrorU_dw, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_du, double *dsubgridErrorV_dv, double *dsubgridErrorV_dw, double *subgridErrorW, double *dsubgridErrorW_dp, double *dsubgridErrorW_du, double *dsubgridErrorW_dv, double *dsubgridErrorW_dw)</td></tr>
 <tr class="memdesc:ga51194e5ab8e3a306279ffc4859841765"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the "l_1 norm formula".  <a href="#ga51194e5ab8e3a306279ffc4859841765">More...</a><br /></td></tr>
 <tr class="separator:ga51194e5ab8e3a306279ffc4859841765"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -726,7 +726,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l04096">4096</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l04094">4094</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -844,7 +844,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l04249">4249</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l04247">4247</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -1774,7 +1774,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l04022">4022</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l04020">4020</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -1890,7 +1890,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l04069">4069</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l04067">4067</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -2870,7 +2870,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l02955">2955</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l02953">2953</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -3090,7 +3090,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03168">3168</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03166">3166</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -3310,7 +3310,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03317">3317</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03315">3315</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -3374,7 +3374,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03971">3971</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03969">3969</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -3450,7 +3450,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03993">3993</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03991">3991</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -3640,7 +3640,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03469">3469</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03467">3467</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -3830,135 +3830,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03720">3720</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="ga6da2ef39a50e97ce939de5e204234a6c"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void calculateSubgridErrorStokes2D_GLS_tau </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nElements_global</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nQuadraturePoints_element</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nSpace</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>elementDiameter</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>dmt</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>a</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>tau0</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>tau1</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l02635">2635</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="ga73fe2de3e760ca1e5ad6b9a07eaa8bd4"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void calculateSubgridErrorStokes2D_GLS_tau_sd </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nElements_global</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nQuadraturePoints_element</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nSpace</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>elementDiameter</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>dmt</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>a</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>tau0</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>tau1</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l02661">2661</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l03718">3718</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -4118,7 +3990,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l02690">2690</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l02688">2688</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -4894,7 +4766,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l02802">2802</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l02800">2800</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
 
 </div>
 </div>
@@ -5634,10 +5506,138 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ga7521a7ee9c8a56c0db7c38cce5c11dec"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void calculateSubgridErrorStokes_GLS_tau </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nElements_global</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nQuadraturePoints_element</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nSpace</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>elementDiameter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>dH</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>a</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>tau0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>tau1</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l02635">2635</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="gadd765a125b63b789fe545c6909d88ff8"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void calculateSubgridErrorStokes_GLS_tau_sd </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nElements_global</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nQuadraturePoints_element</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>nSpace</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>elementDiameter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>dH</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>a</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>tau0</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>tau1</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Definition at line <a class="el" href="subgrid_error_8c_source.html#l02660">2660</a> of file <a class="el" href="subgrid_error_8c_source.html">subgridError.c</a>.</p>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Apr 1 2016 13:53:24 for proteus by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Apr 28 2016 15:29:42 for proteus by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

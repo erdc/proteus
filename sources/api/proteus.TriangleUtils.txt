@@ -1,7 +1,0 @@
-proteus.TriangleUtils module
-============================
-
-.. automodule:: proteus.TriangleUtils
-    :members:
-    :undoc-members:
-    :show-inheritance:

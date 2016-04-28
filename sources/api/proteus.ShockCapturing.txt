@@ -1,7 +1,0 @@
-proteus.ShockCapturing module
-=============================
-
-.. automodule:: proteus.ShockCapturing
-    :members:
-    :undoc-members:
-    :show-inheritance:

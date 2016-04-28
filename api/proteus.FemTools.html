@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.FemTools module &mdash; Proteus 1.0.0 documentation</title>
+    <title>proteus.FemTools module &mdash; Proteus 1.1.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
     <link rel="up" title="proteus package" href="proteus.html" />
     <link rel="next" title="proteus.Gauges module" href="proteus.Gauges.html" />
     <link rel="prev" title="proteus.ErrorEstimators module" href="proteus.ErrorEstimators.html" />
@@ -55,7 +55,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -138,9 +138,8 @@
   <div class="section" id="module-proteus.FemTools">
 <span id="proteus-femtools-module"></span><h1>proteus.FemTools module<a class="headerlink" href="#module-proteus.FemTools" title="Permalink to this headline">¶</a></h1>
 <p>Class hierarchies for constructing and working with finite element spaces</p>
-<p class="graphviz">
-<img src="../_images/inheritance-7a54dd3df5bde406bd91e898974dd8a6f00362e1.svg" alt="Inheritance diagram of proteus.FemTools" class="inheritance"/>
-</p>
+<object data="../_images/inheritance-30a6cd13604f30c3c15f7344b64a48a2e208876c.svg" type="image/svg+xml">
+            <p class="warning">Inheritance diagram of proteus.FemTools</p></object>
 <dl class="class">
 <dt id="proteus.FemTools.ReferenceElement">
 <em class="property">class </em><code class="descclassname">proteus.FemTools.</code><code class="descname">ReferenceElement</code><span class="sig-paren">(</span><em>dim=0</em>, <em>nNodes=0</em>, <em>nElementBoundaries=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.ReferenceElement" title="Permalink to this definition">¶</a></dt>
@@ -230,14 +229,14 @@ the nodes.</p>
 coordinates xi[0],xi[1],and xi[2]. The basis functions are
 numbered according to</p>
 <div class="math">
-</div>
+\[\]</div>
 <p>psi &amp;= lambda_i(2lambda_i-1)  0&lt;= i&lt;= d
 psi &amp;= 4lambda_jlambda_k       0&lt;= j &lt; k &lt;= d</p>
 <p>where <span class="math">\(\lambda_i\)</span> is the barycentric coordinate associated
 with node i (i.e., it&#8217;s 1 at node i and zero elsewhere)</p>
 <p>Gradients of shape functions are</p>
 <div class="math">
-</div>
+\[\]</div>
 </div></blockquote>
 <p>abla psi_i &amp;= (4lambda_i-1)
 ablalambda_i   0&lt;= i &lt;= d</p>
@@ -247,7 +246,7 @@ ablalambda_k mbox{for} 0 &lt;= j &lt; k &lt;= d</p>
 <blockquote>
 <div><p>In 2d we have</p>
 <div class="math">
-</div>
+\[\]</div>
 <p>psi_i &amp;= lambda_i(2lambda_i-1)  0&lt;= i&lt;= 2
 psi_3 &amp;= 4lambda_0lambda_1
 psi_4 &amp;= 4lambda_1lambda_2
@@ -262,7 +261,7 @@ from, so that local dof 3 corresponds to edge 2, local dof 4
 corresponds to edge 0, local dof 5 corresponds to edge 1,</p>
 <p>3d should be</p>
 <div class="math">
-</div>
+\[\]</div>
 <p>psi_i &amp;= lambda_i(2lambda_i-1)  0&lt;= i&lt;= 3
 psi_4 &amp;= 4lambda_0lambda_1
 psi_5 &amp;= 4lambda_1lambda_2
@@ -300,7 +299,7 @@ the reference nd-simplex  (nd &lt;=3)</p>
 <dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
 <p>First order polynomials on the unit nd-simplex with the nodal basis + bubble</p>
 <div class="math">
-</div>
+\[\]</div>
 <p>b = (n_d+1)^{n_d+1} Pi_{i=0}^{n_d} lambda_i</p>
 <p>First nd+1 basis functions are nodal ones on the reference nd-simplex  (nd &lt;=3) with
 coordinates xi[0],xi[1],and xi[2]. The basis functions are numbered according to
@@ -313,7 +312,7 @@ the nodes. The last shape function is the bubble, b</p>
 <dd><p>Bases: <a class="reference internal" href="#proteus.FemTools.LocalFunctionSpace" title="proteus.FemTools.LocalFunctionSpace"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.LocalFunctionSpace</span></code></a></p>
 <p>First order polynomials on the unit nd-simplex with the nodal basis + dg bubble</p>
 <div class="math">
-</div>
+\[\]</div>
 <p>b_e = 1 for x in Omega_e</p>
 <p>First nd+1 basis functions are nodal ones on the reference nd-simplex  (nd &lt;=3) with
 coordinates xi[0],xi[1],and xi[2]. The basis functions are numbered according to
@@ -512,7 +511,7 @@ can just use functionals interface</p>
 
 <dl class="attribute">
 <dt id="proteus.FemTools.p0InterpolationConditions.Quadrature">
-<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.p0InterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.p0InterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -533,7 +532,7 @@ can just use functionals interface</p>
 
 <dl class="attribute">
 <dt id="proteus.FemTools.MonomialInterpolationConditions.Quadrature">
-<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.MonomialInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.MonomialInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -571,7 +570,7 @@ can just use functionals interface</p>
 
 <dl class="attribute">
 <dt id="proteus.FemTools.P1P0BubbleInterpolationConditions.Quadrature">
-<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1P0BubbleInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
+<code class="descname">Quadrature</code><em class="property"> = &lt;module 'proteus.Quadrature' from '/home/cekees/proteus/proteus/Quadrature.pyc'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/FemTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.FemTools.P1P0BubbleInterpolationConditions.Quadrature" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1973,7 +1972,7 @@ injection, which is simply the transpose of the projection matrix.</p>
     </p>
     <p>
         &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
     </p>
   </div>
 </footer>

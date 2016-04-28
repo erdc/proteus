@@ -1,7 +1,0 @@
-proteus.Transport module
-========================
-
-.. automodule:: proteus.Transport
-    :members:
-    :undoc-members:
-    :show-inheritance:

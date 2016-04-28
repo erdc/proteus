@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.UnstructuredFMMandFSWsolvers module &mdash; Proteus 1.0.0 documentation</title>
+    <title>proteus.UnstructuredFMMandFSWsolvers module &mdash; Proteus 1.1.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
     <link rel="up" title="proteus package" href="proteus.html" />
     <link rel="next" title="proteus.Viewers module" href="proteus.Viewers.html" />
     <link rel="prev" title="proteus.TwophaseDarcyCoefficients module" href="proteus.TwophaseDarcyCoefficients.html" />
@@ -55,7 +55,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -138,9 +138,8 @@
   <div class="section" id="module-proteus.UnstructuredFMMandFSWsolvers">
 <span id="proteus-unstructuredfmmandfswsolvers-module"></span><h1>proteus.UnstructuredFMMandFSWsolvers module<a class="headerlink" href="#module-proteus.UnstructuredFMMandFSWsolvers" title="Permalink to this headline">¶</a></h1>
 <p>Fast marching and fast sweeping solvers</p>
-<p class="graphviz">
-<img src="../_images/inheritance-3f9c7cda7fe05cff85a1a2f49fa8ab7d4be732f7.svg" alt="Inheritance diagram of proteus.UnstructuredFMMandFSWsolvers" class="inheritance"/>
-</p>
+<object data="../_images/inheritance-dfbb3d92032668eebe5dad744b3df7f3a385cdf9.svg" type="image/svg+xml">
+            <p class="warning">Inheritance diagram of proteus.UnstructuredFMMandFSWsolvers</p></object>
 <dl class="class">
 <dt id="proteus.UnstructuredFMMandFSWsolvers.FMMEikonalSolver">
 <em class="property">class </em><code class="descclassname">proteus.UnstructuredFMMandFSWsolvers.</code><code class="descname">FMMEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/UnstructuredFMMandFSWsolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.UnstructuredFMMandFSWsolvers.FMMEikonalSolver" title="Permalink to this definition">¶</a></dt>
@@ -186,8 +185,8 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
-<dd><dl class="first last docutils">
+<dt>Status</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd><dl class="first last docutils">
 <dt>-1 &#8211;&gt; Far</dt>
 <dd>0 &#8211;&gt; Trial
 1 &#8211;&gt; Known</dd>
@@ -204,7 +203,7 @@ ec x_n)</p>
 
 <dl class="attribute">
 <dt id="proteus.UnstructuredFMMandFSWsolvers.FMMEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/UnstructuredFMMandFSWsolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.UnstructuredFMMandFSWsolvers.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/UnstructuredFMMandFSWsolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.UnstructuredFMMandFSWsolvers.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -254,8 +253,8 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
-<dd>0 &#8211;&gt; Not Known (Trial)
+<dt>Status</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd>0 &#8211;&gt; Not Known (Trial)
 1 &#8211;&gt; Known</dd>
 </dl>
 <p>Order  : ordering of points in domain using l_p metric from fixed reference points</p>
@@ -264,7 +263,7 @@ ec x_n)</p>
 
 <dl class="attribute">
 <dt id="proteus.UnstructuredFMMandFSWsolvers.FSWEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/UnstructuredFMMandFSWsolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.UnstructuredFMMandFSWsolvers.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/UnstructuredFMMandFSWsolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.UnstructuredFMMandFSWsolvers.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -326,7 +325,7 @@ use c++ interface</p>
     </p>
     <p>
         &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
     </p>
   </div>
 </footer>

@@ -1,7 +1,0 @@
-proteus.LatexReport module
-==========================
-
-.. automodule:: proteus.LatexReport
-    :members:
-    :undoc-members:
-    :show-inheritance:

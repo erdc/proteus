@@ -17,7 +17,6 @@ Submodules
    proteus.tests.test_linear_algebra
    proteus.tests.test_meshtools
    proteus.tests.test_read_mesh_xml
-   proteus.tests.test_sedclosure
    proteus.tests.test_spatialtools
    proteus.tests.test_wavetools
    proteus.tests.util

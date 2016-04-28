@@ -1,7 +1,0 @@
-proteus.mprans.cSW2DCV module
-=============================
-
-.. automodule:: proteus.mprans.cSW2DCV
-    :members:
-    :undoc-members:
-    :show-inheritance:

@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.NumericalFlux module &mdash; Proteus 1.0.0 documentation</title>
+    <title>proteus.NumericalFlux module &mdash; Proteus 1.1.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
     <link rel="up" title="proteus package" href="proteus.html" />
     <link rel="next" title="proteus.NumericalSolution module" href="proteus.NumericalSolution.html" />
     <link rel="prev" title="proteus.Norms module" href="proteus.Norms.html" />
@@ -55,7 +55,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -138,28 +138,12 @@
   <div class="section" id="module-proteus.NumericalFlux">
 <span id="proteus-numericalflux-module"></span><h1>proteus.NumericalFlux module<a class="headerlink" href="#module-proteus.NumericalFlux" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy for numerical flux (numerical trace) computations</p>
-<p class="graphviz">
-<img src="../_images/inheritance-ef296840d057cef010cc36d805285ec8ffc2c598.svg" alt="Inheritance diagram of proteus.NumericalFlux" class="inheritance"/>
-</p>
+<object data="../_images/inheritance-0d1af5064fd2abae7f2badd0ea102a0fe308f206.svg" type="image/svg+xml">
+            <p class="warning">Inheritance diagram of proteus.NumericalFlux</p></object>
 <dl class="class">
 <dt id="proteus.NumericalFlux.NF_base">
 <em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">NF_base</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions=None</em>, <em>parallelPeriodic=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="proteus.NumericalFlux.NF_base.useWeakDirichletConditions">
-<code class="descname">useWeakDirichletConditions</code><em class="property"> = True</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.useWeakDirichletConditions" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="proteus.NumericalFlux.NF_base.useStrongDirichletConstraints">
-<code class="descname">useStrongDirichletConstraints</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.useStrongDirichletConstraints" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="proteus.NumericalFlux.NF_base.hasInterior">
-<code class="descname">hasInterior</code><em class="property"> = True</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.hasInterior" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
+<dd><dl class="method">
 <dt id="proteus.NumericalFlux.NF_base.calculateInteriorNumericalFlux">
 <code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.NF_base.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -765,16 +749,13 @@ even when there is no advective term</p>
 <dt id="proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior">
 <em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">DarcySplitPressure_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<p>weak dirichlet boundary conditions for Twophase_split_pressure class</p>
+<p>Diffusion_IIPG_exterior is ok except for need to switch between psi_w and
+psi_n bc types</p>
 <dl class="attribute">
 <dt id="proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.hasInterior">
 <code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
-<dd><p>weak dirichlet boundary conditions for Twophase_split_pressure class
-Diffusion_IIPG_exterior is ok except for need to switch between
-psi_w and psi_n bc types
-TODO:</p>
-<blockquote>
-<div>put in bc that switches flux and dirichlet types</div></blockquote>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalFlux.DarcySplitPressure_IIPG_exterior.calculateInteriorNumericalFlux">
@@ -860,9 +841,9 @@ TODO:</p>
 <dt id="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal">
 <em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">RusanovNumericalFlux_Diagonal</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux_Diagonal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Advection_DiagonalUpwind" title="proteus.NumericalFlux.Advection_DiagonalUpwind"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind</span></code></a></p>
-<p>apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-ar{lambda}(b-a) where
-lambda &gt;= max <a href="#id1"><span class="problematic" id="id2">|f^{\prime}|</span></a> for a&lt;= u &lt;= b
-this one applies flux to each component of flux separately</p>
+<p>apply numerical flux <span class="math">\(f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)\)</span> where
+<span class="math">\(\lambda &gt;= max |f^{\prime}| for a&lt;= u &lt;= b\)</span></p>
+<p>this one applies flux to each component of flux separately</p>
 <dl class="method">
 <dt id="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal.calculateInteriorNumericalFlux">
 <code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux_Diagonal.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
@@ -879,8 +860,8 @@ this one applies flux to each component of flux separately</p>
 <dt id="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal_Diffusion_IIPG">
 <em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">RusanovNumericalFlux_Diagonal_Diffusion_IIPG</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux_Diagonal_Diffusion_IIPG" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG" title="proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG</span></code></a></p>
-<p>apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-ar{lambda}(b-a) where
-lambda &gt;= max <a href="#id3"><span class="problematic" id="id4">|f^{\prime}|</span></a> for a&lt;= u &lt;= b
+<p>apply numerical flus <span class="math">\(f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)\)</span> where
+<span class="math">\(\lambda &gt;= max |f^{\prime}|\)</span> for <span class="math">\(a&lt;= u &lt;= b\)</span>
 this one applies flux to each component of flux separately</p>
 <dl class="method">
 <dt id="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal_Diffusion_IIPG.calculateInteriorNumericalFlux">
@@ -898,12 +879,9 @@ this one applies flux to each component of flux separately</p>
 <dt id="proteus.NumericalFlux.ConvexOneSonicPointNumericalFlux">
 <em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">ConvexOneSonicPointNumericalFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em>, <em>getPeriodicBoundaryConditions</em>, <em>sonicPoint=0.0</em>, <em>sonicFlux=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.ConvexOneSonicPointNumericalFlux" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.Advection_DiagonalUpwind" title="proteus.NumericalFlux.Advection_DiagonalUpwind"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.Advection_DiagonalUpwind</span></code></a></p>
-<dl class="docutils">
-<dt>basic Godunov flux f_{num}(a,b) = max_{b&lt;= u &lt;= a} f(u) if a &gt;= b</dt>
-<dd>= min_{a&lt;= u &lt;= b} f(u) otherwise</dd>
-</dl>
-<p>where there is only one sonic point, u_s with f^{prime}(u_s) = 0 and
-f is convex so f(u_s) is a minimum</p>
+<p>basic Godunov flux <span class="math">\(f_{num}(a,b) = max_{b&lt;= u &lt;= a} f(u)\)</span> if <span class="math">\(a &gt;= b = min_{a&lt;= u &lt;= b} f(u)\)</span> otherwise
+where there is only one sonic point, <span class="math">\(u_s\)</span> with <span class="math">\(f^{\prime}(u_s) = 0\)</span> and
+<span class="math">\(f\)</span> is convex so <span class="math">\(f(u_s)\)</span> is a minimum</p>
 <p>This class typically has to be &#8220;wrapped&#8221; for a given problem to specify the
 correct sonic point and sonic flux</p>
 <dl class="method">
@@ -1006,11 +984,11 @@ correct sonic point and sonic flux</p>
 <dt id="proteus.NumericalFlux.DarcyFCFF_IIPG_exterior">
 <em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">DarcyFCFF_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCFF_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<p>weak dirichlet boundary conditions for Twophase_fc_ff class</p>
 <dl class="attribute">
 <dt id="proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.hasInterior">
 <code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
-<dd><p>weak dirichlet boundary conditions for Twophase_fc_ff class</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalFlux.DarcyFCFF_IIPG_exterior.calculateInteriorNumericalFlux">
@@ -1038,19 +1016,11 @@ correct sonic point and sonic flux</p>
 <dt id="proteus.NumericalFlux.DarcyFC_IIPG_exterior">
 <em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">DarcyFC_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFC_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<p>weak dirichlet boundary conditions for Twophase_fc class</p>
 <dl class="attribute">
 <dt id="proteus.NumericalFlux.DarcyFC_IIPG_exterior.hasInterior">
 <code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFC_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
-<dd><p>weak dirichlet boundary conditions for Twophase_fc class
-TODO:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>put in nonlinear bc for setting psi_n = psi_n^b</dt>
-<dd>dofFlag = 2</dd>
-</dl>
-<p>put in bc that switches flux and dirichlet types</p>
-</div></blockquote>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalFlux.DarcyFC_IIPG_exterior.calculateInteriorNumericalFlux">
@@ -1078,19 +1048,11 @@ TODO:</p>
 <dt id="proteus.NumericalFlux.DarcyFCPP_IIPG_exterior">
 <em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">DarcyFCPP_IIPG_exterior</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCPP_IIPG_exterior" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.NF_base" title="proteus.NumericalFlux.NF_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.NF_base</span></code></a></p>
+<p>weak dirichlet boundary conditions for Twophase_fc class</p>
 <dl class="attribute">
 <dt id="proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.hasInterior">
 <code class="descname">hasInterior</code><em class="property"> = False</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.hasInterior" title="Permalink to this definition">¶</a></dt>
-<dd><p>weak dirichlet boundary conditions for Twophase_fc class
-TODO:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>put in nonlinear bc for setting psi_n = psi_n^b</dt>
-<dd>dofFlag = 2</dd>
-</dl>
-<p>put in bc that switches flux and dirichlet types</p>
-</div></blockquote>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.NumericalFlux.DarcyFCPP_IIPG_exterior.calculateInteriorNumericalFlux">
@@ -1201,17 +1163,17 @@ TODO:</p>
 <dt id="proteus.NumericalFlux.RusanovNumericalFlux">
 <em class="property">class </em><code class="descclassname">proteus.NumericalFlux.</code><code class="descname">RusanovNumericalFlux</code><span class="sig-paren">(</span><em>vt</em>, <em>getPointwiseBoundaryConditions</em>, <em>getAdvectiveFluxBoundaryConditions</em>, <em>getDiffusiveFluxBoundaryConditions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.NumericalFlux.RusanovNumericalFlux_Diagonal" title="proteus.NumericalFlux.RusanovNumericalFlux_Diagonal"><code class="xref py py-class docutils literal"><span class="pre">proteus.NumericalFlux.RusanovNumericalFlux_Diagonal</span></code></a></p>
-<blockquote>
-<div>Base class for Rusanov scheme for generic systems, relies on a user-specified estimate for the
-maximum (magnitude) eigenvalue for the system. Default is to take ar{lamda}= max |</div></blockquote>
-<dl class="docutils">
-<dt>ec f^{prime} . n|</dt>
-<dd><p class="first">Then we just apply
-apply numerical flux f_{num}(a,b) = 1/2(f(a)+f(b)-ar{lambda}(b-a)</p>
-<p class="last">For now, we will try to piggy back on the cfl calculation, assuming the user has implemented this
-correctly for the system in question</p>
-</dd>
-</dl>
+<p>Base class for Rusanov scheme for generic systems, relies on a
+user-specified estimate for the maximum (magnitude) eigenvalue for the
+system.</p>
+<p>Default is to take</p>
+<div class="math">
+\[\bar{\lamda}= max |\vec f^{\prime} \cdot n\|\]</div>
+<p>Then we just apply apply numerical flux</p>
+<div class="math">
+\[f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)\]</div>
+<p>For now, we will try to piggy back on the cfl calculation, assuming the
+user has implemented this correctly for the system in question</p>
 <dl class="method">
 <dt id="proteus.NumericalFlux.RusanovNumericalFlux.calculateInteriorNumericalFlux">
 <code class="descname">calculateInteriorNumericalFlux</code><span class="sig-paren">(</span><em>q</em>, <em>ebq</em>, <em>ebq_global</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalFlux.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalFlux.RusanovNumericalFlux.calculateInteriorNumericalFlux" title="Permalink to this definition">¶</a></dt>
@@ -1367,7 +1329,7 @@ right now advection jacobian is not calculated</p>
     </p>
     <p>
         &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
     </p>
   </div>
 </footer>

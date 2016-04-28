@@ -1,7 +1,0 @@
-proteus.SpatialTools module
-===========================
-
-.. automodule:: proteus.SpatialTools
-    :members:
-    :undoc-members:
-    :show-inheritance:

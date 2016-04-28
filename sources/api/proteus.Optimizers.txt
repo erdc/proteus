@@ -1,7 +1,0 @@
-proteus.Optimizers module
-=========================
-
-.. automodule:: proteus.Optimizers
-    :members:
-    :undoc-members:
-    :show-inheritance:

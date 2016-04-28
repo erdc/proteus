@@ -1,7 +1,0 @@
-proteus.TimeIntegration module
-==============================
-
-.. automodule:: proteus.TimeIntegration
-    :members:
-    :undoc-members:
-    :show-inheritance:

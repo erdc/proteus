@@ -30,7 +30,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">proteus
-   &#160;<span id="projectnumber">1.0.0</span>
+   &#160;<span id="projectnumber">1.1.0</span>
    </div>
    <div id="projectbrief">C/C++/Fortran libraries</div>
   </td>
@@ -157,9 +157,11 @@ Functions</h2></td></tr>
 <tr class="memitem:ga57653d84de0b215d83923c5cb6bd4aa6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#ga57653d84de0b215d83923c5cb6bd4aa6">calculateSubgridErrorNavierStokes2D_GLS_tau</a> (int nElements_global, int nQuadraturePoints_element, int nSpace, double hFactor, double *elementDiameter, double *dmt, double *dm, double *<a class="el" href="group__analytical_solutions.html#ga5f01b1fc0e3cb358aa6411861cedc62c">f</a>, double *a, double *tau0, double *tau1, double *cfl)</td></tr>
 <tr class="memdesc:ga57653d84de0b215d83923c5cb6bd4aa6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the "l_1 norm formula".  <a href="group__subgrid_error.html#ga57653d84de0b215d83923c5cb6bd4aa6">More...</a><br /></td></tr>
 <tr class="separator:ga57653d84de0b215d83923c5cb6bd4aa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga6da2ef39a50e97ce939de5e204234a6c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#ga6da2ef39a50e97ce939de5e204234a6c">calculateSubgridErrorStokes2D_GLS_tau</a> (int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dmt, double *a, double *tau0, double *tau1)</td></tr>
-<tr class="memdesc:ga6da2ef39a50e97ce939de5e204234a6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the "l_1 norm formula".  <a href="group__subgrid_error.html#ga6da2ef39a50e97ce939de5e204234a6c">More...</a><br /></td></tr>
-<tr class="separator:ga6da2ef39a50e97ce939de5e204234a6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7521a7ee9c8a56c0db7c38cce5c11dec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#ga7521a7ee9c8a56c0db7c38cce5c11dec">calculateSubgridErrorStokes_GLS_tau</a> (int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dH, double *a, double *tau0, double *tau1)</td></tr>
+<tr class="memdesc:ga7521a7ee9c8a56c0db7c38cce5c11dec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the "l_1 norm formula".  <a href="group__subgrid_error.html#ga7521a7ee9c8a56c0db7c38cce5c11dec">More...</a><br /></td></tr>
+<tr class="separator:ga7521a7ee9c8a56c0db7c38cce5c11dec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadd765a125b63b789fe545c6909d88ff8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#gadd765a125b63b789fe545c6909d88ff8">calculateSubgridErrorStokes_GLS_tau_sd</a> (int nElements_global, int nQuadraturePoints_element, int nSpace, double *elementDiameter, double *dH, double *a, double *tau0, double *tau1)</td></tr>
+<tr class="separator:gadd765a125b63b789fe545c6909d88ff8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6a59597ab29928775b48be851b328506"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__subgrid_error.html#ga6a59597ab29928775b48be851b328506">calculateSubgridErrorStokes2D_GLS_tauRes</a> (int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, double *tau0, double *tau1, double *pdeResidualP, double *dpdeResidualP_du, double *dpdeResidualP_dv, double *pdeResidualU, double *dpdeResidualU_dp, double *dpdeResidualU_du, double *pdeResidualV, double *dpdeResidualV_dp, double *dpdeResidualV_dv, double *subgridErrorP, double *dsubgridErrorP_du, double *dsubgridErrorP_dv, double *subgridErrorU, double *dsubgridErrorU_dp, double *dsubgridErrorU_du, double *subgridErrorV, double *dsubgridErrorV_dp, double *dsubgridErrorV_dv)</td></tr>
 <tr class="memdesc:ga6a59597ab29928775b48be851b328506"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the stabilization parameter for the scalar advection-diffusion-reaction equation using the "l_1 norm formula".  <a href="group__subgrid_error.html#ga6a59597ab29928775b48be851b328506">More...</a><br /></td></tr>
 <tr class="separator:ga6a59597ab29928775b48be851b328506"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -176,7 +178,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Apr 1 2016 13:53:24 for proteus by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Apr 28 2016 15:29:42 for proteus by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

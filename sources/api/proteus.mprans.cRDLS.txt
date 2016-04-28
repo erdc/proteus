@@ -1,7 +1,0 @@
-proteus.mprans.cRDLS module
-===========================
-
-.. automodule:: proteus.mprans.cRDLS
-    :members:
-    :undoc-members:
-    :show-inheritance:

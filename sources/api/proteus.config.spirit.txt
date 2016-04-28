@@ -1,7 +1,0 @@
-proteus.config.spirit module
-============================
-
-.. automodule:: proteus.config.spirit
-    :members:
-    :undoc-members:
-    :show-inheritance:

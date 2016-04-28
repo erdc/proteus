@@ -1,7 +1,0 @@
-proteus.mprans.VOF module
-=========================
-
-.. automodule:: proteus.mprans.VOF
-    :members:
-    :undoc-members:
-    :show-inheritance:

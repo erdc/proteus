@@ -1,7 +1,0 @@
-proteus.mprans.MoveMesh module
-==============================
-
-.. automodule:: proteus.mprans.MoveMesh
-    :members:
-    :undoc-members:
-    :show-inheritance:

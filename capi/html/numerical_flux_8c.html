@@ -30,7 +30,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">proteus
-   &#160;<span id="projectnumber">1.0.0</span>
+   &#160;<span id="projectnumber">1.1.0</span>
    </div>
    <div id="projectbrief">C/C++/Fortran libraries</div>
   </td>
@@ -232,14 +232,11 @@ Functions</h2></td></tr>
 <tr class="memitem:ga71c9c8ceb8ea55b0fd1232ccfe47e498"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__numerical_flux.html#ga71c9c8ceb8ea55b0fd1232ccfe47e498">calculateGlobalExteriorNumericalAdvectiveFluxStokesP3D</a> (int nExteriorElementBoundaries_global, int nQuadraturePoints_elementBoundary, int nSpace, int *exteriorElementBoundaries, int *elementBoundaryElements, int *elementBoundaryLocalElementBoundaries, int *isDOFBoundary_p, int *isDOFBoundary_u, int *isDOFBoundary_v, int *isDOFBoundary_w, double *n, double *bc_f, double *bc_fpu, double *bc_fpv, double *bc_fpw, double *<a class="el" href="group__analytical_solutions.html#ga5f01b1fc0e3cb358aa6411861cedc62c">f</a>, double *fpu, double *fpv, double *fpw, double *df_du, double *df_dv, double *df_dw, double *dfpu_dp, double *dfpv_dp, double *dfpw_dp, double *flux, double *fluxpu, double *fluxpv, double *fluxpw, double *dflux_du, double *dflux_dv, double *dflux_dw, double *dfluxpu_dp, double *dfluxpv_dp, double *dfluxpw_dp)</td></tr>
 <tr class="memdesc:ga71c9c8ceb8ea55b0fd1232ccfe47e498"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the advective flux at at exterior element boundaries.  <a href="group__numerical_flux.html#ga71c9c8ceb8ea55b0fd1232ccfe47e498">More...</a><br /></td></tr>
 <tr class="separator:ga71c9c8ceb8ea55b0fd1232ccfe47e498"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac807dc66afd2d94dc978d5eac845537d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="numerical_flux_8c.html#ac807dc66afd2d94dc978d5eac845537d">calculateExteriorNumericalAdvectiveFluxStokes2D</a> (int nExteriorElementBoundaries_global, int nElementBoundaries_element, int nQuadraturePoints_elementBoundary, int nSpace, int *exteriorElementBoundaries, int *elementBoundaryElements, int *elementBoundaryLocalElementBoundaries, int *isDOFBoundary_p, int *isDOFBoundary_u, int *isDOFBoundary_v, double *n, double *bc_p, double *bc_f_mass, double *p, double *f_mass, double *df_mass_du, double *df_mass_dv, double *flux_mass, double *flux_umom, double *flux_vmom, double *dflux_mass_du, double *dflux_mass_dv, double *dflux_umom_dp, double *dflux_vmom_dp)</td></tr>
-<tr class="memdesc:ac807dc66afd2d94dc978d5eac845537d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply basic pressure boundary penalty term for Stokes.  <a href="#ac807dc66afd2d94dc978d5eac845537d">More...</a><br /></td></tr>
-<tr class="separator:ac807dc66afd2d94dc978d5eac845537d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a5efba838235e891a0e528d4b6d3f6e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="numerical_flux_8c.html#a7a5efba838235e891a0e528d4b6d3f6e">calculateGlobalExteriorNumericalAdvectiveFluxStokes2D</a> (int nExteriorElementBoundaries_global, int nQuadraturePoints_elementBoundary, int nSpace, int *exteriorElementBoundaries, int *elementBoundaryElements, int *elementBoundaryLocalElementBoundaries, int *isDOFBoundary_p, int *isDOFBoundary_u, int *isDOFBoundary_v, double *n, double *bc_p, double *bc_f_mass, double *p, double *f_mass, double *df_mass_du, double *df_mass_dv, double *flux_mass, double *flux_umom, double *flux_vmom, double *dflux_mass_du, double *dflux_mass_dv, double *dflux_umom_dp, double *dflux_vmom_dp)</td></tr>
-<tr class="memdesc:a7a5efba838235e891a0e528d4b6d3f6e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply basic pressure boundary penalty term for Stokes.  <a href="#a7a5efba838235e891a0e528d4b6d3f6e">More...</a><br /></td></tr>
-<tr class="separator:a7a5efba838235e891a0e528d4b6d3f6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9adab344fba9fcc8e8cf05add83cfa3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="numerical_flux_8c.html#ac9adab344fba9fcc8e8cf05add83cfa3">calculateGlobalExteriorNumericalAdvectiveFluxStokes3D</a> (int nExteriorElementBoundaries_global, int nQuadraturePoints_elementBoundary, int nSpace, int *exteriorElementBoundaries, int *elementBoundaryElements, int *elementBoundaryLocalElementBoundaries, int *isDOFBoundary_p, int *isDOFBoundary_u, int *isDOFBoundary_v, int *isDOFBoundary_w, double *n, double *bc_p, double *bc_f_mass, double *p, double *f_mass, double *df_mass_du, double *df_mass_dv, double *df_mass_dw, double *flux_mass, double *flux_umom, double *flux_vmom, double *flux_wmom, double *dflux_mass_du, double *dflux_mass_dv, double *dflux_mass_dw, double *dflux_umom_dp, double *dflux_vmom_dp, double *dflux_wmom_dp)</td></tr>
-<tr class="separator:ac9adab344fba9fcc8e8cf05add83cfa3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa48e5584a28cd589a73aa46ca6fb9f6d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="numerical_flux_8c.html#aa48e5584a28cd589a73aa46ca6fb9f6d">calculateGlobalExteriorNumericalAdvectiveFluxStokes2D</a> (int nExteriorElementBoundaries_global, int nQuadraturePoints_elementBoundary, int nSpace, int *exteriorElementBoundaries, int *elementBoundaryElements, int *elementBoundaryLocalElementBoundaries, int *isDOFBoundary_p, int *isDOFBoundary_u, int *isDOFBoundary_v, double *n, double *bc_p, double *bc_f_mass, double *p, double *f_mass, double *df_mass_du, double *df_mass_dv, double *flux_mass, double *flux_umom, double *flux_vmom, double *dflux_mass_du, double *dflux_mass_dv, double *dflux_umom_dp, double *dflux_vmom_dp, double *velocity)</td></tr>
+<tr class="memdesc:aa48e5584a28cd589a73aa46ca6fb9f6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Apply basic pressure boundary penalty term for Stokes.  <a href="#aa48e5584a28cd589a73aa46ca6fb9f6d">More...</a><br /></td></tr>
+<tr class="separator:aa48e5584a28cd589a73aa46ca6fb9f6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd8a232f2c1dbbcdfc8cf9d3b28ee3c7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="numerical_flux_8c.html#afd8a232f2c1dbbcdfc8cf9d3b28ee3c7">calculateGlobalExteriorNumericalAdvectiveFluxStokes3D</a> (int nExteriorElementBoundaries_global, int nQuadraturePoints_elementBoundary, int nSpace, int *exteriorElementBoundaries, int *elementBoundaryElements, int *elementBoundaryLocalElementBoundaries, int *isDOFBoundary_p, int *isDOFBoundary_u, int *isDOFBoundary_v, int *isDOFBoundary_w, double *n, double *bc_p, double *bc_f_mass, double *p, double *f_mass, double *df_mass_du, double *df_mass_dv, double *df_mass_dw, double *flux_mass, double *flux_umom, double *flux_vmom, double *flux_wmom, double *dflux_mass_du, double *dflux_mass_dv, double *dflux_mass_dw, double *dflux_umom_dp, double *dflux_vmom_dp, double *dflux_wmom_dp, double *velocity)</td></tr>
+<tr class="separator:afd8a232f2c1dbbcdfc8cf9d3b28ee3c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gabb24509c7127b6c95c144671cce279c2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__numerical_flux.html#gabb24509c7127b6c95c144671cce279c2">calculateExteriorNumericalAdvectiveFlux_average</a> (int nExteriorElementBoundaries_global, int nElementBoundaries_element, int nQuadraturePoints_elementBoundary, int nSpace, int *exteriorElementBoundaries, int *elementBoundaryElements, int *elementBoundaryLocalElementBoundaries, int *isDOFBoundary, int *inflowFlag, double *n, double *bc_u, double *bc_f, double *bc_df, double *u, double *<a class="el" href="group__analytical_solutions.html#ga5f01b1fc0e3cb358aa6411861cedc62c">f</a>, double *<a class="el" href="group__analytical_solutions.html#ga31fe0a5e02da8c2ed2761f3aabf86e0d">df</a>, double *flux, double *dflux)</td></tr>
 <tr class="memdesc:gabb24509c7127b6c95c144671cce279c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the advective flux at at exterior element boundaries.  <a href="group__numerical_flux.html#gabb24509c7127b6c95c144671cce279c2">More...</a><br /></td></tr>
 <tr class="separator:gabb24509c7127b6c95c144671cce279c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -510,7 +507,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l14343">14343</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l14216">14216</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -634,7 +631,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l14586">14586</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l14459">14459</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -734,7 +731,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l09387">9387</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l09260">9260</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -859,166 +856,6 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l00789">789</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="ac807dc66afd2d94dc978d5eac845537d"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void calculateExteriorNumericalAdvectiveFluxStokes2D </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nExteriorElementBoundaries_global</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nElementBoundaries_element</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nQuadraturePoints_elementBoundary</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>nSpace</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int *&#160;</td>
-          <td class="paramname"><em>exteriorElementBoundaries</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int *&#160;</td>
-          <td class="paramname"><em>elementBoundaryElements</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int *&#160;</td>
-          <td class="paramname"><em>elementBoundaryLocalElementBoundaries</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int *&#160;</td>
-          <td class="paramname"><em>isDOFBoundary_p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int *&#160;</td>
-          <td class="paramname"><em>isDOFBoundary_u</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int *&#160;</td>
-          <td class="paramname"><em>isDOFBoundary_v</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>n</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>bc_p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>bc_f_mass</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>p</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>f_mass</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>df_mass_du</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>df_mass_dv</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>flux_mass</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>flux_umom</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>flux_vmom</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>dflux_mass_du</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>dflux_mass_dv</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>dflux_umom_dp</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>dflux_vmom_dp</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l07191">7191</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -1266,7 +1103,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l08720">8720</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l08593">8593</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -1496,7 +1333,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13548">13548</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13421">13421</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -1602,7 +1439,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13673">13673</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13546">13546</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -1690,7 +1527,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13936">13936</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13809">13809</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -1892,7 +1729,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l11974">11974</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l11847">11847</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -2366,7 +2203,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="a7a5efba838235e891a0e528d4b6d3f6e"></a>
+<a class="anchor" id="aa48e5584a28cd589a73aa46ca6fb9f6d"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -2506,7 +2343,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>dflux_vmom_dp</em>&#160;</td>
+          <td class="paramname"><em>dflux_vmom_dp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>velocity</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -2516,11 +2359,11 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l07364">7364</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l07191">7191</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ac9adab344fba9fcc8e8cf05add83cfa3"></a>
+<a class="anchor" id="afd8a232f2c1dbbcdfc8cf9d3b28ee3c7"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -2690,7 +2533,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">double *&#160;</td>
-          <td class="paramname"><em>dflux_wmom_dp</em>&#160;</td>
+          <td class="paramname"><em>dflux_wmom_dp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double *&#160;</td>
+          <td class="paramname"><em>velocity</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -2700,7 +2549,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l07538">7538</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l07374">7374</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -2942,7 +2791,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l08847">8847</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l08720">8720</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -3221,7 +3070,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Allow upwinding on the diffusion term if this actually is part of an advective process. Comes up in fully coupled Darcy flow and Transport formulations </p>
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l14987">14987</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l14860">14860</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -3411,7 +3260,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l10971">10971</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l10844">10844</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -3655,7 +3504,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l11283">11283</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l11156">11156</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -3923,7 +3772,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l11628">11628</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l11501">11501</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -4137,7 +3986,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l11126">11126</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l10999">10999</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -4417,7 +4266,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l10622">10622</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l10495">10495</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -4667,7 +4516,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l10084">10084</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l09957">9957</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -4857,7 +4706,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l12124">12124</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l11997">11997</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -5101,7 +4950,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l12439">12439</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l12312">12312</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -5369,7 +5218,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l12784">12784</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l12657">12657</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -5583,7 +5432,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l12282">12282</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l12155">12155</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -5707,7 +5556,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13129">13129</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13002">13002</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -5843,7 +5692,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13211">13211</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13084">13084</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -5985,7 +5834,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l14662">14662</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l14535">14535</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -6198,7 +6047,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l08213">8213</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l08086">8086</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -6416,7 +6265,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13497">13497</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13370">13370</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -6528,7 +6377,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13588">13588</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13461">13461</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -6628,7 +6477,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13742">13742</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13615">13615</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -6722,7 +6571,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13295">13295</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13168">13168</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -6798,7 +6647,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13334">13334</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l13207">13207</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -7088,7 +6937,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l09033">9033</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l08906">8906</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -7526,7 +7375,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l09270">9270</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l09143">9143</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -7828,7 +7677,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l15077">15077</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l14950">14950</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -7970,7 +7819,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l08479">8479</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
+<p>Definition at line <a class="el" href="numerical_flux_8c_source.html#l08352">8352</a> of file <a class="el" href="numerical_flux_8c_source.html">numericalFlux.c</a>.</p>
 
 </div>
 </div>
@@ -8125,7 +7974,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Apr 1 2016 13:53:24 for proteus by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Apr 28 2016 15:29:42 for proteus by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

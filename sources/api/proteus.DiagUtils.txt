@@ -1,7 +1,0 @@
-proteus.DiagUtils module
-========================
-
-.. automodule:: proteus.DiagUtils
-    :members:
-    :undoc-members:
-    :show-inheritance:

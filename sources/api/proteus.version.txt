@@ -1,7 +1,0 @@
-proteus.version module
-======================
-
-.. automodule:: proteus.version
-    :members:
-    :undoc-members:
-    :show-inheritance:

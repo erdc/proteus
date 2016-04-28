@@ -1,7 +1,0 @@
-proteus.AnalyticalSolutions module
-==================================
-
-.. automodule:: proteus.AnalyticalSolutions
-    :members:
-    :undoc-members:
-    :show-inheritance:

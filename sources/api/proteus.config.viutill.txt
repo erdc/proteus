@@ -1,7 +1,0 @@
-proteus.config.viutill module
-=============================
-
-.. automodule:: proteus.config.viutill
-    :members:
-    :undoc-members:
-    :show-inheritance:

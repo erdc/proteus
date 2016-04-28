@@ -1,7 +1,0 @@
-proteus.StepControl module
-==========================
-
-.. automodule:: proteus.StepControl
-    :members:
-    :undoc-members:
-    :show-inheritance:

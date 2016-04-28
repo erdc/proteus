@@ -30,7 +30,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">proteus
-   &#160;<span id="projectnumber">1.0.0</span>
+   &#160;<span id="projectnumber">1.1.0</span>
    </div>
    <div id="projectbrief">C/C++/Fortran libraries</div>
   </td>
@@ -11312,19 +11312,25 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l12422"></a><span class="lineno">12422</span>&#160;                                             <span class="keywordtype">double</span> * dofs)</div>
 <div class="line"><a name="l12423"></a><span class="lineno">12423</span>&#160;{</div>
 <div class="line"><a name="l12424"></a><span class="lineno">12424</span>&#160;  <span class="keywordtype">int</span> eN,i,j,k;</div>
-<div class="line"><a name="l12425"></a><span class="lineno">12425</span>&#160;  <span class="keywordflow">for</span> (eN = 0; eN &lt; nElements_global; eN++)</div>
-<div class="line"><a name="l12426"></a><span class="lineno">12426</span>&#160;    {</div>
-<div class="line"><a name="l12427"></a><span class="lineno">12427</span>&#160;      <span class="keywordflow">for</span> (i=0; i &lt; nDOF_element; i++)</div>
-<div class="line"><a name="l12428"></a><span class="lineno">12428</span>&#160;        {</div>
-<div class="line"><a name="l12429"></a><span class="lineno">12429</span>&#160;          k = functional_map_element[i]; <span class="comment">/*dof i maps to interp value k locally*/</span></div>
-<div class="line"><a name="l12430"></a><span class="lineno">12430</span>&#160;          <span class="keywordflow">for</span> (j=0; j &lt; dim_dof; j++)</div>
-<div class="line"><a name="l12431"></a><span class="lineno">12431</span>&#160;            {</div>
-<div class="line"><a name="l12432"></a><span class="lineno">12432</span>&#160;              dofs[l2g[eN*nDOF_element+i]*dim_dof + j] = interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j];</div>
-<div class="line"><a name="l12433"></a><span class="lineno">12433</span>&#160;              </div>
-<div class="line"><a name="l12434"></a><span class="lineno">12434</span>&#160;            }</div>
-<div class="line"><a name="l12435"></a><span class="lineno">12435</span>&#160;        }</div>
-<div class="line"><a name="l12436"></a><span class="lineno">12436</span>&#160;    }</div>
-<div class="line"><a name="l12437"></a><span class="lineno">12437</span>&#160;}</div>
+<div class="line"><a name="l12425"></a><span class="lineno">12425</span>&#160;  </div>
+<div class="line"><a name="l12426"></a><span class="lineno">12426</span>&#160;  <span class="comment">//  printf(&quot;dim_dof = %d, nDOF_element = %d\n&quot;,dim_dof,nDOF_element);</span></div>
+<div class="line"><a name="l12427"></a><span class="lineno">12427</span>&#160;  <span class="keywordflow">for</span> (eN = 0; eN &lt; nElements_global; eN++)</div>
+<div class="line"><a name="l12428"></a><span class="lineno">12428</span>&#160;    {</div>
+<div class="line"><a name="l12429"></a><span class="lineno">12429</span>&#160;      <span class="keywordflow">for</span> (i=0; i &lt; nDOF_element; i++)</div>
+<div class="line"><a name="l12430"></a><span class="lineno">12430</span>&#160;        {</div>
+<div class="line"><a name="l12431"></a><span class="lineno">12431</span>&#160;          k = functional_map_element[i]; <span class="comment">/*dof i maps to interp value k locally*/</span></div>
+<div class="line"><a name="l12432"></a><span class="lineno">12432</span>&#160;          <span class="comment">//  printf(&quot;eN=%d, k=%d, i=%d\n&quot;,eN,k,i);</span></div>
+<div class="line"><a name="l12433"></a><span class="lineno">12433</span>&#160;          <span class="keywordflow">for</span> (j=0; j &lt; dim_dof; j++)</div>
+<div class="line"><a name="l12434"></a><span class="lineno">12434</span>&#160;            {</div>
+<div class="line"><a name="l12435"></a><span class="lineno">12435</span>&#160;              <span class="comment">//     printf(&quot;l2g[%d]= %d \n&quot;, eN*nDOF_element+i, l2g[eN*nDOF_element+i]);</span></div>
+<div class="line"><a name="l12436"></a><span class="lineno">12436</span>&#160;              <span class="comment">//     printf(&quot;l2g[%d]*%d+%d = %d  \n&quot;, eN*nDOF_element+i, dim_dof, j, l2g[eN*nDOF_element+i]*dim_dof + j);</span></div>
+<div class="line"><a name="l12437"></a><span class="lineno">12437</span>&#160;              <span class="comment">//     printf(&quot;interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j] = %.2f \n&quot;, interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j]);</span></div>
+<div class="line"><a name="l12438"></a><span class="lineno">12438</span>&#160;              dofs[l2g[eN*nDOF_element+i]*dim_dof + j] = interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j];</div>
+<div class="line"><a name="l12439"></a><span class="lineno">12439</span>&#160;              </div>
+<div class="line"><a name="l12440"></a><span class="lineno">12440</span>&#160;            }</div>
+<div class="line"><a name="l12441"></a><span class="lineno">12441</span>&#160;        }</div>
+<div class="line"><a name="l12442"></a><span class="lineno">12442</span>&#160;    }</div>
+<div class="line"><a name="l12443"></a><span class="lineno">12443</span>&#160;}</div>
 <div class="ttc" id="fem_integrals_8c_html_a64c4187533ce98dfada26161a8e86c51"><div class="ttname"><a href="fem_integrals_8c.html#a64c4187533ce98dfada26161a8e86c51">updateInteriorElementBoundaryDiffusionAdjoint_sd</a></div><div class="ttdeci">void updateInteriorElementBoundaryDiffusionAdjoint_sd(int nInteriorElementBoundaries_global, int nElementBoundaries_element, int nQuadraturePoints_elementBoundary, int nDOF_test_element, int nSpace, int *rowptr, int *colind, int *interiorElementBoundaries, int *elementBoundaryElements, int *elementBoundaryLocalElementBoundaries, double sigma, double *u, double *n, double *a, double *grad_w, double *dS, double *residual)</div><div class="ttdef"><b>Definition:</b> <a href="fem_integrals_8c_source.html#l11371">femIntegrals.c:11371</a></div></div>
 <div class="ttc" id="group__fem_integrals_html_ga92523d86cc62c9e2e2773406c9c47883"><div class="ttname"><a href="group__fem_integrals.html#ga92523d86cc62c9e2e2773406c9c47883">calculateExteriorElementBoundaryStress2D</a></div><div class="ttdeci">void calculateExteriorElementBoundaryStress2D(int nExteriorElementBoundaries_global, int nQuadraturePoints_elementBoundary, int *elementBoundaryMaterialTypes, int *exteriorElementBoundaries, int *elementBoundaryElements, int *elementBoundaryLocalElementBoundaries, double *p, double *mom_flux_vec_u, double *mom_flux_vec_v, double *dS, double *n, double *F)</div><div class="ttdef"><b>Definition:</b> <a href="fem_integrals_8c_source.html#l04551">femIntegrals.c:4551</a></div></div>
 <div class="ttc" id="fem_integrals_8c_html_adc4efcad4395d688e18d512f07c974fe"><div class="ttname"><a href="fem_integrals_8c.html#adc4efcad4395d688e18d512f07c974fe">updateDiffusionJacobian2_strong_sd</a></div><div class="ttdeci">void updateDiffusionJacobian2_strong_sd(int nElements_global, int nQuadraturePoints_element, int nDOF_trial_element, int nSpace, int *rowptr, int *colind, int *l2g, double *a, double *da, double *v, double *Hess_phi, double *dphi, double *Hess_v, double *dstrong_residual)</div><div class="ttdef"><b>Definition:</b> <a href="fem_integrals_8c_source.html#l03525">femIntegrals.c:3525</a></div></div>
@@ -11552,7 +11558,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Apr 1 2016 13:52:55 for proteus by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Apr 28 2016 15:29:15 for proteus by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

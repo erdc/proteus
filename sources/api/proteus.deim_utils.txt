@@ -1,7 +1,0 @@
-proteus.deim_utils module
-=========================
-
-.. automodule:: proteus.deim_utils
-    :members:
-    :undoc-members:
-    :show-inheritance:

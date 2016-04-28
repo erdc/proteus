@@ -1,7 +1,0 @@
-proteus.tests.test_read_mesh_xml module
-=======================================
-
-.. automodule:: proteus.tests.test_read_mesh_xml
-    :members:
-    :undoc-members:
-    :show-inheritance:

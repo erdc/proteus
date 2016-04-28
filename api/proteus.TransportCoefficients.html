@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.TransportCoefficients module &mdash; Proteus 1.0.0 documentation</title>
+    <title>proteus.TransportCoefficients module &mdash; Proteus 1.1.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
     <link rel="up" title="proteus package" href="proteus.html" />
     <link rel="next" title="proteus.TriangleFileUtils module" href="proteus.TriangleFileUtils.html" />
     <link rel="prev" title="proteus.Transport module" href="proteus.Transport.html" />
@@ -55,7 +55,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -140,9 +140,8 @@
 <p>Classes for implementing the coefficients of transport equations.</p>
 <p>TC_base defines the interface. The classes derived from TC_base in
 this module define common PDE&#8217;s.</p>
-<p class="graphviz">
-<img src="../_images/inheritance-0afdbb2aaf63c8468ff094fce4e7900b64f24d38.svg" alt="Inheritance diagram of proteus.TransportCoefficients" class="inheritance"/>
-</p>
+<object data="../_images/inheritance-bce69b2700caf7fc93f594b8e468493108364f76.svg" type="image/svg+xml">
+            <p class="warning">Inheritance diagram of proteus.TransportCoefficients</p></object>
 <dl class="class">
 <dt id="proteus.TransportCoefficients.TC_base">
 <em class="property">class </em><code class="descclassname">proteus.TransportCoefficients.</code><code class="descname">TC_base</code><span class="sig-paren">(</span><em>nc=2</em>, <em>mass={}</em>, <em>advection={}</em>, <em>diffusion={}</em>, <em>potential={}</em>, <em>reaction={}</em>, <em>hamiltonian={}</em>, <em>variableNames=None</em>, <em>stress={}</em>, <em>sparseDiffusionTensors={}</em>, <em>useSparseDiffusion=True</em>, <em>movingDomain=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.TC_base" title="Permalink to this definition">¶</a></dt>
@@ -170,7 +169,7 @@ allow optimizations in special cases. Non-existant values imply
 that the equation for that component has no term corresponding to
 the given coefficient.</p>
 <div class="math">
-</div>
+\[\]</div>
 <p>a_{i,j} = 1</p>
 <dl class="method">
 <dt id="proteus.TransportCoefficients.TC_base.evaluate">
@@ -981,7 +980,7 @@ TODO:</p>
 <div>3D version needs to be tested more</div></blockquote>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.NCLevelSetCoefficients.FMMEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.NCLevelSetCoefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.NCLevelSetCoefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1009,8 +1008,8 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
-<dd><dl class="first last docutils">
+<dt>Status</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd><dl class="first last docutils">
 <dt>-1 &#8211;&gt; Far</dt>
 <dd>0 &#8211;&gt; Trial
 1 &#8211;&gt; Known</dd>
@@ -1049,7 +1048,7 @@ TODO:</p>
 <div>3D version needs to be tested more</div></blockquote>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.NCLevelSetCoefficients.FSWEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.NCLevelSetCoefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.NCLevelSetCoefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1077,8 +1076,8 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
-<dd>0 &#8211;&gt; Not Known (Trial)
+<dt>Status</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd>0 &#8211;&gt; Not Known (Trial)
 1 &#8211;&gt; Known</dd>
 </dl>
 <p>Order  : ordering of points in domain using l_p metric from fixed reference points</p>
@@ -1195,7 +1194,7 @@ TODO:</p>
 <div>3D version needs to be tested more</div></blockquote>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.CLevelSetCoefficients.FMMEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.CLevelSetCoefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.CLevelSetCoefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1223,8 +1222,8 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
-<dd><dl class="first last docutils">
+<dt>Status</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd><dl class="first last docutils">
 <dt>-1 &#8211;&gt; Far</dt>
 <dd>0 &#8211;&gt; Trial
 1 &#8211;&gt; Known</dd>
@@ -1263,7 +1262,7 @@ TODO:</p>
 <div>3D version needs to be tested more</div></blockquote>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.CLevelSetCoefficients.FSWEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.CLevelSetCoefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.CLevelSetCoefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1291,8 +1290,8 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
-<dd>0 &#8211;&gt; Not Known (Trial)
+<dt>Status</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd>0 &#8211;&gt; Not Known (Trial)
 1 &#8211;&gt; Known</dd>
 </dl>
 <p>Order  : ordering of points in domain using l_p metric from fixed reference points</p>
@@ -1419,7 +1418,7 @@ TODO:</p>
 <div>3D version needs to be tested more</div></blockquote>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.VOFCoefficients.FMMEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.VOFCoefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.VOFCoefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1447,8 +1446,8 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
-<dd><dl class="first last docutils">
+<dt>Status</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd><dl class="first last docutils">
 <dt>-1 &#8211;&gt; Far</dt>
 <dd>0 &#8211;&gt; Trial
 1 &#8211;&gt; Known</dd>
@@ -1487,7 +1486,7 @@ TODO:</p>
 <div>3D version needs to be tested more</div></blockquote>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.VOFCoefficients.FSWEikonalSolver.cfmmfsw">
-<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.VOFCoefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.VOFCoefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1515,8 +1514,8 @@ ec x_n)</p>
 <blockquote>
 <div><p>Internal data structures</p>
 <dl class="docutils">
-<dt>Status <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span></dt>
-<dd>0 &#8211;&gt; Not Known (Trial)
+<dt>Status</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">status of nodal point (dictionary)</span><dd>0 &#8211;&gt; Not Known (Trial)
 1 &#8211;&gt; Known</dd>
 </dl>
 <p>Order  : ordering of points in domain using l_p metric from fixed reference points</p>
@@ -3519,7 +3518,7 @@ S=0 injecting into S=1 background saturation using his definition of f</p>
     </p>
     <p>
         &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
     </p>
   </div>
 </footer>

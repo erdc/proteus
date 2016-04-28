@@ -1,7 +1,0 @@
-proteus.tests.test_boundaryconditions module
-============================================
-
-.. automodule:: proteus.tests.test_boundaryconditions
-    :members:
-    :undoc-members:
-    :show-inheritance:

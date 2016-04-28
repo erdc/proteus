@@ -1,7 +1,0 @@
-proteus.RefUtils module
-=======================
-
-.. automodule:: proteus.RefUtils
-    :members:
-    :undoc-members:
-    :show-inheritance:

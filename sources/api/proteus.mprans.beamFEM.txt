@@ -1,7 +1,0 @@
-proteus.mprans.beamFEM module
-=============================
-
-.. automodule:: proteus.mprans.beamFEM
-    :members:
-    :undoc-members:
-    :show-inheritance:

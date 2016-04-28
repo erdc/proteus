@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.MeshTools module &mdash; Proteus 1.0.0 documentation</title>
+    <title>proteus.MeshTools module &mdash; Proteus 1.1.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
     <link rel="up" title="proteus package" href="proteus.html" />
     <link rel="next" title="proteus.NonlinearSolvers module" href="proteus.NonlinearSolvers.html" />
     <link rel="prev" title="proteus.LinearSolvers module" href="proteus.LinearSolvers.html" />
@@ -55,7 +55,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -138,9 +138,8 @@
   <div class="section" id="module-proteus.MeshTools">
 <span id="proteus-meshtools-module"></span><h1>proteus.MeshTools module<a class="headerlink" href="#module-proteus.MeshTools" title="Permalink to this headline">¶</a></h1>
 <p>Tools for creating and manipulating 1,2, and 3D meshes.</p>
-<p class="graphviz">
-<img src="../_images/inheritance-b94553e64a69cec083e4c7c3ea2214e79d50831f.svg" alt="Inheritance diagram of proteus.MeshTools" class="inheritance"/>
-</p>
+<object data="../_images/inheritance-4537547bbcff42ef955aaee0e7a106ed9a8c0b40.svg" type="image/svg+xml">
+            <p class="warning">Inheritance diagram of proteus.MeshTools</p></object>
 <dl class="class">
 <dt id="proteus.MeshTools.Node">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>nodeNumber=0</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Node" title="Permalink to this definition">¶</a></dt>
@@ -161,7 +160,7 @@
 coordinates.  This allows using Node objects and tuples of node objects as
 dictionary keys, but in that use case one should be careful not to modify
 the node coordinates.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n0</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeNumber</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n0</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeNumber</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">n1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeNumber</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span><span class="n">z</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">n1</span> <span class="o">&gt;=</span> <span class="n">n0</span>
 <span class="go">True</span>
@@ -1367,7 +1366,7 @@ to run using C.  Implementing this will require some work to the mesh.cpp module
 
 <dl class="attribute">
 <dt id="proteus.MeshTools.MultilevelTriangularMesh.cmeshTools">
-<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/cekees/proteus/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1535,7 +1534,7 @@ lexicographic ordering.</p>
 <p>A hierarchical multilevel mesh of intervals (edges)</p>
 <dl class="attribute">
 <dt id="proteus.MeshTools.MultilevelEdgeMesh.cmeshTools">
-<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/cekees/proteus/linux2/lib/python2.7/site-packages/proteus-1.0.0-py2.7-linux-x86_64.egg/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelEdgeMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cmeshTools</code><em class="property"> = &lt;module 'proteus.cmeshTools' from '/home/cekees/proteus/proteus/cmeshTools.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelEdgeMesh.cmeshTools" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1794,7 +1793,7 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
     </p>
     <p>
         &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
     </p>
   </div>
 </footer>

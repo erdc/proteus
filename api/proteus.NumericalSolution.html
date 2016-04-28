@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.NumericalSolution module &mdash; Proteus 1.0.0 documentation</title>
+    <title>proteus.NumericalSolution module &mdash; Proteus 1.1.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.0.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.0.0 documentation" href="../index.html" />
+    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
     <link rel="up" title="proteus package" href="proteus.html" />
     <link rel="next" title="proteus.ObjectiveFunctions module" href="proteus.ObjectiveFunctions.html" />
     <link rel="prev" title="proteus.NumericalFlux module" href="proteus.NumericalFlux.html" />
@@ -55,7 +55,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.0.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -138,9 +138,8 @@
   <div class="section" id="module-proteus.NumericalSolution">
 <span id="proteus-numericalsolution-module"></span><h1>proteus.NumericalSolution module<a class="headerlink" href="#module-proteus.NumericalSolution" title="Permalink to this headline">¶</a></h1>
 <p>A hierarchy of classes for managing comlete numerical solution implementations</p>
-<p class="graphviz">
-<img src="../_images/inheritance-fe79aa9d34a2d3f124629bbf1fed1b414245b98d.svg" alt="Inheritance diagram of proteus.NumericalSolution" class="inheritance"/>
-</p>
+<object data="../_images/inheritance-4fb6419612d5324b880db82d73c11d5584b0aef2.svg" type="image/svg+xml">
+            <p class="warning">Inheritance diagram of proteus.NumericalSolution</p></object>
 <dl class="class">
 <dt id="proteus.NumericalSolution.NS_base">
 <em class="property">class </em><code class="descclassname">proteus.NumericalSolution.</code><code class="descname">NS_base</code><span class="sig-paren">(</span><em>so</em>, <em>pList</em>, <em>nList</em>, <em>sList</em>, <em>opts</em>, <em>simFlagsList=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base" title="Permalink to this definition">¶</a></dt>
@@ -148,6 +147,27 @@
 <p>The constructor must build all the objects required by a numerical
 method to approximate the solution over a sequence of time intervals.</p>
 <p>calculateSolution(runName) carries out the numerical solution.</p>
+<object data="../_images/graphviz-92992528262ec6b987685efbd93ba1302dccf163.svg" type="image/svg+xml">
+            <p class="warning">digraph NumericalSolutionHasA {
+node [shape=record, fontname=Helvetica, fontsize=12];
+NS   [label=&quot;NumericalSolution&quot; URL=&quot;\ref NumericalSolution&quot;, style=&quot;filled&quot;, fillcolor=&quot;gray&quot;];
+mList [label=&quot;MultilevelTranportModel [n]&quot; URL=&quot;\ref proteus::Transport::MultilevelTransport&quot;];
+nsList [label=&quot;NonLinearSolver [n] &quot; URL=&quot;\ref proteus::NonLinearSolver&quot;];
+lsList [label=&quot;LinearSolver [n] &quot; URL=&quot;\ref proteus::LinearSolver&quot;];
+pList [label=&quot;Problem Specification [n]&quot; URL=&quot;\ref proteus::default_p&quot;];
+nList [label=&quot;Numerics Specifiation [n]&quot; URL=&quot;\ref proteus::default_n&quot;];
+sList [label=&quot;Output Specification [n]&quot; URL=&quot;\ref proteus::SimTools&quot;];
+so [label=&quot;Coupling Specification &quot; URL=&quot;\ref proteus::SO_base&quot;];
+ar [label=&quot;Archiver&quot; URL=&quot;\ref proteus::AR_base&quot;];
+NS -&gt; pList [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&quot;purple&quot;];
+NS -&gt; nList [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&quot;purple&quot;];
+NS -&gt; so [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&quot;purple&quot;];
+NS -&gt; sList [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&quot;purple&quot;];
+NS -&gt; mList [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&quot;purple&quot;];
+NS -&gt; nsList [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&quot;purple&quot;];
+NS -&gt; lsList [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&quot;purple&quot;];
+NS -&gt; ar [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&quot;purple&quot;];
+}</p></object>
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.calculateSolution">
 <code class="descname">calculateSolution</code><span class="sig-paren">(</span><em>runName</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.calculateSolution" title="Permalink to this definition">¶</a></dt>
@@ -220,7 +240,7 @@ method to approximate the solution over a sequence of time intervals.</p>
     </p>
     <p>
         &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1+.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
     </p>
   </div>
 </footer>

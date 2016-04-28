@@ -1,7 +1,0 @@
-proteus.tests.test_sedclosure module
-====================================
-
-.. automodule:: proteus.tests.test_sedclosure
-    :members:
-    :undoc-members:
-    :show-inheritance:
