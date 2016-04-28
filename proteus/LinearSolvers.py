@@ -590,20 +590,24 @@ class KSP_petsc4py(LinearSolver):
 
 class schurOperatorConstructor:
     """
-    This class is responsible for building the various matrices that can be
+    This class is responsible for building the various operators that can be
     used as approximations to the Schur operator.
     Currently this class supports Stokes and NSE.
     """
-    def __init__(self,linear_smoother, L , pde_type):
+    def __init__(self, linear_smoother, pde_type):
         """
         Constructor.
         linear_smoother - class that called the function
-        L (input) - xxx
-        pde_type (input) - string currently supports stokes and navierStokes
+        pde_type (input) - string currently supports Stokes and navierStokes
         """
+        if linear_smoother.PCType!='schur':
+            raise Exception, 'Currently this function only works with the' \
+                'LinearSmoothers for Schur Complements.'
+        
         self.linear_smoother=linear_smoother
-        self.L = L
+        self.L = linear_smoother.L
         self.pde_type = pde_type
+
     def getQp(self, output_matrix=False):
         """
         This function returns the pressure mass matrix Qp.
@@ -727,6 +731,7 @@ class NavierStokes3D:
         """
         L (input) - provides the definition of the problem
         """
+        self.PCType = 'schur'
         self.L = L
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
@@ -765,7 +770,7 @@ class NavierStokes3D:
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
-        self.operator_constructor = schurOperatorConstructor(self, self.L ,'navier_stokes')
+        self.operator_constructor = schurOperatorConstructor(self ,'navier_stokes')
 
     def setUp(self,global_ksp):
         pass
@@ -791,20 +796,14 @@ class NavierStokes3D_Qp(NavierStokes3D) :
         self.QpInv_shell.setSizes(L_sizes)
         self.Qp_shell.setType('python')
         self.QpInv_shell.setType('python')
-        # how to get the viscosity???
-        self.matcontext = QpShell(self.Qp,1.)
-        self.matcontext_inv = QpInvShell(self.Qp,1.)
+        self.matcontext = QpShell(self.Qp,self.L.pde.coefficients.nu)
+        self.matcontext_inv = QpInvShell(self.Qp,self.L.pde.coefficients.nu)
         self.Qp_shell.setPythonContext(self.matcontext)
         self.QpInv_shell.setPythonContext(self.matcontext_inv)
         self.Qp_shell.setUp()
         self.QpInv_shell.setUp()
-#         global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].incRef()
-#        global_ksp.pc.getFieldSplitSubKSP()[1].setOperators(global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0],self.Qp_shell)
-        # Set the Pressure Block Operators for the Schur Complement
-#        global_ksp.pc.getFieldSplitSubKSP()[1].setOperators(self.Qp_shell,self.Qp)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
-#        global_ksp.pc.setFieldSplitSchurPreType(3,self.Qp)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
 
 
