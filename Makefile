@@ -240,6 +240,17 @@ check:
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
-doc: install
+doc:
+	@echo "************************************"
+	@echo "Generating documentation with Sphinx"
+	@echo "Be sure to first run"
+	@echo "make develop"
+	@echo "or"
+	@echo "make install"
+	@echo "************************************"
 	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
-	-sensible-browser ../proteus-website/index.html
+	@echo "**********************************"
+	@echo "Trying to open the html at"
+	@echo "../proteus-website/index.html"
+	@echo "**********************************"
+	-sensible-browser ../proteus-website/index.html &
