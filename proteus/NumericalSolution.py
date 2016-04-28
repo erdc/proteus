@@ -1,5 +1,8 @@
 """
 A hierarchy of classes for managing comlete numerical solution implementations
+
+.. inheritance-diagram:: proteus.NumericalSolution
+   :parts: 1
 """
 
 import os
