@@ -25,9 +25,11 @@ def _petsc_view(obj, filename):
 
 def petsc4py_sparse_2_dense(sparse_matrix):
     """
-    This function takes a CSR matrix representation created from a PETSc4Py matrix
+    This function takes the CSR matrix representation from a PETSc4Py matrix
     and returns a dense numpyarray. 
-    Note - This function should not be used for a large matrix.
+    Import Note - If A is a PETSc4Py Matrix, then the input argument should
+    be A.getValuesCSR().
+    Note - This function will be very inefficient for large matrices.
     """
     rowptr = sparse_matrix[0]
     colptr = sparse_matrix[1]
