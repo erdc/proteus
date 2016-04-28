@@ -36,6 +36,7 @@ class NS_base:  # (HasTraits):
     calculateSolution(runName) carries out the numerical solution.
 
     .. graphviz::
+
        digraph NumericalSolutionHasA {
        node [shape=record, fontname=Helvetica, fontsize=12];
        NS   [label="NumericalSolution" URL="\ref NumericalSolution", style="filled", fillcolor="gray"];
