@@ -1,5 +1,8 @@
 """
 A hierarchy of classes for managing comlete numerical solution implementations
+
+.. inheritance-diagram:: proteus.NumericalSolution
+   :parts: 1
 """
 
 import os
@@ -33,6 +36,7 @@ class NS_base:  # (HasTraits):
     calculateSolution(runName) carries out the numerical solution.
 
     .. graphviz::
+
        digraph NumericalSolutionHasA {
        node [shape=record, fontname=Helvetica, fontsize=12];
        NS   [label="NumericalSolution" URL="\ref NumericalSolution", style="filled", fillcolor="gray"];
