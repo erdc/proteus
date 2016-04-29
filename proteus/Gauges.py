@@ -1,3 +1,9 @@
+"""
+Gauges module
+
+.. inheritance-diagram:: proteus.Gauges
+   :parts: 1
+"""
 import os
 from collections import defaultdict, OrderedDict
 from itertools import product
