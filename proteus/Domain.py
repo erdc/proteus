@@ -233,7 +233,8 @@ class D_base:
         field_list = []
         nf = 1  # ID of next field to be defined
         for c in self.MeshOptions.constraints:
-            ind = str((np.array(c['index'])+1).tolist())[1:-1] # index list
+            if c['index']:
+                ind = str((np.array(c['index'])+1).tolist())[1:-1] # index list
             v = c['variables'] # variables dictionary
             if c['type'] == 'fixed':
                 # Attractor
@@ -257,6 +258,25 @@ class D_base:
                     pf.write("Field[{0}].DistMin = {1};\n".format(nf, v['DistMin']))    
                 if v['DistMax']:
                     pf.write("Field[{0}].DistMax = {1};\n".format(nf, v['DistMax']))
+                field_list += [nf]
+                nf += 1
+            elif c['type'] == 'TFI':
+                if c['entity'] == 'segment':
+                    pf.write('Transfinite Line {{{0}}} = {1} Using Progression {2};\n'
+                             .format(ind, v['nodes'], v['prog']))
+            elif c['type'] == 'function':
+                pf.write('Field[{0}] = MathEval;\n'
+                         'Field[{0}].F = "{1}";\n'.format(nf, v['function']))
+                field_list += [nf]
+                nf += 1
+            elif c['type'] == 'box':
+                pf.write('Field[{0}] = Box;\n'
+                         'Field[{0}].VIn = {1}; Field[{0}].VOut = {2};\n'
+                         'Field[{0}].XMin = {3}; Field[{0}].XMax = {4};\n'
+                         'Field[{0}].YMin = {5}; Field[{0}].YMax = {6};\n'
+                         'Field[{0}].ZMin = {7}; Field[{0}].ZMax = {8};\n'
+                         .format(nf, v['VIn'], v['VOut'], v['XMin'], v['XMax'],
+                                 v['YMin'], v['YMax'], v['ZMin'], v['ZMax']))
                 field_list += [nf]
                 nf += 1
 

@@ -575,80 +575,128 @@ class MeshOptions:
     """
     def __init__(self, shape):
         self.Shape = shape
-        self.TFI = {'segments': [], 'vertices': [], 'facets': [], 'regions': []}
-        # self.constraints = {'segments': [], 'vertices': [], 'facets': [], 'regions': []}
-        self.constraints = {'segments': [], 'vertices': [], 'facets': [], 'regions': []}
         self.constraints = []
 
-    # def segment_TFI(self, indice, nb_points, prog=1., orientation=None):
-    #     """
-    #     Transfinite interpolation for line
-    #     :param indice: list of local index of lines
-    #     :param nb_points:
-    #     """
-    #     progs = []
-    #     vec = self.Shape.vertices[seg[1]]-self.Shape.vertices[seg[0]]
-    #     vec_orientation = vec/np.linalg.norm(vec)
-    #     for ind in indice:
-    #         seg = self.Shape.segments[abs(ind)]
-    #         vec = self.Shape.vertices[seg[1]]-self.Shape.vertices[seg[0]]
-    #         vec_orientation = vec/np.linalg.norm(vec)
-    #         if ind < 0 or vec_orientation == (-vec_orientation.tolist()):
-    #             progs += [1./prog]
-    #         else:
-    #             progs += [prog]
+    def _addConstraint(self, entity, cons_type, index, variables):
+        entities = ['vertex', 'segment', 'facet', 'global']
+        assert entity in entities, 'wrong entity'
+        cons_types = ['fixed', 'function', 'TFI', 'box']
+        assert cons_type in cons_types, 'wrong constraint type'
+        assert isinstance(index, (list, tuple)) or index==None,'must pass a list of index'
+        assert isinstance(variables, (dict)), 'variables must be a dictionary'
+        self.constraints += [{'entity': entity, 'type': cons_type,
+                              'index': index, 'variables':variables}]
 
-    #         if ind < 0:
-    #             if orientation == vec_orientation.tolist():
-    #                 prog = float(prog)
-    #             elif orientation == (-vec_orientation).tolist():
-    #                 prog = 1./prog
-    #             else:
-    #                 print('orientation is not aligned with segment')
-    #                 sys.exit()
-    #         self.TFI['segments'] += [[ind, nb_points, prog]]
+    def refineAroundVertex(self, ind, lc_min, lc_max=None, dist_min=None,
+                            dist_max=None):
+        """
+        Refinement (or coarsening) of mesh around vertices.
+        tetgen: only lc_min is taken into account
+        gmsh: lc_min on segment, lc_max away from vertex, with a transition
+              zone between dist_min and dist_max
+        :param ind: list of local index of vertices
+        :param lc_min: size of element at vertex
+        :param lc_max: size of element away from vertex
+        :param dist_min: distance away from vertex with lc_min element size
+        :param dist_max: distance away from vertex with lc_max element size
+        """
+        var_dict = {'LcMin': lc_min, 'LcMax': lc_max,
+                    'DistMin': dist_min, 'DistMax': dist_max}
+        self._addConstraint(entity='vertex', cons_type='fixed',
+                            index=ind, variables=var_dict)
 
-    def transfinite_facets(self, ind, arrangement='left'):
+    def refineAroundSegment(self, ind, lc_min, lc_max=None, dist_min=None,
+                             dist_max=None):
         """
-        Transfinite interpolation for line
-        :param indice: list of local index of facets
-        :param arrangement:
+        Refinement (or coarsening) of mesh around segments.
+        tetgen: only lc_min is taken into account
+        gmsh: lc_min on segment, lc_max away from segment, with a transition
+              zone between dist_min and dist_max
+        :param ind: list of local index of segments
+        :param lc_min: size of element at segment
+        :param lc_max: size of element away from segment
+        :param dist_min: distance away from segment with lc_min element size
+        :param dist_max: distance away from segment with lc_max element size
         """
+        var_dict = {'LcMin': lc_min, 'LcMax': lc_max,
+                    'DistMin': dist_min, 'DistMax': dist_max}
+        self._addConstraint(entity='segment', cons_type='fixed',
+                            index=ind, variables=var_dict)
+
+    def refineAroundFacet(self, ind, lc_min, lc_max=None, dist_min=None,
+                            dist_max=None):
+        """
+        Refinement (or coarsening) of mesh around facets.
+        tetgen: only lc_min is taken into account
+        gmsh: lc_min on segment, lc_max away from facet, with a transition
+              zone between dist_min and dist_max
+        (!) behaviour can be buggy in gmsh
+        :param ind: list of local index of facets
+        :param lc_min: size of element at facet
+        :param lc_max: size of element away from facet
+        :param dist_min: distance away from facet with lc_min element size
+        :param dist_max: distance away from facet with lc_max element size
+        """
+        var_dict = {'LcMin': lc_min, 'LcMax': lc_max,
+                    'DistMin': dist_min, 'DistMax': dist_max}
+        self._addConstraint(entity='facet', cons_type='fixed',
+                            index=ind, variables=var_dict)
+
+    def refineBox(self, lc_in, lc_out, x_min, x_max, y_min, y_max, z_min=None,
+                  z_max=None):
+        """
+        Refinement (or coarsening) of mesh inside a box.
+        (!) for gmsh only
+        :param lc_in: size of element inside box
+        :param lc_out: size of element outside box
+        :param x_min: lower limit of x coordinates of box
+        :param x_max: upper limit of x coordinates of box
+        :param y_min: lower limit of y coordinates of box
+        :param y_max: upper limit of y coordinates of box
+        :param z_min: lower limit of z coordinates of box
+        :param z_max: upper limit of z coordinates of box
+        """
+        var_dict = {'VIn': lc_in, 'VOut': lc_out, 'XMin': x_min, 'XMax': x_max,
+                    'YMin': y_min, 'YMax': y_max, 'ZMin': z_min, 'ZMax': z_max}
+        self._addConstraint(entity='global', cons_type='box',
+                            index=None, variables=var_dict)
+
+    def setRefinementFunction(self, function):
+        """
+        Set a function to make the mesh element size vary.
+        (!) for gmsh only. Must use MathEval syntax. Can use x, y and z in
+            function
+        :param function: function that makes mesh vary (string)
+        """
+        var_dict = {'function': function}
+        self._addConstraint(entity='global', cons_type='function',
+                            index=None, variables=var_dict)
+
+    def setTransfiniteSegment(self, ind, nb_nodes, prog=1.):
+        """
+        Sets segment transfinite interpolation. Goes from the segment first
+        vertex to its second vertex using the defined progression.
+        If TFI should go from segment's second vertex to first vertex,
+        use a negative index.
+        :param ind: list of local index of segments
+        :param nb_nodes: number of nodes on segments
+        :param prog: progression parameter for nodes on segments
+        """
+        var_dict_pos = {'nodes':nb_nodes, 'prog': prog}
+        var_dict_neg = {'nodes':nb_nodes, 'prog': 1./prog}
+        ind_prog_pos = []
+        ind_prog_neg = []
         for ind in indice:
-            self.TFI['facet'] += [[ind, arrangement]]
-
-    def set_facet_element_size(self, ind, size_min, size_max=None, dist_min=None, dist_max=None):
-        """
-        Transfinite interpolation for line
-        :param indice: list of local index of facets
-        :param arrangement:
-        """
-        var_dict = {'LcMin': size_min, 'LcMax': size_max,
-                    'DistMin': dist_min, 'DistMax': dist_max}
-        self.constraints += [{'type': 'fixed', 'entity': 'facet',
-                                'index': ind, 'variables': var_dict}]
-
-    def set_segment_he(self, ind, size_min, size_max=None, dist_min=None, dist_max=None):
-        """
-        Transfinite interpolation for line
-        :param indice: list of local index of facets
-        :param arrangement:
-        """
-        var_dict = {'LcMin': size_min, 'LcMax': size_max,
-                    'DistMin': dist_min, 'DistMax': dist_max}
-        self.constraints += [{'type': 'fixed', 'entity': 'segment',
-                              'index': ind, 'variables': var_dict}]
-
-    def set_vertex_element_size(self, ind, size_min, size_max=None, dist_min=None, dist_max=None):
-        """
-        Transfinite interpolation for line
-        :param indice: list of local index of vertices
-        :param size: size of element at point
-        """
-        var_dict = {'LcMin': size_min, 'LcMax': size_max,
-                    'DistMin': dist_min, 'DistMax': dist_max}
-        self.constraints += [{'type': 'fixed', 'entity': 'vertex',
-                             'index': ind, 'variables': var_dict}]
+            if ind < 0:
+                ind_prog_neg += [abs(ind)]
+            else:
+                ind_prog_pos += [ind]
+        if ind_prog_neg:
+            self._addConstraint(entity='segment', cons_type='TFI',
+                                index=ind_prog_neg, variables=var_dict_neg)
+        if ind_prog_pos:
+            self._addConstraint(entity='segment', cons_type='TFI',
+                                index=ind_prog_pos, variables=var_dict_pos)
 
 # --------------------------------------------------------------------------- #
 # -------------------------SPATIAL TOOLS FOR SHAPES-------------------------- #
