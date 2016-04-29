@@ -1,5 +1,8 @@
 """
 Class hierarchies for constructing and working with finite element spaces
+
+.. inheritance-diagram:: proteus.FemTools
+   :parts: 1
 """
 from EGeometry import *
 from MeshTools import *
