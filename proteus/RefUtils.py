@@ -2,6 +2,9 @@
 """
 Classes, functions, and some global data that are useful
 for doing FEM calculations on reference elements, etc
+
+.. inheritance-diagram:: proteus.RefUtils
+   :parts: 1
 """
 from EGeometry import *
 from Quadrature import *

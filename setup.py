@@ -40,11 +40,11 @@ for arg in sys.argv:
         break
 
 setup(name='proteus',
-      version='1.0.0',
+      version='1.1.0',
       description='Python tools for multiphysics modeling',
       author='Chris Kees, Matthew Farthing, et al.',
-      author_email='chris.kees@us.army.mil',
-      url='http://proteus.usace.army.mil',
+      author_email='christopher.e.kees@usace.army.mil',
+      url='http://proteustoolkit.org',
       packages = ['proteus', 'proteus.config', 'proteus.tests', 'proteus.mprans'],
       cmdclass = {'build_ext':build_ext},
       ext_package='proteus',
