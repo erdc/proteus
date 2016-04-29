@@ -1,5 +1,8 @@
 """
 A class hierarchy and tools for building domains of PDE's.
+
+.. inheritance-diagram:: proteus.Domain
+   :parts: 1
 """
 
 import numpy as np
