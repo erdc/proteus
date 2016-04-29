@@ -1,5 +1,8 @@
 """
 Tools for high level profiling and event logging
+
+.. inheritance-diagram:: proteus.Profiling
+   :parts: 1
 """
 import gc
 import inspect

@@ -1,5 +1,8 @@
 """
 Module for creating boundary conditions. Imported in SpatialTools.py
+
+.. inheritance-diagram:: proteus.BoundaryConditions
+   :parts: 1
 """
 
 
