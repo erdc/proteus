@@ -1,5 +1,8 @@
 """
 Classes for calculating auxiliary variables based on the numerical solution.
+
+.. inheritance-diagram:: proteus.AuxiliaryVariables
+   :parts: 1
 """
 import numpy
 import Profiling

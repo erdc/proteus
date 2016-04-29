@@ -23,6 +23,9 @@ shape2.rotate(np.pi/3.)
 shape2.BC.newBC
 
 st.assembleDomain(domain)
+
+.. inheritance-diagram:: proteus.SpatialTools
+   :parts: 1
 """
 
 from math import cos, sin, sqrt

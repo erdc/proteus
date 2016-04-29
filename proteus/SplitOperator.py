@@ -1,5 +1,8 @@
 """
 A class hierarchy for split operator methods.
+
+.. inheritance-diagram:: proteus.SplitOperator
+   :parts: 1
 """
 import Profiling
 log = Profiling.logEvent
