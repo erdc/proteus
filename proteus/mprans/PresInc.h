@@ -43,6 +43,8 @@ namespace proteus
                                    double* q_vos,
                                    double rho_s,
                                    double* q_rho_f,
+                                   double rho_s_min,
+                                   double rho_f_min,
                                    double* ebqe_vf,
                                    double* ebqe_vs,
                                    double* ebqe_vos,
@@ -94,6 +96,8 @@ namespace proteus
                                    double* q_vos,
                                    double rho_s,
                                    double* q_rho_f,
+                                   double rho_s_min,
+                                   double rho_f_min,
                                    double* ebqe_vf,
                                    double* ebqe_vs,
                                    double* ebqe_vos,
@@ -129,14 +133,14 @@ namespace proteus
                                 const double vf[nSpace],
                                 const double vs[nSpace],
                                 const double& vos,
-                                const double& rhos,
-                                const double& rhof,
+                                const double& rhos_min,
+                                const double& rhof_min,
                                 double f[nSpace],
                                 double& a)
     {
       for (int I=0;I<nSpace;I++)
         f[I] = (1.0-vos)*vf[I] + vos*vs[I];
-      a = (1.0-vos)/(rhof*alphaBDF) + vos/(rhos*alphaBDF);
+      a = (1.0-vos)/(rhof_min*alphaBDF) + vos/(rhos_min*alphaBDF);
     }
     
     inline
@@ -228,6 +232,8 @@ namespace proteus
                                          double* q_vos,
                                          double rho_s,
                                          double* q_rho_f,
+                                         double rho_s_min,
+                                         double rho_f_min,
                                          double* ebqe_vf,
                                          double* ebqe_vs,
                                          double* ebqe_vos,
@@ -306,8 +312,8 @@ namespace proteus
                                &q_vf[eN_k_nSpace],
 			       &q_vs[eN_k_nSpace],
 			       q_vos[eN_k],
-			       rho_s,
-			       q_rho_f[eN_k],
+			       rho_s_min,
+			       rho_f_min,
 			       f,
 			       a);
 	  // 
@@ -365,6 +371,8 @@ namespace proteus
                            double* q_vos,
                            double rho_s,
                            double* q_rho_f,
+                           double rho_s_min,
+                           double rho_f_min,
                            double* ebqe_vf,
                            double* ebqe_vs,
                            double* ebqe_vos,
@@ -431,6 +439,8 @@ namespace proteus
                                    q_vos,
                                    rho_s,
                                    q_rho_f,
+                                   rho_s_min,
+                                   rho_f_min,
                                    ebqe_vf,
                                    ebqe_vs,
                                    ebqe_vos,
@@ -554,8 +564,8 @@ namespace proteus
                                    &ebqe_vf[ebNE_kb_nSpace],
                                    &ebqe_vs[ebNE_kb_nSpace],
                                    q_vos[ebNE_kb],
-                                   rho_s,
-                                   q_rho_f[ebNE_kb],
+                                   rho_s_min,
+                                   rho_f_min,
                                    f_ext,
                                    a_ext);
 	      ebqe_u[ebNE_kb] = u_ext;
@@ -567,7 +577,6 @@ namespace proteus
 	      exteriorNumericalAdvectiveFlux(normal,
 					     f_ext,
 					     adv_flux_ext);
-	      ebqe_adv_flux[ebNE_kb] = adv_flux_ext;
               exteriorNumericalDiffusiveFlux(isDOFBoundary[ebNE_kb],
                                              isFluxBoundary[ebNE_kb],
                                              normal,
@@ -578,22 +587,30 @@ namespace proteus
                                              bc_diff_flux[ebNE_kb],
                                              penalty,
                                              diff_flux_ext);
+              if(isFluxBoundary[ebNE_kb] == 1)
+                {
+                  adv_flux_ext = 0.0;
+                  diff_flux_ext = 0.0;
+                }
+	      ebqe_adv_flux[ebNE_kb] = adv_flux_ext;
 	      ebqe_diff_flux[ebNE_kb] = diff_flux_ext;
-              ebqe_u[ebNE_kb] = u_ext;
 	      //
 	      //update residuals
 	      //
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
-		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(adv_flux_ext+diff_flux_ext,u_test_dS[i]) +
-                    ck.ExteriorElementBoundaryScalarDiffusionAdjoint(isDOFBoundary[ebNE_kb],
-                                                                     isFluxBoundary[ebNE_kb],
-                                                                     1.0,
-                                                                     u_ext,
-                                                                     bc_u_ext,
-                                                                     normal,
-                                                                     a_ext,
-                                                                     &u_grad_test_dS[i*nSpace]);
+		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(adv_flux_ext,u_test_dS[i])
+                    + 
+                    ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]);
+                  /* + */
+                  /*   ck.ExteriorElementBoundaryScalarDiffusionAdjoint(isDOFBoundary[ebNE_kb], */
+                  /*                                                    isFluxBoundary[ebNE_kb], */
+                  /*                                                    1.0, */
+                  /*                                                    u_ext, */
+                  /*                                                    bc_u_ext, */
+                  /*                                                    normal, */
+                  /*                                                    a_ext, */
+                  /*                                                    &u_grad_test_dS[i*nSpace]); */
 		}//i
 	    }//kb
 	  //
@@ -638,6 +655,8 @@ namespace proteus
                                          double* q_vos,
                                          double rho_s,
                                          double* q_rho_f,
+                                         double rho_s_min,
+                                         double rho_f_min,
 					 double* elementJacobian_u_u,
 					 double* element_u,
 					 int eN)
@@ -705,8 +724,8 @@ namespace proteus
                                &q_vf[eN_k_nSpace],
 			       &q_vs[eN_k_nSpace],
 			       q_vos[eN_k],
-			       rho_s,
-			       q_rho_f[eN_k],
+			       rho_s_min,
+			       rho_f_min,
 			       f,
 			       a);
 	  for(int i=0;i<nDOF_test_element;i++)
@@ -756,6 +775,8 @@ namespace proteus
                            double* q_vos,
                            double rho_s,
                            double* q_rho_f,
+                           double rho_s_min,
+                           double rho_f_min,
                            double* ebqe_vf,
                            double* ebqe_vs,
                            double* ebqe_vos,
@@ -806,6 +827,8 @@ namespace proteus
                                    q_vos,
                                    rho_s,
                                    q_rho_f,
+                                   rho_s_min,
+                                   rho_f_min,
 				   elementJacobian_u_u,
 				   element_u,
 				   eN);
@@ -930,8 +953,8 @@ namespace proteus
                                    &ebqe_vf[ebNE_kb_nSpace],
                                    &ebqe_vs[ebNE_kb_nSpace],
                                    q_vos[ebNE_kb],
-                                   rho_s,
-                                   q_rho_f[ebNE_kb],
+                                   rho_s_min,
+                                   rho_f_min,
                                    f_ext,
                                    a_ext);
 	      //
@@ -947,21 +970,21 @@ namespace proteus
                         ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j,
                         j_nSpace = j*nSpace;		  
 
-		      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += ExteriorNumericalDiffusiveFluxJacobian(isDOFBoundary[ebNE_kb],
-                                                                                                                                           isFluxBoundary[ebNE_kb],
-                                                                                                                                           normal,
-                                                                                                                                           a_ext,
-                                                                                                                                           u_trial_trace_ref[ebN_local_kb_j],
-                                                                                                                                           &u_grad_trial_trace[j_nSpace],
-                                                                                                                                           penalty)*u_test_dS[i]
-                        +
-			ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian(isDOFBoundary[ebNE_kb],
-                                                                                 isFluxBoundary[ebNE_kb],
-                                                                                 1.0,
-                                                                                 u_trial_trace_ref[ebN_local_kb_j],
-                                                                                 normal,
-                                                                                 a_ext,
-                                                                                 &u_grad_test_dS[i*nSpace]);
+		      /* globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += ExteriorNumericalDiffusiveFluxJacobian(isDOFBoundary[ebNE_kb], */
+                      /*                                                                                                                      isFluxBoundary[ebNE_kb], */
+                      /*                                                                                                                      normal, */
+                      /*                                                                                                                      a_ext, */
+                      /*                                                                                                                      u_trial_trace_ref[ebN_local_kb_j], */
+                      /*                                                                                                                      &u_grad_trial_trace[j_nSpace], */
+                      /*                                                                                                                      penalty)*u_test_dS[i] */
+                      /*   + */
+		      /*   ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian(isDOFBoundary[ebNE_kb], */
+                      /*                                                            isFluxBoundary[ebNE_kb], */
+                      /*                                                            1.0, */
+                      /*                                                            u_trial_trace_ref[ebN_local_kb_j], */
+                      /*                                                            normal, */
+                      /*                                                            a_ext, */
+                      /*                                                            &u_grad_test_dS[i*nSpace]); */
 		    }//j
 		}//i
 	    }//kb
