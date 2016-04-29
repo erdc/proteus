@@ -253,4 +253,4 @@ doc:
 	@echo "Trying to open the html at"
 	@echo "../proteus-website/index.html"
 	@echo "**********************************"
-	-sensible-browser ../proteus-website/index.html
+	-sensible-browser ../proteus-website/index.html &

@@ -1,5 +1,8 @@
 """
 A class hierarchy for numerical flux (numerical trace) computations
+
+.. inheritance-diagram:: proteus.NumericalFlux
+   :parts: 1
 """
 import cfemIntegrals,cnumericalFlux
 import numpy
@@ -2121,15 +2124,17 @@ class Diffusion_SIPG_exterior(Diffusion_IIPG_exterior):
         self.boundaryAdjoint_sigma=1.0
 
 class DarcySplitPressure_IIPG_exterior(NF_base):
-    hasInterior=False
     """
     weak dirichlet boundary conditions for Twophase_split_pressure class
-    Diffusion_IIPG_exterior is ok except for need to switch between
-    psi_w and psi_n bc types
-    TODO:
+
+    Diffusion_IIPG_exterior is ok except for need to switch between psi_w and
+    psi_n bc types
+
+    .. todo::
 
        put in bc that switches flux and dirichlet types
     """
+    hasInterior=False
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions):
@@ -2803,9 +2808,10 @@ class Advection_DiagonalUpwind_Diffusion_LDG(Diffusion_LDG):
                                                                                 fluxJacobian_exterior[ci][ci])
 #mwf add some scalar numerical fluxes
 class RusanovNumericalFlux_Diagonal(Advection_DiagonalUpwind):
-    """
-    apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a) where
-    \lambda >= max |f^{\prime}| for a<= u <= b
+    r"""
+    apply numerical flux :math:`f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)` where
+    :math:`\lambda >= max |f^{\prime}| for a<= u <= b`
+
     this one applies flux to each component of flux separately
     """
     def __init__(self,vt,getPointwiseBoundaryConditions,
@@ -2901,9 +2907,9 @@ class RusanovNumericalFlux_Diagonal(Advection_DiagonalUpwind):
                                                                                ebqe[('advectiveFlux',ci)],
                                                                                ebqe[('dadvectiveFlux_left',ci,ci)])
 class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diffusion_IIPG):
-    """
-    apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a) where
-    \lambda >= max |f^{\prime}| for a<= u <= b
+    r"""
+    apply numerical flus :math:`f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)` where
+    :math:`\lambda >= max |f^{\prime}|` for :math:`a<= u <= b`
     this one applies flux to each component of flux separately
     """
     def __init__(self,vt,getPointwiseBoundaryConditions,
@@ -3044,11 +3050,10 @@ class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diff
                                                                                ebqe[('advectiveFlux',ci)],
                                                                                ebqe[('dadvectiveFlux_left',ci,ci)])
 class ConvexOneSonicPointNumericalFlux(Advection_DiagonalUpwind):
-    """
-    basic Godunov flux f_{num}(a,b) = max_{b<= u <= a} f(u) if a >= b
-                                    = min_{a<= u <= b} f(u) otherwise
-    where there is only one sonic point, u_s with f^{\prime}(u_s) = 0 and
-    f is convex so f(u_s) is a minimum
+    r"""
+    basic Godunov flux :math:`f_{num}(a,b) = max_{b<= u <= a} f(u)` if :math:`a >= b = min_{a<= u <= b} f(u)` otherwise
+    where there is only one sonic point, :math:`u_s` with :math:`f^{\prime}(u_s) = 0` and
+    :math:`f` is convex so :math:`f(u_s)` is a minimum
 
     This class typically has to be "wrapped" for a given problem to specify the
     correct sonic point and sonic flux
@@ -3694,10 +3699,10 @@ class HamiltonJacobi_Pressure_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Ham
 
 
 class DarcyFCFF_IIPG_exterior(NF_base):
-    hasInterior=False
     """
     weak dirichlet boundary conditions for Twophase_fc_ff class
     """
+    hasInterior=False
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions):
@@ -3878,14 +3883,14 @@ class DarcyFCFF_IIPG_exterior(NF_base):
 
 
 class DarcyFC_IIPG_exterior(NF_base):
-    hasInterior=False
-    """
+    r"""
     weak dirichlet boundary conditions for Twophase_fc class
-    TODO:
-       put in nonlinear bc for setting \psi_n = \psi_n^b
-         dofFlag = 2
-       put in bc that switches flux and dirichlet types
+
+    .. todo::
+       - put in nonlinear bc for setting :math:`\psi_n = \psi_n^b`
+       - put in bc that switches flux and dirichlet types
     """
+    hasInterior=False
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions):
@@ -4113,14 +4118,14 @@ class DarcyFC_IIPG_exterior(NF_base):
             #pdb.set_trace()
 
 class DarcyFCPP_IIPG_exterior(NF_base):
-    hasInterior=False
-    """
+    r"""
     weak dirichlet boundary conditions for Twophase_fc class
-    TODO:
-       put in nonlinear bc for setting \psi_n = \psi_n^b
-         dofFlag = 2
-       put in bc that switches flux and dirichlet types
+
+    .. todo::
+       - put in nonlinear bc for setting :math:`\psi_n = \psi_n^b`
+       - put in bc that switches flux and dirichlet types
     """
+    hasInterior=False
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions):
@@ -4486,15 +4491,26 @@ class ShallowWater_2D(NF_base):
 
 
 class RusanovNumericalFlux(RusanovNumericalFlux_Diagonal):
-    """
-    Base class for Rusanov scheme for generic systems, relies on a user-specified estimate for the
-    maximum (magnitude) eigenvalue for the system. Default is to take \bar{\lamda}= max |\vec f^{\prime} . n|
-    Then we just apply
-    apply numerical flux f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)
+    r"""Base class for Rusanov scheme for generic systems, relies on a
+    user-specified estimate for the maximum (magnitude) eigenvalue for the
+    system.
 
-    For now, we will try to piggy back on the cfl calculation, assuming the user has implemented this
-    correctly for the system in question
+    Default is to take
+
+    .. math::
+
+       \bar{\lamda}= max |\vec f^{\prime} \cdot n\|
+
+    Then we just apply apply numerical flux
+
+    .. math::
+
+       f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)
+
+    For now, we will try to piggy back on the cfl calculation, assuming the
+    user has implemented this correctly for the system in question
     """
+
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions):
