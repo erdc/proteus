@@ -1,5 +1,8 @@
 """
 Module for controlling MPI
+
+.. inheritance-diagram:: proteus.Comm
+   :parts: 1
 """
 
 import ctypes

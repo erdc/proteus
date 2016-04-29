@@ -2,6 +2,9 @@
 """
 Collect classes and routines for postprocessing solution to get
  quantities like conservative velocities, higher accuracy, etc
+
+.. inheritance-diagram:: proteus.PostProcessingTools
+   :parts: 1
 """
 import numpy
 import FemTools
