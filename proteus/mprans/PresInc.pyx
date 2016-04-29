@@ -49,6 +49,8 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                double * q_vos,
                                double rho_s,
                                double * q_rho_f,
+                               double rho_s_min,
+                               double rho_f_min,
                                double * ebqe_vf,
                                double * ebqe_vs,
                                double * ebqe_vos,
@@ -97,6 +99,8 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                double * q_vos,
                                double  rho_s,
                                double * q_rho_f,
+                               double rho_s_min,
+                               double rho_f_min,
                                double * ebqe_vf,
                                double * ebqe_vs,
                                double * ebqe_vos,
@@ -169,6 +173,8 @@ cdef class PresInc:
                           numpy.ndarray q_vos,
                           double rho_s,
                           numpy.ndarray q_rho_f,
+                          double rho_s_min,
+                          double rho_f_min,
                           numpy.ndarray ebqe_vf,
                           numpy.ndarray ebqe_vs,
                           numpy.ndarray ebqe_vos,
@@ -217,6 +223,8 @@ cdef class PresInc:
                                        < double * > q_vos.data,
                                         rho_s,
                                        < double * > q_rho_f.data,
+                                        rho_s_min,
+                                        rho_f_min,
                                        < double * > ebqe_vf.data,
                                        < double * > ebqe_vs.data,
                                        < double * > ebqe_vos.data,
@@ -267,6 +275,8 @@ cdef class PresInc:
                           numpy.ndarray q_vos,
                           double rho_s,
                           numpy.ndarray q_rho_f,
+                          double rho_s_min,
+                          double rho_f_min,
                           numpy.ndarray ebqe_vf,
                           numpy.ndarray ebqe_vs,
                           numpy.ndarray ebqe_vos,
@@ -310,6 +320,8 @@ cdef class PresInc:
                                         < double * > q_vos.data,
                                         rho_s,
                                         < double * > q_rho_f.data,
+                                        rho_s_min,
+                                        rho_f_min,
                                         < double * > ebqe_vf.data,
                                         < double * > ebqe_vs.data,
                                         < double * > ebqe_vos.data,
@@ -424,6 +436,7 @@ class Coefficients(TC_base):
         alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
         for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
             self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
+            #cek hack, need to do scale this right for 3p flow
             self.fluidModel.ebqe[('velocity',0)][...,i] = (self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
             self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
             self.fluidModel.coefficients.ebqe_velocity_solid[...,i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
@@ -1058,6 +1071,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.fluidModel.coefficients.q_vos,
             self.coefficients.fluidModel.coefficients.rho_s,
             self.coefficients.fluidModel.coefficients.q_rho,
+            self.coefficients.rho_s_min,
+            self.coefficients.rho_f_min,
             self.coefficients.fluidModel.ebqe[('velocity',0)],
             self.coefficients.fluidModel.coefficients.ebqe_velocity_solid,
             self.coefficients.fluidModel.coefficients.ebqe_vos,
@@ -1084,8 +1099,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         log("   Mass Conservation Error", level=3,
             data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy is None:
-            self.globalResidualDummy = numpy.zeros(r.shape, 'd')
 
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian, jacobian)
@@ -1120,6 +1133,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.fluidModel.coefficients.q_vos,
             self.coefficients.fluidModel.coefficients.rho_s,
             self.coefficients.fluidModel.coefficients.q_rho,
+            self.coefficients.rho_s_min,
+            self.coefficients.rho_f_min,
             self.coefficients.fluidModel.ebqe[('velocity',0)],
             self.coefficients.fluidModel.coefficients.ebqe_velocity_solid,
             self.coefficients.fluidModel.coefficients.ebqe_vos,
