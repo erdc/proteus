@@ -373,18 +373,19 @@ class MatrixInvShell:
         self.ksp.solve(x,y)
 
 class PCDInv_shell:
-    """
-    Create a shell for the PCD Inverse preconditioner
-    """
+    """ Shell class for the PCD Inverse preconditioner """
     def __init__(self,Qp_matrix,Fp_matrix,Ap_matrix):
         """
         Initializes the pressure-convection-diffusion inverse operator.
 
         Parameters
         ----------
-        Qp_matrix : a petsc4py matrix object for the pressure mass matrix
-        Fp_matrix : 
-        Ap_matrix :
+        Qp_matrix : petsc4py matrix object
+                    The pressure mass matrix.
+        Fp_matrix : petsc4py matrix object
+                    Convection-diffusion operator.
+        Ap_matrix : petsc4py matrix object
+                    The pressure Laplacian operator.
         """
         self.Qp = Qp_matrix
         self.Fp = Fp_matrix
@@ -404,7 +405,19 @@ class PCDInv_shell:
     def create(self,A):
         pass
     def apply(self,A,x,y):
-        """  Apply the PCD operator """
+        """  
+        Apply the inverse pressure-convection-diffusion operator.
+
+        Parameters
+        ----------
+        A : matrix
+            Dummy variable needed to interface with PETSc.
+        x : vector
+
+        Returns
+        -------
+        y : vector
+        """
         temp1 = p4pyPETSc.Vec().create()
         temp1.setType('seq')
         temp2 = p4pyPETSc.Vec().create()
