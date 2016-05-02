@@ -38,11 +38,7 @@ def test_sparse_2_dense():
     assert np.allclose(dense_mat,comparison_mat)
 
 def test_Qp_mat():
-    '''
-    First, verify that Qp returns the correct pressure mass matrix
-    Second, verfity that QpShell performs matrix multiplies correctly
-    '''
-    # import and run a small 2D poiseulle problem
+    ''' Verify that Qp returns the correct pressure mass matrix  '''
     import stokes_2d_p
     import stokes_2d_n
     pList = [stokes_2d_p]
@@ -61,44 +57,11 @@ def test_Qp_mat():
     Qp_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qp_raw.getValuesCSR())
     pressure_mass_matrix = np.loadtxt('pressure_mass_matrix.txt')
     assert np.allclose(pressure_mass_matrix,Qp_dense)
-    # *** 2 *** test QpShell performs a matrix vector product correctly
-    ksp_dummy = p4pyPETSc.KSP().create()
-    ksp_dummy.pc.setFieldSplitSchurPreType(0)
-    ksp_dummy.pc.setFieldSplitSchurFactType(0)
-    import pdb
-    pdb.set_trace()
-    smoother.setUp(ksp_dummy)
-    
-
-    # vector_x = p4pyPETSc.Vec().create()
-    # vector_x1 = p4pyPETSc.Vec().create()
-    # vector_y = p4pyPETSc.Vec().create()
-    # vector_b = p4pyPETSc.Vec().create()
-    # vector_x.setType('standard')
-    # vector_x1.setType('standard')
-    # vector_y.setType('standard')
-    # vector_b.setType('standard')
-    # vector_x.setSizes(len(pressure_mass_matrix[0]),len(pressure_mass_matrix[0]))
-    # vector_x1.setSizes(len(pressure_mass_matrix[0]),len(pressure_mass_matrix[0]))
-    # vector_y.setSizes(len(pressure_mass_matrix[0]),len(pressure_mass_matrix[0]))
-    # vector_b.setSizes(len(pressure_mass_matrix[0]),len(pressure_mass_matrix[0]))
-    # vector_x.set(1)
-    # vector_b.set(1)
-    # matrix.Qp_shell.mult(vector_x,vector_y)
-    # matrix.QpInv_shell.mult(vector_x1,vector_b)
-    
-
-    # TODO - verify true_y
-#    true_y = np.array([[0.16666667,0.333333333,0.166666667,0.33333333,0.5,1.,0.5,0.5,0.5]])
-#    assert np.allclose(vector_y,true_y)
-
+    # *** 2 *** : test solver does not generate an error
+    ns.calculateSolution('test_Qp_mat')
 
 if __name__ == '__main__':
     from proteus import Comm
     comm = Comm.init()
     test_sparse_2_dense()
     test_Qp_mat()
-
-    # test = LinearSolvers.KSP_petsc4py(ns.modelList[0].jacobianList[0],
-    #                                   ns.modelList[0].par_jacobianList[0],
-    #                                   Preconditioner=SimpleNavierStokes3D)

@@ -270,7 +270,10 @@ def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
 class SparseMatShell:
     """
     Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains).
-    Input: ghosted_csr_mat must be a superluWrappers.SparseMatrix
+
+    Parameters
+    ----------
+    ghosted_csr_mat: a superluWrappers.SparseMatrix
     """
     def __init__(self,ghosted_csr_mat):
         self.ghosted_csr_mat=ghosted_csr_mat
@@ -295,15 +298,16 @@ class SparseMatShell:
         y.setArray(self.yGhosted.getArray())
 
 class QpShell:
-    """
-    Create a shell for a pressure mass matrix in a Schur complment 
-    preconditioner.
-    """
+    """ A PETSc shell class for a pressure mass matrix. """
     def __init__(self,Qp_matrix,nu):
         """
-        Qp_matrix (input) - a petsc4py matrix object representing the pressure
-        mass matrix.
-        nu (input) - viscosity (scalar value)
+        Specifies parameters for pressure mass matrix shell.
+
+        Parameters
+        ----------
+        Qp_matrix : a petsc4py matrix object representing the pressure mass 
+                    matrix.
+        nu :  viscosity (scalar value)
         """
         self.Qp = Qp_matrix
         self.viscosity = nu
@@ -311,32 +315,40 @@ class QpShell:
         pass
     def mult(self,A,x,y):
         """
-        x (input) - valid petsc vector
-        y (output) - valid petsc vector
+        Multiply the pressure mass matrix and x.
+
+        Parameters
+        ----------
+        A : dummy place holder for PETSc compatibility
+        x : valid petsc vector
+
+        Returns
+        -------
+        y : valid petsc vector - stores results of multiplication.
         """
         # TODO - Add some asserts
         self.Qp.mult(x,y)
         y.scale(1./self.viscosity)
 
 class QpInvShell:
-    """
-    Create a shell for the pressure mass matrix inverse
-    """
+    """ A PETSc shell class for a pressure mass matrix. """
     def __init__(self,Qp_matrix,nu):
         """
-        Qp_matrix (input) - a petsc4py matrix object representing the pressure
-        mass matrix.
-        nu (input) - scalar value representing the operators viscosity
+        Initializes operators and solvers for inverse operator.
+
+        Parameters
+        ----------
+        Qp_matrix : a petsc4py matrix object representing the pressure mass 
+                    matrix.
+        nu :  viscosity (scalar value)
         """
-#        self.Qp = Qp_matrix.scale(1./nu)
+        self.Qp = Qp_matrix.scale(1./nu)
         self.Qp = Qp_matrix
         self.ksp = p4pyPETSc.KSP().create()
         self.ksp.setOperators(self.Qp,self.Qp)
         self.ksp.setType('preonly')
         self.ksp.pc.setType('lu')
         self.ksp.setUp()
-        import pdb
-#        pdb.set_trace()
     def create(self,A):
         pass
     def apply(self,A,x,y):
@@ -348,7 +360,13 @@ class PCDInv_shell:
     """
     def __init__(self,Qp_matrix,Fp_matrix,Ap_matrix):
         """
-        Initialize the PCD operator
+        Initializes the pressure-convection-diffusion inverse operator.
+
+        Parameters
+        ----------
+        Qp_matrix : a petsc4py matrix object for the pressure mass matrix
+        Fp_matrix : 
+        Ap_matrix :
         """
         self.Qp = Qp_matrix
         self.Fp = Fp_matrix
@@ -368,9 +386,7 @@ class PCDInv_shell:
     def create(self,A):
         pass
     def apply(self,A,x,y):
-        """
-        Apply the PCD operator
-        """
+        """  Apply the PCD operator """
         temp1 = p4pyPETSc.Vec().create()
         temp1.setType('seq')
         temp2 = p4pyPETSc.Vec().create()

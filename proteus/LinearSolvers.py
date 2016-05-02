@@ -367,6 +367,27 @@ class KSP_petsc4py(LinearSolver):
                  Preconditioner=None,
                  connectionList=None,
                  linearSolverLocalBlockSize=1):
+        """ 
+        Create an object to interface Proteus with PETSc's KSP class.
+        
+        Parameters
+        -----------
+        L : :class: `.superluWrappers.SparseMatrix`
+        par_L :  :class: `.LinearAlgebraTools.ParMat_petsc4py`
+        rtol_r : float
+        atol_r : float
+        maxIts : int
+        norm :   norm type
+        convergenceTest : 
+        computeRates: bool
+        printInfo : bool
+        prefix : bool
+        Preconditioner : preconditioner type
+        connection List : 
+        linearSolverLocalBlockSize : int
+        """
+        import pdb
+        pdb.set_trace()
         LinearSolver.__init__(self,
                               L,
                               rtol_r=rtol_r,
@@ -531,6 +552,8 @@ class KSP_petsc4py(LinearSolver):
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
             if self.preconditioner:
+                import pdb
+                pdb.set_trace()
                 self.preconditioner.setUp(self.ksp)
         self.ksp.setUp()
         self.ksp.pc.setUp()
@@ -579,9 +602,6 @@ class KSP_petsc4py(LinearSolver):
             par_b.proteus_array[:] = par_b.proteus_array[par_b.proteus2petsc_subdomain]
             par_u.proteus_array[:] = par_u.proteus_array[par_u.proteus2petsc_subdomain]
     def converged(self,r):
-        """
-        decide on convention to match norms, convergence criteria
-        """
         return self.ksp.converged
     def failed(self):
         failedFlag = LinearSolver.failed(self)
@@ -592,29 +612,35 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.view()
 
 class schurOperatorConstructor:
-    """
-    This class is responsible for building the various operators that can be
-    used as approximations to the Schur operator.
-    Currently this class supports Stokes and NSE.
-    """
+    """ Compute matrices for use in preconditioner operators. """
     def __init__(self, linear_smoother, pde_type):
         """
-        Constructor.
-        linear_smoother - class that called the function
-        pde_type (input) - string currently supports Stokes and navierStokes
+        Initialize a Schur Operator.
+
+        Parameters
+        ----------
+        linear_smoother : class that called the function
+        pde_type :  string currently supports Stokes and navierStokes
         """
         if linear_smoother.PCType!='schur':
-            raise Exception, 'Currently this function only works with the' \
+            raise Exception, 'This function only works with the' \
                 'LinearSmoothers for Schur Complements.'
-        
         self.linear_smoother=linear_smoother
         self.L = linear_smoother.L
         self.pde_type = pde_type
 
     def getQp(self, output_matrix=False):
         """
-        This function returns the pressure mass matrix Qp.
-        print (input) - outputs a .m file for the pressure mass matrix
+        Return the pressure mass matrix Qp.
+
+        Parameters
+        ----------
+        output_matrix : boolean for determining whether matrix should be 
+                        exported.
+
+        Returns
+        -------
+        Qp : the pressure mass matrix.
         """
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
         self.Qsys_rowptr = rowptr.copy()
@@ -727,12 +753,23 @@ class schurOperatorConstructor:
         #  p = ksp(Qp, Fp*ksp(Ap,b)) for some input b
         # where p represents the approximate solution of S p = b
         return self.Fp
-    
-# ??? Question - Should this linearSmoother imply a Schur complement approach? 
-class NavierStokes3D:
+
+class SchurPrecon:
+    """
+    The base class for Schur complement preconditioners.
+
+    TODO - needs to run for TH, Q1Q1, dim = 2 or 3 etc.
+    """
     def __init__(self,L,prefix=None):
         """
-        L (input) - provides the definition of the problem
+        Initializes the Schur complement preconditioner for use with PETSc.
+
+        This class creates a KSP PETSc solver object and initializes flags the
+        pressure and velocity unknowns for a general saddle point problem.
+
+        Parameters
+        ----------
+        L : provides the definition of the problem.
         """
         self.PCType = 'schur'
         self.L = L
@@ -773,47 +810,101 @@ class NavierStokes3D:
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
-        self.operator_constructor = schurOperatorConstructor(self ,'navier_stokes')
 
     def setUp(self,global_ksp):
         pass
 
-SimpleNavierStokes3D = NavierStokes3D
+class NavierStokesSchur(SchurPrecon):
+    """
+    Schur complement preconditioners for Navier-Stokes problems.
 
-class NavierStokes3D_Qp(NavierStokes3D) :
+    This class is derived from SchurPrecond and serves as the base
+    class for all NavierStokes preconditioners which use the Schur complement
+    method.    
+    """
+    def __init__(self,L,prefix=None):
+        SchurPrecon.__init__(self,L,prefix)
+        self.operator_constructor = schurOperatorConstructor(self ,'navier_stokes')
+    def setUp(self,global_ksp=None):
+        """
+        Set up the NaverStokesSchur preconditioner.  
+
+        Nothing needs to be done here for a generic NSE preconditioner and 
+        specific arguments can be set using PETSc command line arguments.
+        """
+        pass
+        
+SimpleNavierStokes3D = NavierStokesSchur
+NavierStokes3D = NavierStokesSchur
+
+class NavierStokes3D_Qp(NavierStokesSchur) :
+    """ A Navier-Stokes preconditioner which uses the pressure mass matrix. """
     def __init__(self,L,prefix=None):
         """
-        L (input) - provides the definition of the problem
-        """
-        NavierStokes3D.__init__(self,L,prefix)
+        Initializes the pressure mass matrix class.
 
-    def setUp(self,global_ksp):
-        # Step-1: get the pressure mass matrix
+        Parameters
+        ---------
+        L - provides the definition of the problem
+        """
+        NavierStokesSchur.__init__(self,L,prefix)
+
+    def setUp(self,global_ksp,S_hat=False):
+        """
+        Attaches the pressure mass matrix to PETSc KSP preconditioner.
+
+        Parameters
+        ----------
+        global_ksp : PETSc KSP object used to specify solver.
+        S_hat : Boolean flag to indicate whether the Schur operator should
+                be approximated using the PETSc default or the pressure mass
+                matrix. Generally this should be set to False.
+        """
+        # Get the pressure mass matrix.
         self.Qp = self.operator_constructor.getQp()
-        # Step-2: Set up the PETSc operator.
-        self.Qp_shell = p4pyPETSc.Mat().create()
-        self.QpInv_shell = p4pyPETSc.Mat().create()
         L_sizes = self.Qp.size
         L_range = self.Qp.owner_range
-        self.Qp_shell.setSizes(L_sizes)
+
+        self.S_hat = 'selfp'
+        if S_hat == True:
+            # Set up a PETSc shell for the Qp operator.
+            self.S_hat = 'Qp'
+            self.Qp_shell = p4pyPETSc.Mat().create()
+            self.Qp_shell.setSizes(L_sizes)
+            self.Qp_shell.setType('python')
+            self.matcontext = QpShell(self.Qp,self.L.pde.coefficients.nu)
+            self.Qp_shell.setPythonContext(self.matcontext)
+            self.Qp_shell.setUp()
+
+        # Setup a PETSc shell for the inverse Qp operator
+        self.QpInv_shell = p4pyPETSc.Mat().create()
         self.QpInv_shell.setSizes(L_sizes)
-        self.Qp_shell.setType('python')
         self.QpInv_shell.setType('python')
-        self.matcontext = QpShell(self.Qp,self.L.pde.coefficients.nu)
         self.matcontext_inv = QpInvShell(self.Qp,self.L.pde.coefficients.nu)
-        self.Qp_shell.setPythonContext(self.matcontext)
         self.QpInv_shell.setPythonContext(self.matcontext_inv)
-        self.Qp_shell.setUp()
         self.QpInv_shell.setUp()
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+
+        # Set PETSc Schur operator
+        if self.S_hat == 'selfp':
+            import pdb
+            pdb.set_trace()
+            global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+            global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+            global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        elif self.S_hat == 'Qp':
+            raise Exception, 'Currently using Qp as an approximation is not' \
+                'supported.'
 
 
-class NavierStokes3D_PCD(NavierStokes3D) :
+class NavierStokes3D_PCD(NavierStokesSchur) :
     def __init__(self,L,prefix=None):
         """
-        L (input) - provides the definition of the problem
+        Initialize the pressure convection diffusion preconditioning class.
+
+        Parameters
+        ----------
+        L :  provides the definition of the problem
+        prefix : 
         """
         NavierStokes3D.__init__(self,L,prefix)
 
