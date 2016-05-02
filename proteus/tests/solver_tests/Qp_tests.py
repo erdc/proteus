@@ -37,6 +37,33 @@ def test_sparse_2_dense():
     comparison_mat = np.loadtxt('sparse_mat_1.txt')
     assert np.allclose(dense_mat,comparison_mat)
 
+def matrix_shells():
+    ''' This function tests pressure mass matrix shells '''
+    from proteus import LinearAlgebraTools
+    vals = [1.,3.,1.5,-2.1,4.,3.]
+    col_idx = [0, 2, 0, 1, 1, 2]
+    row_idx = [0, 2, 4, 6]
+    size_n = len(row_idx) - 1
+    petsc_mat = p4pyPETSc.Mat().createAIJ(size = (size_n,size_n), \
+                                          csr  = (row_idx, col_idx, vals))
+    Qp_shell = LinearAlgebraTools.MatrixShell(petsc_mat)
+    Qp_inv_shell = LinearAlgebraTools.MatrixInvShell(petsc_mat)
+    x_vec = np.ones(size_n)
+    y_vec = np.zeros(size_n)
+    x_PETSc_vec = p4pyPETSc.Vec().createWithArray(x_vec)
+    y_PETSc_vec = p4pyPETSc.Vec().createWithArray(y_vec)
+    A = None
+    Qp_shell.mult(A, x_PETSc_vec, y_PETSc_vec)
+    comparison_vec = np.array([4., -0.6, 7.])
+    assert np.allclose(y_vec,comparison_vec)
+    x_vec = np.ones(size_n)
+    y_vec = np.zeros(size_n)
+    x_PETSc_vec = p4pyPETSc.Vec().createWithArray(x_vec)
+    y_PETSc_vec = p4pyPETSc.Vec().createWithArray(y_vec)
+    Qp_inv_shell.apply(A, x_PETSc_vec, y_PETSc_vec)
+    comparison_vec = np.array([1.02564103, 0.25641026, -0.00854701])
+    assert np.allclose(y_vec,comparison_vec)
+
 def test_Qp_mat():
     ''' Verify that Qp returns the correct pressure mass matrix  '''
     import stokes_2d_p
@@ -65,3 +92,4 @@ if __name__ == '__main__':
     comm = Comm.init()
     test_sparse_2_dense()
     test_Qp_mat()
+    matrix_shells()
