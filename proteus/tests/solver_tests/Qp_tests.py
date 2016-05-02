@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 
-Test module for 2D Quadrilateral Meshes
+Test module for the pressure mass matrix schur complement
 
 """
 from proteus.iproteus import *
