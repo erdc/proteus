@@ -1,10 +1,7 @@
 from proteus import *
 from proteus.default_p import *
 from proteus import Domain
-import stokes_2d
 from proteus import Context
-Context.setFromModule(stokes_2d)
-ct=Context.get()
 """
 Stokes Poiseuille Equation - this file contains the physics
 corresponding to a Stokes' Poiseuille flow.
@@ -17,8 +14,8 @@ accuracy of various numerical schemes.
 
 # variables set from context
 name = "poiseulleFlow"
-numeric_scheme = "THQuads"
-useWeakBoundaryConditions = False
+numeric_scheme = "TH"
+useWeakBoundaryConditions = True
 
 ######################################################
 
