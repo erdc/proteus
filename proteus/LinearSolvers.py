@@ -1,5 +1,8 @@
 """
 A hierarchy of classes for linear algebraic system solvers.
+
+.. inheritance-diagram:: proteus.LinearSolvers
+   :parts: 1
 """
 from LinearAlgebraTools import *
 import lapackWrappers
