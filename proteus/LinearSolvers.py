@@ -386,8 +386,6 @@ class KSP_petsc4py(LinearSolver):
         connection List : 
         linearSolverLocalBlockSize : int
         """
-        import pdb
-        pdb.set_trace()
         LinearSolver.__init__(self,
                               L,
                               rtol_r=rtol_r,
@@ -552,8 +550,6 @@ class KSP_petsc4py(LinearSolver):
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
             if self.preconditioner:
-                import pdb
-                pdb.set_trace()
                 self.preconditioner.setUp(self.ksp)
         self.ksp.setUp()
         self.ksp.pc.setUp()
@@ -619,8 +615,10 @@ class schurOperatorConstructor:
 
         Parameters
         ----------
-        linear_smoother : class that called the function
-        pde_type :  string currently supports Stokes and navierStokes
+        linear_smoother : class
+                          Provides the data about the problem.
+        pde_type :  str 
+                    Currently supports Stokes and navierStokes
         """
         if linear_smoother.PCType!='schur':
             raise Exception, 'This function only works with the' \
@@ -635,12 +633,13 @@ class schurOperatorConstructor:
 
         Parameters
         ----------
-        output_matrix : boolean for determining whether matrix should be 
-                        exported.
+        output_matrix : bool 
+                        Determines whether matrix should be exported.
 
         Returns
         -------
-        Qp : the pressure mass matrix.
+        Qp : matrix
+             The pressure mass matrix.
         """
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
         self.Qsys_rowptr = rowptr.copy()
@@ -672,6 +671,19 @@ class schurOperatorConstructor:
         #runnig Qpf = full(Mat_...) will get the full matrix
         return self.Qp
     def getAp(self,output_matrix=False):
+        """
+        Return the Laplacian pressure matrix Ap.
+
+        Parameters
+        ----------
+        output_matrix : bool
+                        Determine whether matrix should be exported.
+
+        Returns
+        -------
+        Fp : matrix
+             The Laplacian pressure matrix.
+        """
         #modify the diffusion term in the mass equation so the p-p block is Ap
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
         self.Asys_rowptr = rowptr.copy()
@@ -708,6 +720,19 @@ class schurOperatorConstructor:
         #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
         return self.Ap
     def getFp(self,output_matrix=False):
+        """
+        Return the convection-diffusion pressue matrix Fp.
+
+        Parameters
+        ----------
+        output_matrix : bool
+                        Determine whether matrix should be exported.
+
+        Returns
+        -------
+        Fp : matrix
+             The convection-diffusion pressure matrix.
+        """
         #modify the diffusion term in the mass equation so the p-p block is Ap
         #modify the diffusion term in the mass equation so the p-p block is Fp
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
@@ -829,8 +854,8 @@ class NavierStokesSchur(SchurPrecon):
         """
         Set up the NaverStokesSchur preconditioner.  
 
-        Nothing needs to be done here for a generic NSE preconditioner and 
-        specific arguments can be set using PETSc command line arguments.
+        Nothing needs to be done here for a generic NSE preconditioner. 
+        Preconditioner arguments can be set using PETSc command line arguments.
         """
         pass
         
@@ -845,7 +870,8 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
 
         Parameters
         ---------
-        L - provides the definition of the problem
+        L - petsc4py matrix
+            Defines the problem's operator.
         """
         NavierStokesSchur.__init__(self,L,prefix)
 
@@ -855,13 +881,15 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
 
         Parameters
         ----------
-        global_ksp : PETSc KSP object used to specify solver.
-        S_hat : Boolean flag to indicate whether the Schur operator should
+        global_ksp : PETSc KSP object
+        S_hat : bool
+                Flag to indicate whether the Schur operator should
                 be approximated using the PETSc default or the pressure mass
                 matrix. Generally this should be set to False.
         """
-        # Get the pressure mass matrix.
+        # Create the pressure mass matrix and scale by the viscosity.
         self.Qp = self.operator_constructor.getQp()
+        self.Qp.scale(1./self.L.pde.coefficients.nu)
         L_sizes = self.Qp.size
         L_range = self.Qp.owner_range
 
@@ -872,7 +900,7 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
             self.Qp_shell = p4pyPETSc.Mat().create()
             self.Qp_shell.setSizes(L_sizes)
             self.Qp_shell.setType('python')
-            self.matcontext = QpShell(self.Qp,self.L.pde.coefficients.nu)
+            self.matcontext = MatrixShell(self.Qp)
             self.Qp_shell.setPythonContext(self.matcontext)
             self.Qp_shell.setUp()
 
@@ -880,14 +908,12 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
         self.QpInv_shell = p4pyPETSc.Mat().create()
         self.QpInv_shell.setSizes(L_sizes)
         self.QpInv_shell.setType('python')
-        self.matcontext_inv = QpInvShell(self.Qp,self.L.pde.coefficients.nu)
+        self.matcontext_inv = MatrixInvShell(self.Qp)
         self.QpInv_shell.setPythonContext(self.matcontext_inv)
         self.QpInv_shell.setUp()
 
         # Set PETSc Schur operator
         if self.S_hat == 'selfp':
-            import pdb
-            pdb.set_trace()
             global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
             global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
             global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
@@ -903,8 +929,14 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
 
         Parameters
         ----------
-        L :  provides the definition of the problem
+        L :  
         prefix : 
+
+        Notes
+        -----
+        This method runs but remains a work in progress.  Notably the
+        convection diffusion operator and boundary conditions need to
+        be tested and taylored to problem specific boundary conditions.
         """
         NavierStokes3D.__init__(self,L,prefix)
 
@@ -923,7 +955,6 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         # ***
         self.matcontext_inv = PCDInv_shell(self.Qp,self.Fp,self.Ap,)
         self.PCDInv_shell.setPythonContext(self.matcontext_inv)
-#        self.PCD_shell.setUp()
         self.PCDInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)

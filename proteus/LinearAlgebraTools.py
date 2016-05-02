@@ -297,61 +297,69 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
 
-class QpShell:
-    """ A PETSc shell class for a pressure mass matrix. """
-    def __init__(self,Qp_matrix,nu):
+class MatrixShell:
+    """ A shell class for a matrix. """
+    def __init__(self,A):
         """
-        Specifies parameters for pressure mass matrix shell.
+        Specifies a basic matrix shell.
 
         Parameters
         ----------
-        Qp_matrix : a petsc4py matrix object representing the pressure mass 
-                    matrix.
-        nu :  viscosity (scalar value)
+        A : matrix
+            A petsc4py matrix object
         """
-        self.Qp = Qp_matrix
-        self.viscosity = nu
+        self.A = A
     def create(self,A):
         pass
     def mult(self,A,x,y):
         """
-        Multiply the pressure mass matrix and x.
+        Multiply the matrix and x.
 
         Parameters
         ----------
-        A : dummy place holder for PETSc compatibility
-        x : valid petsc vector
+        A : matrix
+            Dummy place holder for PETSc compatibility
+        x : vector
 
         Returns
         -------
-        y : valid petsc vector - stores results of multiplication.
+        y : vector
         """
-        # TODO - Add some asserts
-        self.Qp.mult(x,y)
-        y.scale(1./self.viscosity)
+        self.A.mult(x,y)
 
-class QpInvShell:
-    """ A PETSc shell class for a pressure mass matrix. """
-    def __init__(self,Qp_matrix,nu):
+class MatrixInvShell:
+    """ A PETSc shell class for a inverse operator. """
+    def __init__(self, A):
         """
         Initializes operators and solvers for inverse operator.
 
         Parameters
         ----------
-        Qp_matrix : a petsc4py matrix object representing the pressure mass 
-                    matrix.
-        nu :  viscosity (scalar value)
+        A : PETSc matrix
+            This is the matrix object used to construct the inverse.
         """
-        self.Qp = Qp_matrix.scale(1./nu)
-        self.Qp = Qp_matrix
+        self.A = A
         self.ksp = p4pyPETSc.KSP().create()
-        self.ksp.setOperators(self.Qp,self.Qp)
+        self.ksp.setOperators(self.A,self.A)
         self.ksp.setType('preonly')
         self.ksp.pc.setType('lu')
         self.ksp.setUp()
     def create(self,A):
         pass
     def apply(self,A,x,y):
+        """
+        Apply the inverse pressure mass matrix.
+
+        Parameters
+        ----------
+        A : matrix
+            Dummy place holder for PETSc compatibility
+        x : vector
+
+        Returns
+        -------
+        y : vector
+        """
         self.ksp.solve(x,y)
 
 class PCDInv_shell:
