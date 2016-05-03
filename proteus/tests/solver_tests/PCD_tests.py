@@ -51,6 +51,11 @@ def test_pcd_shell():
     true_vec = np.mat('[0.52511998  -0.13008364  -0.03200969]')
     assert np.allclose(y_vec,true_vec)
 
+def test_pcd_matrix():
+    '''
+    Test construction of the PCD operators.
+    '''
+
 if __name__ == '__main__':
     from proteus import Comm
     comm = Comm.init()
