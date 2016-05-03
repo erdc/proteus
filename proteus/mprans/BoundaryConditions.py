@@ -98,6 +98,17 @@ class BC_RANS(BC_Base):
             self.hz_dirichlet = constantBC(0.)
             self.w_stress = None
 
+    def setFixedNodes(self):
+        """
+        For moving domains: fixes nodes/boundary
+        """
+        self.hx_dirichlet = constantBC(0.)
+        self.hy_dirichlet = constantBC(0.)
+        self.hz_dirichlet = constantBC(0.)
+        self.u_stress = None
+        self.v_stress = None
+        self.w_stress = None
+
     def setNoSlip(self):
         """
         sets no slip conditions at the boundary
@@ -475,15 +486,6 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
                         coeff.q_velocity_solid[eN, k, 1] = zone.v(x, t)
                         if self.nd > 2:
                             coeff.q_velocity_solid[eN, k, 2] = zone.w(x, t)
-                        # if zone.zone_type == 'generation' and x[0] < 0.2:
-                        #     print '$$$$$$$$$$'
-                        #     print 'x: ' + str(x)
-                        #     phi = zone.center[0]-x[0]
-                        #     print 'phi: ' + str(phi)
-                        #     new_x = max(0., min(1., 0.5+phi/(2*zone.epsFact_solid)))
-                        #     print 'new_x: ' + str(new_x)
-                        #     H_s = (np.exp(new_x**3.5)-1)/(np.exp(1)-1)
-                        #     print 'H_s: ' + str(H_s)
             m.q['phi_solid'] = m.coefficients.q_phi_solid
             m.q['velocity_solid'] = m.coefficients.q_velocity_solid
 
