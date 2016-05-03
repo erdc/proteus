@@ -608,10 +608,10 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.view()
 
 class schurOperatorConstructor:
-    """ Compute matrices for use in preconditioner operators. """
+    """ Generate matrices for use in Schur complement preconditioner operators. """
     def __init__(self, linear_smoother, pde_type):
         """
-        Initialize a Schur Operator.
+        Initialize a Schur Operator constructor.
 
         Parameters
         ----------
@@ -641,35 +641,12 @@ class schurOperatorConstructor:
         Qp : matrix
              The pressure mass matrix.
         """
-        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-        self.Qsys_rowptr = rowptr.copy()
-        self.Qsys_colind = colind.copy()
-        self.Qsys_nzval = nzval.copy()
-        nr = rowptr.shape[0] - 1
-        nc = nr
-        self.Qsys =SparseMat(nr,nc,
-                             self.Qsys_nzval.shape[0],
-                             self.Qsys_nzval,
-                             self.Qsys_colind,
-                             self.Qsys_rowptr)
-        self.L.pde.q[('dm',0,0)][:] = 1.0
-        self.L.pde.getMassJacobian(self.Qsys)
-        self.Qsys_petsc4py = self.L.duplicate()
-        L_sizes = self.L.getSizes()
-        Q_csr_rep_local = self.Qsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
-        self.Qsys_petsc4py.setValuesLocalCSR(Q_csr_rep_local[0],
-                                             Q_csr_rep_local[1],
-                                             Q_csr_rep_local[2],
-                                             p4pyPETSc.InsertMode.INSERT_VALUES)
-        self.Qsys_petsc4py.assemblyBegin()
-        self.Qsys_petsc4py.assemblyEnd()
+        self.Qsys_petsc4py = self._massMatrix()
         self.Qp = self.Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isp)
         if output_matrix==True:
-            from LinearAlgebraTools import _petsc_view
-            _petsc_view(self.Qp, "Qp")#write to Qp.m
-        #running Qp.m will load into matlab  sparse matrix
-        #runnig Qpf = full(Mat_...) will get the full matrix
+            _exportMatrix(self.Qp,"Qp")
         return self.Qp
+
     def getAp(self,output_matrix=False):
         """
         Return the Laplacian pressure matrix Ap.
@@ -713,12 +690,10 @@ class schurOperatorConstructor:
         self.Asys_petsc4py.assemblyEnd()
         self.Ap = self.Asys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isp)
         if output_matrix==True:
-            from LinearAlgebraTools import _petsc_view
-            _petsc_view(self.Ap,"Ap")#write to A.m
-        #running A.m will load into matlab  sparse matrix
-        #runnig Af = full(Mat_...) will get the full matrix
+            _exportMatrix(self.Ap,'Ap')
         #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
         return self.Ap
+
     def getFp(self,output_matrix=False):
         """
         Return the convection-diffusion pressue matrix Fp.
@@ -762,10 +737,7 @@ class schurOperatorConstructor:
         self.Fsys_petsc4py.assemblyEnd()
         self.Fp = self.Fsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isp)
         if output_matrix==True:
-            from LinearAlgebraTools import __petsc_view
-            _petsc_view(self.Fp, "Fp")#write to F.m
-        #running F.m will load into matlab  sparse matrix
-        #runnig Ff = full(Mat_...) will get the full matrix
+            _exportMatrix(self.Ap,'Ap')
         #Ff(1:np,1:np) whould be Fp, the pressure convection-diffusion matrix
         #
         #now zero all the dummy coefficents
@@ -773,11 +745,86 @@ class schurOperatorConstructor:
         self.L.pde.q[('dm',0,0)][:] = 0.0
         self.L.pde.q[('df',0,0)][:] = 0.0
         self.L.pde.q[('a',0,0)][:] = 0.0
-        #
-        # I think the next step is to setup something that does
-        #  p = ksp(Qp, Fp*ksp(Ap,b)) for some input b
-        # where p represents the approximate solution of S p = b
         return self.Fp
+
+    def getQv(self,output_matrix=False):
+        """
+        Return the velocity mass matrix Qv.
+
+        Parameters
+        ----------
+        output_matrix : bool
+                        Determine whether the matrix should be exported.
+        
+        Returns
+        -------
+        Qv : matrix
+             The velocity mass matrix.
+        """
+        Qsys_petsc4py = self._massMatrix()
+        import pdb
+        pdb.set_trace()
+        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,self.linear_smoother.isv)
+        if output_matrix==True:
+            _exportmatrix(self.Qv,'Qv')
+        return self.Qv
+
+    def _massMatrix(self):
+        """
+        Generates and returns the mass matrix.
+
+        This function generates and returns the mass matrix for the system. This
+        function is internal to the class and called by public functions which 
+        take and return the relevant components (eg. the pressure or velcoity).
+
+        Returns
+        -------
+        Qsys : matrix
+               The system's mass matrix.
+        """
+        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+        Qsys_rowptr = rowptr.copy()
+        Qsys_colind = colind.copy()
+        Qsys_nzval = nzval.copy()
+        nr = rowptr.shape[0] - 1
+        nc = nr
+        Qsys =SparseMat(nr,nc,
+                        Qsys_nzval.shape[0],
+                        Qsys_nzval,
+                        Qsys_colind,
+                        Qsys_rowptr)
+        self.L.pde.q[('dm',0,0)][:] = 1.0
+        self.L.pde.q[('dm',1,1)][:] = 1.0
+        self.L.pde.q[('dm',2,2)][:] = 1.0
+        self.L.pde.getMassJacobian(Qsys)
+        Qsys_petsc4py = self.L.duplicate()
+        L_sizes = self.L.getSizes()
+        Q_csr_rep_local = Qsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
+        Qsys_petsc4py.setValuesLocalCSR(Q_csr_rep_local[0],
+                                             Q_csr_rep_local[1],
+                                             Q_csr_rep_local[2],
+                                             p4pyPETSc.InsertMode.INSERT_VALUES)
+        Qsys_petsc4py.assemblyBegin()
+        Qsys_petsc4py.assemblyEnd()
+        return Qsys_petsc4py
+
+    def _exportMatrix(self,operator,export_name):
+        """
+        Export the matrix operator.
+
+        Parameters
+        ----------
+        operator : matrix
+                   Operator to be exported.
+        export_name : str
+                    Export file name.
+        """
+        from LinearAlgebraTools import __petsc_view
+        _petsc_view(operator, export_name) #write to export_name.m
+        #running export_name.m will load into matlab  sparse matrix
+        #runnig operatorf = full(Mat_...) will get the full matrix
+
+
 
 class SchurPrecon:
     """
@@ -960,7 +1007,43 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
 
+class NavierStokes3D_LSC(NavierStokesSchur) :
+    def __init__(self,L,prefix=None):
+        """
+        Initialize the least squares commutator preconditioning class.
 
+        Parameters
+        ----------
+        L :  
+        prefix : 
+
+        Notes
+        -----
+        This method runs but remains a work in progress.  Notably the
+        convection diffusion operator and boundary conditions need to
+        be tested and taylored to problem specific boundary conditions.
+        """
+        NavierStokes3D.__init__(self,L,prefix)
+
+    def setUp(self,global_ksp):
+        # Step-1: get the pressure mass matrix
+        self.Qp = self.operator_constructor.getQp()
+        self.Fp = self.operator_constructor.getFp()
+        self.Ap = self.operator_constructor.getAp()
+        # Step-2: Set up the Shell for the  PETSc operator
+        # Qp
+        L_sizes = self.Qp.size
+        L_range = self.Qp.owner_range
+        self.PCDInv_shell = p4pyPETSc.Mat().create()
+        self.PCDInv_shell.setSizes(L_sizes)
+        self.PCDInv_shell.setType('python')
+        # ***
+        self.matcontext_inv = PCDInv_shell(self.Qp,self.Fp,self.Ap,)
+        self.PCDInv_shell.setPythonContext(self.matcontext_inv)
+        self.PCDInv_shell.setUp()
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
 
 class SimpleDarcyFC:
     def __init__(self,L):

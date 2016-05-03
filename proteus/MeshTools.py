@@ -2111,6 +2111,17 @@ class TetrahedralMesh(Mesh):
 
     The mesh can be generated from a rectangular grid and refined using either
     4T or Freudenthal-Bey global refinement.
+
+    Attributes
+    ----------
+    elementNodesArray : array_like
+        A list of lists storing the node values associated with each element 
+        in the triangulation.  The first index refers to the element number,
+        while the second index refers to the global node value.
+    nodeArray : array_like
+        A list of lists storing node coordinates.  The first index referes
+        to the global node number, while the second index refers to the x, y
+        and z coordinates of the node respectively.
     """
 
     def __init__(self):

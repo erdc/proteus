@@ -64,8 +64,8 @@ def matrix_shells():
     comparison_vec = np.array([1.02564103, 0.25641026, -0.00854701])
     assert np.allclose(y_vec,comparison_vec)
 
-def test_Qp_mat():
-    ''' Verify that Qp returns the correct pressure mass matrix  '''
+def test_Q_mat():
+    ''' Verify that Q returns the correct pressure and velocity mass matrix  '''
     import stokes_2d_p
     import stokes_2d_n
     pList = [stokes_2d_p]
@@ -82,8 +82,12 @@ def test_Qp_mat():
     operator_constructor = LinearSolvers.schurOperatorConstructor(smoother, 'stokes')
     Qp_raw = operator_constructor.getQp()
     Qp_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qp_raw.getValuesCSR())
+    Qv_raw = operator_constructor.getQv()
+    Qv_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qv_raw.getValuesCSR())
     pressure_mass_matrix = np.loadtxt('pressure_mass_matrix.txt')
+    velocity_mass_matrix = np.loadtxt('velocity_mass_matrix.txt')
     assert np.allclose(pressure_mass_matrix,Qp_dense)
+    assert np.allclose(velocity_mass_matrix,Qv_dense)
     # *** 2 *** : test solver does not generate an error
     ns.calculateSolution('test_Qp_mat')
 
@@ -91,5 +95,5 @@ if __name__ == '__main__':
     from proteus import Comm
     comm = Comm.init()
     test_sparse_2_dense()
-    test_Qp_mat()
+    test_Q_mat()
     matrix_shells()
