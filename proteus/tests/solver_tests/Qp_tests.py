@@ -78,12 +78,20 @@ def test_Q_mat():
     opts.profile=True
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     # *** 1 *** : test the pressure mass matrix is being created properly.
+    import pdb
+    pdb.set_trace()
     smoother = LinearSolvers.NavierStokes3D_Qp(L=ns.modelList[0].par_jacobianList[1])
     operator_constructor = LinearSolvers.schurOperatorConstructor(smoother, 'stokes')
     Qp_raw = operator_constructor.getQp()
     Qp_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qp_raw.getValuesCSR())
     Qv_raw = operator_constructor.getQv()
     Qv_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qv_raw.getValuesCSR())
+    # Q 4 CK - is this the best way to handle this?
+    ns.modelList[0].par_jacobianList[1].pde.scale_dt = False
+    B_raw = operator_constructor.getB()
+    import pdb
+    pdb.set_trace()
+#    B_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(B_raw.getValuesCSR())
     pressure_mass_matrix = np.loadtxt('pressure_mass_matrix.txt')
     velocity_mass_matrix = np.loadtxt('velocity_mass_matrix.txt')
     assert np.allclose(pressure_mass_matrix,Qp_dense)
