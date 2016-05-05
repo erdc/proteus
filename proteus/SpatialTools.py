@@ -23,6 +23,9 @@ shape2.rotate(np.pi/3.)
 shape2.BC.newBC
 
 st.assembleDomain(domain)
+
+.. inheritance-diagram:: proteus.SpatialTools
+   :parts: 1
 """
 
 from math import cos, sin, sqrt
@@ -313,7 +316,7 @@ class Cuboid(Shape):
                         self.BC_dict['left'],
                         self.BC_dict['top']]
         self.BC = BCContainer(self.BC_dict)
-        self.barycenter = np.array(barycenter) or self.coords
+        self.barycenter = np.array(barycenter) or np.array(coords)
         self.It = np.array([[(W**2.+H**2.)/12., 0, 0],
                             [0, (L**2.+H**2.)/12., 0],
                             [0, 0, (W**2.+L**2.)/12.]])
@@ -373,8 +376,8 @@ class Rectangle(Shape):
                                   'right': 2,
                                   'top': 3,
                                   'left': 4}
-        self.segmentFlags = np.array([bt['bottom'], bt['right'], bt['left'],
-                                      bt['top']])  # bottom, right, top, left
+        self.segmentFlags = np.array([bt['bottom'], bt['right'], bt['top'],
+                                      bt['left']])  # bottom, right, top, left
         self.vertexFlags = np.array([bt['bottom'], bt['bottom'], bt['top'],
                                      bt['top']])  # bottom, bottom, top, top
         self.regionFlags = np.array([1])
@@ -437,6 +440,7 @@ class CustomShape(Shape):
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
         self._checkFlags(boundaryTags.values())
+        self.boundaryTgs = boundaryTags
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)
         if segments:
@@ -465,7 +469,7 @@ class CustomShape(Shape):
         if barycenter is not None:
             self.barycenter = np.array(barycenter)
 
-        
+
 class ShapeSTL(Shape):
     def __init__(self, domain, filename):
         super(ShapeSTL, self).__init__(domain, nd=3)
@@ -473,6 +477,7 @@ class ShapeSTL(Shape):
         self.vertices, self.facets, self.facetnormals = getInfoFromSTL(self.filename)
         self.facetFlags = np.ones(len(self.facets))
         self.vertexFlags = np.ones(len(self.vertices))
+        self.boundaryTags = {'stl': 1}
         self.BC_dict = {'stl': self.BC_class(shape=self, name='stl')}
         self.BC_list = [self.BC_dict['stl']]
         self.BC = BCContainer(self.BC_dict)
@@ -497,6 +502,8 @@ def getInfoFromSTL(filename):
         elif "endfacet" in line:
             facets += [[facet]]
             facet = []
+        elif "endsolid" in line:
+            pass
         elif "solid" in line:
             word_list = line.split()
             name = word_list[1]
