@@ -4587,6 +4587,7 @@ void calculateConservationJacobianPWL(int nDOF_global,
 	    starJacobian[nN][ii + jj*subdomain_dim[nN]] = 0.0;
 	}
     }
+  //  printf("break1\n");
   /*Load Jacobian entries arising from iterior element boundaries*/
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
     {
@@ -4631,6 +4632,7 @@ void calculateConservationJacobianPWL(int nDOF_global,
 	    }
 	}
     }  
+  //  printf("break2\n");
   /*Load Jacobian entries arising from exterior element boundaries*/
   for (ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
     {
@@ -4641,7 +4643,7 @@ void calculateConservationJacobianPWL(int nDOF_global,
 	{
 	  for (nN=0;nN<nNodes_element;nN++)
 	    {
-	      nN_global = elementNodes[eN*nNodes_element+
+	      nN_global =  dofMapl2g[eN*nNodes_element+
 				       nN];
 	      eN_star = dofStarElements[eN*nNodes_element+
 					 nN];
@@ -4654,7 +4656,7 @@ void calculateConservationJacobianPWL(int nDOF_global,
 		 if (nN != ebN_element && !(fluxElementBoundaries[ebNE] && fluxBoundaryNodes[nN_global]) )*/
 	      if (nN != ebN_element && !fluxElementBoundaries[ebNE])
 		{
-		  starJacobian[nN_global][eN_star+
+	          starJacobian[nN_global][eN_star+
 					  eN_star*nElements_node[nN_global]]
 		    += 
                     w[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nNodes_element+
@@ -4725,6 +4727,7 @@ void calculateConservationJacobianPWL(int nDOF_global,
         /*   } */
 	/*assert(INFO == 0);*//*need to turn off if use dgetc2*/
     }
+    printf("break6\n");
 }
 void calculateConservationFluxPWL(int nNodes_global,
 				  int nNodes_internal,

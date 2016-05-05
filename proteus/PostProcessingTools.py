@@ -721,8 +721,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         if correctFlux == True:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
 
-        import pdb
-        pdb.set_trace()
         cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
                                                          self.vt.mesh.exteriorElementBoundariesArray,
                                                          self.vt.mesh.elementBoundaryElementsArray,
@@ -780,6 +778,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                          self.vt.mesh.elementBoundaryElementsArray,
                                                          self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
                                                          self.vt.mesh.elementNodesArray,
+                                                         self.vt.u[0].femSpace.dofMap.l2g,
                                                          self.nodeStarElementsArray,
                                                          self.nodeStarElementNeighborsArray,
                                                          self.nElements_node,
@@ -1084,7 +1083,7 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
 
         if verbose > 0:
             logEvent("Max local conservation (dgp1 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.nElements_owned])))
-
+        
     def getConservationResidualPWL(self,ci,correctFlux=False):
         """
         compute conservation resiudal using current guess for element boundary flux
@@ -1341,6 +1340,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                                                            self.nDOFs_element[self.BDMcomponent]),
                                                           'i')
 
+
         self.interiorTestSpace = None
         self.setInteriorTestSpace(self.degree)        
 
@@ -1348,6 +1348,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
         self.getInteriorDivFreeElement()
 
         self.computeBDM2projectionMatrices()
+        
 
     def set_BDM_dimensions(self,degree):
         ''' Calculate and set the BDM polynomial dimension
