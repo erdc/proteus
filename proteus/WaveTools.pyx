@@ -354,7 +354,7 @@ class MonochromaticWaves:
         self.omega = 2.0*pi/period
 
 #Calculating / checking wavelength data
-        if  self.waveType is "Linear":
+        if  self.waveType== "Linear":
             self.k = dispersion(w=self.omega,d=self.depth,g=self.gAbs)
             self.wavelength = 2.0*pi/self.k
         else:
@@ -377,14 +377,14 @@ class MonochromaticWaves:
         self.Bcoeff = Bcoeff
 
 # Checking for
-        if (Ycoeff is None) or (Bcoeff is None):
-            if self.waveType is not "Linear":
-                logEvent("WaveTools.py: Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
+        if (Ycoeff==None) or (Bcoeff==None):
+            if self.waveType!= "Linear":
+                logEvent("WaveTools.py: Need to define Fenton Fourier coefficients Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
                 sys.exit(1)
     def eta(self, x, t):
-        if self.waveType is "Linear":
+        if self.waveType == "Linear":
             return eta_mode(x,t,self.kDir,self.omega,self.phi0,self.amplitude)
-        elif self.waveType is "Fenton":
+        elif self.waveType == "Fenton":
             HH = 0.
             ii =0.
             for Y in self.Ycoeff:
@@ -393,9 +393,9 @@ class MonochromaticWaves:
             return HH/self.k
 
     def u(self, x, t):
-        if self.waveType is "Linear":
+        if self.waveType == "Linear":
             return vel_mode(x, t, self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,self.vDir)
-        elif self.waveType is "Fenton":
+        elif self.waveType == "Fenton":
             Ufenton = self.meanVelocity.copy()
             ii = 0
             for B in self.Bcoeff:
@@ -1081,7 +1081,7 @@ class TimeSeries:
         t0 = self.windows_rec[Nw][0,0]
         U=0.
         for ii in range(0,self.Nf):
-            x1 = x-[self.x0, self.y0, self.z0]
+            x1 =  np.array(x)-[self.x0, self.y0, self.z0]
             U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
 
