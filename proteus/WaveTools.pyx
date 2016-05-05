@@ -19,8 +19,8 @@ import sys as sys
 
 
 def loadExistingFunction(funcName, validFunctions):
-    """ Checks if a function name  is present in a list of known functions, returns system exit if not present
-    param: funcName : function name in form of string under consideration
+    """ Checks if a function name  is present in a list of known functions, returns system exit if not present 
+   param: funcName : function name in form of string under consideration
     param: validFunctions: list of valid functions objects (not names in strings)
 
     """
@@ -301,7 +301,7 @@ def decompose_tseries(time,eta,dt):
     results.append(setup)
     return results
 
-
+    
 
 
 
@@ -508,6 +508,31 @@ class RandomWaves:
         for ii in range(self.N):
             U+= vel_mode(x, t, self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
+    def writeEtaSeries(self,Tstart,Tend,x0,Vgen,fname):
+        """Write a timeseries for the free-surface elevation
+        :param Tstart: start time of timeseries
+        :param Tend: end time of timeseries
+        :param x0: Location vector of timeseries
+        :param Vgen: Length vector of relaxation zone 
+        :param fname: filename for timeseries
+        """
+
+        Nper = self.period/50.
+        Tlag = np.zeros(len(self.omega),)
+        for j in range(len(self.omega)):
+            Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
+        Tlag = max(Tlag)
+        Tstart = Tstart - Tlag
+        Np = int(Nper*(Tend - Tstart)/self.period)
+        time = np.linspace(Tstart,Tend,Np )
+        etaR  = np.zeros(len(time), )
+        for jj in len(time):
+            etaR[jj] = self.eta(x0,time[jj])
+        np.savetxt(fname,zip(time,etaR))
+        
+    
+
+
 
 class MultiSpectraRandomWaves(RandomWaves):
     """Generate a random wave timeseries from multiple spectra. 
