@@ -517,19 +517,27 @@ class VerifyRandomWaves(unittest.TestCase):
         self.assertTrue(round(uy,8) == round(uyRef,8))
         self.assertTrue(round(uz,8) == round(uzRef,8))
 
-
-
-
-        aa= RandomWaves(2,
-                     0.1,
-                     0.,#m significant wave height
-                     1. ,           #m depth
-                     np.array([0.,1,0]),
-                     g,      #peak  frequency
-                     N,
-                     bandFactor,         #accelerationof gravity
-                     spectName# random words will result in error and return the available spectra 
-                   )
+        # Asserting write function from Random waves
+        x0 = np.array([0,0,0])
+        Lgen = np.array([5,0,0])
+        Tstart = 0
+        Tend = 50.
+        Tlag = sum(Lgen[:]*normDir[:])/max(ki[:]/omega[:])
+        Tstart -= Tlag
+        Np = Tp/ 50.
+        Nf = int(Np*(Tend-Tstart)/Tp)
+        tlist = np.array(Tstart,Tend,Nf)
+        etaWrite = zeros(len(tlist),)
+        for ii in range(len(tlist)):
+            etaWrite = a.eta(x0,tlist[ii])
+        fname = "randomSeries.txt"
+        a.writeEtaSeries(Tstart,Tend,x0,Lgen,fname)
+        series = np.loadtxt(open(fname,"r"))
+        self.assertTrue((series[:,0]- time == 0).all())
+        self.assertTrue((series[:,1]- etaWrite == 0).all())
+                             
+                         
+                   
 
 # Test contours
 """
