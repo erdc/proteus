@@ -10,6 +10,7 @@ cdef extern from "BEAMS.h" namespace "proteus":
 				   double rho_0,
 				   double rho_1,
 				   double* phi,
+				   double* vf,
 				   double* q_x,
 				   double* q_velocity,
 				   double* q_dV,
@@ -31,7 +32,9 @@ cdef extern from "BEAMS.h" namespace "proteus":
 				double* q3,
 				double* vel_avg,
 				double* netBeamDrag,
-				int* beamIsLocal)       
+				int* beamIsLocal,
+				double useVF,
+				double* avgBox)       
      
     BEAMS_base* newBEAMS(int nSpaceIn,
                            int nQuadraturePoints_elementIn,
@@ -68,6 +71,7 @@ cdef class cBEAMS_base:
                          double rho_0,
                          double rho_1,
                          numpy.ndarray phi,
+			 numpy.ndarray vf,
                          numpy.ndarray q_x,
                          numpy.ndarray q_velocity,
 			 numpy.ndarray q_dV,
@@ -89,11 +93,14 @@ cdef class cBEAMS_base:
 			 numpy.ndarray q3,
 			 numpy.ndarray vel_avg,
 			 numpy.ndarray netBeamDrag,
-			 numpy.ndarray beamIsLocal):			 
+			 numpy.ndarray beamIsLocal,
+			 double useVF,
+			 numpy.ndarray avgBox):			 
        self.thisptr.calculateBeams(nElements_global,
                                        rho_0,
                                        rho_1,
                                        <double*> phi.data,
+				       <double*> vf.data,
                                        <double*> q_x.data,
                                        <double*> q_velocity.data,
 				       <double*> q_dV.data,
@@ -115,6 +122,8 @@ cdef class cBEAMS_base:
 				       <double*> q3.data,
 				       <double*> vel_avg.data,
 				       <double*> netBeamDrag.data,
-				       <int*> beamIsLocal.data)
+				       <int*> beamIsLocal.data,
+				       useVF,
+				       <double*> avgBox.data)
 			       
    

@@ -86,6 +86,7 @@ namespace proteus
 				/* const double useVF, */
 				/* double* vf, */
 				double* phi,
+				double* vf,
 				/* double* normal_phi, */
 				/* double* kappa_phi, */
 				/* double* q_mom_u_acc, */
@@ -180,7 +181,9 @@ namespace proteus
 				double* q3,
 				double* vel_avg,
 				double* netBeamDrag,
-				int* beamIsLocal)=0;
+				int* beamIsLocal,
+				double useVF,
+				double* avgBox)=0;
      
   };
   
@@ -297,6 +300,7 @@ namespace proteus
 			      const double w,
 			      const double eps_rho,
 			      const double& phi,
+			      const double& vf,
 			      const double rho_0,
 			      const double rho_1,
 			      double& mom_u_source,
@@ -304,10 +308,12 @@ namespace proteus
 			      double& mom_w_source,
 			      const double dV,
 			      double* netBeamDrag,
-			      int* beamIsLocal)
+			      int* beamIsLocal,
+			      const double useVF,
+			      double* avgBox)
     {
       double rho, H_rho, delt, vel;
-      H_rho = smoothedHeaviside(eps_rho,phi);
+      H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf)); //H_rho = smoothedHeaviside(eps_rho,phi);
       rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
       vel = sqrt(u*u+v*v+w*w);
       mom_u_source = 0.0;
@@ -346,7 +352,7 @@ namespace proteus
 	    }
 	    }
 	}
-      if ((y>.1) && ( y< 0.4) && (x >= 1.2) && (x <= 11.0))
+      if ((x>avgBox[0]) && (x<avgBox[1]) && (y>avgBox[2]) && (y<avgBox[3]) && (z>avgBox[4]) && (z<avgBox[5])) //((y>.1) && ( y< 0.4) && (x >= 1.2) && (x <= 11.0))
 	{
 	  netBeamDrag[0]+= dV*sqrt(mom_u_source*mom_u_source+mom_v_source*mom_v_source+mom_w_source*mom_w_source);
 	}
@@ -369,6 +375,7 @@ inline
 			  const double w,
 			  const double eps_rho,
 			  const double& phi,
+			  const double& vf,
 			  const double rho_0,
 			  const double rho_1,
 			  double *q1,
@@ -376,13 +383,15 @@ inline
 			  double *q3,
 			  const double dV,
 			  double *vel_avg,
-			  int *beamIsLocal)
+			  int *beamIsLocal,
+			  const double useVF,
+			  double *avgBox)
     {
       double rho, H_rho, delt, vel,h_save, buoy;
-      H_rho = smoothedHeaviside(eps_rho,phi);
+      H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf)); //H_rho = smoothedHeaviside(eps_rho,phi);
       rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
       vel = sqrt(u*u+v*v+w*w);
-      if ((x >= 1.2) && (x <= 11.0) && (y >= 0.1) && (y<= 0.4))
+      if ((x>avgBox[0]) && (x<avgBox[1]) && (y>avgBox[2]) && (y<avgBox[3]) && (z>avgBox[4]) && (z<avgBox[5]))//if ((x >= 1.2) && (x <= 11.0) && (y >= 0.1) && (y<= 0.4))
 	{
 	  vel_avg[0] += rho*u*dV;
 	  vel_avg[1] += rho*v*dV;
@@ -496,6 +505,7 @@ inline
 		       /* const double useVF, */
 		       /* double* vf, */
 		       double* phi,
+		       double* vf,
 		       /* double* normal_phi, */
 		       /* double* kappa_phi, */
 		       /* double* q_mom_u_acc, */
@@ -590,7 +600,9 @@ inline
 		       double* q3,
 		       double* vel_avg,
 		       double* netBeamDrag,
-		       int* beamIsLocal)
+		       int* beamIsLocal,
+		       double useVF,
+			double* avgBox)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -795,6 +807,7 @@ inline
 				 q_velocity[eN_k*3+2],
 				 eps_rho,
 				 phi[eN_k],
+				 vf[eN_k],
 				 rho_0,
 				 rho_1,
 				 q_dragBeam1[eN_k],
@@ -802,7 +815,9 @@ inline
 				 q_dragBeam3[eN_k],
 				 q_dV[eN_k],
 				 netBeamDrag,
-				 beamIsLocal);
+				 beamIsLocal,
+				 useVF,
+				 avgBox);
 	      calculateBeamLoads(nBeams,
 				 nBeamElements,
 				 beam_quadOrder,
@@ -820,6 +835,7 @@ inline
 				 q_velocity[eN_k*3+2],
 				 eps_rho,
 				 phi[eN_k],
+				 vf[eN_k],
 				 rho_0,
 				 rho_1,
 				 q1,
@@ -827,7 +843,9 @@ inline
 				 q3,
 				 q_dV[eN_k],
 				 vel_avg,
-				 beamIsLocal);
+				 beamIsLocal,
+				 useVF,
+				 avgBox);
 	      
 	      // 
 	      

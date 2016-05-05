@@ -62,7 +62,8 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
                  beam_Cd = 1.2,
                  beam_nlTol= 1.0e-5,
                  beamRigid = True,
-                 yVertical = False):
+                 yVertical = False,
+                 avgBox = [[0.0,1.0], [0.0, 1.0], [0.0,1.0]]):
 
         RANS2P.Coefficients.__init__(self,
                  epsFact,
@@ -123,6 +124,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         self.beamRigid= beamRigid
         self.beamIsLocal = np.zeros((len(self.beamLocation),1), dtype=np.bool)
         self.yVertical = yVertical
+        self.avgBox = avgBox
 
     def attachModels(self,modelList):
         RANS2P.Coefficients.attachModels(self,modelList)
@@ -516,6 +518,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
                 self.coefficients.rho_0,
                 self.coefficients.rho_1,
                 self.coefficients.q_phi,
+                self.coefficients.q_vf,
                 self.q['x'],
                 self.q[('velocity',0)],
                 self.q['dV'],
@@ -537,13 +540,16 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
                 self.q2,
                 self.coefficients.vel_avg,
                 self.coefficients.netBeamDrag,
-                self.coefficients.beamIsLocal)
+                self.coefficients.beamIsLocal,
+                self.coefficients.useVF,
+                self.coefficients.avgBox)
         else:
             self.beams.calculateBeams(
                 self.mesh.nElements_global,
                 self.coefficients.rho_0,
                 self.coefficients.rho_1,
                 self.coefficients.q_phi,
+                self.coefficients.q_vf,
                 self.q['x'],
                 self.q[('velocity',0)],
                 self.q['dV'],
@@ -565,17 +571,29 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
                 self.q3,
                 self.coefficients.vel_avg,
                 self.coefficients.netBeamDrag,
-                self.coefficients.beamIsLocal)
+                self.coefficients.beamIsLocal,
+                self.coefficients.useVF,
+                self.coefficients.avgBox)
         #import pdb
         #pdb.set_trace()
  
         from proteus.flcbdfWrappers import globalSum
-        for i in range(self.coefficients.nBeams):
-            for j in range(self.coefficients.nBeamElements):
-                for k in range(self.coefficients.beam_quadOrder):
-                    self.coefficients.q1[i,j,k] = globalSum(self.q1[i,j,k])#globalSum(self.q1[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
-                    self.coefficients.q2[i,j,k] = globalSum(self.q2[i,j,k])#globalSum(self.q2[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
-                    self.coefficients.q3[i,j,k] = globalSum(self.q3[i,j,k])#globalSum(self.q3[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
+        # for i in range(self.coefficients.nBeams):
+        #     for j in range(self.coefficients.nBeamElements):
+        #         for k in range(self.coefficients.beam_quadOrder):
+        #             self.coefficients.q1[i,j,k] = globalSum(self.q1[i,j,k])#globalSum(self.q1[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
+        #             self.coefficients.q2[i,j,k] = globalSum(self.q2[i,j,k])#globalSum(self.q2[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
+        #             self.coefficients.q3[i,j,k] = globalSum(self.q3[i,j,k])#globalSum(self.q3[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
+        cq1 = np.copy(self.coefficients.q1)
+        cq2 = np.copy(self.coefficients.q2)
+        cq3 = np.copy(self.coefficients.q3)
+        self.comm2.Allreduce(self.coefficients.q1, cq1)
+        self.comm2.Allreduce(self.coefficients.q2, cq2)
+        self.comm2.Allreduce(self.coefficients.q3, cq3)
+        self.coefficients.q1=cq1
+        self.coefficients.q2=cq2
+        self.coefficients.q3=cq3
+
         for i in range(3):
             self.coefficients.vel_avg[i]=globalSum(self.coefficients.vel_avg[i])
 
