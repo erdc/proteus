@@ -536,13 +536,12 @@ class NS_base:  # (HasTraits):
 
     ## compute the solution
     def calculateSolution(self,runName):
-        """
-        Cacluate the PDEs numerical solution.
+        """ Cacluate the PDEs numerical solution.
         
         Parameters
         ----------
         runName : str
-                  A name for the calculated solution.
+            A name for the calculated solution.
         """
         log("Setting initial conditions",level=0)
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
