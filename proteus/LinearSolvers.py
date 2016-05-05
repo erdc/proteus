@@ -461,6 +461,9 @@ class KSP_petsc4py(LinearSolver):
             elif Preconditioner == NavierStokes3D_PCD:
                 self.preconditioner = NavierStokes3D_PCD(par_L,prefix)
                 self.pc = self.preconditioner.pc
+            elif Preconditioner == NavierStokes3D_LSC:
+                self.preconditioner = NavierStokes3D_LSC(par_L,prefix)
+                self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleNavierStokes2D:
                 self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
                 self.pc = self.preconditioner.pc
@@ -658,7 +661,7 @@ class schurOperatorConstructor:
 
         Returns
         -------
-        Fp : matrix
+        Ap : matrix
              The Laplacian pressure matrix.
         """
         #modify the diffusion term in the mass equation so the p-p block is Ap
@@ -692,6 +695,11 @@ class schurOperatorConstructor:
         if output_matrix==True:
             _exportMatrix(self.Ap,'Ap')
         #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
+        #now zero all the dummy coefficents
+        #
+ #       self.L.pde.q[('dm',0,0)][:] = 0.0
+ #       self.L.pde.q[('df',0,0)][:] = 0.0
+ #       self.L.pde.q[('a',0,0)][:] = 0.0
         return self.Ap
 
     def getFp(self,output_matrix=False):
@@ -725,6 +733,7 @@ class schurOperatorConstructor:
         self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
         self.L.pde.q[('df',0,0)][...,0] = self.L.pde.q[('u',1)]
         self.L.pde.q[('df',0,0)][...,1] = self.L.pde.q[('u',2)]
+  
 #        self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
         self.L.pde.getSpatialJacobian(self.Fsys)#notice, switched  to spatial
         self.Fsys_petsc4py = self.L.duplicate()
@@ -737,15 +746,61 @@ class schurOperatorConstructor:
         self.Fsys_petsc4py.assemblyEnd()
         self.Fp = self.Fsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isp)
         if output_matrix==True:
-            _exportMatrix(self.Ap,'Ap')
+            _exportMatrix(self.Fp,'Fp')
         #Ff(1:np,1:np) whould be Fp, the pressure convection-diffusion matrix
         #
         #now zero all the dummy coefficents
         #
-        self.L.pde.q[('dm',0,0)][:] = 0.0
-        self.L.pde.q[('df',0,0)][:] = 0.0
-        self.L.pde.q[('a',0,0)][:] = 0.0
+ #       self.L.pde.q[('dm',0,0)][:] = 0.0
+ #       self.L.pde.q[('df',0,0)][:] = 0.0
+ #       self.L.pde.q[('a',0,0)][:] = 0.0
         return self.Fp
+
+    def getB(self,output_matrix=False):
+        """
+        Return the conservation of mass matrix B.
+
+        Parameters
+        ----------
+        output_matrix : bool
+                        Determine whether matrix should be exported.
+
+        Returns
+        -------
+        B : matrix
+             The conservation of mass matrix B.
+        """
+        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+        self.B_rowptr = rowptr.copy()
+        self.B_colind = colind.copy()
+        self.B_nzval = nzval.copy()
+        L_sizes = self.L.getSizes()
+        nr = L_sizes[0][0]
+        nc = L_sizes[1][0]
+        self.B =SparseMat(nr,nc,
+                          self.B_nzval.shape[0],
+                          self.B_nzval,
+                          self.B_colind,
+                          self.B_rowptr)
+        self.L.pde.q[('f',0)][...,0] = self.L.pde.q[('u',1)]
+        self.L.pde.q[('f',0)][...,1] = self.L.pde.q[('u',2)]
+#        self.L.pde.q[('df',0,0)][:] = 1.0
+        self.L.pde.getSpatialJacobian(self.B)
+        import pdb
+        pdb.set_trace()
+        self.Bsys_petsc4py = self.L.duplicate()
+        B_csr_rep_local = self.B.getSubMatCSRrepresentation(0,L_sizes[0][0])
+        self.Bsys_petsc4py.setValuesLocalCSR(B_csr_rep_local[0],
+                                             B_csr_rep_local[1],
+                                             B_csr_rep_local[2],
+                                             p4pyPETSc.InsertMode.INSERT_VALUES)
+        self.Bsys_petsc4py.assemblyBegin()
+        self.Bsys_petsc4py.assemblyEnd()
+        self.B = self.Bsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isv)
+        if output_matrix==True:
+            _exportMatrix(self.B,'B')
+        return self.B
+
 
     def getQv(self,output_matrix=False):
         """
@@ -762,8 +817,6 @@ class schurOperatorConstructor:
              The velocity mass matrix.
         """
         Qsys_petsc4py = self._massMatrix()
-        import pdb
-        pdb.set_trace()
         self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,self.linear_smoother.isv)
         if output_matrix==True:
             _exportmatrix(self.Qv,'Qv')
@@ -786,6 +839,8 @@ class schurOperatorConstructor:
         Qsys_rowptr = rowptr.copy()
         Qsys_colind = colind.copy()
         Qsys_nzval = nzval.copy()
+        import pdb
+        pdb.set_trace() 
         nr = rowptr.shape[0] - 1
         nc = nr
         Qsys =SparseMat(nr,nc,
@@ -806,6 +861,9 @@ class schurOperatorConstructor:
                                              p4pyPETSc.InsertMode.INSERT_VALUES)
         Qsys_petsc4py.assemblyBegin()
         Qsys_petsc4py.assemblyEnd()
+#        self.L.pde.q[('dm',0,0)][:] = 0.0
+#        self.L.pde.q[('df',0,0)][:] = 0.0
+#        self.L.pde.q[('a',0,0)][:] = 0.0
         return Qsys_petsc4py
 
     def _exportMatrix(self,operator,export_name):
@@ -1027,23 +1085,10 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
 
     def setUp(self,global_ksp):
         # Step-1: get the pressure mass matrix
-        self.Qp = self.operator_constructor.getQp()
-        self.Fp = self.operator_constructor.getFp()
-        self.Ap = self.operator_constructor.getAp()
-        # Step-2: Set up the Shell for the  PETSc operator
-        # Qp
-        L_sizes = self.Qp.size
-        L_range = self.Qp.owner_range
-        self.PCDInv_shell = p4pyPETSc.Mat().create()
-        self.PCDInv_shell.setSizes(L_sizes)
-        self.PCDInv_shell.setType('python')
-        # ***
-        self.matcontext_inv = PCDInv_shell(self.Qp,self.Fp,self.Ap,)
-        self.PCDInv_shell.setPythonContext(self.matcontext_inv)
-        self.PCDInv_shell.setUp()
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        import pdb
+        pdb.set_trace()
+        self.Qv = self.operator_constructor.getQv()
+        self.B = self.operator_constructor.getB()
 
 class SimpleDarcyFC:
     def __init__(self,L):

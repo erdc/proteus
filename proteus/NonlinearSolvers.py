@@ -435,12 +435,19 @@ class Newton(NonlinearSolver):
         self.norm_r_last = self.norm_r
         self.linearSolver.setResTol(rtol=eta,atol=self.linearSolver.atol_r)
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        """
-        Solve F(u) = b
+        """ Solve the non-linear problem F(u) = b.
 
-        b -- right hand side
-        u -- solution
-        r -- F(u) - b
+        Parameters
+        ----------
+        b : vec
+           The right hand side vector.
+        r : vec
+           The solution residual F(u) - b.
+
+        Returns
+        -------
+        u : vec
+            The solution.
         """
 
         import Viewers

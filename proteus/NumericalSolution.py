@@ -538,8 +538,10 @@ class NS_base:  # (HasTraits):
     def calculateSolution(self,runName):
         """Cacluate the PDEs numerical solution.
         
-        Input arguments:
-        runName -- string for solution's name.
+        Parameters
+        ----------
+        runName : str
+            Provides the solution's name.
         """
         log("Setting initial conditions",level=0)
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
@@ -761,7 +763,6 @@ class NS_base:  # (HasTraits):
                                 log("Model substep t=%12.5e for model %s model.timeIntegration.t= %12.5e" % (self.tSubstep,model.name,model.levelModelList[-1].timeIntegration.t),level=3)
 
                                 model.stepController.setInitialGuess(model.uList,model.rList)
-
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
