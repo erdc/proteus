@@ -829,8 +829,21 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         return vx
 
 class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
-    """
-    WIP - New base class for higher order RT elements *** A refactoring may be in order ***
+    """Base class for higher order RT elements.
+
+    Attributes
+    ----------
+    globalDOF2globalElementList : list of lists
+        Lists the global element numbers associated with each degree of 
+        freedom.
+    globalDOFGlobalElement2StarElement : list of dicts
+        Dictionaries of maps of local element numbers to global element
+        numbers for each degree of freedom.
+    dofStarElementsArray : list of lists
+        For every element DOF, this array lists the element's local
+        mapping number.
+    dofStarElementsNeighborsArray : list of lists of lists
+        Provides local neighboring elements for each DOF on an element.
     """
     def __init__(self,vectorTransport=None,vtComponents=[0],omitFluxBoundaryNodes=True):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='pwl',
@@ -850,7 +863,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         self.testSpace = None
         #mesh information needed
         #building mesh infrastructure
-        import pdb
         self.globalDOF2globalElementList = [[] for nN in range(self.vt.mesh.nNodes_global + self.vt.mesh.nEdges_global)]
         
         for eN in range(self.vt.mesh.nElements_global):
@@ -861,7 +873,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                 e_global = self.vt.mesh.elementBoundariesArray[eN,nN]
                 self.globalDOF2globalElementList[e_global+len(self.vt.mesh.nodeArray)].append(eN)
 
-
         self.globalDOFGlobalElement2StarElement = []
         self.nElements_DOF = numpy.zeros((self.vt.mesh.nNodes_global + self.vt.mesh.nElementBoundaries_global,),'i')
         self.dofStarElementsArray = numpy.ones((self.vt.mesh.nElements_global,
@@ -871,7 +882,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                          self.vt.mesh.nNodes_element + self.vt.mesh.nElementBoundaries_element,
                                                          self.vt.mesh.nElementBoundaries_element),
                                                         'i')
-
 
         for I in range(self.vt.mesh.nNodes_global + self.vt.mesh.nElementBoundaries_global):
             self.globalDOF2globalElementList[I].sort()
@@ -919,6 +929,9 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
             self.nodeStarFactors[ci] = cpostprocessing.NodeStarFactor(self.nElements_DOF,
                                                                       self.dofStarElementsArray,
                                                                       self.dofStarElementNeighborsArray)
+
+        import pdb
+        pdb.set_trace()
 
 
         #
