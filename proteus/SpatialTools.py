@@ -23,6 +23,9 @@ shape2.rotate(np.pi/3.)
 shape2.BC.newBC
 
 st.assembleDomain(domain)
+
+.. inheritance-diagram:: proteus.SpatialTools
+   :parts: 1
 """
 
 from math import cos, sin, sqrt
@@ -313,7 +316,7 @@ class Cuboid(Shape):
                         self.BC_dict['left'],
                         self.BC_dict['top']]
         self.BC = BCContainer(self.BC_dict)
-        self.barycenter = np.array(barycenter) or self.coords
+        self.barycenter = np.array(barycenter) or np.array(coords)
         self.It = np.array([[(W**2.+H**2.)/12., 0, 0],
                             [0, (L**2.+H**2.)/12., 0],
                             [0, 0, (W**2.+L**2.)/12.]])
@@ -373,8 +376,8 @@ class Rectangle(Shape):
                                   'right': 2,
                                   'top': 3,
                                   'left': 4}
-        self.segmentFlags = np.array([bt['bottom'], bt['right'], bt['left'],
-                                      bt['top']])  # bottom, right, top, left
+        self.segmentFlags = np.array([bt['bottom'], bt['right'], bt['top'],
+                                      bt['left']])  # bottom, right, top, left
         self.vertexFlags = np.array([bt['bottom'], bt['bottom'], bt['top'],
                                      bt['top']])  # bottom, bottom, top, top
         self.regionFlags = np.array([1])
@@ -437,6 +440,7 @@ class CustomShape(Shape):
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
         self._checkFlags(boundaryTags.values())
+        self.boundaryTgs = boundaryTags
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)
         if segments:
@@ -465,6 +469,62 @@ class CustomShape(Shape):
         if barycenter is not None:
             self.barycenter = np.array(barycenter)
 
+
+class ShapeSTL(Shape):
+    def __init__(self, domain, filename):
+        super(ShapeSTL, self).__init__(domain, nd=3)
+        self.filename = filename
+        self.vertices, self.facets, self.facetnormals = getInfoFromSTL(self.filename)
+        self.facetFlags = np.ones(len(self.facets))
+        self.vertexFlags = np.ones(len(self.vertices))
+        self.boundaryTags = {'stl': 1}
+        self.BC_dict = {'stl': self.BC_class(shape=self, name='stl')}
+        self.BC_list = [self.BC_dict['stl']]
+        self.BC = BCContainer(self.BC_dict)
+
+def getInfoFromSTL(filename):
+    file = open(filename, 'r')
+    facetnormals = []
+    facet = []
+    facets = []
+    vertices = []
+    vFlag = 0
+    for line in file:
+        if "vertex" in line:
+            word_list = line.split()
+            vertex = (word_list[1], word_list[2], word_list[3])
+            vertices += [vertex]
+            facet += [vFlag]
+            vFlag += 1
+        if "facet normal" in line:
+            word_list = line.split()
+            facetnormals += [[word_list[2], word_list[3], word_list[4]]]
+        elif "endfacet" in line:
+            facets += [[facet]]
+            facet = []
+        elif "endsolid" in line:
+            pass
+        elif "solid" in line:
+            word_list = line.split()
+            name = word_list[1]
+    file.close()
+    # vertices_u, inverse = np.unique(vertices, return_inverse=True)
+    vertices = np.array(vertices).astype(float)
+    facets = np.array(facets).astype(int)
+    vertices, inverse = unique_rows(vertices)
+    facets = inverse[facets]
+    facetnormals = np.array(facetnormals).astype(float)
+    return vertices, facets, facetnormals
+
+def unique_rows(arr):
+    arr = np.array(arr)
+    ca = np.ascontiguousarray(arr).view([('', arr.dtype)] * arr.shape[1])
+    unique, indices, inverse = np.unique(ca, return_index=True, return_inverse=True)
+    # counts = np.bincount(inverse)
+    # sort_indices = np.argsort(counts)[::-1]
+    # sorted_arr = arr[indices[sort_indices]]
+    # sorted_count = counts[sort_indices]
+    return (arr[indices], inverse)
 
 class BCContainer(object):
     """
@@ -590,6 +650,11 @@ def assembleDomain(domain):
     :param domain: domain to asssemble
     """
     # reinitialize geometry of domain
+    _assembleGeometry(domain, BC_class=bc.BC_Base)
+    _generateMesh(domain)
+
+def _assembleGeometry(domain, BC_class):
+    # reinitialize geometry of domain
     domain.vertices = []
     domain.vertexFlags = []
     domain.segments = []
@@ -600,11 +665,10 @@ def assembleDomain(domain):
     domain.regions = []
     domain.regionFlags = []
     # BC at flag 0
-    domain.bc = [bc.BC_Base()]
-    # domain.bc[0].setNonMaterial()  # function not defined in BC_Base
+    domain.bc = [BC_class()]
+    # domain.bc[0].setNonMaterial()
     # barycenter at flag 0
     domain.barycenters = np.array([[0., 0., 0.]])
-    domain.auxiliaryVariables = []
     start_flag = 0
     start_vertex = 0
     for shape in domain.shape_list:
@@ -613,21 +677,49 @@ def assembleDomain(domain):
         # --------------------------- #
         start_flag = len(domain.bc)-1
         start_vertex = len(domain.vertices)
-        start_region = len(domain.regions)  # indice 0 ignored
         if domain.regionFlags:
             start_rflag = max(domain.regionFlags)
         else:
             start_rflag = 0
         domain.bc += shape.BC_list
-        domain.vertices += (shape.vertices).tolist()
-        domain.vertexFlags += (shape.vertexFlags+start_flag).tolist()
+        # making copies of shape properties before operations/modifications
+        vertices = shape.vertices.copy()
+        vertexFlags = shape.vertexFlags.copy()
+        if shape.segments is not None:
+            segments = shape.segments.copy()
+        if shape.facets is not None:
+            facets = shape.facets.copy()
+        # deleting duplicate vertices and updating segment/facets accordingly
+        del_v = 0
+        for i_s, vertex in enumerate(shape.vertices):
+            if vertex.tolist() in domain.vertices:
+                vertices = np.delete(vertices, i_s-del_v, axis=0)
+                verticesFlags = np.delete(vertexFlags, i_s-del_v)
+                i_s -= del_v
+                del_v += 1
+                i_d = domain.vertices.index(vertex.tolist())
+                if shape.segments is not None:
+                    for i in np.nditer(segments, op_flags=['readwrite']):
+                        if i > i_s:
+                            i[...] -= 1
+                        elif i == i_s:
+                            i[...] = i_d-start_vertex
+                if shape.facets is not None:
+                    for i in np.nditer(facets, op_flags=['readwrite']):
+                        if i > i_s:
+                            i[...] -= 1
+                        elif i == i_s:
+                            i[...] = i_d-start_vertex
+        # adding shape geometry to domain
+        domain.vertices += vertices.tolist()
+        domain.vertexFlags += (vertexFlags+start_flag).tolist()
         barycenters = np.array([shape.barycenter for bco in shape.BC_list])
         domain.barycenters = np.append(domain.barycenters, barycenters, axis=0)
         if shape.segments is not None:
-            domain.segments += (shape.segments+start_vertex).tolist()
+            domain.segments += (segments+start_vertex).tolist()
             domain.segmentFlags += (shape.segmentFlags+start_flag).tolist()
         if shape.facets is not None:
-            domain.facets += (shape.facets+start_vertex).tolist()
+            domain.facets += (facets+start_vertex).tolist()
             domain.facetFlags += (shape.facetFlags+start_flag).tolist()
         if shape.regions is not None:
             domain.regions += (shape.regions).tolist()
@@ -635,6 +727,9 @@ def assembleDomain(domain):
         if shape.holes is not None:
             domain.holes += (shape.holes).tolist()
         domain.getBoundingBox()
+
+
+def _generateMesh(domain):
     # --------------------------- #
     # ----- MESH GENERATION ----- #
     # --------------------------- #
@@ -648,3 +743,4 @@ def assembleDomain(domain):
     mesh.setTriangleOptions()
     log("""Mesh generated using: tetgen -%s %s"""  %
         (mesh.triangleOptions, domain.polyfile+".poly"))
+

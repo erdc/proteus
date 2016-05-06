@@ -19,8 +19,8 @@ import sys as sys
 
 
 def loadExistingFunction(funcName, validFunctions):
-    """ Checks if a function name  is present in a list of known functions, returns system exit if not present
-    param: funcName : function name in form of string under consideration
+    """ Checks if a function name  is present in a list of known functions, returns system exit if not present 
+   param: funcName : function name in form of string under consideration
     param: validFunctions: list of valid functions objects (not names in strings)
 
     """
@@ -301,7 +301,7 @@ def decompose_tseries(time,eta,dt):
     results.append(setup)
     return results
 
-
+    
 
 
 
@@ -354,7 +354,7 @@ class MonochromaticWaves:
         self.omega = 2.0*pi/period
 
 #Calculating / checking wavelength data
-        if  self.waveType is "Linear":
+        if  self.waveType== "Linear":
             self.k = dispersion(w=self.omega,d=self.depth,g=self.gAbs)
             self.wavelength = 2.0*pi/self.k
         else:
@@ -377,26 +377,26 @@ class MonochromaticWaves:
         self.Bcoeff = Bcoeff
 
 # Checking for
-        if (Ycoeff is None) or (Bcoeff is None):
-            if self.waveType is not "Linear":
-                logEvent("WaveTools.py: Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
+        if (Ycoeff==None) or (Bcoeff==None):
+            if self.waveType!= "Linear":
+                logEvent("WaveTools.py: Need to define Fenton Fourier coefficients Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
                 sys.exit(1)
     def eta(self, x, t):
-        if self.waveType is "Linear":
+        if self.waveType == "Linear":
             return eta_mode(x,t,self.kDir,self.omega,self.phi0,self.amplitude)
-        elif self.waveType is "Fenton":
+        elif self.waveType == "Fenton":
             HH = 0.
             ii =0.
             for Y in self.Ycoeff:
                 ii+=1
-                HH+=eta_mode(x,t,ii*self.kDir,ii*self.omega,self.phi0,Y)
+                HH+=eta_mode(x,t,ii*self.kDir,ii*self.omega,ii*self.phi0,Y)
             return HH/self.k
 
     def u(self, x, t):
-        if self.waveType is "Linear":
+        if self.waveType == "Linear":
             return vel_mode(x, t, self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,self.vDir)
-        elif self.waveType is "Fenton":
-            Ufenton = self.meanVelocity
+        elif self.waveType == "Fenton":
+            Ufenton = self.meanVelocity.copy()
             ii = 0
             for B in self.Bcoeff:
                 ii+=1
@@ -404,7 +404,7 @@ class MonochromaticWaves:
                 kmode = ii*self.k
                 kdir = self.waveDir*kmode
                 amp = tanh(kmode*self.depth)*sqrt(self.gAbs/self.k)*B/self.omega
-                Ufenton+= vel_mode(x,t,kdir,kmode,wmode,self.phi0,amp,self.mwl,self.depth,self.g,self.vDir)
+                Ufenton+= vel_mode(x,t,kdir,kmode,wmode,ii*self.phi0,amp,self.mwl,self.depth,self.g,self.vDir)
             return Ufenton # + self.meanVelocity[comp]
 
 
@@ -508,6 +508,31 @@ class RandomWaves:
         for ii in range(self.N):
             U+= vel_mode(x, t, self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
+    def writeEtaSeries(self,Tstart,Tend,x0,Vgen,fname):
+        """Write a timeseries for the free-surface elevation
+        :param Tstart: start time of timeseries
+        :param Tend: end time of timeseries
+        :param x0: Location vector of timeseries
+        :param Vgen: Length vector of relaxation zone 
+        :param fname: filename for timeseries
+        """
+
+        Nper = self.period/50.
+        Tlag = np.zeros(len(self.omega),)
+        for j in range(len(self.omega)):
+            Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
+        Tlag = max(Tlag)
+        Tstart = Tstart - Tlag
+        Np = int(Nper*(Tend - Tstart)/self.period)
+        time = np.linspace(Tstart,Tend,Np )
+        etaR  = np.zeros(len(time), )
+        for jj in len(time):
+            etaR[jj] = self.eta(x0,time[jj])
+        np.savetxt(fname,zip(time,etaR))
+        
+    
+
+
 
 class MultiSpectraRandomWaves(RandomWaves):
     """Generate a random wave timeseries from multiple spectra. 
@@ -754,8 +779,10 @@ class TimeSeries:
     :param mwl: mean water level [L]
     :param waveDir: wave Direction vector
     :param g: Gravitational acceleration vector (3 components required)
+    :cutoffTotal: Parameter for cutting off the first and the last part of the time series, given in ratio of the total duration (default 0.01)
     :param rec_direct: Logical variable, True for direct reconstruction, False for windowed reconstrunction
     :window_params: dictionary for window reconstruction parameters. Mandatory definition for Nwaves (how many waves per window) Tm (mean wave period), wind_filt (window filter name in string form). Optional: Overlap (window overlap as a percentage of window lenght), Cutoff (length of domain wher filter is applied, as a percentage of the 1/2 of window length)
+
     """
 
     def __init__(self,
@@ -767,6 +794,7 @@ class TimeSeries:
                  mwl ,        #mean water level
                  waveDir, 
                  g,
+                 cutoffTotal = 0.01,
                  rec_direct = True,
                  window_params = None #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Tm":Tm,"Window":wind_filt,"Overlap":overlap,"Cutoff":cutoff}
                  ):
@@ -845,7 +873,7 @@ class TimeSeries:
         # Remove mean level from raw data
         self.eta -= np.mean(self.eta)
         # Filter out first 2.5 % and last 2.5% to make the signal periodic
-        self.eta *= costap(len(self.time),cutoff=0.025)
+        self.eta *= costap(len(self.time),cutoff=cutoffTotal)
         # clear tdata from memory
         del tdata
         # Calculate time lenght
@@ -854,11 +882,7 @@ class TimeSeries:
         self.windows_handover = []
         self.windows_rec = []
 
-
-
-
-
-        # Direct decomposition of the time series for using at reconstruct_direct
+    # Direct decomposition of the time series for using at reconstruct_direct
         if (self.rec_direct):
             Nf = self.N
             self.nfft=len(self.time)
@@ -996,7 +1020,13 @@ class TimeSeries:
                 self.decompose_window.append(decomp)
                 
             
-
+        if(self.rec_direct):
+            self.eta = self.etaDirect
+            self.u = self.uDirect
+        else:
+            self.eta =  self.etaWindow
+            self.u = self.uWindow
+     
 #                if style == "k-":
 #                    style = "kx"
 #                else:
@@ -1076,10 +1106,9 @@ class TimeSeries:
         t0 = self.windows_rec[Nw][0,0]
         U=0.
         for ii in range(0,self.Nf):
-            x1 = x-[self.x0, self.y0, self.z0]
+            x1 =  np.array(x)-[self.x0, self.y0, self.z0]
             U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
-
 
 
 

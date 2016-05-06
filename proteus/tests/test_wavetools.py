@@ -173,8 +173,9 @@ class TestWaveParameters(unittest.TestCase):
 #Checking dispersion calculation for a predicted wavelenght of 5.00m
     def test_dispersion(self):
         from proteus.WaveTools import dispersion
-        length = 2*pi/dispersion(2*pi/1.94,1.)
-        self.assertTrue(abs(length - 5.)/5.<0.001)
+        length = 2*pi/dispersion(2*pi/5.,4.)
+        lTheor = 27.958
+        self.assertTrue(abs(length - lTheor)/lTheor<0.001)
         length = 2*pi/dispersion([2*pi/1.94,2*pi/1.94,],1.)
         length-=5.
         length/=5
@@ -381,10 +382,10 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
 
         for ii in range(len(YC)):
             jj+=1
-            etaRef+=YC[ii]*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/kw
-            uxRef += normDir[0]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/cosh(jj*kw*depth)
-            uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/cosh(jj*kw*depth)
-            uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/cosh(jj*kw*depth)
+            etaRef+=YC[ii]*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t + jj*phi0)/kw
+            uxRef += normDir[0]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
+            uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
+            uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
             
 #            uxRef+=  normDir[0]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
 #*jj*BC[ii]*normDir[0]*cosh(jj*kw*(z0+depth))*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - jj*omega * t +phi0)*tanh(jj*kw*depth)/sinh(jj*kw*depth)
@@ -516,19 +517,27 @@ class VerifyRandomWaves(unittest.TestCase):
         self.assertTrue(round(uy,8) == round(uyRef,8))
         self.assertTrue(round(uz,8) == round(uzRef,8))
 
-
-
-
-        aa= RandomWaves(2,
-                     0.1,
-                     0.,#m significant wave height
-                     1. ,           #m depth
-                     np.array([0.,1,0]),
-                     g,      #peak  frequency
-                     N,
-                     bandFactor,         #accelerationof gravity
-                     spectName# random words will result in error and return the available spectra 
-                   )
+        # Asserting write function from Random waves
+        x0 = np.array([0,0,0])
+        Lgen = np.array([5,0,0])
+        Tstart = 0
+        Tend = 50.
+        Tlag = sum(Lgen[:]*normDir[:])/max(ki[:]/omega[:])
+        Tstart -= Tlag
+        Np = Tp/ 50.
+        Nf = int(Np*(Tend-Tstart)/Tp)
+        tlist = np.array(Tstart,Tend,Nf)
+        etaWrite = zeros(len(tlist),)
+        for ii in range(len(tlist)):
+            etaWrite = a.eta(x0,tlist[ii])
+        fname = "randomSeries.txt"
+        a.writeEtaSeries(Tstart,Tend,x0,Lgen,fname)
+        series = np.loadtxt(open(fname,"r"))
+        self.assertTrue((series[:,0]- time == 0).all())
+        self.assertTrue((series[:,1]- etaWrite == 0).all())
+                             
+                         
+                   
 
 # Test contours
 """
@@ -936,6 +945,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             1. ,        
             np.array([1.,0,0]), 
             np.array([0,0,-9.81]),
+            0.025,
             False,
             {"Nwaves" : 5,"Tm":1, "Window":"costap"}
             
@@ -952,6 +962,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             1. ,        
             np.array([1.,0,0]), 
             np.array([0,0,-9.81]),
+            0.025,
             False,
             {"Nwaves" : 500,"Tm":1, "Window":"costap"}
             
@@ -970,6 +981,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Tm":1, "Window":"costap"}
             
@@ -991,6 +1003,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Window":"costap"}
             
@@ -1009,6 +1022,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Tm":1}
             
@@ -1027,6 +1041,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Tm":1, "Window":"aargh"}
             
@@ -1046,6 +1061,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 1. ,        
                 np.array([1.,0,0]), 
                 np.array([0,0,-9.81]),
+                0.025,
                 False,
                 {"Nwaves":5, "Tm":1, "Window":"costap", "Cutoff" : 0.4}
             
@@ -1065,7 +1081,8 @@ class VerifyTimeSeries(unittest.TestCase):
             256,          #number of frequency bins
             1. ,        
             np.array([1,0,0]), 
-            np.array([0,0,-9.81])
+            np.array([0,0,-9.81]),
+            cutoffTotal=0.025
             )
         fid = open(path+"test_timeSeries.txt","r")
         data = np.loadtxt(fid)
@@ -1081,7 +1098,7 @@ class VerifyTimeSeries(unittest.TestCase):
         ii = -1
         for tt in timeInt:
             ii+=1
-            etaTest[ii] = aa.etaDirect([x, y, z], tt)
+            etaTest[ii] = aa.eta([x, y, z], tt)
 
         etaInt-=np.mean(etaInt)
         etaInt*=costap(len(data),0.025)
@@ -1120,9 +1137,9 @@ class VerifyTimeSeries(unittest.TestCase):
             1. ,        
             np.array([1,0,0]), 
             np.array([0,0,-9.81]),
+            0.025,
             False,
             {"Nwaves":3, "Tm":8, "Window":"costap"}
-           
             )
         fid = open(path+"test_timeSeries.txt","r")
         data = np.loadtxt(fid)
@@ -1138,14 +1155,14 @@ class VerifyTimeSeries(unittest.TestCase):
         ii = -1
         for tt in timeInt:
             ii+=1
-            etaTest[ii] = aa.etaWindow([x, y, z], tt)
+            etaTest[ii] = aa.eta([x, y, z], tt)
 
         etaInt-=np.mean(etaInt)
         etaInt*=costap(len(data),0.025)
         norm = max(etaRef)
         err = (etaInt - etaTest)**2
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
-        print err
+#        print err
         self.assertTrue(err<1e-2 )     
 """
         from matplotlib import pyplot as plt

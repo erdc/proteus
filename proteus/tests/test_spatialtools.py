@@ -106,10 +106,10 @@ class TestShapeDomainBuilding(unittest.TestCase):
         cuboidRANS = create_cuboid(domain3D, folder='mprans')
         tand2D = create_tank2D(domain2D)
         tank3D = create_tank3D(domain3D)
-        custom2D = create_custom2D(domain2D) 
-        custom2DRANS = create_custom2D(domain2D, folder='mprans') 
-        custom3D = create_custom3D(domain3D) 
-        custom3DRANS = create_custom3D(domain3D, folder='mprans') 
+        custom2D = create_custom2D(domain2D)
+        custom2DRANS = create_custom2D(domain2D, folder='mprans')
+        custom3D = create_custom3D(domain3D)
+        custom3DRANS = create_custom3D(domain3D, folder='mprans')
 
     def test_assemble_domain(self):
         """
@@ -149,7 +149,7 @@ class TestShapeDomainBuilding(unittest.TestCase):
         assembleDomain(domain3D)
         assembleDomainRANS(domain2DRANS)
         assembleDomainRANS(domain3DRANS)
-        
+
         # check that each domain has the right number of shapes
         npt.assert_equal(len(domain2D.shape_list), nb_shapes)
         npt.assert_equal(len(domain3D.shape_list), nb_shapes)
@@ -434,15 +434,13 @@ class TestShapeRANS(unittest.TestCase):
 
     def test_porous_zones(self):
         flag = 1
-        epsFact_solid = 0.5
         dragAlpha = 0.5/1.005e-6
         dragBeta = 0.
         porosity = 1.
         domain = create_domain2D()
         # for custom (same principle for rectangle or cuboid)
         custom = create_custom2D(domain, 'mprans')
-        custom.setPorousZones(flags=flag, epsFact_solid=epsFact_solid,
-                              dragAlpha=dragAlpha, dragBeta=dragBeta,
+        custom.setPorousZones(flags=flag, dragAlpha=dragAlpha, dragBeta=dragBeta,
                               porosity=porosity)
         npt.assert_equal(custom.auxiliaryVariables['RelaxZones'], custom.zones)
         zone = custom.zones[flag]

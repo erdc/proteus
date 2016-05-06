@@ -138,10 +138,10 @@ class NonlinearSolver:
         self.failedFlag = False
 
     def norm(self,u):
-        return self.norm_function(u[:self.F.dim_proc])
+        return self.norm_function(u[self.F.owned_local])
 
     def unorm(self,u):
-        return self.unorm_function(u[:self.F.dim_proc])
+        return self.unorm_function(u[self.F.owned_local])
 
     def fullNewtonOff(self):
         self.fullNewton=False
@@ -353,7 +353,6 @@ class NonlinearSolver:
         self.infoString += "rtol_r                = %12.5e \n" % self.rtol_r
         self.infoString += "norm(r0)              = %12.5e \n" % self.norm_r0
         self.infoString += "norm(r)               = %12.5e \n" % self.norm_r
-        self.infoString += "norm(du)              = %12.5e \n" % self.norm_du
         if self.convergenceHistoryIsCorrupt:
             self.infoString += "CONVERGENCE HISTORY IS CORRUPT!!!\n"
         self.infoString += "************End Nonlinear Solver Info ************\n"
@@ -493,13 +492,10 @@ class Newton(NonlinearSolver):
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
                 self.linearSolverFailed = self.linearSolver.failed()
-            #print self.du
             u-=self.du
             if par_u != None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)
-            #no overlap
-            #print "local r",r
             if par_r != None:
                 #no overlap
                 if not self.par_fullOverlap:
@@ -1245,6 +1241,8 @@ class NewtonNS(NonlinearSolver):
                 self.linearSolverFailed = self.linearSolver.failed()
             self.linearSolver.printPerformance()
             #print self.du
+            #if par_du != None:
+            #    par_du.scatter_forward_insert()
             u-=self.du
             if par_u != None:
                 par_u.scatter_forward_insert()
