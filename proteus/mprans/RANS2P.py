@@ -1,8 +1,24 @@
+"""
+Optimized  Two-Phase Reynolds Averaged Navier-Stokes
+"""
 import proteus
 from proteus.mprans.cRANS2P import *
 from proteus.mprans.cRANS2P2D import *
 from proteus import Profiling
 class SubgridError(proteus.SubgridError.SGE_base):
+    """
+    Create a SubgridError  object for two-phase incompressible flow
+
+    The VMS subgrid error approximation
+
+    Args:
+        coefficients  : The coefficients object
+        nd            : Number of space  dimensions
+        lag           : Use prior time step to calculate
+        nStepsToDelay : Lag only after nSteps
+        hFactor       : scaling factor based on order
+        noPressureStabilization : turn off pressure stab
+    """
     def __init__(self,coefficients,nd,lag=False,nStepsToDelay=0,hFactor=1.0,noPressureStabilization=False):
         self.noPressureStabilization=noPressureStabilization
         proteus.SubgridError.SGE_base.__init__(self,coefficients,nd,lag)
@@ -15,6 +31,18 @@ class SubgridError(proteus.SubgridError.SGE_base):
             self.nStepsToDelay=1
             self.lag=False
     def initializeElementQuadrature(self,mesh,t,cq):
+        """
+        Allocated or set additional arrays for values at element quadrature
+
+        Parameters
+        ----------
+        mesh : proteus.MeshTools.Mesh
+           The mesh for the domain
+        t    : float
+           The current time
+        cq   : dict
+           The dictionary of element quadrature arrrays
+        """
         import copy
         self.cq=cq
         self.v_last = self.cq[('velocity',0)]
