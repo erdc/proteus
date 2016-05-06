@@ -39,28 +39,36 @@ log = Profiling.logEvent
 #matrix.
 #
 class TC_base:
-    """
+    """ Base class for vector transport coefficients.
+
     This is the base class for coefficients of the vector transport
     equation with nc components. The coefficients and their derivative
     are evaluated at a time t over an array of solution values, u, at
     an array of points x.
 
-    methods:
+    Parameters
+    -----------
+    nc :  int
+        Number of unknowns.
+    mass : ({{}} logically nc x nc) str ('linear' or 'nonlinear')
+        Coefficients for the mass terms.
+    advection :  ({{}} logically nc x nc) str 'constant', 'linear' or 'nonlinear'
+        Coefficients for the advection terms.
+    diffusion : ({{{}}} logically nc x nc x nc) str 'constant' or 'nonlinear'
+        Coefficients for the diffusion terms.
+    potential : ({{}} logically nc x nc) str 'u' or 'nonlinear'
+        Coefficients for the potential terms.
+    reaction  : ({{}} logically nc x nc) str 'constant','linear', or 'nonlinear'
+        Coefficients for the reaction terms.
+    hamiltonian : ({{}} logically nx x nc) str 'linear' or 'nonlinear'
+        Coefficients for the hamiltonian terms.
+    stencil  : ([set(),] nc x nc) 
+        indicates jacobian block structure
+    variableNames : str (number of components) 
+        string describing the component
 
-    evaluate(t,c) -- t, time, is a float, c is a dictionary of x,u, and coefficients
-
-    members:
-
-    nc        -- (number  of components) integer
-    mass      -- ({{}} logically nc x nc) 'linear' or 'nonlinear'
-    advection -- ({{}} logically nc x nc) 'constant', 'linear' or 'nonlinear'
-    diffusion -- ({{{}}} logically nc x nc x nc) 'constant' or 'nonlinear'
-    potential -- ({{}} logically nc x nc) 'u' or 'nonlinear'
-    reaction  -- ({{}} logically nc x nc) 'constant','linear', or 'nonlinear'
-    hamiltonian -- ({{}} logically nx x nc) 'linear' or 'nonlinear'
-    stencil   -- ([set(),] nc x nc) indicates jacobian block structure
-    variableNames -- (number of components) string describing the component
-
+    Note
+    ----
     These dictionaries indicate which coefficients are nonzero and how
     the non-zero coefficietns depend on the solution variables. The
     dictionaries will be used like sparse multi-dimensional
@@ -72,6 +80,11 @@ class TC_base:
     .. math::
 
     a_{i,j} = 1
+
+    Example
+    -------
+    Non-conservative advection example.
+
     """
     def __init__(self,
                  nc=2,
@@ -10409,3 +10422,12 @@ class SinglePhaseDarcyCoefficients(TC_base):
     def evaluate(self,t,c):
         pass #need to put in eval for time varying coefficients
     #end def
+
+# class schurPressureOperators(TC_base):
+#     """ This class is designed to build Schur complement operators  """
+#     def __init__(self):
+#         TC_base.__init__(self,
+#                          nc=1,
+#                          variableNames = ['p'],
+#                          mass = {0:{0:'linear'}},
+#                          diffusion = {0:{0:'linear'}})
