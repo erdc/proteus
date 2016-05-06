@@ -508,28 +508,29 @@ class RandomWaves:
         for ii in range(self.N):
             U+= vel_mode(x, t, self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
-    def writeEtaSeries(self,Tstart,Tend,x0,Vgen,fname):
-        """Write a timeseries for the free-surface elevation
+    def writeEtaSeries(self,Tstart,Tend,x0,fname,Vgen= np.array([0.,0,0])):
+        """Write a timeseries for the free-surface elevation.  
         :param Tstart: start time of timeseries
         :param Tend: end time of timeseries
         :param x0: Location vector of timeseries
-        :param Vgen: Length vector of relaxation zone 
         :param fname: filename for timeseries
+        :param Vgen: Length vector of relaxation zone (used to combine TimeSeries class with a relaxation zone)
         """
-
-        Nper = self.period/50.
+        if sum(Vgen[:]*self.waveDir[:])< 0 :
+                logEvent('WaveTools.py: Location vector of generation zone should not be opposite to the wave direction')
+                sys.exit(1)        
+        dt = self.Tp/50.
         Tlag = np.zeros(len(self.omega),)
         for j in range(len(self.omega)):
             Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
         Tlag = max(Tlag)
         Tstart = Tstart - Tlag
-        Np = int(Nper*(Tend - Tstart)/self.period)
+        Np = int((Tend - Tstart)/dt)
         time = np.linspace(Tstart,Tend,Np )
         etaR  = np.zeros(len(time), )
-        for jj in len(time):
+        for jj in range(len(time)):
             etaR[jj] = self.eta(x0,time[jj])
         np.savetxt(fname,zip(time,etaR))
-        
     
 
 
