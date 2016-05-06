@@ -517,19 +517,33 @@ class VerifyRandomWaves(unittest.TestCase):
         self.assertTrue(round(uy,8) == round(uyRef,8))
         self.assertTrue(round(uz,8) == round(uzRef,8))
 
+        # Asserting write function from Random waves
+        x0 = np.array([0,0,0])
+        Lgen = np.array([5,0,0])
+        Tstart = 0
+        Tend = 2.
+        Tlag = sum(Lgen[:]*normDir[:])/min(omega[:]/ki[:])
+        Tstart2 = Tstart -  Tlag
+        dt = Tp/50.
+        Nf = int((Tend-Tstart2)/dt)
+        tlist = np.linspace(Tstart2,Tend,Nf)
+        etaWrite = np.zeros(len(tlist),)
+        for ii in range(len(tlist)):
+            etaWrite[ii] = a.eta(x0,tlist[ii])
+        fname = "randomSeries.txt"
+        print Tlag
+        if Tlag < 0.:
+            with self.assertRaises(SystemExit) as cm1:
+                a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+            self.assertEqual(cm1.exception.code, 1 )     
+        else:
+            a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+            series = np.loadtxt(open(fname,"r"))
+            self.assertTrue((abs(series[:,0])- abs(tlist) <= 1e-10  ).all())
+            self.assertTrue((abs(series[:,1])- abs(etaWrite) <= 1e-10).all())
 
-
-
-        aa= RandomWaves(2,
-                     0.1,
-                     0.,#m significant wave height
-                     1. ,           #m depth
-                     np.array([0.,1,0]),
-                     g,      #peak  frequency
-                     N,
-                     bandFactor,         #accelerationof gravity
-                     spectName# random words will result in error and return the available spectra 
-                   )
+                         
+                   
 
 # Test contours
 """
