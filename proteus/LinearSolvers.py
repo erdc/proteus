@@ -657,12 +657,12 @@ class schurOperatorConstructor:
         Parameters
         ----------
         output_matrix : bool
-                        Determine whether matrix should be exported.
+            Determine whether matrix should be exported.
 
         Returns
         -------
         Ap : matrix
-             The Laplacian pressure matrix.
+            The Laplacian pressure matrix.
         """
         #modify the diffusion term in the mass equation so the p-p block is Ap
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
@@ -697,9 +697,9 @@ class schurOperatorConstructor:
         #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
         #now zero all the dummy coefficents
         #
- #       self.L.pde.q[('dm',0,0)][:] = 0.0
- #       self.L.pde.q[('df',0,0)][:] = 0.0
- #       self.L.pde.q[('a',0,0)][:] = 0.0
+        self.L.pde.q[('dm',0,0)][:] = 0.0
+        self.L.pde.q[('df',0,0)][:] = 0.0
+        self.L.pde.q[('a',0,0)][:] = 0.0
         return self.Ap
 
     def getFp(self,output_matrix=False):
@@ -718,6 +718,8 @@ class schurOperatorConstructor:
         """
         #modify the diffusion term in the mass equation so the p-p block is Ap
         #modify the diffusion term in the mass equation so the p-p block is Fp
+        
+        # First generate the advection part of Fp
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
         self.Fsys_rowptr = rowptr.copy()
         self.Fsys_colind = colind.copy()
@@ -730,7 +732,7 @@ class schurOperatorConstructor:
                              self.Fsys_nzval,
                              self.Fsys_colind,
                              self.Fsys_rowptr)
-        self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
+#        self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
         self.L.pde.q[('df',0,0)][...,0] = self.L.pde.q[('u',1)]
         self.L.pde.q[('df',0,0)][...,1] = self.L.pde.q[('u',2)]
   
@@ -744,16 +746,19 @@ class schurOperatorConstructor:
                                              p4pyPETSc.InsertMode.INSERT_VALUES)
         self.Fsys_petsc4py.assemblyBegin()
         self.Fsys_petsc4py.assemblyEnd()
-        self.Fp = self.Fsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isp)
+        self.Cp = self.Fsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isp)
         if output_matrix==True:
             _exportMatrix(self.Fp,'Fp')
-        #Ff(1:np,1:np) whould be Fp, the pressure convection-diffusion matrix
+        #Ff(1:np,1:np) would be Fp, the pressure convection-diffusion matrix
         #
         #now zero all the dummy coefficents
         #
- #       self.L.pde.q[('dm',0,0)][:] = 0.0
- #       self.L.pde.q[('df',0,0)][:] = 0.0
- #       self.L.pde.q[('a',0,0)][:] = 0.0
+        self.L.pde.q[('dm',0,0)][:] = 0.0
+        self.L.pde.q[('df',0,0)][:] = 0.0
+        self.L.pde.q[('a',0,0)][:] = 0.0
+        self.Fp = self.getAp()
+        self.Fp.scale(self.L.pde.coefficients.nu)
+        self.Fp.__add__(self.Cp)
         return self.Fp
 
     def getB(self,output_matrix=False):
@@ -786,8 +791,6 @@ class schurOperatorConstructor:
         self.L.pde.q[('f',0)][...,1] = self.L.pde.q[('u',2)]
 #        self.L.pde.q[('df',0,0)][:] = 1.0
         self.L.pde.getSpatialJacobian(self.B)
-        import pdb
-        pdb.set_trace()
         self.Bsys_petsc4py = self.L.duplicate()
         B_csr_rep_local = self.B.getSubMatCSRrepresentation(0,L_sizes[0][0])
         self.Bsys_petsc4py.setValuesLocalCSR(B_csr_rep_local[0],
@@ -839,8 +842,6 @@ class schurOperatorConstructor:
         Qsys_rowptr = rowptr.copy()
         Qsys_colind = colind.copy()
         Qsys_nzval = nzval.copy()
-        import pdb
-        pdb.set_trace() 
         nr = rowptr.shape[0] - 1
         nc = nr
         Qsys =SparseMat(nr,nc,
