@@ -521,21 +521,27 @@ class VerifyRandomWaves(unittest.TestCase):
         x0 = np.array([0,0,0])
         Lgen = np.array([5,0,0])
         Tstart = 0
-        Tend = 50.
-        Tlag = sum(Lgen[:]*normDir[:])/max(ki[:]/omega[:])
-        Tstart -= Tlag
-        Np = Tp/ 50.
-        Nf = int(Np*(Tend-Tstart)/Tp)
-        tlist = np.array(Tstart,Tend,Nf)
-        etaWrite = zeros(len(tlist),)
+        Tend = 2.
+        Tlag = sum(Lgen[:]*normDir[:])/min(omega[:]/ki[:])
+        Tstart2 = Tstart -  Tlag
+        dt = Tp/50.
+        Nf = int((Tend-Tstart2)/dt)
+        tlist = np.linspace(Tstart2,Tend,Nf)
+        etaWrite = np.zeros(len(tlist),)
         for ii in range(len(tlist)):
-            etaWrite = a.eta(x0,tlist[ii])
+            etaWrite[ii] = a.eta(x0,tlist[ii])
         fname = "randomSeries.txt"
-        a.writeEtaSeries(Tstart,Tend,x0,Lgen,fname)
-        series = np.loadtxt(open(fname,"r"))
-        self.assertTrue((series[:,0]- time == 0).all())
-        self.assertTrue((series[:,1]- etaWrite == 0).all())
-                             
+        print Tlag
+        if Tlag < 0.:
+            with self.assertRaises(SystemExit) as cm1:
+                a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+            self.assertEqual(cm1.exception.code, 1 )     
+        else:
+            a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+            series = np.loadtxt(open(fname,"r"))
+            self.assertTrue((abs(series[:,0])- abs(tlist) <= 1e-10  ).all())
+            self.assertTrue((abs(series[:,1])- abs(etaWrite) <= 1e-10).all())
+
                          
                    
 
