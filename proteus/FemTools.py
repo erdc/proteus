@@ -3099,19 +3099,21 @@ class ParametricFiniteElementSpace:
 
     Parameters
     ----------
-    referenceFiniteElement : class
-    elementMaps : class
-    dofMap : class
+    referenceFiniteElement : :class:`proteus.FemTools.ReferenceFiniteElement`
+    elementMaps : :class:`proteus.FemTools.AffineMaps`
+    dofMap : :class:`proteus.FemTools.DOFMap`
 
     Attributes
     ----------
-    mesh : mesh object
-        This is the mesh object associated with the finite element.
-    dofMap : dofMap object
+    mesh : :class:`proteus.MeshTools.Mesh`
+        The mesh object associated with the finite element.
+    dofMap : :class:`proteus.FemTools.DOFMap`
         Describes the global degree-of-freedom numbers associated with
         each element in the finite element triangulation.
     """
     def __init__(self, referenceFiniteElement, elementMaps, dofMap):
+        import pdb
+        pdb.set_trace()
         self.strongDirichletConditions = True
         self.dim=dofMap.nDOF
         self.range_dim = range(dofMap.nDOF)
