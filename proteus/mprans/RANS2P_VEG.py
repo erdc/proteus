@@ -124,7 +124,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
         self.beamRigid= beamRigid
         self.beamIsLocal = np.zeros((len(self.beamLocation),1), dtype=np.bool)
         self.yVertical = yVertical
-        self.avgBox = avgBox
+        self.avgBox = np.array(avgBox)
 
     def attachModels(self,modelList):
         RANS2P.Coefficients.attachModels(self,modelList)
@@ -584,20 +584,21 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         #             self.coefficients.q1[i,j,k] = globalSum(self.q1[i,j,k])#globalSum(self.q1[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
         #             self.coefficients.q2[i,j,k] = globalSum(self.q2[i,j,k])#globalSum(self.q2[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
         #             self.coefficients.q3[i,j,k] = globalSum(self.q3[i,j,k])#globalSum(self.q3[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
-        cq1 = np.copy(self.coefficients.q1)
-        cq2 = np.copy(self.coefficients.q2)
-        cq3 = np.copy(self.coefficients.q3)
-        self.comm2.Allreduce(self.coefficients.q1, cq1)
-        self.comm2.Allreduce(self.coefficients.q2, cq2)
-        self.comm2.Allreduce(self.coefficients.q3, cq3)
-        self.coefficients.q1=cq1
-        self.coefficients.q2=cq2
-        self.coefficients.q3=cq3
+        if not self.coefficients.beamRigid:
+            cq1 = np.copy(self.coefficients.q1)
+            cq2 = np.copy(self.coefficients.q2)
+            cq3 = np.copy(self.coefficients.q3)
+            self.coefficients.comm2.Allreduce(self.coefficients.q1, cq1)
+            self.coefficients.comm2.Allreduce(self.coefficients.q2, cq2)
+            self.coefficients.comm2.Allreduce(self.coefficients.q3, cq3)
+            self.coefficients.q1=cq1
+            self.coefficients.q2=cq2
+            self.coefficients.q3=cq3
 
-        for i in range(3):
-            self.coefficients.vel_avg[i]=globalSum(self.coefficients.vel_avg[i])
-
-        self.coefficients.vel_avg=self.coefficients.vel_avg/0.1472
-        self.coefficients.netBeamDrag[0] = globalSum(self.coefficients.netBeamDrag[0])
+            for i in range(3):
+                self.coefficients.vel_avg[i]=globalSum(self.coefficients.vel_avg[i])
+                
+                self.coefficients.vel_avg=self.coefficients.vel_avg/0.1472
+                self.coefficients.netBeamDrag[0] = globalSum(self.coefficients.netBeamDrag[0])
 
         
