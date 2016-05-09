@@ -4265,6 +4265,12 @@ void calculateConservationResidualPWL(int nElements_global,
       right_eN = elementBoundaryElements[ebN*2+1];
       left_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       right_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+1];
+      printf("ebN = %d, left_eN = %d, right_eN = %d, left_ebN_element = %d, right_ebN_element = %d\n",
+	     ebN,
+	     left_eN,
+	     right_eN,
+	     left_ebN_element,
+	     right_ebN_element);
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
 	{
           fluxAverage = 0.0;

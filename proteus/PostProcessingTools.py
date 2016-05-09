@@ -663,7 +663,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
             else:
                 #local element residuals
                 self.elementResidual[ci] = self.vt.elementResidual[ci]
-
             #solution space not P^1
             self.updateConservationJacobian[ci] = True
 
@@ -686,6 +685,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         compute mass conservative velocity field following Larson and Niklasson assuming a P^k C0
         Galerkin solution has already been found
         """
+
         #must zero first time for average velocity
         self.nodeStarFactors[ci].setU(0.0)
         #correct first time through, in case there are Flux boundaries that
@@ -729,6 +729,8 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         """
         if correctFlux == True:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
+        import pdb
+        pdb.set_trace()
 
         cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
                                                          self.vt.mesh.exteriorElementBoundariesArray,
@@ -746,10 +748,12 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                          self.w[ci],
                                                          self.vt.ebq_global['n'],
                                                          self.nodeStarFactors[ci],
-                                                         self.q[('conservationResidual',ci)],
-                                                         self.ebq_global[('velocity',ci)],
-                                                         self.ebq[('velocity',ci)])
+                                                         self.q[('conservationResidual',ci)], # output
+                                                         self.ebq_global[('velocity',ci)],    # output
+                                                         self.ebq[('velocity',ci)])           # output
         #set boundary flux
+        import pdb
+        pdb.set_trace()
         updateCoef = 0.0 #overwrite first
         cfemIntegrals.loadBoundaryFluxIntoGlobalElementBoundaryVelocity(self.vt.mesh.exteriorElementBoundariesArray,
                                                                         self.fluxElementBoundaries[ci],
@@ -758,7 +762,8 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                                         updateCoef,
                                                                         self.vt.ebq_global[('velocity',ci)])
 
-
+        import pdb
+        pdb.set_trace()
         cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
                                                                          self.vt.mesh.exteriorElementBoundariesArray,
                                                                          self.vt.mesh.elementBoundaryElementsArray,
@@ -1059,6 +1064,8 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         if self.testSpace == None:
             #all the solution spaces must be C0P1
             self.testSpace = self.vt.u[self.vtComponents[0]].femSpace
+        import pdb
+        pdb.set_trace()
     #init
     def postprocess_component(self,ci,verbose=0):
         """
@@ -1098,6 +1105,8 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                      self.nodeStarFactors[ci])
         #
         self.getConservationResidualPWL(ci,correctFlux=False)
+        import pdb
+        pdb.set_trace()
 
         #add back fluxes for elementBoundaries that were Neumann but
         #not enforced directly
@@ -1112,7 +1121,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         """
         if correctFlux == True:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
-
 
         cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
                                                          self.vt.mesh.exteriorElementBoundariesArray,
@@ -1134,6 +1142,8 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                          self.ebq_global[('velocity',ci)],
                                                          self.ebq[('velocity',ci)])   # i'm not crazy about the nodeStarFactors term here...should it be dofStarFactors?
         #set boundary flux
+        import pdb
+        pdb.set_trace()
         updateCoef = 0.0 #overwrite first
         cfemIntegrals.loadBoundaryFluxIntoGlobalElementBoundaryVelocity(self.vt.mesh.exteriorElementBoundariesArray,
                                                                         self.fluxElementBoundaries[ci],
@@ -1141,7 +1151,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                                         self.vt.ebq_global[('totalFlux',ci)],
                                                                         updateCoef,
                                                                         self.vt.ebq_global[('velocity',ci)])
-
 
         cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
                                                                          self.vt.mesh.exteriorElementBoundariesArray,
@@ -3316,7 +3325,7 @@ class AggregateVelocityPostProcessor:
             assert self.vt != None, "must pass in vectorTransport if doing velocity postprocessing"
             #collect components that share an algorithm
             for ci in transport.conservativeFlux.keys():
-                assert transport.conservativeFlux[ci] in self.vpp_types.keys()
+                assert transport.conservativeFlux[ci] in self.vpp_types.keys(), "invalid postprocessing string"
                 if self.vpp_components.has_key(transport.conservativeFlux[ci]):
                     self.vpp_components[transport.conservativeFlux[ci]].append(ci)
                 else:

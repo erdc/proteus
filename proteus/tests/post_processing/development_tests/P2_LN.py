@@ -35,11 +35,24 @@ def test_BDM2_P2():
     pdb.set_trace()
     # Test correct node star is being created
 
+def test_BDM_P1():
+    '''
+    Tests some BDM stuff
+    '''
+    # bdm_tests_template loads 
+    import example1 as ex
+    import numpy as np
+    import expected_output as eo
+
+    import pdb
+    pdb.set_trace()
+
 
 if __name__ == '__main__':
     from proteus import Comm
     comm = Comm.init()
-    test_BDM2_P2()
+    test_BDM_P1()
+#    test_BDM2_P2()
    # import nose
    # nose.main()
 

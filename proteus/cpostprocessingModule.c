@@ -1465,13 +1465,20 @@ cpostprocessingCalculateConservationResidualPWL(PyObject* self,
                        &vConservative_element))
     
     return NULL;
-  calculateConservationResidualPWL(SHAPE(w)[0],
-				   SHAPE(interiorElementBoundaries)[0],
-				   SHAPE(exteriorElementBoundaries)[0],
-				   SHAPE(w)[1],
-				   SHAPE(w)[2],
-				   SHAPE(w)[3],
-				   SHAPE(n)[2],
+  calculateConservationResidualPWL(SHAPE(w)[0] 
+				   /* nElements_global*/, 
+				   SHAPE(interiorElementBoundaries)[0] 
+				   /*nInteriorElementBoundaries_global*/,
+				   SHAPE(exteriorElementBoundaries)[0]
+				   /*nExteriorElementBoundaries_global*/,
+				   SHAPE(w)[1]
+				   /*nElementBoundaries_element*/,
+				   SHAPE(w)[2]
+				   /*nQuadraturePoints_elementBoundary*/,
+				   SHAPE(w)[3]
+				   /*nDOF_element*/,
+				   SHAPE(n)[2]
+				   /*nSpace */,
 				   IDATA(interiorElementBoundaries),
 				   IDATA(exteriorElementBoundaries),
 				   IDATA(elementBoundaryElements),
