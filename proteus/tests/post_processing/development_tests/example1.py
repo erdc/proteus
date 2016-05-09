@@ -68,7 +68,7 @@ n.nDTout = 1
 n.T = 1
 n.parallel = False
 
-n.femSpaces = dict((i,pr.FemTools.C0_AffineLinearOnSimplexWithNodalBasis) for i in range(p.nc))
+n.femSpaces = dict((i,pr.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis) for i in range(p.nc))
 n.elementQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd,4)
 n.elementBoundaryQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd-1,4)
 n.nn = 3
@@ -105,8 +105,8 @@ n.l_atol_res = 1.0e-10
 
 n.multigridCycles = 0
 
-n.cfluxtag  = 'pwl-bdm'#'pwl-bdm'#'sun-rt0','sun-gs-rt0','pwc','pwl','pwl-bdm','point-eval'
-n.conservativeFlux =  {0:'pwl-bdm'}#,1:'pwl-ib-fix-0'}#dict((i,cfluxtag) for i in range(nc))
+n.cfluxtag  = 'pwl-bdm2'#'pwl-bdm'#'sun-rt0','sun-gs-rt0','pwc','pwl','pwl-bdm','point-eval'
+n.conservativeFlux =  {0:'pwl-bdm2'}#,1:'pwl-ib-fix-0'}#dict((i,cfluxtag) for i in range(nc))
 #need this for sun-wheeler-gs
 #if n.cfluxtag == 'sun-gs-rt0':
 #n.numericalFluxType = pr.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior

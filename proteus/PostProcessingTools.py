@@ -935,10 +935,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                                       self.dofStarElementsArray,
                                                                       self.dofStarElementNeighborsArray)
 
-        import pdb
-        pdb.set_trace()
-
-
         #
         self.nDOFs_element = {}
         self.updateConservationJacobian = {}
@@ -1064,8 +1060,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         if self.testSpace == None:
             #all the solution spaces must be C0P1
             self.testSpace = self.vt.u[self.vtComponents[0]].femSpace
-        import pdb
-        pdb.set_trace()
     #init
     def postprocess_component(self,ci,verbose=0):
         """
@@ -1105,12 +1099,14 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                      self.nodeStarFactors[ci])
         #
         self.getConservationResidualPWL(ci,correctFlux=False)
-        import pdb
-        pdb.set_trace()
 
         #add back fluxes for elementBoundaries that were Neumann but
         #not enforced directly
         self.addBoundaryFluxesBackToResidual(ci,self.fluxElementBoundaries[ci])
+
+        # developmental
+        self.conservativeVelocityCalculation()
+        # end developmental
 
         if verbose > 0:
             logEvent("Max local conservation (dgp1 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.nElements_owned])))
@@ -1142,8 +1138,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                          self.ebq_global[('velocity',ci)],
                                                          self.ebq[('velocity',ci)])   # i'm not crazy about the nodeStarFactors term here...should it be dofStarFactors?
         #set boundary flux
-        import pdb
-        pdb.set_trace()
         updateCoef = 0.0 #overwrite first
         cfemIntegrals.loadBoundaryFluxIntoGlobalElementBoundaryVelocity(self.vt.mesh.exteriorElementBoundariesArray,
                                                                         self.fluxElementBoundaries[ci],
@@ -1499,6 +1493,60 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
 #        pdb.set_trace()
 
 
+    def flag_neumann_boundary_edges(self):
+        ''' This function flags neumann boundaries.
+
+        TODO - WIP - part of some experimental functions
+        designed for LN approximations.
+        NOTE - Currently this function is not operational and
+        it returns a dictionary which suggests all edges
+        are Dirichlet.
+        '''
+        self.neumann_edge_dict = {}
+        for edge in self.vt.mesh.exteriorElementBoundariesArray:
+            self.neumann_edge_dict[edge] = False
+
+    def conservativeVelocityCalculation(self):
+        '''Serial implimentation of LN algorithm.
+
+        TODO - This function is experimental and should be
+        refactor once completed.
+        '''
+        # Initialize the matrix - serial LN requires a system
+        # the size of the number of elements in the mesh.
+        import pdb
+        num_elements = self.vt.mesh.nElements_global
+        num_quadpts_element = self.vt.q['dV'].shape[1]
+#        num_quadpts_boundary = 
+        self.flag_neumann_boundary_edges()
+
+        A = numpy.zeros(shape=(num_elements,num_elements))
+        b = numpy.zeros(shape=(num_elements,1))
+        pdb.set_trace()
+        # loop over all elements in the mesh
+        for k in range(num_elements):
+            # Need to calculate the source term integral
+            # Eg. - int_{K} (f, 1)_{K}
+            for pt in range(num_quadpts_element):
+                # Q for ck - is q[('r',0)][k][pt] effectively f 
+                b[k] += (self.vt.q[('r',0)][k][pt] *  
+                         self.vt.q['dV'][k][pt])
+            # Need to loop over edges
+            # Need to find Neumann edges and Dirichlet edges
+            for edge in self.vt.mesh.elementBoundariesArray[k]:
+                print 'Element : ' + `k` + ' Edge : ' + `edge`
+                if edge in self.vt.mesh.interiorElementBoundariesArray:
+                    print 'Edge : ' + `edge` + ' is interior'
+                else:
+                    if self.neumann_edge_dict[edge] == False:
+                        print 'Edge ' + `edge` + ' is a Dirichelt exterior edge'
+                if (edge in self.vt.mesh.interiorElementBoundaries) or (self.neumann_edge_dict[edge]==False):
+                    
+
+#            self.vt.ebq_global['n'] - normal component
+#            self.vt.ebq_global[('velocityAverage',0)] - velocity component
+#            self.vt.ebq[('dS_u',0)] - integration weights
+        pdb.set_trace()
 
     def computeGeometricInfo(self):
         if self.BDMcomponent != None:
