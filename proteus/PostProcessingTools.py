@@ -1515,38 +1515,57 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
         # Initialize the matrix - serial LN requires a system
         # the size of the number of elements in the mesh.
         import pdb
+#        pdb.set_trace()
         num_elements = self.vt.mesh.nElements_global
-        num_quadpts_element = self.vt.q['dV'].shape[1]
-#        num_quadpts_boundary = 
+        num_element_quadpts = self.vt.q['dV'].shape[1]
+        num_bdy_quadpts = self.vt.ebq_global['n'][0].shape[0]
+        dim = self.vt.ebq_global['n'][0].shape[1]
+        h = self.vt.mesh.h
+
+        # Flag Neumann terms
         self.flag_neumann_boundary_edges()
 
+        # Allocate space for matrices
         A = numpy.zeros(shape=(num_elements,num_elements))
         b = numpy.zeros(shape=(num_elements,1))
-        pdb.set_trace()
+        flux_approx = numpy.zeros(shape=(num_elements,1))
+
         # loop over all elements in the mesh
         for k in range(num_elements):
             # Need to calculate the source term integral
             # Eg. - int_{K} (f, 1)_{K}
-            for pt in range(num_quadpts_element):
+            for pt in range(num_element_quadpts):
                 # Q for ck - is q[('r',0)][k][pt] effectively f 
                 b[k] += (self.vt.q[('r',0)][k][pt] *  
                          self.vt.q['dV'][k][pt])
             # Need to loop over edges
             # Need to find Neumann edges and Dirichlet edges
-            for edge in self.vt.mesh.elementBoundariesArray[k]:
-                print 'Element : ' + `k` + ' Edge : ' + `edge`
-                if edge in self.vt.mesh.interiorElementBoundariesArray:
-                    print 'Edge : ' + `edge` + ' is interior'
-                else:
-                    if self.neumann_edge_dict[edge] == False:
-                        print 'Edge ' + `edge` + ' is a Dirichelt exterior edge'
-                if (edge in self.vt.mesh.interiorElementBoundaries) or (self.neumann_edge_dict[edge]==False):
-                    
-
-#            self.vt.ebq_global['n'] - normal component
-#            self.vt.ebq_global[('velocityAverage',0)] - velocity component
-#            self.vt.ebq[('dS_u',0)] - integration weights
+            for local_edge_num , global_edge_num in enumerate(self.vt.mesh.elementBoundariesArray[k]):
+                print 'element : ' + `k`
+                # Diagonal element
+                A[k][k] += 1/h * ( sum(self.vt.ebq[('dS_u',0)][k][local_edge_num]) )
+                # Calculate A's off-diagonal terms
+                if global_edge_num in self.vt.mesh.interiorElementBoundariesArray:
+                    elements = self.vt.mesh.elementBoundaryElementsArray[global_edge_num]
+                    if k == elements[0]:
+                        j = elements[1]
+                    else:
+                        j = elements[0]
+                    # off diagonal elements
+                    A[k][j] += 1/h * ( sum(self.vt.ebq[('dS_u',0)][k][local_edge_num]) )
+                # Calculate Flux Inner Products
+                for pt in range(num_bdy_quadpts):
+                    for comp in range(dim):
+                        flux_approx[k] = (self.vt.ebq_global['n'][global_edge_num][pt][comp]*
+                                          self.vt.ebq_global[('velocityAverage',0)][global_edge_num][pt][comp])
+                        b[k] += ( flux_approx[k] *
+                                  self.vt.ebq[('dS_u',0)][k][local_edge_num][pt] )
+        print 'loop done'
+        V = numpy.linalg.solve(A,b)
+        self.CorrectedFlux = flux_approx - V
         pdb.set_trace()
+
+
 
     def computeGeometricInfo(self):
         if self.BDMcomponent != None:
