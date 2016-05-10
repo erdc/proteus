@@ -1475,7 +1475,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
 
 
     def computeBDM2projectionMatrices(self):
-        
+        import pdb
+        pdb.set_trace()
         cpostprocessing.buildLocalBDM2projectionMatrices(self.degree,
                                                          self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
                                                          self.vt.ebq['n'],
@@ -1493,7 +1494,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
 #        pdb.set_trace()
 
 
-    def flag_neumann_boundary_edges(self):
+    def flagNeumannBoundaryEdges(self):
         ''' This function flags neumann boundaries.
 
         TODO - WIP - part of some experimental functions
@@ -1519,16 +1520,18 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
         num_elements = self.vt.mesh.nElements_global
         num_element_quadpts = self.vt.q['dV'].shape[1]
         num_bdy_quadpts = self.vt.ebq_global['n'][0].shape[0]
+        num_edges = self.vt.mesh.nElementBoundaries_global
         dim = self.vt.ebq_global['n'][0].shape[1]
         h = self.vt.mesh.h
 
         # Flag Neumann terms
-        self.flag_neumann_boundary_edges()
+        self.flagNeumannBoundaryEdges()
+        self.getAverageFlux()
 
         # Allocate space for matrices
         A = numpy.zeros(shape=(num_elements,num_elements))
         b = numpy.zeros(shape=(num_elements,1))
-        flux_approx = numpy.zeros(shape=(num_elements,1))
+        flux_approx = numpy.zeros(shape=(num_edges,1))
 
         # loop over all elements in the mesh
         for k in range(num_elements):
@@ -1538,6 +1541,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                 # Q for ck - is q[('r',0)][k][pt] effectively f 
                 b[k] += (self.vt.q[('r',0)][k][pt] *  
                          self.vt.q['dV'][k][pt])
+#            pdb.set_trace()
             # Need to loop over edges
             # Need to find Neumann edges and Dirichlet edges
             for local_edge_num , global_edge_num in enumerate(self.vt.mesh.elementBoundariesArray[k]):
@@ -1552,19 +1556,61 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                     else:
                         j = elements[0]
                     # off diagonal elements
-                    A[k][j] += 1/h * ( sum(self.vt.ebq[('dS_u',0)][k][local_edge_num]) )
+                    A[k][j] += ( sum(self.vt.ebq[('dS_u',0)][k][local_edge_num]) )
                 # Calculate Flux Inner Products
                 for pt in range(num_bdy_quadpts):
                     for comp in range(dim):
-                        flux_approx[k] = (self.vt.ebq_global['n'][global_edge_num][pt][comp]*
-                                          self.vt.ebq_global[('velocityAverage',0)][global_edge_num][pt][comp])
-                        b[k] += ( flux_approx[k] *
+                        b[k] += ( self.flux_average[global_edge_num] *
                                   self.vt.ebq[('dS_u',0)][k][local_edge_num][pt] )
         print 'loop done'
         V = numpy.linalg.solve(A,b)
-        self.CorrectedFlux = flux_approx - V
+        pdb.set_trace()
+#       self.CorrectedFlux = self.flux_average - V
+
+    def getAverageFlux(self):
+        '''Helper function to cacluate the average flux along the mesh boundaries. '''
+        # Step 1 : calculate the normal component of all velocities
+        import pdb
+#        pdb.set_trace()
+
+        num_elements = self.vt.mesh.nElements_global
+        num_edges = self.vt.mesh.nElementBoundaries_global
+        num_bdy_quadpts = self.vt.ebq_global['n'][0].shape[0]
+        dim = self.vt.ebq_global['n'][0].shape[1]
+
+        flux_array = numpy.zeros(shape=(num_edges,2))
+        self.flux_average = numpy.zeros(shape=(num_edges,1))
+
+        for element in range(num_elements):
+            for local_edge_num , global_edge_num in enumerate(self.vt.mesh.elementBoundariesArray[element]):
+                elements = self.vt.mesh.elementBoundaryElementsArray[global_edge_num]
+                j = 0
+                if element == elements[1]:
+                    j = 1
+                for pt in range(num_bdy_quadpts):
+                    for comp in range(dim):
+                        flux_array[global_edge_num][j] += (self.vt.ebq['n'][element][local_edge_num][pt][comp] *
+                                                           self.vt.ebq[('velocity',0)][element][local_edge_num][pt][comp] )
+        for edge in range(num_edges):
+            if edge in self.vt.mesh.interiorElementBoundariesArray:
+                self.flux_average[edge] = (flux_array[edge][0] + flux_array[edge][1]) / 2.0
+            else:
+                self.flux_average[edge] = flux_array[edge][0]
         pdb.set_trace()
 
+    def getFlux(self):
+        ''' ?? doc string ?? '''
+        num_elements = self.vt.mesh.nElements_global
+        num_edges = self.vt.mesh.nElementBoundaries_global
+        num_bdy_quadpts = self.vt.ebq_global['n'][0].shape[0]
+        dim = self.vt.ebq_global['n'][0].shape[1]
+
+        flux_array = numpy.zeros(shape=(num_edges,2))
+        self.flux_average = numpy.zeros(shape=(num_edges,1))
+        
+#        for edge in range(num_edges):
+            
+            
 
 
     def computeGeometricInfo(self):
@@ -1577,6 +1623,10 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
         """
 #        ARB -- need to add an assert here
 #        assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
+
+        self.getAverageFlux()
+        import pdb
+        pdb.set_trace()
 
         self.buildBDM2rhs(self.BDMprojectionMat_element,
                           self.BDMprojectionMatPivots_element,
@@ -1602,6 +1652,9 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
         cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.qv[ci],
                                                                 self.q[('velocity_dofs',ci)],
                                                                 self.vt.q[('velocity',ci)])
+
+        import pdb
+        pdb.set_trace()
 
     def evaluateElementVelocityField(self,x,ci):
         """

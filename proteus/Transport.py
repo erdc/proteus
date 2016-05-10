@@ -40,8 +40,7 @@ class StorageSet(set):
             storageDict[k] = numpy.zeros(self.shape,self.storageType)
 
 class OneLevelTransport(NonlinearEquation):
-    r"""
-    A class for finite element discretizations of multicomponent
+    r""" A class for finite element discretizations of multicomponent
     advective-diffusive-reactive transport on a single spatial mesh.
 
     Objects of this type take the initial-boundary value
@@ -65,6 +64,13 @@ class OneLevelTransport(NonlinearEquation):
 
     The rest of the functions in this class are either private functions
     or return various other pieces of information.
+
+    Attributes
+    ----------
+    ebq_global[('velocityAverage',0)] : array
+        This attribute stores the average velocity along an edge given 
+        a discontinous velocity field.
+
     """
     def __init__(self,
                  uDict,
