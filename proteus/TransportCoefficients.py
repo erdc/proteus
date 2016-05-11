@@ -10423,11 +10423,18 @@ class SinglePhaseDarcyCoefficients(TC_base):
         pass #need to put in eval for time varying coefficients
     #end def
 
-# class schurPressureOperators(TC_base):
-#     """ This class is designed to build Schur complement operators  """
-#     def __init__(self):
-#         TC_base.__init__(self,
-#                          nc=1,
-#                          variableNames = ['p'],
-#                          mass = {0:{0:'linear'}},
-#                          diffusion = {0:{0:'linear'}})
+ # class schurPressureOperators(TC_base):
+ #    """ This class is designed to build Schur complement operators  """
+ #    def __init__(self):
+ #        TC_base.__init__(self,
+ #                         nc=1,
+ #                         variableNames = ['p'],
+ #                         mass = {0:{0:'linear'}},
+ #                         advection = {},
+ #                         diffusion = {},
+ #                         potential = {},
+ #                         reaction = {} )
+ #    def evaluate(self,t,c):
+ #        c[('m',0)][:]  =  1.0*c[('u',0)]
+ #        c[('dm',0)][:] =  1.0
+         
