@@ -54,7 +54,6 @@ def dirCheck(v1, v2):
     param: v2 : 2nd vector  [-]  with three components
     """
     dircheck = abs(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
-        #print self.dircheck
     if dircheck > 1e-10:
         logEvent("Wave direction is not perpendicular to gravity vector. Check input",level=0)
         return sys.exit(1)
@@ -222,10 +221,9 @@ def dispersion(w,d, g = 9.81,niter = 1000):
     :param niter: number  of solution iterations
     :param g: gravity [L/T^2
     """
-#    print("Initiating dispersion")
+
     w_aux = np.array(w)
     K = w_aux**2/g
-#    print("Initial dispersion value = %s" %str(Kd/d))
     for jj in range(niter):
        #Kdn_1 = Kd
         K =  w_aux**2/(g*np.tanh(K*d))
@@ -508,32 +506,32 @@ class RandomWaves:
         for ii in range(self.N):
             U+= vel_mode(x, t, self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
-    def writeEtaSeries(self,Tstart,Tend,x0,Vgen,fname):
-        """Write a timeseries for the free-surface elevation
+    def writeEtaSeries(self,Tstart,Tend,x0,fname,Vgen= np.array([0.,0,0])):
+        """Write a timeseries for the free-surface elevation.  
         :param Tstart: start time of timeseries
         :param Tend: end time of timeseries
         :param x0: Location vector of timeseries
-        :param Vgen: Length vector of relaxation zone 
         :param fname: filename for timeseries
+        :param Vgen: Length vector of relaxation zone (used to combine TimeSeries class with a relaxation zone)
         """
-
-        Nper = self.period/50.
+        if sum(Vgen[:]*self.waveDir[:])< 0 :
+                logEvent('WaveTools.py: Location vector of generation zone should not be opposite to the wave direction')
+                sys.exit(1)        
+        dt = self.Tp/50.
         Tlag = np.zeros(len(self.omega),)
         for j in range(len(self.omega)):
             Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
         Tlag = max(Tlag)
         Tstart = Tstart - Tlag
-        Np = int(Nper*(Tend - Tstart)/self.period)
+        Np = int((Tend - Tstart)/dt)
         time = np.linspace(Tstart,Tend,Np )
         etaR  = np.zeros(len(time), )
-        for jj in len(time):
+        for jj in range(len(time)):
             etaR[jj] = self.eta(x0,time[jj])
-        np.savetxt(fname,zip(time,etaR))
+        with open(fname,"w") as ff:
+            np.savetxt(ff,zip(time,etaR))
+        return np.array(zip(time,etaR))
         
-    
-
-
-
 class MultiSpectraRandomWaves(RandomWaves):
     """Generate a random wave timeseries from multiple spectra. 
     Same input parameters as RandomWaves class but they have to be all in lists with the same lenght as the spectra (except from g!)
@@ -828,22 +826,30 @@ class TimeSeries:
         self.vDir = setVertDir(g)
         dirCheck(self.waveDir,self.vDir)
         #Reading time series
-        filetype = timeSeriesFile[-4:]
-        logEvent("WaveTools.py: Reading timeseries from %s file: %s" % (filetype,timeSeriesFile),level=0)
-        fid = open(timeSeriesFile,"r")
-        if (filetype !=".txt") and (filetype != ".csv"):
-                logEvent("WaveTools.py: File %s must be given in .txt or .csv format" % (timeSeriesFile),level=0)
+        if type(timeSeriesFile) is np.ndarray:
+            tdata = timeSeriesFile
+            logEvent("WaveTools.py: Reading timeseries from numpy array", level=0)
+        elif type(timeSeriesFile) is str:
+            filetype = timeSeriesFile[-4:]
+            logEvent("WaveTools.py: Reading timeseries from file "+str(timeSeriesFile), level=0)
+            if (type(filetype)  is 'string') and (filetype !=".txt") and (filetype != ".csv"):
+                logEvent("WaveTools.py: File  must be given in .txt or .csv format")
                 sys.exit(1)
-        elif (filetype == ".csv"):
-            tdata = np.loadtxt(fid,skiprows=skiprows,delimiter=",")
-        else:
-            tdata = np.loadtxt(fid,skiprows=skiprows)
-        fid.close()
+            else:
+                fid = open(timeSeriesFile,"r")
+                if(filetype == ".csv"):
+                    tdata = np.loadtxt(fid,skiprows=skiprows,delimiter=",")
+                else:
+                    tdata = np.loadtxt(fid,skiprows=skiprows)
+                fid.close()
+        else: 
+            logEvent("WaveTools.py: timeSeriesFile argument must be string or array", level=0)
+            sys.exit(1)
         #Checks for tseries file
         # Only 2 columns: time & eta
         ncols = len(tdata[0,:])
         if ncols != 2:
-            logEvent("WaveTools.py: Timeseries file (%s) must have only two columns [time, eta]" % (timeSeriesFile),level=0)
+            logEvent("WaveTools.py: Timeseries must have only two columns [time, eta]",level=0)
             sys.exit(1)
         time_temp = tdata[:,0]
         self.dt = (time_temp[-1]-time_temp[0])/(len(time_temp)-1)
@@ -856,7 +862,7 @@ class TimeSeries:
             dt_temp = time_temp[i]-time_temp[i-1]
         #check if time is at first column
             if time_temp[i]<=time_temp[i-1]:
-                logEvent("WaveTools.py:  Found not consistent time entry between %s and %s row in %s file. Time variable must be always at the first column of the file and increasing monotonically" %(i-1,i,timeSeriesFile) )
+                logEvent("WaveTools.py: Time variable must be always at the first column of the file and increasing monotonically",level=0 )
                 sys.exit(1)
         #check if sampling rate is constant
             if dt_temp!=self.dt:
