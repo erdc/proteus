@@ -86,7 +86,13 @@ def test_Q_mat():
     Qv_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qv_raw.getValuesCSR())
     # Q 4 CK - is this the best way to handle this?
     ns.modelList[0].par_jacobianList[1].pde.scale_dt = False
+    ns.modelList[0].levelModelList[1].dphi[(0,0)].dof[:] = 1.0
+    ns.modelList[0].levelModelList[1].dphi[(1,1)].dof[:] = 1.0
+    ns.modelList[0].levelModelList[1].dphi[(2,2)].dof[:] = 1.0
+    import pdb
+    pdb.set_trace()
     B_raw = operator_constructor.getB()
+    Ap_raw = operator_constructor.getAp()
     import pdb
     pdb.set_trace()
 #    B_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(B_raw.getValuesCSR())
