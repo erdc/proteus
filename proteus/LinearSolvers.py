@@ -685,8 +685,6 @@ class schurOperatorConstructor:
         self.L.pde.q[('df',0,0)][:] = 0.0
         self.L.pde.q[('df',0,1)][:] = 0.0
         self.L.pde.q[('df',0,2)][:] = 0.0
-        import pdb
-        pdb.set_trace()
         self.L.pde.getSpatialJacobian(self.Asys)#notice switched to  Spatial
         self.Asys_petsc4py = self.L.duplicate()
         A_csr_rep_local = self.Asys.getSubMatCSRrepresentation(0,L_sizes[0][0])
@@ -702,8 +700,6 @@ class schurOperatorConstructor:
         #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
         #now zero all the dummy coefficents
         #
-        import pdb
-        pdb.set_trace()
         return self.Ap
 
     def getFp(self,output_matrix=False):
