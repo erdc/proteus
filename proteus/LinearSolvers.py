@@ -637,12 +637,12 @@ class schurOperatorConstructor:
         Parameters
         ----------
         output_matrix : bool 
-                        Determines whether matrix should be exported.
+            Determines whether matrix should be exported.
 
         Returns
         -------
         Qp : matrix
-             The pressure mass matrix.
+            The pressure mass matrix.
         """
         self.Qsys_petsc4py = self._massMatrix()
         self.Qp = self.Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isp)
@@ -762,13 +762,12 @@ class schurOperatorConstructor:
         return self.Fp
 
     def getB(self,output_matrix=False):
-        """
-        Return the conservation of mass matrix B.
+        """ Return the conservation of mass matrix B.
 
         Parameters
         ----------
         output_matrix : bool
-                        Determine whether matrix should be exported.
+            Determine whether matrix should be exported.
 
         Returns
         -------
@@ -787,6 +786,8 @@ class schurOperatorConstructor:
                           self.B_nzval,
                           self.B_colind,
                           self.B_rowptr)
+        import pdb
+        pdb.set_trace()
         self.L.pde.q[('f',0)][...,0] = self.L.pde.q[('u',1)]
         self.L.pde.q[('f',0)][...,1] = self.L.pde.q[('u',2)]
 #        self.L.pde.q[('df',0,0)][:] = 1.0
@@ -812,12 +813,12 @@ class schurOperatorConstructor:
         Parameters
         ----------
         output_matrix : bool
-                        Determine whether the matrix should be exported.
+            Determine whether the matrix should be exported.
         
         Returns
         -------
         Qv : matrix
-             The velocity mass matrix.
+            The velocity mass matrix.
         """
         Qsys_petsc4py = self._massMatrix()
         self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,self.linear_smoother.isv)
@@ -836,7 +837,7 @@ class schurOperatorConstructor:
         Returns
         -------
         Qsys : matrix
-               The system's mass matrix.
+            The system's mass matrix.
         """
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
         Qsys_rowptr = rowptr.copy()
@@ -862,9 +863,9 @@ class schurOperatorConstructor:
                                              p4pyPETSc.InsertMode.INSERT_VALUES)
         Qsys_petsc4py.assemblyBegin()
         Qsys_petsc4py.assemblyEnd()
-#        self.L.pde.q[('dm',0,0)][:] = 0.0
-#        self.L.pde.q[('df',0,0)][:] = 0.0
-#        self.L.pde.q[('a',0,0)][:] = 0.0
+        self.L.pde.q[('dm',0,0)][:] = 0.0
+        self.L.pde.q[('dm',1,1)][:] = 0.0
+        self.L.pde.q[('dm',2,2)][:] = 0.0
         return Qsys_petsc4py
 
     def _exportMatrix(self,operator,export_name):

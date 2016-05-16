@@ -3112,8 +3112,6 @@ class ParametricFiniteElementSpace:
         each element in the finite element triangulation.
     """
     def __init__(self, referenceFiniteElement, elementMaps, dofMap):
-        import pdb
-        pdb.set_trace()
         self.strongDirichletConditions = True
         self.dim=dofMap.nDOF
         self.range_dim = range(dofMap.nDOF)
