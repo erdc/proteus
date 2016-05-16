@@ -78,8 +78,6 @@ def test_Q_mat():
     opts.profile=True
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     # *** 1 *** : test the pressure mass matrix is being created properly.
-    import pdb
-    pdb.set_trace()
     smoother = LinearSolvers.NavierStokes3D_Qp(L=ns.modelList[0].par_jacobianList[1])
     operator_constructor = LinearSolvers.schurOperatorConstructor(smoother, 'stokes')
     Qp_raw = operator_constructor.getQp()
