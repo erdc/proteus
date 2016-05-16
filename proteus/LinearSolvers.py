@@ -619,9 +619,9 @@ class schurOperatorConstructor:
         Parameters
         ----------
         linear_smoother : class
-                          Provides the data about the problem.
+            Provides the data about the problem.
         pde_type :  str 
-                    Currently supports Stokes and navierStokes
+            Currently supports Stokes and navierStokes
         """
         if linear_smoother.PCType!='schur':
             raise Exception, 'This function only works with the' \
@@ -649,6 +649,26 @@ class schurOperatorConstructor:
         if output_matrix==True:
             _exportMatrix(self.Qp,"Qp")
         return self.Qp
+
+    def getQv(self,output_matrix=False):
+        """
+        Return the velocity mass matrix Qv.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether the matrix should be exported.
+        
+        Returns
+        -------
+        Qv : matrix
+            The velocity mass matrix.
+        """
+        Qsys_petsc4py = self._massMatrix()
+        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,self.linear_smoother.isv)
+        if output_matrix==True:
+            _exportmatrix(self.Qv,'Qv')
+        return self.Qv
 
     def getAp(self,output_matrix=False):
         """
@@ -694,29 +714,31 @@ class schurOperatorConstructor:
                                              p4pyPETSc.InsertMode.INSERT_VALUES)
         self.Asys_petsc4py.assemblyBegin()
         self.Asys_petsc4py.assemblyEnd()
-        self.Ap = self.Asys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isp)
+        self.Ap = self.Asys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                                  self.linear_smoother.isp)
         if output_matrix==True:
             _exportMatrix(self.Ap,'Ap')
         #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
         #now zero all the dummy coefficents
-        #
+        self.L.pde.q[('a',0,0)][:] = 0.0
+        self.L.pde.q[('df',0,1)][...,0] = 1.0
+        self.L.pde.q[('df',0,2)][...,1] = 1.0
         return self.Ap
 
     def getFp(self,output_matrix=False):
         """
-        Return the convection-diffusion pressue matrix Fp.
+        Return the convection matrix for the pressure Fp.
 
         Parameters
         ----------
         output_matrix : bool
-                        Determine whether matrix should be exported.
+            Determine whether matrix should be exported.
 
         Returns
         -------
         Fp : matrix
              The convection-diffusion pressure matrix.
         """
-        #modify the diffusion term in the mass equation so the p-p block is Ap
         #modify the diffusion term in the mass equation so the p-p block is Fp
         
         # First generate the advection part of Fp
@@ -732,11 +754,10 @@ class schurOperatorConstructor:
                              self.Fsys_nzval,
                              self.Fsys_colind,
                              self.Fsys_rowptr)
-#        self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
         self.L.pde.q[('df',0,0)][...,0] = self.L.pde.q[('u',1)]
         self.L.pde.q[('df',0,0)][...,1] = self.L.pde.q[('u',2)]
-  
-#        self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
+        import pdb
+ #        self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
         self.L.pde.getSpatialJacobian(self.Fsys)#notice, switched  to spatial
         self.Fsys_petsc4py = self.L.duplicate()
         F_csr_rep_local = self.Fsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
@@ -753,27 +774,25 @@ class schurOperatorConstructor:
         #
         #now zero all the dummy coefficents
         #
-        self.L.pde.q[('dm',0,0)][:] = 0.0
         self.L.pde.q[('df',0,0)][:] = 0.0
-        self.L.pde.q[('a',0,0)][:] = 0.0
+        pdb.set_trace()
         self.Fp = self.getAp()
         self.Fp.scale(self.L.pde.coefficients.nu)
         self.Fp.__add__(self.Cp)
         return self.Fp
 
     def getB(self,output_matrix=False):
-        """
-        Return the mass matrix B.
+        """ Return the operator B matrix.
 
         Parameters
         ----------
         output_matrix : bool
-           Determine whether matrix should be stored externally.
+            Determine whether matrix should be stored externally.
 
         Returns
         -------
         B : matrix
-             The operator B matrix.
+            The operator B matrix.
         """
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
         self.B_rowptr = rowptr.copy()
@@ -787,8 +806,6 @@ class schurOperatorConstructor:
                           self.B_nzval,
                           self.B_colind,
                           self.B_rowptr)
-        import pdb
-        pdb.set_trace()
         self.L.pde.q[('f',0)][...,0] = self.L.pde.q[('u',1)]
         self.L.pde.q[('f',0)][...,1] = self.L.pde.q[('u',2)]
         self.L.pde.q[('df',0,1)][...,0] = 1.0
@@ -805,34 +822,38 @@ class schurOperatorConstructor:
         self.B = self.Bsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isv)
         if output_matrix==True:
             _exportMatrix(self.B,'B')
-        import pdb
-        pdb.set_trace()
         return self.B
 
-
-    def getQv(self,output_matrix=False):
-        """
-        Return the velocity mass matrix Qv.
-
-        Parameters
-        ----------
-        output_matrix : bool
-            Determine whether the matrix should be exported.
-        
-        Returns
-        -------
-        Qv : matrix
-            The velocity mass matrix.
-        """
-        Qsys_petsc4py = self._massMatrix()
-        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,self.linear_smoother.isv)
+    def getF(self,output_matrix=False):
+        """ Return the A-block of the NSE """
+        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+        self.F_rowptr = rowptr.copy()
+        self.F_colind = colind.copy()
+        self.F_nzval = nzval.copy()
+        L_sizes = self.L.getSizes()
+        nr = L_sizes[0][0]
+        nc = L_sizes[1][0]
+        self.F = SparseMat(nr,nc,
+                           self.F_nzval.shape[0],
+                           self.F_nzval,
+                           self.F_colind,
+                           self.F_rowptr)
+        self.Fsys_petsc4py = self.L.duplicate()
+        F_csr_rep_local = self.F.getSubMatCSRrepresentation(0,L_sizes[0][0])
+        self.Fsys_petsc4py.setValuesLocalCSR(F_csr_rep_local[0],
+                                             F_csr_rep_local[1],
+                                             F_csr_rep_local[2],
+                                             p4pyPETSc.InsertMode.INSERT_VALUES)
+        self.Fsys_petsc4py.assemblyBegin()
+        self.Fsys_petsc4py.assemblyEnd()
+        self.F = self.Fsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+                                                 self.linear_smoother.isv)
         if output_matrix==True:
-            _exportmatrix(self.Qv,'Qv')
-        return self.Qv
+            _exportMatrix(self.F,'F')
+        return self.F
 
     def _massMatrix(self):
-        """
-        Generates and returns the mass matrix.
+        """ Generates and returns the mass matrix.
 
         This function generates and returns the mass matrix for the system. This
         function is internal to the class and called by public functions which 
@@ -843,17 +864,20 @@ class schurOperatorConstructor:
         Qsys : matrix
             The system's mass matrix.
         """
-        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+        # TODO - figure out why the following commented line doesn't work
+#        Qsys = self._initializeMatrix()
+        rowptr,colind,nzval = self.L.pde.jacobian.getCSRrepresentation()
         Qsys_rowptr = rowptr.copy()
         Qsys_colind = colind.copy()
         Qsys_nzval = nzval.copy()
         nr = rowptr.shape[0] - 1
         nc = nr
-        Qsys =SparseMat(nr,nc,
-                        Qsys_nzval.shape[0],
-                        Qsys_nzval,
-                        Qsys_colind,
-                        Qsys_rowptr)
+        Qsys = SparseMat(nr,nc,
+                         Qsys_nzval.shape[0],
+                         Qsys_nzval,
+                         Qsys_colind,
+                         Qsys_rowptr)
+#        pdb.set_trace()
         self.L.pde.q[('dm',0,0)][:] = 1.0
         self.L.pde.q[('dm',1,1)][:] = 1.0
         self.L.pde.q[('dm',2,2)][:] = 1.0
@@ -862,9 +886,9 @@ class schurOperatorConstructor:
         L_sizes = self.L.getSizes()
         Q_csr_rep_local = Qsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
         Qsys_petsc4py.setValuesLocalCSR(Q_csr_rep_local[0],
-                                             Q_csr_rep_local[1],
-                                             Q_csr_rep_local[2],
-                                             p4pyPETSc.InsertMode.INSERT_VALUES)
+                                        Q_csr_rep_local[1],
+                                        Q_csr_rep_local[2],
+                                        p4pyPETSc.InsertMode.INSERT_VALUES)
         Qsys_petsc4py.assemblyBegin()
         Qsys_petsc4py.assemblyEnd()
         self.L.pde.q[('dm',0,0)][:] = 0.0
@@ -872,9 +896,29 @@ class schurOperatorConstructor:
         self.L.pde.q[('dm',2,2)][:] = 0.0
         return Qsys_petsc4py
 
-    def _exportMatrix(self,operator,export_name):
+    def _initializeMatrix(self):
+        """ Allocates memory for the matrix operators.
+
+        Returns
+        -------
+        Q : sparseMat
         """
-        Export the matrix operator.
+        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+        Q_rowptr = rowptr.copy()
+        Q_colind = colind.copy()
+        Q_nzval  = nzval.copy()
+        nr = rowptr.shape[0] - 1
+        nc = nr
+        Q = SparseMat(nr,nc,
+                      Q_nzval.shape[0],
+                      Q_nzval,
+                      Q_colind,
+                      Q_rowptr)        
+        return Q
+
+
+    def _exportMatrix(self,operator,export_name):
+        """ Export the matrix operator.
 
         Parameters
         ----------
@@ -966,7 +1010,7 @@ class NavierStokesSchur(SchurPrecon):
         Set up the NaverStokesSchur preconditioner.  
 
         Nothing needs to be done here for a generic NSE preconditioner. 
-        Preconditioner arguments can be set using PETSc command line arguments.
+        Preconditioner arguments can be set with PETSc command line.
         """
         pass
         
@@ -987,19 +1031,20 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
         NavierStokesSchur.__init__(self,L,prefix)
 
     def setUp(self,global_ksp,S_hat=False):
-        """
-        Attaches the pressure mass matrix to PETSc KSP preconditioner.
+        """ Attaches the pressure mass matrix to PETSc KSP preconditioner.
 
         Parameters
         ----------
         global_ksp : PETSc KSP object
         S_hat : bool
-                Flag to indicate whether the Schur operator should
-                be approximated using the PETSc default or the pressure mass
-                matrix. Generally this should be set to False.
+            Flag to indicate whether the Schur operator should
+            be approximated using the PETSc default or the pressure mass
+            matrix. Generally this should be set to False.
         """
         # Create the pressure mass matrix and scale by the viscosity.
         self.Qp = self.operator_constructor.getQp()
+        import pdb
+        pdb.set_trace()
         self.Qp.scale(1./self.L.pde.coefficients.nu)
         L_sizes = self.Qp.size
         L_range = self.Qp.owner_range
@@ -1052,6 +1097,8 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         NavierStokes3D.__init__(self,L,prefix)
 
     def setUp(self,global_ksp):
+        import pdb
+        pdb.set_trace()
         # Step-1: get the pressure mass matrix
         self.Qp = self.operator_constructor.getQp()
         self.Fp = self.operator_constructor.getFp()
@@ -1059,12 +1106,13 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         # Step-2: Set up the Shell for the  PETSc operator
         # Qp
         L_sizes = self.Qp.size
+        # ??? Is L_range necessary ???
         L_range = self.Qp.owner_range
         self.PCDInv_shell = p4pyPETSc.Mat().create()
         self.PCDInv_shell.setSizes(L_sizes)
         self.PCDInv_shell.setType('python')
         # ***
-        self.matcontext_inv = PCDInv_shell(self.Qp,self.Fp,self.Ap,)
+        self.matcontext_inv = PCDInv_shell(self.Qp,self.Fp,self.Ap)
         self.PCDInv_shell.setPythonContext(self.matcontext_inv)
         self.PCDInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
@@ -1090,11 +1138,30 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         NavierStokes3D.__init__(self,L,prefix)
 
     def setUp(self,global_ksp):
-        # Step-1: get the pressure mass matrix
         import pdb
-        pdb.set_trace()
+        # initialize the Qv_diagonal operator
         self.Qv = self.operator_constructor.getQv()
+        self.Qv_hat = p4pyPETSc.Mat().create()
+        self.Qv_hat.setSizes(self.Qv.getSizes())
+        self.Qv_hat.setType('aij')
+        self.Qv_hat.setUp()
+        self.Qv_hat.setDiagonal(self.Qv.getDiagonal())
+        # initialize the B and F operators
         self.B = self.operator_constructor.getB()
+        self.F = self.operator_constructor.getF()
+        pdb.set_trace()
+        L_size = self.B.size[0]
+        L_sizes = (L_size,L_size)
+        self.LSCInv_shell = p4pyPETSc.Mat().create()
+        self.LSCInv_shell.setSizes(L_sizes)
+        self.LSCInv_shell.setType('python')
+        # ***
+        self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.F)
+        self.LSCInv_shell.setPythonContext(self.matcontext_inv)
+        self.LSCInv_shell.setUp()
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
 
 class SimpleDarcyFC:
     def __init__(self,L):

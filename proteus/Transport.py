@@ -65,6 +65,15 @@ class OneLevelTransport(NonlinearEquation):
 
     The rest of the functions in this class are either private functions
     or return various other pieces of information.
+    
+    Attributes
+    ----------
+    coefficients : :class:`proteus.TransportCoefficients`
+        The coefficients defining the problem's physics.
+    q : dict
+        This dictionary contains a the function values
+        used in Jacobian and residual assembly at the required
+        quadrature points.
     """
     def __init__(self,
                  uDict,
@@ -2712,8 +2721,6 @@ class OneLevelTransport(NonlinearEquation):
                     if self.timeIntegration.diffusionIsImplicit[ci]:
                         if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
                             if self.sd:
-                                import pdb
-                                pdb.set_trace()
                                 cfemIntegrals.updateDiffusionJacobian_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                               self.phi[ck].femSpace.dofMap.l2g,
                                                                               self.q[('a',ci,ck)],

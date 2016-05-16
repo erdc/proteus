@@ -277,21 +277,27 @@ def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
     import superluWrappers
     return superluWrappers.SparseMatrix(nr,nc,nnz,nzval,colind,rowptr)
 
-class SparseMatShell:
-    """
-    Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains).
+class OperatorShell:
+    """ A base class for operator shells """
+    def __init__(self):
+        pass
+    def create(self,A):
+        pass
+    def mult(self,A,x,y):
+        pass
+
+class SparseMatShell(OperatorShell):
+    """ Build a parallel matrix shell from CSR data structures.
 
     Parameters
     ----------
-    ghosted_csr_mat: a superluWrappers.SparseMatrix
+    ghosted_csr_mat: :class: `proteus.superluWrappers.SparseMatrix`
     """
     def __init__(self,ghosted_csr_mat):
         self.ghosted_csr_mat=ghosted_csr_mat
         self.par_b = None
         self.xGhosted = None
         self.yGhosted = None
-    def create(self, A):
-        pass
     def mult(self, A, x, y):
         assert self.par_b!=None, "The parallel RHS vector par_b must be " \
                             "initialized before using the mult function"
@@ -307,7 +313,7 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
 
-class MatrixShell:
+class MatrixShell(OperatorShell):
     """ A shell class for a matrix. """
     def __init__(self,A):
         """
@@ -319,8 +325,6 @@ class MatrixShell:
             A petsc4py matrix object
         """
         self.A = A
-    def create(self,A):
-        pass
     def mult(self,A,x,y):
         """
         Multiply the matrix and x.
@@ -337,7 +341,7 @@ class MatrixShell:
         """
         self.A.mult(x,y)
 
-class MatrixInvShell:
+class MatrixInvShell(OperatorShell):
     """ A PETSc shell class for a inverse operator. """
     def __init__(self, A):
         """
@@ -354,11 +358,8 @@ class MatrixInvShell:
         self.ksp.setType('preonly')
         self.ksp.pc.setType('lu')
         self.ksp.setUp()
-    def create(self,A):
-        pass
     def apply(self,A,x,y):
-        """
-        Apply the inverse pressure mass matrix.
+        """ Apply the inverse pressure mass matrix.
 
         Parameters
         ----------
@@ -372,18 +373,17 @@ class MatrixInvShell:
         """
         self.ksp.solve(x,y)
 
-class PCDInv_shell:
-    """ Shell class for the PCD Inverse preconditioner """
+class PCDInv_shell(OperatorShell):
+    """ Shell class for the PCD inverse preconditioner """
     def __init__(self,Qp_matrix,Fp_matrix,Ap_matrix):
-        """
-        Initializes the pressure-convection-diffusion inverse operator.
+        """ Initializes the pressure-convection-diffusion inverse operator.
 
         Parameters
         ----------
         Qp_matrix : petsc4py matrix object
                     The pressure mass matrix.
         Fp_matrix : petsc4py matrix object
-                    Convection-diffusion operator.
+                    The convection-diffusion operator.
         Ap_matrix : petsc4py matrix object
                     The pressure Laplacian operator.
         """
@@ -402,11 +402,8 @@ class PCDInv_shell:
         self.kspQp.setType('preonly')
         self.kspQp.pc.setType('lu')
         self.kspQp.setUp()
-    def create(self,A):
-        pass
     def apply(self,A,x,y):
-        """  
-        Apply the inverse pressure-convection-diffusion operator.
+        """ Apply the inverse pressure-convection-diffusion operator.
 
         Parameters
         ----------
@@ -427,6 +424,63 @@ class PCDInv_shell:
         self.kspAp.solve(x,temp1)
         self.Fp.mult(temp1,temp2)
         self.kspQp.solve(temp2,y)
+
+class LSCInv_shell(OperatorShell):
+    """ Shell class for the LSC Inverse Preconditioner """
+    def __init__(self,Qv_matrix,B_matrix,F_matrix):
+        """Initializes the LSC inverse operator.
+        
+        Parameters
+        ----------
+        Qv_matrix : petsc4py matrix object
+            The diagonal velocity mass matrix.
+        B_matrix : petsc4py matrix object
+            The velocity-pressure operator.
+        F_matrix : petsc4py matrix object
+            The A-block of the linear system
+        """
+        self.Qv = Qv_matrix
+        self.B = B_matrix
+        self.F = F_matrix
+        # initialize Q_hat
+        self.kspQv = p4pyPETSc.KSP().create()
+        self.kspQv.setOperators(self.Qv,self.Qv)
+        self.kspQv.setType('preonly')
+        self.kspQv.pc.setType('lu')
+        self.kspQv.setUp()
+        # initialize (B Q_hat B')
+    def apply(self,A,x,y):
+        """ Apply the LSC inverse operator """
+        pass
+
+class AinvBAt_shell(OperatorShell):
+    """ Shell class for operators of the A inv(B) A' """
+    def __init__(self,A_matrix,B_matrix):
+        """ Initialize the shell operator.
+
+        Parameters
+        ----------
+        A_matrix : petsc4py matrix object
+        B_matrix : petsc4py matrix object
+        """
+        self.A = A_matrix
+        self.B = B_matrix
+        # initialize inv(B)
+        self.kspB = p4pyPETSc.KSP().create()
+        self.kspB.setOperators(self.B,self.B)
+        self.kspB.setType('preonly')
+        self.kspB.pc.setType('lu')
+        self.kspB.setUp()
+    def apply(self,A,x,y):
+        """ Apply the inverse Operation """
+        temp1 = p4pyPETSc.Vec().create()
+        temp1.setType('seq')
+        temp2 = p4pyPETSc.Vec().create()
+        temp2.setType('seq')
+        temp1 = y.copy()
+        temp2 = y.copy()
+        self.
+
 
 def l2Norm(x):
     """
