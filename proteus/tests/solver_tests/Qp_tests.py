@@ -91,13 +91,14 @@ def test_Q_mat():
     ns.modelList[0].levelModelList[1].dphi[(2,2)].dof[:] = 1.0
     import pdb
     pdb.set_trace()
-    B_raw = operator_constructor.getB()
+#    B_raw = operator_constructor.getB()
     Ap_raw = operator_constructor.getAp()
-    import pdb
-    pdb.set_trace()
 #    B_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(B_raw.getValuesCSR())
+    Ap_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Ap_raw.getValuesCSR())
+    pressure_laplace_matrix = np.loadtxt('pressure_laplace_matrix.txt')
     pressure_mass_matrix = np.loadtxt('pressure_mass_matrix.txt')
     velocity_mass_matrix = np.loadtxt('velocity_mass_matrix.txt')
+    assert np.allclose(pressure_laplace_matrix,Ap_dense)
     assert np.allclose(pressure_mass_matrix,Qp_dense)
     assert np.allclose(velocity_mass_matrix,Qv_dense)
     # *** 2 *** : test solver does not generate an error

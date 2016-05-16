@@ -3094,10 +3094,6 @@ void updateDiffusionJacobian_weak_sd(int nElements_global,
                 *
                 dphi[l2g[eN*nDOF_trial_element + 
                          j]];
-	      printf("eN = %d, v = %.2f, dphiProduct = %.2f, dphi = %.2f \n", eN,
-		     v[eN*nQuadraturePoints_element*nDOF_trial_element+ k*nDOF_trial_element+j] ,
-		     dphiProduct,
-		     dphi[l2g[eN*nDOF_trial_element +  j]]);
             }
         }
 }
