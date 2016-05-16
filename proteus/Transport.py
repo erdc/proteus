@@ -2340,8 +2340,6 @@ class OneLevelTransport(NonlinearEquation):
         return jacobian
     def calculateElementResidual(self):
         """Calculate all the element residuals"""
-        import pdb
-        #pdb.set_trace()
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
         for ci  in self.coefficients.advection.keys():
@@ -2714,6 +2712,8 @@ class OneLevelTransport(NonlinearEquation):
                     if self.timeIntegration.diffusionIsImplicit[ci]:
                         if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
                             if self.sd:
+                                import pdb
+                                pdb.set_trace()
                                 cfemIntegrals.updateDiffusionJacobian_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                               self.phi[ck].femSpace.dofMap.l2g,
                                                                               self.q[('a',ci,ck)],
