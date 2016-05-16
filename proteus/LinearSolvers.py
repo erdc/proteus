@@ -665,6 +665,7 @@ class schurOperatorConstructor:
             The Laplacian pressure matrix.
         """
         #modify the diffusion term in the mass equation so the p-p block is Ap
+        self.L.pde.coefficients.evaluate(0.0,self.L.pde.q)
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
         self.Asys_rowptr = rowptr.copy()
         self.Asys_colind = colind.copy()
@@ -677,11 +678,15 @@ class schurOperatorConstructor:
                              self.Asys_nzval,
                              self.Asys_colind,
                              self.Asys_rowptr)
+        # Set the diffusion coefficient terms to the same thing
+        # as the velocity coeffiicents.
         self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
+        # Remove the coefficients on the advection terms.
         self.L.pde.q[('df',0,0)][:] = 0.0
         self.L.pde.q[('df',0,1)][:] = 0.0
         self.L.pde.q[('df',0,2)][:] = 0.0
- #       self.L.pde.q[('df',0,3)][:] = 0.0
+        import pdb
+        pdb.set_trace()
         self.L.pde.getSpatialJacobian(self.Asys)#notice switched to  Spatial
         self.Asys_petsc4py = self.L.duplicate()
         A_csr_rep_local = self.Asys.getSubMatCSRrepresentation(0,L_sizes[0][0])
@@ -697,9 +702,8 @@ class schurOperatorConstructor:
         #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
         #now zero all the dummy coefficents
         #
-        self.L.pde.q[('dm',0,0)][:] = 0.0
-        self.L.pde.q[('df',0,0)][:] = 0.0
-        self.L.pde.q[('a',0,0)][:] = 0.0
+        import pdb
+        pdb.set_trace()
         return self.Ap
 
     def getFp(self,output_matrix=False):
@@ -762,17 +766,18 @@ class schurOperatorConstructor:
         return self.Fp
 
     def getB(self,output_matrix=False):
-        """ Return the conservation of mass matrix B.
+        """
+        Return the mass matrix B.
 
         Parameters
         ----------
         output_matrix : bool
-            Determine whether matrix should be exported.
+           Determine whether matrix should be stored externally.
 
         Returns
         -------
         B : matrix
-             The conservation of mass matrix B.
+             The operator B matrix.
         """
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
         self.B_rowptr = rowptr.copy()
@@ -790,7 +795,8 @@ class schurOperatorConstructor:
         pdb.set_trace()
         self.L.pde.q[('f',0)][...,0] = self.L.pde.q[('u',1)]
         self.L.pde.q[('f',0)][...,1] = self.L.pde.q[('u',2)]
-#        self.L.pde.q[('df',0,0)][:] = 1.0
+        self.L.pde.q[('df',0,1)][...,0] = 1.0
+        self.L.pde.q[('df',0,2)][...,1] = 1.0
         self.L.pde.getSpatialJacobian(self.B)
         self.Bsys_petsc4py = self.L.duplicate()
         B_csr_rep_local = self.B.getSubMatCSRrepresentation(0,L_sizes[0][0])
@@ -803,6 +809,8 @@ class schurOperatorConstructor:
         self.B = self.Bsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isv)
         if output_matrix==True:
             _exportMatrix(self.B,'B')
+        import pdb
+        pdb.set_trace()
         return self.B
 
 

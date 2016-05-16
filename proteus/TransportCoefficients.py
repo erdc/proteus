@@ -1533,8 +1533,6 @@ class Stokes(TC_base):
 
     def evaluate(self,t,c):
         if self.nd==2:
-#            import pdb
-#            pdb.set_trace()
             self.Stokes_2D_Evaluate(self.rho,
                                     self.nu,
                                     self.g,
