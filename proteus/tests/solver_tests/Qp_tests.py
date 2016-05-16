@@ -89,11 +89,7 @@ def test_Q_mat():
     ns.modelList[0].levelModelList[1].dphi[(0,0)].dof[:] = 1.0
     ns.modelList[0].levelModelList[1].dphi[(1,1)].dof[:] = 1.0
     ns.modelList[0].levelModelList[1].dphi[(2,2)].dof[:] = 1.0
-    import pdb
-    pdb.set_trace()
-#    B_raw = operator_constructor.getB()
     Ap_raw = operator_constructor.getAp()
-#    B_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(B_raw.getValuesCSR())
     Ap_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Ap_raw.getValuesCSR())
     pressure_laplace_matrix = np.loadtxt('pressure_laplace_matrix.txt')
     pressure_mass_matrix = np.loadtxt('pressure_mass_matrix.txt')
@@ -103,7 +99,9 @@ def test_Q_mat():
     assert np.allclose(velocity_mass_matrix,Qv_dense)
     # *** 2 *** : test solver does not generate an error
     ns.calculateSolution('test_Qp_mat')
-
+    #  TODO - BELOW:
+    #    B_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(B_raw.getValuesCSR())
+    #    B_raw = operator_constructor.getB()
 if __name__ == '__main__':
     from proteus import Comm
     comm = Comm.init()

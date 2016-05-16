@@ -117,7 +117,7 @@ else:
     else:
         pass
 
-linearSmoother = NavierStokes3D_Qp
+linearSmoother = NavierStokes3D_PCD
 #linear solver relative convergence test
 linTolFac = 0.0
 #linear solver absolute convergence test
