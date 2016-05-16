@@ -1114,3 +1114,158 @@ class TimeSeries:
 
 
 
+class NonlinearCorrectionWriteSeries(RandomWaves):
+    def __init__(self,
+                 Tp,                      #wave period
+                 Hs,                      #significant wave height
+                 mwl,                     #mean water level
+                 depth,                   #water depth          
+                 waveDir,                 #wave direction vector with three components
+                 g,                       #gravitational accelaration vector with three components      
+                 N,                       #number of frequency bins
+                 bandFactor,              #width factor for band around peak frequency fp       
+                 spectName,               #random words will result in error and return the available spectra 
+                 tInterval,               #setup the time interval as a list
+                 spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 phi=None                 #array of component phases
+                 ):
+        RandomWaves.__init__(self,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
+        self.tStart = tInterval[0]
+        self.tEnd = tInterval[1]
+        self.dtStep = Tp/48. # To be checked with APO, TAP
+        self.Nseries = int((self.tEnd - self.tStart)/self.dtStep)
+        self.dtStep = (self.tEnd - self.tStart)/self.Nseries
+        
+
+
+    def eta_linear(self,x,t):
+        Eta=0.
+        for i in range(0,self.N):
+            Eta += eta_mode(x,t,self.kDir[i],self.omega[i],self.phi[i],self.ai[i])
+        return Eta
+
+
+    def eta_2ndOrder(self,x,t):
+        Eta2nd = 0.
+        for i in range(0,self.N):
+            ai_2nd = (self.ai[i]**2*self.ki[i]*(2+3/sinh(self.ki[i]*self.depth)**2))/(4*tanh(self.ki[i]*self.depth))
+            wwi_2ndOrder = eta_mode(x,t,2*self.kDir[i],2*self.omega[i],2*self.phi[i],ai_2nd)
+            Eta2nd += wwi_2ndOrder  
+        return Eta2nd
+
+
+
+    #free surface elevation due to short-crested waves        
+    def eta_short(self,x,t):
+        Etashort = 0.
+        for i in range(0,self.N-1):
+            for j in range(i+1,self.N):
+                Dp = (self.omega[i]+self.omega[j])**2 - self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth)
+                Bp = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) - ((self.omega[i]*self.omega[j])/(2*self.gAbs))*(1-1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth)))*(((self.omega[i]+self.omega[j])**2 + self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth))/Dp) + ((self.omega[i]+self.omega[j])/(2*self.gAbs*Dp))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) + (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))	
+                ai_short = self.ai[i]*self.ai[j]*Bp
+                wwi_short = eta_mode(x,t,self.kDir[i]+self.kDir[j],self.omega[i]+self.omega[j],self.phi[i]+self.phi[j],ai_short)
+                Etashort += wwi_short
+        return Etashort
+
+
+
+    #free surface elevation due to high-crested waves
+    def eta_long(self,x,t):
+        Etalong = 0.
+        for i in range(0,self.N-1):
+            for j in range(i+1,self.N):
+                Dm = (self.omega[i]-self.omega[j])**2 - self.gAbs*(self.ki[i]-self.ki[j])*tanh((self.ki[i]-self.ki[j])*self.depth)	
+                Bm = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) + ((self.omega[i]*self.omega[j])/(2*self.gAbs))*(1+1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth)))*(((self.omega[i]-self.omega[j])**2 + self.gAbs*(self.ki[i]-self.ki[j])*tanh((self.ki[i]-self.ki[j])*self.depth))/Dm) + ((self.omega[i]-self.omega[j])/(2*self.gAbs*Dm))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) - (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))
+                ai_long = self.ai[i]*self.ai[j]*Bm 
+                wwi_long = eta_mode(x,t,self.kDir[i]-self.kDir[j],self.omega[i]-self.omega[j],self.phi[i]-self.phi[j],ai_long)
+                Etalong += wwi_long
+        return Etalong
+
+
+
+    def eta_setUp(self,x,t):
+        EtasetUp = 0.
+        for i in range(0,self.N):
+            wwi_setUp = (self.ai[i]**2*self.ki[i])/(2*sinh(2*self.ki[i]*self.depth))
+            EtasetUp += wwi_setUp
+        return EtasetUp
+
+
+
+    #overall free surface elevation
+    def eta_overall(self,x,t,setUp=False):
+        Etaoverall =  self.eta_linear(x,t) + self.eta_2ndOrder(x,t) + self.eta_short(x,t) + self.eta_long(x,t)
+        if setUp:   
+            Etaoverall -= self.eta_setUp(x,t)
+        return Etaoverall
+
+
+
+    def eta_write(self,x0,filename,mode="all",setUp=False):
+        timelst=np.linspace(self.tStart, self.tEnd, self.Nseries)
+        timeSeries = np.zeros((self.Nseries,2),)
+        timeSeries[:,0] = timelst
+        for i in range(len(timelst)):
+            time = timeSeries[i,0]
+            if mode == "all":
+                timeSeries[i,1] = self.eta_overall(x0,time,setUp)
+            elif mode != "all":
+                if mode == "setup":
+                    timeSeries[i,1] = self.eta_setUp(x0,time)
+                if mode == "short":
+                    timeSeries[i,1] = self.eta_short(x0,time) + self.eta_2ndOrder(x0,time)
+                if mode == "long":
+                    timeSeries[i,1] = self.eta_long(x0,time) 
+                if mode == "linear":
+                    timeSeries[i,1] = self.eta_linear(x0,time)
+            else:
+                logEvent('WaveTools.pyx: Argument mode in eta_write for 2nd order correction should be "all", "setup", "short", "long" or "linear"')
+                sys.exit(1)
+        
+        delimiter =" "
+        if filename[-4:]==".csv":
+            delimiter = ","
+        
+        np.savetxt(filename,timeSeries,delimiter=delimiter)
+        
+
+    
+
+class ReconstructNonlinearCorrectionTimeSeries:            
+    def __init__(self,
+                 Tp,
+                 Hs,
+                 mwl,
+                 depth,
+                 waveDir,
+                 g,
+                 Nwrite,
+                 bandFactor,
+                 spectName,
+                 tInterval,
+                 skiprows,                 
+                 timeSeriesPosition,
+                 Nrecon,
+                 cutoffTotal=0.01,
+                 spectral_params=None,
+                 phi=None
+                 ):
+        NlCWS = NonlinearCorrectionWriteSeries(Tp,Hs,mwl,depth,waveDir,g,Nwrite,bandFactor,spectName,tInterval,spectral_params,phi)
+
+        modes = ["short","long","linear"]
+        
+        self.TClass = []
+        for mode in modes:
+            NlCWS.eta_write(timeSeriesPosition,mode+".csv",mode=mode,setUp=False)
+            self.TClass.append(TimeSeries(mode+".csv",skiprows,timeSeriesPosition,depth,Nrecon,mwl,waveDir,g,cutoffTotal,rec_direct=False,window_params={"Nwaves":10,"Tm":Tp/1.1,"Window":"costap"}))
+
+        
+    def eta_correction(self,x,t):
+        return self.TClass[0].eta(x,t) + self.TClass[1].eta(x,t) + self.TClass[2].eta(x,t)
+
+
+    def u_correction(self,x,t):
+        return self.TClass[0].u(x,t) + self.TClass[1].u(x,t) + self.TClass[2].u(x,t) 
+        
+
+
