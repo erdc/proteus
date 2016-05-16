@@ -11,13 +11,20 @@ class SubgridError(proteus.SubgridError.SGE_base):
 
     The VMS subgrid error approximation
 
-    Args:
-        coefficients  : The coefficients object
-        nd            : Number of space  dimensions
-        lag           : Use prior time step to calculate
-        nStepsToDelay : Lag only after nSteps
-        hFactor       : scaling factor based on order
-        noPressureStabilization : turn off pressure stab
+    Parameters
+    ----------
+        coefficients  : proteus.TransportCoefficients.TC_base
+            The coefficients object
+        nd            : int
+            Number of space  dimensions
+        lag           : bool
+            Use prior time step to calculate
+        nStepsToDelay : int
+            Lag only after nSteps
+        hFactor       : float
+            scaling factor based on order
+        noPressureStabilization : bool
+            turn off pressure stab
     """
     def __init__(self,coefficients,nd,lag=False,nStepsToDelay=0,hFactor=1.0,noPressureStabilization=False):
         self.noPressureStabilization=noPressureStabilization
