@@ -531,7 +531,6 @@ class VerifyRandomWaves(unittest.TestCase):
         for ii in range(len(tlist)):
             etaWrite[ii] = a.eta(x0,tlist[ii])
         fname = "randomSeries.txt"
-        print Tlag
         if Tlag < 0.:
             with self.assertRaises(SystemExit) as cm1:
                 a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
@@ -956,6 +955,26 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             {"Nwaves" : 5,"Tm":1, "Window":"costap"}
             
             )
+        #load successfully - import array
+
+        numarray  =np.zeros((10001,2),float)
+        numarray[:,0] = np.linspace(0,100,10001)
+        numarray[:,1] = np.cos(pi*numarray[:,0])
+        aa= TimeSeries(
+            path+"test_timeSeries.txt",
+            0,
+            np.array([1.,0,0]), 
+            1.  ,
+            64 ,          #number of frequency bins
+            1. ,        
+            np.array([1.,0,0]), 
+            np.array([0,0,-9.81]),
+            0.025,
+            False,
+            {"Nwaves" : 5,"Tm":1, "Window":"costap"},
+            True,
+            numarray
+            )
 
         # Putting too many waves  
         with self.assertRaises(SystemExit) as cm1:
@@ -1076,6 +1095,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
         
 class VerifyTimeSeries(unittest.TestCase):
     def testDirect(self):
+# Testing class while reading from file
         path =getpath()
         from proteus.WaveTools import TimeSeries, costap
         import random
@@ -1111,24 +1131,38 @@ class VerifyTimeSeries(unittest.TestCase):
         norm = max(etaRef)
         err = (etaInt - etaTest)**2
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
+        self.assertTrue(err<1e-2 )     
+# Testing class while getting a timeseries from an array
+        series = np.zeros( (len(timeInt),2),)
+        series[:,0] = timeInt
+        series[:,1] = etaInt
+        aa2= TimeSeries(
+            path+"test_timeSeries.txt",
+            0,
+             np.array([0.,0.,0]),            
+            1.  ,
+            256,          #number of frequency bins
+            1. ,        
+            np.array([1,0,0]), 
+            np.array([0,0,-9.81]),
+            0.025,
+            True,
+            None,
+            True,
+            series
+            )
+        ii = -1
+        for tt in timeInt:                                                                                                                                  
+            ii+=1                                                                                                                                           
+            etaTest[ii] = aa2.eta([x, y, z], tt)                                                                                                         
+        etaInt-=np.mean(etaInt)                                                                                                                            
+        etaInt*=costap(len(data),0.025)                                                                                                                     
+        norm = max(etaRef)                                                                                                                                 
+        err = (etaInt - etaTest)**2                                                                                                                         
+        err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))                                                                                            
+        self.assertTrue(err<1e-2 )                                                                                                                          
 
-        """
-        from matplotlib import pyplot as plt
- 
 
-        fig = plt.figure(2)
-        line2,=plt.plot(timeInt,etaInt,'ko')
-#        print "Timeseries error: %s" % str(err)
-
-#Showing plot of window recontruction
-        
-        line1,=plt.plot(timeInt,etaTest,"b-")
-        plt.grid()
-        fig.legend((line2,line1),("Field data from FRF", "Reconstructed time series"),"upper right",bbox_to_anchor=(0.6,0.9))
-        plt.xlabel("Time (s)",size=20)
-        plt.ylabel("$\eta$ (m)",size=20)
-        plt.savefig("Direct.pdf")
-        """
 
     def testWindow(self):
         path =getpath()
@@ -1170,23 +1204,36 @@ class VerifyTimeSeries(unittest.TestCase):
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
 #        print err
         self.assertTrue(err<1e-2 )     
-"""
-        from matplotlib import pyplot as plt
-
-        fig = plt.figure(2)
-        line2,=plt.plot(timeInt,etaInt,'ko')
-#        print "Timeseries error: %s" % str(err)
-
-#Showing plot of window recontruction
         
-        line1,=plt.plot(timeInt,etaTest,"g-")
-        plt.grid()
-        fig.legend((line2,line1),("Field data from FRF", "Reconstructed time series"),"upper right",bbox_to_anchor=(0.6,0.9))
-        plt.xlabel("Time (s)",size=20)
-        plt.ylabel("$\eta$ (m)",size=20)
-        plt.savefig("Window.pdf")
-"""
-        
+# Testing class while getting a timeseries from an array
+        series = np.zeros( (len(timeInt),2),)
+        series[:,0] = timeInt
+        series[:,1] = etaInt
+        aa2= TimeSeries(
+            path+"test_timeSeries.txt",
+            0,
+             np.array([0.,0.,0]),            
+            1.  ,
+            256,          #number of frequency bins
+            1. ,        
+            np.array([1,0,0]), 
+            np.array([0,0,-9.81]),
+            0.025,
+            False,                                                                                                                                          
+            {"Nwaves":3, "Tm":8, "Window":"costap"},
+            True,
+            series
+            )
+        ii = -1
+        for tt in timeInt:                                                                                                                                  
+            ii+=1                                                                                                                                           
+            etaTest[ii] = aa2.eta([x, y, z], tt)                                                                                                         
+        etaInt-=np.mean(etaInt)                                                                                                                            
+        etaInt*=costap(len(data),0.025)                                                                                                                     
+        norm = max(etaRef)                                                                                                                                 
+        err = (etaInt - etaTest)**2                                                                                                                         
+        err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))                                                                                            
+        self.assertTrue(err<1e-2 )                                                                                                                          
         
         
 
