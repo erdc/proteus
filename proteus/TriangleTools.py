@@ -2,6 +2,9 @@
 """Collect functionality to make a lightweight interface for
 Shewchuk's Triangle package. Follow the ellipt2d example in some
 respects
+
+.. inheritance-diagram:: proteus.TriangleTools
+   :parts: 1
 """
 import os
 import numpy
