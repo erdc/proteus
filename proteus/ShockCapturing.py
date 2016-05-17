@@ -1,5 +1,8 @@
 """
 A class hierarchy for shock capturing diffusion methods
+
+.. inheritance-diagram:: proteus.ShockCapturing
+   :parts: 1
 """
 import numpy
 import cshockCapturing

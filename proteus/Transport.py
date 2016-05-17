@@ -5,6 +5,9 @@ This module contains methods for solving
 
 The solution is the vector of components :math:`u=u_0,\ldots,u_{nc-1}`, and
 the nonlinear coefficients are :math:`m^i,f^i,a^{ik},\phi^k, H^i` and :math:`r^i`.
+
+.. inheritance-diagram:: proteus.Transport
+   :parts: 1
 """
 from math import *
 
@@ -6030,6 +6033,12 @@ class MultilevelTransport:
         """read in the multilevel mesh, mesh independent boundary
         conditions, and types for test and trial spaces and the
         jacobian. Pass through the rest to the models on each mesh"""
+
+        if bool(TrialSpaceTypeDict) == False:
+            raise Exception,  'Proteus is trying to create a' \
+            ' Multilevel Transport object with no trial space.  Make' \
+            ' sure femSpaces is properly specified in your numerics.'
+        
         self.weakDirichletConditions=weakDirichletConditions
         self.jacobianList=[]
         self.par_jacobianList=[]
