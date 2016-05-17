@@ -3,7 +3,7 @@
 .. _intro-sec:
 
 Introduction
-==============
+============
 
 Proteus is a Python package for rapidly developing computer models and
 numerical methods. It is focused on models of continuum mechanical
@@ -37,7 +37,7 @@ methods, both of which are described in more detail below
 .. _obtaining-sec:
 
 Obtaining and Installing Proteus
-==================
+================================
 
 For now, Proteus is only available as source from our public `GitHub
 <https://github.com/erdc-cm/proteus>`_ repository  because we haven't
@@ -53,7 +53,7 @@ the `Developers' Mailing List <https://groups.google.com/forum/#!forum/proteus-d
 .. _getting_start-sec:
 
 Getting Started
-===========
+===============
 
 The following IPython Notebooks provide a gentle introduction to
 getting started with Proteus, from setting up a model domain to
@@ -66,7 +66,7 @@ can all be downloaded as an `archive <https://github.com/erdc-cm/proteus-noteboo
 .. _running-sec:
 
 Running
-=========
+=======
 
 If you have successfully compiled Proteus then you should be able to do::
 
@@ -79,7 +79,7 @@ opened with ParaView or Ensight.
 .. _capabilities-sec:
 
 Capabilities
-==============
+============
 
 Test problems and some analytical solutions have been implemented for
 
@@ -158,7 +158,7 @@ elements.
 .. _release-sec:
 
 Release Policy
-================
+==============
 
 The releases are numbered major.minor.revision
 
@@ -168,24 +168,8 @@ The releases are numbered major.minor.revision
 
 These are not hard and fast rules, and there is no time table for releases.
 
-.. _buildbot-sec:
-
-Buildbot
-==========
-
-The buildbot status page shows the results of builds and tests on a
-variet of desktop and HPC architectures. It currently only shows
-results for the master branch on github.
- 
-.. raw:: html
-
-  <iframe src="https://proteus.usace.army.mil/buildbot/waterfall?num_events=0" frameborder=1 width=1000 height=400>
-  </iframe>
-
-.. _references-sec:
-
 References
-============
+==========
 
 * `Numerical modeling of drag for flow through vegetated domains and
   porous structures
@@ -224,25 +208,19 @@ References
   (2008) M. W. Farthing and C. E. Kees, *ERDC/CHL CHETN-XIII-2*
 
 Indices and tables
-===================
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
 
-Detailed Documentation
-=======================
-
-Python Package
+Source Code Documentation
+=========================
 
 .. toctree::
    :maxdepth: 1
 
    api/modules
-   todo
+   cfiles
+   
 
-C+/C++/Fortran Libraries
-
-* `File List <capi/html/files.html>`_
-* `C++ Classes <capi/html/hierarchy.html>`_
-* `C/C++/Fortran Todo List <capi/html/todo.html>`_
