@@ -10,6 +10,7 @@ from proteus.MeshAdaptPUMI import MeshAdaptPUMI
 from proteus import Archiver
 from proteus import Domain
 from tables import *
+from proteus import Comm
 
 from petsc4py import PETSc
 
