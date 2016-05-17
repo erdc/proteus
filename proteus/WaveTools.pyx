@@ -531,7 +531,10 @@ class RandomWaves:
         for jj in range(len(time)):
             etaR[jj] = self.eta(x0,time[jj])
         np.savetxt(fname,zip(time,etaR))
-        return zip(time,etaR)
+        series = np.zeros((len(time),2),)
+        series[:,0] = time
+        series[:,1] = etaR
+        return series
 
 
 
@@ -837,7 +840,7 @@ class TimeSeries:
         
         self.arrayData = arrayData
         if(self.arrayData):
-            tdata = np.loadtxt(seriesArray)
+            tdata = seriesArray
         else:
             fid = open(timeSeriesFile,"r")
             if (filetype !=".txt") and (filetype != ".csv"):
@@ -1118,6 +1121,76 @@ class TimeSeries:
             x1 =  np.array(x)-[self.x0, self.y0, self.z0]
             U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
+
+
+
+class RandomWavesFast(RandomWaves):
+    """Sets up a wave with RandomWaves class and uses u and eta from TimeSeries class & spectral windows for fast wave generation
+    :param Tstart: Start time of the time series
+    :param Tend: End time of the time series
+    :param x0: Position vector for the wave generation boundary
+    :param Tp: frequency [1/T]
+    :param Hs: significant wave height [L]
+    :param mwl: mean water level [L]
+    :param  depth: depth [L]
+    :param waveDir:wave Direction vector with three components [-]
+    :param g: Gravitational acceleration vector with three components [L/T^2]
+    :param N: number of frequency bins [-]
+    :param bandFactor: width factor for band  around fp [-]
+    :param spectName: Name of spectral function in string format. Use a random word and run the code to obtain the vaild spectra names
+    :param spectral_params: Dictionary of additional arguments for spectral function, specific to each spectral function, except from Hs and Tp e.g. {"gamma": 3.3, "TMA" = True, "depth" = 1} for Jonswap. Check spectral function arguments 
+    :param phi: Array of component phases - if set to none, random phases are assigned
+"""
+
+    def __init__(self,
+                 Tstart,
+                 Tend,
+                 x0,
+                 Tp,
+                 Hs,
+                 mwl,#m significant wave height
+                 depth ,           #m depth
+                 waveDir,
+                 g,      #peak  frequency
+                 N,
+                 bandFactor,         #accelerationof gravity
+                 spectName ,# random words will result in error and return the available spectra 
+                 spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 phi=None,
+                 Lgen = np.array([0., 0. ,0. ])
+                 ):
+            RandomWaves.__init__(self,
+                                 Tp, # np array with 
+                                 Hs,
+                                 mwl,#m significant wave height
+                                 depth,           #m depth
+                                 waveDir,
+                                 g,      #peak  frequency
+                                 N,
+                                 bandFactor,         #accelerationof gravity
+                                 spectName,# random words will result in error and return the available spectra 
+                                 spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                                 phi
+                             )
+            fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
+            series = self.writeEtaSeries(Tstart,Tend,x0,fname,Lgen)
+            TS = TimeSeries(
+                 fname, # e.g.= "Timeseries.txt",
+                 0,
+                 x0,
+                 self.depth ,
+                 32 ,          #number of frequency bins
+                 self.mwl ,        #mean water level
+                 self.waveDir, 
+                 self.g,
+                 cutoffTotal = 0.2*self.Tp,
+                 rec_direct = False,
+                 window_params = {"Nwaves":15 ,"Tm":self.Tp/1.1,"Window":"costap"},
+                 arrayData = True,
+                 seriesArray = series
+                 )
+            self.eta = TS.eta
+            self.u = TS.u
 
 
 
