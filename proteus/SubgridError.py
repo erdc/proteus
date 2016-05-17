@@ -1,5 +1,8 @@
 """
 A class hierarchy for subgrid error estimation methods (multiscale methods)
+
+.. inheritance-diagram:: proteus.SubgridError
+   :parts: 1
 """
 import numpy
 import csubgridError

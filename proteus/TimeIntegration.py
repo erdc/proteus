@@ -1,5 +1,8 @@
 """
 A class hierarchy of time discretizations
+
+.. inheritance-diagram:: proteus.TimeIntegration
+   :parts: 1
 """
 from LinearAlgebraTools import *
 import sys,math
