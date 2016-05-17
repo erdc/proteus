@@ -1,5 +1,8 @@
 """
 An extension of the TransportCoefficients module for two-phase flow in porous media
+
+.. inheritance-diagram:: proteus.TwophaseDarcyCoefficients
+   :parts: 1
 """
 from math import *
 from TransportCoefficients import TC_base

@@ -1,5 +1,8 @@
 """
 Class hierarchies for constructing and working with finite element spaces
+
+.. inheritance-diagram:: proteus.FemTools
+   :parts: 1
 """
 from EGeometry import *
 from MeshTools import *
@@ -3558,9 +3561,9 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                     "Dimensions":"%i" % (self.mesh.globalMesh.nNodes_global,)})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+u.name+"_p"+"_t"+str(tCount)
+                    values.text = ar.hdfFilename+":/"+u.name+"_t"+str(tCount)
                     comm = Comm.get()
-                    ar.create_dataset_sync(u.name+"_p"+"_t"+str(tCount),
+                    ar.create_dataset_sync(u.name+"_t"+str(tCount),
                                            offsets=self.dofMap.dof_offsets_subdomain_owned,
                                            data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -self.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
                 else:
@@ -3627,8 +3630,8 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
                 if ar.hdfFile != None:
                     if ar.has_h5py:
-                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+"_t"+str(tCount)
-                        ar.create_dataset_sync(vectorName+"_p"+"_t"+str(tCount),
+                        values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
+                        ar.create_dataset_sync(vectorName+"_t"+str(tCount),
                                                offsets=self.mesh.globalMesh.nodeOffsets_subdomain_owned,
                                                data = velocity[:self.mesh.nNodes_owned,:])
                     else:
@@ -3875,8 +3878,8 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                     "Dimensions":"%i" % (self.mesh.globalMesh.nNodes_global,)})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+u.name+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_sync(u.name+"_p"+"_t"+str(tCount),
+                    values.text = ar.hdfFilename+":/"+u.name+"_t"+str(tCount)
+                    ar.create_dataset_sync(u.name+"_t"+str(tCount),
                                            offsets = self.dofMap.dof_offsets_subdomain_owned,
                                            data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - self.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
                 else:
@@ -3927,8 +3930,8 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
                 if ar.hdfFile != None:
                     if ar.has_h5py:
-                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+"_t"+str(tCount)
-                        ar.create_dataset_sync(vectorName+"_p"+"_t"+str(tCount),
+                        values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
+                        ar.create_dataset_sync(vectorName+"_t"+str(tCount),
                                                offsets =self.mesh.globalMesh.nodeOffsets_subdomain_owned,
                                                data = velocity[:self.mesh.nNodes_owned,:])
                     else:
