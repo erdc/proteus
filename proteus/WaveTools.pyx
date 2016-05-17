@@ -531,7 +531,7 @@ class RandomWaves:
         for jj in range(len(time)):
             etaR[jj] = self.eta(x0,time[jj])
         np.savetxt(fname,zip(time,etaR))
-    
+        return zip(time,etaR)
 
 
 
@@ -797,7 +797,9 @@ class TimeSeries:
                  g,
                  cutoffTotal = 0.01,
                  rec_direct = True,
-                 window_params = None #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Tm":Tm,"Window":wind_filt,"Overlap":overlap,"Cutoff":cutoff}
+                 window_params = None, #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Tm":Tm,"Window":wind_filt,"Overlap":overlap,"Cutoff":cutoff}
+                 arrayData = False,
+                 seriesArray = None
                  ):
 
         # Setting the depth
@@ -831,15 +833,21 @@ class TimeSeries:
         #Reading time series
         filetype = timeSeriesFile[-4:]
         logEvent("WaveTools.py: Reading timeseries from %s file: %s" % (filetype,timeSeriesFile),level=0)
-        fid = open(timeSeriesFile,"r")
-        if (filetype !=".txt") and (filetype != ".csv"):
+
+        
+        self.arrayData = arrayData
+        if(self.arrayData):
+            tdata = np.loadtxt(seriesArray)
+        else:
+            fid = open(timeSeriesFile,"r")
+            if (filetype !=".txt") and (filetype != ".csv"):
                 logEvent("WaveTools.py: File %s must be given in .txt or .csv format" % (timeSeriesFile),level=0)
                 sys.exit(1)
-        elif (filetype == ".csv"):
-            tdata = np.loadtxt(fid,skiprows=skiprows,delimiter=",")
-        else:
-            tdata = np.loadtxt(fid,skiprows=skiprows)
-        fid.close()
+            elif (filetype == ".csv"):
+                tdata = np.loadtxt(fid,skiprows=skiprows,delimiter=",")
+            else:
+                tdata = np.loadtxt(fid,skiprows=skiprows)
+            fid.close()
         #Checks for tseries file
         # Only 2 columns: time & eta
         ncols = len(tdata[0,:])
@@ -1132,7 +1140,7 @@ class NonlinearCorrectionWriteSeries(RandomWaves):
         RandomWaves.__init__(self,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
         self.tStart = tInterval[0]
         self.tEnd = tInterval[1]
-        self.dtStep = Tp/48. # To be checked with APO, TAP
+        self.dtStep = Tp/48.
         self.Nseries = int((self.tEnd - self.tStart)/self.dtStep)
         self.dtStep = (self.tEnd - self.tStart)/self.Nseries
         
@@ -1227,7 +1235,7 @@ class NonlinearCorrectionWriteSeries(RandomWaves):
             delimiter = ","
         
         np.savetxt(filename,timeSeries,delimiter=delimiter)
-        
+        return timeSeries
 
     
 
@@ -1260,11 +1268,11 @@ class ReconstructNonlinearCorrectionTimeSeries:
             self.TClass.append(TimeSeries(mode+".csv",skiprows,timeSeriesPosition,depth,Nrecon,mwl,waveDir,g,cutoffTotal,rec_direct=False,window_params={"Nwaves":10,"Tm":Tp/1.1,"Window":"costap"}))
 
         
-    def eta_correction(self,x,t):
+    def eta(self,x,t):
         return self.TClass[0].eta(x,t) + self.TClass[1].eta(x,t) + self.TClass[2].eta(x,t)
 
 
-    def u_correction(self,x,t):
+    def u(self,x,t):
         return self.TClass[0].u(x,t) + self.TClass[1].u(x,t) + self.TClass[2].u(x,t) 
         
 
