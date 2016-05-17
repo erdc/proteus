@@ -1,5 +1,8 @@
 """
 Classes for archiving numerical solution data
+
+.. inheritance-diagram:: proteus.Archiver
+   :parts: 1
 """
 import Profiling
 import Comm
@@ -583,16 +586,12 @@ class XdmfWriter:
                         #    for nN in range(Xdmf_NodesPerElement):
                         #        q_l2g[eN,nN] = eN*Xdmf_NodesPerElement + nN
                         #
-                        import pdb
-#                        pdb.set_trace()
                         from proteus import Comm
                         comm = Comm.get()
                         q_l2g = numpy.arange(mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank()]*Xdmf_NodesPerElement,
                                              mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank()+1]*Xdmf_NodesPerElement,
                                              dtype='i').reshape((mesh.nElements_owned,Xdmf_NodesPerElement))
                         if ar.has_h5py:
-#                            import pdb
-#                            pdb.set_trace()
                             ar.create_dataset_sync('elements'+spaceSuffix+`tCount`,
                                                    offsets=mesh.globalMesh.elementOffsets_subdomain_owned,
                                                    data = q_l2g)
@@ -684,7 +683,7 @@ class XdmfWriter:
                     values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_t"+str(tCount),
                                            offsets = self.mesh.globalMesh.elementOffsets_subdomain_owned*u.shape[1], # verify
-                                           data = u[:self.mesh.nElements_owned].flat)
+                                           data = u[:self.mesh.nElements_owned].reshape((self.mesh.nElements_owned*u.shape[1],)))
                 else:
                     assert False, "global_sync not supported with pytables"
             else:
@@ -1299,10 +1298,6 @@ class XdmfWriter:
                 return 0
             elif spaceDim == 2:
                 Xdmf_ElementTopology = "Quadrilateral"
-
-#                import pdb
-#                pdb.set_trace()
-
                 e2s=[ [0,4,8,7], [7,8,6,3],  [4,1,5,8], [8,5,2,6] ]
                 nsubelements=4
 
