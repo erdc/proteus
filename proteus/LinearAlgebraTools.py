@@ -283,10 +283,22 @@ class OperatorShell:
         pass
     def create(self,A):
         pass
-    def mult(self,A,x,y):
+
+class ProductOperatorShell(OperatorShell):
+    """ A base class for shell operators that apply multiplcation """
+    def __init__(self):
+        pass
+    def mult(self, A, x, y):
         pass
 
-class SparseMatShell(OperatorShell):
+class InvOperatorShell(OperatorShell):
+    """ A base class for inverse operator shells """
+    def __init__(self):
+        pass
+    def apply(self, A, x, y):
+        pass
+
+class SparseMatShell(ProductOperatorShell):
     """ Build a parallel matrix shell from CSR data structures.
 
     Parameters
@@ -313,7 +325,7 @@ class SparseMatShell(OperatorShell):
             self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
 
-class MatrixShell(OperatorShell):
+class MatrixShell(ProductOperatorShell):
     """ A shell class for a matrix. """
     def __init__(self,A):
         """
@@ -341,7 +353,57 @@ class MatrixShell(OperatorShell):
         """
         self.A.mult(x,y)
 
-class MatrixInvShell(OperatorShell):
+class B_Ainv_Bt_shell(ProductOperatorShell):
+    """ Shell class for the operator :math:`B A^{-1} B^{'}` """
+
+    def __init__(self,A,B):
+        """ Initialize the shell operator.
+
+        Parameters
+        ----------
+        A : petsc4py matrix object
+            A must be a full rank square matrix.
+        B : petsc4py matrix object
+        """
+        # TODO - add an exception checking that A is a square matrix
+        self.A = A
+        self.B = B
+        # initialize inv(A)
+        self.kspA = p4pyPETSc.KSP().create()
+        self.kspA.setOperators(self.A,self.A)
+        self.kspA.setType('preonly')
+        self.kspA.pc.setType('lu')
+        self.kspA.setUp()
+
+    def mult(self , A , x , y):
+        """ This routine returns :math:`y = (B A^{-1} B^{'}) x`.
+
+        Parameters
+        ----------
+        A : matrix
+            Dummy matrix for PETSc interface
+        x : vector
+            Input vector to apply to operator
+
+        Return
+        ------
+        y : vector
+            Stores result of :math:`(B A^{-1} B^{'}) x`
+        """
+        A_sizes = self.A.getSizes()[0]
+        # Initialize temporary storage containers
+        temp1 = p4pyPETSc.Vec().create()
+        temp2 = p4pyPETSc.Vec().create()
+        temp1.setType('seq')
+        temp2.setType('seq')
+        temp1.setSizes(A_sizes)
+        temp2.setSizes(A_sizes)
+        # Apply the operator.
+        self.B.multTranspose(x,temp1)
+        self.kspA.solve(temp1,temp2)
+        self.B.mult(temp2,y)
+
+class MatrixInvShell(InvOperatorShell):
     """ A PETSc shell class for a inverse operator. """
     def __init__(self, A):
         """
@@ -373,7 +435,7 @@ class MatrixInvShell(OperatorShell):
         """
         self.ksp.solve(x,y)
 
-class PCDInv_shell(OperatorShell):
+class PCDInv_shell(InvOperatorShell):
     """ Shell class for the PCD inverse preconditioner """
     def __init__(self,Qp_matrix,Fp_matrix,Ap_matrix):
         """ Initializes the pressure-convection-diffusion inverse operator.
@@ -425,7 +487,7 @@ class PCDInv_shell(OperatorShell):
         self.Fp.mult(temp1,temp2)
         self.kspQp.solve(temp2,y)
 
-class LSCInv_shell(OperatorShell):
+class LSCInv_shell(InvOperatorShell):
     """ Shell class for the LSC Inverse Preconditioner """
     def __init__(self,Qv_matrix,B_matrix,F_matrix):
         """Initializes the LSC inverse operator.
@@ -452,35 +514,6 @@ class LSCInv_shell(OperatorShell):
     def apply(self,A,x,y):
         """ Apply the LSC inverse operator """
         pass
-
-class AinvBAt_shell(OperatorShell):
-    """ Shell class for operators of the A inv(B) A' """
-    def __init__(self,A_matrix,B_matrix):
-        """ Initialize the shell operator.
-
-        Parameters
-        ----------
-        A_matrix : petsc4py matrix object
-        B_matrix : petsc4py matrix object
-        """
-        self.A = A_matrix
-        self.B = B_matrix
-        # initialize inv(B)
-        self.kspB = p4pyPETSc.KSP().create()
-        self.kspB.setOperators(self.B,self.B)
-        self.kspB.setType('preonly')
-        self.kspB.pc.setType('lu')
-        self.kspB.setUp()
-    def apply(self,A,x,y):
-        """ Apply the inverse Operation """
-        temp1 = p4pyPETSc.Vec().create()
-        temp1.setType('seq')
-        temp2 = p4pyPETSc.Vec().create()
-        temp2.setType('seq')
-        temp1 = y.copy()
-        temp2 = y.copy()
-        self.
-
 
 def l2Norm(x):
     """
