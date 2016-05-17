@@ -44,13 +44,15 @@ SparseMatrix_fwrite(SparseMatrix *self,
                     PyObject *args)
 {
   register int i,k;
+  int base=0;
   int_t *rowptr,*colind;
   double *a;
   char *filename;
   FILE *file;
   if(!PyArg_ParseTuple(args,
-                       "s",
-                       &filename))
+                       "s|i",
+                       &filename,
+                       &base))
     return NULL;
   a = (double*)self->A.nzval;
   rowptr = self->A.rowptr;
@@ -61,8 +63,7 @@ SparseMatrix_fwrite(SparseMatrix *self,
   for (i = 0; i < self->dim[0]; i ++) 
     {
       for (k=rowptr[i]; k<rowptr[i+1]; k++)
-	fprintf(file,"%d %d %13.8e\n",i+1,colind[k]+1,a[k]);
-	/* printf("%d %d %10.3g\n",i+1,colind[k]+1,a[k]); */
+	fprintf(file,"%d %d %13.8e\n",i+base,colind[k]+base,a[k]);
     }
   fclose(file);
   Py_INCREF(Py_None);
@@ -122,10 +123,10 @@ SparseMatrix_getSubMatCSRrepresentation(SparseMatrix *self,
   assert(range_end > range_start);
   nr = range_end-range_start;
   assert(nr <= self->dim[0]);
-
-  a = (double*)self->A.nzval;
-  rowptr = self->A.rowptr;
-  colind = self->A.colind;
+  
+  rowptr = self->A.rowptr + range_start;
+  colind = self->A.colind + rowptr[0];
+  a = (double*)(self->A.nzval) + rowptr[0];
   nnz = self->A.rowptr[range_end]-self->A.rowptr[range_start];
 
   dims[0] = nr+1;
