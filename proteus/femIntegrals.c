@@ -12422,13 +12422,19 @@ void projectFromNodalInterpolationConditions(int nElements_global,
 					     double * dofs)
 {
   int eN,i,j,k;
+  
+  //  printf("dim_dof = %d, nDOF_element = %d\n",dim_dof,nDOF_element);
   for (eN = 0; eN < nElements_global; eN++)
     {
       for (i=0; i < nDOF_element; i++)
 	{
 	  k = functional_map_element[i]; /*dof i maps to interp value k locally*/
+	  //  printf("eN=%d, k=%d, i=%d\n",eN,k,i);
 	  for (j=0; j < dim_dof; j++)
 	    {
+	      //     printf("l2g[%d]= %d \n", eN*nDOF_element+i, l2g[eN*nDOF_element+i]);
+	      //     printf("l2g[%d]*%d+%d = %d  \n", eN*nDOF_element+i, dim_dof, j, l2g[eN*nDOF_element+i]*dim_dof + j);
+	      //     printf("interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j] = %.2f \n", interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j]);
 	      dofs[l2g[eN*nDOF_element+i]*dim_dof + j] = interpolationValues[eN*nDOF_element*dim_dof + k*dim_dof + j];
 	      
 	    }

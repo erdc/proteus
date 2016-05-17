@@ -1,5 +1,8 @@
 """
 A class hierarchy for subgrid error estimation methods (multiscale methods)
+
+.. inheritance-diagram:: proteus.SubgridError
+   :parts: 1
 """
 import numpy
 import csubgridError
@@ -839,6 +842,7 @@ class StokesStabilization_1(SGE_base):
 class StokesASGS_velocity(SGE_base):
     def __init__(self,coefficients,nd):
         SGE_base.__init__(self,coefficients,nd,lag=False)
+        self.stabilizationFlag = '1'
         coefficients.stencil[0].add(0)
         if nd == 2:
             coefficients.stencil[1].add(2)
@@ -850,8 +854,6 @@ class StokesASGS_velocity(SGE_base):
             coefficients.stencil[2].add(3)
             coefficients.stencil[3].add(1)
             coefficients.stencil[3].add(2)
-    def initializeElementQuadrature(self,mesh,t,cq):
-        self.mesh=mesh
     def calculateSubgridError(self,q):
         if self.nd == 2:
             if self.coefficients.sd:
@@ -1490,9 +1492,8 @@ class NavierStokesWithBodyForceASGS_velocity_pressure(NavierStokesASGS_velocity_
 #             return NavierStokesASGS_velocity_pressure.calculateSubgridError(q)
 
 class StokesASGS_velocity_pressure(SGE_base):
-    def __init__(self,coefficients,nd,stabFlag='1',lag=False):
-        SGE_base.__init__(self,coefficients,nd,lag)
-        self.stabilizationFlag = stabFlag
+    def __init__(self,coefficients,nd):
+        SGE_base.__init__(self,coefficients,nd,lag=False)
         coefficients.stencil[0].add(0)
         if nd == 2:
             coefficients.stencil[1].add(2)
@@ -1506,26 +1507,22 @@ class StokesASGS_velocity_pressure(SGE_base):
             coefficients.stencil[3].add(3)
     def calculateSubgridError(self,q):
         if self.nd == 2:
+        #    import pdb
+        #    pdb.set_trace()
             if self.coefficients.sd:
-                csubgridError.calculateSubgridErrorStokes2D_GLS_tau_sd(self.mesh.elementDiametersArray,
-                                                                       q[('dmt',1,1)],
-                                                                       q[('a',1,1)],
-                                                                       self.tau[0],
-                                                                       self.tau[1])
+                csubgridError.calculateSubgridErrorStokes_GLS_tau_sd(self.mesh.elementDiametersArray,
+                                                                     q[('dH',1,0)],
+                                                                     q[('a',1,1)],
+                                                                     self.tau[0],
+                                                                     self.tau[1])
             else:
-                csubgridError.calculateSubgridErrorStokes2D_GLS_tau(self.mesh.elementDiametersArray,
-                                                                    q[('dmt',1,1)],
-                                                                    q[('a',1,1)],
-                                                                    self.tau[0],
-                                                                    self.tau[1])
-            if self.lag:
-                tau0=self.tau_last[0]
-                tau1=self.tau_last[1]
-            else:
-                tau0=self.tau[0]
-                tau1=self.tau[1]
-            csubgridError.calculateSubgridErrorStokes2D_GLS_tauRes(tau0,
-                                                                   tau1,
+                csubgridError.calculateSubgridErrorStokes_GLS_tau(self.mesh.elementDiametersArray,
+                                                                  q[('dH',1,0)],
+                                                                  q[('a',1,1)],
+                                                                  self.tau[0],
+                                                                  self.tau[1])
+            csubgridError.calculateSubgridErrorStokes2D_GLS_tauRes(self.tau[0],
+                                                                   self.tau[1],
                                                                    q[('pdeResidual',0)],
                                                                    q[('dpdeResidual',0,1)],
                                                                    q[('dpdeResidual',0,2)],
@@ -1546,25 +1543,20 @@ class StokesASGS_velocity_pressure(SGE_base):
                                                                    q[('dsubgridError',2,2)])
         elif self.nd == 3:
             if self.coefficients.sd:
-                csubgridError.calculateSubgridErrorStokes2D_GLS_tau_sd(self.mesh.elementDiametersArray,
-                                                                       q[('dmt',1,1)],
-                                                                       q[('a',1,1)],
-                                                                       self.tau[0],
-                                                                       self.tau[1])
+                csubgridError.calculateSubgridErrorStokes_GLS_tau_sd(self.mesh.elementDiametersArray,
+                                                                     q[('dH',1,0)],
+                                                                     q[('a',1,1)],
+                                                                     self.tau[0],
+                                                                     self.tau[1])
             else:
-                csubgridError.calculateSubgridErrorStokes2D_GLS_tau(self.mesh.elementDiametersArray,
-                                                                    q[('dmt',1,1)],
-                                                                    q[('a',1,1)],
-                                                                    self.tau[0],
-                                                                    self.tau[1])
-            if self.lag:
-                tau0=self.tau_last[0]
-                tau1=self.tau_last[1]
-            else:
-                tau0=self.tau[0]
-                tau1=self.tau[1]
-                csubgridError.calculateSubgridErrorStokes3D_GLS_tauRes(tau0,
-                                                                       tau1,
+                csubgridError.calculateSubgridErrorStokes_GLS_tau(self.mesh.elementDiametersArray,
+                                                                  q[('dH',1,0)],
+                                                                  q[('a',1,1)],
+                                                                  self.tau[0],
+                                                                  self.tau[1])
+                self.tau[0][:] = 0.0
+                csubgridError.calculateSubgridErrorStokes3D_GLS_tauRes(self.tau[0],
+                                                                       self.tau[1],
                                                                        q[('pdeResidual',0)],
                                                                        q[('dpdeResidual',0,1)],
                                                                        q[('dpdeResidual',0,2)],
@@ -1591,33 +1583,6 @@ class StokesASGS_velocity_pressure(SGE_base):
                                                                        q[('subgridError',3)],
                                                                        q[('dsubgridError',3,0)],
                                                                        q[('dsubgridError',3,3)])
-
-#             csubgridError.calculateSubgridErrorStokes3D_GLS_velocity_pressure(self.mesh.elementDiametersArray,
-#                                                                                     q[('dm',1,1)],
-#                                                                                     q[('f',0)],
-#                                                                                     q[('a',1,1)],
-#                                                                                     q[('pdeResidual',0)],
-#                                                                                     q[('dpdeResidual',0,1)],
-#                                                                                     q[('dpdeResidual',0,2)],
-#                                                                                     q[('dpdeResidual',0,3)],
-#                                                                                     q[('pdeResidual',1)],
-#                                                                                     q[('dpdeResidual',1,0)],
-#                                                                                     q[('dpdeResidual',1,1)],
-#                                                                                     q[('pdeResidual',2)],
-#                                                                                     q[('dpdeResidual',2,0)],
-#                                                                                     q[('dpdeResidual',2,2)],
-#                                                                                     q[('pdeResidual',3)],
-#                                                                                     q[('dpdeResidual',3,0)],
-#                                                                                     q[('dpdeResidual',3,3)],
-#                                                                                     q[('subgridError',1)],
-#                                                                                     q[('dsubgridError',1,0)],
-#                                                                                     q[('dsubgridError',1,1)],
-#                                                                                     q[('subgridError',2)],
-#                                                                                     q[('dsubgridError',2,0)],
-#                                                                                     q[('dsubgridError',2,2)],
-#                                                                                     q[('subgridError',3)],
-#                                                                                     q[('dsubgridError',3,0)],
-#                                                                                     q[('dsubgridError',3,3)])
 
 class TwophaseStokes_LS_FC_ASGS(SGE_base):
     def __init__(self,coefficients,nd,stabFlag='1',lag=False):

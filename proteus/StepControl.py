@@ -1,5 +1,8 @@
 """
 A class hierarchy for methods of controlling the step size
+
+.. inheritance-diagram:: proteus.StepControl
+   :parts: 1
 """
 import Profiling
 log = Profiling.logEvent
