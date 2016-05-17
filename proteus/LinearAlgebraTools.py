@@ -42,7 +42,7 @@ def petsc4py_sparse_2_dense(sparse_matrix):
     -----
     If A is the PETSc4Py Matrix input, then the input argument should
     be A.getValuesCSR().
-    This function is be very inefficient for large matrices.
+    This function is very inefficient for large matrices.
     """
     rowptr = sparse_matrix[0]
     colptr = sparse_matrix[1]
@@ -285,18 +285,28 @@ class OperatorShell:
         pass
 
 class ProductOperatorShell(OperatorShell):
-    """ A base class for shell operators that apply multiplcation """
+    """ A base class for shell operators that apply multiplcation 
+    
+    Operators derived from this class should have working multiplication
+    functions.
+    """
     def __init__(self):
         pass
     def mult(self, A, x, y):
-        pass
+        raise NotImplementedError('You need to define a multiply' \
+                                  'function for your shell')
 
 class InvOperatorShell(OperatorShell):
-    """ A base class for inverse operator shells """
+    """ A base class for inverse operator shells 
+    
+    Operators derived from this class should have working apply
+    functions.
+    """
     def __init__(self):
         pass
     def apply(self, A, x, y):
-        pass
+        raise NotImplementedError('You need to define an apply' \
+                                  'function for your shell')
 
 class SparseMatShell(ProductOperatorShell):
     """ Build a parallel matrix shell from CSR data structures.
@@ -364,6 +374,12 @@ class B_Ainv_Bt_shell(ProductOperatorShell):
         A : petsc4py matrix object
             A must be a full rank square matrix.
         B : petsc4py matrix object
+        
+        Note
+        ----
+        This shell is of limited use as a context matrix for use in an 
+        inverse operation because of the lack of an effective 
+        preconditioner.
         """
         # TODO - add an exception checking that A is a square matrix
         self.A = A
@@ -488,36 +504,94 @@ class PCDInv_shell(InvOperatorShell):
         self.kspQp.solve(temp2,y)
 
 class LSCInv_shell(InvOperatorShell):
-    """ Shell class for the LSC Inverse Preconditioner """
-    def __init__(self,Qv_matrix,B_matrix,F_matrix):
+    """ Shell class for the LSC Inverse Preconditioner 
+    
+    This class creates a shell for the least-squares commutator (LSC)
+    preconditioner, where 
+    :math:`M_{s}= (B \hat{Q^{-1}_{v}} B^{'}) (B \hat{Q^{-1}_{v}} F 
+    \hat{Q^{-1}_{v}} B^{'})^{-1} (B \hat{Q^{-1}_{v}} B^{'})` 
+    is used to approximate the Schur complement.
+    """
+    def __init__(self, Qv, B, F):
         """Initializes the LSC inverse operator.
         
         Parameters
         ----------
-        Qv_matrix : petsc4py matrix object
-            The diagonal velocity mass matrix.
-        B_matrix : petsc4py matrix object
+        Qv : petsc4py matrix object
+            The diagonal elements of the velocity mass matrix.
+        B : petsc4py matrix object
             The velocity-pressure operator.
-        F_matrix : petsc4py matrix object
-            The A-block of the linear system
+        F : petsc4py matrix object
+            The A-block of the linear system.
         """
-        self.Qv = Qv_matrix
-        self.B = B_matrix
-        self.F = F_matrix
-        # initialize Q_hat
-        self.kspQv = p4pyPETSc.KSP().create()
-        self.kspQv.setOperators(self.Qv,self.Qv)
-        self.kspQv.setType('preonly')
-        self.kspQv.pc.setType('lu')
-        self.kspQv.setUp()
+
+        # TDB - should this class take (i) a diagonal matrix
+        # or (ii) the whole velocity matrix and then process the 
+        # operator to be diagonal?
+        # FOR NOW - assume Qv is diagonal.
+
+        # TODO - Add an assert testing that Qv is diagonal.
+        self.Qv = Qv
+        self.B = B
+        self.F = F
         # initialize (B Q_hat B')
+        self.__constructBQinvBt()
+        # initialize (B Q_hat B') solver
+        self.kspBQinvBt = p4pyPETSc.KSP().create()
+        self.kspBQinvBt.setOperators(self.BQinvBt,
+                                     self.BQinvBt)
+        self.kspBQinvBt.setType('preonly')
+        self.kspBQinvBt.pc.setType('lu')
+        self.kspBQinvBt.setUp()
+
     def apply(self,A,x,y):
         """ Apply the LSC inverse operator """
+        import pdb
+        # TODO - write a routine in the base class
+        #        that provides a method to create tmp vectors.
+        B_sizes = self.B.getSizes()
+        tmp1 = p4pyPETSc.Vec().create()
+        tmp2 = p4pyPETSc.Vec().create()
+        tmp3 = p4pyPETSc.Vec().create()
+        tmp1.setType('seq')
+        tmp2.setType('seq')
+        tmp3.setType('seq')
+        tmp1.setSizes(B_sizes[0])
+        tmp2.setSizes(B_sizes[1])
+        tmp3.setSizes(B_sizes[1])
+        # Apply the first BQinvB' operator
+        self.kspBQinvBt.solve(x,tmp1)
+        self.B.multTranspose(tmp1,tmp2)
+        self.Qv_inv.mult(tmp2,tmp3)
+        self.F.mult(tmp3,tmp2)
+        self.Qv_inv.mult(tmp2,tmp3)
+        self.B.mult(tmp3,tmp1)
+        self.kspBQinvBt.solve(tmp1,y)
+    
+    def __constructBQinvBt(self):
+        """ Private method repsonsible for building BQinvBt """
+        # Create \hat{Q}^{-1}
+        self.Qv_inv = p4pyPETSc.Mat().create()
+        self.Qv_inv.setSizes(self.Qv.getSizes())
+        self.Qv_inv.setType('aij')
+        self.Qv_inv.setUp()
+        self.Qv_inv.setDiagonal(1./self.Qv.getDiagonal())
+        QinvBt = self.Qv_inv.matTransposeMult(self.B)
+        self.BQinvBt = self.B.matMult(QinvBt)
+
+    def __diagonalInverse(self, A):
+        """ Construct the inverse of a diagonal matrix. 
+
+        Parameters
+        ----------
+        A - petsc4py diagonal matrix
+        """
         pass
+
 
 def l2Norm(x):
     """
-    Compute the parallel l_2 norm
+    Compute the parallel :math:`l_2` norm
     """
     return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
 
