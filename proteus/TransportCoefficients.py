@@ -3,6 +3,9 @@ Classes for implementing the coefficients of transport equations.
 
 TC_base defines the interface. The classes derived from TC_base in
 this module define common PDE's.
+
+.. inheritance-diagram:: proteus.TransportCoefficients
+   :parts: 1
 """
 from math import *
 import numpy
