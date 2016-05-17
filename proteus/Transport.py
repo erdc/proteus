@@ -1713,7 +1713,7 @@ class OneLevelTransport(NonlinearEquation):
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    u[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN]#load the BC value directly into the global array
+                    u[self.offset[cj]+self.stride[cj]*dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)#load the BC value directly into the global array
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
