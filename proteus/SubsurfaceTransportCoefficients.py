@@ -1,5 +1,8 @@
 """
 TransportCoefficients for flow and transport in porous media
+
+.. inheritance-diagram:: proteus.SubsurfaceTransportCoefficients
+   :parts: 1
 """
 from math import *
 from TransportCoefficients import TC_base

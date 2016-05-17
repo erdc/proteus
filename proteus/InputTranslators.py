@@ -1,5 +1,8 @@
 """
 Classes for taking input in other formats
+
+.. inheritance-diagram:: proteus.InputTranslators
+   :parts: 1
 """
 from proteus.EGeometry import *
 def logEvent(string):
