@@ -124,13 +124,12 @@ def test_bdm_sshaped_region():
     ns.calculateSolution('test1')
     #
     test_path = os.path.dirname(os.path.abspath(__file__))
-    expected = tables.openFile(
-        os.path.join(test_path,
-                     'test_bdm_sshaped_region_expected.h5'),'r')
+    expected = tables.openFile(os.path.join(test_path,
+                               'test_bdm_sshaped_region_expected.h5'),'r')
     actual = tables.openFile('poisson_bdm1_test.h5','r')
 
     assert np.allclose(expected.root.velocity_0_elementQuadrature_p_t1, \
-                       actual.root.velocity_0_elementQuadrature_p_t1), \
+                       actual.root.velocity_0_elementQuadrature_t1), \
            'post-processed velocity field is no longer producing expectout out'
 
     expected.close()
@@ -148,8 +147,7 @@ def test_piola_mapping():
 if __name__ == '__main__':
     from proteus import Comm
     comm = Comm.init()
-    test_BDM2_reference_triangle()
-    test_bdm_sshaped_region()
-   # import nose
-   # nose.main()
-
+#    test_BDM2_reference_triangle()
+#    test_bdm_sshaped_region()
+    import nose
+    nose.main()

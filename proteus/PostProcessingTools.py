@@ -832,7 +832,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         #go from boundary flux to local element boundary representation
         self.evaluateLocalVelocityRepresentation(ci)
         self.getElementwiseFlux(ci)
-        pdb.set_trace()
     #
     def getConservationJacobianPWL(self,ci):
         """
