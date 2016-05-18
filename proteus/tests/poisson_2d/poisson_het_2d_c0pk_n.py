@@ -37,6 +37,9 @@ nl_atol_res = 1.0e-8
 
 matrix = SparseMatrix
 
+class Exterior_StrongFlux(DoNothing):
+    useStrongDirichletConstraints=True
+
 if parallel:
     multilevelLinearSolver = KSP_petsc4py
     #for petsc do things lie
