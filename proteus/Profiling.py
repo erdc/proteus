@@ -241,7 +241,7 @@ Wall clock percentage of top 20 calls
                     fname=f[-1].strip("<").strip(">")
                 else:
                     fname="function '{2:s}' at {0:s}:{1:d}".format(*f)
-                msg+=("{0:11.1%} {1:s}\n".format(statsm[f][2]/stats.__dict__['total_tt'],str(fname)))
+                msg+=("{0:11.1%} {1:s}\n".format(stats.stats[f][2]/stats.__dict__['total_tt'],str(fname)))
             logEvent(msg)
 
         return func_return

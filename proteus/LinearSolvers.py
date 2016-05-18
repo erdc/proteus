@@ -12,9 +12,7 @@ from math import *
 from Profiling import logEvent
 
 class LinearSolver:
-    """
-    The base class for linear solvers.
-    """
+    """ The base class for linear solvers. """
     def __init__(self,
                  L,
                  rtol_r  = 1.0e-4,
@@ -355,6 +353,7 @@ class PETSc(LinearSolver):
 
 
 class KSP_petsc4py(LinearSolver):
+    """ A class that interfaces Proteus with PETSc's KSP. """
     def __init__(self,L,par_L,
                  rtol_r  = 1.0e-4,
                  atol_r  = 1.0e-16,
@@ -366,9 +365,9 @@ class KSP_petsc4py(LinearSolver):
                  prefix=None,
                  Preconditioner=None,
                  connectionList=None,
-                 linearSolverLocalBlockSize=1):
-        """ 
-        Create an object to interface Proteus with PETSc's KSP class.
+                 linearSolverLocalBlockSize=1,
+                 outputResults = True):
+        """ Initialize a petsc4py KSP object.
         
         Parameters
         -----------
@@ -396,9 +395,180 @@ class KSP_petsc4py(LinearSolver):
                               computeRates=computeRates,
                               printInfo=printInfo)
         import petsc4py
+
+        assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
+        assert isinstance(par_L,ParMat_petsc4py)
+
+        # initialize some class attributes
         self.pccontext = None
         self.preconditioner = None
         self.pc = None
+        self.solverName  = "PETSc"
+        self.par_fullOverlap = True
+        self.par_firstAssembly=True
+        self.par_L   = par_L
+        self.petsc_L = par_L
+        self.csr_rep_local = self.petsc_L.csr_rep_local
+        self.csr_rep = self.petsc_L.csr_rep
+
+        # create petsc4py KSP object and attach operators
+        self.ksp = p4pyPETSc.KSP().create()
+        self.__setMatOperators()
+        self.ksp.setOperators(self.petsc_L,self.petsc_L)
+
+        # set the ksp residual tolerance, options prefix and function handle for convergence message.
+        self.setResTol(rtol_r,atol_r,maxIts)
+        if convergenceTest == 'r-true':
+            self.r_work = self.petsc_L.getVecLeft()
+            self.rnorm0 = None
+            self.ksp.setConvergenceTest(self.__converged_trueRes)
+        else:
+            self.r_work = None
+        if prefix != None:
+            self.ksp.setOptionsPrefix(prefix)
+
+        # set ksp preconditioner
+        if Preconditioner != None:
+            self.__setPreconditioner(Preconditioner,par_L,prefix)
+            self.ksp.setPC(self.pc)
+        # TODO - Null space options is still WIP.  Should'nt hurt anything
+        # being here but I'm not sure it is doing what its supposed to.
+        self.__setKSPNullSpace()
+        # set the ksp options
+        self.ksp.setFromOptions()
+
+    def setResTol(self,rtol,atol,maxIts):
+        """ Set the ksp object's residual and maximum iterations. """
+        self.rtol_r = rtol
+        self.atol_r = atol
+        self.maxIts = maxIts
+        self.ksp.rtol = rtol
+        self.ksp.atol = atol
+        self.ksp.max_it = self.maxIts
+        logEvent("KSP atol %e rtol %e" % (self.ksp.atol,self.ksp.rtol))
+
+    def prepare(self,b=None):
+        self.petsc_L.zeroEntries()
+        assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
+        if self.petsc_L.proteus_jacobian != None:
+            self.csr_rep[2][self.petsc_L.nzval_proteus2petsc] = self.petsc_L.proteus_csr_rep[2][:]
+        if self.par_fullOverlap == True:
+            self.petsc_L.setValuesLocalCSR(self.csr_rep_local[0],self.csr_rep_local[1],self.csr_rep_local[2],p4pyPETSc.InsertMode.INSERT_VALUES)
+        else:
+            if self.par_firstAssembly:
+                self.petsc_L.setOption(p4pyPETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,False)
+                self.par_firstAssembly = False
+            else:
+                self.petsc_L.setOption(p4pyPETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,True)
+            self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],p4pyPETSc.InsertMode.ADD_VALUES)
+        self.petsc_L.assemblyBegin()
+        self.petsc_L.assemblyEnd()
+        self.ksp.setOperators(self.petsc_L,self.petsc_L)
+        #self.ksp.setOperators(self.Lshell,self.petsc_L)
+        if self.pc != None:
+            self.pc.setOperators(self.petsc_L,self.petsc_L)
+            self.pc.setUp()
+            if self.preconditioner:
+                self.preconditioner.setUp(self.ksp)
+        self.ksp.setUp()
+        self.ksp.pc.setUp()
+
+
+    def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
+        if par_b.proteus2petsc_subdomain is not None:
+            par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
+            par_u.proteus_array[:] = par_u.proteus_array[par_u.petsc2proteus_subdomain]
+        # if self.petsc_L.isSymmetric(tol=1.0e-12):
+        #    self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
+        #    print "Matrix is symmetric"
+        # else:
+        #    print "MATRIX IS NONSYMMETRIC"
+        logEvent("before ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s " % (self.ksp.rtol,
+                                                                                                   self.ksp.atol,
+                                                                                                   self.ksp.converged,
+                                                                                                   self.ksp.its,
+                                                                                                   self.ksp.norm))
+        if self.pccontext != None:
+            self.pccontext.par_b = par_b
+            self.pccontext.par_u = par_u
+        if self.matcontext != None:
+            self.matcontext.par_b = par_b
+
+        if not initialGuessIsZero:
+            self.ksp.setInitialGuessNonzero(True)
+        try:
+            if self.preconditioner.hasNullSpace:
+                self.preconditioner.nsp.remove(par_b)
+                self.ksp.setNullSpace(self.preconditioner.nsp)
+        except:
+            pass
+        self.ksp.solve(par_b,par_u)
+        logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
+                                                                                                             self.ksp.atol,
+                                                                                                             self.ksp.converged,
+                                                                                                             self.ksp.its,
+                                                                                                             self.ksp.norm,
+                                                                                                             self.ksp.reason))
+        self.its = self.ksp.its
+        if self.printInfo:
+            self.info()
+        if par_b.proteus2petsc_subdomain is not None:
+            par_b.proteus_array[:] = par_b.proteus_array[par_b.proteus2petsc_subdomain]
+            par_u.proteus_array[:] = par_u.proteus_array[par_u.proteus2petsc_subdomain]
+    def converged(self,r):
+        return self.ksp.converged
+    def failed(self):
+        failedFlag = LinearSolver.failed(self)
+        failedFlag = failedFlag or (not self.ksp.converged)
+        return failedFlag
+
+    def info(self):
+        self.ksp.view()
+
+    def __setMatOperators(self):
+        """ Initializes python context for the ksp matrix operator """
+        self.Lshell = p4pyPETSc.Mat().create()
+        L_sizes = self.petsc_L.getSizes()
+        L_range = self.petsc_L.getOwnershipRange()
+        self.Lshell.setSizes(L_sizes)
+        self.Lshell.setType('python')
+        self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
+        self.Lshell.setPythonContext(self.matcontext)
+
+
+    def __converged_trueRes(self,ksp,its,rnorm):
+        """ Function handle to feed to ksp's setConvergenceTest  """
+        ksp.buildResidual(self.r_work)
+        truenorm = self.r_work.norm()
+        logEvent("        KSP it %i norm(r) = %e; atol=%e rtol=%e " % (its,truenorm,ksp.atol,ksp.rtol))
+        if its == 0:
+            self.rnorm0 = truenorm
+            return False
+        else:
+            if truenorm < self.rnorm0*ksp.rtol:
+                return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
+                if truenorm < ksp.atol:
+                    return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
+        return False
+
+
+    def __setKSPNullSpace(self):
+        """ Apply a Null space to a KSP object.
+
+        Note
+        ----
+        TODO - This is a WIP with no working tests
+        """
+        try:
+            if self.preconditioner.hasNullSpace:
+                self.petsc_L.setNullSpace(self.preconditioner.nsp)
+                self.ksp.setNullSpace(self.preconditioner.nsp)
+        except:
+            pass
+
+
+    def __setPreconditioner(self,Preconditioner,par_L,prefix):
+        """ Sets the preconditioner type used in the KSP object """
         if Preconditioner != None:
             if Preconditioner == Jacobi:
                 self.pccontext= Preconditioner(L,
@@ -473,142 +643,7 @@ class KSP_petsc4py(LinearSolver):
             elif Preconditioner == NavierStokesPressureCorrection:
                 self.preconditioner = NavierStokesPressureCorrection(par_L)
                 self.pc = self.preconditioner.pc
-        assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
-        assert isinstance(par_L,ParMat_petsc4py)
-        self.solverName  = "PETSc"
-        self.par_fullOverlap = True
-        self.par_firstAssembly=True
-        self.par_L   = par_L
-        self.petsc_L = par_L
-        self.ksp     = p4pyPETSc.KSP().create()
-        self.csr_rep_local = self.petsc_L.csr_rep_local
-        self.csr_rep = self.petsc_L.csr_rep
-        #shell for main operator
-        self.Lshell = p4pyPETSc.Mat().create()
-        L_sizes = self.petsc_L.getSizes()
-        L_range = self.petsc_L.getOwnershipRange()
-        self.Lshell.setSizes(L_sizes)
-        self.Lshell.setType('python')
-        self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
-        self.Lshell.setPythonContext(self.matcontext)
-        #self.ksp.setOperators(self.petsc_L,self.Lshell)#,self.petsc_L)
-        #
-        try:
-            if self.preconditioner.hasNullSpace:
-                self.petsc_L.setNullSpace(self.preconditioner.nsp)
-                self.ksp.setNullSpace(self.preconditioner.nsp)
-        except:
-            pass
-        self.ksp.setOperators(self.petsc_L,self.petsc_L)
-        self.ksp.atol = self.atol_r; self.ksp.rtol= self.rtol_r ; self.ksp.max_it = self.maxIts
-        if convergenceTest == 'r-true':
-            self.r_work = self.petsc_L.getVecLeft()
-            self.rnorm0 = None
-            def converged_trueRes(ksp,its,rnorm):
-                ksp.buildResidual(self.r_work)
-                truenorm = self.r_work.norm()
-                logEvent("        KSP it %i norm(r) = %e; atol=%e rtol=%e " % (its,truenorm,ksp.atol,ksp.rtol))
-                if its == 0:
-                    self.rnorm0 = truenorm
-                    return False
-                else:
-                    if truenorm < self.rnorm0*ksp.rtol:
-                        return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
-                    if truenorm < ksp.atol:
-                        return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
-                    return False
-            self.ksp.setConvergenceTest(converged_trueRes)
-        else:
-            self.r_work = None
-        if prefix != None:
-            self.ksp.setOptionsPrefix(prefix)
-        if Preconditioner != None:
-            self.ksp.setPC(self.pc)
-        self.ksp.setFromOptions()
-    def setResTol(self,rtol,atol):
-        self.rtol_r = rtol
-        self.atol_r = atol
-        self.ksp.rtol = rtol
-        self.ksp.atol = atol
-        logEvent("KSP atol %e rtol %e" % (self.ksp.atol,self.ksp.rtol))
-    def prepare(self,b=None):
-        self.petsc_L.zeroEntries()
-        assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
-        if self.petsc_L.proteus_jacobian != None:
-            self.csr_rep[2][self.petsc_L.nzval_proteus2petsc] = self.petsc_L.proteus_csr_rep[2][:]
-        if self.par_fullOverlap == True:
-            self.petsc_L.setValuesLocalCSR(self.csr_rep_local[0],self.csr_rep_local[1],self.csr_rep_local[2],p4pyPETSc.InsertMode.INSERT_VALUES)
-        else:
-            if self.par_firstAssembly:
-                self.petsc_L.setOption(p4pyPETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,False)
-                self.par_firstAssembly = False
-            else:
-                self.petsc_L.setOption(p4pyPETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,True)
-            self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],p4pyPETSc.InsertMode.ADD_VALUES)
-        self.petsc_L.assemblyBegin()
-        self.petsc_L.assemblyEnd()
-        self.ksp.setOperators(self.petsc_L,self.petsc_L)
-        #self.ksp.setOperators(self.Lshell,self.petsc_L)
-        if self.pc != None:
-            self.pc.setOperators(self.petsc_L,self.petsc_L)
-            self.pc.setUp()
-            if self.preconditioner:
-                self.preconditioner.setUp(self.ksp)
-        self.ksp.setUp()
-        self.ksp.pc.setUp()
-
-
-
-    def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
-        if par_b.proteus2petsc_subdomain is not None:
-            par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
-            par_u.proteus_array[:] = par_u.proteus_array[par_u.petsc2proteus_subdomain]
-        # if self.petsc_L.isSymmetric(tol=1.0e-12):
-        #    self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
-        #    print "Matrix is symmetric"
-        # else:
-        #    print "MATRIX IS NONSYMMETRIC"
-        logEvent("before ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s " % (self.ksp.rtol,
-                                                                                                   self.ksp.atol,
-                                                                                                   self.ksp.converged,
-                                                                                                   self.ksp.its,
-                                                                                                   self.ksp.norm))
-        if self.pccontext != None:
-            self.pccontext.par_b = par_b
-            self.pccontext.par_u = par_u
-        if self.matcontext != None:
-            self.matcontext.par_b = par_b
-
-        if not initialGuessIsZero:
-            self.ksp.setInitialGuessNonzero(True)
-        try:
-            if self.preconditioner.hasNullSpace:
-                self.preconditioner.nsp.remove(par_b)
-                self.ksp.setNullSpace(self.preconditioner.nsp)
-        except:
-            pass
-        self.ksp.solve(par_b,par_u)
-        logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
-                                                                                                             self.ksp.atol,
-                                                                                                             self.ksp.converged,
-                                                                                                             self.ksp.its,
-                                                                                                             self.ksp.norm,
-                                                                                                             self.ksp.reason))
-        self.its = self.ksp.its
-        if self.printInfo:
-            self.info()
-        if par_b.proteus2petsc_subdomain is not None:
-            par_b.proteus_array[:] = par_b.proteus_array[par_b.proteus2petsc_subdomain]
-            par_u.proteus_array[:] = par_u.proteus_array[par_u.proteus2petsc_subdomain]
-    def converged(self,r):
-        return self.ksp.converged
-    def failed(self):
-        failedFlag = LinearSolver.failed(self)
-        failedFlag = failedFlag or (not self.ksp.converged)
-        return failedFlag
-
-    def info(self):
-        self.ksp.view()
+        
 
 class schurOperatorConstructor:
     """ Generate matrices for use in Schur complement preconditioner operators. """
@@ -775,7 +810,6 @@ class schurOperatorConstructor:
         #now zero all the dummy coefficents
         #
         self.L.pde.q[('df',0,0)][:] = 0.0
-        pdb.set_trace()
         self.Fp = self.getAp()
         self.Fp.scale(self.L.pde.coefficients.nu)
         self.Fp.__add__(self.Cp)
@@ -935,9 +969,10 @@ class schurOperatorConstructor:
 
 
 class SchurPrecon:
-    """
-    The base class for Schur complement preconditioners.
+    """ Base class for Schur complement preconditioners.
 
+    Notes
+    -----
     TODO - needs to run for TH, Q1Q1, dim = 2 or 3 etc.
     """
     def __init__(self,L,prefix=None):
@@ -953,8 +988,21 @@ class SchurPrecon:
         """
         self.PCType = 'schur'
         self.L = L
-        L_sizes = L.getSizes()
-        L_range = L.getOwnershipRange()
+        self.__initializeIS(prefix)
+        self.pc.setFromOptions()
+
+    def setUp(self,global_ksp):
+        pass
+        
+    def __initializeIS(self,prefix):
+        """ Sets the index set (IP) for the pressure and velocity 
+        
+        Notes
+        -----
+        TODO - this needs to set up to run for TH,Q1Q1, dim = 2 or 3 etc.
+        """
+        L_sizes = self.L.getSizes()
+        L_range = self.L.getOwnershipRange()
         neqns = L_sizes[0][0]
         rank = p4pyPETSc.COMM_WORLD.rank
         if self.L.pde.stride[0] == 1:#assume end to end
@@ -989,14 +1037,9 @@ class SchurPrecon:
         self.isv = p4pyPETSc.IS()
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
-        self.pc.setFromOptions()
-
-    def setUp(self,global_ksp):
-        pass
 
 class NavierStokesSchur(SchurPrecon):
-    """
-    Schur complement preconditioners for Navier-Stokes problems.
+    """ Schur complement preconditioners for Navier-Stokes problems.
 
     This class is derived from SchurPrecond and serves as the base
     class for all NavierStokes preconditioners which use the Schur complement
@@ -1043,8 +1086,6 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
         """
         # Create the pressure mass matrix and scale by the viscosity.
         self.Qp = self.operator_constructor.getQp()
-        import pdb
-        pdb.set_trace()
         self.Qp.scale(1./self.L.pde.coefficients.nu)
         L_sizes = self.Qp.size
         L_range = self.Qp.owner_range
@@ -1097,8 +1138,6 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         NavierStokes3D.__init__(self,L,prefix)
 
     def setUp(self,global_ksp):
-        import pdb
-        pdb.set_trace()
         # Step-1: get the pressure mass matrix
         self.Qp = self.operator_constructor.getQp()
         self.Fp = self.operator_constructor.getFp()
@@ -1149,7 +1188,7 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         # initialize the B and F operators
         self.B = self.operator_constructor.getB()
         self.F = self.operator_constructor.getF()
-        pdb.set_trace()
+#        pdb.set_trace()
         L_size = self.B.size[0]
         L_sizes = (L_size,L_size)
         self.LSCInv_shell = p4pyPETSc.Mat().create()

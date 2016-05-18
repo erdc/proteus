@@ -472,7 +472,9 @@ class Newton(NonlinearSolver):
         self.linearSolverFailed = False
         while (not self.converged(r) and
                not self.failed()):
-            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+            log("  NumericalAnalytics NewtonIteration: %d, Norm: %12.5e"
+                %(self.its-1, self.norm_r), level=1)
+            log("  Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
                 % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
@@ -2257,6 +2259,7 @@ class MultilevelNonlinearSolver:
             else:
                 par_u=None
                 par_r=None
+            log("  NumericalAnalytics Starting Newton Iteration for level " + `l`, level = 0)
             self.solverList[l].solve(u = uList[l],
                                      r = rList[l],
                                      b = bList[l],
