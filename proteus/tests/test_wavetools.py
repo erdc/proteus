@@ -1214,7 +1214,7 @@ class VerifyTimeSeries(unittest.TestCase):
             0,
              np.array([0.,0.,0]),            
             1.  ,
-            256,          #number of frequency bins
+            32,          #number of frequency bins
             1. ,        
             np.array([1,0,0]), 
             np.array([0,0,-9.81]),
@@ -1235,8 +1235,103 @@ class VerifyTimeSeries(unittest.TestCase):
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))                                                                                            
         self.assertTrue(err<1e-2 )                                                                                                                          
         
+       
+class VerifyRandomWavesFast(unittest.TestCase):
+# RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
+    def testRandomFast(self):
+        from proteus.WaveTools import RandomWaves,TimeSeries,RandomWavesFast
+        import random
+        path =getpath()
+        fname = path+"randomSeries.txt"
+        # Assinging a random value at a field and getting the expected output
+        Tp = 1. 
+        Hs = 0.15
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 2*random.random() - 1 
+        dir2 = 2*random.random() - 1 
+        waveDir = np.array([dir1,dir2, 0])
+        N = 20
+        phi = 2*pi*np.random.rand(N)
+        TMA = True
+        spectName = "JONSWAP"
+        bandFactor = 2.0
+        Lgen = 5 * waveDir 
+        x0 =  np.array([2.,0.,0 ])
+        Tstart = 0.
+        Tend = 150.
+        aR= RandomWaves(Tp,
+                     Hs,
+                     mwl,
+                     depth ,
+                     waveDir,
+                     g,
+                     N,
+                        bandFactor,       
+                        spectName, 
+                        None,
+                        phi            
+                        
+                   )
+        series = aR.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+        aT= TimeSeries(
+            fname,
+            0,
+            x0,
+            depth,
+            32,          #number of frequency bins
+            mwl ,        
+            waveDir,
+            g,
+            0.2*Tp,
+            False,                                                                                                                                          
+            {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
+            True,
+            series
+            )        
+        aRF = RandomWavesFast(Tstart,
+                         Tend,
+                         x0,
+                         Tp,
+                         Hs,
+                         mwl,
+                         depth,
+                         waveDir,
+                         g,
+                         N,
+                         bandFactor,
+                         spectName,
+                         None,
+                         phi,
+                         Lgen)
+        x = x0 + Lgen * random.random()
+        t = Tstart + random.random()*(Tend-Tstart)
+#        print x,t,aT.eta(x,t),aRF.eta(x,t)
+        self.assertTrue(abs(aRF.eta(x,t)-aT.eta(x,t)) <= 1e-8)
+        self.assertTrue(abs(aRF.u(x,t)[0]-aT.u(x,t)[0]) <= 1e-8)
+        self.assertTrue(abs(aRF.u(x,t)[1]-aT.u(x,t)[1]) <= 1e-8)
+        self.assertTrue(abs(aRF.u(x,t)[2]-aT.u(x,t)[2]) <= 1e-8)
+
+"""
+        eta0 = np.zeros(len(series),)
+        eta1 = eta0.copy()
+        eta2 = eta0.copy()
+        for ii in range(len(series)):
+            t = series[ii,0]
+            eta0[ii] = aR.eta(x,t)
+            eta1[ii] = aT.eta(x,t)
+            eta2[ii] = aRF.eta(x,t)
+        import pylab as plt
+        plt.plot(series[:,0],series[:,1],"ko")
+        plt.plot(series[:,0],eta0,"k-")
+        plt.plot(series[:,0],eta1,"k--")
+        plt.plot(series[:,0],eta2,"k:")
+        plt.xlim(50,65)
+        plt.grid()
+        plt.savefig("t.pdf")
+"""
         
-
-
 if __name__ == '__main__':
     unittest.main(verbosity=2)
