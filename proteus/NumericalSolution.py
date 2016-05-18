@@ -715,6 +715,7 @@ class NS_base:  # (HasTraits):
             log("==============================================================",level=0)
             log("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             log("==============================================================",level=0)
+            log("NumericalAnalytics Time Step " + `self.tn`,level=0)
             if self.opts.save_dof:
                 for m in self.modelList:
                     for lm in m.levelModelList:

@@ -525,7 +525,7 @@ class LSCInv_shell(InvOperatorShell):
             The A-block of the linear system.
         """
 
-        # TDB - should this class take (i) a diagonal matrix
+        # TBD - should this class take (i) a diagonal matrix
         # or (ii) the whole velocity matrix and then process the 
         # operator to be diagonal?
         # FOR NOW - assume Qv is diagonal.

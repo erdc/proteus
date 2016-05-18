@@ -261,6 +261,8 @@ class Quadrilateral(Polygon):
         if zMin==zMax:
             coordinate_list[2] = 0
         if sum(coordinate_list) !=2:
+            import pdb
+            pdb.set_trace()
             assert 0, 'Invalid 2D quadrilateral object'
 
         for i, t in enumerate(coordinate_list):
