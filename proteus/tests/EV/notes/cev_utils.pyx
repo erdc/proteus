@@ -111,7 +111,7 @@ def build_div_representation(np.ndarray row, np.ndarray col):
     """
     pass
 
-def build_graph_laplacian_element(np.ndarray q_dV, np.ndarray b_e, int nDOF_trial_element):
+def build_graph_laplacian_element(np.ndarray V_e, np.ndarray b_e, int nDOF_trial_element):
     """
     Build element contribution for Graph laplacian
     \begin{align}
@@ -120,21 +120,23 @@ def build_graph_laplacian_element(np.ndarray q_dV, np.ndarray b_e, int nDOF_tria
                             & \ 0, \ \mbox{ otherwise}
     \end{align}
 
+    :param: V_e array of elemental volumes: nElements_global
+    :param: b_e output array for elemental graph laplacian: nElements_global x nDOF_trial_element x nDOF_trial_element
+    :param: nDOF_trial_element, number of degrees of freedom per element, scalar
     """
-    cdef int i,j,iq,eN,nElements_global=q_dV.shape[0], nQuadrature_element=q_dV.shape[1]
+    cdef int i,j,eN,nElements_global=V_e.shape[0]
     cdef double vol,bij,bjj,ne_inv
+    
     assert b_e.shape[0] == nElements_global
     assert b_e.shape[1] == nDOF_trial_element
     assert b_e.shape[2] == nDOF_trial_element
     
-    cdef double* dVptr=<double*> q_dV.data
+    cdef double* dVptr=<double*> V_e.data
     cdef double* b_eptr=<double*> b_e.data
     ne_inv = 1.0/(nDOF_trial_element - 1.0)
     
     for eN in range(nElements_global):
-        vol = 0.0
-        for iq in range(nQuadrature_element):
-            vol += dVptr[eN*nQuadrature_element+iq]
+        vol = dVptr[eN]
         bji = -vol*ne_inv
         bjj = vol
         for j in range(nDOF_trial_element):
