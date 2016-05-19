@@ -190,10 +190,10 @@ class BC_RANS(BC_Base):
                 hx = new_x_0-x_0+h
                 return hx[i]
             return DBC_h
-        self.hx_dirichlet = get_DBC_h(i=0)
-        self.hy_dirichlet = get_DBC_h(i=1)
+        self.hx_dirichlet = get_DBC_h(0)
+        self.hy_dirichlet = get_DBC_h(1)
         if len(last_pos) > 2:
-            self.hz_dirichlet = get_DBC_h(i=2)
+            self.hz_dirichlet = get_DBC_h(2)
 
     def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None,
                                          windSpeed=(0., 0., 0.), air=1.,
