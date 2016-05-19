@@ -30,6 +30,9 @@ import cmeshTools
 
 log = Profiling.logEvent
 
+#mwf for testing entropy viscosity
+import cev_utils
+
 class StorageSet(set):
     def __init__(self,initializer=[],shape=(0,),storageType='d'):
         set.__init__(self,initializer)
@@ -2546,6 +2549,13 @@ class OneLevelTransport(NonlinearEquation):
                         else:
                             self.b[eN,j,i] = bjj
                             self.n[eN,i,j] = self.mesh.nodeArray[self.mesh.elementNodesArray[eN,i],:self.nSpace_global] - self.mesh.nodeArray[self.mesh.elementNodesArray[eN,j],:self.nSpace_global]
+        #mwf debug b creation
+        #import pdb
+        #pdb.set_trace()
+        b_copy = self.b.copy(); b_copy.fill(0.)
+        b_copy = cev_utils.build_graph_laplacian_element(self.q['dV'],b_copy,self.nDOF_trial_element[0])
+        assert np.allclose(self.b,b_copy)
+        
 
         cfemIntegrals.zeroJacobian_CSR(self.nnz, self.fterm_global)
         for ci,cjDict in self.coefficients.advection.iteritems():

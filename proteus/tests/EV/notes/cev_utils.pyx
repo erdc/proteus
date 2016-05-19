@@ -110,3 +110,37 @@ def build_div_representation(np.ndarray row, np.ndarray col):
 
     """
     pass
+
+def build_graph_laplacian_element(np.ndarray q_dV, np.ndarray b_e, int nDOF_trial_element):
+    """
+    Build element contribution for Graph laplacian
+    \begin{align}
+                            & -\frac{1}{n_e}|\Omega_e|, \ i \ne j, \ i,j \in \mathcal{I}(\Omega_e) \\
+    b_{e}(w_{h,j},w_{h,i}) =& \ |\Omega_e|, \  i = j, \ i,j \in \mathcal{I}(\Omega_e) \\
+                            & \ 0, \ \mbox{ otherwise}
+    \end{align}
+
+    """
+    cdef int i,j,iq,eN,nElements_global=q_dV.shape[0], nQuadrature_element=q_dV.shape[1]
+    cdef double vol,bij,bjj,ne_inv
+    assert b_e.shape[0] == nElements_global
+    assert b_e.shape[1] == nDOF_trial_element
+    assert b_e.shape[2] == nDOF_trial_element
+    
+    cdef double* dVptr=<double*> q_dV.data
+    cdef double* b_eptr=<double*> b_e.data
+    ne_inv = 1.0/(nDOF_trial_element - 1.0)
+    
+    for eN in range(nElements_global):
+        vol = 0.0
+        for iq in range(nQuadrature_element):
+            vol += dVptr[eN*nQuadrature_element+iq]
+        bji = -vol*ne_inv
+        bjj = vol
+        for j in range(nDOF_trial_element):
+            for i in range(nDOF_trial_element):
+                b_eptr[eN*nDOF_trial_element*nDOF_trial_element + j*nDOF_trial_element + i] = bji
+            #overwrite diagonal
+            b_eptr[eN*nDOF_trial_element*nDOF_trial_element + j*nDOF_trial_element + j] = bjj
+    return b_e
+
