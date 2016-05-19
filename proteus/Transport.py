@@ -2538,6 +2538,11 @@ class OneLevelTransport(NonlinearEquation):
                                self.nDOF_test_element[0]),
                               'd')
             self.nu_L = np.zeros((self.mesh.nElements_global,),'d')
+
+            #graph laplacian
+            #self.b = cev_utils.build_graph_laplacian_element(np.sum(self.q['dV'],1),self.b,self.nDOF_trial_element[0])
+            #
+            
             for eN in range(self.mesh.nElements_global):
                 vol = math.fabs(self.q['det(J)'][eN,0])/float(math.factorial(self.nSpace_global))#assume simplex
                 bji = -vol/(self.nDOF_trial_element[ci]-1.0)
@@ -2548,12 +2553,12 @@ class OneLevelTransport(NonlinearEquation):
                             self.b[eN,j,i] = bji
                         else:
                             self.b[eN,j,i] = bjj
-                            self.n[eN,i,j] = self.mesh.nodeArray[self.mesh.elementNodesArray[eN,i],:self.nSpace_global] - self.mesh.nodeArray[self.mesh.elementNodesArray[eN,j],:self.nSpace_global]
+                        self.n[eN,i,j] = self.mesh.nodeArray[self.mesh.elementNodesArray[eN,i],:self.nSpace_global] - self.mesh.nodeArray[self.mesh.elementNodesArray[eN,j],:self.nSpace_global]
         #mwf debug b creation
         #import pdb
         #pdb.set_trace()
         b_copy = self.b.copy(); b_copy.fill(0.)
-        b_copy = cev_utils.build_graph_laplacian_element(self.q['dV'],b_copy,self.nDOF_trial_element[0])
+        b_copy = cev_utils.build_graph_laplacian_element(np.sum(self.q['dV'],1),b_copy,self.nDOF_trial_element[0])
         assert np.allclose(self.b,b_copy)
         
 
