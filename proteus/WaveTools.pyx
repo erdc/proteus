@@ -1195,8 +1195,10 @@ class RandomWavesFast(RandomWaves):
 
 
 
-class NonlinearCorrectionWriteSeries(RandomWaves):
+class RandomNLWaves(RandomWaves):
     def __init__(self,
+                 Tstart,
+                 Tend,
                  Tp,                      #wave period
                  Hs,                      #significant wave height
                  mwl,                     #mean water level
@@ -1206,26 +1208,25 @@ class NonlinearCorrectionWriteSeries(RandomWaves):
                  N,                       #number of frequency bins
                  bandFactor,              #width factor for band around peak frequency fp       
                  spectName,               #random words will result in error and return the available spectra 
-                 tInterval,               #setup the time interval as a list
                  spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
                  phi=None                 #array of component phases
                  ):
         RandomWaves.__init__(self,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
-        self.tStart = tInterval[0]
-        self.tEnd = tInterval[1]
-        self.dtStep = Tp/48.
+        self.tStart = Tstart
+        self.tEnd = Tend
+        self.dtStep = self.Tp/48.
         self.Nseries = int((self.tEnd - self.tStart)/self.dtStep)
         self.dtStep = (self.tEnd - self.tStart)/self.Nseries
         
 
+        self.eta_linear=self.eta
+#    def eta_linear(self,x,t):
+#        Eta=0.
+#        for i in range(0,self.N):
+#            Eta += eta_mode(x,t,self.kDir[i],self.omega[i],self.phi[i],self.ai[i])
+#        return Eta
 
-    def eta_linear(self,x,t):
-        Eta=0.
-        for i in range(0,self.N):
-            Eta += eta_mode(x,t,self.kDir[i],self.omega[i],self.phi[i],self.ai[i])
-        return Eta
-
-
+    #2nd order higher harmonics
     def eta_2ndOrder(self,x,t):
         Eta2nd = 0.
         for i in range(0,self.N):
@@ -1236,7 +1237,7 @@ class NonlinearCorrectionWriteSeries(RandomWaves):
 
 
 
-    #free surface elevation due to short-crested waves        
+    #higher harmonics
     def eta_short(self,x,t):
         Etashort = 0.
         for i in range(0,self.N-1):
@@ -1250,7 +1251,7 @@ class NonlinearCorrectionWriteSeries(RandomWaves):
 
 
 
-    #free surface elevation due to high-crested waves
+    #lower harmonics
     def eta_long(self,x,t):
         Etalong = 0.
         for i in range(0,self.N-1):
@@ -1263,7 +1264,7 @@ class NonlinearCorrectionWriteSeries(RandomWaves):
         return Etalong
 
 
-
+    #set-up calculation
     def eta_setUp(self,x,t):
         EtasetUp = 0.
         for i in range(0,self.N):
@@ -1311,7 +1312,7 @@ class NonlinearCorrectionWriteSeries(RandomWaves):
         return timeSeries
 
     
-
+"""
 class ReconstructNonlinearCorrectionTimeSeries:            
     def __init__(self,
                  Tp,
@@ -1350,3 +1351,4 @@ class ReconstructNonlinearCorrectionTimeSeries:
         
 
 
+"""
