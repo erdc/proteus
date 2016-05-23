@@ -1413,7 +1413,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
         ww = aR.omega
         ki = aR.ki
         
-
+# Testing higher harmonics
         etaT = 0.
         N = aR.N
         for ii in range(0,N-1):
@@ -1437,6 +1437,30 @@ class VerifyRandomNLWaves(unittest.TestCase):
                 etaT += eta_mode(xi,t,aR.kDir[ii] + aR.kDir[jj],w1p2,aR.phi[ii] + aR.phi[jj],ai)
 #        print etaT,aNL.eta_short(xi,t)                
         self.assertTrue(round(etaT,8) == round(aNL.eta_short(xi,t),8))
+# Testing lower harmonics
+        etaT = 0.
+        N = aR.N
+        for ii in range(0,N-1):
+            for jj in range(ii+1,N):
+                w1p2 = ww[ii] - ww[jj]
+                w1p2_sq = ww[ii]**2 + ww[jj]**2
+                k1p2 = abs(ki[ii] - ki[jj])
+                w1b2 = ww[ii]* ww[jj]
+                kh12 = k1p2 * aR.depth
+                k1h = ki[ii] * aR.depth
+                k2h = ki[jj] * aR.depth
+                Dp = (w1p2)**2  - aR.gAbs*k1p2*tanh(kh12)
+                Bp =  w1p2_sq 
+                Bp = Bp + w1b2*( 1. + 1./(tanh(k1h)*tanh(k2h))) * (w1p2**2 + aR.gAbs * k1p2  *tanh(kh12)) / Dp
+                Bp += w1p2*( ww[ii]**3/sinh(k1h)**2 - ww[jj]**3/sinh(k2h)**2)/Dp 
+                Bp =0.5* Bp / aR.gAbs
+
+
+
+                ai = aR.ai[ii]*aR.ai[jj]*Bp
+                etaT += eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai)
+#        print etaT,aNL.eta_short(xi,t)                
+        self.assertTrue(round(etaT,8) == round(aNL.eta_long(xi,t),8))
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
