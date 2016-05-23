@@ -1242,7 +1242,7 @@ class RandomNLWaves(RandomWaves):
         for i in range(0,self.N-1):
             for j in range(i+1,self.N):
                 Dp = (self.omega[i]+self.omega[j])**2 - self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth)
-                Bp = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) - ((self.omega[i]*self.omega[j])/(2*self.gAbs))*(1-1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth)))*(((self.omega[i]+self.omega[j])**2 + self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth))/Dp) + ((self.omega[i]+self.omega[j])/(2*self.gAbs*Dp))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) + (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))	
+                Bp = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) - ((self.omega[i]*self.omega[j])/(2*self.gAbs)) *(1-1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth))) *(((self.omega[i]+self.omega[j])**2 + self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth))/Dp) + ((self.omega[i]+self.omega[j])/(2*self.gAbs*Dp))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) + (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))	
                 ai_short = self.ai[i]*self.ai[j]*Bp
                 wwi_short = eta_mode(x,t,self.kDir[i]+self.kDir[j],self.omega[i]+self.omega[j],self.phi[i]+self.phi[j],ai_short)
                 Etashort += wwi_short
