@@ -1336,7 +1336,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
 
 class VerifyRandomNLWaves(unittest.TestCase):
     def testFunctions(self):
-        from proteus.WaveTools import RandomWaves,TimeSeries,RandomNLWaves
+        from proteus.WaveTools import RandomWaves,TimeSeries,RandomNLWaves,eta_mode
         import random
         path =getpath()
         fname = path+"randomSeries.txt"
@@ -1398,9 +1398,20 @@ class VerifyRandomNLWaves(unittest.TestCase):
         t =  random.random()*200. - 100.
         xi = np.array([x, y, z])
 #        print aR.eta(xi,t),aNL.eta(xi,t)
+ 
         self.assertTrue(round(aR.eta(xi,t),8) == round(aNL.eta_linear(xi,t),8))
-
-
         
+        etaT = 0. 
+        for ii in range(N):
+            kh = aR.ki[ii]*aR.depth
+            ai = 0.25 * aR.ai[ii]**2 * aR.ki[ii] / tanh(kh) * (2. + 3./(sinh(kh)**2))
+            etaT += eta_mode(xi,t,2.*aR.kDir[ii],2.*aR.omega[ii],2.*aR.phi[ii],ai)
+        # 2nd order testing
+        print etaT,aNL.eta_2ndOrder(xi,t)
+        self.assertTrue(round(etaT,8) == round(aNL.eta_2ndOrder(xi,t),8))
+
+
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
