@@ -1308,11 +1308,12 @@ class VerifyRandomWavesFast(unittest.TestCase):
                          Lgen)
         x = x0 + Lgen * random.random()
         t = Tstart + random.random()*(Tend-Tstart)
-#        print x,t,aT.eta(x,t),aRF.eta(x,t)
-        self.assertTrue(abs(aRF.eta(x,t)-aT.eta(x,t)) <= 1e-8)
-        self.assertTrue(abs(aRF.u(x,t)[0]-aT.u(x,t)[0]) <= 1e-8)
-        self.assertTrue(abs(aRF.u(x,t)[1]-aT.u(x,t)[1]) <= 1e-8)
-        self.assertTrue(abs(aRF.u(x,t)[2]-aT.u(x,t)[2]) <= 1e-8)
+#        print x,t,aT.eta(x,t),aRF.eta(x,t),aT.u(x,t),aRF.u(x,t)
+        self.assertTrue(round(abs(aRF.eta(x,t)/aT.eta(x,t)),8) == 1.)
+        self.assertTrue(round(abs(aRF.u(x,t)[0]/aT.u(x,t)[0]),8) == 1.)
+        self.assertTrue(round(abs(aRF.u(x,t)[1]/aT.u(x,t)[1]),8) == 1.)
+        self.assertTrue(round(abs(aRF.u(x,t)[2]/aT.u(x,t)[2]),8) == 1.)
+
 
 """
         eta0 = np.zeros(len(series),)
@@ -1332,6 +1333,74 @@ class VerifyRandomWavesFast(unittest.TestCase):
         plt.grid()
         plt.savefig("t.pdf")
 """
+
+class VerifyRandomNLWaves(unittest.TestCase):
+    def testFunctions(self):
+        from proteus.WaveTools import RandomWaves,TimeSeries,RandomNLWaves
+        import random
+        path =getpath()
+        fname = path+"randomSeries.txt"
+        # Assinging a random value at a field and getting the expected output
+        Tp = 1. 
+        Hs = 0.15
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 2*random.random() - 1 
+        dir2 = 2*random.random() - 1 
+        waveDir = np.array([dir1,dir2, 0])
+        N = 20
+        phi = 2*pi*np.random.rand(N)
+        TMA = True
+        spectName = "JONSWAP"
+        bandFactor = 2.0
+        Lgen = 5 * waveDir 
+        x0 =  np.array([2.,0.,0 ])
+        Tstart = 0.
+        Tend = 150.
+
+
+        aR = RandomWaves(                 
+            Tp,                      #wave period
+            Hs,                      #significant wave height
+            mwl,                     #mean water level
+            depth,                   #water depth          
+            waveDir,                 #wave direction vector with three components
+            g,                       #gravitational accelaration vector with three components      
+            N,                       #number of frequency bins
+            bandFactor,              #width factor for band around peak frequency fp       
+            spectName,               #random words will result in error and return the available spectra 
+            spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+            phi=None                 #array of component phases
+            )
+
+
+        aNL = RandomNLWaves(                 
+            Tstart,
+            Tend,
+            Tp,                      #wave period
+            Hs,                      #significant wave height
+            mwl,                     #mean water level
+            depth,                   #water depth          
+            waveDir,                 #wave direction vector with three components
+            g,                       #gravitational accelaration vector with three components      
+            N,                       #number of frequency bins
+            bandFactor,              #width factor for band around peak frequency fp       
+            spectName,               #random words will result in error and return the available spectra 
+            spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+            phi = aR.phi               #array of component phases
+            )
+
+        x = random.random()*200. - 100.
+        y = random.random()*200. - 100.
+        z =  mwl - depth + random.random()*( depth)
+        t =  random.random()*200. - 100.
+        xi = np.array([x, y, z])
+#        print aR.eta(xi,t),aNL.eta(xi,t)
+        self.assertTrue(round(aR.eta(xi,t),8) == round(aNL.eta_linear(xi,t),8))
+
+
         
 if __name__ == '__main__':
     unittest.main(verbosity=2)
