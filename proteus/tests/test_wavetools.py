@@ -1470,6 +1470,10 @@ class VerifyRandomNLWaves(unittest.TestCase):
             etaT += setup
 
         self.assertTrue(round(etaT,8) == round(aNL.eta_setUp(xi,t),8))
+        etaT =aNL.eta_linear(xi,t)+aNL.eta_2ndOrder(xi,t)+aNL.eta_short(xi,t)+aNL.eta_long(xi,t) 
+        self.assertTrue(round(etaT,8) == round(aNL.eta_overall(xi,t),8))        
+        etaT= etaT - aNL.eta_setUp(xi,t)
+        self.assertTrue(round(etaT,8) == round(aNL.eta_overall(xi,t,True),8))        
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
