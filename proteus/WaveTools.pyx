@@ -834,14 +834,13 @@ class TimeSeries:
         self.vDir = setVertDir(g)
         dirCheck(self.waveDir,self.vDir)
         #Reading time series
-        filetype = timeSeriesFile[-4:]
-        logEvent("WaveTools.py: Reading timeseries from %s file: %s" % (filetype,timeSeriesFile),level=0)
 
         
         self.arrayData = arrayData
         if(self.arrayData):
             tdata = seriesArray
         else:
+            filetype = timeSeriesFile[-4:]
             fid = open(timeSeriesFile,"r")
             if (filetype !=".txt") and (filetype != ".csv"):
                 logEvent("WaveTools.py: File %s must be given in .txt or .csv format" % (timeSeriesFile),level=0)
