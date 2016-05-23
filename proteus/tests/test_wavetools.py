@@ -1459,8 +1459,17 @@ class VerifyRandomNLWaves(unittest.TestCase):
 
                 ai = aR.ai[ii]*aR.ai[jj]*Bp
                 etaT += eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai)
-#        print etaT,aNL.eta_short(xi,t)                
+
         self.assertTrue(round(etaT,8) == round(aNL.eta_long(xi,t),8))
+
+# Testing setup
+        etaT = 0.
+        N = aR.N
+        for ii in range(0,N-1):
+            setup =  0.5*aR.ai[ii]*aR.ai[ii]*aR.ki[ii]/sinh(2.*ki[ii]*aR.depth)
+            etaT += setup
+
+        self.assertTrue(round(etaT,8) == round(aNL.eta_setUp(xi,t),8))
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
