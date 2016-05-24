@@ -472,6 +472,7 @@ class KSP_petsc4py(LinearSolver):
                 self.preconditioner.setUp(self.ksp)
         self.ksp.setUp()
         self.ksp.pc.setUp()
+#        self.ksp.pc.getFieldSplitSubKSP()[1].setConvergenceTest(self.preconditioner._converged_trueRes)
 
 
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
@@ -502,6 +503,21 @@ class KSP_petsc4py(LinearSolver):
                 self.ksp.setNullSpace(self.preconditioner.nsp)
         except:
             pass
+  #      pressure_null_space = p4pyPETSc.NullSpace().create(constant=True)
+  #      if self.ksp.getOperators()[0].isNullSpace(self.preconditioner.global_nsp):
+   #         self.ksp.getOperators()[0].setNullSpace(self.preconditioner.global_nsp)
+     #       import pdb
+#            pdb.set_trace()
+    #        par_b.remove_null_space(self.preconditioner.global_nsp)
+ #           self.preconditioner.global_nsp.remove(par_b)
+  #      else:
+   #         raise Exception('The nullspace assigned to the ksp operator is not correct.')
+   #     if self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].isNullSpace(pressure_null_space):
+    #        self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(pressure_null_space)
+     #   else:
+   #         raise Exception('The nullspace assigned to the ksp operator is not correct.')
+        import pdb
+        pdb.set_trace()
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -533,13 +549,14 @@ class KSP_petsc4py(LinearSolver):
         self.Lshell.setSizes(L_sizes)
         self.Lshell.setType('python')
         self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
-        self.Lshell.setPythonContext(self.matcontext)
+        self.Lshell.setPythonContext(self.matcontext)        
 
 
     def __converged_trueRes(self,ksp,its,rnorm):
         """ Function handle to feed to ksp's setConvergenceTest  """
         ksp.buildResidual(self.r_work)
         truenorm = self.r_work.norm()
+        logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
         logEvent("        KSP it %i norm(r) = %e; atol=%e rtol=%e " % (its,truenorm,ksp.atol,ksp.rtol))
         if its == 0:
             self.rnorm0 = truenorm
@@ -547,8 +564,8 @@ class KSP_petsc4py(LinearSolver):
         else:
             if truenorm < self.rnorm0*ksp.rtol:
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
-                if truenorm < ksp.atol:
-                    return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
+            if truenorm < ksp.atol:
+                return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
         return False
 
 
@@ -1037,6 +1054,12 @@ class SchurPrecon:
         self.isv = p4pyPETSc.IS()
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
+        # Global null space constructor
+        temp_array = numpy.zeros(shape=(neqns,1))
+        temp_array[0:nDOF_pressure] = 1.0/(sqrt(nDOF_pressure))
+        null_space_basis = p4pyPETSc.Vec().createWithArray(temp_array)
+        self.global_null_space = [null_space_basis]
+        
 
 class NavierStokesSchur(SchurPrecon):
     """ Schur complement preconditioners for Navier-Stokes problems.
@@ -1048,6 +1071,7 @@ class NavierStokesSchur(SchurPrecon):
     def __init__(self,L,prefix=None):
         SchurPrecon.__init__(self,L,prefix)
         self.operator_constructor = schurOperatorConstructor(self ,'navier_stokes')
+
     def setUp(self,global_ksp=None):
         """
         Set up the NaverStokesSchur preconditioner.  
@@ -1055,8 +1079,36 @@ class NavierStokesSchur(SchurPrecon):
         Nothing needs to be done here for a generic NSE preconditioner. 
         Preconditioner arguments can be set with PETSc command line.
         """
+        self._setSchurlog(global_ksp)
+
+    def _setSchurlog(self,global_ksp):
+        """ Helper function that attaches a residual log to the inner solve """
+        global_ksp.pc.getFieldSplitSubKSP()[1].setConvergenceTest(self._converged_trueRes)
+
+    def _converged_trueRes(self,ksp,its,rnorm):
+        """ Function handle to feed to ksp's setConvergenceTest  """
+        r_work = ksp.getOperators()[1].getVecLeft()
+        ksp.buildResidual(r_work)
+        truenorm = r_work.norm()
+        logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
+        logEvent("        KSP it %i norm(r) = %e; atol=%e rtol=%e " % (its,truenorm,ksp.atol,ksp.rtol))
+        if its == 0:
+            self.rnorm0 = truenorm
+            return False
+        else:
+            if truenorm < self.rnorm0*ksp.rtol:
+                return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
+            if truenorm < ksp.atol:
+                return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
+        return False
+
+    def _setConstantPressureNullSpace(self,global_ksp):
+        self.global_nsp = p4pyPETSc.NullSpace().create(vectors=self.global_null_space)
+#        self.nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,constant=True)
+        # nsp = global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].getNullSpace()
+        # global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
         pass
-        
+
 SimpleNavierStokes3D = NavierStokesSchur
 NavierStokes3D = NavierStokesSchur
 
@@ -1117,7 +1169,8 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
         elif self.S_hat == 'Qp':
             raise Exception, 'Currently using Qp as an approximation is not' \
                 'supported.'
-
+        self._setSchurlog(global_ksp)
+        self._setConstantPressureNullSpace(global_ksp)
 
 class NavierStokes3D_PCD(NavierStokesSchur) :
     def __init__(self,L,prefix=None):
@@ -1157,6 +1210,9 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        self._setSchurlog(global_ksp)
+        self._setConstantPressureNullSpace(global_ksp)
+
 
 class NavierStokes3D_LSC(NavierStokesSchur) :
     def __init__(self,L,prefix=None):
@@ -1174,7 +1230,7 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         convection diffusion operator and boundary conditions need to
         be tested and taylored to problem specific boundary conditions.
         """
-        NavierStokes3D.__init__(self,L,prefix)
+        NavierStokesSchur.__init__(self,L,prefix)
 
     def setUp(self,global_ksp):
         import pdb
@@ -1198,9 +1254,14 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.F)
         self.LSCInv_shell.setPythonContext(self.matcontext_inv)
         self.LSCInv_shell.setUp()
+#        import pdb
+#        pdb.set_trace()
+#        global_ksp.pc.getFieldSplitSubKSP()[1].setType('preonly')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        self._setSchurlog(global_ksp)
+        self._setConstantPressureNullSpace(global_ksp)
 
 class SimpleDarcyFC:
     def __init__(self,L):

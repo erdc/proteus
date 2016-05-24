@@ -159,6 +159,38 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
         """
         _petsc_view(self, filename)
 
+    def remove_null_space(self,nsp):
+        """ Removes the null space from a RHS
+
+        Arguments
+        ---------
+        nsp : petsc4py null space class
+            Note this null space corresponds to the null space of the operator's transpose.
+        
+        Notes
+        -----
+        WIP - not tested for parallel implementation
+        """
+        from scipy import sparse
+        import pdb
+#        pdb.set_trace()
+        size = nsp.getVecs()[0].size
+        eye = numpy.identity(size)
+        Z = nsp.getVecs()[0].getArray()
+        ZZ = numpy.outer(Z,Z)
+        P = eye - ZZ
+        sP = sparse.csr_matrix(P)
+        petsc_sP = p4pyPETSc.Mat().createAIJ(size = (size,size), 
+                                             csr = (sP.indptr,
+                                                    sP.indices,
+                                                    sP.data) )
+        y = numpy.zeros(size)
+#        pdb.set_trace()
+        projected_vec = p4pyPETSc.Vec().createWithArray(y)
+        petsc_sP.mult(self , projected_vec)
+        self = projected_vec
+#        pdb.set_trace()
+
 
 class ParMat_petsc4py(p4pyPETSc.Mat):
     """
