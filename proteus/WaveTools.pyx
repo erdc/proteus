@@ -1194,6 +1194,7 @@ class RandomWavesFast(RandomWaves):
 
 
 
+
 class RandomNLWaves(RandomWaves):
     def __init__(self,
                  Tstart,
@@ -1211,21 +1212,12 @@ class RandomNLWaves(RandomWaves):
                  phi=None                 #array of component phases
                  ):
         RandomWaves.__init__(self,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
-        self.tStart = Tstart
-        self.tEnd = Tend
-        self.dtStep = self.Tp/48.
-        self.Nseries = int((self.tEnd - self.tStart)/self.dtStep)
-        self.dtStep = (self.tEnd - self.tStart)/self.Nseries
         
-
-        self.eta_linear=self.eta
-#    def eta_linear(self,x,t):
-#        Eta=0.
-#        for i in range(0,self.N):
-#            Eta += eta_mode(x,t,self.kDir[i],self.omega[i],self.phi[i],self.ai[i])
-#        return Eta
-
-    #2nd order higher harmonics
+        
+        self.eta_linear = self.eta
+        self.eta = self.wtError 
+        self.u = self.wtError 
+    
     def eta_2ndOrder(self,x,t):
         Eta2nd = 0.
         for i in range(0,self.N):
@@ -1282,34 +1274,36 @@ class RandomNLWaves(RandomWaves):
 
 
 
-    def eta_write(self,x0,filename,mode="all",setUp=False):
-        timelst=np.linspace(self.tStart, self.tEnd, self.Nseries)
-        timeSeries = np.zeros((self.Nseries,2),)
-        timeSeries[:,0] = timelst
+    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False):
+        Nseries = int(Tend - Tstart)/dt + 1
+        timelst=np.linspace(Tstart, Tend, Nseries)
+        series = np.zeros((Nseries,2),)
+        series[:,0] = timelst
         for i in range(len(timelst)):
-            time = timeSeries[i,0]
+            time = series[i,0]
             if mode == "all":
-                timeSeries[i,1] = self.eta_overall(x0,time,setUp)
-            elif mode != "all":
-                if mode == "setup":
-                    timeSeries[i,1] = self.eta_setUp(x0,time)
-                if mode == "short":
-                    timeSeries[i,1] = self.eta_short(x0,time) + self.eta_2ndOrder(x0,time)
-                if mode == "long":
-                    timeSeries[i,1] = self.eta_long(x0,time) 
-                if mode == "linear":
-                    timeSeries[i,1] = self.eta_linear(x0,time)
+                series[i,1] = self.eta_overall(x0,time,setUp)
+            elif mode == "setup":
+                series[i,1] = self.eta_setUp(x0,time)
+            elif mode == "short":
+                series[i,1] = self.eta_short(x0,time) + self.eta_2ndOrder(x0,time)
+            elif mode == "long":
+                series[i,1] = self.eta_long(x0,time) 
+            elif mode == "linear":
+                series[i,1] = self.eta_linear(x0,time)
             else:
-                logEvent('WaveTools.pyx: Argument mode in eta_write for 2nd order correction should be "all", "setup", "short", "long" or "linear"')
-                sys.exit(1)
-        
+                logEvent('WaveTools.pyx: Argument mode in RandomNLWaves.writeEtaSeries should be "all", "setup", "short", "long" or "linear"')
+                sys.exit(1)        
         delimiter =" "
-        if filename[-4:]==".csv":
-            delimiter = ","
-        
-        np.savetxt(filename,timeSeries,delimiter=delimiter)
-        return timeSeries
+        if fname[-4:]==".csv":
+            delimiter = ","        
+        np.savetxt(fname,series,delimiter=delimiter)
+        return series
 
+    def wtError(self,x,t):
+        logEvent("WaveTools.py: eta and u functions not available for this class. Please use RandomNLWavesFast for generating random waves with nonlinear correction",0)
+        sys.exit(1)
+    
     
 """
 class ReconstructNonlinearCorrectionTimeSeries:            
