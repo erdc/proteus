@@ -1305,34 +1305,43 @@ class RandomNLWaves(RandomWaves):
         sys.exit(1)
     
     
-"""
-class ReconstructNonlinearCorrectionTimeSeries:            
-    def __init__(self,
-                 Tp,
-                 Hs,
-                 mwl,
-                 depth,
-                 waveDir,
-                 g,
-                 Nwrite,
-                 bandFactor,
-                 spectName,
-                 tInterval,
-                 skiprows,                 
-                 timeSeriesPosition,
-                 Nrecon,
-                 cutoffTotal=0.01,
-                 spectral_params=None,
-                 phi=None
-                 ):
-        NlCWS = NonlinearCorrectionWriteSeries(Tp,Hs,mwl,depth,waveDir,g,Nwrite,bandFactor,spectName,tInterval,spectral_params,phi)
 
+class RandomNLWavesFast(RandomNLWaves):
+    def __init__(self,
+                 Tstart,
+                 Tend,
+                 x0,
+                 Tp,                      #wave period
+                 Hs,                      #significant wave height
+                 mwl,                     #mean water level
+                 depth,                   #water depth          
+                 waveDir,                 #wave direction vector with three components
+                 g,                       #gravitational accelaration vector with three components      
+                 N,                       #number of frequency bins
+                 bandFactor,              #width factor for band around peak frequency fp       
+                 spectName,               #random words will result in error and return the available spectra 
+                 spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 phi=None,
+                 Vgen = np.array([0.,0.,0.])    #array of component phases
+                 ):
+        RandomNLWaves.__init__(self,Tstart,Tend,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
+        Tlag = np.zeros(len(self.omega),)
+        for j in range(len(self.omega)):
+            Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
+        Tlag = max(Tlag)
+        Tstart = Tstart - Tlag
         modes = ["short","long","linear"]
-        
+        Tmax = 2*pi/(max(self.omega)-min(self.omega))/2.
+        periods = [self.Tp/2./1.1,self.Tp/1.1,Tmax]
         self.TClass = []
-        for mode in modes:
-            NlCWS.eta_write(timeSeriesPosition,mode+".csv",mode=mode,setUp=False)
-            self.TClass.append(TimeSeries(mode+".csv",skiprows,timeSeriesPosition,depth,Nrecon,mwl,waveDir,g,cutoffTotal,rec_direct=False,window_params={"Nwaves":10,"Tm":Tp/1.1,"Window":"costap"}))
+        cutoff = 0.2*self.Tp/(Tend-Tstart)
+        ii = -1
+        for mode in modes:            
+            ii+=1
+            dt  = periods[ii]/50.
+            fname = "randomNLWaves_"+mode+".csv"
+            series = self.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode)
+            self.TClass.append(TimeSeries(fname,0,x0,self.depth,self.mwl,self.waveDir,self.g,cutoff,False,{"Nwaves":15,"Tm":periods[ii],"Window":"costap"},True,series))
 
         
     def eta(self,x,t):
@@ -1344,4 +1353,4 @@ class ReconstructNonlinearCorrectionTimeSeries:
         
 
 
-"""
+
