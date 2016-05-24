@@ -2349,6 +2349,8 @@ class OneLevelTransport(NonlinearEquation):
         return jacobian
     def calculateElementResidual(self):
         """Calculate all the element residuals"""
+        import pdb
+        pdb.set_trace()
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
         for ci  in self.coefficients.advection.keys():
