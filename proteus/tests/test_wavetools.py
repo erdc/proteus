@@ -1333,6 +1333,27 @@ class VerifyRandomWavesFast(unittest.TestCase):
         plt.grid()
         plt.savefig("t.pdf")
 """
+class CheckFailureRandomNLWaves(unittest.TestCase):
+    def testFailures(self):
+        from proteus.WaveTools import RandomNLWaves
+        RR = RandomNLWaves(0,100,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", spectral_params= None )
+        xi = np.array([0.,0.,0.])
+        t = 0.
+#        print RR.writeEtaSeries(0.,100,1,xi,"aa.txt","blah")
+#Failure 1:  call eta
+        with self.assertRaises(SystemExit) as cm1:    
+            f = RR.eta(xi,t)
+        self.assertEqual(cm1.exception.code, 1 )             
+#Failure 2:  call u
+        with self.assertRaises(SystemExit) as cm2:    
+            f = RR.eta(xi,t)
+        self.assertEqual(cm2.exception.code, 1 )             
+#Failure 3:  call writeEtaSeries with a wrong mode
+        with self.assertRaises(SystemExit) as cm3:    
+            f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","blah")
+        self.assertEqual(cm3.exception.code, 1 )             
+
+
 
 class VerifyRandomNLWaves(unittest.TestCase):
     def testFunctions(self):
@@ -1474,6 +1495,65 @@ class VerifyRandomNLWaves(unittest.TestCase):
         self.assertTrue(round(etaT,8) == round(aNL.eta_overall(xi,t),8))        
         etaT= etaT - aNL.eta_setUp(xi,t)
         self.assertTrue(round(etaT,8) == round(aNL.eta_overall(xi,t,True),8))        
+
+# Test writing series for different modes
+        Tstart = 0
+        Tend = 2.
+        dt = 1.
+        fname = "2ndorderseries.txt"
+
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"all")
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_overall(xi,float(ii)),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_overall(xi,float(ii)),8) )
+        fid.close()
+
+
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"all",True)
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_overall(xi,float(ii),True),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_overall(xi,float(ii),True),8) )
+        fid.close()
+
+
+
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"short")
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_short(xi,float(ii))+aNL.eta_2ndOrder(xi,float(ii)),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_short(xi,float(ii))+aNL.eta_2ndOrder(xi,float(ii)),8) )
+        fid.close()
+
+
+
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"long")
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_long(xi,float(ii)),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_long(xi,float(ii)),8) )
+        fid.close()
+
+
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"setup")
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_setUp(xi,float(ii)),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_setUp(xi,float(ii)),8) )
+        fid.close()
+
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
