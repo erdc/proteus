@@ -10,6 +10,8 @@ from proteus.BoundaryConditions import (BC_Base,
 from proteus.Profiling import logEvent as log
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
+from proteus import Context
+ct = Context.get()
 
 
 class BC_RANS(BC_Base):
@@ -223,8 +225,6 @@ class BC_RANS(BC_Base):
 
         def get_inlet_ux_dirichlet(i):
             def ux_dirichlet(x, t):
-                from proteus import Context
-                ct = Context.get()
                 waveHeight = wave.mwl+wave.eta(x, t)
                 wavePhi = x[vert_axis]-waveHeight
                 if wavePhi <= 0:
@@ -241,8 +241,6 @@ class BC_RANS(BC_Base):
             return ux_dirichlet
 
         def inlet_vof_dirichlet(x, t):
-            from proteus import Context
-            ct = Context.get()
             level = wave.mwl + wave.eta(x,t)
             mesh = ct.domain.MeshOptions
             he, ecH = ct.domain.MeshOptions.he, ct.epsFact_consrv_heaviside
@@ -250,8 +248,6 @@ class BC_RANS(BC_Base):
             return H
 
         def inlet_p_advective(x, t):
-            from proteus import Context
-            ct = Context.get()
             # This is the normal velocity, based on the outwards boundary
             # orientation b_or
             # needs to be equal to -ux_dirichlet
@@ -260,7 +256,6 @@ class BC_RANS(BC_Base):
             waterSpeed = np.array(wave.u(x, t))
             waveHeight = wave.mwl+wave.eta(x, t)
             wavePhi = x[vert_axis]-waveHeight
-            he = ct.domain.MeshOptions.he
             if wavePhi <= 0:
                 waterSpeed = wave.u(x, t)
             else:
@@ -436,8 +431,6 @@ class RelaxationZone:
         Sets the functions necessary for generation zones
         """
         def twp_flowVelocity(x, t):
-            from proteus import Context
-            ct = Context.get()
             vert_axis = self.Shape.Domain.nd-1
             waveHeight = self.waves.mwl+self.waves.eta(x, t)
             wavePhi = x[vert_axis]-waveHeight
