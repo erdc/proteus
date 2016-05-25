@@ -1569,7 +1569,7 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         path =getpath()
         fname = path+"randomNLSeries.txt"
         # Assinging a random value at a field and getting the expected output
-        Tp = 3. 
+        Tp = 2. 
         Hs = 0.001
         mwl = 4.5
         depth = 0.9
