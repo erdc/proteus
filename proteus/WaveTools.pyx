@@ -938,7 +938,7 @@ class TimeSeries:
                 sys.exit(1)
 
             if(self.Nwaves > 0.5*self.tlength / self.Tm):
-                logEvent("WaveTools.py: Reconstruction is expected to have two windows or less. Plese reduce the number of waves per window or switch to direct decomposition )")
+                logEvent("WaveTools.py: Reconstruction is expected to have two windows or more. Plese reduce the number of waves per window or switch to direct decomposition )")
                 sys.exit(1)
 
 
@@ -1274,7 +1274,17 @@ class RandomNLWaves(RandomWaves):
 
 
 
-    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False):
+    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False,Vgen=np.array([0.,0.,0.])):
+        if sum(Vgen[:]*self.waveDir[:])< 0 :
+            logEvent('WaveTools.py: Location vector of generation zone should not be opposite to the wave direction')
+            sys.exit(1)        
+
+        Tlag = np.zeros(len(self.omega),)
+        for j in range(len(self.omega)):
+            Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
+        Tlag = max(Tlag)
+        Tstart = Tstart - Tlag
+
         Nseries = int(Tend - Tstart)/dt + 1
         timelst=np.linspace(Tstart, Tend, Nseries)
         series = np.zeros((Nseries,2),)
@@ -1306,7 +1316,7 @@ class RandomNLWaves(RandomWaves):
     
     
 
-class RandomNLWavesFast(RandomNLWaves):
+class RandomNLWavesFast:
     def __init__(self,
                  Tstart,
                  Tend,
@@ -1324,32 +1334,63 @@ class RandomNLWavesFast(RandomNLWaves):
                  phi=None,
                  Vgen = np.array([0.,0.,0.])    #array of component phases
                  ):
-        RandomNLWaves.__init__(self,Tstart,Tend,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
-        Tlag = np.zeros(len(self.omega),)
-        for j in range(len(self.omega)):
-            Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
-        Tlag = max(Tlag)
-        Tstart = Tstart - Tlag
-        modes = ["short","long","linear"]
-        Tmax = 2*pi/(max(self.omega)-min(self.omega))/2.
-        periods = [self.Tp/2./1.1,self.Tp/1.1,Tmax]
-        self.TClass = []
-        cutoff = 0.2*self.Tp/(Tend-Tstart)
-        ii = -1
-        for mode in modes:            
-            ii+=1
-            dt  = periods[ii]/50.
-            fname = "randomNLWaves_"+mode+".csv"
-            series = self.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode)
-            self.TClass.append(TimeSeries(fname,0,x0,self.depth,self.mwl,self.waveDir,self.g,cutoff,False,{"Nwaves":15,"Tm":periods[ii],"Window":"costap"},True,series))
+        aR = RandomWaves(Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
+        aRN = RandomNLWaves(Tstart,Tend,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
+        self.omega = aR.omega
 
-        
+        Tmax = 4.*pi/(max(self.omega)-min(self.omega))
+        modes = ["short","linear","long"]
+        periods = [Tp/2./1.1,Tp/1.1, Tmax]
+        self.TS= []
+        ii = -1
+        for mode in modes:
+            ii+=1
+            fname = "randomNLWaves_"+mode+".csv"
+            dt = periods[ii]/50.
+            series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Vgen)
+            Tstart_temp = series[0,0]
+            cutoff = 0.2*Tp/(Tend-Tstart_temp)
+            self.TS.append(TimeSeries(
+                    fname,
+                    0,
+                    x0,
+                    depth,
+                    32,
+                    mwl,
+                    waveDir,
+                    g,
+                    cutoffTotal = cutoff,
+                    rec_direct = False,
+                    window_params = {"Nwaves":15 ,"Tm":periods[ii],"Window":"costap"},
+                    arrayData = True,
+                    seriesArray = series)
+                           )
+        self.series =  [ Tstart,Tend,
+                         fname,
+                    0,
+                    x0,
+                    depth,
+                    32,
+                    mwl,
+                    waveDir,
+                    g,
+                    cutoff,
+                     False,
+                     {"Nwaves":15 ,"Tm":periods[ii],"Window":"costap"},
+                     True,
+                     series]
+
+#        self.series = ii
+
+
     def eta(self,x,t):
-        return self.TClass[0].eta(x,t) + self.TClass[1].eta(x,t) + self.TClass[2].eta(x,t)
+        etaR = self.TS[0].eta(x,t)+ self.TS[1].eta(x,t)+self.TS[2].eta(x,t)
+        return etaR
 
 
     def u(self,x,t):
-        return self.TClass[0].u(x,t) + self.TClass[1].u(x,t) + self.TClass[2].u(x,t) 
+        uR = self.TS[0].u(x,t)+ self.TS[1].u(x,t)+self.TS[2].u(x,t)
+        return uR
         
 
 
