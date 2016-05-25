@@ -1335,8 +1335,10 @@ class VerifyRandomWavesFast(unittest.TestCase):
 """
 class CheckFailureRandomNLWaves(unittest.TestCase):
     def testFailures(self):
+        waveDir = np.array([0.,0.,1.])
+        Vgen = np.array([0.,0.,-1])
         from proteus.WaveTools import RandomNLWaves
-        RR = RandomNLWaves(0,100,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", spectral_params= None )
+        RR = RandomNLWaves(0,100,1.,1.,0.,10.,waveDir,np.array([0,-9.81,0]),100,2.,"JONSWAP", spectral_params= None )
         xi = np.array([0.,0.,0.])
         t = 0.
 #        print RR.writeEtaSeries(0.,100,1,xi,"aa.txt","blah")
@@ -1352,6 +1354,10 @@ class CheckFailureRandomNLWaves(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm3:    
             f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","blah")
         self.assertEqual(cm3.exception.code, 1 )             
+        with self.assertRaises(SystemExit) as cm4:    
+            f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","long",False,Vgen)
+        self.assertEqual(cm4.exception.code, 1 )             
+
 
 
 
@@ -1502,7 +1508,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
         dt = 1.
         fname = "2ndorderseries.txt"
 
-        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"all")
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"all",False)
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
         
