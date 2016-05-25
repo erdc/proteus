@@ -1521,6 +1521,14 @@ class VerifyRandomNLWaves(unittest.TestCase):
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_overall(xi,float(ii),True),8) )
         fid.close()
 
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"linear")
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_linear(xi,float(ii)),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_linear(xi,float(ii)),8) )
+        fid.close()
 
 
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"short")
@@ -1553,7 +1561,154 @@ class VerifyRandomNLWaves(unittest.TestCase):
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_setUp(xi,float(ii)),8) )
         fid.close()
 
+class VerifyRandomNLWavesFast(unittest.TestCase):
+# RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
+    def testRandomNLFast(self):
+        from proteus.WaveTools import RandomNLWaves,RandomNLWavesFast,TimeSeries
+        import random
+        path =getpath()
+        fname = path+"randomNLSeries.txt"
+        # Assinging a random value at a field and getting the expected output
+        Tp = 3. 
+        Hs = 0.001
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 2*random.random() - 1 
+        dir2 = 2*random.random() - 1 
+        waveDir = np.array([dir1,dir2, 0])
+        N = 3
+        phi = 2*pi*np.random.rand(N)
+        TMA = True
+        spectName = "JONSWAP"
+        bandFactor = 3.
+        Lgen = 5 * waveDir 
+        x0 =  np.array([2.,0.,0 ])
+        Tstart = 0.
+        Tend = 80.
+        aR= RandomNLWaves(
+            Tstart,
+            Tend,
+            Tp,
+            Hs,
+            mwl,
+            depth,
+            waveDir,
+            g,
+            N,
+            bandFactor,
+            spectName,
+            None,
+            phi)
+        
+        aRF= RandomNLWavesFast(
+            Tstart,
+            Tend,
+            x0,
+            Tp,
+            Hs,
+            mwl,
+            depth,
+            waveDir,
+            g,
+            N,
+            bandFactor,
+            spectName,
+            None,
+            phi,
+            Lgen)
 
+        Tmax = 4*pi/(max(aR.omega) - min(aR.omega))
+        
+        dt_s = (Tp/50.)/2.2
+        dt =  (Tp/50.)/1.1
+        dt_l = Tmax/50.
+
+
+        series = aR.writeEtaSeries(Tstart,Tend,dt,x0,fname,"linear",False,Lgen)
+        series_l = aR.writeEtaSeries(Tstart,Tend,dt_l,x0,fname,"long",False,Lgen)
+        series_s = aR.writeEtaSeries(Tstart,Tend,dt_s,x0,fname,"short",False ,Lgen)
+        Tstart = series_s[0,0]
+        Tend = series_s[-1,0]
+        cutoff = 0.2*Tp/(Tend-Tstart)
+
+
+        aT_s= TimeSeries(
+            fname,
+            0,
+            x0,
+            depth,
+            32,          #number of frequency bins
+            mwl ,        
+            waveDir,
+            g,
+            cutoff,
+            False,                                                                                                                                      
+            {"Nwaves":15, "Tm":Tp/2.2, "Window":"costap"},
+            True,
+            series_s
+            )        
+        Tstart = series[0,0]
+        Tend = series[-1,0]
+        cutoff = 0.2*Tp/(Tend-Tstart)
+
+        aT= TimeSeries(
+            fname,
+            0,
+            x0,
+            depth,
+            32,          #number of frequency bins
+            mwl ,        
+            waveDir,
+            g,
+            cutoff,
+            False,                                                                                                                                      
+            {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
+            True,
+            series
+            )        
+        Tstart = series_l[0,0]
+        Tend = series_l[-1,0]
+        cutoff = 0.2*Tp/(Tend-Tstart)
+
+        aT_l= TimeSeries(
+            fname,
+            0,
+            x0,
+            depth,
+            32,          #number of frequency bins
+            mwl ,        
+            waveDir,
+            g,
+            cutoff,
+            False,                                                          
+            {"Nwaves":15, "Tm":Tmax, "Window":"costap"},
+            True,
+            series_l
+            )        
+
+
+        
+        x = x0 + Lgen * random.random()
+        t = Tstart + random.random()*(Tend-Tstart)
+#        print x,t,aT.eta(x,t),aRF.eta(x,t),aT.u(x,t),aRF.u(x,t)
+        etaT = [Tstart,Tend, fname,
+                0,
+                x0,
+                depth,
+                32,
+                mwl,
+                waveDir,
+                g,##
+                
+                cutoff,
+                False,
+                {"Nwaves":15 ,"Tm":Tp/2.2,"Window":"costap"},
+                True,
+                series_l]
+        self.assertTrue(round(aRF.eta(x,t),8) == round(aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t),8))
+        self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
