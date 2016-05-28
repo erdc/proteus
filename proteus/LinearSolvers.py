@@ -9,7 +9,7 @@ import lapackWrappers
 import superluWrappers
 from petsc4py import PETSc as p4pyPETSc
 from math import *
-from Profiling import logEvent
+from .Profiling import logEvent
 
 class LinearSolver:
     """

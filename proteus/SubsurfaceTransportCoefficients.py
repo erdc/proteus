@@ -7,8 +7,7 @@ TransportCoefficients for flow and transport in porous media
 from math import *
 from TransportCoefficients import TC_base
 import numpy
-import Profiling
-log = Profiling.logEvent
+from .Profiling import logEvent
 from proteus import FemTools
 from proteus import Transport
 import subsurfaceTransportFunctions as stfuncs
@@ -742,7 +741,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #                 kv = kv0
 #             if self.testIsTrial:
 #                 if kv in sd.keys():
-#                     log("Shallow copy of trial shape is being used for test shape %s " % kw[0],level=4)
+#                     logEvent("Shallow copy of trial shape is being used for test shape %s " % kw[0],level=4)
 #                     sd[kw] = sd[kv]
 #                     aliased=True
 #             return aliased
@@ -755,7 +754,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #             k0 = (ks,)+(refi,)
 #             if self.reuse_test_trial_quadrature and refi != None:
 #                 if k0 in sd.keys():
-#                     log("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
+#                     logEvent("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
 #                     sd[k] = sd[k0]
 #                     aliased=True
 #             return aliased
@@ -773,7 +772,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #         for k in trial_shape_quadrature_duplicate:
 #             self.u_ip[k] = self.u_ip[trial_shape_quadrature_duplicate_map[k]]
 #         #mwf trial-dup end
-#         log(memory("solution interpolation points, test/trial functions trial_shape","OneLevelTransport"),level=4)
+#         logEvent(memory("solution interpolation points, test/trial functions trial_shape","OneLevelTransport"),level=4)
 #         #allocate test shape functions
 #         for k in self.test_shape_quadrature:
 #             if not makeAlias(self.u_ip,k):
@@ -782,7 +781,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #                      self.n_u_ip_element,
 #                      self.nDOF_test_element[k[-1]]),
 #                     'd')
-#         log(memory("solution interpolation points, test/trial functions test_shape","OneLevelTransport"),level=4)
+#         logEvent(memory("solution interpolation points, test/trial functions test_shape","OneLevelTransport"),level=4)
 #         #allocate trial shape function gradients
 #         for k in sorted(self.trial_shapeGradient_quadrature):
 #             if not makeAliasForComponent1(self.u_ip,k,['grad(v)'],refi=0):#need to handle multiple component combinations
@@ -792,7 +791,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #                      self.nDOF_trial_element[k[-1]],
 #                      self.nSpace_global),
 #                     'd')
-#         log(memory("solution interpolation points, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
+#         logEvent(memory("solution interpolation points, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
 #         #allocate test shape function gradients
 #         for k in self.test_shapeGradient_quadrature:
 #             if not makeAlias(self.u_ip,k):
@@ -3950,7 +3949,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
             #tLastSave =self.satModel_me.timeIntegration.tLast
             #todo need to do make sure mass conserved, handle projection from cg to dg correctly
             #todo ExplicitRK is getting messed up here, going twice as fast
-            log("Incomp.FracFlowSatAdvDiff preStep t= %s model %s setting its solution from model %s " % (t,self.satModel_me,self.satModel_other),level=2)
+            logEvent("Incomp.FracFlowSatAdvDiff preStep t= %s model %s setting its solution from model %s " % (t,self.satModel_me,self.satModel_other),level=2)
             #if self.satModelIndex_me != 1:#mwf hack
             self.satModel_other.u[0].getValues(self.u_ip[('v_other',0)],
                                                self.u_ip[('u_other',0)])
