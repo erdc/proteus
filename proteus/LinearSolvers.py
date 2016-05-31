@@ -418,6 +418,8 @@ class KSP_petsc4py(LinearSolver):
 
         # set the ksp residual tolerance, options prefix and function handle for convergence message.
         self.setResTol(rtol_r,atol_r,maxIts)
+        # I don't really understand this...
+        convergenceTest = 'r-true'
         if convergenceTest == 'r-true':
             self.r_work = self.petsc_L.getVecLeft()
             self.rnorm0 = None
@@ -503,21 +505,20 @@ class KSP_petsc4py(LinearSolver):
                 self.ksp.setNullSpace(self.preconditioner.nsp)
         except:
             pass
-  #      pressure_null_space = p4pyPETSc.NullSpace().create(constant=True)
-  #      if self.ksp.getOperators()[0].isNullSpace(self.preconditioner.global_nsp):
-   #         self.ksp.getOperators()[0].setNullSpace(self.preconditioner.global_nsp)
-     #       import pdb
-#            pdb.set_trace()
-    #        par_b.remove_null_space(self.preconditioner.global_nsp)
- #           self.preconditioner.global_nsp.remove(par_b)
-  #      else:
-   #         raise Exception('The nullspace assigned to the ksp operator is not correct.')
-   #     if self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].isNullSpace(pressure_null_space):
-    #        self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(pressure_null_space)
-     #   else:
-   #         raise Exception('The nullspace assigned to the ksp operator is not correct.')
+        pressure_null_space = p4pyPETSc.NullSpace().create(constant=True)
+        if self.ksp.getOperators()[0].isNullSpace(self.preconditioner.global_nsp):
+#            pass
+            self.ksp.getOperators()[1].setNullSpace(self.preconditioner.global_nsp)
+#            par_b.remove_null_space(self.preconditioner.global_nsp)
+        else:
+            raise Exception('The nullspace assigned to the ksp operator is not correct.')
+        if self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].isNullSpace(pressure_null_space):
+#            pass
+            self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(pressure_null_space)
+        else:
+            raise Exception('The nullspace assigned to the ksp operator is not correct.')
         import pdb
-        pdb.set_trace()
+#        pdb.set_trace()
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -556,12 +557,16 @@ class KSP_petsc4py(LinearSolver):
         """ Function handle to feed to ksp's setConvergenceTest  """
         ksp.buildResidual(self.r_work)
         truenorm = self.r_work.norm()
-        logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
-        logEvent("        KSP it %i norm(r) = %e; atol=%e rtol=%e " % (its,truenorm,ksp.atol,ksp.rtol))
         if its == 0:
             self.rnorm0 = truenorm
+            logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
+            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,truenorm,(truenorm/ self.rnorm0),ksp.atol,ksp.rtol))
             return False
         else:
+            logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
+            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,truenorm,(truenorm/ self.rnorm0),ksp.atol,ksp.rtol))
             if truenorm < self.rnorm0*ksp.rtol:
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
             if truenorm < ksp.atol:
@@ -640,15 +645,19 @@ class KSP_petsc4py(LinearSolver):
                                                printInfo=False)
                 self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
+                logEvent("NAHeader Preconditioner selfp" )
                 self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokes3D_Qp:
+                logEvent("NAHeader Preconditioner Qp" )
                 self.preconditioner = NavierStokes3D_Qp(par_L,prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokes3D_PCD:
+                logEvent("NAHeader Preconditioner PCD" )
                 self.preconditioner = NavierStokes3D_PCD(par_L,prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokes3D_LSC:
+                logEvent("NAHeader Preconditioner LSC" )
                 self.preconditioner = NavierStokes3D_LSC(par_L,prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleNavierStokes2D:
@@ -1060,7 +1069,6 @@ class SchurPrecon:
         null_space_basis = p4pyPETSc.Vec().createWithArray(temp_array)
         self.global_null_space = [null_space_basis]
         
-
 class NavierStokesSchur(SchurPrecon):
     """ Schur complement preconditioners for Navier-Stokes problems.
 
@@ -1079,6 +1087,7 @@ class NavierStokesSchur(SchurPrecon):
         Nothing needs to be done here for a generic NSE preconditioner. 
         Preconditioner arguments can be set with PETSc command line.
         """
+        self._setConstantPressureNullSpace(global_ksp)
         self._setSchurlog(global_ksp)
 
     def _setSchurlog(self,global_ksp):
@@ -1090,12 +1099,16 @@ class NavierStokesSchur(SchurPrecon):
         r_work = ksp.getOperators()[1].getVecLeft()
         ksp.buildResidual(r_work)
         truenorm = r_work.norm()
-        logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
-        logEvent("        KSP it %i norm(r) = %e; atol=%e rtol=%e " % (its,truenorm,ksp.atol,ksp.rtol))
         if its == 0:
             self.rnorm0 = truenorm
+            logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
+            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,truenorm,(truenorm/ self.rnorm0),ksp.atol,ksp.rtol))
             return False
         else:
+            logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
+            logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,truenorm,(truenorm/ self.rnorm0),ksp.atol,ksp.rtol))
             if truenorm < self.rnorm0*ksp.rtol:
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
             if truenorm < ksp.atol:
@@ -1105,9 +1118,8 @@ class NavierStokesSchur(SchurPrecon):
     def _setConstantPressureNullSpace(self,global_ksp):
         self.global_nsp = p4pyPETSc.NullSpace().create(vectors=self.global_null_space)
 #        self.nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,constant=True)
-        # nsp = global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].getNullSpace()
-        # global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
-        pass
+#        nsp = global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].getNullSpace()
+#        global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
 
 SimpleNavierStokes3D = NavierStokesSchur
 NavierStokes3D = NavierStokesSchur
@@ -2271,3 +2283,6 @@ if __name__ == '__main__':
     for ev in evals[1:]:
         gevals.replot(Gnuplot.Data(ev,title='eigenvalues'))
     raw_input('Please press return to continue... \n')
+
+
+    

@@ -21,6 +21,8 @@ import Viewers
 from Archiver import ArchiveFlags
 import Domain
 
+from Profiling import logEvent
+
 log = Profiling.logEvent
 
 # Global to control whether the kernel starting is active.
@@ -255,6 +257,7 @@ class NS_base:  # (HasTraits):
                 mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                             parallelPartitioningType=n.parallelPartitioningType)
+                logEvent("NAHeader GridRefinements %i" % (n.nLevels) )
                 log("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
@@ -529,6 +532,7 @@ class NS_base:  # (HasTraits):
             log("Using tnList from so = "+so.name)
             self.tnList = so.tnList
         log("Time sequence"+`self.tnList`)
+        logEvent("NAHeader Num Time Steps "+`len(self.tnList)-1`)
         log("Setting "+so.name+" systemStepController to object of type "+str(so.systemStepControllerType))
         self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
         self.systemStepController.setFromOptions(so)

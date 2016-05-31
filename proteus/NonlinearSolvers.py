@@ -504,8 +504,6 @@ class Newton(NonlinearSolver):
             u-=self.du
             if par_u != None:
                 par_u.scatter_forward_insert()
-            import pdb
-            pdb.set_trace()
             self.computeResidual(u,r,b)
             if par_r != None:
                 #no overlap
@@ -633,10 +631,14 @@ class Newton(NonlinearSolver):
                     Viewers.newPlot()
                     Viewers.newWindow()
                 #raw_input("wait")
+            log("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
+                %(self.its-1, self.norm_r), level=1)
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             log(memory("Newton","Newton"),level=4)
             return self.failedFlag
+        logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
+            %(self.its-1, self.norm_r), level=1)
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
         log(memory("Newton","Newton"),level=4)
