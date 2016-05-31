@@ -27,12 +27,11 @@ def _petsc_view(obj, filename):
     viewer2(obj)
 
 def petsc4py_sparse_2_dense(sparse_matrix):
-    """
-    Converts a the CSR representation of a PETSc4Py matrix to a dense numpyarray.
+    """ Converts a PETSc4Py matrix to a dense numpyarray.
 
     Parameters
     ----------
-    sparse_matrix : PETSc4py CSR representation
+    sparse_matrix : PETSc4py matrix
 
     Returns
     -------
@@ -40,15 +39,14 @@ def petsc4py_sparse_2_dense(sparse_matrix):
     
     Notes
     -----
-    If A is the PETSc4Py Matrix input, then the input argument should
-    be A.getValuesCSR().
     This function is very inefficient for large matrices.
     """
-    rowptr = sparse_matrix[0]
-    colptr = sparse_matrix[1]
-    data   = sparse_matrix[2]
-    row    = len(rowptr)-1
-    dense_matrix = numpy.zeros(shape = (row,row), dtype='float')
+    rowptr = sparse_matrix.getValuesCSR()[0]
+    colptr = sparse_matrix.getValuesCSR()[1]
+    data   = sparse_matrix.getValuesCSR()[2]
+    row    = sparse_matrix.getSize()[0]
+    col    = sparse_matrix.getSize()[1]
+    dense_matrix = numpy.zeros(shape = (row,col), dtype='float')
     for idx in range(len(rowptr)-1):
         row_vals = data[rowptr[idx]:rowptr[idx+1]]
         for val_idx,j in enumerate(colptr[rowptr[idx]:rowptr[idx+1]]):
@@ -565,6 +563,9 @@ class LSCInv_shell(InvOperatorShell):
         # TODO - Add an assert testing that Qv is diagonal.
         self.Qv = Qv
         self.B = B
+        import pdb
+        pdb.set_trace()
+        B_new = petsc4py_sparse_2_dense(self.B)
         self.F = F
         # initialize (B Q_hat B')
         self.__constructBQinvBt()

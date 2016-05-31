@@ -96,7 +96,6 @@ def getDiffFluxBCu(x,flag):
 def getDiffFluxBCv(x,flag):
     if (x[0] ==  x0[0] + L[0]):
         return lambda x,t: 0.0
-
     
 # set boundary conditions
 dirichletConditions = {0:getDBCp, 1:getDBCu, 2:getDBCv}
