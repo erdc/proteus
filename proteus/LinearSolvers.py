@@ -366,7 +366,8 @@ class KSP_petsc4py(LinearSolver):
                  Preconditioner=None,
                  connectionList=None,
                  linearSolverLocalBlockSize=1,
-                 outputResults = True):
+                 outputResults = True,
+                 bdyNullSpace=False):
         """ Initialize a petsc4py KSP object.
         
         Parameters
@@ -410,6 +411,7 @@ class KSP_petsc4py(LinearSolver):
         self.petsc_L = par_L
         self.csr_rep_local = self.petsc_L.csr_rep_local
         self.csr_rep = self.petsc_L.csr_rep
+        self.bdyNullSpace = bdyNullSpace
 
         # create petsc4py KSP object and attach operators
         self.ksp = p4pyPETSc.KSP().create()
@@ -496,29 +498,8 @@ class KSP_petsc4py(LinearSolver):
             self.pccontext.par_u = par_u
         if self.matcontext != None:
             self.matcontext.par_b = par_b
-
-        if not initialGuessIsZero:
-            self.ksp.setInitialGuessNonzero(True)
-        try:
-            if self.preconditioner.hasNullSpace:
-                self.preconditioner.nsp.remove(par_b)
-                self.ksp.setNullSpace(self.preconditioner.nsp)
-        except:
-            pass
-        pressure_null_space = p4pyPETSc.NullSpace().create(constant=True)
-        if self.ksp.getOperators()[0].isNullSpace(self.preconditioner.global_nsp):
-#            pass
-            self.ksp.getOperators()[1].setNullSpace(self.preconditioner.global_nsp)
-#            par_b.remove_null_space(self.preconditioner.global_nsp)
-        else:
-            raise Exception('The nullspace assigned to the ksp operator is not correct.')
-        if self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].isNullSpace(pressure_null_space):
-#            pass
-            self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(pressure_null_space)
-        else:
-            raise Exception('The nullspace assigned to the ksp operator is not correct.')
-        import pdb
-#        pdb.set_trace()
+        if self.bdyNullSpace==True:
+            self.__setNullSpace()
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -541,6 +522,23 @@ class KSP_petsc4py(LinearSolver):
 
     def info(self):
         self.ksp.view()
+
+    def __setNullSpace(self):
+        """ Set up the boundary null space for the KSP solves. """
+        pressure_null_space = p4pyPETSc.NullSpace().create(constant=True)
+        if self.ksp.getOperators()[0].isNullSpace(self.preconditioner.global_nsp):
+            self.ksp.getOperators()[1].setNullSpace(self.preconditioner.global_nsp)
+            par_b.remove_null_space(self.preconditioner.global_nsp)
+        else:
+#            dense_A = petsc4py_sparse_2_dense(self.ksp.getOperators()[0])
+#            import pdb
+#            pdb.set_trace()
+            raise Exception('The nullspace assigned to the ksp operator is not correct.')
+        if self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].isNullSpace(pressure_null_space):
+            self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(pressure_null_space)
+        else:
+            raise Exception('The nullspace assigned to the ksp operator is not correct.')
+        
 
     def __setMatOperators(self):
         """ Initializes python context for the ksp matrix operator """
@@ -646,19 +644,19 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
                 logEvent("NAHeader Preconditioner selfp" )
-                self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
+                self.preconditioner = SimpleNavierStokes3D(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokes3D_Qp:
                 logEvent("NAHeader Preconditioner Qp" )
-                self.preconditioner = NavierStokes3D_Qp(par_L,prefix)
+                self.preconditioner = NavierStokes3D_Qp(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokes3D_PCD:
                 logEvent("NAHeader Preconditioner PCD" )
-                self.preconditioner = NavierStokes3D_PCD(par_L,prefix)
+                self.preconditioner = NavierStokes3D_PCD(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokes3D_LSC:
                 logEvent("NAHeader Preconditioner LSC" )
-                self.preconditioner = NavierStokes3D_LSC(par_L,prefix)
+                self.preconditioner = NavierStokes3D_LSC(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleNavierStokes2D:
                 self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
@@ -1076,9 +1074,10 @@ class NavierStokesSchur(SchurPrecon):
     class for all NavierStokes preconditioners which use the Schur complement
     method.    
     """
-    def __init__(self,L,prefix=None):
+    def __init__(self,L,prefix=None,bdyNullSpace=False):
         SchurPrecon.__init__(self,L,prefix)
         self.operator_constructor = schurOperatorConstructor(self ,'navier_stokes')
+        self.bdyNullSpace = bdyNullSpace
 
     def setUp(self,global_ksp=None):
         """
@@ -1087,7 +1086,8 @@ class NavierStokesSchur(SchurPrecon):
         Nothing needs to be done here for a generic NSE preconditioner. 
         Preconditioner arguments can be set with PETSc command line.
         """
-        self._setConstantPressureNullSpace(global_ksp)
+        if self.bdyNullSpace == True:
+            self._setConstantPressureNullSpace(global_ksp)
         self._setSchurlog(global_ksp)
 
     def _setSchurlog(self,global_ksp):
@@ -1126,7 +1126,7 @@ NavierStokes3D = NavierStokesSchur
 
 class NavierStokes3D_Qp(NavierStokesSchur) :
     """ A Navier-Stokes preconditioner which uses the pressure mass matrix. """
-    def __init__(self,L,prefix=None):
+    def __init__(self,L,prefix=None,bdyNullSpace=False):
         """
         Initializes the pressure mass matrix class.
 
@@ -1135,7 +1135,7 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
         L - petsc4py matrix
             Defines the problem's operator.
         """
-        NavierStokesSchur.__init__(self,L,prefix)
+        NavierStokesSchur.__init__(self,L,prefix,bdyNullSpace)
 
     def setUp(self,global_ksp,S_hat=False):
         """ Attaches the pressure mass matrix to PETSc KSP preconditioner.
@@ -1182,10 +1182,11 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
             raise Exception, 'Currently using Qp as an approximation is not' \
                 'supported.'
         self._setSchurlog(global_ksp)
-        self._setConstantPressureNullSpace(global_ksp)
+        if self.bdyNullSpace == True:
+            self._setConstantPressureNullSpace(global_ksp)
 
 class NavierStokes3D_PCD(NavierStokesSchur) :
-    def __init__(self,L,prefix=None):
+    def __init__(self,L,prefix=None,bdyNullSpace=False):
         """
         Initialize the pressure convection diffusion preconditioning class.
 
@@ -1200,7 +1201,7 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         convection diffusion operator and boundary conditions need to
         be tested and taylored to problem specific boundary conditions.
         """
-        NavierStokes3D.__init__(self,L,prefix)
+        NavierStokes3D.__init__(self,L,prefix,bdyNullSpace)
 
     def setUp(self,global_ksp):
         # Step-1: get the pressure mass matrix
@@ -1223,11 +1224,12 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
         self._setSchurlog(global_ksp)
-        self._setConstantPressureNullSpace(global_ksp)
+        if self.bdyNullSpace == True:
+            self._setConstantPressureNullSpace(global_ksp)
 
 
 class NavierStokes3D_LSC(NavierStokesSchur) :
-    def __init__(self,L,prefix=None):
+    def __init__(self,L,prefix=None,bdyNullSpace=False):
         """
         Initialize the least squares commutator preconditioning class.
 
@@ -1242,7 +1244,7 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         convection diffusion operator and boundary conditions need to
         be tested and taylored to problem specific boundary conditions.
         """
-        NavierStokesSchur.__init__(self,L,prefix)
+        NavierStokesSchur.__init__(self,L,prefix,bdyNullSpace)
 
     def setUp(self,global_ksp):
         import pdb
@@ -1273,7 +1275,8 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
         self._setSchurlog(global_ksp)
-        self._setConstantPressureNullSpace(global_ksp)
+        if self.bdyNullSpace == True:
+            self._setConstantPressureNullSpace(global_ksp)
 
 class SimpleDarcyFC:
     def __init__(self,L):
@@ -1902,9 +1905,6 @@ class NI(MultilevelLinearSolver):
 
     def info(self):
         return self.infoString
-"""
-A function for setting up a multilevel linear solver.
-"""
 def multilevelLinearSolverChooser(linearOperatorList,
                                   par_linearOperatorList,
                                   multilevelLinearSolverType=NI,
@@ -1918,6 +1918,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                   printLevelSolverInfo=False,
                                   computeLevelSolverRates=False,
                                   smootherType=Jacobi,
+                                  boundaryNullSpace=False,
                                   prolongList=None,
                                   restrictList=None,
                                   connectivityListList=None,
@@ -1933,6 +1934,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                   par_duList=None,
                                   solver_options_prefix=None,
                                   linearSolverLocalBlockSize=1):
+    """ A function for setting up a multilevel linear solver."""
     logEvent("multilevelLinearSolverChooser type= %s" % multilevelLinearSolverType)
     if (multilevelLinearSolverType == PETSc or
         multilevelLinearSolverType == KSP_petsc4py or
@@ -2063,7 +2065,8 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                       prefix=solver_options_prefix,
                                                       Preconditioner=smootherType,
                                                       connectionList = connectivityListList[l],
-                                                      linearSolverLocalBlockSize = linearSolverLocalBlockSize))
+                                                      linearSolverLocalBlockSize = linearSolverLocalBlockSize,
+                                                      bdyNullSpace=boundaryNullSpace))
             #if solverConvergenceTest == 'r-true' and par_duList != None:
             #    levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
         levelLinearSolver = levelLinearSolverList

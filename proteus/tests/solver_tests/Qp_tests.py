@@ -33,7 +33,7 @@ def test_sparse_2_dense():
     petsc_mat = p4pyPETSc.Mat().createAIJ(size = (size_n,size_n), \
                                           csr  = (row_idx, col_idx, vals))
     dense_mat = LinearAlgebraTools.petsc4py_sparse_2_dense \
-                (petsc_mat.getValuesCSR())
+                (petsc_mat)
     comparison_mat = np.loadtxt('sparse_mat_1.txt')
     assert np.allclose(dense_mat,comparison_mat)
 
@@ -81,16 +81,16 @@ def test_Q_mat():
     smoother = LinearSolvers.NavierStokes3D_Qp(L=ns.modelList[0].par_jacobianList[1])
     operator_constructor = LinearSolvers.schurOperatorConstructor(smoother, 'stokes')
     Qp_raw = operator_constructor.getQp()
-    Qp_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qp_raw.getValuesCSR())
+    Qp_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qp_raw)
     Qv_raw = operator_constructor.getQv()
-    Qv_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qv_raw.getValuesCSR())
+    Qv_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qv_raw)
     # Q 4 CK - is this the best way to handle this?
     ns.modelList[0].par_jacobianList[1].pde.scale_dt = False
     ns.modelList[0].levelModelList[1].dphi[(0,0)].dof[:] = 1.0
     ns.modelList[0].levelModelList[1].dphi[(1,1)].dof[:] = 1.0
     ns.modelList[0].levelModelList[1].dphi[(2,2)].dof[:] = 1.0
     Ap_raw = operator_constructor.getAp()
-    Ap_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Ap_raw.getValuesCSR())
+    Ap_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Ap_raw)
     pressure_laplace_matrix = np.loadtxt('pressure_laplace_matrix.txt')
     pressure_mass_matrix = np.loadtxt('pressure_mass_matrix.txt')
     velocity_mass_matrix = np.loadtxt('velocity_mass_matrix.txt')

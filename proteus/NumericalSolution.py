@@ -420,7 +420,6 @@ class NS_base:  # (HasTraits):
             linear_solver_options_prefix = None
             if 'linear_solver_options_prefix' in dir(n):
                 linear_solver_options_prefix = n.linear_solver_options_prefix
-
             (multilevelLinearSolver,directSolverFlag) = LinearSolvers.multilevelLinearSolverChooser(
                 linearOperatorList = model.jacobianList,
                 par_linearOperatorList = model.par_jacobianList,
@@ -431,6 +430,7 @@ class NS_base:  # (HasTraits):
                 computeLevelSolverRates=n.computeLevelLinearSolverRates,
                 printLevelSolverInfo=n.printLevelLinearSolverInfo,
                 smootherType = n.linearSmoother,
+                boundaryNullSpace = n.boundaryCreatesNullSpace,
                 computeSmootherRates=n.computeLinearSmootherRates,
                 printSmootherInfo=n.printLinearSmootherInfo,
                 prolongList = model.meshTransfers.prolongList,
