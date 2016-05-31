@@ -2269,8 +2269,6 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                                                                   c[('dH',1,0)],
                                                                   c[('H',2)],
                                                                   c[('dH',2,0)])
-                import pdb
-                pdb.set_trace()
 
             else:
                 self.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate(self.eps_density,
