@@ -669,7 +669,7 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = self.preconditioner.pc
         
 
-class schurOperatorConstructor:
+class SchurOperatorConstructor:
     """ Generate matrices for use in Schur complement preconditioner operators. """
     def __init__(self, linear_smoother, pde_type):
         """
