@@ -236,14 +236,16 @@ class Dispatcher():
 Wall clock percentage of top 20 calls
 -------------------------------------
 """
+            total=0.0
             for f in stats.__dict__['fcn_list'][0:20]:
                 if f[0] == '~':
                     fname=f[-1].strip("<").strip(">")
                 else:
                     fname="function '{2:s}' at {0:s}:{1:d}".format(*f)
                 msg+=("{0:11.1%} {1:s}\n".format(statsm[f][2]/stats.__dict__['total_tt'],str(fname)))
+                total += statsm[f][2]/stats.__dict__['total_tt']
             logEvent(msg)
-
+            logEvent("Representing "+`total*100.`+"%")
         return func_return
 
 @atexit.register

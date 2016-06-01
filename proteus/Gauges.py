@@ -173,28 +173,56 @@ class Gauges(AV_base):
 
     def getLocalNearestNode(self, location):
         # determine local nearest node distance
+        nearest_node_distance_kdtree, nearest_node_kdtree = self.nodes_kdtree.query(location)
         node_distances = norm(self.vertices - location, axis=1)
         nearest_node = np.argmin(node_distances)
         nearest_node_distance = node_distances[nearest_node]
         comm = Comm.get().comm.tompi4py()
+        assert (nearest_node == nearest_node_kdtree), `nearest_node` + `nearest_node_kdtree`
+        assert (nearest_node_distance == nearest_node_distance_kdtree), `nearest_node_distance` == `nearest_node_distance_kdtree`
         return comm.rank, nearest_node, nearest_node_distance
 
-    def getLocalElement(self, femSpace, location, node):
+    def getLocalElement(self, femSpace, location, nodeCheck=None):
         """Given a location and its nearest node, determine if it is on a local element.
 
         Returns None if location is not on any elements owned by this process
         """
 
         # search elements that contain the nearest node
-        for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
-            eN = femSpace.mesh.nodeElementsArray[eOffset]
-            # evaluate the inverse map for element eN
-            xi = femSpace.elementMaps.getInverseValue(eN, location)
-            # query whether xi lies within the reference element
-            if femSpace.elementMaps.referenceElement.onElement(xi):
-                return eN
-        # no elements found
-        return None
+        foundElements=[]
+        nearestNodes=[]
+        nearestNodeDistances=[]
+        (distances, nodes) = self.nodes_kdtree.query(location,3)
+        for  node, distance in zip(nodes, distances):
+            for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+                eN = femSpace.mesh.nodeElementsArray[eOffset]
+                # evaluate the inverse map for element eN
+                xi = femSpace.elementMaps.getInverseValue(eN, location)
+                # query whether xi lies within the reference element
+                if femSpace.elementMaps.referenceElement.onElement(xi):
+                    foundElements.append(eN)
+                    nearestNodes.append(node)
+                    nearestNodeDistances.append(distance)
+        if len(foundElements) > 0:
+            if len(foundElements) > 1:
+                eN = foundElements[0]
+                coord_sum = 100.0
+                for e,n,d in zip(foundElements, nearestNodes, nearestNodeDistances):
+                    xi = femSpace.elementMaps.getInverseValue(e, location)
+                    if sum(xi) < coord_sum:
+                        eN=e
+                        N=n
+                        D=d
+                        coord_sum = sum(xi)
+                if  nodeCheck:
+                    assert(nodeCheck == N)
+                return eN,N,D
+            else:
+                if nodeCheck:
+                    assert(nodeCheck == nearestNodes[0])
+                return foundElements[0], nearestNodes[0], nearestNodeDistances[0]
+        else:
+            return None
 
 
     def findNearestNode(self, femSpace, location):
@@ -205,9 +233,8 @@ class Gauges(AV_base):
         node and nearest element.
         """
         comm = Comm.get().comm.tompi4py()
-
-        comm_rank, nearest_node, nearest_node_distance = self.getLocalNearestNode(location)
-        local_element = self.getLocalElement(femSpace, location, nearest_node)
+        #comm_rank, nearest_node, nearest_node_distance = self.getLocalNearestNode(location)
+        local_element, nearest_node, nearest_node_distance = self.getLocalElement(femSpace, location)#, nearest_node)
 
         # determine global nearest node
         haveElement = int(local_element is not None)
@@ -220,7 +247,7 @@ class Gauges(AV_base):
             global_min_distance, owning_proc = comm.allreduce(nearest_node_distance, op=MPI.MINLOC)
             log("Off-element gauge location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
                                                                  owning_proc), 3)
-        if comm_rank != owning_proc:
+        if comm.rank != owning_proc:
             nearest_node = None
 
         assert owning_proc is not None
@@ -234,7 +261,7 @@ class Gauges(AV_base):
 
         # search elements that contain the nearest node
         # use nearest node if the location is not found on any elements
-        localElement = self.getLocalElement(femFun.femSpace, location, node)
+        localElement, nearestNode, nearestNodeDistance = self.getLocalElement(femFun.femSpace, location, node)
         if localElement is not None:
             for i, psi in enumerate(femFun.femSpace.referenceFiniteElement.localFunctionSpace.basis):
                 # assign quantity weights here
@@ -589,6 +616,7 @@ class Gauges(AV_base):
     def attachModel(self, model, ar):
         """ Attach this gauge to the given simulation model.
         """
+        from scipy import spatial
         self.model = model
         self.fieldNames = model.levelModelList[-1].coefficients.variableNames
         self.vertexFlags = model.levelModelList[-1].mesh.nodeMaterialTypes
@@ -596,11 +624,10 @@ class Gauges(AV_base):
         self.num_owned_nodes = model.levelModelList[-1].mesh.nNodes_global
         self.u = model.levelModelList[-1].u
         self.timeIntegration = model.levelModelList[-1].timeIntegration
-
         for field in self.fields:
             field_id = self.fieldNames.index(field)
             self.field_ids.append(field_id)
-
+        self.nodes_kdtree = spatial.cKDTree(model.levelModelList[-1].mesh.nodeArray)
         linesSegments = []
         for line in self.lines:
             lineSegments = self.getMeshIntersections(line)

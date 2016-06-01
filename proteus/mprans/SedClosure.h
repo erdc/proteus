@@ -1,9 +1,12 @@
+#ifndef SEDCLOSURE_H
+#define SEDCLOSURE_H
+
 #include <cmath>
 #include <iostream>
 namespace proteus
 {  
-  // template<int nSpace>
   const int nSpace(2);
+  template<int nSpace>
   class cppHsuSedStress
 {
 public:
@@ -67,24 +70,26 @@ public:
     double gDrag1 = (aDarcy_*sedF*nu/((1. - sedF)*grain_*grain_) + betaForch_*du/grain_); // Darcy forchheimer term     
     double Cd = 0.44;
     double Re = (1-sedF)*du*grain_/nu;
+    double Re_min = 1.0e-3;//cek 5/26/2016, need this to  prevent Cd -> inf
     if (Re < 1000) 
       {
-	    Cd = 24*(1. + 0.15*pow(Re, 0.687))/Re;                       //Particle cloud resistance Wen and Yu 1966
+        Cd = 24*(1. + 0.15*pow(fmax(Re_min,Re), 0.687))/fmax(Re_min,Re);                       //Particle cloud resistance Wen and Yu 1966
       }
+
     double gDrag2 = 0.75 * Cd * du * pow(1. - sedF, -1.65)/grain_;
 	  
-    
-    if(sedF < packFraction_ + packMargin_) 
-      { 
-	if (sedF > packFraction_ - packMargin_)
-	  {	  
-	    weight =  0.5 + 0.5* (sedF - packFraction_) /packMargin_;
-	  }
-	else
-	  {
-	    weight =  0.;
-	  }
-      }
+    //cek  debug -- this makes the drag term nonlinear
+    /* if(sedF < packFraction_ + packMargin_)  */
+    /*   {  */
+    /*     if (sedF > packFraction_ - packMargin_) */
+    /*       {	   */
+    /*         weight =  0.5 + 0.5* (sedF - packFraction_) /packMargin_; */
+    /*       } */
+    /*     else */
+    /*       { */
+    /*         weight =  0.; */
+    /*       } */
+    /*   } */
     
 
     
@@ -711,4 +716,8 @@ public:
   double large_;
 
 };
+
+  typedef cppHsuSedStress<2> cppHsuSedStress2D;
 }
+
+#endif
