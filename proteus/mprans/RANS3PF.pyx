@@ -2352,7 +2352,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # 3=K-Epsilon, 4=K-Omega
                  smagorinskyConstant=0.1,
                  barycenters=None,
-                 PSTAB=0.0):
+                 PSTAB=0.0,
+                 set_vos=None,
+                 set_sed_velocity=None):
+        self.set_vos=set_vos
+        self.set_sed=set_sed_velocity
         self.PSTAB=PSTAB
         self.barycenters = barycenters
         self.smagorinskyConstant = smagorinskyConstant
@@ -3914,6 +3918,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                                                  dofN], self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+        if self.coefficients.set_vos:
+            self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
+            self.coefficients.set_vos(self.ebqe['x'],self.coefficients.ebqe_vos)
         self.rans3pf.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
