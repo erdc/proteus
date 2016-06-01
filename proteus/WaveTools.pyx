@@ -19,8 +19,8 @@ import sys as sys
 
 
 def loadExistingFunction(funcName, validFunctions):
-    """ Checks if a function name  is present in a list of known functions, returns system exit if not present
-    param: funcName : function name in form of string under consideration
+    """ Checks if a function name  is present in a list of known functions, returns system exit if not present 
+   param: funcName : function name in form of string under consideration
     param: validFunctions: list of valid functions objects (not names in strings)
 
     """
@@ -301,7 +301,7 @@ def decompose_tseries(time,eta,dt):
     results.append(setup)
     return results
 
-
+    
 
 
 
@@ -508,6 +508,35 @@ class RandomWaves:
         for ii in range(self.N):
             U+= vel_mode(x, t, self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
+    def writeEtaSeries(self,Tstart,Tend,x0,fname,Vgen= np.array([0.,0,0])):
+        """Write a timeseries for the free-surface elevation.  
+        :param Tstart: start time of timeseries
+        :param Tend: end time of timeseries
+        :param x0: Location vector of timeseries
+        :param fname: filename for timeseries
+        :param Vgen: Length vector of relaxation zone (used to combine TimeSeries class with a relaxation zone)
+        """
+        if sum(Vgen[:]*self.waveDir[:])< 0 :
+                logEvent('WaveTools.py: Location vector of generation zone should not be opposite to the wave direction')
+                sys.exit(1)        
+        dt = self.Tp/50.
+        Tlag = np.zeros(len(self.omega),)
+        for j in range(len(self.omega)):
+            Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
+        Tlag = max(Tlag)
+        Tstart = Tstart - Tlag
+        Np = int((Tend - Tstart)/dt)
+        time = np.linspace(Tstart,Tend,Np )
+        etaR  = np.zeros(len(time), )
+        for jj in range(len(time)):
+            etaR[jj] = self.eta(x0,time[jj])
+        np.savetxt(fname,zip(time,etaR))
+        series = np.zeros((len(time),2),)
+        series[:,0] = time
+        series[:,1] = etaR
+        return series
+
+
 
 class MultiSpectraRandomWaves(RandomWaves):
     """Generate a random wave timeseries from multiple spectra. 
@@ -771,7 +800,9 @@ class TimeSeries:
                  g,
                  cutoffTotal = 0.01,
                  rec_direct = True,
-                 window_params = None #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Tm":Tm,"Window":wind_filt,"Overlap":overlap,"Cutoff":cutoff}
+                 window_params = None, #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Tm":Tm,"Window":wind_filt,"Overlap":overlap,"Cutoff":cutoff}
+                 arrayData = False,
+                 seriesArray = None
                  ):
 
         # Setting the depth
@@ -803,17 +834,22 @@ class TimeSeries:
         self.vDir = setVertDir(g)
         dirCheck(self.waveDir,self.vDir)
         #Reading time series
-        filetype = timeSeriesFile[-4:]
-        logEvent("WaveTools.py: Reading timeseries from %s file: %s" % (filetype,timeSeriesFile),level=0)
-        fid = open(timeSeriesFile,"r")
-        if (filetype !=".txt") and (filetype != ".csv"):
+
+        
+        self.arrayData = arrayData
+        if(self.arrayData):
+            tdata = seriesArray
+        else:
+            filetype = timeSeriesFile[-4:]
+            fid = open(timeSeriesFile,"r")
+            if (filetype !=".txt") and (filetype != ".csv"):
                 logEvent("WaveTools.py: File %s must be given in .txt or .csv format" % (timeSeriesFile),level=0)
                 sys.exit(1)
-        elif (filetype == ".csv"):
-            tdata = np.loadtxt(fid,skiprows=skiprows,delimiter=",")
-        else:
-            tdata = np.loadtxt(fid,skiprows=skiprows)
-        fid.close()
+            elif (filetype == ".csv"):
+                tdata = np.loadtxt(fid,skiprows=skiprows,delimiter=",")
+            else:
+                tdata = np.loadtxt(fid,skiprows=skiprows)
+            fid.close()
         #Checks for tseries file
         # Only 2 columns: time & eta
         ncols = len(tdata[0,:])
@@ -902,7 +938,7 @@ class TimeSeries:
                 sys.exit(1)
 
             if(self.Nwaves > 0.5*self.tlength / self.Tm):
-                logEvent("WaveTools.py: Reconstruction is expected to have two windows or less. Plese reduce the number of waves per window or switch to direct decomposition )")
+                logEvent("WaveTools.py: Reconstruction is expected to have two windows or more. Plese reduce the number of waves per window or switch to direct decomposition )")
                 sys.exit(1)
 
 
@@ -1085,6 +1121,277 @@ class TimeSeries:
             U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
 
+
+
+class RandomWavesFast(RandomWaves):
+    """Sets up a wave with RandomWaves class and uses u and eta from TimeSeries class & spectral windows for fast wave generation
+    :param Tstart: Start time of the time series
+    :param Tend: End time of the time series
+    :param x0: Position vector for the wave generation boundary
+    :param Tp: frequency [1/T]
+    :param Hs: significant wave height [L]
+    :param mwl: mean water level [L]
+    :param  depth: depth [L]
+    :param waveDir:wave Direction vector with three components [-]
+    :param g: Gravitational acceleration vector with three components [L/T^2]
+    :param N: number of frequency bins [-]
+    :param bandFactor: width factor for band  around fp [-]
+    :param spectName: Name of spectral function in string format. Use a random word and run the code to obtain the vaild spectra names
+    :param spectral_params: Dictionary of additional arguments for spectral function, specific to each spectral function, except from Hs and Tp e.g. {"gamma": 3.3, "TMA" = True, "depth" = 1} for Jonswap. Check spectral function arguments 
+    :param phi: Array of component phases - if set to none, random phases are assigned
+"""
+
+    def __init__(self,
+                 Tstart,
+                 Tend,
+                 x0,
+                 Tp,
+                 Hs,
+                 mwl,#m significant wave height
+                 depth ,           #m depth
+                 waveDir,
+                 g,      #peak  frequency
+                 N,
+                 bandFactor,         #accelerationof gravity
+                 spectName ,# random words will result in error and return the available spectra 
+                 spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 phi=None,
+                 Lgen = np.array([0., 0. ,0. ])
+                 ):
+            RandomWaves.__init__(self,
+                                 Tp, # np array with 
+                                 Hs,
+                                 mwl,#m significant wave height
+                                 depth,           #m depth
+                                 waveDir,
+                                 g,      #peak  frequency
+                                 N,
+                                 bandFactor,         #accelerationof gravity
+                                 spectName,# random words will result in error and return the available spectra 
+                                 spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                                 phi
+                             )
+            fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
+            series = self.writeEtaSeries(Tstart,Tend,x0,fname,Lgen)
+            TS = TimeSeries(
+                 fname, # e.g.= "Timeseries.txt",
+                 0,
+                 x0,
+                 self.depth ,
+                 32 ,          #number of frequency bins
+                 self.mwl ,        #mean water level
+                 self.waveDir, 
+                 self.g,
+                 cutoffTotal = 0.2*self.Tp,
+                 rec_direct = False,
+                 window_params = {"Nwaves":15 ,"Tm":self.Tp/1.1,"Window":"costap"},
+                 arrayData = True,
+                 seriesArray = series
+                 )
+            self.eta = TS.eta
+            self.u = TS.u
+
+
+
+
+
+class RandomNLWaves(RandomWaves):
+    def __init__(self,
+                 Tstart,
+                 Tend,
+                 Tp,                      #wave period
+                 Hs,                      #significant wave height
+                 mwl,                     #mean water level
+                 depth,                   #water depth          
+                 waveDir,                 #wave direction vector with three components
+                 g,                       #gravitational accelaration vector with three components      
+                 N,                       #number of frequency bins
+                 bandFactor,              #width factor for band around peak frequency fp       
+                 spectName,               #random words will result in error and return the available spectra 
+                 spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 phi=None                 #array of component phases
+                 ):
+        RandomWaves.__init__(self,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
+        
+        
+        self.eta_linear = self.eta
+        self.eta = self.wtError 
+        self.u = self.wtError 
+    
+    def eta_2ndOrder(self,x,t):
+        Eta2nd = 0.
+        for i in range(0,self.N):
+            ai_2nd = (self.ai[i]**2*self.ki[i]*(2+3/sinh(self.ki[i]*self.depth)**2))/(4*tanh(self.ki[i]*self.depth))
+            wwi_2ndOrder = eta_mode(x,t,2*self.kDir[i],2*self.omega[i],2*self.phi[i],ai_2nd)
+            Eta2nd += wwi_2ndOrder  
+        return Eta2nd
+
+
+
+    #higher harmonics
+    def eta_short(self,x,t):
+        Etashort = 0.
+        for i in range(0,self.N-1):
+            for j in range(i+1,self.N):
+                Dp = (self.omega[i]+self.omega[j])**2 - self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth)
+                Bp = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) - ((self.omega[i]*self.omega[j])/(2*self.gAbs)) *(1-1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth))) *(((self.omega[i]+self.omega[j])**2 + self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth))/Dp) + ((self.omega[i]+self.omega[j])/(2*self.gAbs*Dp))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) + (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))	
+                ai_short = self.ai[i]*self.ai[j]*Bp
+                wwi_short = eta_mode(x,t,self.kDir[i]+self.kDir[j],self.omega[i]+self.omega[j],self.phi[i]+self.phi[j],ai_short)
+                Etashort += wwi_short
+        return Etashort
+
+
+
+    #lower harmonics
+    def eta_long(self,x,t):
+        Etalong = 0.
+        for i in range(0,self.N-1):
+            for j in range(i+1,self.N):
+                Dm = (self.omega[i]-self.omega[j])**2 - self.gAbs*(self.ki[i]-self.ki[j])*tanh((self.ki[i]-self.ki[j])*self.depth)	
+                Bm = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) + ((self.omega[i]*self.omega[j])/(2*self.gAbs))*(1+1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth)))*(((self.omega[i]-self.omega[j])**2 + self.gAbs*(self.ki[i]-self.ki[j])*tanh((self.ki[i]-self.ki[j])*self.depth))/Dm) + ((self.omega[i]-self.omega[j])/(2*self.gAbs*Dm))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) - (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))
+                ai_long = self.ai[i]*self.ai[j]*Bm 
+                wwi_long = eta_mode(x,t,self.kDir[i]-self.kDir[j],self.omega[i]-self.omega[j],self.phi[i]-self.phi[j],ai_long)
+                Etalong += wwi_long
+        return Etalong
+
+
+    #set-up calculation
+    def eta_setUp(self,x,t):
+        EtasetUp = 0.
+        for i in range(0,self.N):
+            wwi_setUp = (self.ai[i]**2*self.ki[i])/(2*sinh(2*self.ki[i]*self.depth))
+            EtasetUp += wwi_setUp
+        return EtasetUp
+
+
+
+    #overall free surface elevation
+    def eta_overall(self,x,t,setUp=False):
+        Etaoverall =  self.eta_linear(x,t) + self.eta_2ndOrder(x,t) + self.eta_short(x,t) + self.eta_long(x,t)
+        if setUp:   
+            Etaoverall -= self.eta_setUp(x,t)
+        return Etaoverall
+
+
+
+    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False,Vgen=np.array([0.,0.,0.])):
+        if sum(Vgen[:]*self.waveDir[:])< 0 :
+            logEvent('WaveTools.py: Location vector of generation zone should not be opposite to the wave direction')
+            sys.exit(1)        
+
+        Tlag = np.zeros(len(self.omega),)
+        for j in range(len(self.omega)):
+            Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
+        Tlag = max(Tlag)
+        Tstart = Tstart - Tlag
+
+        Nseries = int(Tend - Tstart)/dt + 1
+        timelst=np.linspace(Tstart, Tend, Nseries)
+        series = np.zeros((Nseries,2),)
+        series[:,0] = timelst
+        for i in range(len(timelst)):
+            time = series[i,0]
+            if mode == "all":
+                series[i,1] = self.eta_overall(x0,time,setUp)
+            elif mode == "setup":
+                series[i,1] = self.eta_setUp(x0,time)
+            elif mode == "short":
+                series[i,1] = self.eta_short(x0,time) + self.eta_2ndOrder(x0,time)
+            elif mode == "long":
+                series[i,1] = self.eta_long(x0,time) 
+            elif mode == "linear":
+                series[i,1] = self.eta_linear(x0,time)
+            else:
+                logEvent('WaveTools.pyx: Argument mode in RandomNLWaves.writeEtaSeries should be "all", "setup", "short", "long" or "linear"')
+                sys.exit(1)        
+        delimiter =" "
+        if fname[-4:]==".csv":
+            delimiter = ","        
+        np.savetxt(fname,series,delimiter=delimiter)
+        return series
+
+    def wtError(self,x,t):
+        logEvent("WaveTools.py: eta and u functions not available for this class. Please use RandomNLWavesFast for generating random waves with nonlinear correction",0)
+        sys.exit(1)
+    
+    
+
+class RandomNLWavesFast:
+    def __init__(self,
+                 Tstart,
+                 Tend,
+                 x0,
+                 Tp,                      #wave period
+                 Hs,                      #significant wave height
+                 mwl,                     #mean water level
+                 depth,                   #water depth          
+                 waveDir,                 #wave direction vector with three components
+                 g,                       #gravitational accelaration vector with three components      
+                 N,                       #number of frequency bins
+                 bandFactor,              #width factor for band around peak frequency fp       
+                 spectName,               #random words will result in error and return the available spectra 
+                 spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 phi=None,
+                 Vgen = np.array([0.,0.,0.])    #array of component phases
+                 ):
+        aR = RandomWaves(Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
+        aRN = RandomNLWaves(Tstart,Tend,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
+        self.omega = aR.omega
+
+        Tmax = 4.*pi/(max(self.omega)-min(self.omega))
+        modes = ["short","linear","long"]
+        periods = [Tp/2./1.1,Tp/1.1, Tmax]
+        self.TS= []
+        ii = -1
+        for mode in modes:
+            ii+=1
+            fname = "randomNLWaves_"+mode+".csv"
+            dt = periods[ii]/50.
+            series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Vgen)
+            Tstart_temp = series[0,0]
+            cutoff = 0.2*Tp/(Tend-Tstart_temp)
+            self.TS.append(TimeSeries(
+                    fname,
+                    0,
+                    x0,
+                    depth,
+                    32,
+                    mwl,
+                    waveDir,
+                    g,
+                    cutoffTotal = cutoff,
+                    rec_direct = False,
+                    window_params = {"Nwaves":15 ,"Tm":periods[ii],"Window":"costap"},
+                    arrayData = True,
+                    seriesArray = series)
+                           )
+        self.series =  [ Tstart,Tend,
+                         fname,
+                    0,
+                    x0,
+                    depth,
+                    32,
+                    mwl,
+                    waveDir,
+                    g,
+                    cutoff,
+                     False,
+                     {"Nwaves":15 ,"Tm":periods[ii],"Window":"costap"},
+                     True,
+                     series]
+
+#        self.series = ii
+
+
+    def eta(self,x,t):
+        etaR = self.TS[0].eta(x,t)+ self.TS[1].eta(x,t)+self.TS[2].eta(x,t)
+        return etaR
+
+
+    def u(self,x,t):
+        uR = self.TS[0].u(x,t)+ self.TS[1].u(x,t)+self.TS[2].u(x,t)
+        return uR
+        
 
 
 
