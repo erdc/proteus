@@ -19,9 +19,21 @@ import sys as sys
 
 
 def loadExistingFunction(funcName, validFunctions):
-    """ Checks if a function name  is present in a list of known functions, returns system exit if not present 
-   param: funcName : function name in form of string under consideration
-    param: validFunctions: list of valid functions objects (not names in strings)
+    """ Checks if a function name is present in a list of known functions, returns system exit if not present 
+
+    Parameters
+    ----------    
+    param : funcName
+            Description : Function name 
+            Type : String
+    param : validFunctions
+            Description : List of valid functions 
+            Type: Object list
+
+    Returns
+    --------
+    None if function name is in the function list
+    System exit otherwise
 
     """
     funcNames = []
@@ -37,21 +49,42 @@ def loadExistingFunction(funcName, validFunctions):
 
 
 def setVertDir(g):
-    """ Sets the unit vector for the vertical direction, opposite to the gravity vector
-    param: g : gravitational acceleration vector [L/T^2] (must have 3 components)
+    """ Returns the unit vector for the vertical direction taken as opposite to the gravity direction
+
+    Parameters
+    ----------    
+    param : g 
+            Gravitational acceleration vector (must have 3 components)
+            Numpy array or list 
+
+    Returns
+    --------
+    1D numpy array containing the unit vector
     """
-    return -g/(sqrt(g[0]**2 + g[1]**2 + g[2]**2))
+    return -np.array(g/(sqrt(g[0]**2 + g[1]**2 + g[2]**2)))
 
 def setDirVector(vector):
     """ Returns the direction of a vector in the form of a unit vector
+
+    Parameters
+    ----------    
     param: vector : Any vector with three components
+
+    Returns
+    --------
+    1D numpy array containing the unit vector
+    
     """
     return vector/(sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2))
 
 def dirCheck(v1, v2):
     """ Checks if to vectors are vertical and returns system exit if not
-    param: v1 : 1st vector  [-]  with three components
-    param: v2 : 2nd vector  [-]  with three components
+
+    Parameters
+    ----------    
+    param : v1 
+            1st vector with three components
+    param: v2 : 2nd vector with three components
     """
     dircheck = abs(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
         #print self.dircheck
