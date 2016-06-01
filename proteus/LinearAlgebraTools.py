@@ -26,16 +26,19 @@ def _petsc_view(obj, filename):
     viewer2.setFormat(1)
     viewer2(obj)
 
-def petsc4py_sparse_2_dense(sparse_matrix):
+def petsc4py_sparse_2_dense(sparse_matrix,output=False):
     """ Converts a PETSc4Py matrix to a dense numpyarray.
 
     Parameters
     ----------
     sparse_matrix : PETSc4py matrix
+    output : str
+        Output file name to store the matrix.
 
     Returns
     -------
-    dense_matrix : numpy dense matrix
+    dense_matrix : numpy array
+        A numpy array with the dense matrix.
     
     Notes
     -----
@@ -51,6 +54,8 @@ def petsc4py_sparse_2_dense(sparse_matrix):
         row_vals = data[rowptr[idx]:rowptr[idx+1]]
         for val_idx,j in enumerate(colptr[rowptr[idx]:rowptr[idx+1]]):
             dense_matrix[idx][j] = row_vals[val_idx]
+    if output!= False:
+        numpy.save(output,dense_matrix)
     return dense_matrix
 
 class ParVec:
@@ -483,24 +488,28 @@ class MatrixInvShell(InvOperatorShell):
 
 class PCDInv_shell(InvOperatorShell):
     """ Shell class for the PCD inverse preconditioner """
+
     def __init__(self,Qp_matrix,Fp_matrix,Ap_matrix):
         """ Initializes the pressure-convection-diffusion inverse operator.
 
         Parameters
         ----------
         Qp_matrix : petsc4py matrix object
-                    The pressure mass matrix.
+            The pressure mass matrix.
         Fp_matrix : petsc4py matrix object
-                    The convection-diffusion operator.
+            The convection-diffusion operator.
         Ap_matrix : petsc4py matrix object
-                    The pressure Laplacian operator.
+            The pressure Laplacian operator.
         """
         self.Qp = Qp_matrix
         self.Fp = Fp_matrix
         self.Ap = Ap_matrix
-        # initialize kspAp
+        # initialize kspAp with a constant nullspace
+        laplace_null_space = p4pyPETSc.NullSpace().create(constant=True)
         self.kspAp = p4pyPETSc.KSP().create()
         self.kspAp.setOperators(self.Ap,self.Ap)
+#        self.kspAp.getOperators()[0].setNullSpace(laplace_null_space)
+#        self.kspAp.getOperators()[1].setNullSpace(laplace_null_space)
         self.kspAp.setType('preonly')
         self.kspAp.pc.setType('lu')
         self.kspAp.setUp()
@@ -510,6 +519,8 @@ class PCDInv_shell(InvOperatorShell):
         self.kspQp.setType('preonly')
         self.kspQp.pc.setType('lu')
         self.kspQp.setUp()
+
+
     def apply(self,A,x,y):
         """ Apply the inverse pressure-convection-diffusion operator.
 
@@ -518,20 +529,21 @@ class PCDInv_shell(InvOperatorShell):
         A : matrix
             Dummy variable needed to interface with PETSc.
         x : vector
+            Vector to be applied to operator.
 
         Returns
         -------
         y : vector
         """
-        temp1 = p4pyPETSc.Vec().create()
-        temp1.setType('seq')
-        temp2 = p4pyPETSc.Vec().create()
-        temp2.setType('seq')
-        temp1 = y.copy()
-        temp2 = y.copy()
-        self.kspAp.solve(x,temp1)
-        self.Fp.mult(temp1,temp2)
-        self.kspQp.solve(temp2,y)
+        tmp1 = p4pyPETSc.Vec().create()
+        tmp1.setType('seq')
+        tmp2 = p4pyPETSc.Vec().create()
+        tmp2.setType('seq')
+        tmp1 = y.copy()
+        tmp2 = y.copy()
+        self.kspAp.solve(x,tmp1)
+        self.Fp.mult(tmp1,tmp2)
+        self.kspQp.solve(tmp2,y)
 
 class LSCInv_shell(InvOperatorShell):
     """ Shell class for the LSC Inverse Preconditioner 

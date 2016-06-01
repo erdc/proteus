@@ -435,9 +435,6 @@ class KSP_petsc4py(LinearSolver):
         if Preconditioner != None:
             self.__setPreconditioner(Preconditioner,par_L,prefix)
             self.ksp.setPC(self.pc)
-        # TODO - Null space options is still WIP.  Should'nt hurt anything
-        # being here but I'm not sure it is doing what its supposed to.
-        self.__setKSPNullSpace()
         # set the ksp options
         self.ksp.setFromOptions()
 
@@ -574,22 +571,6 @@ class KSP_petsc4py(LinearSolver):
             if truenorm < ksp.atol:
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
         return False
-
-
-    def __setKSPNullSpace(self):
-        """ Apply a Null space to a KSP object.
-
-        Note
-        ----
-        TODO - This is a WIP with no working tests
-        """
-        try:
-            if self.preconditioner.hasNullSpace:
-                self.petsc_L.setNullSpace(self.preconditioner.nsp)
-                self.ksp.setNullSpace(self.preconditioner.nsp)
-        except:
-            pass
-
 
     def __setPreconditioner(self,Preconditioner,par_L,prefix):
         """ Sets the preconditioner type used in the KSP object """
@@ -809,38 +790,48 @@ class SchurOperatorConstructor:
         self.Fsys_rowptr = rowptr.copy()
         self.Fsys_colind = colind.copy()
         self.Fsys_nzval = nzval.copy()
+        self.Fsys_nzval.fill(0.0)
+
         L_sizes = self.L.getSizes()
         nr = L_sizes[0][0]
         nc = L_sizes[1][0]
-        self.Fsys =SparseMat(nr,nc,
-                             self.Fsys_nzval.shape[0],
-                             self.Fsys_nzval,
-                             self.Fsys_colind,
-                             self.Fsys_rowptr)
+
+        self.Fsys = SparseMat(nr,nc,
+                              self.Fsys_nzval.shape[0],
+                              self.Fsys_nzval,
+                              self.Fsys_colind,
+                              self.Fsys_rowptr)
         self.L.pde.q[('df',0,0)][...,0] = self.L.pde.q[('u',1)]
         self.L.pde.q[('df',0,0)][...,1] = self.L.pde.q[('u',2)]
-        import pdb
  #        self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
         self.L.pde.getSpatialJacobian(self.Fsys)#notice, switched  to spatial
         self.Fsys_petsc4py = self.L.duplicate()
+
         F_csr_rep_local = self.Fsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
         self.Fsys_petsc4py.setValuesLocalCSR(F_csr_rep_local[0],
                                              F_csr_rep_local[1],
                                              F_csr_rep_local[2],
                                              p4pyPETSc.InsertMode.INSERT_VALUES)
+
         self.Fsys_petsc4py.assemblyBegin()
         self.Fsys_petsc4py.assemblyEnd()
-        self.Cp = self.Fsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isp)
+
+        self.Cp = self.Fsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                                  self.linear_smoother.isp)
+
+        self.L.pde.q[('df',0,0)].fill(0.0)
+
+        self.Fp = p4pyPETSc.Mat().createAIJ(self.getAp().getSize())
+        self.Fp.setUp()
+        self.getAp().copy(self.Fp)
+        self.Fp.scale(self.L.pde.coefficients.nu)
+        self.Fp.axpy(1.0,self.Cp)
         if output_matrix==True:
             _exportMatrix(self.Fp,'Fp')
         #Ff(1:np,1:np) would be Fp, the pressure convection-diffusion matrix
         #
         #now zero all the dummy coefficents
         #
-        self.L.pde.q[('df',0,0)][:] = 0.0
-        self.Fp = self.getAp()
-        self.Fp.scale(self.L.pde.coefficients.nu)
-        self.Fp.__add__(self.Cp)
         return self.Fp
 
     def getB(self,output_matrix=False):
@@ -939,7 +930,6 @@ class SchurOperatorConstructor:
                          Qsys_nzval,
                          Qsys_colind,
                          Qsys_rowptr)
-#        pdb.set_trace()
         self.L.pde.q[('dm',0,0)][:] = 1.0
         self.L.pde.q[('dm',1,1)][:] = 1.0
         self.L.pde.q[('dm',2,2)][:] = 1.0
