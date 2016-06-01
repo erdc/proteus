@@ -1029,6 +1029,8 @@ class SchurPrecon:
         L_range = self.L.getOwnershipRange()
         neqns = L_sizes[0][0]
         rank = p4pyPETSc.COMM_WORLD.rank
+        import pdb
+        pdb.set_trace()
         if self.L.pde.stride[0] == 1:#assume end to end
             pSpace = self.L.pde.u[0].femSpace
             pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
@@ -1076,7 +1078,7 @@ class NavierStokesSchur(SchurPrecon):
     """
     def __init__(self,L,prefix=None,bdyNullSpace=False):
         SchurPrecon.__init__(self,L,prefix)
-        self.operator_constructor = schurOperatorConstructor(self ,'navier_stokes')
+        self.operator_constructor = SchurOperatorConstructor(self ,'navier_stokes')
         self.bdyNullSpace = bdyNullSpace
 
     def setUp(self,global_ksp=None):
