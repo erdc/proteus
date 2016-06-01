@@ -4,6 +4,8 @@
 #include <iostream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
+#include "SedClosure.h"
+
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
 const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
@@ -390,25 +392,71 @@ namespace proteus
   class cppRANS3PF : public cppRANS3PF_base
   {
   public:
+    double aDarcy;
+    double betaForch;
+    double grain;
+    double packFraction;
+    double packMargin;
+    double maxFraction;
+    double frFraction;
+    double sigmaC;
+    double C3e;
+    double C4e;
+    double eR;
+    double fContact;
+    double mContact;
+    double nContact;
+    double angFriction;
+    cppHsuSedStress<3> closure;
     const int nDOF_test_X_trial_element;
     CompKernelType ck;
     cppRANS3PF():
+      aDarcy(150.0),
+      betaForch(0.0),
+      grain(0.0102),
+      packFraction(0.2),
+      packMargin(0.01),
+      maxFraction(0.635),
+      frFraction(0.57),
+      sigmaC(1.1),
+      C3e(1.2),
+      C4e(1.0),
+      eR(0.8),
+      fContact(0.02),
+      mContact(2.0),
+      nContact(5.0),
+      angFriction(M_PI/6.0),
+      closure(aDarcy,
+              betaForch,
+              grain,
+              packFraction,
+              packMargin,
+              maxFraction,
+              frFraction,
+              sigmaC,
+              C3e,
+              C4e,
+              eR,
+              fContact,
+              mContact,
+              nContact,
+              angFriction),
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
       ck()
-	{/*	     std::cout<<"Constructing cppRANS3PF<CompKernelTemplate<"
+    {/*	     std::cout<<"Constructing cppRANS3PF<CompKernelTemplate<"
 		      <<0<<","
 		      <<0<<","
 		      <<0<<","
 		      <<0<<">,"*/
-		    /*  <<nSpaceIn<<","
-		      <<nQuadraturePoints_elementIn<<","
-		      <<nDOF_mesh_trial_elementIn<<","
-		      <<nDOF_trial_elementIn<<","
-		      <<nDOF_test_elementIn<<","
-		      <<nQuadraturePoints_elementBoundaryIn<<">());"*/
-	  /*  <<std::endl<<std::flush; */
-	}
-      
+      /*  <<nSpaceIn<<","
+          <<nQuadraturePoints_elementIn<<","
+          <<nDOF_mesh_trial_elementIn<<","
+          <<nDOF_trial_elementIn<<","
+          <<nDOF_test_elementIn<<","
+          <<nQuadraturePoints_elementBoundaryIn<<">());"*/
+      /*  <<std::endl<<std::flush; */
+    }
+    
     inline double smoothedHeaviside(double eps, double phi)
     {
       double H;
@@ -762,9 +810,10 @@ namespace proteus
 					   double dmom_v_source[nSpace],
 					   double dmom_w_source[nSpace])
     {
-      double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
+      double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+      rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
       viscosity = nu;
       double x = fmax(0.0, fmin( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
@@ -775,22 +824,28 @@ namespace proteus
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
+      double fluid_velocity[3]={u,v,w}, solid_velocity[3]={u_s,v_s,w_s};
+      double new_beta = closure.betaCoeff(1.0-phi_s,
+                                          rho,
+                                          fluid_velocity,
+                                          solid_velocity,
+                                          nu);
+      new_beta/=rho;
+      mom_u_source += phi_s*new_beta*(u-u_s);
+      mom_v_source += phi_s*new_beta*(v-v_s);
+      mom_w_source += phi_s*new_beta*(w-w_s);
 
-      mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s);
-      mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s);
-      mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_s);
-
-      dmom_u_source[0] = H_s*viscosity*(alpha + beta*(uc + u*duc_du));
-      dmom_u_source[1] = H_s*viscosity*beta*u*duc_dv;
-      dmom_u_source[2] = H_s*viscosity*beta*u*duc_dw;
+      dmom_u_source[0] = phi_s*new_beta;
+      dmom_u_source[1] = 0.0;
+      dmom_u_source[2] = 0.0;
     
-      dmom_v_source[0] = H_s*viscosity*beta*v*duc_du;
-      dmom_v_source[1] = H_s*viscosity*(alpha + beta*(uc + v*duc_dv));
-      dmom_v_source[2] = H_s*viscosity*beta*w*duc_dw;
+      dmom_v_source[0] = 0.0;
+      dmom_v_source[1] = phi_s*new_beta;
+      dmom_v_source[2] = 0.0;
 
-      dmom_w_source[0] = H_s*viscosity*beta*w*duc_du;
-      dmom_w_source[1] = H_s*viscosity*beta*w*duc_dv;
-      dmom_w_source[2] = H_s*viscosity*(alpha + beta*(uc + w*duc_dw));
+      dmom_w_source[0] = 0.0;
+      dmom_w_source[1] = 0.0;
+      dmom_w_source[2] = phi_s*new_beta;
     }
 
     inline
@@ -1529,6 +1584,7 @@ namespace proteus
                            double* q_nu,
                            double* ebqe_nu)
     {
+      
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
