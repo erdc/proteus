@@ -19,11 +19,20 @@ import sys as sys
 
 
 def loadExistingFunction(funcName, validFunctions):
-    """ Checks if a function name  is present in a list of known functions, returns system exit if not present 
-   param: funcName : function name in form of string under consideration
-    param: validFunctions: list of valid functions objects (not names in strings)
-
-    """
+ """ Checks if a function name is present in a list of known functions, returns system exit if not present
+Parameters
+----------
+param : funcName
+Description : Function name
+Type : String
+param : validFunctions
+Description : List of valid functions
+Type: Object list
+Returns
+--------
+None if function name is in the function list
+System exit otherwise
+"""
     funcNames = []
     for func  in validFunctions:
             funcNames.append(func.__name__)
