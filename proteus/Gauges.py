@@ -186,13 +186,27 @@ class Gauges(AV_base):
         """
 
         # search elements that contain the nearest node
+        patchBoundaryNodes=set()
+        checkedElements=[]
         for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
             eN = femSpace.mesh.nodeElementsArray[eOffset]
+            checkedElements.append(eN)
+            patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
             # evaluate the inverse map for element eN
             xi = femSpace.elementMaps.getInverseValue(eN, location)
             # query whether xi lies within the reference element
             if femSpace.elementMaps.referenceElement.onElement(xi):
                 return eN
+        for node in patchBoundaryNodes:
+            for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+                eN = femSpace.mesh.nodeElementsArray[eOffset]
+                if eN not in checkedElements:
+                    checkedElements.append(eN)
+                    # evaluate the inverse map for element eN
+                    xi = femSpace.elementMaps.getInverseValue(eN, location)
+                    # query whether xi lies within the reference element
+                    if femSpace.elementMaps.referenceElement.onElement(xi):
+                        return eN
         # no elements found
         return None
 
