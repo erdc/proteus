@@ -499,7 +499,8 @@ class KSP_petsc4py(LinearSolver):
         if self.matcontext != None:
             self.matcontext.par_b = par_b
         if self.bdyNullSpace==True:
-            self.__setNullSpace()
+            # is there a reason par_b should not be owned by self?
+            self.__setNullSpace(par_b)
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -523,16 +524,19 @@ class KSP_petsc4py(LinearSolver):
     def info(self):
         self.ksp.view()
 
-    def __setNullSpace(self):
-        """ Set up the boundary null space for the KSP solves. """
+    def __setNullSpace(self,par_b):
+        """ Set up the boundary null space for the KSP solves. 
+
+        Parameters
+        ----------
+        par_b : proteus.LinearAlgebraTools.ParVec_petsc4py
+            The problem's RHS vector.
+        """
         pressure_null_space = p4pyPETSc.NullSpace().create(constant=True)
         if self.ksp.getOperators()[0].isNullSpace(self.preconditioner.global_nsp):
             self.ksp.getOperators()[1].setNullSpace(self.preconditioner.global_nsp)
             par_b.remove_null_space(self.preconditioner.global_nsp)
         else:
-#            dense_A = petsc4py_sparse_2_dense(self.ksp.getOperators()[0])
-#            import pdb
-#            pdb.set_trace()
             raise Exception('The nullspace assigned to the ksp operator is not correct.')
         if self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].isNullSpace(pressure_null_space):
             self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(pressure_null_space)
@@ -1029,8 +1033,6 @@ class SchurPrecon:
         L_range = self.L.getOwnershipRange()
         neqns = L_sizes[0][0]
         rank = p4pyPETSc.COMM_WORLD.rank
-        import pdb
-        pdb.set_trace()
         if self.L.pde.stride[0] == 1:#assume end to end
             pSpace = self.L.pde.u[0].femSpace
             pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
