@@ -50,4 +50,3 @@ class TestStokesDrivenCavity():
 if __name__=='__main__':
     from proteus import Comm
     comm = Comm.init()
-#    stokesCavity_test()

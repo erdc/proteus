@@ -5939,9 +5939,7 @@ from LinearAlgebraTools import ParVec
 import Comm
 
 class FiniteElementFunction:
-    """
-    A member of a finite element space of scalar functions.
-    """
+    """ A member of a finite element space of scalar functions. """
     def __init__(self,finiteElementSpace,dof=None,dim_dof=1,name="no_name",isVector=False):
         self.name=name
         self.isVector=isVector
