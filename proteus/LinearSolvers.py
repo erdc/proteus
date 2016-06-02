@@ -1201,6 +1201,8 @@ class MultilevelLinearSolver:
             self.infoString += "**************End Level %i Info********************\n" % l
         self.infoString+="********************End Multilevel Linear Solver Info*********************\n"
         return self.infoString
+    def failed(self):
+        return self.solverList[-1].failed()
 
 class MGM(MultilevelLinearSolver):
     """
@@ -1365,6 +1367,8 @@ class NI(MultilevelLinearSolver):
 
     def info(self):
         return self.infoString
+    def failed(self):
+        return self.levelSolverList[-1].failed()
 """
 A function for setting up a multilevel linear solver.
 """
@@ -1406,7 +1410,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
         multilevelLinearSolverType == StarBILU or
         multilevelLinearSolverType == MGM):
         levelLinearSolverType = multilevelLinearSolverType
-        printLevelLinearSolverInfo = printSolverInfo
+        printLevelSolverInfo = printSolverInfo
         computeLevelSolverRates = computeSolverRates
     nLevels = len(linearOperatorList)
     multilevelLinearSolver = None
@@ -1522,7 +1526,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                       rtol_r = relativeToleranceList[l],
                                                       atol_r = absoluteTolerance,
                                                       computeRates = computeLevelSolverRates,
-                                                      printInfo = printLevelLinearSolverInfo,
+                                                      printInfo = printLevelSolverInfo,
                                                       prefix=solver_options_prefix,
                                                       Preconditioner=smootherType,
                                                       connectionList = connectivityListList[l],
@@ -1587,7 +1591,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                   printInfo = printLevelSolverInfo))
         levelLinearSolver = levelLinearSolverList
     else:
-        raise RuntimeError,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Unknown level linear solver "+ levelLinearSolverType
+        raise RuntimeError,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Unknown level linear solver "+ `levelLinearSolverType`
     if multilevelLinearSolverType == NI:
         multilevelLinearSolver = NI(solverList = levelLinearSolverList,
                                     prolongList = prolongList,

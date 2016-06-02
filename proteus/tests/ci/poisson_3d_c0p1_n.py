@@ -21,7 +21,7 @@ nnz = 11
 
 
 #number of levels in mesh
-nLevels = 1
+nLevels = 2
 
 #no stabilization or shock capturing
 subgridError = None
