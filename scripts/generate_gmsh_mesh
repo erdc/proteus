@@ -28,7 +28,7 @@ if [ -f gmsh.mesh ]; then
   echo =============================
   grep ille gmsh.log | grep -v no
 
-  gmsh2tetgen gmsh.mesh 
+  gmsh2tetgen_mprans_withtags gmsh.mesh 
   cp mesh.vtk ../$dir.vtk
   echo =============================
   ls -lhatr mesh.*
@@ -38,6 +38,8 @@ if [ -f gmsh.mesh ]; then
   mv mesh.1.ele mesh.ele
   mv mesh.1.node mesh.node
   mv mesh.1.face mesh.face
+  mv mesh.1.neigh mesh.neigh
+  mv mesh.1.edge mesh.edge
   echo =============================
   ls -lhatr mesh.*
   grep ille gmsh.log
