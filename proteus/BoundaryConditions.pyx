@@ -28,9 +28,12 @@ class BC_Base(object):
         """
         setattr(cls, name, default_value)
 
-    def getContext(self):
-        from proteus import Context
-        self.ct = Context.get()
+    def getContext(self, context=None):
+        if context is None:
+            from proteus import Context
+            self.ct = Context.get()
+        else:
+            self.ct = context
 
 
 class BoundaryCondition():
@@ -38,14 +41,14 @@ class BoundaryCondition():
     Boundary condition class
     """
     def __init__(self):
-        self.u0fXT = None
+        self.uOfXT = None
 
     def init_cython(self):
         """
         Function to replace call before the first time step
         Must always return another function of x and t
         """
-        return self.u0fXT
+        return self.uOfXT
 
     def setConstantBC(self, value):
         """
@@ -56,7 +59,7 @@ class BoundaryCondition():
         value :
 
         """
-        self.u0fXT = lambda x, t: value
+        self.uOfXT = lambda x, t: value
 
     def setLinearBC(self, a0, a1, i):
-        self.u0fXT = lambda x, t: a0 + a1*x[i]
+        self.uOfXT = lambda x, t: a0 + a1*x[i]
