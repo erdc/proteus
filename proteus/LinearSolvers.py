@@ -675,8 +675,7 @@ class SchurOperatorConstructor:
         self.pde_type = pde_type
 
     def getQp(self, output_matrix=False):
-        """
-        Return the pressure mass matrix Qp.
+        """ Return the pressure mass matrix Qp.
 
         Parameters
         ----------
@@ -695,8 +694,7 @@ class SchurOperatorConstructor:
         return self.Qp
 
     def getQv(self,output_matrix=False):
-        """
-        Return the velocity mass matrix Qv.
+        """ Return the velocity mass matrix Qv.
 
         Parameters
         ----------
@@ -715,8 +713,7 @@ class SchurOperatorConstructor:
         return self.Qv
 
     def getAp(self,output_matrix=False):
-        """
-        Return the Laplacian pressure matrix Ap.
+        """ Return the Laplacian pressure matrix Ap.
 
         Parameters
         ----------
@@ -834,19 +831,8 @@ class SchurOperatorConstructor:
         #
         return self.Fp
 
-    def getB(self,output_matrix=False):
-        """ Return the operator B matrix.
-
-        Parameters
-        ----------
-        output_matrix : bool
-            Determine whether matrix should be stored externally.
-
-        Returns
-        -------
-        B : matrix
-            The operator B matrix.
-        """
+    def _setupB(self):
+        """ Initializes construction of the B operator. """
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
         self.B_rowptr = rowptr.copy()
         self.B_colind = colind.copy()
@@ -863,6 +849,10 @@ class SchurOperatorConstructor:
         self.L.pde.q[('f',0)][...,1] = self.L.pde.q[('u',2)]
         self.L.pde.q[('df',0,1)][...,0] = 1.0
         self.L.pde.q[('df',0,2)][...,1] = 1.0
+        self.L.pde.q[('H',1)][:] = self.L.pde.q[('grad(u)',0)][...,0]
+        self.L.pde.q[('H',2)][:] = self.L.pde.q[('grad(u)',0)][...,1]
+        self.L.pde.q[('dH',1,0)][...,0] = 1.0
+        self.L.pde.q[('dH',2,0)][...,1] = 1.0
         self.L.pde.getSpatialJacobian(self.B)
         self.Bsys_petsc4py = self.L.duplicate()
         B_csr_rep_local = self.B.getSubMatCSRrepresentation(0,L_sizes[0][0])
@@ -872,10 +862,49 @@ class SchurOperatorConstructor:
                                              p4pyPETSc.InsertMode.INSERT_VALUES)
         self.Bsys_petsc4py.assemblyBegin()
         self.Bsys_petsc4py.assemblyEnd()
-        self.B = self.Bsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isv)
+        # from nose.tools import set_trace
+        # set_trace()
+
+
+    def getB(self,output_matrix=False):
+        """ Create the B operator.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether matrix should be stored externally.
+
+        Returns
+        -------
+        B : matrix
+            The operator B matrix.
+        """
+        self._setupB()
+        self.B = self.Bsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                                 self.linear_smoother.isv)
         if output_matrix==True:
             _exportMatrix(self.B,'B')
         return self.B
+
+    def getBt(self,output_matrix=False):
+        """ Create the Bt operator.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether matrix should be stored externally.
+
+        Returns
+        -------
+        B : matrix
+            The operator B matrix.
+        """
+        self._setupB()
+        self.Bt = self.Bsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+                                                  self.linear_smoother.isp)
+        if output_matrix==True:
+            _exportMatrix(self.Bt,'Bt')
+        return self.Bt
 
     def getF(self,output_matrix=False):
         """ Return the A-block of the NSE """
