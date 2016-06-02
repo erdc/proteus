@@ -47,11 +47,11 @@ class BC_RANS(BC_Base):
         self.hy_dirichlet = BoundaryCondition()
         self.hz_dirichlet = BoundaryCondition()
         self.u_stress = BoundaryCondition()
-        self.u_stress.u0fXT = 0.
+        self.u_stress.uOfXT = 0.
         self.v_stress = BoundaryCondition()
-        self.v_stress.u0fXT = 0.
+        self.v_stress.uOfXT = 0.
         self.w_stress = BoundaryCondition()
-        self.w_stress.u0fXT = 0.
+        self.w_stress.uOfXT = 0.
 
     def reset(self):
         """
@@ -95,13 +95,13 @@ class BC_RANS(BC_Base):
         b_or = self._b_or[self._b_i]
         if b_or[0] == 1 or b_or[0] == -1:
             self.hx_dirichlet.setConstantBC(0.)
-            self.u_stress.u0fXT = None
+            self.u_stress.uOfXT = None
         elif b_or[1] == 1 or b_or[1] == -1:
             self.hy_dirichlet.setConstantBC(0.)
-            self.v_stress.u0fXT = None
+            self.v_stress.uOfXT = None
         elif len(b_or) > 2 and (b_or[2] == 1 or b_or[2] == -1):
             self.hz_dirichlet.setConstantBC(0.)
-            self.w_stress.u0fXT = None
+            self.w_stress.uOfXT = None
 
     def setFixedNodes(self):
         """
@@ -110,9 +110,9 @@ class BC_RANS(BC_Base):
         self.hx_dirichlet.setConstantBC(0.)
         self.hy_dirichlet.setConstantBC(0.)
         self.hz_dirichlet.setConstantBC(0.)
-        self.u_stress.u0fXT = None
-        self.v_stress.u0fXT = None
-        self.w_stress.u0fXT = None
+        self.u_stress.uOfXT = None
+        self.v_stress.uOfXT = None
+        self.w_stress.uOfXT = None
 
     def setNoSlip(self):
         """
@@ -165,10 +165,10 @@ class BC_RANS(BC_Base):
             print('Boundary orientation needs to be defined')
         self.reset()
         self.p_dirichlet.setConstantBC(0.)
-        self.u_dirichlet.u0fXT = get_ux_dirichlet(0)
-        self.v_dirichlet.u0fXT = get_ux_dirichlet(1)
+        self.u_dirichlet.uOfXT = get_ux_dirichlet(0)
+        self.v_dirichlet.uOfXT = get_ux_dirichlet(1)
         if len(b_or) > 2:
-            self.w_dirichlet.u0fXT = get_ux_dirichlet(2)
+            self.w_dirichlet.uOfXT = get_ux_dirichlet(2)
         self.vof_dirichlet.setConstantBC(1.)  # air
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
@@ -195,10 +195,10 @@ class BC_RANS(BC_Base):
                 hx = new_x_0-x_0+h
                 return hx[i]
             return DBC_h
-        self.hx_dirichlet.u0fXT = get_DBC_h(0)
-        self.hy_dirichlet.u0fXT = get_DBC_h(1)
+        self.hx_dirichlet.uOfXT = get_DBC_h(0)
+        self.hy_dirichlet.uOfXT = get_DBC_h(1)
         if len(last_pos) > 2:
-            self.hz_dirichlet.u0fXT = get_DBC_h(2)
+            self.hz_dirichlet.uOfXT = get_DBC_h(2)
 
     def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None,
                                          windSpeed=(0., 0., 0.), air=1.,
@@ -222,7 +222,6 @@ class BC_RANS(BC_Base):
         """
         self.reset()
 
-        windSpeed=np.array(windSpeed)
         if vert_axis is None:
             vert_axis = self.Shape.Domain.nd-1
 
@@ -231,24 +230,26 @@ class BC_RANS(BC_Base):
                 wave_mwl = wave.mwl
                 wave_eta = wave.eta
                 wave_u = wave.u
+                wind_speed = np.array(windSpeed)
                 he = self.ct.he
                 ecH = self.ct.ecH
                 def ux_dirichlet(x, t):
                     waveHeight = wave_mwl+wave_eta(x, t)
                     wavePhi = x[vert_axis]-waveHeight
                     if wavePhi <= 0:
-                        waterSpeed = wave_u(x, t)
+                        water_speed = wave_u(x, t)
                     elif wavePhi > 0 and wavePhi < 0.5*ecH*he:
                         x_max = list(x)
                         x_max[vert_axis] = waveHeight
-                        waterSpeed = wave_u(x_max, t)
+                        water_speed = wave_u(x_max, t)
                     else:
-                        waterSpeed = (0., 0., 0.)
+                        water_speed = np.array([0., 0., 0.])
                         # smoothing only above wave, only on half the VOF smoothing length
                     H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
-                    ux = H*windSpeed + (1-H)*waterSpeed
+                    ux = H*windSpeed + (1-H)*water_speed
                     return ux[i]
                 return ux_dirichlet
+            return ux_dirichlet_cython
             
         # def get_inlet_ux_dirichlet(i, wave):
         #     def _init_cython():
@@ -261,14 +262,14 @@ class BC_RANS(BC_Base):
         #             waveHeight = wave_mwl+wave_eta(x, t)
         #             wavePhi = x[vert_axis]-waveHeight
         #             if wavePhi <= 0:
-        #                 waterSpeed = wave_u(x, t)
+        #                 water_speed = wave_u(x, t)
         #             else:
         #                 x_max = list(x)
         #                 x_max[vert_axis] = waveHeight
-        #                 waterSpeed = wave_u(x_max, t)
+        #                 water_speed = wave_u(x_max, t)
         #             # smoothing only above wave, only on half the VOF smoothing length
         #             H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
-        #             ux = H*windSpeed + (1-H)*waterSpeed
+        #             ux = H*windSpeed + (1-H)*water_speed
         #             return ux[i]
         #         return ux_dirichlet
         #     return _init_cython
@@ -294,21 +295,22 @@ class BC_RANS(BC_Base):
             wave_mwl = wave.mwl
             wave_eta = wave.eta
             wave_u = wave.u
+            wind_speed = np.array(windSpeed)
             he = self.ct.he
             ecH = self.ct.ecH
             def p_advective(x, t):
                 waveHeight = wave_mwl+wave_eta(x, t)
                 wavePhi = x[vert_axis]-waveHeight
                 if wavePhi <= 0:
-                    waterSpeed = wave_u(x, t)
+                    water_speed = wave_u(x, t)
                 elif wavePhi > 0 and wavePhi < 0.5*ecH*he:
                     x_max = list(x)
                     x_max[vert_axis] = waveHeight
-                    waterSpeed = wave_u(x_max, t)
+                    water_speed = wave_u(x_max, t)
                 else:
-                    waterSpeed = (0., 0., 0.)
+                    water_speed = np.array([0., 0., 0.])
                 H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
-                U = H*windSpeed + (1-H)*waterSpeed
+                U = H*windSpeed + (1-H)*water_speed
                 u_p = np.sum(U[:nd]*b_or)
                 return u_p
             return p_advective
