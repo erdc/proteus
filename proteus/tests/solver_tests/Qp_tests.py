@@ -135,7 +135,7 @@ class TestStokesOperatorConstruction():
         expected = tables.openFile(os.path.join(test_path,
                                    'poiseulleFlow_expected.h5'),
                                    'r')
-        actual = tables.openFile('poiseulleFlow_expected.h5','r')
+        actual = tables.openFile('poiseulleFlow.h5','r')
         assert np.allclose(expected.root.velocity_t1,
                            actual.root.velocity_t1)
         expected.close()
@@ -145,5 +145,4 @@ class TestStokesOperatorConstruction():
 
 if __name__ == '__main__':
     from proteus import Comm
-    comm = Comm.init()
-    
+    comm = Comm.init()   

@@ -575,9 +575,6 @@ class LSCInv_shell(InvOperatorShell):
         # TODO - Add an assert testing that Qv is diagonal.
         self.Qv = Qv
         self.B = B
-        import pdb
-        pdb.set_trace()
-        B_new = petsc4py_sparse_2_dense(self.B)
         self.F = F
         # initialize (B Q_hat B')
         self.__constructBQinvBt()

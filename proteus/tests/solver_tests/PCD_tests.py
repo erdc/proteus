@@ -17,6 +17,7 @@ from nose.tools import set_trace
 from petsc4py import PETSc as p4pyPETSc
 
 from scipy.sparse import csr_matrix
+import petsc4py
 import numpy as np
 
 
@@ -103,12 +104,47 @@ def test_lsc_shell():
     true_solu = np.mat('[-0.01096996,0.00983216]')
     assert np.allclose(y_vec,true_solu)
 
-def test_pcd_matrix():
-    '''  Test construction of the PCD operators. '''
+class TestNSEDrivenCavity():
+    """ This class runs a small NSE test problem """
+    
+    def setUp(self):
+        import nseDrivenCavity_2d_p
+        import nseDrivenCavity_2d_n
+        pList = [nseDrivenCavity_2d_p]
+        nList = [nseDrivenCavity_2d_n]    
+        so = default_so
+        so.tnList = [0.,1.]
+        so.name = pList[0].name
+        so.sList=[default_s]
+        opts.verbose=True
+        opts.profile=True
+        self._setPETSc()
+        self.ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
+
+    def tearDown(self):
+        pass
+
+    def test_01_FullRun(self):
+        self.ns.calculateSolution('test_nse')
+
+    def _setPETSc(self):
+        petsc4py.PETSc.Options().setValue("ksp_type","fgmres")
+        petsc4py.PETSc.Options().setValue("ksp_atol",1e-20)
+        petsc4py.PETSc.Options().setValue("ksp_atol",1e-6)
+        petsc4py.PETSc.Options().setValue("pc_fieldsplit_type","schur")
+        petsc4py.PETSc.Options().setValue("pc_fieldsplit_schur_fact_type","full")
+        petsc4py.PETSc.Options().setValue("fieldsplit_velocity_ksp_type","preonly")
+        petsc4py.PETSc.Options().setValue("fieldsplit_velocity_pc_type","lu")
+        petsc4py.PETSc.Options().setValue("fieldsplit_pressure_ksp_type","gmres")
+        petsc4py.PETSc.Options().setValue("fieldsplit_pressure_ksp_gmres_restart",3)
+        petsc4py.PETSc.Options().setValue("fieldsplit_pressure_ksp_max_it",3)
+        petsc4py.PETSc.Options().setValue("fieldsplit_pressure_ksp_atol",1e-2)
+        petsc4py.PETSc.Options().setValue("fieldsplit_pressure_ksp_rtol",1e-2)
 
 if __name__ == '__main__':
     from proteus import Comm
     comm = Comm.init()
-    test_pcd_shell()
-    test_BAinvBt_shell()
-    test_lsc_shell()
+    test = TestNSEDrivenCavity()
+    test.setUp()
+    test.test_01_FullRun()
+    

@@ -781,7 +781,6 @@ class SchurOperatorConstructor:
              The convection-diffusion pressure matrix.
         """
         #modify the diffusion term in the mass equation so the p-p block is Fp
-        
         # First generate the advection part of Fp
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
         self.Fsys_rowptr = rowptr.copy()
@@ -803,7 +802,6 @@ class SchurOperatorConstructor:
  #        self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
         self.L.pde.getSpatialJacobian(self.Fsys)#notice, switched  to spatial
         self.Fsys_petsc4py = self.L.duplicate()
-
         F_csr_rep_local = self.Fsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
         self.Fsys_petsc4py.setValuesLocalCSR(F_csr_rep_local[0],
                                              F_csr_rep_local[1],
@@ -816,13 +814,16 @@ class SchurOperatorConstructor:
         self.Cp = self.Fsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                   self.linear_smoother.isp)
 
+        import pdb
+        pdb.set_trace()
+
         self.L.pde.q[('df',0,0)].fill(0.0)
 
         self.Fp = p4pyPETSc.Mat().createAIJ(self.getAp().getSize())
         self.Fp.setUp()
         self.getAp().copy(self.Fp)
         self.Fp.scale(self.L.pde.coefficients.nu)
-        self.Fp.axpy(1.0,self.Cp)
+        self.Fp.axpy(-1.0,self.Cp)
         if output_matrix==True:
             _exportMatrix(self.Fp,'Fp')
         #Ff(1:np,1:np) would be Fp, the pressure convection-diffusion matrix
