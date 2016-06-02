@@ -28,18 +28,35 @@ class BC_Base(object):
         """
         setattr(cls, name, default_value)
 
+    def getContext(self):
+        from proteus import Context
+        self.ct = Context.get()
 
-def constantBC(value):
-    """
-    function returning constant BC
-    """
-    return lambda x, t: value
 
-def linearBC(a0, a1, i):
+class BoundaryCondition():
     """
-    function returning linear BC
-    :param a0:
-    :param a1:
-    :param i:
+    Boundary condition class
     """
-    return lambda x, t: a0 + a1*x[i]
+    def __init__(self):
+        self.u0fXT = None
+
+    def init_cython(self):
+        """
+        Function to replace call before the first time step
+        Must always return another function of x and t
+        """
+        return self.u0fXT
+
+    def setConstantBC(self, value):
+        """
+        function returning constant BC
+
+        Parameters
+        ----------
+        value :
+
+        """
+        self.u0fXT = lambda x, t: value
+
+    def setLinearBC(self, a0, a1, i):
+        self.u0fXT = lambda x, t: a0 + a1*x[i]
