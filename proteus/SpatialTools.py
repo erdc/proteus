@@ -35,6 +35,8 @@ from proteus import BoundaryConditions as bc
 from proteus.Profiling import logEvent as log
 
 
+
+
 class Shape(object):
     """
     Base/super class of all shapes.
@@ -44,13 +46,16 @@ class Shape(object):
 
     def __init__(self, domain, nd=None, BC_class=None):
         if nd != domain.nd:
-            log('Shape ('+`nd`+'D) and Domain ('+`domain.nd`+'D)' \
-                ' have different dimensions!')
+            log('Shape ({0}D) and Domain ({1}D)'
+                ' have different dimensions!'
+                .format(nd, domain.nd))
             sys.exit()
         self.Domain = domain
         domain.shape_list.append(self)
+        self.MeshOptions = MeshOptions(self)
         self.nd = nd
         self.BC_class = BC_class or bc.BC_Base
+        self.name = ''
         self.vertices = None
         self.vertexFlags = None
         self.segments = None
@@ -59,10 +64,13 @@ class Shape(object):
         self.facetFlags = None
         self.regions = None
         self.regionFlags = None
+        self.volumes = None
         self.holes = None
+        self.holes_ind = None
         self.barycenter = np.zeros(3)
         self.coords = None  # Only used for predefined shapes
                             # (can be different from barycenter)
+        self.children = {}
         self.coords_system = np.eye(nd)
         self.boundaryTags = None
         self.b_or = None  # boundary orientation
@@ -140,7 +148,33 @@ class Shape(object):
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
 
-    def setHoles(self, holes):
+
+    def setParentShape(self, shape, ind=0):
+        """
+        :param ind: list
+        """
+        if shape.children.has_key(ind):
+            shape.children[ind] += [self]
+        else:
+            shape.children[ind] = [self]
+
+    def setChildShape(self, shape, ind=0):
+        """
+        :param shape: shape class instance containing this shape
+        :param ind: index of parent shape facet/volume containing this shape
+        """
+        if self.children.has_key(ind):
+            self.children[ind] += [shape]
+        else:
+            self.children[ind] = [shape]
+
+    def setVolumeHoles(self, ind):
+        if self.holes_ind is None:
+            self.holes_ind = [ind]
+        else:
+            self.holes_ind += [ind]
+
+    def setHoles(self, coords):
         """
         Sets a 'hole' in the mesh. The region where the hole is defined will
         not be meshed.
@@ -149,6 +183,7 @@ class Shape(object):
         """
         self._checkListOfLists(holes)
         self.holes = np.array(holes)
+        self.holes_ind += [ind]
 
     def rotate(self, rot, axis=(0, 0, 1), pivot=None):
         """
@@ -283,6 +318,7 @@ class Cuboid(Shape):
                               [-1., 0.,  0.],
                               [0.,  0.,  1.]])
         self.regions = np.array([[x, y, z]])
+        self.volumes = np.array([[[0, 1, 2, 3, 4, 5]]])
         # defining flags for boundary conditions
         self.boundaryTags = bt = {'bottom': 1,
                                   'front': 2,
@@ -433,8 +469,8 @@ class CustomShape(Shape):
 
     def __init__(self, domain, barycenter=None, vertices=None,
                  vertexFlags=None, segments=None, segmentFlags=None,
-                 facets=None, facetFlags=None, holes=None, regions=None,
-                 regionFlags=None, boundaryTags=None,
+                 facets=None, facetFlags=None, volumes=None, holes=None,
+                 regions=None, regionFlags=None, boundaryTags=None,
                  boundaryOrientations=None):
         super(CustomShape, self).__init__(domain, nd=len(vertices[0]))
         self.__class__.count += 1
@@ -451,6 +487,8 @@ class CustomShape(Shape):
             self.facetFlags = np.array(facetFlags)
         if holes is not None:
             self.holes = np.array(holes)
+        if volumes is not None:
+            self.volumes = np.array(volumes)
         if regions is not None:
             self._checkFlags(regionFlags)
             self.regions = np.array(regions)
@@ -477,6 +515,7 @@ class ShapeSTL(Shape):
         self.vertices, self.facets, self.facetnormals = getInfoFromSTL(self.filename)
         self.facetFlags = np.ones(len(self.facets))
         self.vertexFlags = np.ones(len(self.vertices))
+        self.volumes = np.array([[[i for i in range(len(self.facets))]]])
         self.boundaryTags = {'stl': 1}
         self.BC_dict = {'stl': self.BC_class(shape=self, name='stl')}
         self.BC_list = [self.BC_dict['stl']]
@@ -533,6 +572,134 @@ class BCContainer(object):
     def __init__(self, BC_dict):
         self.__dict__ = BC_dict
 
+class MeshOptions:
+    """
+    Mesh options for the domain
+    """
+    def __init__(self, shape):
+        self.Shape = shape
+        self.constraints = []
+
+    def _addConstraint(self, entity, cons_type, index, variables):
+        entities = ['vertex', 'segment', 'facet', 'global']
+        assert entity in entities, 'wrong entity'
+        cons_types = ['fixed', 'function', 'TFI', 'box']
+        assert cons_type in cons_types, 'wrong constraint type'
+        assert isinstance(index, (list, tuple)) or index==None,'must pass a list of index'
+        assert isinstance(variables, (dict)), 'variables must be a dictionary'
+        self.constraints += [{'entity': entity, 'type': cons_type,
+                              'index': index, 'variables':variables}]
+
+    def refineAroundVertex(self, ind, lc_min, lc_max=None, dist_min=None,
+                            dist_max=None):
+        """
+        Refinement (or coarsening) of mesh around vertices.
+        tetgen: only lc_min is taken into account
+        gmsh: lc_min on segment, lc_max away from vertex, with a transition
+              zone between dist_min and dist_max
+        :param ind: list of local index of vertices
+        :param lc_min: size of element at vertex
+        :param lc_max: size of element away from vertex
+        :param dist_min: distance away from vertex with lc_min element size
+        :param dist_max: distance away from vertex with lc_max element size
+        """
+        var_dict = {'LcMin': lc_min, 'LcMax': lc_max,
+                    'DistMin': dist_min, 'DistMax': dist_max}
+        self._addConstraint(entity='vertex', cons_type='fixed',
+                            index=ind, variables=var_dict)
+
+    def refineAroundSegment(self, ind, lc_min, lc_max=None, dist_min=None,
+                             dist_max=None):
+        """
+        Refinement (or coarsening) of mesh around segments.
+        tetgen: only lc_min is taken into account
+        gmsh: lc_min on segment, lc_max away from segment, with a transition
+              zone between dist_min and dist_max
+        :param ind: list of local index of segments
+        :param lc_min: size of element at segment
+        :param lc_max: size of element away from segment
+        :param dist_min: distance away from segment with lc_min element size
+        :param dist_max: distance away from segment with lc_max element size
+        """
+        var_dict = {'LcMin': lc_min, 'LcMax': lc_max,
+                    'DistMin': dist_min, 'DistMax': dist_max}
+        self._addConstraint(entity='segment', cons_type='fixed',
+                            index=ind, variables=var_dict)
+
+    def refineAroundFacet(self, ind, lc_min, lc_max=None, dist_min=None,
+                            dist_max=None):
+        """
+        Refinement (or coarsening) of mesh around facets.
+        tetgen: only lc_min is taken into account
+        gmsh: lc_min on segment, lc_max away from facet, with a transition
+              zone between dist_min and dist_max
+        (!) behaviour can be buggy in gmsh
+        :param ind: list of local index of facets
+        :param lc_min: size of element at facet
+        :param lc_max: size of element away from facet
+        :param dist_min: distance away from facet with lc_min element size
+        :param dist_max: distance away from facet with lc_max element size
+        """
+        var_dict = {'LcMin': lc_min, 'LcMax': lc_max,
+                    'DistMin': dist_min, 'DistMax': dist_max}
+        self._addConstraint(entity='facet', cons_type='fixed',
+                            index=ind, variables=var_dict)
+
+    def refineBox(self, lc_in, lc_out, x_min, x_max, y_min, y_max, z_min=None,
+                  z_max=None):
+        """
+        Refinement (or coarsening) of mesh inside a box.
+        (!) for gmsh only
+        :param lc_in: size of element inside box
+        :param lc_out: size of element outside box
+        :param x_min: lower limit of x coordinates of box
+        :param x_max: upper limit of x coordinates of box
+        :param y_min: lower limit of y coordinates of box
+        :param y_max: upper limit of y coordinates of box
+        :param z_min: lower limit of z coordinates of box
+        :param z_max: upper limit of z coordinates of box
+        """
+        var_dict = {'VIn': lc_in, 'VOut': lc_out, 'XMin': x_min, 'XMax': x_max,
+                    'YMin': y_min, 'YMax': y_max, 'ZMin': z_min, 'ZMax': z_max}
+        self._addConstraint(entity='global', cons_type='box',
+                            index=None, variables=var_dict)
+
+    def setRefinementFunction(self, function):
+        """
+        Set a function to make the mesh element size vary.
+        (!) for gmsh only. Must use MathEval syntax. Can use x, y and z in
+            function
+        :param function: function that makes mesh vary (string)
+        """
+        var_dict = {'function': function}
+        self._addConstraint(entity='global', cons_type='function',
+                            index=None, variables=var_dict)
+
+    def setTransfiniteSegment(self, ind, nb_nodes, prog=1.):
+        """
+        Sets segment transfinite interpolation. Goes from the segment first
+        vertex to its second vertex using the defined progression.
+        If TFI should go from segment's second vertex to first vertex,
+        use a negative index.
+        :param ind: list of local index of segments
+        :param nb_nodes: number of nodes on segments
+        :param prog: progression parameter for nodes on segments
+        """
+        var_dict_pos = {'nodes':nb_nodes, 'prog': prog}
+        var_dict_neg = {'nodes':nb_nodes, 'prog': 1./prog}
+        ind_prog_pos = []
+        ind_prog_neg = []
+        for ind in indice:
+            if ind < 0:
+                ind_prog_neg += [abs(ind)]
+            else:
+                ind_prog_pos += [ind]
+        if ind_prog_neg:
+            self._addConstraint(entity='segment', cons_type='TFI',
+                                index=ind_prog_neg, variables=var_dict_neg)
+        if ind_prog_pos:
+            self._addConstraint(entity='segment', cons_type='TFI',
+                                index=ind_prog_pos, variables=var_dict_pos)
 
 # --------------------------------------------------------------------------- #
 # -------------------------SPATIAL TOOLS FOR SHAPES-------------------------- #
@@ -654,6 +821,7 @@ def assembleDomain(domain):
     _generateMesh(domain)
 
 def _assembleGeometry(domain, BC_class):
+    mesh = domain.MeshOptions
     # reinitialize geometry of domain
     domain.vertices = []
     domain.vertexFlags = []
@@ -664,6 +832,9 @@ def _assembleGeometry(domain, BC_class):
     domain.holes = []
     domain.regions = []
     domain.regionFlags = []
+    domain.volumes = []
+    domain.boundaryTags = {}
+    domain.reversed_boundaryTags = {}
     # BC at flag 0
     domain.bc = [BC_class()]
     # domain.bc[0].setNonMaterial()
@@ -671,12 +842,26 @@ def _assembleGeometry(domain, BC_class):
     domain.barycenters = np.array([[0., 0., 0.]])
     start_flag = 0
     start_vertex = 0
+    start_segment = 0
     for shape in domain.shape_list:
         # --------------------------- #
         # ----- DOMAIN GEOMETRY ----- #
         # --------------------------- #
-        start_flag = len(domain.bc)-1
-        start_vertex = len(domain.vertices)
+        start_flag = shape.start_flag = len(domain.bc)-1
+        start_vertex = shape.start_vertex = len(domain.vertices)
+        start_segment = shape.start_segment = len(domain.segments)
+        start_facet = shape.start_facet = len(domain.facets)
+        start_region = shape.start_region = len(domain.regions)
+        if shape.boundaryTags:
+            for tag, value in shape.boundaryTags.iteritems():
+                domain.boundaryTags[shape.name+'_'+str(tag)] = value+start_flag
+                domain.reversed_boundaryTags[value+start_flag] = shape.name+'_'+str(tag)            
+            # import operator
+            # sorted_tags = sorted(x.items(), key=operator.itemgetter(1))
+            # for tag in sorted_tags:
+            #     domain.sortedTags = 
+            # domain.boundaryTags
+        # start_volume = shape.start_volume = len(domain.volumes)
         if domain.regionFlags:
             start_rflag = max(domain.regionFlags)
         else:
@@ -726,7 +911,64 @@ def _assembleGeometry(domain, BC_class):
             domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
         if shape.holes is not None:
             domain.holes += (shape.holes).tolist()
-        domain.getBoundingBox()
+        # adding local shape mesh options to global domain mesh options
+        cons = shape.MeshOptions.constraints
+        for con in cons:
+            domain.MeshOptions.constraints += [con]
+            dcon = domain.MeshOptions.constraints[-1]
+            if dcon['entity'] == 'vertex':
+                dcon['index'] = (np.array(dcon['index'])+start_vertex).tolist()
+            if dcon['entity'] == 'segment':
+                dcon['index'] = (np.array(dcon['index'])+start_segment).tolist()
+            if dcon['entity'] == 'facet':
+                print dcon, start_vertex
+                dcon['index'] = (np.array(dcon['index'])+start_facet).tolist()
+                print dcon
+            if dcon['entity'] == 'region':
+                dcon['index'] = (np.array(dcon['index'])+start_region).tolist()
+        # TFI = np.array(shape.MeshOptions.TFI['segments'])
+        # if TFI:
+        #     TFI = (TFI+[start_segment, 0, 0]).tolist()
+        #     mesh.TFI['segments'] += TFI
+        # for line in shape.MeshOptions.TFI['line']:
+        #     domain.MeshOptions.TFI['line'] +=
+    # for gmsh
+    domain.holes_ind = []
+    for shape in domain.shape_list:
+        shape.start_volume = len(domain.volumes)
+        if shape.holes_ind is not None:
+            domain.holes_ind += (np.array(shape.holes_ind)+shape.start_volume).tolist()
+        if shape.volumes is not None:
+            volumes = (shape.volumes+shape.start_facet).tolist()
+            for i, volume in enumerate(volumes):
+                # add holes to volumes
+                if shape.children.has_key(i):
+                    for child in shape.children[i]:
+                        child_vols = []
+                        child_facets = []  # facets in volumes
+                        for child_vol in child.volumes:
+                            # don't need holes of child volumes, only outer shells:
+                            child_vols += [(child_vol[0]+child.start_facet).tolist()]
+                        if len(child_vols) > 1:
+                            # merge volumes that share a facet
+                            inter = np.intersect1d(*child_vols)
+                            new_child_vols = list(child_vols)
+                            for f in inter:
+                                ind_to_remove = set()
+                                merged = []
+                                for ind, vol in enumerate(child_vols):
+                                    if f in vol:
+                                        ind_to_remove.add(ind)
+                                        merged += vol
+                                for ind in sorted(ind_to_remove, reverse=True):
+                                    child_vols.remove(ind)
+                                merged.remove(f)
+                                child_vols += [merged]
+                    volume += child_vols
+                domain.volumes += volumes
+
+
+    domain.getBoundingBox()
 
 
 def _generateMesh(domain):
