@@ -163,7 +163,13 @@ namespace proteus
 				   double* wettedAreas,
 				   double* netForces_p,
 				   double* netForces_v,
-				   double* netMoments)=0;
+				   double* netMoments,
+				   double* ebqe_stress_p_x,
+				   double* ebqe_stress_p_y,
+				   double* ebqe_stress_p_z,
+				   double* ebqe_stress_v_x,
+				   double* ebqe_stress_v_y,
+				   double* ebqe_stress_v_z)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -1718,7 +1724,13 @@ namespace proteus
 			   double* wettedAreas,
 			   double* netForces_p,
 			   double* netForces_v,
-			   double* netMoments)
+			   double* netMoments,
+			   double* ebqe_stress_p_x,
+			   double* ebqe_stress_p_y,
+			   double* ebqe_stress_p_z,
+			   double* ebqe_stress_v_x,
+			   double* ebqe_stress_v_y,
+			   double* ebqe_stress_v_z)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -3009,6 +3021,18 @@ namespace proteus
 		  //netMoments[3*boundaryFlags[ebN]+0] += (r_y*force_z - r_z*force_y)*dS;
 		  //netMoments[3*boundaryFlags[ebN]+1] += (r_z*force_x - r_x*force_z)*dS;
 		  netMoments[3*boundaryFlags[ebN]+2] += (r_x*force_y - r_y*force_x)*dS;
+		  /* ebqe_stress_p_x[ebN*nQuadraturePoints_elementBoundary+kb] = force_p_x; */
+		  /* ebqe_stress_p_y[ebN*nQuadraturePoints_elementBoundary+kb] = force_p_y; */
+		  /* //ebqe_stress_p_z[ebN*nQuadraturePoints_elementBoundary+kb] = force_p_z; */
+		  /* ebqe_stress_v_x[ebN*nQuadraturePoints_elementBoundary+kb] = force_v_x; */
+		  /* ebqe_stress_v_y[ebN*nQuadraturePoints_elementBoundary+kb] = force_v_y; */
+		  /* //ebqe_stress_v_z[ebN*nQuadraturePoints_elementBoundary+kb] = force_v_z; */
+		  ebqe_stress_p_x[ebNE_kb] = force_p_x;
+		  ebqe_stress_p_y[ebNE_kb] = force_p_y;
+		  //ebqe_stress_p_z[ebNE_kb] = force_p_z;
+		  ebqe_stress_v_x[ebNE_kb] = force_v_x;
+		  ebqe_stress_v_y[ebNE_kb] = force_v_y;
+		  //ebqe_stress_v_z[ebNE_kb] = force_v_z
 		}
 	      //
 	      //update residuals

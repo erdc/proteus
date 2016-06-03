@@ -153,7 +153,13 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
 				   double* wettedAreas,
 				   double* netForces_p,
 				   double* netForces_v,
-				   double* netMoments)
+				   double* netMoments,
+				   double* ebqe_stress_p_x,
+				   double* ebqe_stress_p_y,
+				   double* ebqe_stress_p_z,
+				   double* ebqe_stress_v_x,
+				   double* ebqe_stress_v_y,
+				   double* ebqe_stress_v_z)
         void calculateJacobian(double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -507,7 +513,13 @@ cdef class cRANS2P2D_base:
 			 numpy.ndarray wettedAreas,
 			 numpy.ndarray netForces_p,
 			 numpy.ndarray netForces_v,
-			 numpy.ndarray netMoments):
+			 numpy.ndarray netMoments,
+			 numpy.ndarray ebqe_stress_p_x,
+			 	       	   numpy.ndarray ebqe_stress_p_y,
+				   numpy.ndarray ebqe_stress_p_z,
+				   numpy.ndarray ebqe_stress_v_x,
+				   numpy.ndarray ebqe_stress_v_y,
+				   numpy.ndarray ebqe_stress_v_z):
        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -655,7 +667,13 @@ cdef class cRANS2P2D_base:
 				       <double*> wettedAreas.data,
 				       <double*> netForces_p.data,
 				       <double*> netForces_v.data,
-				       <double*> netMoments.data)
+				       <double*> netMoments.data,
+				        <double*> ebqe_stress_p_x.data,
+				   <double*> ebqe_stress_p_y.data,
+				   <double*> ebqe_stress_p_z.data,
+				   <double*> ebqe_stress_v_x.data,
+				   <double*> ebqe_stress_v_y.data,
+				   <double*> ebqe_stress_v_z.data)
 
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,

@@ -924,6 +924,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('velocity',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         self.ebqe[('velocity',2)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         self.ebqe[('velocity',3)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
+        self.ebqe_stress_p_x = numpy.zeros(self.ebqe[('u',0)].shape)
+        self.ebqe_stress_p_y = numpy.zeros(self.ebqe[('u',0)].shape)
+        self.ebqe_stress_p_z = numpy.zeros(self.ebqe[('u',0)].shape)
+        self.ebqe_stress_v_x = numpy.zeros(self.ebqe[('u',0)].shape)
+        self.ebqe_stress_v_y = numpy.zeros(self.ebqe[('u',0)].shape)
+        self.ebqe_stress_v_z = numpy.zeros(self.ebqe[('u',0)].shape)
+
         #VRANS start, defaults to RANS
         self.q[('r',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q['eddy_viscosity'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
@@ -1441,7 +1448,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.wettedAreas,
             self.coefficients.netForces_p,
             self.coefficients.netForces_v,
-            self.coefficients.netMoments)
+            self.coefficients.netMoments,
+            self.ebqe_stress_p_x,
+            self.ebqe_stress_p_y,
+            self.ebqe_stress_p_z,
+            self.ebqe_stress_v_x,
+            self.ebqe_stress_v_y,
+            self.ebqe_stress_v_z)
 	from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
