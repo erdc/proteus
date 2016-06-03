@@ -25,11 +25,6 @@ comm = Comm.init()
 Profiling.procID = comm.rank()
 log("Testing BoundaryConditions")
 
-# for creating a generic context used in some test cases
-from proteus import Domain
-epsFact_consrv_heaviside = 3.
-domain = Domain.PlanarStraightLineGraphDomain()
-domain.MeshOptions.he = 0.2
 
 def create_BC(folder=None, b_or=None, b_i=None):
     if folder is None:
@@ -46,6 +41,14 @@ def get_random_x(start=0., stop=10.):
 def get_time_array(start=0, stop=5, steps=100):
     return np.linspace(0, 5, 100)
 
+class PseudoContext:
+    def __init__(self):
+        from proteus import Domain
+        self.ecH = 3.
+        self.he = 0.2
+
+def get_context():
+    return PseudoContext()
 class TestBC(unittest.TestCase):
 
     def test_bc_base(self):
@@ -264,10 +267,7 @@ class TestBC(unittest.TestCase):
         g = np.array([0., -9.81, 0.])
         waves = MonochromaticWaves(period, height, mwl, depth, g, direction)
         # need to set epsFact and he with context as they are called in BC...
-        from proteus import Context
-        case = sys.modules[__name__]
-        Context.setFromModule(case)
-        ct = Context.get()
+        ct = get_context()
         from proteus.ctransportCoefficients import smoothedHeaviside
         #-----
         # set BC
@@ -295,17 +295,17 @@ class TestBC(unittest.TestCase):
             wavePhi = x[1]-waveHeight
             if wavePhi <= 0:
                 wave_u = waves.u(x, t)
-            elif wavePhi > 0 and wavePhi < 0.5*ecH*he:
+            elif wavePhi > 0 and wavePhi < 0.5*ct.ecH*ct.he:
                 x_max = list(x)
                 x_max[1] = waveHeight
                 wave_u = waves.u(x_max, t)
             else:
                 wave_u = np.array([0., 0., 0.])
-            Hu = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
+            Hu = smoothedHeaviside(0.5*ct.ecH*ct.he, wavePhi-0.5*ct.ecH*ct.he)
             U = Hu*windSpeed + (1-Hu)*wave_u
             u_calc += [U]
             p_calc += [np.sum(U*b_or[b_i])]
-            Hvof = smoothedHeaviside(ecH*he, wavePhi)
+            Hvof = smoothedHeaviside(ct.ecH*ct.he, wavePhi)
             vof_calc += [Hvof]
         u_calc = np.array(u_calc)
         vof_calc = np.array(vof_calc)
@@ -335,9 +335,4 @@ class TestBC(unittest.TestCase):
 
 if __name__ == '__main__':
 
-    from proteus import Domain
-    epsFact_consrv_heaviside = ecH = 3.
-    he = 0.2
-    domain = Domain.PlanarStraightLineGraphDomain()
-    domain.MeshOptions.he = 0.2
     unittest.main(verbosity=2)
