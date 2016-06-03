@@ -379,7 +379,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #     self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,"forceHistory_v.txt"),"w")
         #     self.momentHistory = open(os.path.join(proteus.Profiling.logDir,"momentHistory.txt"),"w")
         self.comm = comm
-    #initialize so it can run as single phase
+        #initialize so it can run as single phase
+        #self.momentHistory = open(os.path.join(proteus.Profiling.logDir,"momentHistory.txt"),"w")
     def initializeElementQuadrature(self,t,cq):
         #VRANS
         self.q_phi_solid = numpy.ones(cq[('u',1)].shape,'d')
@@ -465,6 +466,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
          #
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         #VRANS
+        x = cebqe['x']
+        x = numpy.resize(x, (x.shape[0]*x.shape[1],3))
+        numpy.savetxt("ebqe_points.txt", x)
+
         log("ebqe_global allocations in coefficients")
         self.ebqe_porosity = numpy.ones(cebqe[('u',1)].shape,'d')
         self.ebqe_dragAlpha = numpy.ones(cebqe[('u',1)].shape,'d')
@@ -492,6 +497,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
                     self.ebqe_dragBeta[ebNE,:] = self.dragBetaTypes[self.elementMaterialTypes[eN]]
         #
+        
     def updateToMovingDomain(self,t,c):
         pass
     def evaluateForcingTerms(self,t,c,mesh=None,mesh_trial_ref=None,mesh_l2g=None):
@@ -663,7 +669,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             # self.forceHistory_v.flush()
             # self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1,:]))
             # self.momentHistory.flush()
-
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls=0
     def __init__(self,
@@ -1834,6 +1839,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.velocityPostProcessor.vpp_algorithms[ci].computeGeometricInfo()
                         self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian[cj] = True
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+        t = self.timeIntegration.t
+        numpy.savetxt("ebqe_stress_p_x_" + `self.timeIntegration.t` + ".txt" , self.ebqe_stress_p_x, header = `t`)
+        numpy.savetxt("ebqe_stress_p_y_" + `self.timeIntegration.t` + ".txt" , self.ebqe_stress_p_y, header = `t`)
+        numpy.savetxt("ebqe_stress_p_z_" + `self.timeIntegration.t` + ".txt" , self.ebqe_stress_p_z, header = `t`)
+        numpy.savetxt("ebqe_stress_v_x_" + `self.timeIntegration.t` + ".txt" , self.ebqe_stress_v_x, header = `t`)
+        numpy.savetxt("ebqe_stress_v_y_" + `self.timeIntegration.t` + ".txt" , self.ebqe_stress_v_y, header = `t`)
+        numpy.savetxt("ebqe_stress_v_z_" + `self.timeIntegration.t` + ".txt" , self.ebqe_stress_v_z, header = `t`)
 
     def updateAfterMeshMotion(self):
         pass
