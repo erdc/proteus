@@ -1030,7 +1030,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             nd=None,
             applyCorrectionToDOF=True,
             useMetrics=0.0,
-            useConstantH=False):
+            useConstantH=False,
+            set_vos=None):
+        self.set_vos=set_vos
         self.useConstantH = useConstantH
         self.useMetrics = useMetrics
         self.sd = sd
@@ -1680,6 +1682,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
+        if self.coefficients.set_vos:
+            self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.setUnknowns(u)
