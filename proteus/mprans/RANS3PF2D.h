@@ -12,6 +12,21 @@ namespace proteus
   {
   public:
     virtual ~cppRANS3PF2D_base(){}
+    virtual void setSedClosure(double aDarcy,
+                               double betaForch,
+                               double grain,
+                               double packFraction,
+                               double packMargin,
+                               double maxFraction,
+                               double frFraction,
+                               double sigmaC,
+                               double C3e,
+                               double C4e,
+                               double eR,
+                               double fContact,
+                               double mContact,
+                               double nContact,
+                               double angFriction){}
     virtual void calculateResidual(double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -388,55 +403,25 @@ namespace proteus
   class cppRANS3PF2D : public cppRANS3PF2D_base
   {
   public:
-    double aDarcy;
-    double betaForch;
-    double grain;
-    double packFraction;
-    double packMargin;
-    double maxFraction;
-    double frFraction;
-    double sigmaC;
-    double C3e;
-    double C4e;
-    double eR;
-    double fContact;
-    double mContact;
-    double nContact;
-    double angFriction;
     cppHsuSedStress<2> closure;
     const int nDOF_test_X_trial_element;
     CompKernelType ck;
     cppRANS3PF2D():
-      aDarcy(150.0),
-      betaForch(0.0),
-      grain(.016473),
-      packFraction(0.2),
-      packMargin(0.01),
-      maxFraction(0.635),
-      frFraction(0.57),
-      sigmaC(1.1),
-      C3e(1.2),
-      C4e(1.0),
-      eR(0.8),
-      fContact(0.02),
-      mContact(2.0),
-      nContact(5.0),
-      angFriction(M_PI/6.0),
-      closure(aDarcy,
-              betaForch,
-              grain,
-              packFraction,
-              packMargin,
-              maxFraction,
-              frFraction,
-              sigmaC,
-              C3e,
-              C4e,
-              eR,
-              fContact,
-              mContact,
-              nContact,
-              angFriction),
+      closure(150.0,
+              0.0,
+              0.0102,
+              0.2,
+              0.01,
+              0.635,
+              0.57,
+              1.1,
+              1.2,
+              1.0,
+              0.8,
+              0.02,
+              2.0,
+              5.0,
+              M_PI/6.),
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
       ck()
 	{/*	     std::cout<<"Constructing cppRANS3PF2D<CompKernelTemplate<"
@@ -453,6 +438,39 @@ namespace proteus
 	  /*  <<std::endl<<std::flush; */
 	}
       
+    void setSedClosure(double aDarcy,
+                       double betaForch,
+                       double grain,
+                       double packFraction,
+                       double packMargin,
+                       double maxFraction,
+                       double frFraction,
+                       double sigmaC,
+                       double C3e,
+                       double C4e,
+                       double eR,
+                       double fContact,
+                       double mContact,
+                       double nContact,
+                       double angFriction)
+    {
+      closure = cppHsuSedStress<2>(aDarcy,
+                                   betaForch,
+                                   grain,
+                                   packFraction,
+                                   packMargin,
+                                   maxFraction,
+                                   frFraction,
+                                   sigmaC,
+                                   C3e,
+                                   C4e,
+                                   eR,
+                                   fContact,
+                                   mContact,
+                                   nContact,
+                                   angFriction);
+    }
+    
     inline double smoothedHeaviside(double eps, double phi)
     {
       double H;
@@ -794,6 +812,9 @@ namespace proteus
 					   const double u,
 					   const double v,
 					   const double w,
+					   const double uStar,
+					   const double vStar,
+					   const double wStar,
 					   const double eps_s,
 					   const double phi_s,
 					   const double u_s,
@@ -816,7 +837,7 @@ namespace proteus
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
-      double fluid_velocity[3]={u,v,w}, solid_velocity[3]={u_s,v_s,w_s};
+      double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
       double new_beta = closure.betaCoeff(1.0-phi_s,
                                           rho,
                                           fluid_velocity,
@@ -1895,6 +1916,9 @@ namespace proteus
 						u,
 						v,
 						w,
+                                                q_velocity_sge[eN_k_nSpace+0],
+                                                q_velocity_sge[eN_k_nSpace+1],
+                                                q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used
 						eps_solid[elementFlags[eN]],
 						porosity,
 						q_velocity_solid[eN_k_nSpace+0],
@@ -3549,6 +3573,9 @@ namespace proteus
 						u,
 						v,
 						w,
+                                                q_velocity_sge[eN_k_nSpace+0],
+                                                q_velocity_sge[eN_k_nSpace+1],
+                                                q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't  be used
 						eps_solid[elementFlags[eN]],
 						porosity,
 						q_velocity_solid[eN_k_nSpace+0],
@@ -3730,9 +3757,8 @@ namespace proteus
 					
 					
 	      tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
-	      tau_p = PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);					
-					
-	      calculateSubgridError_tauRes(tau_p,
+	      tau_p = PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);
+              calculateSubgridError_tauRes(tau_p,
 					   tau_v,
 					   pdeResidual_p,
 					   pdeResidual_u,
@@ -4909,15 +4935,46 @@ namespace proteus
                                          int nDOF_trial_elementIn,
                                          int nDOF_test_elementIn,
                                          int nQuadraturePoints_elementBoundaryIn,
-                                         int CompKernelFlag)
+                                         int CompKernelFlag,
+                                         double aDarcy,
+                                         double betaForch,
+                                         double grain,
+                                         double packFraction,
+                                         double packMargin,
+                                         double maxFraction,
+                                         double frFraction,
+                                         double sigmaC,
+                                         double C3e,
+                                         double C4e,
+                                         double eR,
+                                         double fContact,
+                                         double mContact,
+                                         double nContact,
+                                         double angFriction)
   {
-    return proteus::chooseAndAllocateDiscretization2D<cppRANS3PF2D_base,cppRANS3PF2D,CompKernel>(nSpaceIn,
-											 nQuadraturePoints_elementIn,
-											 nDOF_mesh_trial_elementIn,
-											 nDOF_trial_elementIn,
-											 nDOF_test_elementIn,
-											 nQuadraturePoints_elementBoundaryIn,
-											 CompKernelFlag);
+    cppRANS3PF2D_base* rvalue = proteus::chooseAndAllocateDiscretization2D<cppRANS3PF2D_base,cppRANS3PF2D,CompKernel>(nSpaceIn,
+                                                                                                                      nQuadraturePoints_elementIn,
+                                                                                                                      nDOF_mesh_trial_elementIn,
+                                                                                                                      nDOF_trial_elementIn,
+                                                                                                                      nDOF_test_elementIn,
+                                                                                                                      nQuadraturePoints_elementBoundaryIn,
+                                                                                                                      CompKernelFlag);
+    rvalue->setSedClosure(aDarcy,
+                          betaForch,
+                          grain,
+                          packFraction,
+                          packMargin,
+                          maxFraction,
+                          frFraction,
+                          sigmaC,
+                          C3e,
+                          C4e,
+                          eR,
+                          fContact,
+                          mContact,
+                          nContact,
+                          angFriction);
+    return rvalue;
   }
 }//proteus
 
