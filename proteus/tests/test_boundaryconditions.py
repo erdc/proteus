@@ -271,9 +271,9 @@ class TestBC(unittest.TestCase):
         from proteus.ctransportCoefficients import smoothedHeaviside
         #-----
         # set BC
-        windSpeed=np.array([1., 2., 3.4])
+        wind_speed=np.array([1., 2., 3.4])
         BC.setUnsteadyTwoPhaseVelocityInlet(waves, vert_axis=1,
-                                            windSpeed=windSpeed)
+                                            wind_speed=wind_speed)
         BC.getContext(ct)
         BC.u_dirichlet.uOfXT = BC.u_dirichlet.init_cython()
         BC.v_dirichlet.uOfXT = BC.v_dirichlet.init_cython()
@@ -302,7 +302,7 @@ class TestBC(unittest.TestCase):
             else:
                 wave_u = np.array([0., 0., 0.])
             Hu = smoothedHeaviside(0.5*ct.ecH*ct.he, wavePhi-0.5*ct.ecH*ct.he)
-            U = Hu*windSpeed + (1-Hu)*wave_u
+            U = Hu*wind_speed + (1-Hu)*wave_u
             u_calc += [U]
             p_calc += [np.sum(U*b_or[b_i])]
             Hvof = smoothedHeaviside(ct.ecH*ct.he, wavePhi)
