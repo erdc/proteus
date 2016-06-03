@@ -391,15 +391,15 @@ class BC_RANS(BC_Base):
                 if b_or[i] == 0:
                     return 0.
             return ux_dirichlet
-        self.u_dirichlet = get_outlet_ux_dirichlet(0)
-        self.v_dirichlet = get_outlet_ux_dirichlet(1)
-        if len(g) == 3:
-            self.w_dirichlet = get_outlet_ux_dirichlet(2)
-        self.p_dirichlet = linearBC(a0, a1, vert_axis)
-        self.vof_dirichlet = constantBC(vof)
-        self.u_diffusive = constantBC(0.)
-        self.v_diffusive = constantBC(0.)
-        self.w_diffusive = constantBC(0.)
+        self.u_dirichlet.uOfXT = get_outlet_ux_dirichlet(0)
+        self.v_dirichlet.uOfXT = get_outlet_ux_dirichlet(1)
+        if len(g).uOfXT == 3:
+            self.w_dirichlet.uOfXT = get_outlet_ux_dirichlet(2)
+        self.p_dirichlet.uOfXT.setLinearBC(a0, a1, vert_axis)
+        self.vof_dirichlet.setConstantBC(vof)
+        self.u_diffusive.setConstantBC(0.)
+        self.v_diffusive.setConstantBC(0.)
+        self.w_diffusive.setConstantBC(0.)
 
     # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
     def hydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
@@ -440,8 +440,8 @@ class BC_RANS(BC_Base):
 
         self.setHydrostaticPressureOutlet(rhoUp, g, refLevel, pRef, vert_axis,
                                       air)
-        self.p_dirichlet = hydrostaticPressureOutletWithDepth_p_dirichlet
-        self.vof_dirichlet = hydrostaticPressureOutletWithDepth_vof_dirichlet
+        self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
+        self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
 
 
 
