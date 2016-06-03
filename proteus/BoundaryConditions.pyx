@@ -8,7 +8,7 @@ Module for creating boundary conditions. Imported in SpatialTools.py
 
 class BC_Base(object):
     """
-    class defining boundary conditions for a facet or a segment
+    Generic class regrouping boundary conditions 
     """
     def __init__(self, shape=None, name=None, b_or=None, b_i=None):
         self.Shape = shape
@@ -20,15 +20,25 @@ class BC_Base(object):
     @classmethod
     def newGlobalBC(cls, name, default_value=None):
         """
-        Makes a new boundary condition with a default value. This creates a new
-        class instance and adds it to all BoundaryConditions class instances.
-        :param name: name of the new class attribute
-        :param default: default value of BC for attr (usually a funtion of
-                        (x, t) or None)
+        Makes a new BoundaryCondition class instance attached to BC_Base.
+        This creates a new class attributed that will be added to all BC_Base
+        class instances.
+
+        Parameters
+        ----------
+        name: string
         """
         setattr(cls, name, default_value)
 
     def getContext(self, context=None):
+        """
+        Gets context from proteus.Context or
+
+        Parameters
+        ----------
+        context: class, optional
+             if set to None, the context will be created from proteus.Context
+        """
         if context is None:
             from proteus import Context
             self.ct = Context.get()
@@ -39,6 +49,12 @@ class BC_Base(object):
 class BoundaryCondition():
     """
     Boundary condition class
+
+    Attributes
+    ----------
+    uOfXT: func or None
+        boundary condition function of x (array_like) and t (float) or None force
+        no boundary condition
     """
     def __init__(self):
         self.uOfXT = None
