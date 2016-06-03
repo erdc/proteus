@@ -6,7 +6,7 @@ A class hierarchy for numerical flux (numerical trace) computations
 """
 import cfemIntegrals,cnumericalFlux
 import numpy
-from Profiling import logEvent,memory
+from .Profiling import logEvent,memory
 from EGeometry import enorm
 #TODO:
 #  allow different flags for Dirichlet bc's, keep isDOFBoundary = 1 by default
