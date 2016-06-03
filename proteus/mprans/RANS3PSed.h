@@ -13,12 +13,27 @@ namespace proteus
   {
   public:
     virtual ~cppRANS3PSed_base(){}
-    virtual void calculateResidual(//element
-				   double* mesh_trial_ref,
+    virtual void setSedClosure(double aDarcy,
+                               double betaForch,
+                               double grain,
+                               double packFraction,
+                               double packMargin,
+                               double maxFraction,
+                               double frFraction,
+                               double sigmaC,
+                               double C3e,
+                               double C4e,
+                               double eR,
+                               double fContact,
+                               double mContact,
+                               double nContact,
+                               double angFriction){}
+    virtual void calculateResidual(double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
 				   double* mesh_velocity_dof,
 				   double MOVING_DOMAIN,//0 or 1
+                                   double PSTAB,
 				   int* mesh_l2g,
 				   double* dV_ref,
 				   double* p_trial_ref,
@@ -101,6 +116,7 @@ namespace proteus
                                    double* q_dV,
                                    double* q_dV_last,
 				   double* q_velocity_sge,
+				   double* ebqe_velocity_star,
 				   double* q_cfl,
 				   double* q_numDiff_u,
                                    double* q_numDiff_v,
@@ -189,6 +205,7 @@ namespace proteus
 				   double* mesh_dof,
 				   double* mesh_velocity_dof,
 				   double MOVING_DOMAIN,
+                                   double PSTAB,
 				   int* mesh_l2g,
 				   double* dV_ref,
 				   double* p_trial_ref,
@@ -263,6 +280,7 @@ namespace proteus
                                    double* q_dV,
                                    double* q_dV_last,
 				   double* q_velocity_sge,
+                                   double* ebqe_velocity_star,
 				   double* q_cfl,
 				   double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
 				   int* sdInfo_u_u_rowptr,int* sdInfo_u_u_colind,			      
@@ -380,9 +398,25 @@ namespace proteus
   class cppRANS3PSed : public cppRANS3PSed_base
   {
   public:
+    cppHsuSedStress<3> closure;
     const int nDOF_test_X_trial_element;
     CompKernelType ck;
     cppRANS3PSed():
+      closure(150.0,
+              0.0,
+              0.0102,
+              0.2,
+              0.01,
+              0.635,
+              0.57,
+              1.1,
+              1.2,
+              1.0,
+              0.8,
+              0.02,
+              2.0,
+              5.0,
+              M_PI/6.),
       nDOF_test_X_trial_element(nDOF_test_element*nDOF_trial_element),
       ck()
 	{/*	     std::cout<<"Constructing cppRANS3PSed<CompKernelTemplate<"
@@ -390,15 +424,48 @@ namespace proteus
 		      <<0<<","
 		      <<0<<","
 		      <<0<<">,"*/
-		    /*  <<nSpaceIn<<","
-		      <<nQuadraturePoints_elementIn<<","
-		      <<nDOF_mesh_trial_elementIn<<","
-		      <<nDOF_trial_elementIn<<","
-		      <<nDOF_test_elementIn<<","
-		      <<nQuadraturePoints_elementBoundaryIn<<">());"*/
-	  /*  <<std::endl<<std::flush; */
-	}
-      
+      /*  <<nSpaceIn<<","
+          <<nQuadraturePoints_elementIn<<","
+          <<nDOF_mesh_trial_elementIn<<","
+          <<nDOF_trial_elementIn<<","
+          <<nDOF_test_elementIn<<","
+          <<nQuadraturePoints_elementBoundaryIn<<">());"*/
+      /*  <<std::endl<<std::flush; */
+    }
+
+    void setSedClosure(double aDarcy,
+                       double betaForch,
+                       double grain,
+                       double packFraction,
+                       double packMargin,
+                       double maxFraction,
+                       double frFraction,
+                       double sigmaC,
+                       double C3e,
+                       double C4e,
+                       double eR,
+                       double fContact,
+                       double mContact,
+                       double nContact,
+                       double angFriction)
+    {
+      closure = cppHsuSedStress<3>(aDarcy,
+                                   betaForch,
+                                   grain,
+                                   packFraction,
+                                   packMargin,
+                                   maxFraction,
+                                   frFraction,
+                                   sigmaC,
+                                   C3e,
+                                   C4e,
+                                   eR,
+                                   fContact,
+                                   mContact,
+                                   nContact,
+                                   angFriction);
+    }
+    
     inline double smoothedHeaviside(double eps, double phi)
     {
       double H;
@@ -737,6 +804,9 @@ namespace proteus
 					   const double u,
 					   const double v,
 					   const double w,
+					   const double uStar,
+					   const double vStar,
+					   const double wStar,
 					   const double eps_s,
 					   const double phi_s,
 					   const double u_f,
@@ -752,32 +822,35 @@ namespace proteus
       double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+      rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
       viscosity = nu;
-      double x = fmax(0.0, fmin( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
-      x = 1. - x;
-      H_s = 1.- (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
-      //
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
+      double solid_velocity[3]={uStar,vStar,wStar}, fluid_velocity[3]={u_f,v_f,w_f};
+      double new_beta = closure.betaCoeff(1.0-phi_s,
+                                          rho,
+                                          fluid_velocity,
+                                          solid_velocity,
+                                          viscosity);
+      new_beta/=rho;
+      mom_u_source += (1.0 - phi_s)*new_beta*(u-u_f);
+      mom_v_source += (1.0 - phi_s)*new_beta*(v-v_f);
+      mom_w_source += (1.0 - phi_s)*new_beta*(w-w_f);
 
-      mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_f);
-      mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_f);
-      mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_f);
-
-      dmom_u_source[0] = H_s*viscosity*(alpha + beta*(uc + u*duc_du));
-      dmom_u_source[1] = H_s*viscosity*beta*u*duc_dv;
-      dmom_u_source[2] = H_s*viscosity*beta*u*duc_dw;
+      dmom_u_source[0] = (1.0 - phi_s)*new_beta;
+      dmom_u_source[1] = 0.0;
+      dmom_u_source[2] = 0.0;
     
-      dmom_v_source[0] = H_s*viscosity*beta*v*duc_du;
-      dmom_v_source[1] = H_s*viscosity*(alpha + beta*(uc + v*duc_dv));
-      dmom_v_source[2] = H_s*viscosity*beta*w*duc_dw;
+      dmom_v_source[0] = 0.0;
+      dmom_v_source[1] = (1.0 - phi_s)*new_beta;
+      dmom_v_source[2] = 0.0;
 
-      dmom_w_source[0] = H_s*viscosity*beta*w*duc_du;
-      dmom_w_source[1] = H_s*viscosity*beta*w*duc_dv;
-      dmom_w_source[2] = H_s*viscosity*(alpha + beta*(uc + w*duc_dw));
+      dmom_w_source[0] = 0.0;
+      dmom_w_source[1] = 0.0;
+      dmom_w_source[2] = (1.0 - phi_s)*new_beta;
     }
 
     inline
@@ -1039,52 +1112,55 @@ namespace proteus
 					double& flux_umom,
 					double& flux_vmom,
 					double& flux_wmom,
-					double* velocity)
+					double* velocity_star,
+                                        double* velocity)
     {
-      double flowDirection, speed, bc_flowDirection, bc_speed;
+      double flowSpeedNormal;
       flux_mass = 0.0;
       flux_umom = 0.0;
       flux_vmom = 0.0;
       flux_wmom = 0.0;
-      flowDirection=vos*(n[0]*u+n[1]*v+n[2]*w);
-      speed = fabs(flowDirection);
-      bc_flowDirection=vos*(n[0]*bc_u+n[1]*bc_v+n[2]*bc_w);
-      bc_speed = fabs(bc_flowDirection);
+      flowSpeedNormal=porosity*(n[0]*velocity_star[0] +
+                                n[1]*velocity_star[1] +
+                                n[2]*velocity_star[2]);
+      velocity[0] = u;
+      velocity[1] = v;
+      velocity[2] = w;
       if (isDOFBoundary_u != 1)
 	{
 	  flux_mass += n[0]*f_mass[0];
-	  velocity[0] = u;
 	}
       else
 	{
 	  flux_mass += n[0]*f_mass[0];
-	  velocity[0] = u;
-	  if (flowDirection < 0.0)
-            flux_umom+=bc_speed*(bc_u - u);
+	  if (flowSpeedNormal < 0.0)
+            {
+              flux_umom+=flowSpeedNormal*(bc_u - u);
+            }
 	}
       if (isDOFBoundary_v != 1)
 	{
 	  flux_mass+=n[1]*f_mass[1];
-	  velocity[1] = v;
 	}
       else
 	{
 	  flux_mass+=n[1]*f_mass[1];
-	  velocity[1] = v;
-	  if (flowDirection < 0.0)
-            flux_vmom+=bc_speed*(bc_v - v);
+	  if (flowSpeedNormal < 0.0)
+            {
+              flux_vmom+=flowSpeedNormal*(bc_v - v);
+            }
 	}
       if (isDOFBoundary_w != 1)
 	{
 	  flux_mass+=n[2]*f_mass[2];
-	  velocity[2] = w;
 	}
       else
 	{
 	  flux_mass +=n[2]*f_mass[2];
-	  velocity[2] = w;
-	  if (flowDirection < 0.0)
-            flux_wmom+=bc_speed*(bc_w - w);
+	  if (flowSpeedNormal < 0.0)
+            {
+              flux_wmom+=flowSpeedNormal*(bc_w - w);
+            }
 	}
       /* if (isDOFBoundary_p == 1) */
       /*   { */
@@ -1174,9 +1250,10 @@ namespace proteus
 						   double& dflux_wmom_dp,
 						   double& dflux_wmom_du,
 						   double& dflux_wmom_dv,
-						   double& dflux_wmom_dw)
+						   double& dflux_wmom_dw,
+                                                   double* velocity_star)
     {
-      double flowDirection, speed, bc_flowDirection, bc_speed;
+      double flowSpeedNormal;
       dflux_mass_du = 0.0;
       dflux_mass_dv = 0.0;
       dflux_mass_dw = 0.0;
@@ -1195,10 +1272,9 @@ namespace proteus
       dflux_wmom_du = 0.0;
       dflux_wmom_dv = 0.0;
       dflux_wmom_dw = 0.0;
-      flowDirection=vos*(n[0]*u+n[1]*v+n[2]*w);
-      speed = fabs(flowDirection);
-      bc_flowDirection=vos*(n[0]*bc_u+n[1]*bc_v+n[2]*bc_w);
-      bc_speed = fabs(bc_flowDirection);
+      flowSpeedNormal=porosity*(n[0]*velocity_star[0] +
+                                n[1]*velocity_star[1] +
+                                n[2]*velocity_star[2]);
       if (isDOFBoundary_u != 1)
 	{
 	  dflux_mass_du += n[0]*df_mass_du[0];
@@ -1206,8 +1282,8 @@ namespace proteus
       else
 	{
 	  dflux_mass_du += n[0]*df_mass_du[0];
-	  if (flowDirection < 0.0)
-            dflux_umom_du += bc_speed;
+	  if (flowSpeedNormal < 0.0)
+            dflux_umom_du -= flowSpeedNormal;
 	}
       if (isDOFBoundary_v != 1)
 	{
@@ -1216,8 +1292,8 @@ namespace proteus
       else
 	{
 	  dflux_mass_dv += n[1]*df_mass_dv[1];
-	  if (flowDirection < 0.0)
-            dflux_vmom_dv += bc_speed;
+	  if (flowSpeedNormal < 0.0)
+            dflux_vmom_dv -= flowSpeedNormal;
 	}
       if (isDOFBoundary_w != 1)
 	{
@@ -1226,8 +1302,8 @@ namespace proteus
       else
 	{
 	  dflux_mass_dw += n[2]*df_mass_dw[2];
-	  if (flowDirection < 0.0)
-            dflux_wmom_dw += bc_speed;
+	  if (flowSpeedNormal < 0.0)
+            dflux_wmom_dw -= flowSpeedNormal;
 	}
       /* if (isDOFBoundary_p == 1) */
       /*   { */
@@ -1352,6 +1428,7 @@ namespace proteus
 			   double* mesh_dof,
 			   double* mesh_velocity_dof,
 			   double MOVING_DOMAIN,
+                           double PSTAB,
 			   int* mesh_l2g,
 			   double* dV_ref,
 			   double* p_trial_ref,
@@ -1436,6 +1513,7 @@ namespace proteus
                            double* q_dV,
                            double* q_dV_last,
 			   double* q_velocity_sge,
+                           double* ebqe_velocity_star,
 			   double* q_cfl,
 			   double* q_numDiff_u, double* q_numDiff_v, double* q_numDiff_w,
 			   double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
@@ -1537,7 +1615,8 @@ namespace proteus
 	    {
 	      //compute indices and declare local storage
 	      register int eN_k = eN*nQuadraturePoints_element+k,
-		eN_k_nSpace = eN_k*nSpace,eN_k_3d=eN_k*3,
+		eN_k_nSpace = eN_k*nSpace,
+		eN_k_3d     = eN_k*3,
 		eN_nDOF_trial_element = eN*nDOF_trial_element;
 	      register double p=0.0,u=0.0,v=0.0,w=0.0,
 		grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
@@ -1617,7 +1696,7 @@ namespace proteus
 		p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
 		dV,x,y,z,xt,yt,zt,
 		//
-		vos,
+		porosity,
 		//meanGrainSize,
 		mass_source,
 		dmom_u_source[nSpace],
@@ -1701,6 +1780,7 @@ namespace proteus
               div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
 	      //VRANS
 	      vos      = q_vos[eN_k];
+	      porosity      = 1.0 - q_vos[eN_k];
 	      //meanGrainSize = q_meanGrain[eN_k]; 
 	      //
 	      q_x[eN_k_3d+0]=x;
@@ -1804,8 +1884,11 @@ namespace proteus
 						u,
 						v,
 						w,
+                                                q_velocity_sge[eN_k_nSpace+0],
+                                                q_velocity_sge[eN_k_nSpace+1],
+                                                q_velocity_sge[eN_k_nSpace+2],
 						eps_solid[elementFlags[eN]],
-						vos,
+						porosity,
 						q_velocity_fluid[eN_k_nSpace+0],
 						q_velocity_fluid[eN_k_nSpace+1],
 						q_velocity_fluid[eN_k_nSpace+2],
@@ -1967,7 +2050,7 @@ namespace proteus
 					q_cfl[eN_k]);	
 
 	      tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
-	      tau_p = useMetrics*tau_p1+(1.0-useMetrics)*tau_p0;
+	      tau_p = PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);
 
 	      calculateSubgridError_tauRes(tau_p,
 					   tau_v,
@@ -1984,6 +2067,10 @@ namespace proteus
 	      dmom_adv_star[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt + useRBLES*subgridError_v);
               dmom_adv_star[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt + useRBLES*subgridError_w);
          
+	      mom_u_adv[0] += dmom_u_acc_u*(useRBLES*subgridError_u*q_velocity_sge[eN_k_nSpace+0]);  	   
+	      mom_u_adv[1] += dmom_u_acc_u*(useRBLES*subgridError_v*q_velocity_sge[eN_k_nSpace+0]); 
+              mom_u_adv[2] += dmom_u_acc_u*(useRBLES*subgridError_w*q_velocity_sge[eN_k_nSpace+0]);
+              
 	      // adjoint times the test functions 
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
@@ -2018,9 +2105,9 @@ namespace proteus
               mesh_vel[0] = xt;
               mesh_vel[1] = yt;
               mesh_vel[2] = zt;
-	      q_velocity[eN_k_nSpace+0]=u+subgridError_u;
-	      q_velocity[eN_k_nSpace+1]=v+subgridError_v;
-	      q_velocity[eN_k_nSpace+2]=w+subgridError_w;
+	      q_velocity[eN_k_nSpace+0]=u;
+	      q_velocity[eN_k_nSpace+1]=v;
+	      q_velocity[eN_k_nSpace+2]=w;
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  register int i_nSpace=i*nSpace;
@@ -2365,9 +2452,9 @@ namespace proteus
 				   u_ext,
 				   v_ext,
 				   w_ext,
-				   u_ext,
-				   v_ext,
-				   w_ext,
+				   ebqe_velocity_star[ebNE_kb_nSpace+0],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],
+				   ebqe_velocity_star[ebNE_kb_nSpace+2],
 				   eddy_viscosity_ext,
 				   mom_u_acc_ext,
 				   dmom_u_acc_u_ext,
@@ -2439,9 +2526,9 @@ namespace proteus
 				   bc_u_ext,
 				   bc_v_ext,
 				   bc_w_ext,
-				   bc_u_ext,
-				   bc_v_ext,
-				   bc_w_ext,
+				   ebqe_velocity_star[ebNE_kb_nSpace+0],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],
+				   ebqe_velocity_star[ebNE_kb_nSpace+2],
 				   bc_eddy_viscosity_ext,
 				   bc_mom_u_acc_ext,
 				   bc_dmom_u_acc_u_ext,
@@ -2644,7 +2731,8 @@ namespace proteus
 					     flux_mom_u_adv_ext,
 					     flux_mom_v_adv_ext,
 					     flux_mom_w_adv_ext,
-					     &ebqe_velocity[ebNE_kb_nSpace]);
+					     &ebqe_velocity_star[ebNE_kb_nSpace],
+                                             &ebqe_velocity[ebNE_kb_nSpace]);
 	      exteriorNumericalDiffusiveFlux(eps_rho,
 					     ebqe_phi_ext[ebNE_kb],
 					     sdInfo_u_u_rowptr,
@@ -2829,7 +2917,6 @@ namespace proteus
 		  elementResidual_p[i] += ck.ExteriorElementBoundaryFlux(flux_mass_ext,p_test_dS[i]);
 		  elementResidual_p[i] -= DM*ck.ExteriorElementBoundaryFlux(MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1]+zt_ext*normal[2]),p_test_dS[i]); 
 		  globalConservationError += ck.ExteriorElementBoundaryFlux(flux_mass_ext,p_test_dS[i]);
-		  
 		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
 		    ck.ExteriorElementBoundaryFlux(flux_mom_uu_diff_ext,vel_test_dS[i])+
 		    ck.ExteriorElementBoundaryFlux(flux_mom_uv_diff_ext,vel_test_dS[i])+
@@ -2962,6 +3049,7 @@ namespace proteus
 			   double* mesh_dof,
 			   double* mesh_velocity_dof,
 			   double MOVING_DOMAIN,
+                           double PSTAB,
 			   int* mesh_l2g,
 			   double* dV_ref,
 			   double* p_trial_ref,
@@ -3037,6 +3125,7 @@ namespace proteus
                            double* q_dV,
                            double* q_dV_last,
 			   double* q_velocity_sge,
+                           double* ebqe_velocity_star,
 			   double* q_cfl,
 			   double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
 			   int* sdInfo_u_u_rowptr,int* sdInfo_u_u_colind,			      
@@ -3346,6 +3435,7 @@ namespace proteus
 	      //
 	      //VRANS
 	      vos = q_vos[eN_k];
+	      porosity = 1.0 - q_vos[eN_k];
 	      //
 	      //
 	      //calculate pde coefficients and derivatives at quadrature points
@@ -3446,8 +3536,11 @@ namespace proteus
 						u,
 						v,
 						w,
+                                                q_velocity_sge[eN_k_nSpace+0],
+                                                q_velocity_sge[eN_k_nSpace+1],
+                                                q_velocity_sge[eN_k_nSpace+2],
 						eps_solid[elementFlags[eN]],
-						q_vos[eN_k],
+						porosity,
 						q_velocity_fluid[eN_k_nSpace+0],
 						q_velocity_fluid[eN_k_nSpace+1],
 						q_velocity_fluid[eN_k_nSpace+2],
@@ -3627,9 +3720,8 @@ namespace proteus
 					
 					
 	      tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
-	      tau_p = useMetrics*tau_p1+(1.0-useMetrics)*tau_p0;					
-					
-	      calculateSubgridError_tauRes(tau_p,
+	      tau_p = PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);
+              calculateSubgridError_tauRes(tau_p,
 					   tau_v,
 					   pdeResidual_p,
 					   pdeResidual_u,
@@ -3703,7 +3795,7 @@ namespace proteus
 		{
 		  register int i_nSpace = i*nSpace;
 		  for(int j=0;j<nDOF_trial_element;j++) 
-		    { 
+		    {
 		      register int j_nSpace = j*nSpace;
 		      /* elementJacobian_p_p[i][j] += ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_p[i]) +  */
 		      /*   ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]);// +  */
@@ -4094,9 +4186,9 @@ namespace proteus
 				   u_ext,
 				   v_ext,
 				   w_ext,
-				   u_ext,
-				   v_ext,
-				   w_ext,
+				   ebqe_velocity_star[ebNE_kb_nSpace+0],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],
+				   ebqe_velocity_star[ebNE_kb_nSpace+2],
 				   eddy_viscosity_ext,
 				   mom_u_acc_ext,
 				   dmom_u_acc_u_ext,
@@ -4168,9 +4260,9 @@ namespace proteus
 				   bc_u_ext,
 				   bc_v_ext,
 				   bc_w_ext,
-				   bc_u_ext,
-				   bc_v_ext,
-				   bc_w_ext,
+				   ebqe_velocity_star[ebNE_kb_nSpace+0],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],
+				   ebqe_velocity_star[ebNE_kb_nSpace+2],
 				   bc_eddy_viscosity_ext,
 				   bc_mom_u_acc_ext,
 				   bc_dmom_u_acc_u_ext,
@@ -4377,7 +4469,8 @@ namespace proteus
 							dflux_mom_w_adv_p_ext,
 							dflux_mom_w_adv_u_ext,
 							dflux_mom_w_adv_v_ext,
-							dflux_mom_w_adv_w_ext);
+							dflux_mom_w_adv_w_ext,
+                                                        &ebqe_velocity_star[ebNE_kb_nSpace]);
 	      //
 	      //calculate the flux jacobian
 	      //
@@ -4797,20 +4890,51 @@ namespace proteus
   };//RANS3PSed
   
   inline cppRANS3PSed_base* newRANS3PSed(int nSpaceIn,
-				int nQuadraturePoints_elementIn,
-				int nDOF_mesh_trial_elementIn,
-				int nDOF_trial_elementIn,
-				int nDOF_test_elementIn,
-				int nQuadraturePoints_elementBoundaryIn,
-				int CompKernelFlag)
+                                         int nQuadraturePoints_elementIn,
+                                         int nDOF_mesh_trial_elementIn,
+                                         int nDOF_trial_elementIn,
+                                         int nDOF_test_elementIn,
+                                         int nQuadraturePoints_elementBoundaryIn,
+                                         int CompKernelFlag,
+                                         double aDarcy,
+                                         double betaForch,
+                                         double grain,
+                                         double packFraction,
+                                         double packMargin,
+                                         double maxFraction,
+                                         double frFraction,
+                                         double sigmaC,
+                                         double C3e,
+                                         double C4e,
+                                         double eR,
+                                         double fContact,
+                                         double mContact,
+                                         double nContact,
+                                         double angFriction)
   {
-    return proteus::chooseAndAllocateDiscretization<cppRANS3PSed_base,cppRANS3PSed,CompKernel>(nSpaceIn,
-										   nQuadraturePoints_elementIn,
-										   nDOF_mesh_trial_elementIn,
-										   nDOF_trial_elementIn,
-										   nDOF_test_elementIn,
-										   nQuadraturePoints_elementBoundaryIn,
-										   CompKernelFlag);
+    cppRANS3PSed_base* rvalue = proteus::chooseAndAllocateDiscretization<cppRANS3PSed_base,cppRANS3PSed,CompKernel>(nSpaceIn,
+                                                                                                                    nQuadraturePoints_elementIn,
+                                                                                                                    nDOF_mesh_trial_elementIn,
+                                                                                                                    nDOF_trial_elementIn,
+                                                                                                                    nDOF_test_elementIn,
+                                                                                                                    nQuadraturePoints_elementBoundaryIn,
+                                                                                                                    CompKernelFlag);
+    rvalue->setSedClosure(aDarcy,
+                          betaForch,
+                          grain,
+                          packFraction,
+                          packMargin,
+                          maxFraction,
+                          frFraction,
+                          sigmaC,
+                          C3e,
+                          C4e,
+                          eR,
+                          fContact,
+                          mContact,
+                          nContact,
+                          angFriction);
+    return rvalue;
   }
 }//proteus
 
