@@ -390,7 +390,22 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                  int nDOF_trial_elementIn,
                                  int nDOF_test_elementIn,
                                  int nQuadraturePoints_elementBoundaryIn,
-                                 int CompKernelFlag)
+                                 int CompKernelFlag,
+                                 double aDarcy,
+		                 double betaForch,
+		                 double grain,
+		                 double packFraction,
+		                 double packMargin,
+		                 double maxFraction,
+		                 double frFraction,
+                                 double sigmaC,
+                                 double C3e,
+                                 double C4e,
+                                 double eR,
+ 		                 double fContact,
+                                 double mContact,
+                                 double nContact,
+                                 double angFriction)
 
 cdef class RANS3PF:
     cdef cppRANS3PF_base * thisptr
@@ -402,14 +417,44 @@ cdef class RANS3PF:
                   int nDOF_trial_elementIn,
                   int nDOF_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
-                  int CompKernelFlag):
+                  int CompKernelFlag,
+                  double aDarcy,
+		  double betaForch,
+		  double grain,
+		  double packFraction,
+		  double packMargin,
+		  double maxFraction,
+		  double frFraction,
+                  double sigmaC,
+                  double C3e,
+                  double C4e,
+                  double eR,
+ 		  double fContact,
+                  double mContact,
+                  double nContact,
+                  double angFriction):
         self.thisptr = newRANS3PF(nSpaceIn,
                                   nQuadraturePoints_elementIn,
                                   nDOF_mesh_trial_elementIn,
                                   nDOF_trial_elementIn,
                                   nDOF_test_elementIn,
                                   nQuadraturePoints_elementBoundaryIn,
-                                  CompKernelFlag)
+                                  CompKernelFlag,
+                                  aDarcy,
+		                  betaForch,
+		                  grain,
+		                  packFraction,
+		                  packMargin,
+		                  maxFraction,
+		                  frFraction,
+                                  sigmaC,
+                                  C3e,
+                                  C4e,
+                                  eR,
+ 		                  fContact,
+                                  mContact,
+                                  nContact,
+                                  angFriction)
 
     def __dealloc__(self):
         del self.thisptr
@@ -1467,7 +1512,22 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                      int nDOF_trial_elementIn,
                                      int nDOF_test_elementIn,
                                      int nQuadraturePoints_elementBoundaryIn,
-                                     int CompKernelFlag)
+                                     int CompKernelFlag,
+                                     double aDarcy,
+		                     double betaForch,
+		                     double grain,
+		                     double packFraction,
+		                     double packMargin,
+		                     double maxFraction,
+		                     double frFraction,
+                                     double sigmaC,
+                                     double C3e,
+                                     double C4e,
+                                     double eR,
+ 		                     double fContact,
+                                     double mContact,
+                                     double nContact,
+                                     double angFriction)
 
 cdef class RANS3PF2D:
     cdef cppRANS3PF2D_base * thisptr
@@ -1479,14 +1539,44 @@ cdef class RANS3PF2D:
                   int nDOF_trial_elementIn,
                   int nDOF_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
-                  int CompKernelFlag):
+                  int CompKernelFlag,
+                  double aDarcy,
+		  double betaForch,
+		  double grain,
+		  double packFraction,
+		  double packMargin,
+		  double maxFraction,
+		  double frFraction,
+                  double sigmaC,
+                  double C3e,
+                  double C4e,
+                  double eR,
+ 		  double fContact,
+                  double mContact,
+                  double nContact,
+                  double angFriction):
         self.thisptr = newRANS3PF2D(nSpaceIn,
                                     nQuadraturePoints_elementIn,
                                     nDOF_mesh_trial_elementIn,
                                     nDOF_trial_elementIn,
                                     nDOF_test_elementIn,
                                     nQuadraturePoints_elementBoundaryIn,
-                                    CompKernelFlag)
+                                    CompKernelFlag,
+                                    aDarcy,
+		                    betaForch,
+		                    grain,
+		                    packFraction,
+		                    packMargin,
+		                    maxFraction,
+		                    frFraction,
+                                    sigmaC,
+                                    C3e,
+                                    C4e,
+                                    eR,
+ 		                    fContact,
+                                    mContact,
+                                    nContact,
+                                    angFriction)
 
     def __dealloc__(self):
         del self.thisptr
@@ -2354,7 +2444,37 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  barycenters=None,
                  PSTAB=0.0,
                  set_vos=None,
-                 set_sed_velocity=None):
+                 set_sed_velocity=None,
+                 aDarcy=150.0,
+		 betaForch=0.0,
+		 grain=0.0102,
+		 packFraction=0.2,
+		 packMargin=0.01,
+		 maxFraction=0.635,
+		 frFraction=0.57,
+                 sigmaC=1.1,
+                 C3e=1.2,
+                 C4e=1.0,
+                 eR=0.8,
+ 		 fContact=0.02,
+                 mContact=2.0,
+                 nContact=5.0,
+                 angFriction=pi/6.0):
+        self.aDarcy=aDarcy
+        self.betaForch=betaForch
+        self.grain=grain
+        self.packFraction=packFraction
+        self.packMargin=packMargin
+        self.maxFraction=maxFraction
+        self.frFraction=frFraction
+        self.sigmaC=sigmaC
+        self.C3e=C3e
+        self.C4e=C4e
+        self.eR=eR
+        self.fContact=fContact
+        self.mContact=mContact
+        self.nContact=nContact
+        self.angFriction=angFriction
         self.set_vos=set_vos
         self.set_sed=set_sed_velocity
         self.PSTAB=PSTAB
@@ -3839,7 +3959,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                 self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                 self.nElementBoundaryQuadraturePoints_elementBoundary,
-                compKernelFlag)
+                compKernelFlag,
+                self.coefficients.aDarcy,
+		self.coefficients.betaForch,
+		self.coefficients.grain,
+		self.coefficients.packFraction,
+		self.coefficients.packMargin,
+		self.coefficients.maxFraction,
+		self.coefficients.frFraction,
+                self.coefficients.sigmaC,
+                self.coefficients.C3e,
+                self.coefficients.C4e,
+                self.coefficients.eR,
+ 		self.coefficients.fContact,
+                self.coefficients.mContact,
+                self.coefficients.nContact,
+                self.coefficients.angFriction)
         else:
             log("calling  RANS3PF_base ctor")
             self.rans3pf = RANS3PF(
@@ -3849,7 +3984,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                 self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                 self.nElementBoundaryQuadraturePoints_elementBoundary,
-                compKernelFlag)
+                compKernelFlag,
+                self.coefficients.aDarcy,
+		self.coefficients.betaForch,
+		self.coefficients.grain,
+		self.coefficients.packFraction,
+		self.coefficients.packMargin,
+		self.coefficients.maxFraction,
+		self.coefficients.frFraction,
+                self.coefficients.sigmaC,
+                self.coefficients.C3e,
+                self.coefficients.C4e,
+                self.coefficients.eR,
+ 		self.coefficients.fContact,
+                self.coefficients.mContact,
+                self.coefficients.nContact,
+                self.coefficients.angFriction)
 
     def getResidual(self, u, r):
         """
