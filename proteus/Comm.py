@@ -9,7 +9,7 @@ import ctypes
 import sys
 
 import petsc4py
-from .Profiling import logEvent as log
+from .Profiling import logEvent
 
 
 # Special workaround for broken MPI on certain Cray systems
@@ -44,7 +44,7 @@ def init():
 
 def get():
     if comm is None:
-        log("Comm.get called before init, init is being called for you.", 3)
+        logEvent("Comm.get called before init, init is being called for you.", 3)
         return init()
     return comm
 
