@@ -20,7 +20,7 @@ domain = Domain.PlanarStraightLineGraphDomain()
 shape1 = st.Rectangle(domain, dim=[0.5, 0.5], coords=[1., 1.])
 shape2 = st.Rectangle(domain. dim=[0.3, 0.2], coords=[3., 3.])
 shape2.rotate(np.pi/3.)
-shape2.BC.newBC
+shape2.BC_dict["left"].uOfXT = lambda x, t: 0.
 
 st.assembleDomain(domain)
 
@@ -39,7 +39,18 @@ class Shape(object):
     """
     Base/super class of all shapes.
 
-    :param domain: domain in which the shape is defined
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    nd: Optional[int]
+        Number of dimensions of the shape. If not set, will take the number of
+        dimensions of the domain.
+    BC_class: Optional[proteus.BoundaryConditions.BC_Base]
+        Class to use for boundary conditions (e.g.
+        proteus.BoundaryConditions.BC_Base or
+        proteus.BoundaryConditions.mprans.BC_RANS).
     """
 
     def __init__(self, domain, nd=None, BC_class=None):
@@ -73,7 +84,10 @@ class Shape(object):
         """
         Checks if flags are set correctly
 
-        :param flagSet: flags to be check (list/array/set)
+        Parameters
+        ----------
+        flagSet: list
+            List of flags.
         """
         flagSet = set(flagSet)
         checkFlag = min(flagSet)
@@ -87,7 +101,9 @@ class Shape(object):
         """
         Checks if the list of lists has the right dimension
 
-        :param list_of_lists: a list of lists
+        Parameters
+        ----------
+        list_of_lists: list
         """
         assert len(list_of_lists[0]) == self.nd, 'must have be a list of: ' \
             'lists of length ' + self.nd
@@ -96,6 +112,10 @@ class Shape(object):
         """
         Checks if an array is of the same dimension of the Shape instance or
         is of dimension 3
+
+        Parameters
+        ----------
+        array: array_like
         """
         assert len(array) == self.nd or len(array) == 3, 'wrong dimension'
 
@@ -103,7 +123,10 @@ class Shape(object):
         """
         Set position with coords of the barycenter
 
-        :param coords: new set of coordinates for barycenter (list/array)
+        Parameters
+        ----------
+        coords: array_like
+            New set of coordinates for barycenter (list/array).
         """
         old_coords = np.array(self.barycenter)
         if self.Domain.nd == 2 and len(old_coords) == 3:
@@ -117,7 +140,10 @@ class Shape(object):
         Set barycenter (center of mass) of the shape
         (!) this function does not move the shape
 
-        :param barycenter: global coordinates of barycenter (list/array)
+        Parameters
+        ----------
+        barycenter: array_like
+            Global coordinates of barycenter (list/array).
         """
         if self.Domain.nd == 2 and len(barycenter) == 2:
             self.barycenter[:2] = barycenter
@@ -128,7 +154,12 @@ class Shape(object):
         """
         Sets new regions for the Shape
 
-        :param regions: coordinate of the new region(s) (list/array)
+        Parameters
+        ----------
+        regions: array_like
+            Array of coordinates of regions.
+        regionFlags: Optional[array_like]
+            Array of flags.
         """
         self._checkListOfLists(regions)
         if regionFlags is not None:
@@ -145,7 +176,10 @@ class Shape(object):
         Sets a 'hole' in the mesh. The region where the hole is defined will
         not be meshed.
 
-        :param holes: set of coordinates of holes (list/array)
+        Parameters
+        ----------
+        holes: array_like
+            Array of coordinates of holes (list/array).
         """
         self._checkListOfLists(holes)
         self.holes = np.array(holes)
@@ -154,18 +188,26 @@ class Shape(object):
         """
         Function to rotate Shape
 
-        :param rot: angle of rotation ()in radians)
-        :param axis: axis of rotation (list/array)
-        :param pivot: point around which the Shape rotates (list/array)
-        -----------------
-        Rotated parameters:
+        Parameters
+        ----------
+        rot: float
+            Angle of rotation (in radians).
+        axis: Optional[array_like]
+            Vector used for rotation. Not necessary for rotation in 2D.
+        pivot: Optional[array_list]
+            Point around which the shape will rotate. If not set, the
+            barycenter will be the center of rotation.
+
+        Notes
+        -----
+        Rotated attributes:
         - vertices
         - holes
         - regions
         - local coordinate system
         - boundary orientations
         - coords (if not None)
-        - barycenters
+        - barycenter
         """
         # This function and rotate2D/rotate3D could be optimized
         rot = float(rot)
@@ -204,9 +246,14 @@ class Shape(object):
         """
         Function to translate Shape
 
-        :param trans: translation values
-        -----------------
-        Translated parameters:
+        Parameters
+        ----------
+        trans: array_like
+            Translation values.
+
+        Notes
+        -----
+        Translated attributes:
         - vertices
         - regions
         - coords (if not None)
@@ -228,13 +275,19 @@ class Shape(object):
 
     def getPosition(self):
         """
-        Returns current position of barycenter
+        Returns
+        -------
+        barycenter: array_like
+            Current position of barycenter.
         """
         return self.barycenter
 
     def getRotation(self):
         """
-        Returns local coordinate system relative to global coordinate system
+        Returns
+        -------
+        coords_system: array_like
+            Local coordinate system relative to global coordinate system.
         """
         return self.coords_system
 
@@ -243,9 +296,17 @@ class Cuboid(Shape):
     """
     Class to create a 3D cuboid
 
-    :param domain: domain of the cuboid
-    :param dim: dimensions of the cuboid (list/array)
-    :param coords: coordinates of the cuboid (list/array)
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    dim: Optional[array_like]
+        Dimensions of the cuboid.
+    coords: Optional[array_like]
+        Coordinates of the centroid of the shape.
+    barycenter: Optional[array_like]
+        Coordinates of the barycenter.
     """
     count = 0
 
@@ -323,9 +384,13 @@ class Cuboid(Shape):
 
     def setDimensions(self, dim):
         """
-        Set dimensions of the shape
+        Sets dimensions of the shape.
 
-        :param dim: new dimensions (list/array)
+        Parameters
+        ----------
+
+        dim: array_like
+            New dimensions of the shape.
         """
         self.dim = dim
         L, W, H = dim
@@ -345,9 +410,17 @@ class Rectangle(Shape):
     """
     Class to create a rectangle
 
-    :param domain: domain of the rectangle
-    :param dim: dimensions of the rectangle (list/array)
-    :param coords: coordinates of the rectangle (list/array)
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    dim: Optional[array_like]
+        Dimensions of the cuboid.
+    coords: Optional[array_like]
+        Coordinates of the centroid of the shape.
+    barycenter: Optional[array_like]
+        Coordinates of the barycenter.
     """
     count = 0
 
@@ -416,18 +489,36 @@ class CustomShape(Shape):
     """
     Class to create a custom 2D or 3D shape
 
-    :param domain: domain of the shape
-    :param barycenter: barycenter (list/array)
-    :param vertices: set of vertices (list/array)
-    :param vertexFlags: set of vertex flags (list/array)
-    :param segments: set of segments for 2D shape (list/array)
-    :param segmentFlags: set of segment flags for 2D shape (list/array)
-    :param facets: set of facets for 3D shape (list/array)
-    :param facetFlags: set of facet flags for 3D shape (list/array)
-    :param holes: set of hole coordinates (list/array)
-    :param regions: set of regions of the shape (list/array)
-    :param boundaryTags: set of boundary tags to flag shape elements (dict)
-    :param boundaryOrientations: set of boundary orientations (dict)
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    barycenter: Optional[array_like]
+        Coordinates of the barycenter.
+    vertices: array_like
+        Array of vertex coordinates.
+    vertexFlags: array_like
+        Array of vertex flags (used for boundary conditions)
+    segments: array_like
+        Array of segments (each defined by indice of 2 vertex).
+    segmentFlags: array_like
+        Array of segment flags (used for boundary conditions)
+    facetss: array_like
+        Array of facets (defined by clockwise or counterclockwise loop of
+        vertices).
+    facetFlags: array_like
+        Array of facet flags (used for boundary conditions)
+    vertices: array_like
+        Array of region coordinates.
+    regionFlags: array_like
+        Array of region flags (used for boundary conditions)
+    holes: array_like
+        Array of holes coordinates (unmeshed regions)
+    boundaryTags: dict
+        Dictionary of flags (int) as keys, and tags (e.g. string) for BC.
+    boundaryOrientations: Optional[array_like]
+        Array of orientation of boundaries. Can be used for BC.
     """
     count = 0
 
@@ -471,6 +562,18 @@ class CustomShape(Shape):
 
 
 class ShapeSTL(Shape):
+    """
+    Class to extract geometrical information from STL file
+
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    filename: string
+        Name of the stl file.
+    """
+
     def __init__(self, domain, filename):
         super(ShapeSTL, self).__init__(domain, nd=3)
         self.filename = filename
@@ -482,7 +585,26 @@ class ShapeSTL(Shape):
         self.BC_list = [self.BC_dict['stl']]
         self.BC = BCContainer(self.BC_dict)
 
+
 def getInfoFromSTL(filename):
+    """
+    Extracts information from STL file and converts it to a Proteus friendly
+    format. Duplicate vertices and segments are removed during the process,
+    so the shape is ready for meshing.
+
+    Parameters
+    ----------
+    filename: name of STL file
+
+    Returns
+    -------
+    vertices: array_like
+        Array of vertices that define STL shape (duplicates removed)
+    facets: array_like
+        Array of facets (loops of 3 vertices)
+    facetnormals: array_like
+        normal vertors of each facet
+    """
     file = open(filename, 'r')
     facetnormals = []
     facet = []
@@ -540,13 +662,21 @@ class BCContainer(object):
 
 def rotation2D(points, rot, pivot=(0., 0.)):
     """
-    function to make a set of points/vertices/vectors (arg: points) to rotate
-    around a pivot point (arg: pivot)
+    Rotates a set of points/vertices/vectors around a pivotal point in 2D.
 
-    :param points: set of 3D points (list or array)
-    :param rot: angle of rotation (in radians)
-    :param pivot: point around which the set of points rotates (list or array)
-    :return points_rot: the rotated set of points (numpy array)
+    Parameters
+    ----------
+    points: array_like
+        Array of point coordinates to rotate.
+    rot: float
+        Angle of rotation.
+    pivot: array_like
+        Pivotal point around which the set of points will be rotated.
+
+    Returns
+    -------
+    points_rot: array_like
+        Rotated set of points.
     """
     # function could be optimized
     points = np.array(points)
@@ -579,14 +709,23 @@ def rotation2D(points, rot, pivot=(0., 0.)):
 
 def rotation3D(points, rot, axis=(0., 0., 1.), pivot=(0., 0., 0.)):
     """
-    function to make a set of points/vertices/vectors to rotate around an
-    arbitrary axis/vector (arg: axis) going through a pivot point.
+    Rotates a set of points/vertices/vectors around a pivotal point in 3D.
 
-    :param points: set of 3D points (array)
-    :param rot: angle of rotation (in radians)
-    :param axis: axis of rotation (list or array)
-    :param pivot: point around which the set of points rotates (list or array)
-    :return points_rot: the rotated set of points (numpy array)
+    Parameters
+    ----------
+    points: array_like
+        Array of point coordinates to rotate.
+    rot: float
+        Angle of rotation.
+    axis: array_like
+        Axis of rotation.
+    pivot: array_like
+        Pivotal point around which the set of points will be rotated.
+
+    Returns
+    -------
+    points_rot: array_like
+        Rotated set of points.
     """
     # function could be optimized
     points = np.array(points)
@@ -647,13 +786,27 @@ def assembleDomain(domain):
     It should always be called after defining and manipulating all the shapes
     to be attached to the domain.
 
-    :param domain: domain to asssemble
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
     """
     # reinitialize geometry of domain
     _assembleGeometry(domain, BC_class=bc.BC_Base)
     _generateMesh(domain)
 
 def _assembleGeometry(domain, BC_class):
+    """
+    Assembles all the geometrical informations of the shapes attached to a
+    domain.
+
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    """
     # reinitialize geometry of domain
     domain.vertices = []
     domain.vertexFlags = []
@@ -730,6 +883,15 @@ def _assembleGeometry(domain, BC_class):
 
 
 def _generateMesh(domain):
+    """
+    Generates tetgen mesh of domain
+
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    """
     # --------------------------- #
     # ----- MESH GENERATION ----- #
     # --------------------------- #
