@@ -380,33 +380,33 @@ class BC_RANS(BC_Base):
 
     def setHydrostaticPressureOutlet(self, rho, g, refLevel, vof, pRef=0.0,
                                     vert_axis=-1):
-       self.reset()
-       a0 = pRef - rho*g[vert_axis]*refLevel
-       a1 = rho*g[vert_axis]
+        self.reset()
+        a0 = pRef - rho*g[vert_axis]*refLevel
+        a1 = rho*g[vert_axis]
        # This is the normal velocity, based on the boundary orientation
 
-       def get_outlet_ux_dirichlet(i):
-           def ux_dirichlet(x, t):
-               b_or = self._b_or[self._b_i]
-               if b_or[i] == 0:
-                   return 0.
-           return ux_dirichlet
-       self.u_dirichlet = get_outlet_ux_dirichlet(0)
-       self.v_dirichlet = get_outlet_ux_dirichlet(1)
-       if len(g) == 3:
-           self.w_dirichlet = get_outlet_ux_dirichlet(2)
-       self.p_dirichlet = linearBC(a0, a1, vert_axis)
-       self.vof_dirichlet = constantBC(vof)
-       self.u_diffusive = constantBC(0.)
-       self.v_diffusive = constantBC(0.)
-       self.w_diffusive = constantBC(0.)
+        def get_outlet_ux_dirichlet(i):
+            def ux_dirichlet(x, t):
+                b_or = self._b_or[self._b_i]
+                if b_or[i] == 0:
+                    return 0.
+            return ux_dirichlet
+        self.u_dirichlet = get_outlet_ux_dirichlet(0)
+        self.v_dirichlet = get_outlet_ux_dirichlet(1)
+        if len(g) == 3:
+            self.w_dirichlet = get_outlet_ux_dirichlet(2)
+        self.p_dirichlet = linearBC(a0, a1, vert_axis)
+        self.vof_dirichlet = constantBC(vof)
+        self.u_diffusive = constantBC(0.)
+        self.v_diffusive = constantBC(0.)
+        self.w_diffusive = constantBC(0.)
 
     # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
     def hydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
                                           refLevel, pRef=0.0, vert_axis=None,
                                           air=1.0, water=0.0):
-       """Imposes a hydrostatic pressure profile and open boundary conditions
-       with a known otuflow depth
+        """Imposes a hydrostatic pressure profile and open boundary conditions
+        with a known otuflow depth
        :param rhoUp: Phase density of the upper part.
        :param rhoDown: Phase density of the lower part.
        :param g: Gravitational acceleration vector.
@@ -423,25 +423,25 @@ class BC_RANS(BC_Base):
        (!) This condition is best used for boundaries and gravity aligned with
            one of the main axes.
        """
-       self.reset()
+        self.reset()
 
-       if vert_axis is None:
-           vert_axis = self.Shape.Domain.nd - 1
+        if vert_axis is None:
+            vert_axis = self.Shape.Domain.nd - 1
 
-       def hydrostaticPressureOutletWithDepth_p_dirichlet(x, t):
-           if x[vert_axis] < seaLevel:
-               a0 = pRef-rhoUp*g[vert_axis]*(refLevel-seaLevel)-rhoDown*g[vert_axis]*seaLevel
-               a1 = rhoDown*g[vert_axis]
-               return a0 + a1*x[vert_axis]
+        def hydrostaticPressureOutletWithDepth_p_dirichlet(x, t):
+            if x[vert_axis] < seaLevel:
+                a0 = pRef-rhoUp*g[vert_axis]*(refLevel-seaLevel)-rhoDown*g[vert_axis]*seaLevel
+                a1 = rhoDown*g[vert_axis]
+                return a0 + a1*x[vert_axis]
 
-       def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
-           if x[vert_axis] < seaLevel:
-               return water
+        def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
+            if x[vert_axis] < seaLevel:
+                return water
 
-       self.setHydrostaticPressureOutlet(rhoUp, g, refLevel, pRef, vert_axis,
+        self.setHydrostaticPressureOutlet(rhoUp, g, refLevel, pRef, vert_axis,
                                       air)
-       self.p_dirichlet = hydrostaticPressureOutletWithDepth_p_dirichlet
-       self.vof_dirichlet = hydrostaticPressureOutletWithDepth_vof_dirichlet
+        self.p_dirichlet = hydrostaticPressureOutletWithDepth_p_dirichlet
+        self.vof_dirichlet = hydrostaticPressureOutletWithDepth_vof_dirichlet
 
 
 
