@@ -26,6 +26,7 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * mesh_dof,
                                double * mesh_velocity_dof,
                                double MOVING_DOMAIN,
+                               double PSTAB,
                                int * mesh_l2g,
                                double * dV_ref,
                                double * p_trial_ref,
@@ -108,6 +109,7 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
+                               double * ebqe_velocity_star,
                                double * q_cfl,
                                double * q_numDiff_u,
                                double * q_numDiff_v,
@@ -195,6 +197,7 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * mesh_dof,
                                double * mesh_velocity_dof,
                                double MOVING_DOMAIN,
+                               double PSTAB,
                                int * mesh_l2g,
                                double * dV_ref,
                                double * p_trial_ref,
@@ -245,7 +248,8 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double C_b,
                                # VRANS start
                                double * eps_solid,
-                               double * q_velocity_fluid,
+                               double * phi_solid,
+                               double * q_velocity_solid,
                                double * q_vos,
                                double * q_dvos_dt,
                                double * q_dragAlpha,
@@ -269,6 +273,7 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
+                               double * ebqe_velocity_star,
                                double * q_cfl,
                                double * q_numDiff_u_last, double * q_numDiff_v_last, double * q_numDiff_w_last,
                                int * sdInfo_u_u_rowptr, int * sdInfo_u_u_colind,
@@ -380,7 +385,22 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                  int nDOF_trial_elementIn,
                                  int nDOF_test_elementIn,
                                  int nQuadraturePoints_elementBoundaryIn,
-                                 int CompKernelFlag)
+                                 int CompKernelFlag,
+                                 double aDarcy,
+		                 double betaForch,
+		                 double grain,
+		                 double packFraction,
+		                 double packMargin,
+		                 double maxFraction,
+		                 double frFraction,
+                                 double sigmaC,
+                                 double C3e,
+                                 double C4e,
+                                 double eR,
+ 		                 double fContact,
+                                 double mContact,
+                                 double nContact,
+                                 double angFriction)
 
 cdef class RANS3PSed:
     cdef cppRANS3PSed_base * thisptr
@@ -392,14 +412,44 @@ cdef class RANS3PSed:
                   int nDOF_trial_elementIn,
                   int nDOF_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
-                  int CompKernelFlag):
+                  int CompKernelFlag,
+                  double aDarcy,
+		  double betaForch,
+		  double grain,
+		  double packFraction,
+		  double packMargin,
+		  double maxFraction,
+		  double frFraction,
+                  double sigmaC,
+                  double C3e,
+                  double C4e,
+                  double eR,
+ 		  double fContact,
+                  double mContact,
+                  double nContact,
+                  double angFriction):
         self.thisptr = newRANS3PSed(nSpaceIn,
                                   nQuadraturePoints_elementIn,
                                   nDOF_mesh_trial_elementIn,
                                   nDOF_trial_elementIn,
                                   nDOF_test_elementIn,
                                   nQuadraturePoints_elementBoundaryIn,
-                                  CompKernelFlag)
+                                  CompKernelFlag,
+                                  aDarcy,
+		                  betaForch,
+		                  grain,
+		                  packFraction,
+		                  packMargin,
+		                  maxFraction,
+		                  frFraction,
+                                  sigmaC,
+                                  C3e,
+                                  C4e,
+                                  eR,
+ 		                  fContact,
+                                  mContact,
+                                  nContact,
+                                  angFriction)
 
     def __dealloc__(self):
         del self.thisptr
@@ -410,6 +460,7 @@ cdef class RANS3PSed:
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_velocity_dof,
                           double MOVING_DOMAIN,
+                          double PSTAB,
                           numpy.ndarray mesh_l2g,
                           numpy.ndarray dV_ref,
                           numpy.ndarray p_trial_ref,
@@ -492,6 +543,7 @@ cdef class RANS3PSed:
                           numpy.ndarray q_dV,
                           numpy.ndarray q_dV_last,
                           numpy.ndarray q_velocity_sge,
+                          numpy.ndarray ebqe_velocity_star,
                           numpy.ndarray q_cfl,
                           numpy.ndarray q_numDiff_u, numpy.ndarray q_numDiff_v, numpy.ndarray q_numDiff_w,
                           numpy.ndarray q_numDiff_u_last, numpy.ndarray q_numDiff_v_last, numpy.ndarray q_numDiff_w_last,
@@ -562,6 +614,7 @@ cdef class RANS3PSed:
                                        < double * > mesh_dof.data,
                                        < double * > mesh_velocity_dof.data,
                                        MOVING_DOMAIN,
+                                       PSTAB,
                                        < int * > mesh_l2g.data,
                                        < double * > dV_ref.data,
                                        < double * > p_trial_ref.data,
@@ -644,6 +697,7 @@ cdef class RANS3PSed:
                                         < double * > q_dV.data,
                                         < double * > q_dV_last.data,
                                         < double * > q_velocity_sge.data,
+                                        < double * > ebqe_velocity_star.data,
                                         < double * > q_cfl.data,
                                         < double * > q_numDiff_u.data, < double * > q_numDiff_v.data, < double * > q_numDiff_w.data,
                                         < double * > q_numDiff_u_last.data, < double * > q_numDiff_v_last.data, < double * > q_numDiff_w_last.data,
@@ -716,6 +770,7 @@ cdef class RANS3PSed:
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_velocity_dof,
                           double MOVING_DOMAIN,
+                          double PSTAB,
                           numpy.ndarray mesh_l2g,
                           numpy.ndarray dV_ref,
                           numpy.ndarray p_trial_ref,
@@ -789,6 +844,7 @@ cdef class RANS3PSed:
                           numpy.ndarray q_dV,
                           numpy.ndarray q_dV_last,
                           numpy.ndarray q_velocity_sge,
+                          numpy.ndarray ebqe_velocity_star,
                           numpy.ndarray q_cfl,
                           numpy.ndarray q_numDiff_u_last, numpy.ndarray q_numDiff_v_last, numpy.ndarray q_numDiff_w_last,
                           numpy.ndarray sdInfo_u_u_rowptr, numpy.ndarray sdInfo_u_u_colind,
@@ -878,7 +934,8 @@ cdef class RANS3PSed:
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
                                        < double * > mesh_velocity_dof.data,
-                                       MOVING_DOMAIN,
+                                        MOVING_DOMAIN,
+                                        PSTAB,
                                        < int * > mesh_l2g.data,
                                        < double * > dV_ref.data,
                                        < double * > p_trial_ref.data,
@@ -952,6 +1009,7 @@ cdef class RANS3PSed:
                                         < double * > q_dV.data,
                                         < double * > q_dV_last.data,
                                         < double * > q_velocity_sge.data,
+                                        < double * > ebqe_velocity_star.data,
                                         < double * > q_cfl.data,
                                         < double * > q_numDiff_u_last.data, < double * > q_numDiff_v_last.data, < double * > q_numDiff_w_last.data,
                                         < int * > sdInfo_u_u_rowptr.data, < int * > sdInfo_u_u_colind.data,
@@ -1089,6 +1147,7 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * mesh_dof,
                                double * mesh_velocity_dof,
                                double MOVING_DOMAIN,
+                               double PSTAB,
                                int * mesh_l2g,
                                double * dV_ref,
                                double * p_trial_ref,
@@ -1172,6 +1231,7 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
+                               double * ebqe_velocity_star,
                                double * q_cfl,
                                double * q_numDiff_u, double * q_numDiff_v, double * q_numDiff_w,
                                double * q_numDiff_u_last, double * q_numDiff_v_last, double * q_numDiff_w_last,
@@ -1242,6 +1302,7 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * mesh_dof,
                                double * mesh_velocity_dof,
                                double MOVING_DOMAIN,
+                               double PSTAB,
                                int * mesh_l2g,
                                double * dV_ref,
                                double * p_trial_ref,
@@ -1316,6 +1377,7 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
+                               double * ebqe_velocity_star,
                                double * q_cfl,
                                double * q_numDiff_u_last, double * q_numDiff_v_last, double * q_numDiff_w_last,
                                int * sdInfo_u_u_rowptr, int * sdInfo_u_u_colind,
@@ -1427,7 +1489,22 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                      int nDOF_trial_elementIn,
                                      int nDOF_test_elementIn,
                                      int nQuadraturePoints_elementBoundaryIn,
-                                     int CompKernelFlag)
+                                     int CompKernelFlag,
+                                     double aDarcy,
+		                     double betaForch,
+		                     double grain,
+		                     double packFraction,
+		                     double packMargin,
+		                     double maxFraction,
+		                     double frFraction,
+                                     double sigmaC,
+                                     double C3e,
+                                     double C4e,
+                                     double eR,
+ 		                     double fContact,
+                                     double mContact,
+                                     double nContact,
+                                     double angFriction)
 
 cdef class RANS3PSed2D:
     cdef cppRANS3PSed2D_base * thisptr
@@ -1439,14 +1516,44 @@ cdef class RANS3PSed2D:
                   int nDOF_trial_elementIn,
                   int nDOF_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
-                  int CompKernelFlag):
+                  int CompKernelFlag,
+                  double aDarcy,
+		  double betaForch,
+		  double grain,
+		  double packFraction,
+		  double packMargin,
+		  double maxFraction,
+		  double frFraction,
+                  double sigmaC,
+                  double C3e,
+                  double C4e,
+                  double eR,
+ 		  double fContact,
+                  double mContact,
+                  double nContact,
+                  double angFriction):
         self.thisptr = newRANS3PSed2D(nSpaceIn,
                                     nQuadraturePoints_elementIn,
                                     nDOF_mesh_trial_elementIn,
                                     nDOF_trial_elementIn,
                                     nDOF_test_elementIn,
                                     nQuadraturePoints_elementBoundaryIn,
-                                    CompKernelFlag)
+                                    CompKernelFlag,
+                                    aDarcy,
+		                    betaForch,
+		                    grain,
+		                    packFraction,
+		                    packMargin,
+		                    maxFraction,
+		                    frFraction,
+                                    sigmaC,
+                                    C3e,
+                                    C4e,
+                                    eR,
+ 		                    fContact,
+                                    mContact,
+                                    nContact,
+                                    angFriction)
 
     def __dealloc__(self):
         del self.thisptr
@@ -1457,6 +1564,7 @@ cdef class RANS3PSed2D:
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_velocity_dof,
                           double MOVING_DOMAIN,
+                          double PSTAB,
                           numpy.ndarray mesh_l2g,
                           numpy.ndarray dV_ref,
                           numpy.ndarray p_trial_ref,
@@ -1539,6 +1647,7 @@ cdef class RANS3PSed2D:
                           numpy.ndarray q_dV,
                           numpy.ndarray q_dV_last,
                           numpy.ndarray q_velocity_sge,
+                          numpy.ndarray ebqe_velocity_star,
                           numpy.ndarray q_cfl,
                           numpy.ndarray q_numDiff_u, numpy.ndarray q_numDiff_v, numpy.ndarray q_numDiff_w,
                           numpy.ndarray q_numDiff_u_last, numpy.ndarray q_numDiff_v_last, numpy.ndarray q_numDiff_w_last,
@@ -1609,6 +1718,7 @@ cdef class RANS3PSed2D:
                                        < double * > mesh_dof.data,
                                        < double * > mesh_velocity_dof.data,
                                        MOVING_DOMAIN,
+                                        PSTAB,
                                        < int * > mesh_l2g.data,
                                        < double * > dV_ref.data,
                                        < double * > p_trial_ref.data,
@@ -1691,6 +1801,7 @@ cdef class RANS3PSed2D:
                                         < double * > q_dV.data,
                                         < double * > q_dV_last.data,
                                         < double * > q_velocity_sge.data,
+                                        < double * > ebqe_velocity_star.data,
                                         < double * > q_cfl.data,
                                         < double * > q_numDiff_u.data, < double * > q_numDiff_v.data, < double * > q_numDiff_w.data,
                                         < double * > q_numDiff_u_last.data, < double * > q_numDiff_v_last.data, < double * > q_numDiff_w_last.data,
@@ -1763,6 +1874,7 @@ cdef class RANS3PSed2D:
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_velocity_dof,
                           double MOVING_DOMAIN,
+                          double PSTAB,
                           numpy.ndarray mesh_l2g,
                           numpy.ndarray dV_ref,
                           numpy.ndarray p_trial_ref,
@@ -1836,6 +1948,7 @@ cdef class RANS3PSed2D:
                           numpy.ndarray q_dV,
                           numpy.ndarray q_dV_last,
                           numpy.ndarray q_velocity_sge,
+                          numpy.ndarray ebqe_velocity_star,
                           numpy.ndarray q_cfl,
                           numpy.ndarray q_numDiff_u_last, numpy.ndarray q_numDiff_v_last, numpy.ndarray q_numDiff_w_last,
                           numpy.ndarray sdInfo_u_u_rowptr, numpy.ndarray sdInfo_u_u_colind,
@@ -1926,6 +2039,7 @@ cdef class RANS3PSed2D:
                                        < double * > mesh_dof.data,
                                        < double * > mesh_velocity_dof.data,
                                        MOVING_DOMAIN,
+                                        PSTAB,
                                        < int * > mesh_l2g.data,
                                        < double * > dV_ref.data,
                                        < double * > p_trial_ref.data,
@@ -1999,6 +2113,7 @@ cdef class RANS3PSed2D:
                                         < double * > q_dV.data,
                                         < double * > q_dV_last.data,
                                         < double * > q_velocity_sge.data,
+                                        < double * > ebqe_velocity_star.data,
                                         < double * > q_cfl.data,
                                         < double * > q_numDiff_u_last.data, < double * > q_numDiff_v_last.data, < double * > q_numDiff_w_last.data,
                                         < int * > sdInfo_u_u_rowptr.data, < int * > sdInfo_u_u_colind.data,
@@ -2291,7 +2406,39 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  # 0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky,
                  # 3=K-Epsilon, 4=K-Omega
                  smagorinskyConstant=0.1,
-                 barycenters=None):
+                 barycenters=None,
+                 PSTAB=0.0,
+                 aDarcy=150.0,
+		 betaForch=0.0,
+		 grain=0.0102,
+		 packFraction=0.2,
+		 packMargin=0.01,
+		 maxFraction=0.635,
+		 frFraction=0.57,
+                 sigmaC=1.1,
+                 C3e=1.2,
+                 C4e=1.0,
+                 eR=0.8,
+ 		 fContact=0.02,
+                 mContact=2.0,
+                 nContact=5.0,
+                 angFriction=pi/6.0):
+        self.aDarcy=aDarcy
+        self.betaForch=betaForch
+        self.grain=grain
+        self.packFraction=packFraction
+        self.packMargin=packMargin
+        self.maxFraction=maxFraction
+        self.frFraction=frFraction
+        self.sigmaC=sigmaC
+        self.C3e=C3e
+        self.C4e=C4e
+        self.eR=eR
+        self.fContact=fContact
+        self.mContact=mContact
+        self.nContact=nContact
+        self.angFriction=angFriction
+        self.PSTAB=PSTAB
         self.barycenters = barycenters
         self.smagorinskyConstant = smagorinskyConstant
         self.turbulenceClosureModel = turbulenceClosureModel
@@ -3751,7 +3898,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                 self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                 self.nElementBoundaryQuadraturePoints_elementBoundary,
-                compKernelFlag)
+                compKernelFlag,
+                self.coefficients.aDarcy,
+		self.coefficients.betaForch,
+		self.coefficients.grain,
+		self.coefficients.packFraction,
+		self.coefficients.packMargin,
+		self.coefficients.maxFraction,
+		self.coefficients.frFraction,
+                self.coefficients.sigmaC,
+                self.coefficients.C3e,
+                self.coefficients.C4e,
+                self.coefficients.eR,
+ 		self.coefficients.fContact,
+                self.coefficients.mContact,
+                self.coefficients.nContact,
+                self.coefficients.angFriction)
         else:
             log("calling  RANS3PSed ctor")
             self.rans3pf = RANS3PSed(
@@ -3761,7 +3923,22 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                 self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                 self.nElementBoundaryQuadraturePoints_elementBoundary,
-                compKernelFlag)
+                compKernelFlag,
+                self.coefficients.aDarcy,
+		self.coefficients.betaForch,
+		self.coefficients.grain,
+		self.coefficients.packFraction,
+		self.coefficients.packMargin,
+		self.coefficients.maxFraction,
+		self.coefficients.frFraction,
+                self.coefficients.sigmaC,
+                self.coefficients.C3e,
+                self.coefficients.C4e,
+                self.coefficients.eR,
+ 		self.coefficients.fContact,
+                self.coefficients.mContact,
+                self.coefficients.nContact,
+                self.coefficients.angFriction)
 
     def getResidual(self, u, r):
         """
@@ -3836,16 +4013,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nodeArray,
             self.mesh.nodeVelocityArray,
             self.MOVING_DOMAIN,
+            self.coefficients.PSTAB,
             self.mesh.elementNodesArray,
             self.elementQuadratureWeights[('u', 0)],
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
-            self.pressureModel.q[('u',0)],
-            self.pressureModel.q[('grad(u)',0)],
-            self.pressureModel.ebqe[('u',0)],
-            self.pressureModel.ebqe[('grad(u)',0)],
+            self.pressureModel.q_p_sharp,
+            self.pressureModel.q_grad_p_sharp,
+            self.pressureModel.ebqe_p_sharp,
+            self.pressureModel.ebqe_grad_p_sharp,
+            #self.pressureModel.q[('u',0)],
+            #self.pressureModel.q[('grad(u)',0)],
+            #self.pressureModel.ebqe[('u',0)],
+            #self.pressureModel.ebqe[('grad(u)',0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
@@ -3918,6 +4100,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dV'],
             self.q['dV_last'],
             self.stabilization.v_last,
+            self.coefficients.ebqe_velocity_last,
             self.q[('cfl', 0)],
             self.q[('numDiff', 0, 0)],
             self.q[('numDiff', 1, 1)],
@@ -4062,16 +4245,21 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nodeArray,
             self.mesh.nodeVelocityArray,
             self.MOVING_DOMAIN,
+            self.coefficients.PSTAB,
             self.mesh.elementNodesArray,
             self.elementQuadratureWeights[('u', 0)],
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
-            self.pressureModel.q[('u',0)],
-            self.pressureModel.q[('grad(u)',0)],
-            self.pressureModel.ebqe[('u',0)],
-            self.pressureModel.ebqe[('grad(u)',0)],
+            self.pressureModel.q_p_sharp,
+            self.pressureModel.q_grad_p_sharp,
+            self.pressureModel.ebqe_p_sharp,
+            self.pressureModel.ebqe_grad_p_sharp,
+            #self.pressureModel.q[('u',0)],
+            #self.pressureModel.q[('grad(u)',0)],
+            #self.pressureModel.ebqe[('u',0)],
+            #self.pressureModel.ebqe[('grad(u)',0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
@@ -4141,6 +4329,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dV'],
             self.q['dV_last'],
             self.stabilization.v_last,
+            self.coefficients.ebqe_velocity_last,
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
             self.shockCapturing.numDiff_last[1],
@@ -4461,12 +4650,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
 
 
-def getErgunDrag(vos, meanGrainSize, viscosity):
+def getErgunDrag(porosity, meanGrainSize, viscosity):
     # cek hack, this doesn't seem right
     # cek todo look up correct Ergun model for alpha and beta
-    voidFrac = 1.0 - vos
+    voidFrac = 1.0 - porosity
     if voidFrac > 1.0e-6:
-        dragBeta = vos * vos * vos * meanGrainSize * 1.0e-2 / voidFrac
-    if (vos > epsZero and meanGrainSize > epsZero):
+        dragBeta = porosity * porosity * porosity * meanGrainSize * 1.0e-2 / voidFrac
+    if (porosity > epsZero and meanGrainSize > epsZero):
         dragAlpha = viscosity * 180.0 * voidFrac * voidFrac / \
-            (meanGrainSize * meanGrainSize * vos)
+            (meanGrainSize * meanGrainSize * porosity)
