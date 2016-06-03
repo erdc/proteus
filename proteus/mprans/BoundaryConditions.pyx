@@ -59,25 +59,25 @@ class BC_RANS(BC_Base):
         affecting: moving mesh
         """
         self.BC_type = 'None'
-        self.p_dirichlet = BoundaryCondition()
-        self.u_dirichlet = BoundaryCondition()
-        self.v_dirichlet = BoundaryCondition()
-        self.w_dirichlet = BoundaryCondition()
-        self.vof_dirichlet = BoundaryCondition()
-        self.k_dirichlet = BoundaryCondition()
-        self.dissipation_dirichlet = BoundaryCondition()
-        self.p_advective = BoundaryCondition()
-        self.u_advective = BoundaryCondition()
-        self.v_advective = BoundaryCondition()
-        self.w_advective = BoundaryCondition()
-        self.vof_advective = BoundaryCondition()
-        self.k_advective = BoundaryCondition()
-        self.dissipation_advective = BoundaryCondition()
-        self.u_diffusive = BoundaryCondition()
-        self.v_diffusive = BoundaryCondition()
-        self.w_diffusive = BoundaryCondition()
-        self.k_diffusive = BoundaryCondition()
-        self.dissipation_diffusive = BoundaryCondition()
+        self.p_dirichlet.uOfXT = None
+        self.u_dirichlet.uOfXT = None
+        self.v_dirichlet.uOfXT = None
+        self.w_dirichlet.uOfXT = None
+        self.vof_dirichlet.uOfXT = None
+        self.k_dirichlet.uOfXT = None
+        self.dissipation_dirichlet.uOfXT = None
+        self.p_advective.uOfXT = None
+        self.u_advective.uOfXT = None
+        self.v_advective.uOfXT = None
+        self.w_advective.uOfXT = None
+        self.vof_advective.uOfXT = None
+        self.k_advective.uOfXT = None
+        self.dissipation_advective.uOfXT = None
+        self.u_diffusive.uOfXT = None
+        self.v_diffusive.uOfXT = None
+        self.w_diffusive.uOfXT = None
+        self.k_diffusive.uOfXT = None
+        self.dissipation_diffusive.uOfXT = None
 
     def setNonMaterial(self):
         """
