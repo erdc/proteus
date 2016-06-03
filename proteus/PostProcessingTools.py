@@ -12,7 +12,7 @@ import LinearSolvers
 from LinearAlgebraTools import Mat,Vec,SparseMatFromDict
 import cfemIntegrals
 import cpostprocessing
-from Profiling import logEvent
+from .Profiling import logEvent
 import Norms
 import Archiver
 
