@@ -16,7 +16,7 @@ from proteus.ctransportCoefficients import (smoothedHeaviside,
 
 class BC_RANS(BC_Base):
     """
-    class defining boundary conditions for a facet or a segment
+    Class regrouping boundary conditions for two-phase flows
     """
     def __init__(self, shape=None, name=None, b_or=None, b_i=None):
         super(BC_RANS, self).__init__(shape, name, b_or, b_i)
@@ -55,8 +55,8 @@ class BC_RANS(BC_Base):
 
     def reset(self):
         """
-        Resets all boundary conditions to None, apart from:
-        - moveMesh BCs
+        Resets all BoundaryCondtion functions to None, apart from the BCs
+        affecting: moving mesh
         """
         self.BC_type = 'None'
         self.p_dirichlet = BoundaryCondition()
@@ -81,8 +81,8 @@ class BC_RANS(BC_Base):
 
     def setNonMaterial(self):
         """
-        For non-material boundaries.
-        Sets diffusive flux and advective vof to zero
+        Sets non-material boundary conditions (diffusive flux and advective vof
+        to 0.).
         """
         self.reset()
         self.BC_type = 'NonMaterial'
@@ -116,7 +116,7 @@ class BC_RANS(BC_Base):
 
     def setNoSlip(self):
         """
-        sets no slip conditions at the boundary
+        Sets no slip conditions at the boundary
         """
         self.reset()
         self.BC_type = 'NoSlip'
@@ -130,7 +130,7 @@ class BC_RANS(BC_Base):
 
     def setFreeSlip(self):
         """
-        sets free slip conditions at the boundary
+        Sets free slip conditions at the boundary
         """
         self.reset()
         self.BC_type = 'FreeSlip'
@@ -147,7 +147,15 @@ class BC_RANS(BC_Base):
 
     def setOpenAir(self, orientation=None):
         """
-        sets open boundary conditions (water can come out)
+        Sets open boundary conditions (water can come out)
+
+        Parameters
+        ----------
+        orientation: Optional[array_like]
+            orientation of the boundary. Optional if orientation was already
+            passed when creating the BC_RANS class instance.
+        vof_air: Optional[float]
+            VOF value of air (default is 1.)
         """
         self.BC_type = 'OpenAir'
 
@@ -178,11 +186,20 @@ class BC_RANS(BC_Base):
 
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
-        sets rigid body boundary conditions for moving the mesh
-        :param last_pos: position (barycentre) of body pre-calculation
-        :param h: displacement during time step
-        :param rot_matrix: rotation matrix of body pre-calculation
-        (!) should not be set manually
+        Sets boundary conditions for moving the mesh with a rigid body
+
+        Parameters
+        ----------
+        last_pos: array_like
+            last position of rigig body
+        h: array_like
+            displacement of the body
+        rot_matrix:
+            rotation matrix describing displament due to rotation between last
+            position and new position (3x3 array)
+
+        (!) if set manually, the input arrays should be updated externally
+            without loosing their memory address
         """
         if rot_matrix is None:
             rot_matrix = np.array([[1., 0., 0.],
@@ -201,24 +218,29 @@ class BC_RANS(BC_Base):
             self.hz_dirichlet.uOfXT = get_DBC_h(2)
 
     def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None,
-                                         windSpeed=(0., 0., 0.), air=1.,
-                                         water=0.):
+                                         wind_speed=(0., 0., 0.), vof_air=1.,
+                                         vof_water=0.):
         """
-        Imposes a velocity profile lower than the sea level and an open
-        boundary for higher than the sealevel.
-        :param U: Velocity vector at the global system.
-        :param vert_axis: index of vertical in position vector, must always be
-                        aligned with gravity, by default set to 1].
-        :param air: Volume fraction for air (1.0 by default).
-        :param water: Volume fraction for water (0.0 by default).
-        Below the seawater level, the condition returns the _dirichlet and
-        p_advective condition according to the inflow velocity.
-        Above the sea water level, the condition returns the gravity as zero,
-        and sets _dirichlet condition to zero, only if there is a zero inflow
-        velocity component.
-        (!) This condition is best used for boundaries and gravity aligned with
-            one of the main axes.
-        (!) Boundary condition relies on specific variables defined in Context
+        Imposes a velocity profile on the fluid with input wave and wind
+        conditions.
+
+        Parameters
+        ----------
+        wave: proteus.WaveTools
+            class describing a wave (from proteus.WaveTools)
+        vert_axis: Optional[int]
+            index of vertical position vector (x:0, y:1, z:2), must always be
+            aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
+        wind_speed: Optional[array_like]
+        vof_air: Optional[float]
+            VOF value of air (default is 1.)
+        vof_water: Optional[float]
+            VOF value of water (default is 0.)
+        
+        Below the sea water level: fluid velocity to wave speed.
+        Above the sea water level: fluid velocity set to wind speed.
+        (!) Boundary condition relies on specific variables defined in Context:
+            he (mesh element size) and ecH (number of elements for smoothing)
         """
         self.reset()
 
@@ -230,7 +252,7 @@ class BC_RANS(BC_Base):
                 wave_mwl = wave.mwl
                 wave_eta = wave.eta
                 wave_u = wave.u
-                wind_speed = np.array(windSpeed)
+                wind_speed_arr = np.array(wind_speed)
                 he = self.ct.he
                 ecH = self.ct.ecH
                 def ux_dirichlet(x, t):
@@ -246,34 +268,10 @@ class BC_RANS(BC_Base):
                         water_speed = np.array([0., 0., 0.])
                         # smoothing only above wave, only on half the VOF smoothing length
                     H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
-                    ux = H*windSpeed + (1-H)*water_speed
+                    ux = H*wind_speed_arr + (1-H)*water_speed
                     return ux[i]
                 return ux_dirichlet
             return ux_dirichlet_cython
-            
-        # def get_inlet_ux_dirichlet(i, wave):
-        #     def _init_cython():
-        #         wave_mwl = wave.mwl
-        #         wave_eta = wave.eta(x, t)
-        #         wave_u = wave.u(x,t)
-        #         he = self.ct.he
-        #         ecH = self.ct.ecH
-        #         def ux_dirichlet(x, t):
-        #             waveHeight = wave_mwl+wave_eta(x, t)
-        #             wavePhi = x[vert_axis]-waveHeight
-        #             if wavePhi <= 0:
-        #                 water_speed = wave_u(x, t)
-        #             else:
-        #                 x_max = list(x)
-        #                 x_max[vert_axis] = waveHeight
-        #                 water_speed = wave_u(x_max, t)
-        #             # smoothing only above wave, only on half the VOF smoothing length
-        #             H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
-        #             ux = H*windSpeed + (1-H)*water_speed
-        #             return ux[i]
-        #         return ux_dirichlet
-        #     return _init_cython
-        
 
         def vof_dirichlet_cython():
             wave_mwl = wave.mwl
@@ -283,7 +281,7 @@ class BC_RANS(BC_Base):
             def vof_dirichlet(x, t):
                 level = wave_mwl + wave_eta(x,t)
                 H = smoothedHeaviside(ecH*he,x[vert_axis]-level)
-                return H
+                return H*vof_air+(1-H)*vof_water
             return vof_dirichlet
 
         def p_advective_cython():
@@ -295,7 +293,7 @@ class BC_RANS(BC_Base):
             wave_mwl = wave.mwl
             wave_eta = wave.eta
             wave_u = wave.u
-            wind_speed = np.array(windSpeed)
+            wind_speed_arr = np.array(wind_speed)
             he = self.ct.he
             ecH = self.ct.ecH
             def p_advective(x, t):
@@ -310,7 +308,7 @@ class BC_RANS(BC_Base):
                 else:
                     water_speed = np.array([0., 0., 0.])
                 H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
-                U = H*windSpeed + (1-H)*water_speed
+                U = H*wind_speed_arr + (1-H)*water_speed
                 u_p = np.sum(U[:nd]*b_or)
                 return u_p
             return p_advective
@@ -450,14 +448,41 @@ class BC_RANS(BC_Base):
 # for regions
 
 class RelaxationZone:
-    def __init__(self, shape, zone_type, center, orientation, waves, windSpeed,
-                 epsFact_solid, dragAlpha, dragBeta, porosity):
+    """
+    Holds information about a relaxation zone (wave generation/absorption
+    or porous zone)
+
+    Parameters
+    ----------
+    zone_type: string
+        type of zone, can be set to 'absorption', 'generation', or 'porous'
+    center: array_like
+        coordinates of center of the zone
+    orientation: array_like
+        orientation for absorption/generation zones: from boundary to tank
+    epsFact_solid: float
+        half the zone length
+    waves: Optional[proteus.WaveTools]
+        class instance of a wave from proteus.WaveTools (must be set for
+        generation zone)
+    shape: Optional[proteus.SpatialTools.Shape]
+        shape class instance containing region
+    dragAlpha: Optional[float]
+        parameter for porous zones (default: 0.5/1.005e-6)
+    dragBeta: Optional[float]
+        parameter for porous zones (default: 0.)
+    porosity: Optional[float]
+        parameter for porous zone (default: 1.)
+    """
+    def __init__(self, zone_type, center, orientation, epsFact_solid,
+                 waves=None, shape=None, wind_speed=(0.,0.,0.),
+                 dragAlpha=0.5/1.005e-6, dragBeta=0., porosity=1.):
         self.Shape = shape
         self.zone_type = zone_type
         self.center = center
         self.orientation = orientation
         self.waves = waves
-        self.windSpeed = windSpeed
+        self.wind_speed = wind_speed
         self.epsFact_solid = epsFact_solid
         self.dragAlpha = dragAlpha
         self.dragBeta = dragBeta
@@ -468,9 +493,14 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
     """
     Prescribe a velocity penalty scaling in a material zone via a
     Darcy-Forchheimer penalty
-    :param zones: A dictionary mapping integer material types to Zones, where a
-    Zone is a named tuple specifying the x coordinate of the zone center and
-    the velocity components
+
+    Parameters
+    ----------
+    zones: dict
+        dictionary with key as the region flag and values as a RelaxationZone
+        class
+    nd: int
+        number of dimensions of domain
     """
     def __init__(self, zones, nd):
         assert isinstance(zones, dict)
@@ -488,7 +518,7 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
                 waves_u = zone.waves.u
                 waves_mwl = zone.waves.mwl
                 waves_eta = zone.waves.eta
-                windSpeed = zone.windSpeed
+                wind_speed = zone.wind_speed
                 he = ct.he
                 ecH = ct.ecH
                 vert_axis = zone.Shape.Domain.nd-1
@@ -505,7 +535,7 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
                             H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
                         else:
                             waterSpeed = (0., 0., 0.)
-                        return H*self.windSpeed[i] + (1-H)*waterSpeed[i]
+                        return H*self.wind_speed[i] + (1-H)*waterSpeed[i]
                     return twp_flowVelocity
                 zone.u = get_twp_flowVelocity(0)
                 zone.v = get_twp_flowVelocity(1)
