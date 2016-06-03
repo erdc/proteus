@@ -42,8 +42,17 @@ from proteus.SpatialTools import (Shape,
 
 class ShapeRANS(Shape):
     """
-    Super class of shapes defined below. All shapes will have the arguments and
-    functions defined here + the ones from Shape of proteus.SpatialTools
+    Base/super class of all shapes. Sets the boundary condition class to
+    proteus.mprans.BoundaryConditions.BC_RANS.
+
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    nd: Optional[int]
+        Number of dimensions of the shape. If not set, will take the number of
+        dimensions of the domain.
     """
 
     def __init__(self, domain, nd):
@@ -61,7 +70,16 @@ class ShapeRANS(Shape):
         """
         Attaches an auxiliary variable to the auxiliaryVariables dictionary of
         the shape (used in buildDomain function)
-        (!) should not be used manually
+
+        Parameters
+        ----------
+        key: string
+            Dictionary key defining the auxiliaryVariable to attach
+
+        Notes
+        -----
+        This function is called automatically when using other functions to set
+        auxiliaryVariables and should not be used manually.
         """
         if key not in self.auxiliaryVariables:
             if key == 'RigidBody':
@@ -73,8 +91,12 @@ class ShapeRANS(Shape):
         """
         Makes the shape a rigid body
 
-        :param holes: set of hole coordinates (the interior of the rigid body
-                      will not be meshed) (list/array)
+        Parameters
+        ----------
+        holes: Optional[array_like]
+            Used to set coordinates of hole inside the rigid body, so it does
+            not get meshed. If not set, the hole coordinates will be the
+            barycenter coordinates.
         """
         self._attachAuxiliaryVariable('RigidBody')
         if holes is None:
@@ -94,17 +116,24 @@ class ShapeRANS(Shape):
         """
         Sets constraints on the Shape (for moving bodies)
 
-        :param free_x: translational constraints
-        :param free_r: rotational constraints
+        Parameters
+        ----------
+        free_x: array_like
+            Translational constraints.
+        free_r: array_like
+            Rotational constraints.
         """
         self.free_x = np.array(free_x)
         self.free_r = np.array(free_r)
 
     def setMass(self, mass):
         """
-        Set mass of the shape and calculate density
+        Set mass of the shape and calculate density if volume is defined.
 
-        :param mass: mass (int/float)
+        Parameters
+        ----------
+        mass: float
+            mass of the body
         """
         self.mass = float(mass)
         if self.volume:
@@ -112,9 +141,12 @@ class ShapeRANS(Shape):
 
     def setDensity(self, density):
         """
-        Set density and calculate mass
+        Set density and calculate mass is volume is defined.
 
-        :param density: density (int/float)
+        Parameters
+        ----------
+        density: float
+            Density of the shape
         """
         self.density = float(density)
         if self.volume:
@@ -124,7 +156,15 @@ class ShapeRANS(Shape):
         """
         Set the inertia tensor of the shape
 
-        :param It: inertia tensor (list/array)
+        Parameters
+        ----------
+        It: array_like, float
+            Inertia tensor of the body (3x3 array in 3D, float in 2D)
+
+        Notes
+        -----
+        The inertia tensor should not be already scaled with the mass of the
+        shape.
         """
         It = np.array(It)
         if self.nd == 2:
@@ -138,8 +178,27 @@ class ShapeRANS(Shape):
     def getInertia(self, vec=(0., 0., 1.), pivot=None):
         """
         Gives the inertia of the shape from an axis and a pivot
-        (!) The inertia tensor of the shape must be set
-        (!) This is calculated using the local coordinate system of shape
+
+        Parameters
+        ----------
+        vec: array_like
+            Vector around which the body rotates.
+        pivot: Optional[array_like]
+            Pivotal point around which the body rotates. If not set, it will
+            be the barycenter coordinates
+
+        Returns
+        -------
+        I: float
+            inertia of the mass
+
+        Notes
+        -----
+        The inertia is calculated relative to the coordinate system of the
+        shape (self.coords_system). If the shape was not initialised with a
+        position corresponding to its inertia tensor (e.g. shape was already
+        rotated when initialised), set the coordinate system accordingly
+        before calling this function
         """
         assert self.It is not None, 'No inertia tensor! (' + self.name + ')'
         if pivot is None:
@@ -165,19 +224,41 @@ class ShapeRANS(Shape):
             I = np.einsum('ij,ij->', self.mass*self.It, vt)
         return I
 
-    def setRecordValues(self, all_values=False, time=True, pos=False,
-                        pos_x=False, pos_y=False, pos_z=False, rot=False,
-                        rot_x=False, rot_y=False, rot_z=False, F=False,
-                        Fx=False, Fy=False, Fz=False, M=False, Mx=False,
-                        My=False, Mz=False, inertia=False, vel=False,
-                        vel_x=False, vel_y=False, vel_z=False, acc=False,
-                        acc_x=False, acc_y=False, acc_z=False, filename=None):
+    def setRecordValues(self, filename=None, all_values=False, time=True,
+                        pos=False, rot=False, F=False, M=False, inertia=False,
+                        vel=False, acc=False):
         """
-        values to be recorded in a csv file (for rigid bodies)
+        Sets the rigid body attributes that are to be recorded in a csv file
+        during the simulation.
+
+        Parameters
+        ----------
+        filename: Optional[string]
+            Name of file, if not set, the file will be named as follows:
+            'record_[shape.name].csv'
+        all_values: bool
+            Set to True to record all values listed below.
+        time: bool
+            Time of recorded row (default: True).
+        pos: bool
+            Position of body (default: False. Set to True to record).
+        rot: bool
+            Rotation of body (default: False. Set to True to record).
+        F: bool
+            Forces applied on body (default: False. Set to True to record).
+        M: bool
+            Moments applied on body (default: False. Set to True to record).
+        inertia: bool
+            Inertia of body (default: False. Set to True to record).
+        vel: bool
+            Velocity of body (default: False. Set to True to record).
+        acc: bool
+            Acceleration of body (default: False. Set to True to record).
+
         """
         self.record_values = True
         if pos is True:
-            pos_x = pos_y = pos_z = True
+            x = y = z = True
         if rot is True:
             rot_x = rot_y = rot_z = True
         if F is True:
@@ -188,16 +269,11 @@ class ShapeRANS(Shape):
             vel_x = vel_y = vel_z = True
         if acc is True:
             acc_x = acc_y = acc_z = True
-        self.record_bool = [time, pos, pos_x, pos_y, pos_z, rot, rot_x, rot_y,
-                            rot_z, F, Fx, Fy, Fz, M, Mx, My, Mz, inertia,
-                            vel_x, vel_y, vel_z, acc_x, acc_y, acc_z]
+        self.record_dict = {'time':time, 'pos': pos, 'rot':rot, 'F':F, 'M':M,
+                            'inertia': inertia, 'vel': vel, 'acc': acc}
         if all_values is True:
-            self.record_bool = [True for value in self.record_bool]
-        self.record_names = ['time', 'pos_x', 'pos_y', 'pos_z', 'rot_x',
-                             'rot_y', 'rot_z', 'Fx', 'Fy', 'Fz', 'Mx', 'My',
-                             'Mz', 'inertia', 'vel_x', 'vel_y', 'vel_z',
-                             'acc_x', 'acc_y', 'acc_z']
-        self.record_names = list(compress(self.record_names, self.record_bool))
+            for key in self.record_dict:
+                self.record_dict[key] = True
         if filename is None:
             self.record_filename = 'record_' + self.name + '.csv'
         else:
@@ -209,10 +285,22 @@ class ShapeRANS(Shape):
         """
         Sets a region (given the local flag) to an absorption zone
 
-        :param flags: local flags of the region. Can be an integer or a list.
-        :param epsFact_solid: half of absorption zone (region) length
-        :param center: coords of center of the absorption zone
-        :param orientation: orientation pointing TOWARDS incoming waves
+        Parameters
+        ----------
+        flags: array_like, int
+            Local flags of the region. Can be an integer or a list.
+        epsFact_solid: float
+            Half of absorption zone (region) length (used for blending func).
+        center: array_like
+            Coordinates of the center of the absorption zone.
+        orientation: array_like
+            Orientation vector pointing TOWARDS incoming waves.
+        dragAlpha: Optional[float]
+            Porous module parameter.
+        dragBeta: Optional[float]
+            Porous module parameter.
+        porosity: Optional[float]
+            Porous module parameter.
         """
         self._attachAuxiliaryVariable('RelaxZones')
         waves = None
@@ -247,12 +335,26 @@ class ShapeRANS(Shape):
         """
         Sets a region (given the local flag) to a generation zone
 
-        :param flags: local flags of the region. Can be an integer or a list.
-        :param epsFact_solid: half of generation zone (region) length
-        :param center: coordinates of center (or point on plane perpendicular
-                       to orientation)
-        :param waves: Wave class as generated by wavetools
-        :param wind_speed: wind speed (array of length 3)
+        Parameters
+        ----------
+        flags: array_like, int
+            Local flags of the region. Can be an integer or a list.
+        epsFact_solid: float
+            Half of absorption zone (region) length (used for blending func).
+        center: array_like
+            Coordinates of the center of the absorption zone.
+        orientation: array_like
+            Orientation vector pointing TOWARDS incoming waves.
+        waves: proteus.WaveTools
+            Class instance of wave generated from proteus.WaveTools.
+        wind_speed: Optional[array_like]
+            Speed of wind in generation zone (default is (0., 0., 0.))
+        dragAlpha: Optional[float]
+            Porous module parameter.
+        dragBeta: Optional[float]
+            Porous module parameter.
+        porosity: Optional[float]
+            Porous module parameter.
         """
         self._attachAuxiliaryVariable('RelaxZones')
         if isinstance(flags, int):
@@ -285,10 +387,16 @@ class ShapeRANS(Shape):
         """
         Sets a region (given the local flag) to a porous zone
 
-        :param flags: local flags of the region. Can be an integer or a list.
-        :param epsFact_solid: half of absorption zone (region) length
-        :param center: coords of center of the absorption zone
-        :param orientation: orientation pointing TOWARDS incoming waves
+        Parameters
+        ----------
+        flags: array_like, int
+            Local flags of the region. Can be an integer or a list.
+        dragAlpha: Optional[float]
+            Porous module parameter.
+        dragBeta: Optional[float]
+            Porous module parameter.
+        porosity: Optional[float]
+            Porous module parameter.
         """
         self._attachAuxiliaryVariable('RelaxZones')
         if isinstance(flags, int):
@@ -351,10 +459,19 @@ Rectangle._setInertiaTensor = _RectanglesetInertiaTensor
 
 class Tank3D(ShapeRANS):
     """
-    Class to create a 3D tank (cuboid)
+    Class to create a 3D tank (cuboidal shape).
 
-    :param domain: domain of the tank
-    :param dim: dimensions of the tank (list or array)
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    dim: Optional[array_like]
+        Dimensions of the cuboid.
+    coords: Optional[array_like]
+        Coordinates of the centroid of the shape.
+    from_0: Optional[bool]
+        If True (default), the tank extends from the origin to postive x, y, z
     """
     count = 0
 
@@ -747,12 +864,19 @@ class Tank3D(ShapeRANS):
 
 class Tank2D(ShapeRANS):
     """
-    Class to create a 2D tank (rectangle)
+    Class to create a 2D tank (rectangular shape).
 
-    :param domain: domain of the tank
-    :param dim: dimensions of the tank (list or array)
-    :param leftSponge: width of left sponge (float)
-    :param rightSponge: width of right sponge (float)
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    dim: Optional[array_like]
+        Dimensions of the cuboid.
+    coords: Optional[array_like]
+        Coordinates of the centroid of the shape.
+    from_0: Optional[bool]
+        If True (default), the tank extends from the origin to postive x, y, z
     """
     count = 0
 
@@ -965,13 +1089,28 @@ class Tank2D(ShapeRANS):
 
 
 class RigidBody(AuxiliaryVariables.AV_base):
+    """
+    Auxiliary variable used to calculate attributes of an associated shape
+    class instance acting as a rigid body. To set a shape as a rigid body, use
+    shape.setRigidBody(). The class instance is created automatically when
+    shape.setRigidBody() has been called and after calling assembleDomain().
 
-    def __init__(self, shape, he=1., cfl_target=0.9, dt_init=0.001):
+    Parameters
+    ----------
+    shape: proteus.mprans.SpatialTools.Shape_RANS
+        Class instance of the shape associated to the rigid body calculations.
+    cfl_target: Optional[float]
+        UNUSED (to implement), sets the maximum displacement of the body
+        allowed per time step.
+    dt_init: float
+        first time step of the simulation.
+    """
+
+    def __init__(self, shape, cfl_target=0.9, dt_init=0.001):
         self.Shape = shape
         # if isinstance(shape, (Rectangle, Cuboid)):
         #     shape._setInertiaTensor()
         self.dt_init = dt_init
-        self.he = he
         self.cfl_target = 0.9
         self.last_position = np.array([0., 0., 0.])
         self.rotation_matrix = np.eye(3)
@@ -980,76 +1119,10 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.i_start = None  # will be retrieved from setValues() of Domain
         self.i_end = None  # will be retrieved from setValues() of Domain
 
-    def step(self, dt):
-        nd = self.Shape.Domain.nd
-        # acceleration from force
-        self.acceleration = self.F/self.Shape.mass
-        # angular acceleration from moment
-        if sum(self.M) != 0:
-            self.inertia = self.Shape.getInertia(self.M, self.Shape.barycenter)
-            assert self.inertia != 0, 'Zero inertia: inertia tensor (It)' \
-                                      'was not set correctly!'
-            ang_acc = self.M[:]/self.inertia
-        else:
-            self.inertia = None
-            ang_acc = np.array([0., 0., 0.])
-        # substeps for smoother motion between timesteps
-        ang_disp = 0
-        substeps = 20
-        dt_sub = dt/float(substeps)
-        self.h[:] = np.zeros(3)
-        for i in range(substeps):
-            # displacement
-            self.velocity += self.acceleration*dt_sub
-            self.h += self.velocity*dt_sub
-            # rotation
-            self.angvel += ang_acc*dt_sub
-            ang_disp += self.angvel*dt_sub
-        # translate
-        self.Shape.translate(self.h[:nd])
-        # rotate
-        self.ang = np.linalg.norm(ang_disp)
-        if nd == 2 and self.angvel[2] < 0:
-            self.ang = -self.ang
-        if self.ang != 0.:
-            self.Shape.rotate(self.ang, self.angvel, self.Shape.barycenter)
-            self.rotation[:nd, :nd] = self.Shape.coords_system
-            self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation),
-                                             self.rotation)
-        else:
-            self.rotation_matrix[:] = np.eye(3)
-        self.barycenter[:] = self.Shape.barycenter
-        self.position[:] = self.Shape.barycenter
-        if self.Shape.record_values is True:
-            self.recordValues()
-
-    def recordValues(self):
-        t_last = self.model.stepController.t_model_last
-        dt_last = self.model.levelModelList[-1].dt_last
-        time = t_last-dt_last
-        self.record_time = time
-        pos_x, pos_y, pos_z = self.last_position
-        rot = self.last_rotation
-        rot_x = atan2(rot[1, 2], rot[2, 2])
-        rot_y = -asin(rot[0, 2])
-        rot_z = atan2(rot[0, 1], rot[0, 0])
-        Fx, Fy, Fz = self.F
-        Mx, My, Mz = self.M
-        inertia = self.inertia
-        vel_x, vel_y, vel_z = self.velocity
-        acc_x, acc_y, acc_z = self.acceleration
-        values = [time, pos_x, pos_y, pos_z, rot_x, rot_y,
-                  rot_z, Fx, Fy, Fz, Mx, My, Mz, inertia,
-                  vel_x, vel_y, vel_z, acc_x, acc_y, acc_z]
-        values_towrite = list(compress(values, self.Shape.record_bool))
-        comm = Comm.get()
-        if comm.isMaster():
-            if self.Shape.record_values is True:
-                with open(self.record_file, 'a') as csvfile:
-                    writer = csv.writer(csvfile, delimiter=',')
-                    writer.writerow(values_towrite)
-
     def attachModel(self, model, ar):
+        """
+        Attaches model to auxiliary variable
+        """
         self.model = model
         self.ar = ar
         self.writer = Archiver.XdmfWriter()
@@ -1063,7 +1136,6 @@ class RigidBody(AuxiliaryVariables.AV_base):
     def calculate_init(self):
         """
         Function called at the very beginning of the simulation by proteus.
-        (!) name of the function has to be calculate_init()
         """
         nd = self.Shape.Domain.nd
         shape = self.Shape
@@ -1090,19 +1162,13 @@ class RigidBody(AuxiliaryVariables.AV_base):
             self.Fg = self.Shape.mass*np.array([0., -9.81, 0.])
         if nd == 3:
             self.Fg = self.Shape.mass*np.array([0., 0., -9.81])
-        comm = Comm.get()
-        if comm.isMaster():
-            if self.Shape.record_values is True:
-                self.record_file = os.path.join(Profiling.logDir,
-                                                self.Shape.record_filename)
-                with open(self.record_file, 'w') as csvfile:
-                    writer = csv.writer(csvfile, delimiter=',')
-                    writer.writerow(self.Shape.record_names)
+        if self.Shape.record_values is True:
+            self.record_file = os.path.join(Profiling.logDir,
+                                            self.Shape.record_filename)
 
     def calculate(self):
         """
         Function called at each time step by proteus.
-        (!) name of the function has to be calculate()
         """
         # store previous values
         self.last_position[:] = self.position
@@ -1171,7 +1237,116 @@ class RigidBody(AuxiliaryVariables.AV_base):
             (rot_x, rot_y, rot_z))
         log("================================================================")
 
+    def step(self, dt):
+        """
+        Step for rigid body calculations in Python
 
+        Parameters
+        ----------
+        dt: float
+            time step
+        """
+        nd = self.Shape.Domain.nd
+        # acceleration from force
+        self.acceleration = self.F/self.Shape.mass
+        # angular acceleration from moment
+        if sum(self.M) != 0:
+            self.inertia = self.Shape.getInertia(self.M, self.Shape.barycenter)
+            assert self.inertia != 0, 'Zero inertia: inertia tensor (It)' \
+                                      'was not set correctly!'
+            ang_acc = self.M[:]/self.inertia
+        else:
+            self.inertia = None
+            ang_acc = np.array([0., 0., 0.])
+        # substeps for smoother motion between timesteps
+        ang_disp = 0
+        substeps = 20
+        dt_sub = dt/float(substeps)
+        self.h[:] = np.zeros(3)
+        for i in range(substeps):
+            # displacement
+            self.velocity += self.acceleration*dt_sub
+            self.h += self.velocity*dt_sub
+            # rotation
+            self.angvel += ang_acc*dt_sub
+            ang_disp += self.angvel*dt_sub
+        # translate
+        self.Shape.translate(self.h[:nd])
+        # rotate
+        self.ang = np.linalg.norm(ang_disp)
+        if nd == 2 and self.angvel[2] < 0:
+            self.ang = -self.ang
+        if self.ang != 0.:
+            self.Shape.rotate(self.ang, self.angvel, self.Shape.barycenter)
+            self.rotation[:nd, :nd] = self.Shape.coords_system
+            self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation),
+                                             self.rotation)
+        else:
+            self.rotation_matrix[:] = np.eye(3)
+        self.barycenter[:] = self.Shape.barycenter
+        self.position[:] = self.Shape.barycenter
+        if self.Shape.record_values is True:
+            self.recordValues()
+
+    def recordValues(self):
+        """
+        Records values of rigid body attributes at each time step in a csv file.
+        """
+        comm = Comm.get()
+        if comm.isMaster():
+            t_last = self.model.stepController.t_model_last
+            dt_last = self.model.levelModelList[-1].dt_last
+            values_towrite = []
+            if os.stat(self.record_file).st_size == 0:
+                headers = []
+                if self.Shape.record_dict['time'] is True:
+                    headers += ['t']
+                if self.Shape.record_dict['pos'] is True:
+                    headers += ['x', 'y', 'z']
+                if self.Shape.record_dict['rot'] is True:
+                    headers += ['rx', 'ry', 'rz']
+                if self.Shape.record_dict['F'] is True:
+                    headers += ['Fx', 'Fy', 'Fz']
+                if self.Shape.record_dict['M'] is True:
+                    headers += ['Mx', 'My', 'Mz']
+                if self.Shape.record_dict['inertia'] is True:
+                    headers += ['inertia']
+                if self.Shape.record_dict['vel_'] is True:
+                    headers += ['vel_x', 'vel_y', 'vel_z']
+                if self.Shape.record_dict['acc_'] is True:
+                    headers += ['acc_x', 'acc_y', 'acc_z']
+                with open(self.record_file, 'a') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',')
+                    writer.writerow(headers)
+            if self.Shape.record_dict['time'] is True:
+                t = t_last-dt_last
+                values_towrite += [t]
+            if self.Shape.record_dict['pos'] is True:
+                x, y, z = self.last_position
+                values_towrite += [x, y, z]
+            if self.Shape.record_dict['rot'] is True:
+                rot = self.last_rotation
+                rx = atan2(rot[1, 2], rot[2, 2])
+                ry = -asin(rot[0, 2])
+                rz = atan2(rot[0, 1], rot[0, 0])
+                values_towrite += [rx, ry, rz]
+            if self.Shape.record_dict['F'] is True:
+                Fx, Fy, Fz = self.F
+                values_towrite += [Fx, Fy, Fz]
+            if self.Shape.record_dict['M'] is True:
+                Mx, My, Mz = self.M
+                values_towrite += [Mx, My, Mz]
+            if self.Shape.record_dict['inertia'] is True:
+                values_towrite += [self.inertia]
+            if self.Shape.record_dict['vel'] is True:
+                vel_x, vel_y, vel_z = self.velocity
+                values_towrite += [vel_x, vel_y, vel_z]
+            if self.Shape.record_dict['acc'] is True:
+                acc_x, acc_y, acc_z = self.acceleration
+                values_towrite += [acc_x, acc_y, acc_z]
+            with open(self.record_file, 'a') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(values_towrite)
 
 
 def assembleDomain(domain):
@@ -1181,7 +1356,11 @@ def assembleDomain(domain):
     It should always be called after defining and manipulating all the shapes
     to be attached to the domain.
 
-    :param domain: domain to assemble
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
     """
     _assembleGeometry(domain, BC_class=bc.BC_RANS)
     domain.bc[0].setNonMaterial()  # set BC for boundary between processors
@@ -1191,6 +1370,16 @@ def assembleDomain(domain):
 
 def assembleAuxiliaryVariables(domain):
     """
+    Adds the auxiliary variables to the domain.
+
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+
+    Notes
+    -----
     Should be called after assembleGeometry
     """
     domain.auxiliaryVariables = []
