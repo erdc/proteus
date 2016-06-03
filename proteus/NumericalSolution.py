@@ -595,7 +595,7 @@ class NS_base:  # (HasTraits):
         for index,m in self.modelSpinUp.iteritems():
             spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
-            log("Attaching models to model "+p.name)
+            logEvent("Attaching models to model "+p.name)
             m.attachModels(self.modelList)
             if index not in self.modelSpinUp:
                 spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
