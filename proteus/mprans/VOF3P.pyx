@@ -458,7 +458,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             sc_uref=1.0,
             sc_beta=1.0,
             setParamsFunc=None,
-            movingDomain=False):
+            movingDomain=False,
+            set_vos=None):
+        self.set_vos=set_vos
         self.useMetrics = useMetrics
         self.variableNames = ['vof']
         nc = 1
@@ -1199,6 +1201,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
 
+        if self.coefficients.set_vos:
+            self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
         r.fill(0.0)
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
