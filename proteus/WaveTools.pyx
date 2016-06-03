@@ -42,9 +42,9 @@ def loadExistingFunction(funcName, validFunctions):
         funcNames.append(func.__name__)
         if func.__name__ == funcName:
             func_ret = func
-        if funcName not in funcNames:
-            logEvent("WaveTools.py: Wrong function type (%s) given: Valid wavetypes are %s" %(funcName,funcNames), level=0)
-            sys.exit(1)
+    if funcName not in funcNames:
+        logEvent("WaveTools.py: Wrong function type (%s) given: Valid wavetypes are %s" %(funcName,funcNames), level=0)
+        sys.exit(1)
     return func_ret
 
 def setVertDir(g):
