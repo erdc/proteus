@@ -34,7 +34,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             self.numDiff_last=[]
             for ci in range(self.nc):
                 self.numDiff_last.append(self.numDiff[ci].copy())
-        log("RDLS: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
+        logEvent("RDLS: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
 
 class PsiTC(proteus.StepControl.SC_base):
     def __init__(self,model,nOptions):
@@ -73,7 +73,7 @@ class PsiTC(proteus.StepControl.SC_base):
         self.t = tOut
         self.setSubsteps([tOut])
         self.nSteps=0
-        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+        logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
     def updateSubstep(self):
@@ -100,19 +100,19 @@ class PsiTC(proteus.StepControl.SC_base):
             self.dt_model = m.timeIntegration.dt
             if self.nSteps >= self.nStepsOsher:#start ramping up the time step
                 self.dt_model = self.dt_model*self.red_ratio
-            #log("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
+            #logEvent("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
             self.set_dt_allLevels()
             #physical time step
             self.t_model = self.substeps[0]
             self.substeps.append(self.substeps[0])
-            log("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " %(self.nSteps,self.dt_model,res,(res/self.res0)*100.0),level=1)
+            logEvent("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " %(self.nSteps,self.dt_model,res,(res/self.res0)*100.0),level=1)
         elif self.nSteps >= self.nStepsMax:
-            log("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" %(res,))
-            log("Osher-PsiTC tolerance                %12.5e " % (self.res0*self.rtol + self.atol,))
+            logEvent("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" %(res,))
+            logEvent("Osher-PsiTC tolerance                %12.5e " % (self.res0*self.rtol + self.atol,))
             self.nSteps=0
         else:
-            log("Osher-PsiTC converged |res| = %12.5e %12.5e" %(res,ssError*100.0))
-            log("Osher-PsiTC tolerance                %12.5e " % (self.res0*self.rtol + self.atol,))
+            logEvent("Osher-PsiTC converged |res| = %12.5e %12.5e" %(res,ssError*100.0))
+            logEvent("Osher-PsiTC tolerance                %12.5e " % (self.res0*self.rtol + self.atol,))
             self.nSteps=0
     def choose_dt_model(self):
         #don't modify dt_model
@@ -127,7 +127,7 @@ class PsiTC(proteus.StepControl.SC_base):
         #physical time step
         self.t_model = self.substeps[0]
         self.setSubsteps([self.substeps[0]])
-        log("Osher-PsiTC choosing dt = %12.5e " %(self.dt_model,))
+        logEvent("Osher-PsiTC choosing dt = %12.5e " %(self.dt_model,))
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import redistanceLevelSetCoefficientsEvaluate
@@ -203,7 +203,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         import pdb
         #pdb.set_trace()
         if self.nModel != None:
-            log("resetting signed distance level set to current level set",level=2)
+            logEvent("resetting signed distance level set to current level set",level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
             self.rdModel.calculateCoefficients()
             self.rdModel.calculateElementResidual()
@@ -226,7 +226,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self,t,firstStep=False):
         if self.nModel != None:
             if self.applyRedistancing == True:
-                log("resetting level set to signed distance")
+                logEvent("resetting level set to signed distance")
                 self.nModel.u[0].dof.flat[:]  = self.rdModel.u[0].dof.flat[:]
                 self.nModel.calculateCoefficients()
                 self.nModel.calculateElementResidual()
@@ -650,10 +650,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         del self.internalNodes
         self.internalNodes = None
-        log("Updating local to global mappings",2)
+        logEvent("Updating local to global mappings",2)
         self.updateLocal2Global()
-        log("Building time integration object",2)
-        log(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
+        logEvent("Building time integration object",2)
+        logEvent(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
         #mwf for interpolating subgrid error for gradients etc
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
@@ -662,8 +662,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if options != None:
             self.timeIntegration.setFromOptions(options)
-        log(memory("TimeIntegration","OneLevelTransport"),level=4)
-        log("Calculating numerical quadrature formulas",2)
+        logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
+        logEvent("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
         self.setupFieldStrides()
 
@@ -672,7 +672,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if comm.size() > 1:
             assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        log(memory("stride+offset","OneLevelTransport"),level=4)
+        logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
             if options == None or options.periodicDirichletConditions == None:
                 self.numericalFlux = numericalFluxType(self,
@@ -700,12 +700,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
-        log(memory("numericalFlux","OneLevelTransport"),level=4)
+        logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
-        log(memory("velocity postprocessor","OneLevelTransport"),level=4)
+        logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         from proteus import Archiver
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
@@ -851,7 +851,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #print "dH_sge",self.q[('dH_sge',0,0)]
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
-        log("Global residual",level=9,data=r)
+        logEvent("Global residual",level=9,data=r)
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy == None:
@@ -929,7 +929,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.ebqe[('u',0)],
             self.csrColumnOffsets_eb[(0,0)])
-        log("Jacobian ",level=10,data=jacobian)
+        logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
