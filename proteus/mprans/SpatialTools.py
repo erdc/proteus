@@ -28,7 +28,7 @@ import csv
 import os
 import numpy as np
 from proteus import AuxiliaryVariables, Archiver, Comm, Profiling, Gauges
-from proteus.Profiling import logEvent as log
+from proteus.Profiling import logEvent
 from proteus.mprans import BoundaryConditions as bc
 from proteus.SpatialTools import (Shape,
                                   Cuboid,
@@ -1208,34 +1208,34 @@ class RigidBody(AuxiliaryVariables.AV_base):
         rot_x = atan2(rot[1, 2], rot[2, 2])
         rot_y = -asin(rot[0, 2])
         rot_z = atan2(rot[0, 1], rot[0, 0])
-        log("================================================================")
-        log("=================== Rigid Body Calculation =====================")
-        log("================================================================")
-        log("Name: " + `self.Shape.name`)
-        log("================================================================")
-        log("[proteus]     t=%1.5fsec to t=%1.5fsec" % \
+        logEvent("================================================================")
+        logEvent("=================== Rigid Body Calculation =====================")
+        logEvent("================================================================")
+        logEvent("Name: " + `self.Shape.name`)
+        logEvent("================================================================")
+        logEvent("[proteus]     t=%1.5fsec to t=%1.5fsec" % \
             (t_previous, t_current))
-        log("[proteus]    dt=%1.5fsec" % (dt))
-        log("[body] ============== Pre-calculation attributes  ==============")
-        log("[proteus]     t=%1.5fsec" % (t_previous))
-        log("[proteus]     F=(% 12.7e, % 12.7e, % 12.7e)" % (F[0], F[1], F[2]))
-        log("[proteus] F*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (F2[0], F2[1], F2[2]))
-        log("[proteus]     M=(% 12.7e, % 12.7e, % 12.7e)" % (M[0], M[1], M[2]))
-        log("[proteus] M*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (M2[0], M2[1], M2[2]))
-        log("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[proteus]    dt=%1.5fsec" % (dt))
+        logEvent("[body] ============== Pre-calculation attributes  ==============")
+        logEvent("[proteus]     t=%1.5fsec" % (t_previous))
+        logEvent("[proteus]     F=(% 12.7e, % 12.7e, % 12.7e)" % (F[0], F[1], F[2]))
+        logEvent("[proteus] F*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (F2[0], F2[1], F2[2]))
+        logEvent("[proteus]     M=(% 12.7e, % 12.7e, % 12.7e)" % (M[0], M[1], M[2]))
+        logEvent("[proteus] M*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (M2[0], M2[1], M2[2]))
+        logEvent("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
             (last_pos[0], last_pos[1], last_pos[2]))
-        log("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
             (last_vel[0], last_vel[1], last_vel[2]))
-        log("[body] ===============Post-calculation attributes ==============")
-        log("[body]        t=%1.5fsec" % (t_current))
-        log("[body]        h=(% 12.7e, % 12.7e, % 12.7e)" % (h[0], h[1], h[2]))
-        log("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body] ===============Post-calculation attributes ==============")
+        logEvent("[body]        t=%1.5fsec" % (t_current))
+        logEvent("[body]        h=(% 12.7e, % 12.7e, % 12.7e)" % (h[0], h[1], h[2]))
+        logEvent("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
             (pos[0], pos[1], pos[2]))
-        log("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
             (vel[0], vel[1], vel[2]))
-        log("[body]      rot=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body]      rot=(% 12.7e, % 12.7e, % 12.7e)" % \
             (rot_x, rot_y, rot_z))
-        log("================================================================")
+        logEvent("================================================================")
 
     def step(self, dt):
         """
