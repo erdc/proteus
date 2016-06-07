@@ -1297,7 +1297,8 @@ class RigidBody(AuxiliaryVariables.AV_base):
             t_last = self.model.stepController.t_model_last
             dt_last = self.model.levelModelList[-1].dt_last
             values_towrite = []
-            if os.stat(self.record_file).st_size == 0:
+            t = t_last-dt_last
+            if t == 0:
                 headers = []
                 if self.Shape.record_dict['time'] is True:
                     headers += ['t']
@@ -1311,11 +1312,11 @@ class RigidBody(AuxiliaryVariables.AV_base):
                     headers += ['Mx', 'My', 'Mz']
                 if self.Shape.record_dict['inertia'] is True:
                     headers += ['inertia']
-                if self.Shape.record_dict['vel_'] is True:
+                if self.Shape.record_dict['vel'] is True:
                     headers += ['vel_x', 'vel_y', 'vel_z']
-                if self.Shape.record_dict['acc_'] is True:
+                if self.Shape.record_dict['acc'] is True:
                     headers += ['acc_x', 'acc_y', 'acc_z']
-                with open(self.record_file, 'a') as csvfile:
+                with open(self.record_file, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(headers)
             if self.Shape.record_dict['time'] is True:
