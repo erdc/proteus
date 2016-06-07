@@ -741,7 +741,8 @@ class SchurOperatorConstructor:
                              self.Asys_rowptr)
         # Set the diffusion coefficient terms to the same thing
         # as the velocity coeffiicents.
-        self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
+        self.L.pde.q[('a',0,0)][:] = 1.0
+#        self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
         # Remove the coefficients on the advection terms.
         self.L.pde.q[('df',0,0)][:] = 0.0
         self.L.pde.q[('df',0,1)][:] = 0.0
@@ -814,8 +815,6 @@ class SchurOperatorConstructor:
         self.Cp = self.Fsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                   self.linear_smoother.isp)
 
-        import pdb
-        pdb.set_trace()
 
         self.L.pde.q[('df',0,0)].fill(0.0)
 
@@ -824,6 +823,8 @@ class SchurOperatorConstructor:
         self.getAp().copy(self.Fp)
         self.Fp.scale(self.L.pde.coefficients.nu)
         self.Fp.axpy(-1.0,self.Cp)
+#        import pdb
+#        pdb.set_trace()
         if output_matrix==True:
             _exportMatrix(self.Fp,'Fp')
         #Ff(1:np,1:np) would be Fp, the pressure convection-diffusion matrix
