@@ -5,12 +5,12 @@ Classes for archiving numerical solution data
    :parts: 1
 """
 import Profiling
+from Profiling import logEvent
 import Comm
 import numpy
 import os
 from xml.etree.ElementTree import *
 
-log = Profiling.logEvent
 memory = Profiling.memory
 
 def indentXML(elem, level=0):
@@ -241,7 +241,7 @@ class AR_base:
             self.xmlFileGlobal.seek(0)
             self.xmlFileGlobal.truncate()
     def close(self):
-        log("Closing Archive")
+        logEvent("Closing Archive")
         if not self.useGlobalXMF:
             self.xmlFile.close()
         if self.comm.isMaster() and self.useGlobalXMF:
@@ -249,7 +249,7 @@ class AR_base:
             self.xmlFileGlobal.close()
         if self.hdfFile != None:
             self.hdfFile.close()
-        log("Done Closing Archive")
+        logEvent("Done Closing Archive")
         try:
             if not self.useGlobalXMF:
                 if self.gatherAtClose:
@@ -257,7 +257,7 @@ class AR_base:
         except:
             pass
     def allGather(self):
-        log("Gathering Archive")
+        logEvent("Gathering Archive")
         self.comm.barrier()
         if self.rank==0:
             #replace the bottom level grid with a spatial collection
@@ -287,11 +287,11 @@ class AR_base:
             indentXML(self.tree.getroot())
             self.tree.write(f)
             f.close()
-        log("Done Gathering Archive")
+        logEvent("Done Gathering Archive")
     def allGatherIncremental(self):
         import copy
         from mpi4py import MPI
-        log("Gathering Archive Time step")
+        logEvent("Gathering Archive Time step")
         self.comm.barrier()
         XDMF =self.tree.getroot()
         Domain =XDMF[-1]
@@ -362,9 +362,9 @@ class AR_base:
                     if self.comm.isMaster():
                         xml_data[0] = tostring(GridLocal)
         self.n_datasets += 1
-        log("Done Gathering Archive Time Step")
+        logEvent("Done Gathering Archive Time Step")
     def sync(self):
-        log("Syncing Archive",level=3)
+        logEvent("Syncing Archive",level=3)
         memory()
         self.allGatherIncremental()
         self.clear_xml()
@@ -397,8 +397,8 @@ class AR_base:
                 self.comm.barrier()
             else:
                 self.hdfFile.flush()
-        log("Done Syncing Archive",level=3)
-        log(memory("Syncing Archive"),level=4)
+        logEvent("Done Syncing Archive",level=3)
+        logEvent(memory("Syncing Archive"),level=4)
     def create_dataset_async(self,name,data):
         comm_world = self.comm.comm.tompi4py()
         metadata = comm_world.allgather((name,data.shape,data.dtype))
