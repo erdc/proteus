@@ -9,7 +9,6 @@ from proteus.BoundaryConditions import (BC_Base,
                                         # constantBC,
                                         # linearBC
                                         )
-from proteus.Profiling import logEvent as log
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 
