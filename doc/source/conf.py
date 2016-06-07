@@ -49,9 +49,12 @@ extensions = [
     'sphinx.ext.ifconfig',
 #    'sphinx.ext.viewcode',
     'sphinx.ext.linkcode',
+    'sphinx.ext.napoleon',
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive',
 ]
+
+napoleon_use_ivar = True
 
 autodoc_member_order = 'bysource'
 
