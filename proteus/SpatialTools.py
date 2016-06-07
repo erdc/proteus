@@ -32,7 +32,7 @@ from math import cos, sin, sqrt
 import sys
 import numpy as np
 from proteus import BoundaryConditions as bc
-from proteus.Profiling import logEvent as log
+from .Profiling import logEvent
 
 
 class Shape(object):
@@ -55,7 +55,7 @@ class Shape(object):
 
     def __init__(self, domain, nd=None, BC_class=None):
         if nd != domain.nd:
-            log('Shape ('+`nd`+'D) and Domain ('+`domain.nd`+'D)' \
+            logEvent('Shape ('+`nd`+'D) and Domain ('+`domain.nd`+'D)' \
                 ' have different dimensions!')
             sys.exit()
         self.Domain = domain
@@ -903,6 +903,6 @@ def _generateMesh(domain):
     if mesh.outputFiles['asymptote'] is True:
         domain.writeAsymptote(mesh.outputFiles['name'])
     mesh.setTriangleOptions()
-    log("""Mesh generated using: tetgen -%s %s"""  %
+    logEvent("""Mesh generated using: tetgen -%s %s"""  %
         (mesh.triangleOptions, domain.polyfile+".poly"))
 
