@@ -27,14 +27,17 @@ from itertools import compress
 import csv
 import os
 import numpy as np
-from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
-from proteus.Profiling import logEvent as log
+from proteus import AuxiliaryVariables, Archiver, Comm, Profiling, Gauges
+from proteus.Profiling import logEvent
 from proteus.mprans import BoundaryConditions as bc
 from proteus.SpatialTools import (Shape,
                                   Cuboid,
                                   Rectangle,
                                   CustomShape,
-                                  BCContainer)
+                                  ShapeSTL,
+                                  BCContainer,
+                                  _assembleGeometry,
+                                  _generateMesh)
 
 
 class ShapeRANS(Shape):
@@ -277,8 +280,8 @@ class ShapeRANS(Shape):
                                                  dragBeta=dragBeta[i],
                                                  porosity=porosity[i])
 
-    def setPorousZones(self, flags, epsFact_solid, dragAlpha=0.5/1.005e-6,
-                       dragBeta=0., porosity=1.):
+    def setPorousZones(self, flags, dragAlpha=0.5/1.005e-6, dragBeta=0.,
+                       porosity=1.):
         """
         Sets a region (given the local flag) to a porous zone
 
@@ -290,18 +293,19 @@ class ShapeRANS(Shape):
         self._attachAuxiliaryVariable('RelaxZones')
         if isinstance(flags, int):
             flags = [flags]
-            epsFact_solid = [epsFact_solid]
             dragAlpha = [dragAlpha]
             dragBeta = [dragBeta]
             porosity = [porosity]
         for i, flag in enumerate(flags):
+            # note for porous zone:
+            # epsFact_solid = q_phi_solid, --> Hs always equal to 1.
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='porous',
                                                  orientation=None,
                                                  center=None,
                                                  waves=None,
                                                  windSpeed=None,
-                                                 epsFact_solid=epsFact_solid[i],
+                                                 epsFact_solid=1.,
                                                  dragAlpha=dragAlpha[i],
                                                  dragBeta=dragBeta[i],
                                                  porosity=porosity[i])
@@ -314,6 +318,7 @@ class ShapeRANS(Shape):
 Rectangle.__bases__ = (ShapeRANS,)
 Cuboid.__bases__ = (ShapeRANS,)
 CustomShape.__bases__ = (ShapeRANS,)
+ShapeSTL.__bases__ = (ShapeRANS,)
 
 # adding extra functionality to predefined shapes
 
@@ -652,6 +657,7 @@ class Tank3D(ShapeRANS):
         sl = self.spongeLayers
         for key, value in self.abs_zones.iteritems():
             if value is True:
+                self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
                 epsFact_solid = self.spongeLayers[key]/2.
@@ -702,6 +708,7 @@ class Tank3D(ShapeRANS):
         sl = self.spongeLayers
         for key, value in self.abs_zones.iteritems():
             if value is True:
+                self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
                 epsFact_solid = self.spongeLayers[key]/2.
@@ -709,15 +716,23 @@ class Tank3D(ShapeRANS):
                 if key == 'front':
                     center[0] += 0.5*self.dim[0]-sl['front']/2.
                     orientation = [1., 0., 0.]
+                    self.BC.front.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                        windSpeed=windSpeed)
                 elif key == 'back':
                     center[0] += -0.5*self.dim[0]+sl['back']/2.
                     orientation = [-1., 0., 0.]
+                    self.BC.back.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                        windSpeed=windSpeed)
                 elif key == 'left':
                     center[1] += -0.5*self.dim[1]+sl['left']/2.
                     orientation = [0., 1., 0.]
+                    self.BC.left.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                        windSpeed=windSpeed)
                 elif key == 'right':
                     center[1] += 0.5*self.dim[1]-sl['right']/2.
                     orientation = [0., -1., 0.]
+                    self.BC.right.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                        windSpeed=windSpeed)
                 self.zones[flag] = bc.RelaxationZone(shape=self,
                                                      zone_type='generation',
                                                      orientation=orientation,
@@ -926,6 +941,8 @@ class Tank2D(ShapeRANS):
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
+            self.BC.left.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                          windSpeed=windSpeed)
         if right is True:
             center = list(self.coords)
             ind = self.regionIndice['rightSponge']
@@ -943,6 +960,8 @@ class Tank2D(ShapeRANS):
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
+            self.BC.right.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                           windSpeed=windSpeed)
 
 
 class RigidBody(AuxiliaryVariables.AV_base):
@@ -1123,34 +1142,35 @@ class RigidBody(AuxiliaryVariables.AV_base):
         rot_x = atan2(rot[1, 2], rot[2, 2])
         rot_y = -asin(rot[0, 2])
         rot_z = atan2(rot[0, 1], rot[0, 0])
-        log("================================================================")
-        log("=================== Rigid Body Calculation =====================")
-        log("================================================================")
-        log("Name: " + `self.Shape.name`)
-        log("================================================================")
-        log("[proteus]     t=%1.5fsec to t=%1.5fsec" % \
+        logEvent("================================================================")
+        logEvent("=================== Rigid Body Calculation =====================")
+        logEvent("================================================================")
+        logEvent("Name: " + `self.Shape.name`)
+        logEvent("================================================================")
+        logEvent("[proteus]     t=%1.5fsec to t=%1.5fsec" % \
             (t_previous, t_current))
-        log("[proteus]    dt=%1.5fsec" % (dt))
-        log("[body] ============== Pre-calculation attributes  ==============")
-        log("[proteus]     t=%1.5fsec" % (t_previous))
-        log("[proteus]     F=(% 12.7e, % 12.7e, % 12.7e)" % (F[0], F[1], F[2]))
-        log("[proteus] F*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (F2[0], F2[1], F2[2]))
-        log("[proteus]     M=(% 12.7e, % 12.7e, % 12.7e)" % (M[0], M[1], M[2]))
-        log("[proteus] M*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (M2[0], M2[1], M2[2]))
-        log("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[proteus]    dt=%1.5fsec" % (dt))
+        logEvent("[body] ============== Pre-calculation attributes  ==============")
+        logEvent("[proteus]     t=%1.5fsec" % (t_previous))
+        logEvent("[proteus]     F=(% 12.7e, % 12.7e, % 12.7e)" % (F[0], F[1], F[2]))
+        logEvent("[proteus] F*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (F2[0], F2[1], F2[2]))
+        logEvent("[proteus]     M=(% 12.7e, % 12.7e, % 12.7e)" % (M[0], M[1], M[2]))
+        logEvent("[proteus] M*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (M2[0], M2[1], M2[2]))
+        logEvent("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
             (last_pos[0], last_pos[1], last_pos[2]))
-        log("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
             (last_vel[0], last_vel[1], last_vel[2]))
-        log("[body] ===============Post-calculation attributes ==============")
-        log("[body]        t=%1.5fsec" % (t_current))
-        log("[body]        h=(% 12.7e, % 12.7e, % 12.7e)" % (h[0], h[1], h[2]))
-        log("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body] ===============Post-calculation attributes ==============")
+        logEvent("[body]        t=%1.5fsec" % (t_current))
+        logEvent("[body]        h=(% 12.7e, % 12.7e, % 12.7e)" % (h[0], h[1], h[2]))
+        logEvent("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
             (pos[0], pos[1], pos[2]))
-        log("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
             (vel[0], vel[1], vel[2]))
-        log("[body]      rot=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body]      rot=(% 12.7e, % 12.7e, % 12.7e)" % \
             (rot_x, rot_y, rot_z))
-        log("================================================================")
+        logEvent("================================================================")
+
 
 
 
@@ -1163,56 +1183,22 @@ def assembleDomain(domain):
 
     :param domain: domain to assemble
     """
-    # reinitialize geometry of domain
-    domain.vertices = []
-    domain.vertexFlags = []
-    domain.segments = []
-    domain.segmentFlags = []
-    domain.facets = []
-    domain.facetFlags = []
-    domain.holes = []
-    domain.regions = []
-    domain.regionFlags = []
-    # BC at flag 0
-    domain.bc = [bc.BC_RANS()]
-    domain.bc[0].setNonMaterial()
-    # barycenter at flag 0
-    domain.barycenters = np.array([[0., 0., 0.]])
+    _assembleGeometry(domain, BC_class=bc.BC_RANS)
+    domain.bc[0].setNonMaterial()  # set BC for boundary between processors
+    assembleAuxiliaryVariables(domain)
+    _generateMesh(domain)
+
+
+def assembleAuxiliaryVariables(domain):
+    """
+    Should be called after assembleGeometry
+    """
     domain.auxiliaryVariables = []
-    start_flag = 0
-    start_vertex = 0
     zones_global = {}
+    start_region = 0
+    start_rflag = 0
+    start_flag = 0
     for shape in domain.shape_list:
-        # --------------------------- #
-        # ----- DOMAIN GEOMETRY ----- #
-        # --------------------------- #
-        start_flag = len(domain.bc)-1
-        start_vertex = len(domain.vertices)
-        start_region = len(domain.regions)  # indice 0 ignored
-        if domain.regionFlags:
-            start_rflag = max(domain.regionFlags)
-        else:
-            start_rflag = 0
-        domain.bc += shape.BC_list
-        domain.vertices += (shape.vertices).tolist()
-        domain.vertexFlags += (shape.vertexFlags+start_flag).tolist()
-        barycenters = np.array([shape.barycenter for bco in shape.BC_list])
-        domain.barycenters = np.append(domain.barycenters, barycenters, axis=0)
-        if shape.segments is not None:
-            domain.segments += (shape.segments+start_vertex).tolist()
-            domain.segmentFlags += (shape.segmentFlags+start_flag).tolist()
-        if shape.facets is not None:
-            domain.facets += (shape.facets+start_vertex).tolist()
-            domain.facetFlags += (shape.facetFlags+start_flag).tolist()
-        if shape.regions is not None:
-            domain.regions += (shape.regions).tolist()
-            domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
-        if shape.holes is not None:
-            domain.holes += (shape.holes).tolist()
-        domain.getBoundingBox()
-        # --------------------------- #
-        # --- AUXILIARY VARIABLES --- #
-        # --------------------------- #
         aux = domain.auxiliaryVariables
         # ----------------------------
         # RIGID BODIES
@@ -1232,11 +1218,12 @@ def assembleDomain(domain):
             if not zones_global:
                 aux += [bc.RelaxationZoneWaveGenerator(zones_global,
                                                        domain.nd)]
-            # create arrays of default values
-            domain.porosityTypes = np.ones(len(domain.regionFlags)+1)
-            domain.dragAlphaTypes = np.zeros(len(domain.regionFlags)+1)
-            domain.dragBetaTypes = np.zeros(len(domain.regionFlags)+1)
-            domain.epsFact_solid = np.zeros(len(domain.regionFlags)+1)
+            if not hasattr(domain, 'porosityTypes'):
+                # create arrays of default values
+                domain.porosityTypes = np.ones(len(domain.regionFlags)+1)
+                domain.dragAlphaTypes = np.zeros(len(domain.regionFlags)+1)
+                domain.dragBetaTypes = np.zeros(len(domain.regionFlags)+1)
+                domain.epsFact_solid = np.zeros(len(domain.regionFlags)+1)
             i0 = start_region+1
             for flag, zone in shape.zones.iteritems():
                 ind = [i for i, f in enumerate(shape.regionFlags) if f == flag]
@@ -1248,19 +1235,10 @@ def assembleDomain(domain):
                 # update dict with global key instead of local key
                 key = flag+start_rflag
                 zones_global[key] = zone
-    # --------------------------- #
-    # ----- MESH GENERATION ----- #
-    # --------------------------- #
-    mesh = domain.MeshOptions
-    if mesh.outputFiles['poly'] is True:
-        domain.writePoly(mesh.outputFiles['name'])
-    if mesh.outputFiles['ply'] is True:
-        domain.writePLY(mesh.outputFiles['name'])
-    if mesh.outputFiles['asymptote'] is True:
-        domain.writeAsymptote(mesh.outputFiles['name'])
-    mesh.setTriangleOptions()
-    log("""Mesh generated using: tetgen -%s %s"""  %
-        (mesh.triangleOptions, domain.polyfile+".poly"))
+        start_flag += len(shape.BC_list)
+        if shape.regions is not None:
+            start_region += len(shape.regions)
+            start_rflag += max(domain.regionFlags[0:start_region])
 
 
 def get_unit_vector(vector):

@@ -7,7 +7,7 @@ from proteus import AuxiliaryVariables
 from proteus.BoundaryConditions import (BC_Base,
                                         constantBC,
                                         linearBC)
-from proteus.Profiling import logEvent as log
+from proteus.Profiling import logEvent
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 
@@ -97,6 +97,17 @@ class BC_RANS(BC_Base):
         elif len(b_or) > 2 and (b_or[2] == 1 or b_or[2] == -1):
             self.hz_dirichlet = constantBC(0.)
             self.w_stress = None
+
+    def setFixedNodes(self):
+        """
+        For moving domains: fixes nodes/boundary
+        """
+        self.hx_dirichlet = constantBC(0.)
+        self.hy_dirichlet = constantBC(0.)
+        self.hz_dirichlet = constantBC(0.)
+        self.u_stress = None
+        self.v_stress = None
+        self.w_stress = None
 
     def setNoSlip(self):
         """
@@ -413,7 +424,7 @@ class RelaxationZone:
             self.v = self.setGenerationFunctions(1)
             self.w = self.setGenerationFunctions(2)
         else:
-            log('Wrong zone type: ' + self.zone_type)
+            logEvent('Wrong zone type: ' + self.zone_type)
             sys.exit()
         self.epsFact_solid = epsFact_solid
         self.dragAlpha = dragAlpha
@@ -475,15 +486,6 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
                         coeff.q_velocity_solid[eN, k, 1] = zone.v(x, t)
                         if self.nd > 2:
                             coeff.q_velocity_solid[eN, k, 2] = zone.w(x, t)
-                        # if zone.zone_type == 'generation' and x[0] < 0.2:
-                        #     print '$$$$$$$$$$'
-                        #     print 'x: ' + str(x)
-                        #     phi = zone.center[0]-x[0]
-                        #     print 'phi: ' + str(phi)
-                        #     new_x = max(0., min(1., 0.5+phi/(2*zone.epsFact_solid)))
-                        #     print 'new_x: ' + str(new_x)
-                        #     H_s = (np.exp(new_x**3.5)-1)/(np.exp(1)-1)
-                        #     print 'H_s: ' + str(H_s)
             m.q['phi_solid'] = m.coefficients.q_phi_solid
             m.q['velocity_solid'] = m.coefficients.q_velocity_solid
 

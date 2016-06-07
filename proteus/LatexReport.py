@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 """
 Class and script for generating a report from simulation data.
+
+.. inheritance-diagram:: proteus.LatexReport
+   :parts: 1
 """
+
+from .Profiling import logEvent
 
 def openLatexReport(filename,reportname):
     latexReport = open(filename,'w')

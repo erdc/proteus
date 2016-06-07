@@ -49,9 +49,12 @@ extensions = [
     'sphinx.ext.ifconfig',
 #    'sphinx.ext.viewcode',
     'sphinx.ext.linkcode',
+    'sphinx.ext.napoleon',
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive',
 ]
+
+napoleon_use_ivar = True
 
 autodoc_member_order = 'bysource'
 
@@ -92,7 +95,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Proteus'
-copyright = u'2015, The Proteus Team'
+copyright = u'2016, The Proteus Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -172,8 +175,8 @@ html_theme_options = {
     #     ("Examples", "examples"),
     #     ("Link", "http://example.com", True),
     # ],
-    'navbar_links': [("API","/api/proteus"),
-                     ("C/C++/Fortran","/capi/html/hierarchy")],
+    'navbar_links': [("API","api/proteus"),
+                     ("C/C++/Fortran","capi/html/hierarchy")],
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
     'globaltoc_depth': 2,
@@ -228,7 +231,7 @@ html_short_title = u"Proteus"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = "corps_logo_cross_24.svg"
+# html_logo = "corps_logo_cross_24.svg"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
