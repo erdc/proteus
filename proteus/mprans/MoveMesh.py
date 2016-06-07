@@ -122,11 +122,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def preStep(self,t,firstStep=False):
-        log("MoveMesh preStep")
+        logEvent("MoveMesh preStep")
         self.model.preStep()
         for s in self.solidsList:
-            log("Calling step on solids")
-            log(`s`)
+            logEvent("Calling step on solids")
+            logEvent(`s`)
             s.step()
     def evaluate(self,t,c):
         pass
@@ -352,18 +352,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         #show quadrature
         #
-        log("Dumping quadrature shapes for model %s" % self.name,level=9)
-        log("Element quadrature array (q)", level=9)
-        for (k,v) in self.q.iteritems(): log(str((k,v.shape)),level=9)
-        log("Element boundary quadrature (ebq)",level=9)
-        for (k,v) in self.ebq.iteritems(): log(str((k,v.shape)),level=9)
-        log("Global element boundary quadrature (ebq_global)",level=9)
-        for (k,v) in self.ebq_global.iteritems(): log(str((k,v.shape)),level=9)
-        log("Exterior element boundary quadrature (ebqe)",level=9)
-        for (k,v) in self.ebqe.iteritems(): log(str((k,v.shape)),level=9)
-        log("Interpolation points for nonlinear diffusion potential (phi_ip)",level=9)
+        logEvent("Dumping quadrature shapes for model %s" % self.name,level=9)
+        logEvent("Element quadrature array (q)", level=9)
+        for (k,v) in self.q.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Element boundary quadrature (ebq)",level=9)
+        for (k,v) in self.ebq.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Global element boundary quadrature (ebq_global)",level=9)
+        for (k,v) in self.ebq_global.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Exterior element boundary quadrature (ebqe)",level=9)
+        for (k,v) in self.ebqe.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Interpolation points for nonlinear diffusion potential (phi_ip)",level=9)
         for (k,v) in self.phi_ip.iteritems():
-            log(str((k,v.shape)),level=9)
+            logEvent(str((k,v.shape)),level=9)
         #
         # allocate residual and Jacobian storage
         #
@@ -400,10 +400,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         del self.internalNodes
         self.internalNodes = None
-        log("Updating local to global mappings",2)
+        logEvent("Updating local to global mappings",2)
         self.updateLocal2Global()
-        log("Building time integration object",2)
-        log(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
+        logEvent("Building time integration object",2)
+        logEvent(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
         #mwf for interpolating subgrid error for gradients etc
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
@@ -412,8 +412,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if options != None:
             self.timeIntegration.setFromOptions(options)
-        log(memory("TimeIntegration","OneLevelTransport"),level=4)
-        log("Calculating numerical quadrature formulas",2)
+        logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
+        logEvent("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
         self.setupFieldStrides()
 
@@ -422,7 +422,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if comm.size() > 1:
             assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        log(memory("stride+offset","OneLevelTransport"),level=4)
+        logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
             if options == None or options.periodicDirichletConditions == None:
                 self.numericalFlux = numericalFluxType(self,
@@ -450,7 +450,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
-        log(memory("numericalFlux","OneLevelTransport"),level=4)
+        logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         #helper for writing out data storage
@@ -474,7 +474,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stride.append(self.stride[1])
             self.numericalFlux.isDOFBoundary[2] = self.numericalFlux.isDOFBoundary[1].copy()
             self.numericalFlux.ebqe[('u',2)] = self.numericalFlux.ebqe[('u',1)].copy()
-            log("calling cMoveMesh2D_base ctor")
+            logEvent("calling cMoveMesh2D_base ctor")
             self.moveMesh = cMoveMesh2D_base(self.nSpace_global,
                                              self.nQuadraturePoints_element,
                                              self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -483,7 +483,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                              self.nElementBoundaryQuadraturePoints_elementBoundary,
                                              compKernelFlag)
         else:
-            log("calling cMoveMesh_base ctor")
+            logEvent("calling cMoveMesh_base ctor")
             self.moveMesh = cMoveMesh_base(self.nSpace_global,
                                            self.nQuadraturePoints_element,
                                            self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -508,7 +508,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
-        log(memory("velocity postprocessor","OneLevelTransport"),level=4)
+        logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -588,7 +588,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for cj in range(self.nc):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-        log("Global residual",level=9,data=r)
+        logEvent("Global residual",level=9,data=r)
         self.nonlinear_function_evaluations += 1
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
@@ -679,7 +679,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             self.nzval[i] = scaling
                         else:
                             self.nzval[i] = 0.0
-        log("Jacobian ",level=10,data=jacobian)
+        logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         #jacobian.fwrite("jacobian_p"+`self.nonlinear_function_jacobian_evaluations`)

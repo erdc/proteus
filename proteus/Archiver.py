@@ -5,12 +5,12 @@ Classes for archiving numerical solution data
    :parts: 1
 """
 import Profiling
+from Profiling import logEvent
 import Comm
 import numpy
 import os
 from xml.etree.ElementTree import *
 
-log = Profiling.logEvent
 memory = Profiling.memory
 
 def indentXML(elem, level=0):
@@ -241,7 +241,7 @@ class AR_base:
             self.xmlFileGlobal.seek(0)
             self.xmlFileGlobal.truncate()
     def close(self):
-        log("Closing Archive")
+        logEvent("Closing Archive")
         if not self.useGlobalXMF:
             self.xmlFile.close()
         if self.comm.isMaster() and self.useGlobalXMF:
@@ -249,7 +249,7 @@ class AR_base:
             self.xmlFileGlobal.close()
         if self.hdfFile != None:
             self.hdfFile.close()
-        log("Done Closing Archive")
+        logEvent("Done Closing Archive")
         try:
             if not self.useGlobalXMF:
                 if self.gatherAtClose:
@@ -257,7 +257,7 @@ class AR_base:
         except:
             pass
     def allGather(self):
-        log("Gathering Archive")
+        logEvent("Gathering Archive")
         self.comm.barrier()
         if self.rank==0:
             #replace the bottom level grid with a spatial collection
@@ -287,11 +287,11 @@ class AR_base:
             indentXML(self.tree.getroot())
             self.tree.write(f)
             f.close()
-        log("Done Gathering Archive")
+        logEvent("Done Gathering Archive")
     def allGatherIncremental(self):
         import copy
         from mpi4py import MPI
-        log("Gathering Archive Time step")
+        logEvent("Gathering Archive Time step")
         self.comm.barrier()
         XDMF =self.tree.getroot()
         Domain =XDMF[-1]
@@ -362,9 +362,9 @@ class AR_base:
                     if self.comm.isMaster():
                         xml_data[0] = tostring(GridLocal)
         self.n_datasets += 1
-        log("Done Gathering Archive Time Step")
+        logEvent("Done Gathering Archive Time Step")
     def sync(self):
-        log("Syncing Archive",level=3)
+        logEvent("Syncing Archive",level=3)
         memory()
         self.allGatherIncremental()
         self.clear_xml()
@@ -397,8 +397,8 @@ class AR_base:
                 self.comm.barrier()
             else:
                 self.hdfFile.flush()
-        log("Done Syncing Archive",level=3)
-        log(memory("Syncing Archive"),level=4)
+        logEvent("Done Syncing Archive",level=3)
+        logEvent(memory("Syncing Archive"),level=4)
     def create_dataset_async(self,name,data):
         comm_world = self.comm.comm.tompi4py()
         metadata = comm_world.allgather((name,data.shape,data.dtype))
@@ -586,16 +586,12 @@ class XdmfWriter:
                         #    for nN in range(Xdmf_NodesPerElement):
                         #        q_l2g[eN,nN] = eN*Xdmf_NodesPerElement + nN
                         #
-                        import pdb
-#                        pdb.set_trace()
                         from proteus import Comm
                         comm = Comm.get()
                         q_l2g = numpy.arange(mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank()]*Xdmf_NodesPerElement,
                                              mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank()+1]*Xdmf_NodesPerElement,
                                              dtype='i').reshape((mesh.nElements_owned,Xdmf_NodesPerElement))
                         if ar.has_h5py:
-#                            import pdb
-#                            pdb.set_trace()
                             ar.create_dataset_sync('elements'+spaceSuffix+`tCount`,
                                                    offsets=mesh.globalMesh.elementOffsets_subdomain_owned,
                                                    data = q_l2g)
@@ -687,7 +683,7 @@ class XdmfWriter:
                     values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_t"+str(tCount),
                                            offsets = self.mesh.globalMesh.elementOffsets_subdomain_owned*u.shape[1], # verify
-                                           data = u[:self.mesh.nElements_owned].flat)
+                                           data = u[:self.mesh.nElements_owned].reshape((self.mesh.nElements_owned*u.shape[1],)))
                 else:
                     assert False, "global_sync not supported with pytables"
             else:
@@ -1302,10 +1298,6 @@ class XdmfWriter:
                 return 0
             elif spaceDim == 2:
                 Xdmf_ElementTopology = "Quadrilateral"
-
-#                import pdb
-#                pdb.set_trace()
-
                 e2s=[ [0,4,8,7], [7,8,6,3],  [4,1,5,8], [8,5,2,6] ]
                 nsubelements=4
 
