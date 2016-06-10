@@ -471,7 +471,7 @@ class KSP_petsc4py(LinearSolver):
             self.pc.setUp()
             if self.preconditioner:
                 self.preconditioner.setUp(self.ksp)
-        self.pc.getFieldSplitSubKSP()[1].setPCSide(1)
+                self.pc.getFieldSplitSubKSP()[1].setPCSide(1)
         self.ksp.setUp()
         self.ksp.pc.setUp()
 #        self.ksp.pc.getFieldSplitSubKSP()[1].setConvergenceTest(self.preconditioner._converged_trueRes)
