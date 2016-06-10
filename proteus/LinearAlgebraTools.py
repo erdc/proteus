@@ -13,7 +13,7 @@ representations using PETSc.
 import numpy
 import math
 from .superluWrappers import *
-from Profiling import logEvent
+from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
 from . import flcbdfWrappers
 

@@ -216,8 +216,8 @@ class Dispatcher():
             stats = pstats.Stats(profile_rank_name, stream=profilingLog)
             stats.__dict__['files']=['Maximum times across MPI tasks for',
                                      stats.__dict__['files'][0]]
+            statsm = stats.stats
             for i in range(1,comm.size()):
-                statsm = stats.stats
                 pstatsi = pstats.Stats(profile_name+str(i))
                 statsi = pstatsi.stats
                 stats.__dict__['files'].append(pstatsi.__dict__['files'][0])
