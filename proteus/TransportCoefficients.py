@@ -979,17 +979,23 @@ class NavierStokes(TC_base):
         hamiltonian={}
         if nd==2:
             variableNames=['p','u','v']
-            mass= {1:{1:'linear'},
+            mass= {0:{0:'linear'},
+                   1:{1:'linear'},
                    2:{2:'linear'}}
-            advection = {0:{1:'linear',
+            advection = {0:{0:'linear',
+                            1:'linear',
                             2:'linear'},
-                         1:{1:'nonlinear',
+                         1:{0:'nonlinear',
+                            1:'nonlinear',
                             2:'nonlinear'},
-                         2:{1:'nonlinear',
+                         2:{0:'nonlinear',
+                            1:'nonlinear',
                             2:'nonlinear'}}
-            diffusion  = {1:{1:{1:'constant'}},
+            diffusion  = {0:{0:{0:'constant'}},
+                          1:{1:{1:'constant'}},
                           2:{2:{2:'constant'}}}
-            potential= {1:{1:'u'},
+            potential= {0:{0:'u'},
+                        1:{1:'u'},
                         2:{2:'u'}}
             reaction = {1:{1:'constant'},
                         2:{2:'constant'}}
