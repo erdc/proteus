@@ -77,7 +77,7 @@ class TestStokesOperatorConstruction():
         so.tnList = [0.,1.]
         so.name = pList[0].name
         so.sList=[default_s]
-        opts.verbose=True
+        opts.verbose=False
         opts.profile=True
         self.ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
         smoother = LinearSolvers.NavierStokes3D_Qp(L=self.ns.modelList[0].par_jacobianList[1])
@@ -146,3 +146,7 @@ class TestStokesOperatorConstruction():
 if __name__ == '__main__':
     from proteus import Comm
     comm = Comm.init()   
+    test = TestStokesOperatorConstruction()
+    test.setUp()
+#    test.test_02_PressureLaplace()
+    test.test_05_FullRun()

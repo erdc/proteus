@@ -471,6 +471,7 @@ class KSP_petsc4py(LinearSolver):
             self.pc.setUp()
             if self.preconditioner:
                 self.preconditioner.setUp(self.ksp)
+        self.pc.getFieldSplitSubKSP()[1].setPCSide(1)
         self.ksp.setUp()
         self.ksp.pc.setUp()
 #        self.ksp.pc.getFieldSplitSubKSP()[1].setConvergenceTest(self.preconditioner._converged_trueRes)
@@ -495,6 +496,7 @@ class KSP_petsc4py(LinearSolver):
             self.pccontext.par_u = par_u
         if self.matcontext != None:
             self.matcontext.par_b = par_b
+        self.bdyNullSpace=False
         if self.bdyNullSpace==True:
             # is there a reason par_b should not be owned by self?
             self.__setNullSpace(par_b)
@@ -531,8 +533,9 @@ class KSP_petsc4py(LinearSolver):
         """
         pressure_null_space = p4pyPETSc.NullSpace().create(constant=True)
         if self.ksp.getOperators()[0].isNullSpace(self.preconditioner.global_nsp):
-            self.ksp.getOperators()[1].setNullSpace(self.preconditioner.global_nsp)
-            par_b.remove_null_space(self.preconditioner.global_nsp)
+            pass
+#            self.ksp.getOperators()[1].setNullSpace(self.preconditioner.global_nsp)
+#            par_b.remove_null_space(self.preconditioner.global_nsp)
         else:
             raise Exception('The nullspace assigned to the ksp operator is not correct.')
         if self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].isNullSpace(pressure_null_space):
@@ -643,6 +646,10 @@ class KSP_petsc4py(LinearSolver):
                 logEvent("NAHeader Preconditioner LSC" )
                 self.preconditioner = NavierStokes3D_LSC(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
+            elif Preconditioner == NavierStokes_Yosida:
+                logEvent("NAHeader Preconditioner Yosida" )
+                self.preconditioner = NavierStokes_Yosida(par_L,prefix,self.bdyNullSpace)
+                self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleNavierStokes2D:
                 self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
                 self.pc = self.preconditioner.pc
@@ -655,7 +662,14 @@ class KSP_petsc4py(LinearSolver):
         
 
 class SchurOperatorConstructor:
-    """ Generate matrices for use in Schur complement preconditioner operators. """
+    """ Generate matrices for use in Schur complement preconditioner operators. 
+
+    Notes
+    -----
+    TODO (ARB) - This class should probably have its own test class.
+    TODO (ARB) - what should be self. vs. returned?
+    TODO (ARB) - Get the matrix allocation function working
+    """
     def __init__(self, linear_smoother, pde_type):
         """
         Initialize a Schur Operator constructor.
@@ -690,7 +704,7 @@ class SchurOperatorConstructor:
         self.Qsys_petsc4py = self._massMatrix()
         self.Qp = self.Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isp)
         if output_matrix==True:
-            _exportMatrix(self.Qp,"Qp")
+            self._exportMatrix(self.Qp,"Qp")
         return self.Qp
 
     def getQv(self,output_matrix=False):
@@ -707,9 +721,10 @@ class SchurOperatorConstructor:
             The velocity mass matrix.
         """
         Qsys_petsc4py = self._massMatrix()
-        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,self.linear_smoother.isv)
+        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+                                             self.linear_smoother.isv)
         if output_matrix==True:
-            _exportmatrix(self.Qv,'Qv')
+            self._exportmatrix(self.Qv,'Qv')
         return self.Qv
 
     def getAp(self,output_matrix=False):
@@ -725,48 +740,34 @@ class SchurOperatorConstructor:
         Ap : matrix
             The Laplacian pressure matrix.
         """
-        #modify the diffusion term in the mass equation so the p-p block is Ap
-        self.L.pde.coefficients.evaluate(0.0,self.L.pde.q)
-        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-        self.Asys_rowptr = rowptr.copy()
-        self.Asys_colind = colind.copy()
-        self.Asys_nzval = nzval.copy()
-        L_sizes = self.L.getSizes()
-        nr = L_sizes[0][0]
-        nc = L_sizes[1][0]
-        self.Asys =SparseMat(nr,nc,
-                             self.Asys_nzval.shape[0],
-                             self.Asys_nzval,
-                             self.Asys_colind,
-                             self.Asys_rowptr)
-        # Set the diffusion coefficient terms to the same thing
-        # as the velocity coeffiicents.
-        self.L.pde.q[('a',0,0)][:] = 1.0
-#        self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
-        # Remove the coefficients on the advection terms.
-        self.L.pde.q[('df',0,0)][:] = 0.0
-        self.L.pde.q[('df',0,1)][:] = 0.0
-        self.L.pde.q[('df',0,2)][:] = 0.0
-        self.L.pde.getSpatialJacobian(self.Asys)#notice switched to  Spatial
-        self.Asys_petsc4py = self.L.duplicate()
-        A_csr_rep_local = self.Asys.getSubMatCSRrepresentation(0,L_sizes[0][0])
-        self.Asys_petsc4py.setValuesLocalCSR(A_csr_rep_local[0],
-                                             A_csr_rep_local[1],
-                                             A_csr_rep_local[2],
-                                             p4pyPETSc.InsertMode.INSERT_VALUES)
-        self.Asys_petsc4py.assemblyBegin()
-        self.Asys_petsc4py.assemblyEnd()
-        self.Ap = self.Asys_petsc4py.getSubMatrix(self.linear_smoother.isp,
-                                                  self.linear_smoother.isp)
+        Ap_sys_petsc4py = self._getLaplace()
+        self.Ap = Ap_sys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                               self.linear_smoother.isp)
         if output_matrix==True:
-            _exportMatrix(self.Ap,'Ap')
-        #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
-        #now zero all the dummy coefficents
-        self.L.pde.q[('a',0,0)][:] = 0.0
-        self.L.pde.q[('df',0,1)][...,0] = 1.0
-        self.L.pde.q[('df',0,2)][...,1] = 1.0
+            self._exportmatrix(self.Ap,'Ap')
         return self.Ap
 
+    def getAv(self,output_matrix=False):
+        """ Return the Laplacian velocity matrix Av.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether matrix should be exported.
+
+        Returns
+        -------
+        Av : matrix
+            The Laplacian velocity matrix.
+        """
+        Av_sys_petsc4py = self._getLaplace()
+        self.Av = Av_sys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+                                               self.linear_smoother.isv)
+        if output_matrix==True:
+            self._exportMatrix(self.Av,'Av')
+        return self.Av
+
+        
     def getFp(self,output_matrix=False):
         """
         Return the convection matrix for the pressure Fp.
@@ -780,6 +781,11 @@ class SchurOperatorConstructor:
         -------
         Fp : matrix
              The convection-diffusion pressure matrix.
+
+        Notes
+        ----
+        While I've tested this function, this may still contain a bug.
+        Needs to be refactored.
         """
         #modify the diffusion term in the mass equation so the p-p block is Fp
         # First generate the advection part of Fp
@@ -820,53 +826,11 @@ class SchurOperatorConstructor:
 
         self.Fp = p4pyPETSc.Mat().createAIJ(self.getAp().getSize())
         self.Fp.setUp()
-        self.getAp().copy(self.Fp)
-        self.Fp.scale(self.L.pde.coefficients.nu)
-        self.Fp.axpy(-1.0,self.Cp)
-#        import pdb
-#        pdb.set_trace()
+        self.getAp().copy(self.Fp) 
+        self.Fp.axpy(1.0,self.Cp)
         if output_matrix==True:
-            _exportMatrix(self.Fp,'Fp')
-        #Ff(1:np,1:np) would be Fp, the pressure convection-diffusion matrix
-        #
-        #now zero all the dummy coefficents
-        #
+            self._exportMatrix(self.Fp,'Fp')
         return self.Fp
-
-    def _setupB(self):
-        """ Initializes construction of the B operator. """
-        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-        self.B_rowptr = rowptr.copy()
-        self.B_colind = colind.copy()
-        self.B_nzval = nzval.copy()
-        L_sizes = self.L.getSizes()
-        nr = L_sizes[0][0]
-        nc = L_sizes[1][0]
-        self.B =SparseMat(nr,nc,
-                          self.B_nzval.shape[0],
-                          self.B_nzval,
-                          self.B_colind,
-                          self.B_rowptr)
-        self.L.pde.q[('f',0)][...,0] = self.L.pde.q[('u',1)]
-        self.L.pde.q[('f',0)][...,1] = self.L.pde.q[('u',2)]
-        self.L.pde.q[('df',0,1)][...,0] = 1.0
-        self.L.pde.q[('df',0,2)][...,1] = 1.0
-        self.L.pde.q[('H',1)][:] = self.L.pde.q[('grad(u)',0)][...,0]
-        self.L.pde.q[('H',2)][:] = self.L.pde.q[('grad(u)',0)][...,1]
-        self.L.pde.q[('dH',1,0)][...,0] = 1.0
-        self.L.pde.q[('dH',2,0)][...,1] = 1.0
-        self.L.pde.getSpatialJacobian(self.B)
-        self.Bsys_petsc4py = self.L.duplicate()
-        B_csr_rep_local = self.B.getSubMatCSRrepresentation(0,L_sizes[0][0])
-        self.Bsys_petsc4py.setValuesLocalCSR(B_csr_rep_local[0],
-                                             B_csr_rep_local[1],
-                                             B_csr_rep_local[2],
-                                             p4pyPETSc.InsertMode.INSERT_VALUES)
-        self.Bsys_petsc4py.assemblyBegin()
-        self.Bsys_petsc4py.assemblyEnd()
-        # from nose.tools import set_trace
-        # set_trace()
-
 
     def getB(self,output_matrix=False):
         """ Create the B operator.
@@ -885,7 +849,7 @@ class SchurOperatorConstructor:
         self.B = self.Bsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                  self.linear_smoother.isv)
         if output_matrix==True:
-            _exportMatrix(self.B,'B')
+            self._exportMatrix(self.B,'B')
         return self.B
 
     def getBt(self,output_matrix=False):
@@ -905,7 +869,7 @@ class SchurOperatorConstructor:
         self.Bt = self.Bsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
                                                   self.linear_smoother.isp)
         if output_matrix==True:
-            _exportMatrix(self.Bt,'Bt')
+            self._exportMatrix(self.Bt,'Bt')
         return self.Bt
 
     def getF(self,output_matrix=False):
@@ -933,8 +897,15 @@ class SchurOperatorConstructor:
         self.F = self.Fsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
                                                  self.linear_smoother.isv)
         if output_matrix==True:
-            _exportMatrix(self.F,'F')
+            self._exportMatrix(self.F,'F')
         return self.F
+
+    def getTildeA(self,output_matrix = False):
+        """ Only take the symmetric parts of the A """
+        self.Av = self.getAv()
+        self.Av.scale(self.L.pde.coefficients.nu)
+        #TODO (ARB) - needs mass matrix term for time dependent problem
+        return self.Av
 
     def _massMatrix(self):
         """ Generates and returns the mass matrix.
@@ -978,6 +949,124 @@ class SchurOperatorConstructor:
         self.L.pde.q[('dm',1,1)][:] = 0.0
         self.L.pde.q[('dm',2,2)][:] = 0.0
         return Qsys_petsc4py
+
+    def _getLaplace(self,output_matrix=False):
+        """ Return the Laplacian pressure matrix Ap.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether matrix should be exported.
+
+        Returns
+        -------
+        A : matrix
+            The Laplacian  matrix.
+
+        TODO (ARB)  Write supporting tests.
+        """
+        #modify the diffusion term in the mass equation so the p-p block is Ap
+        self.L.pde.coefficients.evaluate(0.0,self.L.pde.q)
+        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+        self.Asys_rowptr = rowptr.copy()
+        self.Asys_colind = colind.copy()
+        self.Asys_nzval = nzval.copy()
+        L_sizes = self.L.getSizes()
+        nr = L_sizes[0][0]
+        nc = L_sizes[1][0]
+        self.Asys =SparseMat(nr,nc,
+                             self.Asys_nzval.shape[0],
+                             self.Asys_nzval,
+                             self.Asys_colind,
+                             self.Asys_rowptr)
+        # Set the diffusion coefficient terms to the same thing
+        # as the velocity coeffiicents.
+        self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
+        # Remove the coefficients on the advection terms.
+        self.L.pde.q[('df',0,0)][:] = 0.0
+        self.L.pde.q[('df',0,1)][:] = 0.0
+        self.L.pde.q[('df',0,2)][:] = 0.0
+
+        tmp1 = self.L.pde.q[('f',1)].copy()
+        tmp2 = self.L.pde.q[('f',2)].copy()
+     
+        tmp3 = self.L.pde.q[('df',1,0)].copy()
+        tmp4 = self.L.pde.q[('df',1,1)].copy()
+        tmp5 = self.L.pde.q[('df',1,2)].copy()
+        
+        tmp6 = self.L.pde.q[('df',2,0)].copy()
+        tmp7 = self.L.pde.q[('df',2,1)].copy()
+        tmp8 = self.L.pde.q[('df',2,2)].copy()
+
+        self.L.pde.q[('f',1)][:] = 0.0
+        self.L.pde.q[('f',2)][:] = 0.0
+
+        self.L.pde.q[('df',1,0)][:] = 0.0
+        self.L.pde.q[('df',1,1)][:] = 0.0
+        self.L.pde.q[('df',1,2)][:] = 0.0
+
+        self.L.pde.q[('df',2,0)][:] = 0.0
+        self.L.pde.q[('df',2,1)][:] = 0.0
+        self.L.pde.q[('df',2,2)][:] = 0.0
+
+        self.L.pde.getSpatialJacobian(self.Asys)#notice switched to  Spatial
+        Asys_petsc4py = self.L.duplicate()
+        A_csr_rep_local = self.Asys.getSubMatCSRrepresentation(0,L_sizes[0][0])
+        Asys_petsc4py.setValuesLocalCSR(A_csr_rep_local[0],
+                                        A_csr_rep_local[1],
+                                        A_csr_rep_local[2],
+                                        p4pyPETSc.InsertMode.INSERT_VALUES)
+        Asys_petsc4py.assemblyBegin()
+        Asys_petsc4py.assemblyEnd()
+        self.L.pde.q[('a',0,0)][:] = 0.0
+        self.L.pde.q[('df',0,1)][...,0] = 1.0
+        self.L.pde.q[('df',0,2)][...,1] = 1.0
+
+        self.L.pde.q[('f',1)] = tmp1
+        self.L.pde.q[('f',2)] = tmp2
+
+        self.L.pde.q[('df',1,0)] = tmp3
+        self.L.pde.q[('df',1,1)] = tmp4
+        self.L.pde.q[('df',1,2)] = tmp5
+
+        self.L.pde.q[('df',2,0)] = tmp6
+        self.L.pde.q[('df',2,1)] = tmp7
+        self.L.pde.q[('df',2,2)] = tmp8
+        return Asys_petsc4py
+
+    def _setupB(self):
+        """ Initializes construction of the B operator. """
+        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+        self.B_rowptr = rowptr.copy()
+        self.B_colind = colind.copy()
+        self.B_nzval = nzval.copy()
+        L_sizes = self.L.getSizes()
+        nr = L_sizes[0][0]
+        nc = L_sizes[1][0]
+        self.B =SparseMat(nr,nc,
+                          self.B_nzval.shape[0],
+                          self.B_nzval,
+                          self.B_colind,
+                          self.B_rowptr)
+        self.L.pde.q[('f',0)][...,0] = self.L.pde.q[('u',1)]
+        self.L.pde.q[('f',0)][...,1] = self.L.pde.q[('u',2)]
+        self.L.pde.q[('df',0,1)][...,0] = 1.0
+        self.L.pde.q[('df',0,2)][...,1] = 1.0
+        self.L.pde.q[('H',1)][:] = self.L.pde.q[('grad(u)',0)][...,0]
+        self.L.pde.q[('H',2)][:] = self.L.pde.q[('grad(u)',0)][...,1]
+        self.L.pde.q[('dH',1,0)][...,0] = 1.0
+        self.L.pde.q[('dH',2,0)][...,1] = 1.0
+        self.L.pde.getSpatialJacobian(self.B)
+        self.Bsys_petsc4py = self.L.duplicate()
+        B_csr_rep_local = self.B.getSubMatCSRrepresentation(0,L_sizes[0][0])
+        self.Bsys_petsc4py.setValuesLocalCSR(B_csr_rep_local[0],
+                                             B_csr_rep_local[1],
+                                             B_csr_rep_local[2],
+                                             p4pyPETSc.InsertMode.INSERT_VALUES)
+        self.Bsys_petsc4py.assemblyBegin()
+        self.Bsys_petsc4py.assemblyEnd()
+        # from nose.tools import set_trace
+        # set_trace()
 
     def _initializeMatrix(self):
         """ Allocates memory for the matrix operators.
@@ -1037,13 +1126,13 @@ class SchurPrecon:
         """
         self.PCType = 'schur'
         self.L = L
-        self.__initializeIS(prefix)
+        self._initializeIS(prefix)
         self.pc.setFromOptions()
 
     def setUp(self,global_ksp):
         pass
         
-    def __initializeIS(self,prefix):
+    def _initializeIS(self,prefix):
         """ Sets the index set (IP) for the pressure and velocity 
         
         Notes
@@ -1173,7 +1262,7 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
             be approximated using the PETSc default or the pressure mass
             matrix. Generally this should be set to False.
         """
-        # Create the pressure mass matrix and scale by the viscosity.
+        # Create the pressure mass matrix and scaxle by the viscosity.
         self.Qp = self.operator_constructor.getQp()
         self.Qp.scale(1./self.L.pde.coefficients.nu)
         L_sizes = self.Qp.size
@@ -1252,22 +1341,14 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
 
-
 class NavierStokes3D_LSC(NavierStokesSchur) :
     def __init__(self,L,prefix=None,bdyNullSpace=False):
-        """
-        Initialize the least squares commutator preconditioning class.
+        """ Initialize the least squares commutator preconditioning class.
 
         Parameters
         ----------
         L :  
         prefix : 
-
-        Notes
-        -----
-        This method runs but remains a work in progress.  Notably the
-        convection diffusion operator and boundary conditions need to
-        be tested and taylored to problem specific boundary conditions.
         """
         NavierStokesSchur.__init__(self,L,prefix,bdyNullSpace)
 
@@ -1302,6 +1383,61 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
+
+class NavierStokes_Yosida(NavierStokesSchur):
+    def __init__(self,L,prefix=None,bdyNullSpace=False):
+        """ Initialize the Yosida preconditioner.
+
+        Parameters
+        ----------
+        L :
+        prefix :
+        """
+        NavierStokesSchur.__init__(self,L,prefix,bdyNullSpace)
+
+    def setUp(self,global_ksp):
+        """ Configure PETSc's KSP object with the Yosida preconditioner.
+
+        Parameters
+        ----------
+        global_ksp :
+        """
+        # 3. Build a scaled pressure mass matrix for a preconditioner
+        self.Qp = self.operator_constructor.getQp()
+        self.Qp.scale(1./self.L.pde.coefficients.nu)
+        L_sizes = self.Qp.size
+        L_range = self.Qp.owner_range
+        # Setup a PETSc shell for the inverse Qp operator
+        self.QpInv_shell = p4pyPETSc.Mat().create()
+        self.QpInv_shell.setSizes(L_sizes)
+        self.QpInv_shell.setType('python')
+        self.matcontext_inv = MatrixInvShell(self.Qp)
+        self.QpInv_shell.setPythonContext(self.matcontext_inv)
+        self.QpInv_shell.setUp()
+        # 1. Get required operators
+        tildeA = self.operator_constructor.getTildeA()
+        B = self.operator_constructor.getB()
+        # 3. Build a PETSc shell for the yosida operator
+        self.yosida_shell = p4pyPETSc.Mat().create()
+        self.yosida_shell.setSizes(L_sizes)
+        self.yosida_shell.setType('python')
+        self.matcontext = B_Ainv_Bt_shell(tildeA,B)
+        self.yosida_shell.setPythonContext(self.matcontext)
+        self.yosida_shell.setUp()
+        # Attach shells to KSP object
+
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()        
+
+        global_ksp.pc.getFieldSplitSubKSP()[1].setOperators(self.yosida_shell,
+                                                            self.yosida_shell)
+        self._setSchurlog(global_ksp)
+        self.bdyNullSpace=False
+        # if self.bdyNullSpace == True:
+        #     self._setConstantPressureNullSpace(global_ksp)
+
+
 
 class SimpleDarcyFC:
     def __init__(self,L):
