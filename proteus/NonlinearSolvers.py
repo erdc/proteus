@@ -2261,7 +2261,7 @@ class MultilevelNonlinearSolver:
             else:
                 par_u=None
                 par_r=None
-            log("  NumericalAnalytics Newton iteration for level " + `l`, level = 0)
+            logEvent("  NumericalAnalytics Newton iteration for level " + `l`, level = 0)
             self.solverList[l].solve(u = uList[l],
                                      r = rList[l],
                                      b = bList[l],
