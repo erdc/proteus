@@ -331,12 +331,12 @@ class Cuboid(Shape):
                                       [x+0.5*L, y-0.5*H],
                                       [x+0.5*L, y+0.5*H],
                                       [x-0.5*L, y+0.5*H]])
-        self.facets = np.array([[[0, 1, 2, 3]],  # bottom
-                                [[1, 2, 6, 5]],  # front
-                                [[2, 3, 7, 6]],  # right
-                                [[3, 0, 4, 7]],  # back
-                                [[0, 1, 5, 4]],  # left
-                                [[4, 5, 6, 7]]])  # top
+        self.facets = np.array([[[0, 1, 2, 3]],  # z-
+                                [[1, 2, 6, 5]],  # y+
+                                [[2, 3, 7, 6]],  # x+
+                                [[3, 0, 4, 7]],  # y-
+                                [[0, 1, 5, 4]],  # x-
+                                [[4, 5, 6, 7]]])  # z+
         self.b_or = np.array([[0.,  0., -1.],
                               [0.,  1.,  0.],
                               [1.,  0.,  0.],
@@ -345,38 +345,38 @@ class Cuboid(Shape):
                               [0.,  0.,  1.]])
         self.regions = np.array([[x, y, z]])
         # defining flags for boundary conditions
-        self.boundaryTags = bt = {'bottom': 1,
-                                  'front': 2,
-                                  'right': 3,
-                                  'back': 4,
-                                  'left': 5,
-                                  'top': 6}
-        self.facetFlags = np.array([bt['bottom'], bt['front'], bt['right'],
-                                    bt['back'], bt['left'], bt['top']])
-        self.vertexFlags = np.array([bt['bottom'], bt['bottom'], bt['bottom'],
-                                     bt['bottom'], bt['top'], bt['top'],
-                                     bt['top'], bt['top']])
+        self.boundaryTags = bt = {'z-': 1,
+                                  'y+': 2,
+                                  'x+': 3,
+                                  'y-': 4,
+                                  'x-': 5,
+                                  'z+': 6}
+        self.facetFlags = np.array([bt['z-'], bt['y+'], bt['x+'],
+                                    bt['y-'], bt['x-'], bt['z+']])
+        self.vertexFlags = np.array([bt['z-'], bt['z-'], bt['z-'],
+                                     bt['z-'], bt['z+'], bt['z+'],
+                                     bt['z+'], bt['z+']])
         self.regionFlags = np.array([1])
         # Initialize (empty) boundary conditions
-        self.BC_dict = {'bottom': self.BC_class(shape=self, name='bottom',
-                                                 b_or=self.b_or, b_i=0),
-                        'front': self.BC_class(shape=self, name='front',
-                                                b_or=self.b_or, b_i=1),
-                        'right': self.BC_class(shape=self, name='right',
-                                                b_or=self.b_or, b_i=2),
-                        'back': self.BC_class(shape=self, name='back',
-                                               b_or=self.b_or, b_i=3),
-                        'left': self.BC_class(shape=self, name='left',
-                                               b_or=self.b_or, b_i=4),
-                        'top': self.BC_class(shape=self, name='top',
-                                              b_or=self.b_or, b_i=5)}
-        self.BC_list = [self.BC_dict['bottom'],
-                        self.BC_dict['front'],
-                        self.BC_dict['right'],
-                        self.BC_dict['back'],
-                        self.BC_dict['left'],
-                        self.BC_dict['top']]
-        self.BC = BCContainer(self.BC_dict)
+        self.BC = {'z-': self.BC_class(shape=self, name='z-',
+                                       b_or=self.b_or, b_i=0),
+                   'y+': self.BC_class(shape=self, name='y+',
+                                       b_or=self.b_or, b_i=1),
+                   'x+': self.BC_class(shape=self, name='x+',
+                                       b_or=self.b_or, b_i=2),
+                   'y-': self.BC_class(shape=self, name='y-',
+                                       b_or=self.b_or, b_i=3),
+                   'x-': self.BC_class(shape=self, name='x-',
+                                       b_or=self.b_or, b_i=4),
+                   'z+': self.BC_class(shape=self, name='z+',
+                                       b_or=self.b_or, b_i=5)}
+        self.BC_list = [self.BC['z-'],
+                        self.BC['y+'],
+                        self.BC['x+'],
+                        self.BC['y-'],
+                        self.BC['x-'],
+                        self.BC['z+']]
+        # self.BC = BCContainer(self.BC_dict)
         self.barycenter = np.array(barycenter) or np.array(coords)
         self.It = np.array([[(W**2.+H**2.)/12., 0, 0],
                             [0, (L**2.+H**2.)/12., 0],
@@ -445,28 +445,28 @@ class Rectangle(Shape):
                               [0., 1.],
                               [-1., 0.]])
         self.regions = np.array([[x, y]])
-        self.boundaryTags = bt = {'bottom': 1,
-                                  'right': 2,
-                                  'top': 3,
-                                  'left': 4}
-        self.segmentFlags = np.array([bt['bottom'], bt['right'], bt['top'],
-                                      bt['left']])  # bottom, right, top, left
-        self.vertexFlags = np.array([bt['bottom'], bt['bottom'], bt['top'],
-                                     bt['top']])  # bottom, bottom, top, top
+        self.boundaryTags = bt = {'y-': 1,
+                                  'x+': 2,
+                                  'y+': 3,
+                                  'x-': 4}
+        self.segmentFlags = np.array([bt['y-'], bt['x+'], bt['y+'],
+                                      bt['x-']])  # y-, x+, y+, x-
+        self.vertexFlags = np.array([bt['y-'], bt['y-'], bt['y+'],
+                                     bt['y+']])  # y-, y-, y+, y+
         self.regionFlags = np.array([1])
-        self.BC_dict = {'bottom': self.BC_class(shape=self, name='bottom',
-                                                 b_or=self.b_or, b_i=0),
-                        'right': self.BC_class(shape=self, name='right',
-                                                b_or=self.b_or, b_i=1),
-                        'top': self.BC_class(shape=self, name='top',
-                                              b_or=self.b_or, b_i=2),
-                        'left': self.BC_class(shape=self, name='left',
-                                               b_or=self.b_or, b_i=3)}
-        self.BC_list = [self.BC_dict['bottom'],
-                        self.BC_dict['right'],
-                        self.BC_dict['top'],
-                        self.BC_dict['left']]
-        self.BC = BCContainer(self.BC_dict)
+        self.BC = {'y-': self.BC_class(shape=self, name='y-',
+                                       b_or=self.b_or, b_i=0),
+                   'x+': self.BC_class(shape=self, name='x+',
+                                       b_or=self.b_or, b_i=1),
+                   'y+': self.BC_class(shape=self, name='y+',
+                                       b_or=self.b_or, b_i=2),
+                   'x-': self.BC_class(shape=self, name='x-',
+                                       b_or=self.b_or, b_i=3)}
+        self.BC_list = [self.BC['y-'],
+                        self.BC['x+'],
+                        self.BC['y+'],
+                        self.BC['x-']]
+        # self.BC = BCContainer(self.BC_dict)
         self.It = L**2+H**2/12
 
     def setDimensions(self, dim):
@@ -546,7 +546,7 @@ class CustomShape(Shape):
             self._checkFlags(regionFlags)
             self.regions = np.array(regions)
             self.regionFlags = np.array(regionFlags)
-        self.BC_dict = {}
+        self.BC = {}
         self.BC_list = [None]*len(boundaryTags)
         b_or = [None]*len(boundaryTags)
         self.b_or = b_or
@@ -554,9 +554,9 @@ class CustomShape(Shape):
             b_i = flag-1  # start at index 0
             if boundaryOrientations is not None:
                 b_or[b_i] = boundaryOrientations[tag]
-            self.BC_dict[tag] = self.BC_class(shape=self, name=tag, b_or=b_or, b_i=b_i)
-            self.BC_list[b_i] = self.BC_dict[tag]
-        self.BC = BCContainer(self.BC_dict)
+            self.BC[tag] = self.BC_class(shape=self, name=tag, b_or=b_or, b_i=b_i)
+            self.BC_list[b_i] = self.BC[tag]
+        # self.BC = BCContainer(self.BC_dict)
         if barycenter is not None:
             self.barycenter = np.array(barycenter)
 
@@ -581,9 +581,9 @@ class ShapeSTL(Shape):
         self.facetFlags = np.ones(len(self.facets))
         self.vertexFlags = np.ones(len(self.vertices))
         self.boundaryTags = {'stl': 1}
-        self.BC_dict = {'stl': self.BC_class(shape=self, name='stl')}
-        self.BC_list = [self.BC_dict['stl']]
-        self.BC = BCContainer(self.BC_dict)
+        self.BC = {'stl': self.BC_class(shape=self, name='stl')}
+        self.BC_list = [self.BC['stl']]
+        # self.BC = BCContainer(self.BC_dict)
 
 
 def getInfoFromSTL(filename):
