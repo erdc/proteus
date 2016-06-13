@@ -35,19 +35,17 @@ def loadExistingFunction(funcName, validFunctions):
     --------
     None if function name is in the function list
     System exit otherwise
-
     """
+
     funcNames = []
-    for func  in validFunctions:
-            funcNames.append(func.__name__)
-            if func.__name__ == funcName:
-                func_ret = func
+    for func in validFunctions:
+        funcNames.append(func.__name__)
+        if func.__name__ == funcName:
+            func_ret = func
     if funcName not in funcNames:
         logEvent("ERROR! Wavetools.py: Wrong function type (%s) given: Valid wavetypes are %s" %(funcName,funcNames), level=0)
         sys.exit(1)
     return func_ret
-       
-
 
 def setVertDir(g):
     """ Returns the unit vector for the vertical direction taken as opposite to the gravity direction
@@ -161,9 +159,9 @@ def returnRectangles3D(a,x,y):
     ai = 0.5*(a[1:,:]+a[:-1,:])
     ai = 0.5*(ai[:,1:]+ai[:,:-1])
     for ii in range(len(x)-1):
-        ai[ii,:] *= (y[1:]-y[:-1]) 
+        ai[ii,:] *= (y[1:]-y[:-1])
     for jj in range(len(y) - 1):
-        ai[:,jj] *= (x[1:]-x[:-1])    
+        ai[:,jj] *= (x[1:]-x[:-1])
     return ai
 def normIntegral(f,dom):
     """Returns a normalised 2D function such as :math: `(\int_\Omega f d\Omega =1)`
@@ -383,9 +381,8 @@ def cos2s(theta,f,s=10):
         fun[:,ii] = np.cos(theta/2)**(2*s)
     return fun
 def mitsuyasu(theta,fi,f0,smax=10):
-    """The cos2s wave directional spread with wave frequency dependency (mitsuyasu spread) 
+    """The cos2s wave directional spread with wave frequency dependency (mitsuyasu spread)
     Equation from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010 (3rd ed) eq. 2.22 - 2.25
-
     Parameters
     ----------    
     param : theta
@@ -460,7 +457,6 @@ def tophat(l,cutoff):
     Returns
     --------
     Numpy array of top hat filter
-
     """
     a = np.zeros(l,)
     cut = int(cutoff*l)
@@ -508,9 +504,8 @@ def decompose_tseries(time,eta,dt):
          1 -> numpy array with amplitude of each component aa
          2 -> numpy array with phase of each component pp
          3 -> float of the 0th fourier mode (wave setup) 
-
          """
-    nfft = len(time) 
+    nfft = len(time)
     results = []
     fft_x = np.fft.fft(eta,nfft)
     freq = np.fft.fftfreq(nfft,dt)                              #%complex spectrum
@@ -521,7 +516,7 @@ def decompose_tseries(time,eta,dt):
                               #%retaining only first half of the spectrum
     aa = 2.*abs(fft_x)/nfft                                 #%amplitudes (only the ones related to positive frequencies)
     ww = 2*pi*freq
-    
+
 
     pp = np.zeros(len(aa),complex)
     for k in range(len(aa)):
@@ -533,7 +528,7 @@ def decompose_tseries(time,eta,dt):
     results.append(setup)
     return results
 
-    
+
 
 
 
@@ -587,7 +582,7 @@ class MonochromaticWaves:
                  waveDir,
                  wavelength=None,
                  waveType="Linear",
-                 Ycoeff = None, 
+                 Ycoeff = None,
                  Bcoeff =None, meanVelocity = np.array([0.,0,0.]),
                  phi0 = 0.):
 
@@ -737,7 +732,6 @@ class RandomWaves:
     param : phi
             Description: Component phases (if set to None, phases are picked at random)
             Type: numpy array
-
     """
     def __init__(self,
                  Tp,
@@ -748,12 +742,12 @@ class RandomWaves:
                  g,      #peak  frequency
                  N,
                  bandFactor,         #accelerationof gravity
-                 spectName ,# random words will result in error and return the available spectra 
-                 spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 spectName ,# random words will result in error and return the available spectra
+                 spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  phi=None
                  ):
         validSpectra = [JONSWAP,PM_mod]
-        spec_fun =loadExistingFunction(spectName, validSpectra)                 
+        spec_fun =loadExistingFunction(spectName, validSpectra)
         self.g = np.array(g)
         self.waveDir =  setDirVector(np.array(waveDir))
         self.vDir = setVertDir(g)
@@ -776,12 +770,12 @@ class RandomWaves:
             self.phi = 2.0*pi*np.random.random(self.fi.shape[0])
             logEvent('ERROR! Wavetools.py: No phase array is given. Assigning random phases. Outputing the phasing of the random waves')
         else:
-            try: 
+            try:
                 self.phi = np.array(phi)
                 if self.phi.shape[0] != self.fi.shape[0]:
                     logEvent('ERROR! Wavetools.py: Phase array must have N elements')
                     sys.exit(1)
-                    
+
             except:
                 logEvent('ERROR! Wavetools.py: phi argument must be an array with N elements')
                 sys.exit(1)
@@ -796,12 +790,12 @@ class RandomWaves:
             except:
                 logEvent('ERROR! Wavetools.py: Additional spectral parameters are not valid for the %s spectrum' %spectName)
                 sys.exit(1)
-        
+
 
         self.ai = np.sqrt(2.*returnRectangles(self.Si_Jm,self.fim))
         self.kDir = np.zeros((len(self.ki),3),)
         for ii in range(3):
-             self.kDir[:,ii] = self.ki[:] * self.waveDir[ii] 
+             self.kDir[:,ii] = self.ki[:] * self.waveDir[ii]
     def eta(self, x, t):
         """Calculates the free surface elevation in space and time for RandomWaves class.
         For more information on parameters see MonochromaticWaves.eta"""
@@ -909,11 +903,10 @@ class MultiSpectraRandomWaves(RandomWaves):
     param : phi
             Description: List of component phases 
             Type: list
-
     """
     def __init__(self,
                  Nspectra,
-                 Tp, # np array with 
+                 Tp, # np array with
                  Hs,
                  mwl,#m significant wave height
                  depth ,           #m depth
@@ -921,8 +914,8 @@ class MultiSpectraRandomWaves(RandomWaves):
                  g,      #peak  frequency
                  N,
                  bandFactor,         #accelerationof gravity
-                 spectName ,# random words will result in error and return the available spectra 
-                 spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 spectName ,# random words will result in error and return the available spectra
+                 spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  phi
                  ):
 # Checking length of arrays / lists to be equal to NSpectra
@@ -933,15 +926,15 @@ class MultiSpectraRandomWaves(RandomWaves):
 
                 logEvent('ERROR! Wavetools.py: Parameters passed in MultiSpectraRandomWaves must be in array or list form with length Nspectra  ')
                 sys.exit(1)
-               
+
         except:
             logEvent('ERROR! Wavetools.py: Parameters passed in MultiSpectraRandomWaves must be in array or list form with length Nspectra  ')
             sys.exit(1)
         # Initialize numpy arrays for complete reconstruction
-        self.Nall = 0 
+        self.Nall = 0
         for nn in N:
             self.Nall+=nn
-        
+
 
         self.omegaM = np.zeros(self.Nall,float)
         self.kiM = np.zeros(self.Nall,float)
@@ -956,7 +949,7 @@ class MultiSpectraRandomWaves(RandomWaves):
             NN1 = NN
             NN +=N[kk]
             RandomWaves.__init__(self,
-                                 Tp[kk], # np array with 
+                                 Tp[kk], # np array with
                                  Hs[kk],
                                  mwl,#m significant wave height
                                  depth,           #m depth
@@ -964,8 +957,8 @@ class MultiSpectraRandomWaves(RandomWaves):
                                  g,      #peak  frequency
                                  N[kk],
                                  bandFactor[kk],         #accelerationof gravity
-                                 spectName[kk],# random words will result in error and return the available spectra 
-                                 spectral_params[kk], #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                                 spectName[kk],# random words will result in error and return the available spectra
+                                 spectral_params[kk], #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                                  phi[kk]
                              )
             self.omegaM[NN1:NN] = self.omega
@@ -973,7 +966,7 @@ class MultiSpectraRandomWaves(RandomWaves):
             self.aiM[NN1:NN] = self.ai
             self.kDirM[NN1:NN,:] =self.kDir[:,:]
             self.phiM[NN1:NN] = self.phi
-        
+
 
     def eta(self, x, t):
         """Calculates the free surface elevation in space and time for MultiSpectraRandomWaves class.
@@ -1050,36 +1043,35 @@ class DirectionalWaves(RandomWaves):
     param : phiSymm
             Description: Switch for enabling a symmetric phase allocation across directional components 
             Type: boolean
-
     """
     def __init__(self,
                  M,  #half bin of frequencies
-                 Tp, # np array with 
-                 Hs, # 
+                 Tp, # np array with
+                 Hs, #
                  mwl,#m significant wave height
                  depth ,           #m depth
                  waveDir0,  # Lead direction
                  g,      #peak  frequency
                  N,    # Number of frequencies
                  bandFactor,         #accelerationof gravity
-                 spectName ,# random words will result in error and return the available spectra 
-                 spreadName ,# random words will result in error and return the available spectra 
-                 spectral_params = None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
-                 spread_params = None,  
+                 spectName ,# random words will result in error and return the available spectra
+                 spreadName ,# random words will result in error and return the available spectra
+                 spectral_params = None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
+                 spread_params = None,
                  phi=None, # phi must be an (2*M+1)*N numpy array
                  phiSymm = False # When true, phi[-pi/2,0] is symmetric to phi[0,pi/2]
-                 ):   
+                 ):
         validSpread = [cos2s,mitsuyasu]
         spread_fun =  loadExistingFunction(spreadName, validSpread)
         self.M = M
         self.Mtot = 2*M+1
         self.waveDir0 = setDirVector(waveDir0)
-        self.vDir = setVertDir(g) 
+        self.vDir = setVertDir(g)
 
 
  # Loading Random waves to get the frequency array the wavelegnths and the frequency spectrum
         RandomWaves.__init__(self,
-                             Tp, # np array with 
+                             Tp, # np array with
                              Hs,
                              mwl,#m significant wave height
                              depth,           #m depth
@@ -1087,13 +1079,13 @@ class DirectionalWaves(RandomWaves):
                              g,      #peak  frequency
                              N,
                              bandFactor,         #accelerationof gravity
-                             spectName,# random words will result in error and return the available spectra 
-                             spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
-                             phi = None 
+                             spectName,# random words will result in error and return the available spectra
+                             spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
+                             phi = None
         )
 
-       
-        
+
+
         # Directional waves propagate usually in a plane -90 to 90 deg with respect to the direction vector, normal to the gavity direction. Rotating the waveDir0 vector around the g vector to produce the directional space
         from SpatialTools import rotation3D
         self.thetas = np.linspace(-pi/2,pi/2,2*M+1)
@@ -1101,15 +1093,15 @@ class DirectionalWaves(RandomWaves):
         self.waveDirs = np.zeros((2*M+1,3),)
         self.phiDirs = np.zeros((2*M+1,N),)
         self.aiDirs = np.zeros((2*M+1,N),)
-        
+
 
         temp_array = np.zeros((1,3),)
         temp_array[0,:] = waveDir0
         directions = range(0,self.Mtot)
 
 # initialising wave directions
-        for rr in directions: 
-            theta = self.thetas[rr]            
+        for rr in directions:
+            theta = self.thetas[rr]
             self.waveDirs[rr,:] = rotation3D(temp_array,theta,self.vDir)[0,:]
             self.waveDirs[rr,:]=setDirVector( self.waveDirs[rr,:])
 
@@ -1122,15 +1114,15 @@ class DirectionalWaves(RandomWaves):
         else:
             logEvent("ERROR! Wavetools.py: phi in DirectionalWaves class must be given either as None or as a list with 2*M + 1 numpy arrays with length N")
             sys.exit(1)
-            
+
         if (phiSymm):
             for i in range(0,M):
                 self.phiDirs[M+1+i,:] = self.phiDirs[self.M - 1 - i,:]
-            
-            
 
 
-        self.theta_m = reduceToIntervals(self.thetas,self.dth)        
+
+
+        self.theta_m = reduceToIntervals(self.thetas,self.dth)
         if (spread_params == None):
             self.Si_Sp = spread_fun(self.theta_m,self.fim)
         else:
@@ -1140,13 +1132,13 @@ class DirectionalWaves(RandomWaves):
                 logEvent('ERROR! Wavetools.py: Additional spread parameters are not valid for the %s spectrum' %spectName)
                 sys.exit(1)
 
-        # Setting amplitudes 
+        # Setting amplitudes
         #Normalising the spreading function
         freq = range(0,self.N)
     # Normalising integral over all frequencies
-        for ii in freq:            
+        for ii in freq:
             self.Si_Sp[:,ii] = normIntegral(self.Si_Sp[:,ii],self.theta_m)
-            self.Si_Sp[:,ii]*= self.Si_Jm[ii] 
+            self.Si_Sp[:,ii]*= self.Si_Jm[ii]
     # Creating amplitudes spectrum
         self.aiDirs[:] = np.sqrt(2.*returnRectangles3D(self.Si_Sp,self.theta_m,self.fim))
     def eta(self, x, t):
@@ -1169,13 +1161,13 @@ class DirectionalWaves(RandomWaves):
                 kDiri = self.waveDirs[jj]*self.ki[ii]
                 U+= vel_mode(x,t,kDiri, self.ki[ii],self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii],self.mwl,self.depth,self.g,self.vDir)
         return U
-     
 
 
-            
-                
 
-        
+
+
+
+
 
 class TimeSeries:
     """This class is used for generating waves from an arbirtrary free-surface elevation time series
@@ -1232,7 +1224,7 @@ class TimeSeries:
                  depth  ,
                  N ,          #number of frequency bins
                  mwl ,        #mean water level
-                 waveDir, 
+                 waveDir,
                  g,
                  cutoffTotal = 0.01,
                  rec_direct = True,
@@ -1255,7 +1247,7 @@ class TimeSeries:
         else:
             logEvent("ERROR! Wavetools.py: Location vector for timeSeries must have three-components",level=0)
             sys.exit(1)
-            
+
 
         # Mean water level
         self.mwl = mwl
@@ -1271,7 +1263,7 @@ class TimeSeries:
         dirCheck(self.waveDir,self.vDir)
         #Reading time series
 
-        
+
         self.arrayData = arrayData
         if(self.arrayData):
             tdata = seriesArray
@@ -1316,7 +1308,7 @@ class TimeSeries:
             self.time = time_temp
             self.eta = tdata[:,1]
 
-        self.t0  = self.time[0]        
+        self.t0  = self.time[0]
         # Remove mean level from raw data
         self.eta -= np.mean(self.eta)
         # Filter out first 2.5 % and last 2.5% to make the signal periodic
@@ -1361,13 +1353,13 @@ class TimeSeries:
                 logEvent("ERROR! WaveTools.py: Dictionary key 'Nwaves' (waves per window) not found in window_params dictionary")
                 sys.exit(1)
 
-            try:           
+            try:
                 self.Tm = window_params["Tm"]
             except:
                 logEvent("ERROR! WaveTools.py: Dictionary key 'Tm' (mean or characteristic wave period) not found in window_params dictionary")
                 sys.exit(1)
 
-            try:           
+            try:
                 self.windowName = window_params["Window"]
             except:
                 logEvent("ERROR! WaveTools.py: Dictionary key 'Window' (window function type) not found in window_params dictionary")
@@ -1384,13 +1376,13 @@ class TimeSeries:
             logEvent("ERROR! WaveTools.py: performing series decomposition with spectral windows")
             # Portion of overlap, compared to window time
             try:
-                self.overlap = window_params["Overlap"]            
+                self.overlap = window_params["Overlap"]
             except:
                 self.overlap = 0.25
                 logEvent("ERROR! WaveTools.py: Overlap entry in window_params dictionary not found. Setting default value of 0.25 (1/4 of the window length)")
 
             try:
-                self.cutoff = window_params["Cutoff"]            
+                self.cutoff = window_params["Cutoff"]
             except:
                 self.cutoff= 0.1
                 logEvent("ERROR! WaveTools.py: Cutoff entry in window_params dictionary not found. Setting default value of 0.1 (1/10 of the window length)")
@@ -1404,7 +1396,7 @@ class TimeSeries:
                 logEvent("ERROR! Wavetools.py: Window handover is not optimal as the cutoff is too close to the overlap. Decrease cutoff or increase overlap")
                 sys.exit(1)
             self.Twindow =  self.Tm * self.Nwaves            # setting the window duration (approx.). Twindow = Tmean * Nwaves
-            self.Toverlap = self.overlap * self.Twindow             
+            self.Toverlap = self.overlap * self.Twindow
             self.Nwindows = int( (self.tlength -   self.Twindow ) / (self.Twindow - self.Toverlap) ) + 1             #Getting the actual number of windows  (N-1) * (Twindow - Toverlap) + Twindow = total time
             self.Twindow = self.tlength/(1. + (1. - self.overlap)*(self.Nwindows-1))            # Correct Twindow and Toverlap for duration and integer number of windows
             self.Toverlap = self.overlap*self.Twindow
@@ -1436,7 +1428,7 @@ class TimeSeries:
             self.decompose_window = []
 #            style = "k-"
 #            ii = 0
-            
+
             for wind in self.windows_rec:
                 self.nfft=len(wind[:,0])
                 wind[:,1] *=wind_filt(self.nfft,cutoff = self.cutoff)
@@ -1465,15 +1457,15 @@ class TimeSeries:
                 decomp.append(ki)
 
                 self.decompose_window.append(decomp)
-                
-            
+
+
         if(self.rec_direct):
             self.eta = self.etaDirect
             self.u = self.uDirect
         else:
             self.eta =  self.etaWindow
             self.u = self.uWindow
-     
+
 #                if style == "k-":
 #                    style = "kx"
 #                else:
@@ -1531,7 +1523,7 @@ class TimeSeries:
         else:
             Nw = 0
         return Nw
-        
+
     def etaWindow(self, x, t):
         """Calculates the free surface elevation from TimeSeries class using windowed spectral decomposition.
         For input and return parameters see MonochromaticWaves.u 
@@ -1542,7 +1534,7 @@ class TimeSeries:
         phi = self.decompose_window[Nw][2]
         kDir = self.decompose_window[Nw][4]
         t0 = self.windows_rec[Nw][0,0]
-        Eta=0.        
+        Eta=0.
         for ii in range(0,self.Nf):
             x1 = np.array(x)-[self.x0, self.y0, self.z0]
             Eta+= eta_mode(x1, t-t0, kDir[ii], omega[ii], phi[ii], ai[ii])
@@ -1635,13 +1627,13 @@ class RandomWavesFast(RandomWaves):
                  g,      #peak  frequency
                  N,
                  bandFactor,         #accelerationof gravity
-                 spectName ,# random words will result in error and return the available spectra 
-                 spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 spectName ,# random words will result in error and return the available spectra
+                 spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  phi=None,
                  Lgen = np.array([0., 0. ,0. ])
                  ):
             RandomWaves.__init__(self,
-                                 Tp, # np array with 
+                                 Tp, # np array with
                                  Hs,
                                  mwl,#m significant wave height
                                  depth,           #m depth
@@ -1649,8 +1641,8 @@ class RandomWavesFast(RandomWaves):
                                  g,      #peak  frequency
                                  N,
                                  bandFactor,         #accelerationof gravity
-                                 spectName,# random words will result in error and return the available spectra 
-                                 spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                                 spectName,# random words will result in error and return the available spectra
+                                 spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                                  phi
                              )
             fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
@@ -1662,7 +1654,7 @@ class RandomWavesFast(RandomWaves):
                  self.depth ,
                  32 ,          #number of frequency bins
                  self.mwl ,        #mean water level
-                 self.waveDir, 
+                 self.waveDir,
                  self.g,
                  cutoffTotal = 0.2*self.Tp,
                  rec_direct = False,
@@ -1731,22 +1723,22 @@ class RandomNLWaves(RandomWaves):
                  Tp,                      #wave period
                  Hs,                      #significant wave height
                  mwl,                     #mean water level
-                 depth,                   #water depth          
+                 depth,                   #water depth
                  waveDir,                 #wave direction vector with three components
-                 g,                       #gravitational accelaration vector with three components      
+                 g,                       #gravitational accelaration vector with three components
                  N,                       #number of frequency bins
-                 bandFactor,              #width factor for band around peak frequency fp       
-                 spectName,               #random words will result in error and return the available spectra 
-                 spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 bandFactor,              #width factor for band around peak frequency fp
+                 spectName,               #random words will result in error and return the available spectra
+                 spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  phi=None                 #array of component phases
                  ):
         RandomWaves.__init__(self,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
-        
-        
+
+
         self.eta_linear = self.eta
-        self.eta = self.wtError 
-        self.u = self.wtError 
-    
+        self.eta = self.wtError
+        self.u = self.wtError
+
     def eta_2ndOrder(self,x,t):
         """Calculates the free surface elevation in space and time derived from 2nd-order
         correction terms of nonlinear random wave theory
@@ -1769,7 +1761,7 @@ class RandomNLWaves(RandomWaves):
         for i in range(0,self.N):
             ai_2nd = (self.ai[i]**2*self.ki[i]*(2+3/sinh(self.ki[i]*self.depth)**2))/(4*tanh(self.ki[i]*self.depth))
             wwi_2ndOrder = eta_mode(x,t,2*self.kDir[i],2*self.omega[i],2*self.phi[i],ai_2nd)
-            Eta2nd += wwi_2ndOrder  
+            Eta2nd += wwi_2ndOrder
         return Eta2nd
 
 
@@ -1797,7 +1789,7 @@ class RandomNLWaves(RandomWaves):
         for i in range(0,self.N-1):
             for j in range(i+1,self.N):
                 Dp = (self.omega[i]+self.omega[j])**2 - self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth)
-                Bp = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) - ((self.omega[i]*self.omega[j])/(2*self.gAbs)) *(1-1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth))) *(((self.omega[i]+self.omega[j])**2 + self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth))/Dp) + ((self.omega[i]+self.omega[j])/(2*self.gAbs*Dp))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) + (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))	
+                Bp = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) - ((self.omega[i]*self.omega[j])/(2*self.gAbs)) *(1-1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth))) *(((self.omega[i]+self.omega[j])**2 + self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth))/Dp) + ((self.omega[i]+self.omega[j])/(2*self.gAbs*Dp))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) + (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))
                 ai_short = self.ai[i]*self.ai[j]*Bp
                 wwi_short = eta_mode(x,t,self.kDir[i]+self.kDir[j],self.omega[i]+self.omega[j],self.phi[i]+self.phi[j],ai_short)
                 Etashort += wwi_short
@@ -1827,9 +1819,9 @@ class RandomNLWaves(RandomWaves):
         Etalong = 0.
         for i in range(0,self.N-1):
             for j in range(i+1,self.N):
-                Dm = (self.omega[i]-self.omega[j])**2 - self.gAbs*(self.ki[i]-self.ki[j])*tanh((self.ki[i]-self.ki[j])*self.depth)	
+                Dm = (self.omega[i]-self.omega[j])**2 - self.gAbs*(self.ki[i]-self.ki[j])*tanh((self.ki[i]-self.ki[j])*self.depth)
                 Bm = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) + ((self.omega[i]*self.omega[j])/(2*self.gAbs))*(1+1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth)))*(((self.omega[i]-self.omega[j])**2 + self.gAbs*(self.ki[i]-self.ki[j])*tanh((self.ki[i]-self.ki[j])*self.depth))/Dm) + ((self.omega[i]-self.omega[j])/(2*self.gAbs*Dm))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) - (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))
-                ai_long = self.ai[i]*self.ai[j]*Bm 
+                ai_long = self.ai[i]*self.ai[j]*Bm
                 wwi_long = eta_mode(x,t,self.kDir[i]-self.kDir[j],self.omega[i]-self.omega[j],self.phi[i]-self.phi[j],ai_long)
                 Etalong += wwi_long
         return Etalong
@@ -1882,7 +1874,7 @@ class RandomNLWaves(RandomWaves):
 
         """
         Etaoverall =  self.eta_linear(x,t) + self.eta_2ndOrder(x,t) + self.eta_short(x,t) + self.eta_long(x,t)
-        if setUp:   
+        if setUp:
             Etaoverall -= self.eta_setUp(x,t)
         return Etaoverall
 
@@ -1947,7 +1939,7 @@ class RandomNLWaves(RandomWaves):
             elif mode == "short":
                 series[i,1] = self.eta_short(x0,time) + self.eta_2ndOrder(x0,time)
             elif mode == "long":
-                series[i,1] = self.eta_long(x0,time) 
+                series[i,1] = self.eta_long(x0,time)
             elif mode == "linear":
                 series[i,1] = self.eta_linear(x0,time)
             else:
@@ -1955,7 +1947,7 @@ class RandomNLWaves(RandomWaves):
                 sys.exit(1)        
         delimiter =" "
         if fname[-4:]==".csv":
-            delimiter = ","        
+            delimiter = ","
         np.savetxt(fname,series,delimiter=delimiter)
         return series
 
@@ -1981,8 +1973,8 @@ class RandomNLWaves(RandomWaves):
 
         logEvent("ERROR! Wavetools.py: eta and u functions not available for this class. Please use RandomNLWavesFast for generating random waves with nonlinear correction",0)
         sys.exit(1)
-    
-    
+
+
 
 class RandomNLWavesFast:
     """
@@ -2046,13 +2038,13 @@ class RandomNLWavesFast:
                  Tp,                      #wave period
                  Hs,                      #significant wave height
                  mwl,                     #mean water level
-                 depth,                   #water depth          
+                 depth,                   #water depth
                  waveDir,                 #wave direction vector with three components
-                 g,                       #gravitational accelaration vector with three components      
+                 g,                       #gravitational accelaration vector with three components
                  N,                       #number of frequency bins
-                 bandFactor,              #width factor for band around peak frequency fp       
-                 spectName,               #random words will result in error and return the available spectra 
-                 spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 bandFactor,              #width factor for band around peak frequency fp
+                 spectName,               #random words will result in error and return the available spectra
+                 spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  phi=None,
                  Vgen = np.array([0.,0.,0.])    #array of component phases
                  ):
@@ -2117,7 +2109,3 @@ class RandomNLWavesFast:
         For more information on parameters see MonochromaticWaves.u"""
         uR = self.TS[0].u(x,t)+ self.TS[1].u(x,t)+self.TS[2].u(x,t)
         return uR
-        
-
-
-
