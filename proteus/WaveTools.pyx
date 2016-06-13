@@ -43,7 +43,7 @@ def loadExistingFunction(funcName, validFunctions):
             if func.__name__ == funcName:
                 func_ret = func
     if funcName not in funcNames:
-        logEvent("WaveTools.py: Wrong function type (%s) given: Valid wavetypes are %s" %(funcName,funcNames), level=0)
+        logEvent("ERROR! Wavetools.py: Wrong function type (%s) given: Valid wavetypes are %s" %(funcName,funcNames), level=0)
         sys.exit(1)
     return func_ret
        
@@ -206,7 +206,7 @@ def eta_mode(x, t, kDir, omega, phi, amplitude):
             Description: Phase 
             Type: float
     param : amp
-            Descritpion: wave amplitude
+            Description: wave amplitude
             Type: float
     Returns
     --------
@@ -241,19 +241,19 @@ def vel_mode(x, t, kDir, kAbs, omega, phi, amplitude, mwl, depth, g, vDir):
             Description: Phase 
             Type: float
     param : amplitude
-            Descritpion: wave amplitude
+            Description: wave amplitude
             Type: float
     param : mwl
-            Descritpion: mean water level
+            Description: mean water level
             Type: float
     param : depth
-            Descritpion: wave amplitude
+            Description: wave amplitude
             Type: float
     param : g (dummy parameter, to be removed)
-            Descritpion: Gravitational accelaration
+            Description: Gravitational accelaration
             Type: float
     param : vDir
-            Descritpion: Unit vector aligned with vertical direction
+            Description: Unit vector aligned with vertical direction
             Type: float
         
 
@@ -538,21 +538,46 @@ def decompose_tseries(time,eta,dt):
 
 
 class MonochromaticWaves:
-    """Generate a monochromatic wave train in the linear regime
-    :param period: Monochromatic wave period
-    :param waveHeight: Monochromatic wave height
-    :param mwl: Mean water level
-    :param depth: Mean water depth
-    :param g: gravitational acceleration
-    :param waveDir: wave direction vector (all 3 components needed)
-    :param wavelength: wavelength for nonlinear (Fenton) waves. Can assume None if waves are linear, need to declare if waveType is Fenton
-    :param waveType: can be Linear or Fenton (nonlinear). Linear by default
-    :param Ycoeff: Y coefficient array for Fenton waves (see JD Fenton (1988) THE NUMERICAL SOLUTION OF STEADY WATER WAVE PROBLEMS, Computer and Geosciences, 14(3), 357-368, 
-                   http://johndfenton.com/Papers/Fenton88-The-numerical-solution-of-steady-water-wave-problems.pdf    
-    :param BCoeff: B coefficient array for Fenton waves (see reference above)
-    :meanVelocity: Current velocity. Recommended use with Fenton waves
-    :phi0: Phase of the wave                 
-"""
+    """
+    This class is used for generating regular waves in both linear and nonlinear regimes
+    
+    Parameters
+    ----------    
+    param : period
+            Description: Regular wave period
+            Type: Float
+    param : waveHeight
+            Description: Regular wave height
+            Type: float
+    param : mwl
+            Description: Still water level
+            Type: float
+    param : depth
+            Description: Water depth
+            Type: float
+    param : g
+            Description: Gravitational acceleration vector 
+            Type: Numpy array
+    param : wavelength
+            Description: Regular wave lenght, calculated from linear dispersion if set to None
+            Type: float
+    param : waveType
+            Description: Set to "Linear" for linear wave theory and "Fenton" for using Fenton Fourier appoximation
+            Type: string
+    param : Ycoeff
+            Description: Fenton Fourier coefficients for free-surface elevation (set to None for linear wave theory)
+            Type: Numpy array
+    param : Bcoeff
+            Description: Fenton Fourier coefficients for velocity (set to None for linear wave theory)
+            Type: Numpy array
+    param : meanVelocity
+            Description: Mean velocity for Fenton Fourier approximation
+            Type: Numpy array
+    param : phi0
+            Description: Regular wave phase (0 by default)
+            Type: float
+
+    """
     def __init__(self,
                  period,
                  waveHeight,
@@ -594,7 +619,7 @@ class MonochromaticWaves:
                 self.k = 2.0*pi/wavelength
                 self.wavelength=wavelength
             except:
-                logEvent("WaveTools.py: Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
+                logEvent("ERROR! Wavetools.py: Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
                 sys.exit(1)
         self.kDir = self.k * self.waveDir
         self.amplitude = 0.5*self.waveHeight
@@ -602,7 +627,7 @@ class MonochromaticWaves:
 #Checking that meanvelocity is a vector
 
         if(len(meanVelocity) != 3):
-            logEvent("WaveTools.py: meanVelocity should be a vector with 3 components. ",level=0)
+            logEvent("ERROR! Wavetools.py: meanVelocity should be a vector with 3 components. ",level=0)
             sys.exit(1)
 
         self.Ycoeff = Ycoeff
@@ -611,7 +636,7 @@ class MonochromaticWaves:
 # Checking for
         if (Ycoeff==None) or (Bcoeff==None):
             if self.waveType!= "Linear":
-                logEvent("WaveTools.py: Need to define Fenton Fourier coefficients Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
+                logEvent("ERROR! Wavetools.py: Need to define Fenton Fourier coefficients Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
                 sys.exit(1)
     def eta(self, x, t):
         """Calculates the free surface elevation in space and time for MonochromaticWaves class.
@@ -671,20 +696,49 @@ class MonochromaticWaves:
 
 
 class RandomWaves:
-    """Generate approximate random wave solutions
-    :param Tp: frequency [1/T]
-    :param Hs: significant wave height [L]
-    :param mwl: mean water level [L]
-    :param  depth: depth [L]
-    :param waveDir:wave Direction vector with three components [-]
-    :param g: Gravitational acceleration vector with three components [L/T^2]
-    :param N: number of frequency bins [-]
-    :param bandFactor: width factor for band  around fp [-]
-    :param spectName: Name of spectral function in string format. Use a random word and run the code to obtain the vaild spectra names
-    :param spectral_params: Dictionary of additional arguments for spectral function, specific to each spectral function, except from Hs and Tp e.g. {"gamma": 3.3, "TMA" = True, "depth" = 1} for Jonswap. Check spectral function arguments 
-    :param phi: Array of component phases - if set to none, random phases are assigned
-"""
+    """
+    This class is used for generating plane random waves using linear reconstruction of components from a
+    wave spectrum
+    
+    Parameters
+    ----------    
+    param : Tp
+            Description: Peak wave period
+            Type: Float
+    param : Hs
+            Description: Significant wave height
+            Type: float
+    param : mwl
+            Description: Still water level
+            Type: float
+    param : depth
+            Description: Water depth
+            Type: float
+    param : waveDir
+            Description: Wave direction vector
+            Type: numpy array
+    param : g
+            Description: Gravitational acceleration vector 
+            Type: numpy array
+    param : N
+            Description: Number of frequency components
+            Type: integer
+    param : bandfactor
+            Description: Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)
+            Type: float
+    param : spectName
+            Description: Name of spectral distribution
+            Type: string
+    param : spectral_params
+            Description: Dictionary of arguments specific to the spectral distribution 
+            Example for JONSWAP = {"gamma": 3.3, "TMA":True,"depth": depth}
+            TMA=True activates the TMA modification, which in turn needs the depth as a parameter
+            Type: Dictionary 
+    param : phi
+            Description: Component phases (if set to None, phases are picked at random)
+            Type: numpy array
 
+    """
     def __init__(self,
                  Tp,
                  Hs,
@@ -720,16 +774,16 @@ class RandomWaves:
         self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
         if phi == None:
             self.phi = 2.0*pi*np.random.random(self.fi.shape[0])
-            logEvent('WaveTools.py: No phase array is given. Assigning random phases. Outputing the phasing of the random waves')
+            logEvent('ERROR! Wavetools.py: No phase array is given. Assigning random phases. Outputing the phasing of the random waves')
         else:
             try: 
                 self.phi = np.array(phi)
                 if self.phi.shape[0] != self.fi.shape[0]:
-                    logEvent('WaveTools.py: Phase array must have N elements')
+                    logEvent('ERROR! Wavetools.py: Phase array must have N elements')
                     sys.exit(1)
                     
             except:
-                logEvent('WaveTools.py: phi argument must be an array with N elements')
+                logEvent('ERROR! Wavetools.py: phi argument must be an array with N elements')
                 sys.exit(1)
 
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
@@ -740,7 +794,7 @@ class RandomWaves:
             try:
                 self.Si_Jm = spec_fun(self.fim,self.fp,self.Hs,**spectral_params)
             except:
-                logEvent('WaveTools.py: Additional spectral parameters are not valid for the %s spectrum' %spectName)
+                logEvent('ERROR! Wavetools.py: Additional spectral parameters are not valid for the %s spectrum' %spectName)
                 sys.exit(1)
         
 
@@ -792,7 +846,7 @@ class RandomWaves:
         relaxation zone for t=Tstart
         """
         if sum(Vgen[:]*self.waveDir[:])< 0 :
-                logEvent('WaveTools.py: Location vector of generation zone should not be opposite to the wave direction')
+                logEvent('ERROR! Wavetools.py: Location vector of generation zone should not be opposite to the wave direction')
                 sys.exit(1)        
         dt = self.Tp/50.
         Tlag = np.zeros(len(self.omega),)
@@ -814,9 +868,48 @@ class RandomWaves:
 
 
 class MultiSpectraRandomWaves(RandomWaves):
-    """Generate a random wave timeseries from multiple spectra. 
-    Same input parameters as RandomWaves class but they have to be all in lists with the same lenght as the spectra (except from g!)
-    :param Nspectra, number of spectra
+    """This class is used for generating random waves
+    by combining multiple spectra with different distributions and directions
+    
+    Parameters
+    ----------
+    param : Nspectra
+            Description: Total number of spectra
+            Type: integer
+    param : Tp
+            Description: List of peak wave periods
+            Type: list
+    param : Hs
+            Description: List of significant wave heights
+            Type: list
+    param : mwl
+            Description: Still water level
+            Type: float
+    param : depth
+            Description: Water depth
+            Type: float
+    param : waveDir
+            Description: Lsit of wave direction vector
+            Type: numpy array
+    param : g
+            Description: Gravitational acceleration vector 
+            Type: Numpy array
+    param : N
+            Description: List of numbers of frequency components
+            Type: list
+    param : bandfactor
+            Description: List of spectral band factors
+            Type: list
+    param : spectName
+            Description: List of names of spectral distribution
+            Type: list
+    param : spectral_params
+            Description: List of names of spectral distribution (see RandomWaves class)
+            Type: list
+    param : phi
+            Description: List of component phases 
+            Type: list
+
     """
     def __init__(self,
                  Nspectra,
@@ -838,11 +931,11 @@ class MultiSpectraRandomWaves(RandomWaves):
                (len(N) != Nspectra) or (len(bandFactor) != Nspectra) or \
                (len(spectName) != Nspectra) or (len(spectral_params) != Nspectra) or(len(phi) != Nspectra):
 
-                logEvent('WaveTools.py: Parameters passed in MultiSpectraRandomWaves must be in array or list form with length Nspectra  ')
+                logEvent('ERROR! Wavetools.py: Parameters passed in MultiSpectraRandomWaves must be in array or list form with length Nspectra  ')
                 sys.exit(1)
                
         except:
-            logEvent('WaveTools.py: Parameters passed in MultiSpectraRandomWaves must be in array or list form with length Nspectra  ')
+            logEvent('ERROR! Wavetools.py: Parameters passed in MultiSpectraRandomWaves must be in array or list form with length Nspectra  ')
             sys.exit(1)
         # Initialize numpy arrays for complete reconstruction
         self.Nall = 0 
@@ -859,7 +952,7 @@ class MultiSpectraRandomWaves(RandomWaves):
 
         NN = 0
         for kk in range(Nspectra):
-            logEvent("WaveTools.py: Reading spectra No %s" %kk)
+            logEvent("ERROR! Wavetools.py: Reading spectra No %s" %kk)
             NN1 = NN
             NN +=N[kk]
             RandomWaves.__init__(self,
@@ -904,14 +997,60 @@ class MultiSpectraRandomWaves(RandomWaves):
 
 
 class DirectionalWaves(RandomWaves):
-    """Generate a random wave timeseries from directional waves
-    Same input parameters as RandomWaves with the addition of:
-    :param M: number of discrete directions
-    :param waveDir0: lead direction in vector form (3 components required)
-    :spreadName: Spreading function name (can be cos2s or mitsuyashu), given in string format
-    :spread_params: Parameters specific to each spread functions, e.g. {"s":15} or {fi0: 1, smax=20}, except from f and theta. Check spread functions for more info
-    :phiSymm: Logical variable, by default False, when set to True it generated same phase for symmetrically arranged directions, with respect to the lead direction
+    """
+    This class is used for generating directional random waves using linear reconstruction of components from a
+    wave spectrum
     
+    Parameters
+    ----------    
+    param : M
+            Description: Number of directional components
+            Type: integer
+    param : Tp
+            Description: Peak wave period
+            Type: Float
+    param : Hs
+            Description: Significant wave height
+            Type: float
+    param : mwl
+            Description: Still water level
+            Type: float
+    param : depth
+            Description: Water depth
+            Type: float
+    param : waveDir0
+            Description: Leading wave direction vector
+            Type: numpy array
+    param : g
+            Description: Gravitational acceleration vector 
+            Type: numpy array
+    param : N
+            Description: Number of frequency components
+            Type: integer
+    param : bandfactor
+            Description: Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)
+            Type: float
+    param : spectName
+            Description: Name of spectral distribution
+            Type: string
+    param : spreadName
+            Description: Name of spreading distribution
+            Type: string
+    param : spectral_params
+            Description: Dictionary of arguments specific to the spectral distribution (see RandomWaves class)
+            Type: Dictionary 
+    param : spread_params
+            Description: Dictionary of arguments specific to the spreading distribution
+            Example for Cos-2s = {"s": 10}
+            Example for Mitsuyashu-type = {"fp": 1/Tp, "smax":10}
+            Type: Dictionary 
+    param : phi
+            Description: Component phases (if set to None, phases are picked at random)
+            Type: numpy array
+    param : phiSymm
+            Description: Switch for enabling a symmetric phase allocation across directional components 
+            Type: boolean
+
     """
     def __init__(self,
                  M,  #half bin of frequencies
@@ -981,7 +1120,7 @@ class DirectionalWaves(RandomWaves):
         elif np.shape(phi) == (2*M+1,self.fi.shape[0]):
             self.phiDirs = phi
         else:
-            logEvent("WaveTools.py: phi in DirectionalWaves class must be given either as None or as a list with 2*M + 1 numpy arrays with length N")
+            logEvent("ERROR! Wavetools.py: phi in DirectionalWaves class must be given either as None or as a list with 2*M + 1 numpy arrays with length N")
             sys.exit(1)
             
         if (phiSymm):
@@ -998,7 +1137,7 @@ class DirectionalWaves(RandomWaves):
             try:
                 self.Si_Sp = spread_fun(self.theta_m,self.fim, **spread_params)
             except:
-                logEvent('WaveTools.py: Additional spread parameters are not valid for the %s spectrum' %spectName)
+                logEvent('ERROR! Wavetools.py: Additional spread parameters are not valid for the %s spectrum' %spectName)
                 sys.exit(1)
 
         # Setting amplitudes 
@@ -1039,21 +1178,53 @@ class DirectionalWaves(RandomWaves):
         
 
 class TimeSeries:
-    """Generate a time series by using spectral windowing method.
-    :param timeSeriesFile: Time series file name
-    :param skiprows: How many rows to skip while reading time series
-    :param: timeSeriesPosition: 3D vector showing the position of the surface elevation sampling
-    :param  depth: depth [L]
-    :param N: number of frequency bins [-]
-    :param mwl: mean water level [L]
-    :param waveDir: wave Direction vector
-    :param g: Gravitational acceleration vector (3 components required)
-    :cutoffTotal: Parameter for cutting off the first and the last part of the time series, given in ratio of the total duration (default 0.01)
-    :param rec_direct: Logical variable, True for direct reconstruction, False for windowed reconstrunction
-    :window_params: dictionary for window reconstruction parameters. Mandatory definition for Nwaves (how many waves per window) Tm (mean wave period), wind_filt (window filter name in string form). Optional: Overlap (window overlap as a percentage of window lenght), Cutoff (length of domain wher filter is applied, as a percentage of the 1/2 of window length)
+    """This class is used for generating waves from an arbirtrary free-surface elevation time series
+    
+    Parameters
+    ----------    
+    param : timeSeriesFile
+            Description: Time series file name (csv or txt)
+            Type: string
+    param : skiprows
+            Description: Number of header rows
+            Type: float
+    param : timeSeriesPosition
+            Description: Coordinates of the gauge / signal location
+            Type: float
+    param : depth
+            Description: Water depth
+            Type: float
+    param : N
+            Description: Number of frequency components
+            Type: integer
+    param : mwl
+            Description: Still water level
+            Type: float
+    param : waveDir
+            Description: Leading wave direction vector
+            Type: numpy array
+    param : g
+            Description: Gravitational acceleration vector 
+            Type: numpy array
+    param : cutoffTotal
+            Description: Cut off fraction, applied both at the leading and tailing parts of the series
+            Type: float
+    param : rec_direct
+            Description: Switch for activating direct decomposition
+            Type: string
+    param : window_params
+            Description: Dictionary of parameters for window method
+            e.g.  window_params = {"Nwaves":15, "Tm": Tp/1.1, "Window":"costap"} (minimum parameters required)
+            e.g.  window_params = {"Nwaves":15, "Tm": Tp/1.1, "Window":"costap", "Overlap":0.5, "Cutoff":0.2} (full range of parameters)
+            Type: Dictionary 
+    param : arrayData
+            Description: Switch for passing the time series as an array (False by default)
+            Type: boolean
+    param : seriesArray
+            Description: Free surface elevation time series given in an array format (None by default) 
+            Type: numpy array
 
     """
-
     def __init__(self,
                  timeSeriesFile, # e.g.= "Timeseries.txt",
                  skiprows,
@@ -1082,7 +1253,7 @@ class TimeSeries:
             self.y0 = timeSeriesPosition[1]
             self.z0 = timeSeriesPosition[2]
         else:
-            logEvent("WaveTools.py: Location vector for timeSeries must have three-components",level=0)
+            logEvent("ERROR! Wavetools.py: Location vector for timeSeries must have three-components",level=0)
             sys.exit(1)
             
 
@@ -1108,7 +1279,7 @@ class TimeSeries:
             filetype = timeSeriesFile[-4:]
             fid = open(timeSeriesFile,"r")
             if (filetype !=".txt") and (filetype != ".csv"):
-                logEvent("WaveTools.py: File %s must be given in .txt or .csv format" % (timeSeriesFile),level=0)
+                logEvent("ERROR! Wavetools.py: File %s must be given in .txt or .csv format" % (timeSeriesFile),level=0)
                 sys.exit(1)
             elif (filetype == ".csv"):
                 tdata = np.loadtxt(fid,skiprows=skiprows,delimiter=",")
@@ -1119,7 +1290,7 @@ class TimeSeries:
         # Only 2 columns: time & eta
         ncols = len(tdata[0,:])
         if ncols != 2:
-            logEvent("WaveTools.py: Timeseries file (%s) must have only two columns [time, eta]" % (timeSeriesFile),level=0)
+            logEvent("ERROR! Wavetools.py: Timeseries file (%s) must have only two columns [time, eta]" % (timeSeriesFile),level=0)
             sys.exit(1)
         time_temp = tdata[:,0]
         self.dt = (time_temp[-1]-time_temp[0])/(len(time_temp)-1)
@@ -1132,13 +1303,13 @@ class TimeSeries:
             dt_temp = time_temp[i]-time_temp[i-1]
         #check if time is at first column
             if time_temp[i]<=time_temp[i-1]:
-                logEvent("WaveTools.py:  Found not consistent time entry between %s and %s row in %s file. Time variable must be always at the first column of the file and increasing monotonically" %(i-1,i,timeSeriesFile) )
+                logEvent("ERROR! WaveTools.py:  Found not consistent time entry between %s and %s row in %s file. Time variable must be always at the first column of the file and increasing monotonically" %(i-1,i,timeSeriesFile) )
                 sys.exit(1)
         #check if sampling rate is constant
             if dt_temp!=self.dt:
                 doInterp = True
         if(doInterp):
-            logEvent("WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
+            logEvent("ERROR! WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
             self.time = np.linspace(time_temp[0],time_temp[-1],len(time_temp))
             self.eta = np.interp(self.time,time_temp,tdata[:,1])
         else:
@@ -1162,7 +1333,7 @@ class TimeSeries:
         if (self.rec_direct):
             Nf = self.N
             self.nfft=len(self.time)
-            logEvent("WaveTools.py: performing a direct series decomposition")
+            logEvent("ERROR! WaveTools.py: performing a direct series decomposition")
             self.decomp = decompose_tseries(self.time,self.eta,self.dt)
             self.ai = self.decomp[1]
             ipeak = np.where(self.ai == max(self.ai))[0][0]
@@ -1182,47 +1353,47 @@ class TimeSeries:
                 # Spectral windowing
         else:
             if (window_params==None):
-                logEvent("WaveTools.py: Set parameters for spectral windowing. Argument window_params must be a dictionary")
+                logEvent("ERROR! WaveTools.py: Set parameters for spectral windowing. Argument window_params must be a dictionary")
                 sys.exit(1)
             try:
                 self.Nwaves = window_params["Nwaves"]
             except:
-                logEvent("WaveTools.py: Dictionary key 'Nwaves' (waves per window) not found in window_params dictionary")
+                logEvent("ERROR! WaveTools.py: Dictionary key 'Nwaves' (waves per window) not found in window_params dictionary")
                 sys.exit(1)
 
             try:           
                 self.Tm = window_params["Tm"]
             except:
-                logEvent("WaveTools.py: Dictionary key 'Tm' (mean or characteristic wave period) not found in window_params dictionary")
+                logEvent("ERROR! WaveTools.py: Dictionary key 'Tm' (mean or characteristic wave period) not found in window_params dictionary")
                 sys.exit(1)
 
             try:           
                 self.windowName = window_params["Window"]
             except:
-                logEvent("WaveTools.py: Dictionary key 'Window' (window function type) not found in window_params dictionary")
+                logEvent("ERROR! WaveTools.py: Dictionary key 'Window' (window function type) not found in window_params dictionary")
                 sys.exit(1)
 
             if(self.Nwaves > 0.5*self.tlength / self.Tm):
-                logEvent("WaveTools.py: Reconstruction is expected to have two windows or more. Plese reduce the number of waves per window or switch to direct decomposition )")
+                logEvent("ERROR! WaveTools.py: Reconstruction is expected to have two windows or more. Plese reduce the number of waves per window or switch to direct decomposition )")
                 sys.exit(1)
 
 
 
             validWindows = [costap, tophat]
             wind_filt =  loadExistingFunction(self.windowName, validWindows) 
-            logEvent("WaveTools.py: performing series decomposition with spectral windows")
+            logEvent("ERROR! WaveTools.py: performing series decomposition with spectral windows")
             # Portion of overlap, compared to window time
             try:
                 self.overlap = window_params["Overlap"]            
             except:
                 self.overlap = 0.25
-                logEvent("WaveTools.py: Overlap entry in window_params dictionary not found. Setting default value of 0.25 (1/4 of the window length)")
+                logEvent("ERROR! WaveTools.py: Overlap entry in window_params dictionary not found. Setting default value of 0.25 (1/4 of the window length)")
 
             try:
                 self.cutoff = window_params["Cutoff"]            
             except:
                 self.cutoff= 0.1
-                logEvent("WaveTools.py: Cutoff entry in window_params dictionary not found. Setting default value of 0.1 (1/10 of the window length)")
+                logEvent("ERROR! WaveTools.py: Cutoff entry in window_params dictionary not found. Setting default value of 0.1 (1/10 of the window length)")
                 
                 
 
@@ -1230,17 +1401,17 @@ class TimeSeries:
             # Setting the handover time, either at the middle of the overlap or just after the filter
             self.handover = max(1.1 *self.cutoff,  self.overlap / 2.)
             if (self.handover > 0.9 * self.overlap):
-                logEvent("WaveTools.py: Window handover is not optimal as the cutoff is too close to the overlap. Decrease cutoff or increase overlap")
+                logEvent("ERROR! Wavetools.py: Window handover is not optimal as the cutoff is too close to the overlap. Decrease cutoff or increase overlap")
                 sys.exit(1)
             self.Twindow =  self.Tm * self.Nwaves            # setting the window duration (approx.). Twindow = Tmean * Nwaves
             self.Toverlap = self.overlap * self.Twindow             
             self.Nwindows = int( (self.tlength -   self.Twindow ) / (self.Twindow - self.Toverlap) ) + 1             #Getting the actual number of windows  (N-1) * (Twindow - Toverlap) + Twindow = total time
             self.Twindow = self.tlength/(1. + (1. - self.overlap)*(self.Nwindows-1))            # Correct Twindow and Toverlap for duration and integer number of windows
             self.Toverlap = self.overlap*self.Twindow
-            logEvent("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow / self.Tm) )
+            logEvent("ERROR! Wavetools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow / self.Tm) )
             diff = (self.Nwindows-1.)*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
-            logEvent("WaveTools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
-            logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and %s per cent overlap" %(self.Nwindows, self.Twindow,100*self.overlap ))
+            logEvent("ERROR! Wavetools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
+            logEvent("ERROR! Wavetools.py: Using %s windows for reconstruction with %s sec duration and %s per cent overlap" %(self.Nwindows, self.Twindow,100*self.overlap ))
 # Setting where each window starts and ends
             for jj in range(self.Nwindows):
                 span = np.zeros(2,"d")
@@ -1397,22 +1568,60 @@ class TimeSeries:
 
 
 class RandomWavesFast(RandomWaves):
-    """Sets up a wave with RandomWaves class and uses u and eta from TimeSeries class & spectral windows for fast wave generation
-    :param Tstart: Start time of the time series
-    :param Tend: End time of the time series
-    :param x0: Position vector for the wave generation boundary
-    :param Tp: frequency [1/T]
-    :param Hs: significant wave height [L]
-    :param mwl: mean water level [L]
-    :param  depth: depth [L]
-    :param waveDir:wave Direction vector with three components [-]
-    :param g: Gravitational acceleration vector with three components [L/T^2]
-    :param N: number of frequency bins [-]
-    :param bandFactor: width factor for band  around fp [-]
-    :param spectName: Name of spectral function in string format. Use a random word and run the code to obtain the vaild spectra names
-    :param spectral_params: Dictionary of additional arguments for spectral function, specific to each spectral function, except from Hs and Tp e.g. {"gamma": 3.3, "TMA" = True, "depth" = 1} for Jonswap. Check spectral function arguments 
-    :param phi: Array of component phases - if set to none, random phases are assigned
-"""
+    """
+    This class is used for generating plane random waves in an optimised manner
+    using linear reconstruction of components from a wave spectrum
+    
+    Parameters
+    ----------    
+    param : Tstart
+            Description: Start time
+            Type: Float    
+    param : Tend
+            Description: End time
+            Type: Float    
+    param : x0
+            Description: Position vector for the time series
+            Type: Numpy array    
+    param : Tp
+            Description: Peak wave period
+            Type: Float
+    param : Hs
+            Description: Significant wave height
+            Type: float
+    param : mwl
+            Description: Still water level
+            Type: float
+    param : depth
+            Description: Water depth
+            Type: float
+    param : waveDir
+            Description: Wave direction vector
+            Type: numpy array
+    param : g
+            Description: Gravitational acceleration vector 
+            Type: numpy array
+    param : N
+            Description: Number of frequency components
+            Type: integer
+    param : bandfactor
+            Description: Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)
+            Type: float
+    param : spectName
+            Description: Name of spectral distribution
+            Type: string
+    param : spectral_params
+            Description: Dictionary of arguments specific to the spectral distribution 
+            Example for JONSWAP = {"gamma": 3.3, "TMA":True,"depth": depth}
+            TMA=True activates the TMA modification, which in turn needs the depth as a parameter
+            Type: Dictionary 
+    param : phi
+            Description: Component phases (if set to None, phases are picked at random)
+            Type: numpy array
+    param : Lgen
+            Description: Length of the generation zone (np.array([0., 0., 0.]) by default
+            Type: numpy array
+    """
 
     def __init__(self,
                  Tstart,
@@ -1469,6 +1678,53 @@ class RandomWavesFast(RandomWaves):
 
 
 class RandomNLWaves(RandomWaves):
+    """
+    This class is contains functions for calculating random waves with 2nd order corrections
+    
+    Parameters
+    ----------    
+    param : Tstart
+            Description: Start time
+            Type: Float    
+    param : Tend
+            Description: End time
+            Type: Float    
+    param : Tp
+            Description: Peak wave period
+            Type: Float
+    param : Hs
+            Description: Significant wave height
+            Type: float
+    param : mwl
+            Description: Still water level
+            Type: float
+    param : depth
+            Description: Water depth
+            Type: float
+    param : waveDir
+            Description: Wave direction vector
+            Type: numpy array
+    param : g
+            Description: Gravitational acceleration vector 
+            Type: numpy array
+    param : N
+            Description: Number of frequency components
+            Type: integer
+    param : bandfactor
+            Description: Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)
+            Type: float
+    param : spectName
+            Description: Name of spectral distribution
+            Type: string
+    param : spectral_params
+            Description: Dictionary of arguments specific to the spectral distribution 
+            Example for JONSWAP = {"gamma": 3.3, "TMA":True,"depth": depth}
+            TMA=True activates the TMA modification, which in turn needs the depth as a parameter
+            Type: Dictionary 
+    param : phi
+            Description: Component phases (if set to None, phases are picked at random)
+            Type: numpy array
+    """
     def __init__(self,
                  Tstart,
                  Tend,
@@ -1669,7 +1925,7 @@ class RandomNLWaves(RandomWaves):
         relaxation zone for t=Tstart
         """
         if sum(Vgen[:]*self.waveDir[:])< 0 :
-            logEvent('WaveTools.py: Location vector of generation zone should not be opposite to the wave direction')
+            logEvent('ERROR! Wavetools.py: Location vector of generation zone should not be opposite to the wave direction')
             sys.exit(1)        
 
         Tlag = np.zeros(len(self.omega),)
@@ -1695,7 +1951,7 @@ class RandomNLWaves(RandomWaves):
             elif mode == "linear":
                 series[i,1] = self.eta_linear(x0,time)
             else:
-                logEvent('WaveTools.pyx: Argument mode in RandomNLWaves.writeEtaSeries should be "all", "setup", "short", "long" or "linear"')
+                logEvent('ERROR! Wavetools.pyx: Argument mode in RandomNLWaves.writeEtaSeries should be "all", "setup", "short", "long" or "linear"')
                 sys.exit(1)        
         delimiter =" "
         if fname[-4:]==".csv":
@@ -1723,12 +1979,66 @@ class RandomNLWaves(RandomWaves):
 
         """
 
-        logEvent("WaveTools.py: eta and u functions not available for this class. Please use RandomNLWavesFast for generating random waves with nonlinear correction",0)
+        logEvent("ERROR! Wavetools.py: eta and u functions not available for this class. Please use RandomNLWavesFast for generating random waves with nonlinear correction",0)
         sys.exit(1)
     
     
 
 class RandomNLWavesFast:
+    """
+    This class is used for generating plane random waves with 2ns order correction in an optimised manner
+    using linear reconstruction of components from a wave spectrum
+    
+    Parameters
+    ----------    
+    param : Tstart
+            Description: Start time
+            Type: Float    
+    param : Tend
+            Description: End time
+            Type: Float    
+    param : x0
+            Description: Position vector for the time series
+            Type: Numpy array    
+    param : Tp
+            Description: Peak wave period
+            Type: Float
+    param : Hs
+            Description: Significant wave height
+            Type: float
+    param : mwl
+            Description: Still water level
+            Type: float
+    param : depth
+            Description: Water depth
+            Type: float
+    param : waveDir
+            Description: Wave direction vector
+            Type: numpy array
+    param : g
+            Description: Gravitational acceleration vector 
+            Type: numpy array
+    param : N
+            Description: Number of frequency components
+            Type: integer
+    param : bandfactor
+            Description: Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)
+            Type: float
+    param : spectName
+            Description: Name of spectral distribution
+            Type: string
+    param : spectral_params
+            Description: Dictionary of arguments specific to the spectral distribution 
+            Example for JONSWAP = {"gamma": 3.3, "TMA":True,"depth": depth}
+            TMA=True activates the TMA modification, which in turn needs the depth as a parameter
+            Type: Dictionary 
+    param : phi
+            Description: Component phases (if set to None, phases are picked at random)
+            Type: numpy array
+    param : Vgen
+            Description: Length of the generation zone (np.array([0., 0., 0.]) by default
+            Type: numpy array
+    """
     def __init__(self,
                  Tstart,
                  Tend,
