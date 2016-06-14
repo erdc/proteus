@@ -2834,6 +2834,31 @@ static PyObject* ctransportCoefficientsConservativeHeadRichardsBCBfromMVGHomEval
   return Py_None;
 }
 
+static PyObject* ctransportCoefficientsLaplace_Evaluate(PyObject* self,
+							PyObject* args)
+{
+  // Need to double check I'm not adding too many attributes here.
+  int i,nPoints=1;
+  PyObject *u,*p,*mom_u_diff_ten,*mom_v_diff_ten,*mom_p_diff_ten ;
+  
+  if (!PyArg_ParseTuple(args,"OOO",
+			&mom_p_diff_ten,
+			&mom_u_diff_ten,
+			&mom_v_diff_ten))
+  return NULL;
+
+  for (i=0;i<ND(p);i++)
+    nPoints *= SHAPE(p)[i];
+  
+  Laplace_Evaluate(nPoints,
+		   DDATA(mom_p_diff_ten),
+		   DDATA(mom_u_diff_ten),
+		   DDATA(mom_v_diff_ten));
+
+  Py_INCREF(Py_None);
+  return Py_None;	
+}
+
 static PyObject* ctransportCoefficientsNavierStokes_2D_Evaluate(PyObject* self, 
                                                                 PyObject* args)
 {
