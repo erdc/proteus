@@ -45,21 +45,26 @@ class OneLevelTransport(NonlinearEquation):
     Objects of this type take the initial-boundary value
     problem for
 
-    .. math:: m_t^i + \nabla \cdot (\mathbf{f}^i - \sum_k \mathbf{a}^{ik} \nabla \phi^k) + H^i(\nabla u) + r^i = 0
+    .. math:: 
+
+            m_t^i + \nabla \cdot (\mathbf{f}^i - \sum_k \mathbf{a}^{ik}
+            \nabla \phi^k) + H^i(\nabla u) + r^i = 0
 
     and turn it into the discrete (nonlinear or linear) algebraic
     problem
 
     .. math:: F(U) = 0
 
-    where F and U have dimension self.dim. The Jacobian of F or an
+    where F and U have dimension `self.dim`. The Jacobian of F or an
     approximation for it may also be  provided.
 
     The NonlinearEquation interface is
 
-    self.dim
-    getResidual(u,r)
-    getJacobian(jacobian)
+    * self.dim
+
+    * getResidual(u,r)
+
+    * getJacobian(jacobian).
 
     The rest of the functions in this class are either private functions
     or return various other pieces of information.
@@ -90,40 +95,52 @@ class OneLevelTransport(NonlinearEquation):
                  reuse_trial_and_test_quadrature=False,
                  sd = True,
                  movingDomain=False):#,
-        import Comm
-        """
-        Allocate storage and initialize some variables.
+        r""" Allocate storage and initialize some variables.
 
-        uDict   -- a dictionary of FiniteElementFunction objects
+        Parameters
+        ----------
+        uDict : dict
+            Dictionary of FiniteElementFunction objects.
 
-        phiDict -- a dictionary of FiniteElementFunction objects
+        phiDict : dict
+            Dictionary of FiniteElementFunction objects.
 
-        testSpaceDict -- a dictionary of FiniteElementSpace objects
+        testSpaceDict : dict
+            Dictionary of FiniteElementSpace objects
 
-        dofBoundaryConditionsDict -- a dictionary of DOFBoundaryConditions objects for
-        the Dirichlet conditions
+        dofBoundaryConditionsDict : dict
+            Dictionary of DOFBoundaryConditions objects for the 
+            Dirichlet conditions.
 
-        coefficients -- a TransportCoefficients object
+        coefficients : :class:`proteus.TransportCoefficients.TC_base`
+            Problem's Transport Coefficients class.
 
-        elementQuadratureDict -- a dictionary of dictionaries of quadrature rules for each
-        element integral in each component equation
+        elementQuadratureDict : dict
+            Dictionary of dictionaries of quadrature rules for each 
+            element integral in each component equation.
 
-        elementBoundaryQuadratureDict -- a dictionary of dictionaries of quadrature rules
-        for each element boundary integral in each component equation
+        elementBoundaryQuadratureDict : dict
+            Dictionary of dictionaries of quadrature rules for each 
+            element boundary integral in each component equation
 
-        stabilization
+        stabilization : bool
 
-        shockCapturing
+        shockCapturing : bool
 
-        numericalFlux
+        numericalFlux : bool
+
+        Notes
+        -----
 
         The constructor sets the input arguments, calculates
         dimensions, and allocates storage. The meanings of variable
         suffixes are
 
-        _global          -- per physical domain
-        _element         -- per element
-        _elementBoundary -- per element boundary
+        * global          -- per physical domain
+
+        * element         -- per element
+
+        * elementBoundary -- per element boundary
 
         The prefix n means 'number of'.
 
@@ -132,13 +149,22 @@ class OneLevelTransport(NonlinearEquation):
         dictionary for all the quantities of that type. The names
         and dimensions of the storage dictionaries are
 
-        e          -- at element
-        q          -- at element quadrature, unique to elements
-        ebq        -- at element boundary quadrature, unique to elements
-        ebq_global -- at element boundary quadrature, unique to element boundary
-        ebqe       -- at element boundary quadrature, unique to global, exterior element boundary
-        phi_ip     -- at the generalized interpolation points required to build a nonlinear  phi
+        * e -- at element
+
+        * q -- at element quadrature, unique to elements
+
+        * ebq -- at element boundary quadrature, unique to elements
+
+        * ebq_global -- at element boundary quadrature, unique to element 
+          boundary
+
+        * ebqe -- at element boundary quadrature, unique to global, 
+          exterior element boundary
+
+        * phi_ip -- at the generalized interpolation points required to
+          build a nonlinear phi
         """
+        import Comm
         #
         #set the objects describing the method and boundary conditions
         #
