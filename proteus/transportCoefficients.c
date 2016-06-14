@@ -1806,6 +1806,25 @@ void darcySharpInterfaceFlowImEvaluate(int nPoints,
 
 }
 
+void Laplace_Evaluate(const int nPoints,
+		      double *mom_p_diff_ten,
+		      double *mom_u_diff_ten,
+		      double *mom_v_diff_ten)
+{
+  int k;
+  for (k=0; k<nPoints; k++)
+    {
+      mom_p_diff_ten[k*4+0] = 1.0;
+      mom_p_diff_ten[k*4+3] = 1.0;
+
+      mom_u_diff_ten[k*4+0] = 1.0;
+      mom_u_diff_ten[k*4+3] = 1.0;
+
+      mom_v_diff_ten[k*4+0] = 1.0;
+      mom_v_diff_ten[k*4+3] = 1.0;
+    } 
+}
+
 void NavierStokes_2D_Evaluate(const int nPoints,
                               const double rho,
                               const double nu,
