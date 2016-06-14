@@ -1402,6 +1402,39 @@ class ShallowWater(TC_base):
 #                                           c[('H',3)],
 #                                           c[('dH',3,0)])
 
+class Laplace(TC_base):
+    """ A coefficient class to construct the Laplace Operator """
+    def __init__(self,nd=2):
+        self.nd=nd
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames=['p','u','v']
+            diffusion = {0:{0:{0:'constant'}},
+                         1:{1:{1:'constant'}},
+                         2:{2:{2:'constant'}}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             useSparseDiffusion=True)
+            self.vectorComponents=[1,2]
+
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.Laplace_2D_Evaluate(c[('a',0,0)]
+                                     c[('a',1,1)],
+                                     c[('a',2,2)])
+
 ##\brief Incompressible Stokes equations
 #
 #The equations are formulated as
