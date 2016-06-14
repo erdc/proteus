@@ -1184,7 +1184,7 @@ class RandomWavesFast(RandomWaves):
                              )
             fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
             series = self.writeEtaSeries(Tstart,Tend,x0,fname,Lgen)
-            cutoff = 0.2*self.Tp/(series.[-1,0]-series[0,0])
+            cutoff = 0.2*self.Tp/(series[-1,0]-series[0,0])
             TS = TimeSeries(
                  fname, # e.g.= "Timeseries.txt",
                  0,
