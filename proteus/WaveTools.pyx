@@ -1184,6 +1184,7 @@ class RandomWavesFast(RandomWaves):
                              )
             fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
             series = self.writeEtaSeries(Tstart,Tend,x0,fname,Lgen)
+            cutoff = 0.2*self.Tp/(series.[-1,0]-series[0,0])
             TS = TimeSeries(
                  fname, # e.g.= "Timeseries.txt",
                  0,
@@ -1193,7 +1194,7 @@ class RandomWavesFast(RandomWaves):
                  self.mwl ,        #mean water level
                  self.waveDir,
                  self.g,
-                 cutoffTotal = 0.2*self.Tp,
+                 cutoffTotal = cutoff,
                  rec_direct = False,
                  window_params = {"Nwaves":15 ,"Tm":self.Tp/1.1,"Window":"costap"},
                  arrayData = True,
