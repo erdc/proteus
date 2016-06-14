@@ -1431,7 +1431,7 @@ class Laplace(TC_base):
 
     def evaluate(self,t,c):
         if self.nd==2:
-            self.Laplace_2D_Evaluate(c[('a',0,0)]
+            self.Laplace_2D_Evaluate(c[('a',0,0)],
                                      c[('a',1,1)],
                                      c[('a',2,2)])
 
