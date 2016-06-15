@@ -20,21 +20,26 @@ import sys as sys
 
 
 def loadExistingFunction(funcName, validFunctions):
-    """ Checks if a function name is present in a list of known functions, returns system exit if not present 
+    """ Checks if a function name is known function and returns it
 
+    Checks if a function name is present in a list of functions.
+    If True, the function is returned. If False, raises SystemExit. 
+    
     Parameters
     ----------    
-    param : funcName
-            Description : Function name 
-            Type : String
-    param : validFunctions
-            Description : List of valid functions 
-            Type: Object list
+    funcName : string
+            Function name 
+    validFunctions : List[function]
+            List of valid functions (list of objects) 
 
     Returns
     --------
-    None if function name is in the function list
-    System exit otherwise
+    function
+
+    Raises
+    ---------
+    SystemExit
+    
 
     """
     funcNames = []
@@ -50,17 +55,19 @@ def loadExistingFunction(funcName, validFunctions):
 
 
 def setVertDir(g):
-    """ Returns the unit vector for the vertical direction taken as opposite to the gravity direction
+    """ Returns the unit vector for the vertical direction 
+
+    The vertical direction is opposite to the gravity direction
 
     Parameters
     ----------    
-    param : g 
-            Description: Gravitational acceleration vector (must have 3 components)
-            Type: Numpy array or list 
+    g : numpy.ndarray 
+        Gravitational acceleration vector (must have 3 components)
 
     Returns
     --------
-    1D numpy array or list containing a unit vector
+    numpy.ndarray
+        
     """
     return -np.array(g/(sqrt(g[0]**2 + g[1]**2 + g[2]**2)))
 
@@ -69,32 +76,35 @@ def setDirVector(vector):
 
     Parameters
     ----------    
-    param : vector
-           Description: Any vector with three components
-           Type: Numpy array or list 
+    vector : numpy.ndarray
+           1D numpy array with three components
 
     Returns
     --------
-    1D numpy array or list containing a unit vector
-    
+    numpy.ndarray
+   
     """
     return vector/(sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2))
 
 def dirCheck(v1, v2):
-    """ Checks if two vectors are vertical and returns system exit if they are
+    """ Checks if two vectors are vertical raises SystemError if True
 
     Parameters
     ----------    
-    param : v1 
-            Description: 1st vector with three components
-            Type: Numpy array or list 
-            
-    param : v2 
-            Description: 2nd vector with three components
-            Type: Numpy array or list 
+    v1 : numpy.ndarray
+        1st vector with three components
+           
+    v2 : numpy.ndarray 
+        2nd vector with three components
+        
     Returns
     --------
-    Nothing if vectors are not vertical, system exit if they are
+    None
+
+    Raises
+    ---------
+    SystemExit
+    
     """
     dircheck = abs(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
         #print self.dircheck
@@ -104,59 +114,66 @@ def dirCheck(v1, v2):
     else:
         return None
 def reduceToIntervals(fi,df):
-    """ Prepares the x- axis array with N elements for numerical integration along he x- axis. 
-    If fi = [a1, a2, a3,...,a_N-1 a_N] then it returns the array 
-    [a1, 0.5(a1+a2), 0.5(a2+a3),...0.5(a_N-1+a_N), a_N]. Input array must have constant step
+    """ Prepares the x-axis array with N elements for numerical integration
+
+    Integration is performed along he x- axis. If
+    fi = [a1, a2, a3,...,a_N-1 a_N] then it returns the array 
+    [a1, 0.5(a1+a2), 0.5(a2+a3),...0.5(a_N-1+a_N), a_N].
+    Input array must have constant step
 
     Parameters
     ----------    
-    param : fi
-            Description: x- array with N elements
-            Type: Numpy array or list
-    param : df
-            Description: Constant step of array
-            Type: float
+    fi : numpy.ndarray
+        x- array with N elements
+    df : float
+        Constant step of array
     Returns
     --------
-    Numpy array of x-axis intervals of size N+1
+    numpy.ndarray
             
     """
     fim_tmp = (0.5*(fi[1:]+fi[:-1])).tolist()
     return np.array([fim_tmp[0]-0.5*df]+fim_tmp+[fim_tmp[-1]+0.5*df])
 def returnRectangles(a,x):
-    """ Returns 2D discrete integrals using the rectangle method :math:`(\Delta y = 0.5(a_{n-1}+a_{n})*(x_{n-1}-x_{n})`
+    """ Returns 2D discrete integral array using the rectangle method
+
+    The calculation for each array element is
+    :math:`(\Delta y_i = 0.5(a_{n-1}+a_{n})*(x_{n-1}-x_{n})`
+
     Parameters
     ----------    
-    param : a
-            Description: Array of y(x) function with N+1 elements
-            Type: Numpy array or list
-    param : x
-            Description: x- coordinate array with N elements
-            Type: Numpy array or list
+    a : numpy.ndarray
+        Description: Array of y(x) function with N+1 elements
+    x : numpy.ndarray
+        Description: x- coordinate array with N elements
+
     Returns
     --------
-    Numpy array of discrtete intregrals with N elements
+    numpy.ndarray
             
     
     """
     return 0.5*(a[1:]+a[:-1])*(x[1:]-x[:-1])
 def returnRectangles3D(a,x,y):
     """ Returns 3D discrete integrals using the rectangle method
-    :math: `(\Delta y = 0.25*(a_(n-1,m-1)+a_(n,m-1)+a_(n-1,m)+a_(n,m))*(x_n-1-x_n) *(z_m-1-z_m))`
+
+    The calculation for each array element is
+    :math: `(\Delta y = 0.25*(a_(n-1,m-1)+a_(n,m-1)+a_(n-1,m) ...
+    ...+a_(n,m))*(x_n-1-x_n) *(z_m-1-z_m))`
+    
     Parameters
     ----------    
-    param : a
-            Description: 2D Array of y(x,y) function with (N+1)x(M+1)elements
+    a : numpy.ndarray
+        2D Array of y(x,y) function with (N+1)x(M+1)elements
             Type: Numpy array or list
-    param : x
+    x : numpy.ndarray
+        Description: x- coordinate array with N+1 elements
+    y : numpy.ndarray
             Description: x- coordinate array with N+1 elements
-            Type: Numpy array or list
-    param : y
-            Description: x- coordinate array with N+1 elements
-            Type: Numpy array or list
+            
     Returns
     --------
-    2D Numpy array of discrete intregrals with NxM elements
+    numpy.ndarray
     """
     ai = 0.5*(a[1:,:]+a[:-1,:])
     ai = 0.5*(ai[:,1:]+ai[:,:-1])
@@ -166,19 +183,22 @@ def returnRectangles3D(a,x,y):
         ai[:,jj] *= (x[1:]-x[:-1])    
     return ai
 def normIntegral(f,dom):
-    """Returns a normalised 2D function such as :math: `(\int_\Omega f d\Omega =1)`
+    """Returns a normalised 2D function
+
+    The calculation is  :math: `(\int_\Omega f d\Omega =1)`
+
     Parameters
     ----------    
-    param : f
-            Description: Discrete 2D function
-            Type: Numpy array or list
+    f : numpy.ndarray
+        Discrete 2D function
+        Numpy array or list
     
-    param : dom
-            Description: Discrete function step
-            Type: Float
+    dom : float
+        Discrete function step
+
     Returns
     --------
-    Numpy array of normalised function
+    numpy.ndarray
     """
     G0 = 1./sum(returnRectangles(f,dom))
     return G0*f
@@ -186,31 +206,27 @@ def normIntegral(f,dom):
 
 
 def eta_mode(x, t, kDir, omega, phi, amplitude):
-    """Calculates the free surface elevation in space and time for a single frequency mode,
-    using linear wave theory
+    """Calculates the free surface elevation for a single frequency mode
+
     Parameters
     ----------    
-    param : x
-            Description: Position vector
-            Type: Numpy array or list
-    param : t
-            Description: Time variable
-            Type: float
-    param : kDir
-            Description: wave number vector
-            Type: Numpy array or list
-    param : omega
-            Description: Angular frequency
-            Type: float
-    param : phi
-            Description: Phase 
-            Type: float
-    param : amp
-            Description: wave amplitude
-            Type: float
+    x : numpy.ndarray
+        Position vector
+    t : float
+        Time variable
+    kDir : numpy.ndarray
+        Wave number vector
+    omega : float
+        Angular frequency
+    phi : float
+        Description: Wave phase 
+    amp : float
+        Description: Wave amplitude
+        
     Returns
     --------
-    Free-surface elevation as a float
+    float
+        The free surface elevation at x,t
 
     """
     phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
@@ -218,48 +234,38 @@ def eta_mode(x, t, kDir, omega, phi, amplitude):
 
 
 def vel_mode(x, t, kDir, kAbs, omega, phi, amplitude, mwl, depth, g, vDir):
-    """Calculates the wave velocity components in space and time for a single frequency mode,
-    using linear wave theory. 
+    """Calculates the wave velocity components for a single frequency mode
+
     Parameters
     ----------    
-    param : x
-            Description: Position vector
-            Type: Numpy array or list
-    param : t
-            Description: Time variable
-            Type: float
-    param : kDir
-            Description: wave number vector
-            Type: Numpy array or list
-    param : kAbs
-            Description: Wave number magnitude
-            Type: float
-    param : omega
-            Description: Angular frequency
-            Type: float
-    param : phi
-            Description: Phase 
-            Type: float
-    param : amplitude
-            Description: wave amplitude
-            Type: float
-    param : mwl
-            Description: mean water level
-            Type: float
-    param : depth
-            Description: wave amplitude
-            Type: float
-    param : g (dummy parameter, to be removed)
-            Description: Gravitational accelaration
-            Type: float
-    param : vDir
-            Description: Unit vector aligned with vertical direction
-            Type: float
+    x : numpy.ndarray
+        Position vector
+    t : float
+        Time variable
+    kDir : numpy.ndarray
+        Wave number vector
+    kAbs : floatkAbs
+        Wave number magnitude
+    omega : float
+        Angular frequency
+    phi : float
+        Description: Wave phase 
+    amplidute : float
+        Description: Wave amplitude
+    mwl : float
+        Mean water level
+    depth : float
+        Water depth
+    g : numpy.ndarray
+        Gravitational accelaration (dummy parameter, to be removed)
+    vDir : numpy.ndarray
+        Unit vector aligned with vertical direction
         
 
     Returns
     --------
-    Velocity as a numpy array
+    numpy.ndarray
+        1D Numpy array of the velocity vector at x,t
     """
 
     phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
@@ -280,18 +286,18 @@ def vel_mode(x, t, kDir, kAbs, omega, phi, amplitude, mwl, depth, g, vDir):
 
 def sigma(omega,omega0):
     """Calculates sigma function for JONSWAP spectrum
-       http://www.wikiwaves.org/Ocean-Wave_Sectra
+
+       See http://www.wikiwaves.org/Ocean-Wave_Sectra
     Parameters
     ----------    
-    param : omega
-            Description: Angular frequency array
-            Type: Numpy array or list
-    param : omega0
-            Description: Peak angular frequency
-            Type: float
+    omega : numpy.ndarray
+        Angular frequency array
+    omega0 : numpy.ndarray
+        Peak angular frequency
     Returns
     --------
-    sigma as a numpy array or list
+    numpy.ndarray
+        1D Numpy array of simga function with respect to f
   
     """
     sigmaReturn = np.where(omega > omega0,0.09,0.07)
@@ -299,30 +305,30 @@ def sigma(omega,omega0):
 
 
 def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
-    """Calculates the JONSWAP frequency spectrum (Goda 2009), with or without the TMA modification
+    """Calculates the JONSWAP frequency spectrum (Goda 2009)
+
+    The calculation includes the TMA modification, if TMA =True
+    
     Parameters
     ----------    
-    param : f
-            Description: Frequency array
-            Type: Numpy array
-    param : f0
-            Description peak frequency
-            Type: float
-    param : Hs
-            Description: significant wave height
-            Type: float
-    param : gamma
-            Description: peak enhancement factor
-            Type: float
-    param : TMA
+    f : numpy.ndarray
+        Frequency array
+    f0 : float
+        Peak frequency
+    Hs : float
+        Significant wave height
+    gamma : Optional[float]
+        Peak enhancement factor
+    TMA : bool
             Description: TMA switch
-            Type: boolean
-    param : depth
-            Description: water depth
-            Type: float
+        Type: boolean
+    depth : Optional[float]
+        Water depth
+
     Returns
     --------
-    Numpy array of JONSWAP spectrum
+    numpy.ndarray
+        1D Numpy array of the spectrum in frequency domain
 
     """
     Tp = 1./f0
@@ -341,20 +347,22 @@ def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
 
 def PM_mod(f,f0,Hs):
     """Calculates the Pierson-Moskovitz spectrum (or Bretschneider or ISSC)
-    Reference http://www.orcina.com/SoftwareProducts/OrcaFlex/Documentation/Help/Content/html/Waves,WaveSpectra.htm
+
+    Reference:
+    http://www.orcina.com/SoftwareProducts/OrcaFlex/Documentation/Help/Content/html/Waves,WaveSpectra.htm
     And then to Tucker M J, 1991. Waves in Ocean Engineering. Ellis Horwood Ltd. (Chichester).
-    param : f
-            Description: Frequency array
-            Type: Numpy array
-    param : f0
-            Description peak frequency
-            Type: float
-    param : Hs
-            Description: significant wave height
-            Type: float
+    
+    f : numpy.ndarray
+        Frequency array
+    f0 : float
+        Peak frequency
+    Hs : float
+        Significant wave height
+
     Returns
     --------
-    Numpy array of PM spectrum
+    numpy.ndarray
+        1D Numpy array of the spectrum in frequency domain
 
     """
     return (5.0/16.0)*Hs**2*(f0**4/f**5)*np.exp((-5.0/4.0)*(f0/f)**4)
@@ -365,44 +373,42 @@ def cos2s(theta,f,s=10):
 
     Parameters
     ----------    
-    param : theta
-            Description: Wave angle array
-            Type: numpy array 
-    param : f
-            Description: Frequency array
-            Type: Numpy array
-    param : spreading parameter
-            Description peak frequency
-            Type: float
+    theta : numpy.ndarray
+        Wave angle array
+    f : numpy.ndarray
+        Frequency array
+    s : Optional[float]
+        Spreading parameter
+
     Returns
     --------
-    2D Numpy array of cos-2s spectrum
+    numpy.ndarray
+        2D Numpy array of cos-2s spectrum
     """
     fun = np.zeros((len(theta),len(f)),)
     for ii in range(len(fun[0,:])):
         fun[:,ii] = np.cos(theta/2)**(2*s)
     return fun
 def mitsuyasu(theta,fi,f0,smax=10):
-    """The cos2s wave directional spread with wave frequency dependency (mitsuyasu spread) 
-    Equation from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010 (3rd ed) eq. 2.22 - 2.25
+    """The cos2s wave directional spread with wave frequency dependency
+
+    Equation from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010
+    (3rd ed) eq. 2.22 - 2.25
 
     Parameters
     ----------    
-    param : theta
-            Description: Wave angle array
-            Type: numpy array 
-    param : fi
-            Description: Frequency array
-            Type: Numpy array
-    param : f0
-            Description: peak frequency
-            Type: float
-    param : spreading parameter for the Mituyashu-type spectrum
-            Description peak frequency
-            Type: float
+    theta : numpy.ndarray
+        Wave angle array
+    fi : numpy.ndarray
+        Frequency array
+    f0 : float
+        Peak frequency
+    smax : Optional[float]
+        Spreading parameter
     Returns
     --------
-    2D Numpy array of Mitsuyashu-type spectrum
+    numpy.ndarray
+        2D Numpy array of Mitsuyashu-type spectrum
     """
 
     s = smax * (fi/f0)**(5)
@@ -422,21 +428,19 @@ def dispersion(w,d, g = 9.81,niter = 1000):
 
     Parameters
     ----------    
-    param : w
-            Description: Angular frequency 
-            Type: float or numpy array 
-    param : d
-            Description: Water depth
-            Type: Float
-    param : g
-            Description: Gravitational acceleration
-            Type: float
-    param : niter
-            Description: solution iterations
-            Type: integer
+    w : float or np.ndarray
+        Angular frequency 
+    d : float
+        Water depth
+    g : Optional[float]
+        Gravitational acceleration
+    niter : Optional[int]
+        Solution iterations
+
     Returns
     --------
-    Wavenumber as a float or array
+    float or numpy.ndarray
+        Wavenumber as a float or 1D array for multiple frequencies
     """
     w_aux = np.array(w)
     K = w_aux**2/g
@@ -449,17 +453,18 @@ def dispersion(w,d, g = 9.81,niter = 1000):
 
 
 def tophat(l,cutoff):
-    """ Returns a top hat filter array
+    """ Calculates and returns a top hat filter array
 
     Parameters
     ----------    
-    param : l
-            Description: length of array
-    param : cutoff
-            Description: cut off fraction at both the leading and tailing part of the array
+    l : int
+        Length of array
+    cutoff : float
+         Cut off fraction at both the leading and tailing part of the array
+
     Returns
     --------
-    Numpy array of top hat filter
+    numpy.ndarray
 
     """
     a = np.zeros(l,)
@@ -468,17 +473,18 @@ def tophat(l,cutoff):
     return a
 
 def costap(l,cutoff=0.1):
-    """ Returns a cosine taper filter 
+    """ Calculates and returns a top hat filter array
 
     Parameters
     ----------    
-    param : l
-            Description: length of array
-    param : cutoff
-            Description: cut off fraction at both the leading and tailing part of the array
+    l : int
+        Length of array
+    cutoff : float
+         Cut off fraction at both the leading and tailing part of the array
+
     Returns
     --------
-    Numpy array of top hat filter
+    numpy.ndarray
     """
     npoints = int(cutoff*l)
     wind = np.ones(l)
@@ -492,18 +498,20 @@ def costap(l,cutoff=0.1):
 def decompose_tseries(time,eta,dt):
     """ Performs spectral analysis and calculates angular frequency components, amplitude, phase and mean level power
     of a time series with constant sampling.
-         param : time
-                 Description: time array
-                 Type: numpy array
-         param : eta
-                 Description: signal array
-                 Type: Numpy array
-         param : dt
-                 Description: Sampling interval 
-                 Type: float
+
+    Parameters
+    ----------    
+    time : numpy.ndarray
+        Time array
+    eta :numpy.ndarray 
+        Signal array
+    dt : float
+        Sampling interval
+        
     Returns
     --------
-    A list with results with four entries:
+    List
+        A list with results with four entries:
          0 -> numpy array with angular frequency components 
          1 -> numpy array with amplitude of each component aa
          2 -> numpy array with phase of each component pp
@@ -639,18 +647,18 @@ class MonochromaticWaves:
                 logEvent("ERROR! Wavetools.py: Need to define Fenton Fourier coefficients Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
                 sys.exit(1)
     def eta(self, x, t):
-        """Calculates the free surface elevation in space and time for MonochromaticWaves class.
+        """Calculates free surface elevation (MonochromaticWaves class)
         Parameters
         ----------    
-        param : x
-                Description: Position vector
-                Type: Numpy array or list
-        param : t
-                Description: Time variable
-                Type: float
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
         Returns
         --------
-        Free-surface elevation as a float
+        float
+            Free-surface elevation as a float
 
         """
 
@@ -665,18 +673,18 @@ class MonochromaticWaves:
             return HH/self.k
 
     def u(self, x, t):
-        """Calculates the wave velocity vector in space and time for MonochromaticWaves class.
+        """Calculates wave velocity vector (MonochromaticWaves class).
         Parameters
         ----------    
-        param : x
-                Description: Position vector
-                Type: Numpy array or list
-        param : t
-                Description: Time variable
-                Type: float
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
         Returns
         --------
-        Velocity vector as numpy array
+        numpy.ndarray
+            Velocity vector as 1D array
 
         """
     
@@ -803,8 +811,20 @@ class RandomWaves:
         for ii in range(3):
              self.kDir[:,ii] = self.ki[:] * self.waveDir[ii] 
     def eta(self, x, t):
-        """Calculates the free surface elevation in space and time for RandomWaves class.
-        For more information on parameters see MonochromaticWaves.eta"""
+        """Calculates free surface elevation (RandomWaves class)
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
+        """
         Eta=0.
         for ii in range(self.N):
             Eta+= eta_mode(x, t,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
@@ -812,38 +832,50 @@ class RandomWaves:
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
     def u(self, x, t):
-        """Calculates the wave velocity vector in space and time for RandomWaves class.
-        For more information on parameters see MonochromaticWaves.u"""
+        """Calculates wave velocity vector (RandomWaves class)
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
+        """
 
         U=0.
         for ii in range(self.N):
             U+= vel_mode(x, t, self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
     def writeEtaSeries(self,Tstart,Tend,x0,fname,Vgen= np.array([0.,0,0])):
-        """Writes a timeseries for the free-surface elevation using RandomNLWaves class and returns it as a numpy array.  
+        """Writes a timeseries of the free-surface elevation
+
+        It also returns the free surface elevation as a time-eta array.
+        If Vgen !=[0.,0.,0.,] then Tstart is modified to account for the
+        wave transformation at the most remote point of the relaxation zone.
+    
         Parameters
         ----------    
-        param : Tstart
-                Description: Start time
-                Type: float
-        param : Tend
-                Description: End time
-                Type:float
-        param : x0
-                Description: Position vector of the time series
-                Type: Numpy array
-        param : fname
-                Description: filename for timeseries file
-                Type: string
-        param : Vgen
-                Description: Length vector of relaxation zone 
-                Type: Numpy array
+        Tstart : float
+            Start time
+        Tend : float
+            End time
+        x0 : numpy.ndarray
+            Position vector of the time series
+        fname : string
+            Filename for timeseries file
+        Vgen : Optional[numpy.ndarray]
+            Length vector of relaxation zone 
+            
 
         Returns
-        ----------    
-        2D numpy array Nx2 containing free-surface elevation in time. If Vgen !=[0.,0.,0.,] then
-        Tstart is modified to account for the wave transformation at the most remote point of the
-        relaxation zone for t=Tstart
+        ----------
+        numpy.ndarray
+            2D numpy array Nx2 containing free-surface elevation in time. 
         """
         if sum(Vgen[:]*self.waveDir[:])< 0 :
                 logEvent('ERROR! Wavetools.py: Location vector of generation zone should not be opposite to the wave direction')
@@ -976,8 +1008,20 @@ class MultiSpectraRandomWaves(RandomWaves):
         
 
     def eta(self, x, t):
-        """Calculates the free surface elevation in space and time for MultiSpectraRandomWaves class.
-        For more information on parameters see MonochromaticWaves.eta"""
+        """Calculates free surface elevation(MultiSpectraRandomWaves class)
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
+        """
 
         Eta=0.
         for ii in range(self.Nall):
@@ -986,8 +1030,20 @@ class MultiSpectraRandomWaves(RandomWaves):
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
     def u(self, x, t):
-        """Calculates the wave velocity vector in space and time for MultiSpectraRandomWaves class.
-        For more information on parameters see MonochromaticWaves.u"""
+        """Calculates wave velocity vector (MultiSpectraRandomWaves class)
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
+        """
 
         U=0.
         for ii in range(self.Nall):
@@ -1150,8 +1206,20 @@ class DirectionalWaves(RandomWaves):
     # Creating amplitudes spectrum
         self.aiDirs[:] = np.sqrt(2.*returnRectangles3D(self.Si_Sp,self.theta_m,self.fim))
     def eta(self, x, t):
-        """Calculates the free surface elevation in space and time for DirectionalWaves class.
-        For more information on parameters see MonochromaticWaves.eta"""
+        """Calculates free surface elevation (DirectionalWaves class)
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
+        """
         Eta=0.
         for jj in range(self.Mtot):
             for ii in range(self.N):
@@ -1161,8 +1229,20 @@ class DirectionalWaves(RandomWaves):
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
     def u(self, x, t):
-        """Calculates the wave velocity vector in space and time for DirectionalWaves class.
-        For more information on parameters see MonochromaticWaves.u"""
+        """Calculates wave velocity vector (Directional class).
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
+        """
         U=0.
         for jj in range(self.Mtot):
             for ii in range(self.N):
@@ -1489,8 +1569,19 @@ class TimeSeries:
 #            self.Noverlap = int(self.Npw *0.25)
 
     def etaDirect(self, x, t):
-        """Calculates the free surface elevation in space and time using direct decomposition for Timeseries class.
-        For more information on parameters see MonochromaticWaves.eta
+        """Calculates free surface elevation(Timeseries class-direct method
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
         """
         Eta=0.        
         for ii in range(0,self.Nf):
@@ -1499,8 +1590,19 @@ class TimeSeries:
         return Eta
 
     def uDirect(self, x, t):
-        """Calculates the free surface elevation from TimeSeries class using direct spectral decomposition.
-        For input and return parameters see MonochromaticWaves.u 
+        """Calculates wave velocity vector (Timeseries class-direct method)
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
         """
         U=0.
         for ii in range(0,self.Nf):
@@ -1514,13 +1616,13 @@ class TimeSeries:
         Parameters
         ----------
 
-        param : t
-                Description: time variable
-                Type : float
+        t : float
+                Time variable
 
         Returns
         -------
-        Index of window as an integer
+        int
+            Index of window as an integer
         
         """
         term = 1. - self.handover
@@ -1533,8 +1635,19 @@ class TimeSeries:
         return Nw
         
     def etaWindow(self, x, t):
-        """Calculates the free surface elevation from TimeSeries class using windowed spectral decomposition.
-        For input and return parameters see MonochromaticWaves.u 
+        """Calculates free surface elevation(Timeseries class-window method
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
         """
         Nw = self.findWindow(t)
         ai =  self.decompose_window[Nw][1]
@@ -1549,8 +1662,19 @@ class TimeSeries:
         return Eta
 
     def uWindow(self, x, t):
-        """Calculates the velocity elevation from TimeSeries classusing windowed spectral decomposition.
-        For input and return parameters see MonochromaticWaves.u 
+        """Calculates wave velocity vector (Timeseries class-window method)
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
         """
         Nw = self.findWindow(t)
         ai =  self.decompose_window[Nw][1]
@@ -1655,6 +1779,7 @@ class RandomWavesFast(RandomWaves):
                              )
             fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
             series = self.writeEtaSeries(Tstart,Tend,x0,fname,Lgen)
+            cutoff = 0.2*self.Tp/(series[-1,0]-series[0,0])
             TS = TimeSeries(
                  fname, # e.g.= "Timeseries.txt",
                  0,
@@ -1664,7 +1789,7 @@ class RandomWavesFast(RandomWaves):
                  self.mwl ,        #mean water level
                  self.waveDir, 
                  self.g,
-                 cutoffTotal = 0.2*self.Tp,
+                 cutoffTotal = cutoff,
                  rec_direct = False,
                  window_params = {"Nwaves":15 ,"Tm":self.Tp/1.1,"Window":"costap"},
                  arrayData = True,
@@ -1748,20 +1873,21 @@ class RandomNLWaves(RandomWaves):
         self.u = self.wtError 
     
     def eta_2ndOrder(self,x,t):
-        """Calculates the free surface elevation in space and time derived from 2nd-order
-        correction terms of nonlinear random wave theory
+        """Calculates the free surface elevation for 2nd-order terms
+
+        Uses 2nd order random wave theory
 
         Parameters
         ----------    
-        param : x
-                Description: Position vector
-                Type: Numpy array or list
-        param : t
-                Description: Time variable
-                Type: float
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
         Returns
         --------
-        Free-surface elevation as a float
+        float
+            Free-surface elevation as a float
 
         """
 
@@ -1776,20 +1902,21 @@ class RandomNLWaves(RandomWaves):
 
     #higher harmonics
     def eta_short(self,x,t):
-        """Calculates the free surface elevation in space and time derived from higher-order
-        correction terms of nonlinear random wave theory
+        """Calculates the free surface elevation for higher-order terms
+
+        Uses 2nd order random wave theory
 
         Parameters
         ----------    
-        param : x
-                Description: Position vector
-                Type: Numpy array or list
-        param : t
-                Description: Time variable
-                Type: float
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
         Returns
         --------
-        Free-surface elevation as a float
+        float
+            Free-surface elevation as a float
 
         """
 
@@ -1807,22 +1934,24 @@ class RandomNLWaves(RandomWaves):
 
     #lower harmonics
     def eta_long(self,x,t):
-        """Calculates the free surface elevation in space and time derived from lower-order
-        correction terms of nonlinear random wave theory
+        """Calculates the free surface elevation for lower-order terms
+
+        Uses 2nd order random wave theory
 
         Parameters
         ----------    
-        param : x
-                Description: Position vector
-                Type: Numpy array or list
-        param : t
-                Description: Time variable
-                Type: float
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
         Returns
         --------
-        Free-surface elevation as a float
+        float
+            Free-surface elevation as a float
 
         """
+
 
         Etalong = 0.
         for i in range(0,self.N-1):
@@ -1837,21 +1966,24 @@ class RandomNLWaves(RandomWaves):
 
     #set-up calculation
     def eta_setUp(self,x,t):
-        """Calculates the setup induced by nonlinear interactions in a random wave series
+        """Calculates the free surface elevation set up
+
+        Uses 2nd order random wave theory
 
         Parameters
         ----------    
-        param : x (Dummy parameter, needs removing)
-                Description: Position vector
-                Type: Numpy array or list
-        param : t (Dummy parameter, needs removing)
-                Description: Time variable
-                Type: float
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
         Returns
         --------
-        Free-surface elevation as a float
+        float
+            Free-surface elevation as a float
 
         """
+
 
         EtasetUp = 0.
         for i in range(0,self.N):
@@ -1863,22 +1995,21 @@ class RandomNLWaves(RandomWaves):
 
     #overall free surface elevation
     def eta_overall(self,x,t,setUp=False):
-        """Calculates the free surface elevation in space and time using 2nd order nonlinear corrections
+        """Calculates the free surface elevation with 2nd order corrections
+
+        Uses 2nd order random wave theory
 
         Parameters
         ----------    
-        param : x
-                Description: Position vector
-                Type: Numpy array or list
-        param : t
-                Description: Time variable
-                Type: float
-        param : setUp
-                Description: Switch for including or not the setup calculation from  in the eta_overall function
-                Type: string
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
         Returns
         --------
-        Free-surface elevation as a float
+        float
+            Free-surface elevation as a float
 
         """
         Etaoverall =  self.eta_linear(x,t) + self.eta_2ndOrder(x,t) + self.eta_short(x,t) + self.eta_long(x,t)
@@ -1889,40 +2020,36 @@ class RandomNLWaves(RandomWaves):
 
 
     def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False,Vgen=np.array([0.,0.,0.])):
-        """Writes a timeseries for the free-surface elevation using RandomNLWaves class and returns it as a numpy array.
+        """Writes a timeseries of the free-surface elevation
+
+        It also returns the free surface elevation as a time-eta array.
+        If Vgen !=[0.,0.,0.,] then Tstart is modified to account for the
+        wave transformation at the most remote point of the relaxation zone.
+    
         Parameters
         ----------    
-        param : Tstart
-                Description: Start time
-                Type: float
-        param : Tend
-                Description: End time
-                Type: float
-        param : dt
-                Description: Time step of series
-                Type: float
-        param : mode
-                Description: Selects which mode to calculate.
-                            It can be set to “linear”, “short”, “long”, “setup” and “all” (default value).
-                Type: string
-        param : setUp
-                Description: Switch for including or not the setup calculation from  in the eta_overall function
-                Type: string
+        Tstart : float
+            Start time
+        Tend : float
+            End time
+        dt : float
+            Sampling interval
+        x0 : numpy.ndarray
+            Position vector of the time series
+        fname : string
+            Filename for timeseries file
+        mode: Optional[string]
+            Mode of set up calculations (all, long, short, setup)
+        setUp: Optional[bool]
+            Switch for activating setup calculation
+        Vgen : Optional[numpy.ndarray]
+            Length vector of relaxation zone 
+            
 
-        param : x0
-                Description: Position vector of the time series
-                Type: Numpy array
-        param : fname
-                Description: filename for timeseries file
-                Type: String
-        param : Vgen
-                Description: Length vector of relaxation zone
-                Type: Numpy array
         Returns
-        ----------    
-        2D numpy array Nx2 containing free-surface elevation in time. If Vgen !=[0.,0.,0.,] then
-        Tstart is modified to account for the wave transformation at the most remote point of the
-        relaxation zone for t=Tstart
+        ----------
+        numpy.ndarray
+            2D numpy array Nx2 containing free-surface elevation in time. 
         """
         if sum(Vgen[:]*self.waveDir[:])< 0 :
             logEvent('ERROR! Wavetools.py: Location vector of generation zone should not be opposite to the wave direction')
@@ -1960,22 +2087,23 @@ class RandomNLWaves(RandomWaves):
         return series
 
     def wtError(self,x,t):
-        """Dummy function, returns a message for using RandomNLWavesFast.eta or RandomNLWavesFast.u instead
+        """Raises error for using RandomNLWavesFast class instead 
 
         Parameters
         ----------    
-        param : x
-            Description: Position vector
-            Type: Numpy array or list
-        param : t
-                Description: Time variable
-                Type: float
-        param : setUp
-                Description: Switch for including or not the setup calculation from  in the eta_overall function
-                Type: string
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+
         Returns
         --------
-        Free-surface elevation as a float
+        None
+
+        Raises
+        --------
+        SystemExit
 
         """
 
@@ -2106,15 +2234,39 @@ class RandomNLWavesFast:
 
 
     def eta(self,x,t):
-        """Calculates the free surface elevation in space and time for RandomNLWavesFast class.
-        For more information on parameters see MonochromaticWaves.eta"""
+        """Calculates free surface elevation (RandomNLWavesFast class)
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
+        """
         etaR = self.TS[0].eta(x,t)+ self.TS[1].eta(x,t)+self.TS[2].eta(x,t)
         return etaR
 
 
     def u(self,x,t):
-        """Calculates the wave velocity vector in space and time for RandomNLWavesFast class.
-        For more information on parameters see MonochromaticWaves.u"""
+        """Calculates wave velocity vector (RandomNLWavesFast class)
+        Parameters
+        ----------    
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
+        """
         uR = self.TS[0].u(x,t)+ self.TS[1].u(x,t)+self.TS[2].u(x,t)
         return uR
         
