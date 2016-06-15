@@ -1275,7 +1275,8 @@ class VerifyRandomWavesFast(unittest.TestCase):
                         phi            
                         
                    )
-        series = aR.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+
+        cutoff = 0.2*Tp/(series[-1,0]-series[0,0])
         aT= TimeSeries(
             fname,
             0,
