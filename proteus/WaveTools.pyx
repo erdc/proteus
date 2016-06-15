@@ -1068,7 +1068,7 @@ class TimeSeries:
         :param x: floating point x coordinate
         :param t: time"""
         Eta=0.
-        x1 = x-[self.x0, self.y0, self.z0]
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
             Eta+= eta_mode(x1,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
         return Eta
@@ -1081,7 +1081,7 @@ class TimeSeries:
         :param t: time
         """
         U=0.
-        x1 = x-[self.x0, self.y0, self.z0]
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
             U+= vel_mode(x1, t-self.t0, self.kDir[ii],self.ki[ii], self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
@@ -1107,7 +1107,7 @@ class TimeSeries:
         kDir = self.decompose_window[Nw][4]
         t0 = self.windows_rec[Nw][0,0]
         Eta=0.
-        x1 = np.array(x)-[self.x0, self.y0, self.z0]
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
             Eta+= eta_mode(x1, t-t0, kDir[ii], omega[ii], phi[ii], ai[ii])
         return Eta
@@ -1127,7 +1127,7 @@ class TimeSeries:
         ki = self.decompose_window[Nw][5]
         t0 = self.windows_rec[Nw][0,0]
         U=0.
-        x1 =  np.array(x)-[self.x0, self.y0, self.z0]
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
             U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
