@@ -1286,7 +1286,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
             mwl ,        
             waveDir,
             g,
-            0.2*Tp,
+            cutoff,
             False,                                                                                                                                          
             {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
             True,
