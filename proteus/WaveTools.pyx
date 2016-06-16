@@ -1570,6 +1570,7 @@ class TimeSeries:
 #            self.Noverlap = int(self.Npw *0.25)
 
     def etaDirect(self, x, t):
+
         """Calculates free surface elevation(Timeseries class-direct method
         Parameters
         ----------    
@@ -1585,8 +1586,9 @@ class TimeSeries:
 
         """
         Eta=0.        
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
+
         for ii in range(0,self.Nf):
-            x1 = np.array(x)-[self.x0, self.y0, self.z0]
             Eta+= eta_mode(x1,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
         return Eta
 
@@ -1606,8 +1608,8 @@ class TimeSeries:
 
         """
         U=0.
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
-            x1 = x-[self.x0, self.y0, self.z0]
             U+= vel_mode(x1, t-self.t0, self.kDir[ii],self.ki[ii], self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
 
@@ -1656,9 +1658,10 @@ class TimeSeries:
         phi = self.decompose_window[Nw][2]
         kDir = self.decompose_window[Nw][4]
         t0 = self.windows_rec[Nw][0,0]
-        Eta=0.        
+        Eta=0.
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
+
         for ii in range(0,self.Nf):
-            x1 = np.array(x)-[self.x0, self.y0, self.z0]
             Eta+= eta_mode(x1, t-t0, kDir[ii], omega[ii], phi[ii], ai[ii])
         return Eta
 
@@ -1685,8 +1688,8 @@ class TimeSeries:
         ki = self.decompose_window[Nw][5]
         t0 = self.windows_rec[Nw][0,0]
         U=0.
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
-            x1 =  np.array(x)-[self.x0, self.y0, self.z0]
             U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
 
