@@ -71,6 +71,7 @@ def setVertDir(g):
     """
     return -np.array(g/(sqrt(g[0]**2 + g[1]**2 + g[2]**2)))
 
+
 def setDirVector(vector):
     """ Returns the direction of a vector in the form of a unit vector
 
