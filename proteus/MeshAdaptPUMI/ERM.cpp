@@ -865,7 +865,6 @@ void MeshAdaptPUMIDrvr::get_local_error()
   computeDiffusiveFlux(m,voff,visc,pref,velf);
 
   //Initialize the Error Fields
-  freeField(err_reg);
   err_reg = apf::createField(m,"ErrorRegion",apf::VECTOR,apf::getConstant(nsd));
 
   //Start computing element quantities
