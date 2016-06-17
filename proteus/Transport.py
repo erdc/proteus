@@ -30,7 +30,6 @@ from .Profiling import logEvent
 import superluWrappers
 import numpy
 
-
 class StorageSet(set):
     def __init__(self,initializer=[],shape=(0,),storageType='d'):
         set.__init__(self,initializer)
