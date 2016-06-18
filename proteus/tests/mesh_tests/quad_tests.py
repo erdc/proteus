@@ -65,9 +65,9 @@ def test_2D_stokes():
 
 
 if __name__ == '__main__':
-#    test_2D_stokes()
+    test_2D_stokes()
     from proteus import Comm
     comm = Comm.init()
-    import nose
-    nose.main()
+#    import nose
+#    nose.main()
 
