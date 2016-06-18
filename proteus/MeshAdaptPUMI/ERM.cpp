@@ -839,6 +839,7 @@ void MeshAdaptPUMIDrvr::removeBCData()
 }
 
 
+//double MeshAdaptPUMIDrvr::get_local_error() 
 void MeshAdaptPUMIDrvr::get_local_error() 
 //This function aims to compute error at each element via ERM.
 //First get the mesh and impose a 2nd order field
@@ -1170,11 +1171,11 @@ std::cout<<"Error estimate "<<err_est_total<<std::endl;
 }
   m->end(iter);
 
-  getERMSizeField(err_est_total);
   apf::destroyField(visc);
   apf::destroyField(estimate);
   removeBCData();
   printf("It cleared the function.\n");
+  total_error = err_est_total;
 }
 
 

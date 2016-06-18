@@ -865,6 +865,7 @@ class NS_base:  # (HasTraits):
                 #assuming same for all physics and numerics  for now
                 p0 = self.pList[0]
                 n0 = self.nList[0]
+
                 #can only handle PUMIDomain's for now
                 if (isinstance(p0.domain, Domain.PUMIDomain) and
                     n0.adaptMesh and
@@ -929,6 +930,10 @@ class NS_base:  # (HasTraits):
                     # ...
                     #
                     log("h-adapt mesh by calling AdaptPUMIMesh")
+                    p0.domain.PUMIMesh.get_local_error()
+                    if(p0.domain.PUMIMesh.willAdapt()):
+                      print "Success!"
+
                     p0.domain.PUMIMesh.adaptPUMIMesh()
                     log("Converting PUMI mesh to Proteus")
                     #ibaned: PUMI conversion #2
