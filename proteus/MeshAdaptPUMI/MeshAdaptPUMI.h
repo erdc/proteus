@@ -24,6 +24,7 @@ class MeshAdaptPUMIDrvr{
   int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   int transferBCsToProteus();
   int commuSizeField();
+  int willAdapt();
   int adaptPUMIMesh();
 
   void numberLocally();
@@ -66,6 +67,7 @@ class MeshAdaptPUMIDrvr{
   int integration_order; //determines number of integration points
   int num_quadrature; 
   int num_quarature_boundary;
+  double total_error;
 
   private: 
   apf::Mesh2* m;

@@ -36,6 +36,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   gmi_register_sim();
   approximation_order = 2;
   integration_order = 3;//approximation_order * 2;
+  total_error = 0.0;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
   size_field_config = sfConfig;
   modelFileName = NULL; 
@@ -45,6 +46,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
 {
+  freeField(err_reg);
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);
@@ -201,13 +203,23 @@ void MeshAdaptPUMIDrvr::simmetrixBCreloaded(const char* modelFile)
   getSimmetrixBC();
 }
 
+int MeshAdaptPUMIDrvr::willAdapt()
+{
+  double THRESHOLD = 0.0;
+  int adaptFlag=0;
+  if(total_error > THRESHOLD)
+    adaptFlag = 1;
+  return adaptFlag;
+}
+
 int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 {
   if (size_field_config == "farhad")
     calculateAnisoSizeField();
   else if (size_field_config == "alvin"){
       double t1 = PCU_Time();
-      get_local_error();
+      getERMSizeField(total_error);
+      freeField(err_reg); //mAdapt will throw error if not destroyed. what about free?
       double t2 = PCU_Time();
     if(comm_rank==0 && logging_config == "on"){
       std::ofstream myfile;
