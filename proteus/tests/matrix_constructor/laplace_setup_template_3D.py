@@ -5,21 +5,21 @@ from proteus import default_s,default_so
 import numpy
 import proteus as pr
 
-p.nd = 2
+p.nd = 3
 p.name = "Laplace_matrix_test"
 
-p.rdomain = pr.Domain.unitSimplex(2)
-p.polyfile = "reference_triangle"
-p.rdomain.writePoly(p.polyfile)
+p.rdomain = pr.Domain.unitSimplex(3)
+p.polyfile_3d = "reference_triangle_3d"
+p.rdomain.writePoly(p.polyfile_3d)
 n.triangleOptions = "Yp"
 
-p.nc = 3
+p.nc = 4
 
 def getDBC(x,flag):
     if x[0] in [0.0] and x[1] in [0.0]:
         pass
 
-p.dirichletConditions = {0:getDBC, 1:getDBC, 2:getDBC}
+p.dirichletConditions = {0:getDBC, 1:getDBC, 2:getDBC, 3:getDBC}
 p.advectiveFluxBoundaryConditions = {}
 p.diffusiveFluxBoundaryConditions = {}
 p.periodicDirichletConditions = None
@@ -62,8 +62,3 @@ so.sList=[default_s]
 from proteus import *
 opts = None
 ns = NumericalSolution.NS_base(so,[p],[n],so.sList,ip.opts)
-#from nose.tools import set_trace
-#set_trace()
-
-#failed = ns.calculateSolution('ladr_run1')
-#assert(not failed)
