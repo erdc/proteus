@@ -150,7 +150,7 @@ class TC_base:
                 self.elementIntegralKeys.append(('a',ci,ck))
                 self.elementBoundaryIntegralKeys.append(('a',ci,ck))
                 if not self.potential.has_key(ck):
-                    warn("""a[ci=%d][ck=%d] is non-zero but phi[ck=%d] is undefined. Setting
+                    print("""a[ci=%d][ck=%d] is non-zero but phi[ck=%d] is undefined. Setting
                     phi[ck=%d]=u[ck=%d], the potential definition
                     should be corrected in the future\n""" % (ci,ck,ck,ck,ck))
                     self.potential[ck]='u'
@@ -1404,6 +1404,7 @@ class ShallowWater(TC_base):
 
 class Laplace(TC_base):
     """ A coefficient class to construct the Laplace Operator """
+    from ctransportCoefficients import Laplace_2D_Evaluate
     def __init__(self,nd=2):
         self.nd=nd
         mass = {}
@@ -1417,6 +1418,9 @@ class Laplace(TC_base):
             diffusion = {0:{0:{0:'constant'}},
                          1:{1:{1:'constant'}},
                          2:{2:{2:'constant'}}}
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
+                         2:{2:'u'}}
             TC_base.__init__(self,
                              3,
                              mass,
@@ -1430,8 +1434,13 @@ class Laplace(TC_base):
             self.vectorComponents=[1,2]
 
     def evaluate(self,t,c):
+        import pdb
+        pdb.set_trace()
         if self.nd==2:
-            self.Laplace_2D_Evaluate(c[('a',0,0)],
+            self.Laplace_2D_Evaluate(c[('u',0)],
+                                     c[('u',1)],
+                                     c[('u',2)],
+                                     c[('a',0,0)],
                                      c[('a',1,1)],
                                      c[('a',2,2)])
 
@@ -1548,6 +1557,8 @@ class Stokes(TC_base):
         modelList[0].pp_hasConstantNullSpace = False
 
     def evaluate(self,t,c):
+        import pdb
+        pdb.set_trace()
         if self.nd==2:
             self.Stokes_2D_Evaluate(self.rho,
                                     self.nu,
