@@ -1403,8 +1403,20 @@ class ShallowWater(TC_base):
 #                                           c[('dH',3,0)])
 
 class Laplace(TC_base):
-    """ A coefficient class to construct the Laplace Operator """
+    r""" A coefficient class to construct the discrete Laplace Operator.
+    
+    This class defines the coefficients necessary to construct the
+    discrete Laplace operator :math:`A` where
+
+    .. math::
+    
+        a^{c}_{i,j} = \int_{T} \nabla \phi^{c}_{i} \cdot \nabla \phi^{c}_{j} dT
+
+    for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
+    :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
+    """
     from ctransportCoefficients import Laplace_2D_Evaluate
+    from ctransportCoefficients import Laplace_3D_Evaluate
     def __init__(self,nd=2):
         self.nd=nd
         mass = {}
@@ -1432,10 +1444,28 @@ class Laplace(TC_base):
                              variableNames,
                              useSparseDiffusion=True)
             self.vectorComponents=[1,2]
-
+        if nd==3:
+            variableNames=['p','u','v','w']
+            diffusion ={0:{0:{0:'constant'}},
+                        1:{1:{1:'constant'}},
+                        2:{2:{2:'constant'}},
+                        3:{3:{3:'constant'}}}
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
+                         2:{2:'u'},
+                         3:{3:'u'}}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             useSparseDiffusion=True)
+            self.vectorComponents=[1,2,3]
     def evaluate(self,t,c):
-        import pdb
-        pdb.set_trace()
         if self.nd==2:
             self.Laplace_2D_Evaluate(c[('u',0)],
                                      c[('u',1)],
@@ -1443,6 +1473,15 @@ class Laplace(TC_base):
                                      c[('a',0,0)],
                                      c[('a',1,1)],
                                      c[('a',2,2)])
+        if self.nd==3:
+            self.Laplace_3D_Evaluate(c[('u',0)],
+                                     c[('u',1)],
+                                     c[('u',2)],
+                                     c[('u',3)],
+                                     c[('a',0,0)],
+                                     c[('a',1,1)],
+                                     c[('a',2,2)],
+                                     c[('a',3,3)])
 
 ##\brief Incompressible Stokes equations
 #
