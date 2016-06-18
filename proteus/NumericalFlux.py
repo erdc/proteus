@@ -4,6 +4,7 @@ A class hierarchy for numerical flux (numerical trace) computations
 .. inheritance-diagram:: proteus.NumericalFlux
    :parts: 1
 """
+import pdb
 import cfemIntegrals,cnumericalFlux
 import numpy
 from .Profiling import logEvent,memory
@@ -189,6 +190,7 @@ class NF_base:
                     except TypeError:
                         logEvent("""WARNING NumericalFlux Pointwise conditions should take arguments (x,flag) now trying without flag""")
                         #again try to get boundary condition flag too
+                        pdb.set_trace()
                         gReturn = getPointwiseBoundaryConditions[ci](x)
                         try:
                             g = gReturn[0]
