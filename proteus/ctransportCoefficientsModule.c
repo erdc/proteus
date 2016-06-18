@@ -2834,22 +2834,26 @@ static PyObject* ctransportCoefficientsConservativeHeadRichardsBCBfromMVGHomEval
   return Py_None;
 }
 
-static PyObject* ctransportCoefficientsLaplace_Evaluate(PyObject* self,
+static PyObject* ctransportCoefficientsLaplace_2D_Evaluate(PyObject* self,
 							PyObject* args)
 {
   // Need to double check I'm not adding too many attributes here.
   int i,nPoints=1;
-  PyObject *u,*p,*mom_u_diff_ten,*mom_v_diff_ten,*mom_p_diff_ten ;
-  
-  if (!PyArg_ParseTuple(args,"OOO",
+  PyObject *u,*v,*p,*mom_u_diff_ten,*mom_v_diff_ten,*mom_p_diff_ten ;
+
+  if (!PyArg_ParseTuple(args,"OOOOOO",
+			&p,
+			&u,
+			&v,
 			&mom_p_diff_ten,
 			&mom_u_diff_ten,
 			&mom_v_diff_ten))
   return NULL;
 
-  for (i=0;i<ND(p);i++)
+  for (i=0;i<ND(p);i++){
     nPoints *= SHAPE(p)[i];
-  
+  }
+
   Laplace_Evaluate(nPoints,
 		   DDATA(mom_p_diff_ten),
 		   DDATA(mom_u_diff_ten),
@@ -9723,7 +9727,11 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
   { "Stokes_2D_Evaluate", 
     ctransportCoefficientsStokes_2D_Evaluate,
     METH_VARARGS, 
-    "evaluate the coefficients  of the 2D Stokes equations"}, 
+    "evaluate the coefficients  of the 2D Stokes equations"},
+  { "Laplace_2D_Evaluate",
+    ctransportCoefficientsLaplace_2D_Evaluate,
+    METH_VARARGS,
+    "evaluate the coefficients of the 2D Laplace"},
   { "StokesP_2D_Evaluate", 
     ctransportCoefficientsStokesP_2D_Evaluate,
     METH_VARARGS, 
