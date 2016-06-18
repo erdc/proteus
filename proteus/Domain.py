@@ -301,6 +301,34 @@ shipout();
     def writeXdmf(self,ar):
         raise UserWarning("Xdmf output not implemented")
 
+def unitSimplex(nd=2):
+    """
+    This helper function returns a 2 or 3 dimension Domain object representing the reference element.
+    """
+    if nd==2:
+        return PlanarStraightLineGraphDomain(vertices=[[0. , 0.], 
+                                                       [0. , 1.], 
+                                                       [1. , 0.]],
+                                             segments = [[0, 1],
+                                                         [1, 2],
+                                                         [2, 0]],
+                                             name="Reference Triangle")
+    if nd==3:
+       boundaryTags = {'bottom':1,'front':2,'side':3,'back':4}
+       return PiecewiseLinearComplexDomain(vertices=[[0.0 , 0.0 , 0.0], 
+                                                     [0.0 , 0.0 , 1.0], 
+                                                     [0.0 , 1.0 , 0.0], 
+                                                     [1.0 , 0.0 , 0.0]],
+                                           facets = [[[0, 2, 3]],
+                                                     [[0, 1, 2]],
+                                                     [[0, 1, 3]],
+                                                     [[1, 2, 3]]],
+                                           # facetFlags=[boundaryTags['bottom'],
+                                           #             boundaryTags['front'],
+                                           #             boundaryTags['side'],
+                                           #             boundaryTags['back']],                                                       
+                                           name="Reference Simplex")
+
 class PlanarStraightLineGraphDomain(D_base):
     """
     2D domains described by planar straight line graphs.
