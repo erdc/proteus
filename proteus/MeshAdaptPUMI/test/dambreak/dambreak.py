@@ -119,6 +119,7 @@ else:
         case_mesh = "Dambreak_coarse.smb"
         input_mesh = "%s/%s" % (model_dir,case_mesh)
         domain.PUMIMesh.loadModelAndMesh("Dambreak.smd", input_mesh)
+        domain.PUMIMesh.simmetrixBCreloaded("Dambreak_coarse.smd")
 
 # Time stepping
 T=0.35
