@@ -1834,17 +1834,21 @@ void Laplace_Evaluate3D(const int nPoints,
   int k;
   for (k=0; k<nPoints; k++)
     {
-      mom_p_diff_ten[k*4+0] = 1.0;
-      mom_p_diff_ten[k*4+3] = 1.0;
+      mom_p_diff_ten[k*9+0] = 1.0;
+      mom_p_diff_ten[k*9+4] = 1.0;
+      mom_p_diff_ten[k*9+8] = 1.0;
 
-      mom_u_diff_ten[k*4+0] = 1.0;
-      mom_u_diff_ten[k*4+3] = 1.0;
+      mom_u_diff_ten[k*9+0] = 1.0;
+      mom_u_diff_ten[k*9+4] = 1.0;
+      mom_u_diff_ten[k*9+8] = 1.0;
 
-      mom_v_diff_ten[k*4+0] = 1.0;
-      mom_v_diff_ten[k*4+3] = 1.0;
+      mom_v_diff_ten[k*9+0] = 1.0;
+      mom_v_diff_ten[k*9+4] = 1.0;
+      mom_v_diff_ten[k*9+8] = 1.0;
 
-      mom_w_diff_ten[k*4+0] = 1.0;
-      mom_w_diff_ten[k*4+3] = 1.0;
+      mom_w_diff_ten[k*9+0] = 1.0;
+      mom_w_diff_ten[k*9+4] = 1.0;
+      mom_w_diff_ten[k*9+8] = 1.0;
     } 
 }
 

@@ -9,8 +9,9 @@ p.nd = 2
 p.name = "Laplace_matrix_test"
 
 p.rdomain = pr.Domain.unitSimplex(2)
-p.polyfile_2d = "reference_triangle_2d"
-p.rdomain.writePoly(p.polyfile_2d)
+p.polyfile = "reference_triangle_2d"
+p.rdomain.writePoly(p.polyfile)
+p.domain = None
 n.triangleOptions = "Yp"
 
 p.nc = 3
@@ -62,5 +63,3 @@ so.sList=[default_s]
 from proteus import *
 opts = None
 ns = NumericalSolution.NS_base(so,[p],[n],so.sList,ip.opts)
-import pdb
-pdb.set_trace()
