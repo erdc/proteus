@@ -203,7 +203,7 @@ void MeshAdaptPUMIDrvr::simmetrixBCreloaded(const char* modelFile)
   getSimmetrixBC();
 }
 
-int MeshAdaptPUMIDrvr::willAdapt()
+int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
 {
   double THRESHOLD = 0.0;
   int adaptFlag=0;
