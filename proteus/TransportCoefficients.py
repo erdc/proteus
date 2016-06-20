@@ -971,7 +971,8 @@ class AdvectionOperator(TC_base):
         quadrature points.
     """
     from ctransportCoefficients import Advection_2D_Evaluate
-    def __init__(self,nd=2,u):
+    from ctransportCoefficients import Advection_3D_Evaluate
+    def __init__(self,nd=2):
         self.nd=nd
         self.u=u
         mass = {}
@@ -1053,7 +1054,7 @@ class AdvectionOperator(TC_base):
                                            c[('df',1,3)],
                                            c[('df',2,1)],
                                            c[('df',2,2)],
-                                           c[('df',2,3)]
+                                           c[('df',2,3)],
                                            c[('df',3,1)],
                                            c[('df',3,2)],
                                            c[('df',3,3)])
