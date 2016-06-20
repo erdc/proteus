@@ -4,6 +4,7 @@ from cpython.ref cimport PyObject
 cimport numpy as np
 import numpy as np
 from ..Profiling import logEvent
+from libcpp.string cimport string
 
 cdef extern from "mesh.h":
     struct Mesh:
@@ -17,7 +18,8 @@ cdef extern from "cmeshToolsModule.h":
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
         MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*)
-        int numIter, numAdaptSteps
+        int numIter
+        string size_field_config, adapt_type_config
         int loadModelAndMesh(char *, char*)
         int getSimmetrixBC()
         void simmetrixBCreloaded(char*)
@@ -40,13 +42,17 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
-    cdef double hmax, hmin
-    cdef int numIter, numAdaptSteps
     def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="alvin",maType="isotropic",logType="off"):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
         self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType)
     def __dealloc__(self):
         del self.thisptr
+    def size_field_config(self):
+        return self.thisptr.size_field_config
+    def adapt_type_config(self):
+        return self.thisptr.adapt_type_config
+    def numIter(self):
+        return self.thisptr.numIter
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
     def simmetrixBCreloaded(self,modelFile):
