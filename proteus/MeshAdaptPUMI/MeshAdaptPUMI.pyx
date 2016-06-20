@@ -42,7 +42,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
-    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="alvin",maType="isotropic",logType="off"):
+    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="farhad",maType="isotropic",logType="off"):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
         self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType)
     def __dealloc__(self):
