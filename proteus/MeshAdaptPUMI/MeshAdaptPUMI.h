@@ -44,6 +44,9 @@ class MeshAdaptPUMIDrvr{
   int numIter;
   int nAdapt; //counter for number of adapt steps
   int nsd; //number of spatial dimensions
+  std::string size_field_config;
+  std::string adapt_type_config;
+  std::string logging_config;
 
   //Element Residual Method
   void get_local_error();
@@ -100,9 +103,6 @@ class MeshAdaptPUMIDrvr{
   static void averageToEntity(apf::Field* ef, apf::Field* vf,
       apf::MeshEntity* ent);
 
-  std::string size_field_config;
-  std::string adapt_type_config;
-  std::string logging_config;
 };
 
 
