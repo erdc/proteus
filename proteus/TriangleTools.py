@@ -575,8 +575,6 @@ number of edges         = %d
         -----
         Function assumes the nbase data member is set appropriately.
         """
-        import pdb
-        pdb.set_trace()
         reader = TriangleUtils.TriangleInputFileReader()
         if verbose > 0:
             print 'readFromPolyFile filebase= ',filebase
