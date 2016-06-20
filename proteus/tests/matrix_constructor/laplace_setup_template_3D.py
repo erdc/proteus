@@ -9,8 +9,9 @@ p.nd = 3
 p.name = "Laplace_matrix_test"
 
 p.rdomain = pr.Domain.unitSimplex(3)
-p.polyfile_3d = "reference_triangle_3d"
-p.rdomain.writePoly(p.polyfile_3d)
+p.polyfile = "reference_triangle_3d"
+p.rdomain.writePoly(p.polyfile)
+p.domain = None
 n.triangleOptions = "Yp"
 
 p.nc = 4
