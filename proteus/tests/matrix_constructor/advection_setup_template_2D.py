@@ -25,7 +25,7 @@ p.advectiveFluxBoundaryConditions = {}
 p.diffusiveFluxBoundaryConditions = {}
 p.periodicDirichletConditions = None
 
-p.coefficients = pr.TransportCoefficients.Laplace(p.nd)
+p.coefficients = pr.TransportCoefficients.AdvectionOperator(p.nd)
 
 ############################
 

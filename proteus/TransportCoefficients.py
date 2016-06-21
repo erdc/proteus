@@ -959,9 +959,8 @@ class AdvectionOperator(TC_base):
     """
     from ctransportCoefficients import Advection_2D_Evaluate
     from ctransportCoefficients import Advection_3D_Evaluate
-    def __init__(self,nd=2,u):
+    def __init__(self,nd=2):
         self.nd=nd
-        self.u=u
         mass = {}
         advection = {}
         diffusion = {}
