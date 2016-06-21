@@ -40,17 +40,19 @@ class TestAdvectionConstruction2D():
         nElements = self.advection_object.modelList[0].levelModelList[0].mesh.nElements_global
         nQuadPts =  self.advection_object.modelList[0].levelModelList[0].q['x'].shape[1]
         nd =  self.advection_object.modelList[0].levelModelList[0].coefficients.nd
-        self.advection_field = numpy.zeros(shape=(nQuadPts,nd))
-        for i,quad_pt in enumerate(self.advection_object.modelList[0].levelModelList[0].q['x'][0]):
-            self.advection_field[i][0] = 0.5 * (quad_pt[0] + quad_pt[1])
-            self.advection_field[i][1] = 0.25 * (quad_pt[1])
+        self.advection_field = numpy.zeros(shape=(nElements,nQuadPts,nd))
+        for ele in range(nElements):
+            for i,quad_pt in enumerate(self.advection_object.modelList[0].levelModelList[0].q['x'][0]):
+                self.advection_field[ele][i][0] = 0.5 * (quad_pt[0] + quad_pt[1])
+                self.advection_field[ele][i][1] = 0.25 * (quad_pt[1])
 
     def test_1(self):
         """ Initial test to check whether this is working """
-        self.advection_object.modelList[0].levelModelList[0].calculateCoefficients()
         self.build_advection_field()
+        self.advection_object.modelList[0].levelModelList[0].coefficients.attach_advection_field(self.advection_field)
         import pdb
         pdb.set_trace()
+        self.advection_object.modelList[0].levelModelList[0].calculateCoefficients()
         rowptr, colind, nzval = self.advection_object.modelList[0].levelModelList[0].jacobian.getCSRrepresentation()
         self.advection_object.modelList[0].levelModelList[0].scale_dt = False
         self.Asys_rowptr = rowptr.copy()
@@ -64,6 +66,7 @@ class TestAdvectionConstruction2D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.advection_object.modelList[0].levelModelList[0].getSpatialJacobian(self.Asys)
         advection_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
+        pdb.set_trace()
         comparison_mat = numpy.loadtxt('advection_reference_c0p1_2D.txt')
         assert numpy.allclose(advection_mat,comparison_mat)
 

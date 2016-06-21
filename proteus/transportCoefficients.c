@@ -1811,6 +1811,7 @@ void Advection_2D_Evaluate(const int nPoints,
 			   const double *u,
 			   const double *v,
 			   double *mass_adv,
+			   double *dmass_adv_p,
 			   double *dmass_adv_u,
 			   double *dmass_adv_v,
 			   double *mom_u_adv,
@@ -1826,6 +1827,9 @@ void Advection_2D_Evaluate(const int nPoints,
       //mass advective flux
       mass_adv[k*2+0]=u[k];
       mass_adv[k*2+1]=v[k];
+
+      dmass_adv_p[k*2+0] = u[k];
+      dmass_adv_p[k*2+1] = v[k];
 
       dmass_adv_u[k*2+0]=1.0;
       dmass_adv_v[k*2+1]=1.0;
@@ -1854,6 +1858,7 @@ void Advection_3D_Evaluate(const int nPoints,
 			   const double *v,
 			   const double *w,
 			   double *mass_adv,
+			   double *dmass_adv_p,
 			   double *dmass_adv_u,
 			   double *dmass_adv_v,
 			   double *dmass_adv_w,
@@ -1877,6 +1882,10 @@ void Advection_3D_Evaluate(const int nPoints,
       mass_adv[k*3+0]=u[k];
       mass_adv[k*3+1]=v[k];
       mass_adv[k*3+2]=w[k];
+
+      dmass_adv_p[k*3+0] = u[k];
+      dmass_adv_p[k*3+1] = v[k];
+      dmass_adv_p[k*3+2] = w[k];
 
       dmass_adv_u[k*3+0]=1.0;
       dmass_adv_v[k*3+1]=1.0;

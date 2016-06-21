@@ -8,6 +8,7 @@ this module define common PDE's.
    :parts: 1
 """
 from math import *
+import sys
 import numpy
 import Norms
 from Profiling import logEvent
@@ -961,6 +962,7 @@ class AdvectionOperator(TC_base):
     from ctransportCoefficients import Advection_3D_Evaluate
     def __init__(self,nd=2):
         self.nd=nd
+        self.advection_field = None
         mass = {}
         advection = {}
         diffusion = {}
@@ -969,11 +971,14 @@ class AdvectionOperator(TC_base):
         hamiltonian = {}
         if nd==2:
             variableNames=['p','u','v']
-            advection = {0:{1:'linear',
+            advection = {0:{0:'linear',
+                            1:'linear',
                             2:'linear'},
-                         1:{1:'nonlinear',
+                         1:{0:'nonlinear',
+                            1:'nonlinear',
                             2:'nonlinear'},
-                         2:{1:'nonlinear',
+                         2:{0:'nonlinear',
+                            1:'nonlinear',
                             2:'nonlinear'}}
             TC_base.__init__(self,
                              3,
@@ -987,16 +992,20 @@ class AdvectionOperator(TC_base):
             self.vectorComponents = [1,2]
         if nd==3:
             variableNames=['p','u','v','w']
-            advection = {0:{1:'linear',
+            advection = {0:{0:'linear',
+                            1:'linear',
                             2:'linear',
                             3:'linear'},
-                         1:{1:'nonlinear',
+                         1:{0:'nonlinear',
+                            1:'nonlinear',
                             2:'nonlinear',
                             3:'nonlinear'},
-                         2:{1:'nonlinear',
+                         2:{0:'nonlinear',
+                            1:'nonlinear',
                             2:'nonlinear',
                             3:'nonlinear'},
-                          3:{1:'nonlinear',
+                          3:{0:'nonlinear',
+                             1:'nonlinear',
                              2:'nonlinear',
                              3:'nonlinear'}}
             TC_base.__init__(self,
@@ -1009,41 +1018,61 @@ class AdvectionOperator(TC_base):
                              hamiltonian,
                              variableNames)
             self.vectorComponents = [1,2,3]
-        def evaluate(self,t,c):
-            if self.nd==2:
-                self.Advection_2D_Evaluate(p,
-                                           u,
-                                           v,
-                                           c[('f',0)],
-                                           c[('f',1)],
-                                           c[('f',2)],
-                                           c[('df',0,1)],
-                                           c[('df',0,2)],
-                                           c[('df',1,1)],
-                                           c[('df',1,2)],
-                                           c[('df',2,1)],
-                                           c[('df',2,2)])
-            elif self.nd==3:
-                self.Advection_3D_Evaluate(p,
-                                           u,
-                                           v,
-                                           w,
-                                           c[('f',0)],
-                                           c[('f',1)],
-                                           c[('f',2)],
-                                           c[('f',3)],
-                                           c[('df',0,1)],
-                                           c[('df',0,2)],
-                                           c[('df',0,3)],
-                                           c[('df',1,1)],
-                                           c[('df',1,2)],
-                                           c[('df',1,3)],
-                                           c[('df',2,1)],
-                                           c[('df',2,2)],
-                                           c[('df',2,3)],
-                                           c[('df',3,1)],
-                                           c[('df',3,2)],
-                                           c[('df',3,3)])
+
+    def attach_advection_field(self,u):
+        """Attach the an advection field to the AdvectionOperator
+
+        Arguments
+        ---------
+        u : numpy array
+            An array with the advection field stored at quadrature
+            points.
+        """
+        self.u = numpy.array(u[...,0],copy=True)
+        self.v = numpy.array(u[...,1],copy=True)
+
+    def evaluate(self,t,c):
+        # if self.advection_field==None:
+        #     logEvent("ERROR - no advection field set.")
+        #     sys.exit(1)
+        if self.nd==2:
+            import pdb
+            pdb.set_trace()
+            self.Advection_2D_Evaluate(c[('u',0)],
+                                       self.u,
+                                       self.v,
+                                       c[('f',0)],
+                                       c[('df',0,0)],
+                                       c[('df',0,1)],
+                                       c[('df',0,2)],
+                                       c[('f',1)],
+                                       c[('df',1,1)],
+                                       c[('df',1,2)],
+                                       c[('f',2)],
+                                       c[('df',2,1)],
+                                       c[('df',2,2)])
+        elif self.nd==3:
+            self.Advection_3D_Evaluate(c[('u',0)],
+                                       self.advection_field[...,0],
+                                       self.advection_field[...,1],
+                                       self.advection_field[...,2],
+                                       c[('f',0)],
+                                       c[('df',0,0)],
+                                       c[('df',0,1)],
+                                       c[('df',0,2)],
+                                       c[('df',0,3)],
+                                       c[('f',1)],
+                                       c[('df',1,1)],
+                                       c[('df',1,2)],
+                                       c[('df',1,3)],
+                                       c[('f',2)],
+                                       c[('df',2,1)],
+                                       c[('df',2,2)],
+                                       c[('df',2,3)],
+                                       c[('f',3)],
+                                       c[('df',3,1)],
+                                       c[('df',3,2)],
+                                       c[('df',3,3)])
 
 
 class NavierStokes(TC_base):

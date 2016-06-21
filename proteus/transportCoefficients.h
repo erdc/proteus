@@ -746,6 +746,46 @@ extern void conservativeHeadRichardsBCBfromMVGHomEvaluate(
   double *a,
   double *da
 );
+extern void Advection_2D_Evaluate(
+  const int nPoints,
+  const double *p,
+  const double *u,
+  const double *v,
+  double *mass_adv,
+  double *dmass_adv_p,
+  double *dmass_adv_u,
+  double *dmass_adv_v,
+  double *mom_u_adv,
+  double *dmom_u_adv_u,
+  double *dmom_u_adv_v,
+  double *mom_v_adv,
+  double *dmom_v_adv_u,
+  double *dmom_v_adv_v
+);
+extern void Advection_3D_Evaluate(
+  const int nPoints,
+  const double *p,
+  const double *u,
+  const double *v,
+  const double *w,
+  double *mass_adv,
+  double *dmass_adv_p,
+  double *dmass_adv_u,
+  double *dmass_adv_v,
+  double *dmass_adv_w,
+  double *mom_u_adv,
+  double *dmom_u_adv_u,
+  double *dmom_u_adv_v,
+  double *dmom_u_adv_w,
+  double *mom_v_adv,
+  double *dmom_v_adv_u,
+  double *dmom_v_adv_v,
+  double *dmom_v_adv_w,
+  double *mom_w_adv,
+  double *dmom_w_adv_u,
+  double *dmom_w_adv_v,
+  double *dmom_w_adv_w
+);
 extern void NavierStokes_2D_Evaluate(
   const int nPoints,
   const double rho,
