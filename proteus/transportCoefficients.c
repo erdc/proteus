@@ -1831,20 +1831,23 @@ void Advection_2D_Evaluate(const int nPoints,
       dmass_adv_p[k*2+0] = u[k];
       dmass_adv_p[k*2+1] = v[k];
 
-      dmass_adv_u[k*2+0]=1.0;
-      dmass_adv_v[k*2+1]=1.0;
-
       mom_u_adv[k*2+0] = u[k]*u[k];
       mom_u_adv[k*2+1] = u[k]*v[k];
+
+      //      dmom_u_adv_u[k*2+0] = u[k];
+      //      dmom_u_adv_u[k*2+1] = v[k];
 
       dmom_u_adv_u[k*2+0] = 2.0*u[k];
       dmom_u_adv_u[k*2+1] = v[k];
 
       dmom_u_adv_v[k*2+1] = u[k];
-      
+
       mom_v_adv[k*2+0] = v[k]*u[k];
       mom_v_adv[k*2+1] = v[k]*v[k];
-     
+
+      //      dmom_v_adv_v[k*2+0] = u[k];
+      //       dmom_v_adv_v[k*2+1] = v[k];
+
       dmom_v_adv_u[k*2+0] = v[k];
 
       dmom_v_adv_v[k*2+0] = u[k];

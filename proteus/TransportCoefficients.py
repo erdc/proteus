@@ -942,12 +942,12 @@ class AdvectionOperator(TC_base):
     
     .. math::
 
-       n^{c}_{i,j} = \int_{T} (\mathbf{w}_{h} \phi_{j}) \cdot
+       n^{c}_{i,j} = -\int_{T} (\mathbf{w}_{h} \phi_{j}) \cdot
        \nabla \phi_{i} d T
 
     for all :math:`T \in \Omega`, :math:`c = 0,...nc-1` and
-    :math:`phi^{c}_{i}`, `i=0,\cdot k-1` is a basis component for
-    :math:`c`.  Also note, :math:`\mathbf{w}_{h}` is a vector field 
+    :math:`phi^{c}_{i}`, :math:`i=0, \cdots k-1` is a basis component 
+    for :math:`c`.  Also note, :math:`\mathbf{w}_{h}` is a vector field
     (often the solution from the last non-linear iteration).
     
     Parameters
@@ -1028,8 +1028,13 @@ class AdvectionOperator(TC_base):
             An array with the advection field stored at quadrature
             points.
         """
-        self.u = numpy.array(u[...,0],copy=True)
-        self.v = numpy.array(u[...,1],copy=True)
+        if self.nd == 2:
+            self.u = numpy.array(u[...,0],copy=True)
+            self.v = numpy.array(u[...,1],copy=True)
+        if self.nd == 3:
+            self.u = numpy.array(u[...,0],copy=True)
+            self.v = numpy.array(u[...,1],copy=True)
+            self.w = numpy.array(u[...,2],copy=True)
 
     def evaluate(self,t,c):
         # if self.advection_field==None:
@@ -1053,9 +1058,9 @@ class AdvectionOperator(TC_base):
                                        c[('df',2,2)])
         elif self.nd==3:
             self.Advection_3D_Evaluate(c[('u',0)],
-                                       self.advection_field[...,0],
-                                       self.advection_field[...,1],
-                                       self.advection_field[...,2],
+                                       self.u,
+                                       self.v,
+                                       self.w,
                                        c[('f',0)],
                                        c[('df',0,0)],
                                        c[('df',0,1)],
