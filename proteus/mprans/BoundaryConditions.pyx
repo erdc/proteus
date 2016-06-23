@@ -527,14 +527,15 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
                         wavePhi = x[vert_axis]-waveHeight
                         if wavePhi <= 0:
                             waterSpeed = waves_u(x, t)
+                            H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
                         elif wavePhi > 0 and wavePhi < 0.5*ecH*he:
                             x_max = np.copy(x)
                             x_max[vert_axis] = waveHeight
                             waterSpeed = waves_u(x_max, t)
-                            H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
                         else:
                             waterSpeed = (0., 0., 0.)
-                        return H*self.wind_speed[i] + (1-H)*waterSpeed[i]
+                        H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
+                        return H*wind_speed[i] + (1-H)*waterSpeed[i]
                     return twp_flowVelocity
                 zone.u = get_twp_flowVelocity(0)
                 zone.v = get_twp_flowVelocity(1)
