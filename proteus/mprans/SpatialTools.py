@@ -910,38 +910,33 @@ class Tank2D(ShapeRANS):
         vertexFlags = [bt['y-'], bt['y-'], bt['y+'], bt['y+']]
         segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
         segmentFlags = [bt['y-'], bt['x+'], bt['y+'], bt['x-']]  # y-, x+, y+, x-
-        regions = [[(x0+leftSponge+x1-rightSponge)/2., regions_y]]
+        regions = [[(x0-leftSponge+x0)/2., regions_y]]
         regionFlags = [1]
         self.regionIndice = {'tank': 0}
         ind_region = 1
+        av = 0 # added vertices
         if leftSponge:
-            vertices += [[x0+leftSponge, y0], [x0+leftSponge, y1]]
+            vertices += [[x0-leftSponge, y0], [x0-leftSponge, y1]]
             vertexFlags += [bt['y-'], bt['y+']]
-            regions += [[(x0+leftSponge)/2., regions_y]]
+            segments += [[0, 4+av], [4+av, 5+av], [5+av, 3]]
+            segmentFlags += [bt['y-'], bt['x-'], bt['y+']]
+            segmentFlags[3] = bt['sponge']
+            regions += [[(x0-leftSponge+x0)/2., regions_y]]
             self.regionIndice['x-'] = ind_region
             ind_region += 1
             regionFlags += [ind_region]
+            av += 2
         if rightSponge:
-            vertices += [[x1-rightSponge, y0], [x1-rightSponge, y1]]
+            vertices += [[x1+rightSponge, y0], [x1+rightSponge, y1]]
             vertexFlags += [bt['y-'], bt['y+']]
-            regions += [[((x1-rightSponge)+x1)/2., regions_y]]
+            segments += [[1, 4+av], [4+av, 5+av], [5+av, 2]]
+            segmentFlags += [bt['y-'], bt['x+'], bt['y+']]
+            segmentFlags[1] = bt['sponge']
+            regions += [[((x1+rightSponge)+x1)/2., regions_y]]
             self.regionIndice['x+'] = ind_region
             ind_region += 1
             regionFlags += [ind_region]
-        # getting the right segments if sponge layers are defined
-        if leftSponge and rightSponge:
-            segments = [[0, 4], [4, 6], [6, 1], [1, 2], [2, 7],
-                        [7, 5], [5, 3], [3, 0], [4, 5], [6, 7]]
-            segmentFlags = [bt['y-'], bt['y-'], bt['y-'], bt['x+'], bt['y+'],
-                            bt['y+'], bt['y+'], bt['x-'], bt['sponge'],
-                            bt['sponge']]
-        elif leftSponge or rightSponge:
-            segments = [[0, 4], [4, 1], [1, 2], [2, 5], [5, 3], [3, 0], [4, 5]]
-            segmentFlags = [bt['y-'], bt['y-'], bt['x+'], bt['y+'],bt['y+'],
-                            bt['x-'], bt['sponge']]
-        else:
-            segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
-            segmentFlags = [bt['y-'], bt['x+'], bt['y+'], bt['x-']]  # y-, right, y+, left
+            av += 2
         # need to check that original region is not in new sponge regions!
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)
@@ -1390,7 +1385,7 @@ def assembleAuxiliaryVariables(domain):
     -----
     Should be called after assembleGeometry
     """
-    domain.auxiliaryVariables = []
+    domain.auxiliaryVariables = {'twp': [], 'vof': []}
     zones_global = {}
     start_region = 0
     start_rflag = 0
@@ -1400,7 +1395,7 @@ def assembleAuxiliaryVariables(domain):
         # ----------------------------
         # RIGID BODIES
         if 'RigidBody' in shape.auxiliaryVariables.keys():
-            aux += [RigidBody(shape)]
+            aux['twp'] += [RigidBody(shape)]
             # fixing mesh on rigid body
             body = aux[-1]
             for boundcond in shape.BC_list:
@@ -1413,7 +1408,7 @@ def assembleAuxiliaryVariables(domain):
         # ABSORPTION/GENERATION ZONES
         if 'RelaxZones' in shape.auxiliaryVariables.keys():
             if not zones_global:
-                aux += [bc.RelaxationZoneWaveGenerator(zones_global,
+                aux['twp'] += [bc.RelaxationZoneWaveGenerator(zones_global,
                                                        domain.nd)]
             if not hasattr(domain, 'porosityTypes'):
                 # create arrays of default values
