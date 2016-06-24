@@ -126,7 +126,8 @@ opts = None
 simFlagsList = [{}]
 simFlagsList[0]['storeQuantities'] = ['u',"q:('velocity',0)"]
 ns = NumericalSolution.NS_base(so,[p],[n],so.sList,ip.opts,simFlagsList)
-
+import pdb
+pdb.set_trace()
 
 failed = ns.calculateSolution('ladr_run1')
 assert(not failed)

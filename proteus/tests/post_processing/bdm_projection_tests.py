@@ -53,6 +53,9 @@ def test_BDM2_reference_triangle():
 
     comparison_matrix = np.loadtxt('bdm2_ref_proj_mat.txt', dtype = float)
 
+    import pdb
+    pdb.set_trace()
+
     assert np.allclose(comparison_matrix,bdm2_obj.BDMprojectionMat_element)
 
 
@@ -79,6 +82,32 @@ def test_BDM2_reference_triangle():
                                -1.00000000e+00,  5.00000000e-01,  4.33680869e-19])
 
     assert np.allclose(comparison_rhs,test_rhs)
+
+    # ******************** TEST BDM2 PROJECTION *****************************
+    
+
+def test_BDM2_reference_triangle_full():
+    import bdm_tests_template as bt
+    import numpy as np
+
+    transport_obj = bt.ns.modelList[0].levelModelList[0]
+    bdm2_obj      = transport_obj.velocityPostProcessor.vpp_algorithms[0]
+
+    bdm_bdy_values = np.load('bdm_bdy_func_values.npy')
+    bdm_values = np.load('bdm_func_values.npy')
+
+    # construct a RHS vector from a velocity field of all 1's
+    bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values
+    bdm2_obj.q[('velocity',0)] = bdm_values
+
+    import pdb
+    pdb.set_trace()
+
+    bdm2_obj.evaluateLocalVelocityRepresentation(0)
+    
+    import pdb
+    pdb.set_trace()
+
 
 def test_bdm_sshaped_region():
     '''
@@ -147,7 +176,7 @@ def test_piola_mapping():
 if __name__ == '__main__':
     from proteus import Comm
     comm = Comm.init()
-#    test_BDM2_reference_triangle()
+    test_BDM2_reference_triangle()
 #    test_bdm_sshaped_region()
-    import nose
-    nose.main()
+#    import nose
+#    nose.main()

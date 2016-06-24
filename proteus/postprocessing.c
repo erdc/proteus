@@ -3222,6 +3222,8 @@ void solveLocalBDM2projection(int nElements_global,
 			      int* BDMprojectionMatPivots_element,
 			      double * w_dS_f,
 			      double * ebq_n,
+			      double * w_interior_gradients,
+			      double * q_velocity,
 			      double * ebq_velocity,
 			      double * p1_velocity_dofs)
 {

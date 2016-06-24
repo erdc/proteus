@@ -1117,8 +1117,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         Galerkin solution has already been found
         """
         self.getElementwiseFlux(0)
-        import pdb
-        pdb.set_trace()     
 
         #must zero first time for average velocity
         self.nodeStarFactors[ci].setU(0.0)
@@ -1166,57 +1164,57 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         """
         compute conservation resiudal using current guess for element boundary flux
         """
-     #    if correctFlux == True:
- #            self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
+        if correctFlux == True:
+            self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
         
- #        self.getElementwiseFlux(ci)
+        self.getElementwiseFlux(ci)
  #        import pdb
  #        pdb.set_trace()
 
- #        cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
- #                                                         self.vt.mesh.exteriorElementBoundariesArray,
- #                                                         self.vt.mesh.elementBoundaryElementsArray,
- #                                                         self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
- #                                                         self.vt.mesh.elementNodesArray,
- #                                                         self.vt.u[0].femSpace.dofMap.l2g,
- #                                                         self.dofStarElementsArray,
- #                                                         self.dofStarElementNeighborsArray,
- #                                                         self.nElements_DOF,
- #                                                         self.fluxElementBoundaries[ci],
- #                                                         self.elementResidual[ci],
- #                                                         self.vt.ebq_global[('velocityAverage',ci)],
- #                                                         self.vt.ebq[('dS_u',ci)],
- #                                                         self.w[ci],
- #                                                         self.vt.ebq_global['n'],
- #                                                         self.nodeStarFactors[ci],
- #                                                         self.q[('conservationResidual',ci)],
- #                                                         self.ebq_global[('velocity',ci)],
- #                                                         self.ebq[('velocity',ci)])   # i'm not crazy about the nodeStarFactors term here...should it be dofStarFactors?
- #        #set boundary flux
- #        import pdb
- # #       pdb.set_trace()
+        cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
+                                                         self.vt.mesh.exteriorElementBoundariesArray,
+                                                         self.vt.mesh.elementBoundaryElementsArray,
+                                                         self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                         self.vt.mesh.elementNodesArray,
+                                                         self.vt.u[0].femSpace.dofMap.l2g,
+                                                         self.dofStarElementsArray,
+                                                         self.dofStarElementNeighborsArray,
+                                                         self.nElements_DOF,
+                                                         self.fluxElementBoundaries[ci],
+                                                         self.elementResidual[ci],
+                                                         self.vt.ebq_global[('velocityAverage',ci)],
+                                                         self.vt.ebq[('dS_u',ci)],
+                                                         self.w[ci],
+                                                         self.vt.ebq_global['n'],
+                                                         self.nodeStarFactors[ci],
+                                                         self.q[('conservationResidual',ci)],
+                                                         self.ebq_global[('velocity',ci)],
+                                                         self.ebq[('velocity',ci)])   # i'm not crazy about the nodeStarFactors term here...should it be dofStarFactors?
+         #set boundary flux
+        import pdb
+  #       pdb.set_trace()
 
- #        updateCoef = 0.0 #overwrite first
- #        cfemIntegrals.loadBoundaryFluxIntoGlobalElementBoundaryVelocity(self.vt.mesh.exteriorElementBoundariesArray,
- #                                                                        self.fluxElementBoundaries[ci],
- #                                                                        self.vt.ebq_global['n'],
- #                                                                        self.vt.ebq_global[('totalFlux',ci)],
- #                                                                        updateCoef,
- #                                                                        self.vt.ebq_global[('velocity',ci)])
+        updateCoef = 0.0 #overwrite first
+        cfemIntegrals.loadBoundaryFluxIntoGlobalElementBoundaryVelocity(self.vt.mesh.exteriorElementBoundariesArray,
+                                                                        self.fluxElementBoundaries[ci],
+                                                                        self.vt.ebq_global['n'],
+                                                                        self.vt.ebq_global[('totalFlux',ci)],
+                                                                        updateCoef,
+                                                                        self.vt.ebq_global[('velocity',ci)])
 
- #        cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
- #                                                                         self.vt.mesh.exteriorElementBoundariesArray,
- #                                                                         self.vt.mesh.elementBoundaryElementsArray,
- #                                                                         self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
- #                                                                         self.vt.ebq_global[('velocity',ci)],
- #                                                                         self.vt.ebq[('velocity',ci)])
+        cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
+                                                                         self.vt.mesh.exteriorElementBoundariesArray,
+                                                                         self.vt.mesh.elementBoundaryElementsArray,
+                                                                         self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                         self.vt.ebq_global[('velocity',ci)],
+                                                                         self.vt.ebq[('velocity',ci)])
 
 
- #        cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
- #                                                                                       self.vt.mesh.elementBoundaryElementsArray,
- #                                                                                       self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
- #                                                                                       self.vt.ebq_global[('velocity',ci)],
- #                                                                                       self.vt.ebqe[('velocity',ci)])
+        cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
+                                                                                       self.vt.mesh.elementBoundaryElementsArray,
+                                                                                       self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                       self.vt.ebq_global[('velocity',ci)],
+                                                                                       self.vt.ebqe[('velocity',ci)])
 
 
         #end set boundary flux
@@ -1224,8 +1222,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         self.evaluateLocalVelocityRepresentation(ci)
         self.getElementwiseFlux(ci)
 
-        import pdb
-        pdb.set_trace()
 
     #
     def getConservationJacobianPWL(self,ci):
@@ -1552,8 +1548,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
         cpostprocessing.factorLocalBDM2projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
 
-#        pdb.set_trace()
-
 
     def flagNeumannBoundaryEdges(self):
         ''' This function flags neumann boundaries.
@@ -1670,6 +1664,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
 #        assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
 #        self.getAverageFlux(ci)
+
         import pdb
         pdb.set_trace()
 
@@ -1683,6 +1678,9 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                           self.q[('velocity',ci)],
                           self.q[('velocity_dofs',ci)])
 
+        import pdb
+        pdb.set_trace()
+
         self.solveLocalBDM2projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,
                                       self.w_dS[ci],
@@ -1692,14 +1690,15 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                                       self.q[('velocity',ci)],
                                       self.q[('velocity_dofs',ci)])
 
-
+        import pdb
+        pdb.set_trace()
 
         cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.qv[ci],
                                                                 self.q[('velocity_dofs',ci)],
                                                                 self.vt.q[('velocity',ci)])
 
         import pdb
-#        pdb.set_trace()
+        pdb.set_trace()
 
     def evaluateElementVelocityField(self,x,ci):
         """
