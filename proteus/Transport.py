@@ -5961,6 +5961,16 @@ class OneLevelTransport(NonlinearEquation):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
 
+    def attachMassOperator(self):
+        """Attach a discrete Mass operator to the Transport class. """
+        pass
+
+    def getMassOperator(self):
+        """Return the mass operator object. """
+        pass
+
+
+
 #end Transport definition
 class MultilevelTransport:
     """Nonlinear ADR on a multilevel mesh"""
