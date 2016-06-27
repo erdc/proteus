@@ -5961,9 +5961,80 @@ class OneLevelTransport(NonlinearEquation):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
 
-    def attachMassOperator(self):
+    def attachMassOperator(self,rho=1.):
         """Attach a discrete Mass operator to the Transport class. """
-        pass
+        import superluWrappers
+        self.mass_val = self.nzval.copy()
+        self.MassOperator = SparseMat(self.nFreeVDOF_global,
+                                      self.nFreeVDOF_global,
+                                      self.nnz,
+                                      self.mass_val,
+                                      self.colind,
+                                      self.rowptr)
+
+        _nd = self.coefficients.nd
+        if self.coefficients.rho != None:
+            _rho = self.coefficients.rho
+        self.MassOperatorCoeff = DiscreteMassMatrix(rho=_rho, nd=_nd)
+        _t = 1.0
+
+        self.Mass_q = {}
+        scalar_quad = StorageSet(shape=(self.mesh.nElements_global,
+                                        self.nQuadraturePoints_element,
+                                        3))
+        trial_shape_X_test_shape_quad = StorageSet(shape={})
+        scalar_quad |= set([('u',ci) for ci in range(self.nc)])
+        scalar_quad |= set([('m',ci) for ci in self.MassOperatorCoeff.mass.keys()])
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            trial_shape_X_test_shape_quad |= set([('vXw*dV_m',cj,ci) for cj in cjDict.keys()])
+
+        for ci,cjDict in self.coefficients.mass.iteritems():
+            scalar_quad |= set([('dm',ci,cj) for cj in cjDict.keys()])
+
+        for k in trial_shape_X_test_shape_quad:
+            self.Mass_q[k] = numpy.zeros((self.mesh.nElements_global,
+                                          self.nQuadraturePoints_element,
+                                          self.nDOF_trial_element[k[1]],
+                                          self.nDOF_test_element[k[2]]),'d')
+
+        scalar_quad.allocate(self.Mass_q)
+
+        for ci in zip(range(self.nc),range(self.nc)):
+                cfemIntegrals.calculateShape_X_weightedShape(self.q[('v',ci[1])],
+                                                             self.q[('w*dV_m',ci[0])],
+                                                             self.Mass_q[('vXw*dV_m',ci[1],ci[0])])
+
+
+        if _nd == 2:
+            self.MassOperatorCoeff.evaluate(_t,self.Mass_q)
+
+        Mass_Jacobian = {}
+        for ci in range(self.nc):
+            Mass_Jacobian[ci] = {}
+            for cj in range(self.nc):
+                if cj in self.MassOperatorCoeff.stencil[ci]:
+                    Mass_Jacobian[ci][cj] = numpy.zeros(
+                        (self.mesh.nElements_global,
+                         self.nDOF_test_element[ci],
+                         self.nDOF_trial_element[cj]),
+                         'd')
+
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            for cj in cjDict:
+                cfemIntegrals.updateMassJacobian_weak(self.Mass_q[('dm',ci,cj)],
+                                                      self.Mass_q[('vXw*dV_m',cj,ci)],
+                                                      Mass_Jacobian[ci][cj])
+
+        for ci in range(self.nc):
+            for cj in self.MassOperatorCoeff.stencil[ci]:
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[ci]['nFreeDOF'],
+                                                                          self.l2g[ci]['freeLocal'],
+                                                                          self.l2g[cj]['nFreeDOF'],
+                                                                          self.l2g[cj]['freeLocal'],
+                                                                          self.csrRowIndeces[(ci,cj)],
+                                                                          self.csrColumnOffsets[(ci,cj)],
+                                                                          Mass_Jacobian[ci][cj],
+                                                                          self.MassOperator)
 
     def getMassOperator(self):
         """Return the mass operator object. """
