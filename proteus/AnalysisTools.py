@@ -1,9 +1,5 @@
 import numpy as np
-from scipy import signal as sn
-from pylab import *
-import collections as cll
-import csv
-from proteus import WaveTools as WT
+import WaveTools as WT
 import math
        
 
@@ -45,7 +41,7 @@ def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
         if dt_temp!=dt:
             doInterp = True
     if(doInterp):
-        print "Interpolating series"
+#        print "Interpolating series"
         time_lin = np.linspace(time[0],time[-1],len(time))
         try:
             for ii in range(nprobes):
@@ -104,25 +100,30 @@ def signalFilter(time,data,minfreq,maxfreq,costapCut = False):
 
     return data1
 
-def zeroCrossing(time,data,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e300,costapCut=True):
-    if(filt):
-        data = signalFilter(time,data,minfreq,maxfreq,costapCut)    
-    trend = mean(data)
-    data = data - trend
 
-    data_temp=np.zeros(data.shape,)
-    data_temp[0:-1] = data[1:]
-    zc = data_temp*data
+def zeroCrossing(time,data,Tstart=0.,Tend=1e300,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e300,costapCut=True):
+    irange = np.where(time[np.where(time<Tend)[0]]>Tstart)
+    time = time[irange]
+    data = data[irange]
+#    print time
+    if(filt):
+        data_filt = signalFilter(time,data,minfreq,maxfreq,costapCut)    
+    trend = np.mean(data_filt)
+    data_filt = data_filt - trend
+
+    data_temp=np.zeros(data_filt.shape,)
+    data_temp[0:-1] = data_filt[1:]
+    zc = data_temp*data_filt
     zcPoints = np.where(zc<0)[0]
     if(up):
-        if(data[0]<0):
+        if(data_filt[0]<0):
             zcPoints = zcPoints[::2]
-        if(data[0]>0):
+        if(data_filt[0]>0):
             zcPoints = zcPoints[1::2]
     else:
-        if(data[0]<0):
+        if(data_filt[0]<0):
             zcPoints = zcPoints[1::2]
-        if(data[0]>0):
+        if(data_filt[0]>0):
             zcPoints = zcPoints[::2]
 
     zCH = []
@@ -134,20 +135,25 @@ def zeroCrossing(time,data,mode="mean",up=True,filt=True,minfreq=0.,maxfreq=1e30
         period.append(time[i2]-time[i1])
     zCH = np.array(zCH)
     period = np.array(period)
-    height = None
+
+    args = zCH.argsort()
+    height = zCH[args]
+    period = period[args]
+#    print height, period
 
     if mode == "mean":
-        height = mean(zCH)
-        period = mean(period)
-    elif type(mode) == "int":
-        height = np.sort(zCH)
-        ii = len(height) - float(len(height))/float(mode)
-        height = mean(height[ii:])
-        period = mean(period)
+        height = np.mean(height)
+        period = np.mean(period)
+    elif mode >= 1:
+        ii = len(height) - mode
+        height = np.mean(height[ii:])
+        period = np.mean(period[ii:])
+    elif  mode < 1:
+        ii = int(round(len(height*(1. - mode))))
+        height = np.mean(height[ii:])
+        period = np.mean(period[ii:])
     else:
-        print "mode must be either 'period', 'mean' or an integer "
-
-
+        print "mode must be either an integer > 1, a float < 1 or a 'mean'"
     return [period,height]
                       
 
