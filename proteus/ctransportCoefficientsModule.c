@@ -2877,7 +2877,7 @@ static PyObject* ctransportCoefficientsMass_2D_Evaluate(PyObject* self,
 		   DDATA(dmom_u_acc_u),
 		   DDATA(dmom_v_acc_v));
 
-  PyINCREF(Py_None);
+  Py_INCREF(Py_None);
   return Py_None;
 }
 
@@ -2933,7 +2933,7 @@ static PyObject* ctransportCoefficientsMass_3D_Evaluate(PyObject* self,
 		   DDATA(dmom_v_acc_v),
 		   DDATA(dmom_w_acc_w));
 
-  PyINCREF(Py_None);
+  Py_INCREF(Py_None);
   return Py_None;
 }
 

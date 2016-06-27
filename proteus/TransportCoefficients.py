@@ -10459,6 +10459,9 @@ class DiscreteMassMatrix(TC_base):
     def evaluate(self,t,c):
         if self.nd==2:
             self.Mass_2D_Evaluate(self.rho,
+                                  c[('u',0)],
+                                  c[('u',1)],
+                                  c[('u',2)],
                                   c[('m',0)],
                                   c[('m',1)],
                                   c[('m',2)],
@@ -10467,6 +10470,10 @@ class DiscreteMassMatrix(TC_base):
                                   c[('dm',2,2)])
         elif self.nd==3:
             self.Mass_3D_Evaluate(self.rho,
+                                  c[('u',0)],
+                                  c[('u',1)],
+                                  c[('u',2)],
+                                  c[('u',3)],
                                   c[('m',0)],
                                   c[('m',1)],
                                   c[('m',2)],
