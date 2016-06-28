@@ -12,8 +12,10 @@ representations using PETSc.
 """
 import numpy
 import math
+import sys
+import superluWrappers
 from .superluWrappers import *
-from Profiling import logEvent
+from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
 from . import flcbdfWrappers
 
@@ -25,6 +27,88 @@ def _petsc_view(obj, filename):
     viewer2 = p4pyPETSc.Viewer().createASCII(filename+".m", 'w')
     viewer2.setFormat(1)
     viewer2(obj)
+
+def _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output=False):
+    """ Takes python CSR datatypes and makes a dense matrix """
+    dense_matrix = numpy.zeros(shape = (nr,nc), dtype='float')
+    for idx in range(len(rowptr)-1):
+        row_vals = data[rowptr[idx]:rowptr[idx+1]]
+        for val_idx,j in enumerate(colptr[rowptr[idx]:rowptr[idx+1]]):
+            dense_matrix[idx][j] = row_vals[val_idx]
+    if output!= False:
+        numpy.save(output,dense_matrix)
+    return dense_matrix
+
+def superlu_sparse_2_dense(sparse_matrix,output=False):
+    """ Converts a sparse superluWrapper into a dense matrix.
+
+    Parameters
+    ----------
+    sparse_matrix : 
+    output : str
+        Out file name to store the matrix.
+
+    Returns
+    -------
+    dense_matrix : numpy array
+        A numpy array storing the dense matrix.
+
+    Notes
+    -----
+    This function should not be used for large matrices.
+    """
+    rowptr = sparse_matrix.getCSRrepresentation()[0]
+    colptr = sparse_matrix.getCSRrepresentation()[1]
+    data   = sparse_matrix.getCSRrepresentation()[2]
+    nr     = sparse_matrix.shape[0]
+    nc     = sparse_matrix.shape[1]
+    return _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output)
+
+def petsc4py_sparse_2_dense(sparse_matrix,output=False):
+    """ Converts a PETSc4Py matrix to a dense numpyarray.
+
+    Parameters
+    ----------
+    sparse_matrix : PETSc4py matrix
+    output : str
+        Output file name to store the matrix.
+
+    Returns
+    -------
+    dense_matrix : numpy array
+        A numpy array with the dense matrix.
+    
+    Notes
+    -----
+    This function is very inefficient for large matrices.
+    """
+    rowptr = sparse_matrix.getValuesCSR()[0]
+    colptr = sparse_matrix.getValuesCSR()[1]
+    data   = sparse_matrix.getValuesCSR()[2]
+    nr     = sparse_matrix.getSize()[0]
+    nc     = sparse_matrix.getSize()[1]
+    return _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output)
+
+def superlu_2_petsc4py(sparse_superlu):
+    """ Copy a sparse superlu matrix to a sparse petsc4py matrix
+
+    Parameters
+    ----------
+    sparse_matrix : :class:`proteus.superluWrappers.SparseMatrix`
+
+    Returns
+    -------
+    sparse_matrix : PETSc4py matrix
+    """
+    rowptr, colind, nzval = sparse_superlu.getCSRrepresentation()
+    A_rowptr = rowptr.copy()
+    A_colind = colind.copy()
+    A_nzval  = nzval.copy()
+    nr       = sparse_superlu.shape[0]
+    nc       = sparse_superlu.shape[1]
+    A_petsc4py = p4pyPETSc.Mat().createAIJWithArrays((nr,nc),
+                                                     (A_rowptr,A_colind,A_nzval))
+    return A_petsc4py
 
 class ParVec:
     """
@@ -48,9 +132,9 @@ class ParVec:
                 self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,nghosts,subdomain2global,array,1)
         self.nghosts = nghosts
     def scatter_forward_insert(self):
-        self.cparVec.scatter_forward_insert()
+       self.cparVec.scatter_forward_insert()
     def scatter_reverse_add(self):
-        self.cparVec.scatter_reverse_add()
+       self.cparVec.scatter_reverse_add()
 
 
 class ParVec_petsc4py(p4pyPETSc.Vec):
@@ -129,7 +213,6 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
         """Saves to disk using a PETSc binary viewer.
         """
         _petsc_view(self, filename)
-
 
 class ParMat_petsc4py(p4pyPETSc.Mat):
     """
@@ -242,15 +325,45 @@ def SparseMatFromDict(nr,nc,aDict):
 
 
 def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
+    """ Build a nr x nc sparse matrix from the CSR data structures
+
+    Parameters
+    ----------
+    nr : int
+        The number of rows.
+    nc : int
+        The number of columns.
+    nnz : int
+        The number of non-zero matrix entries.
+    nzval : numpy array
+        Array with non-zero matrix entries.
+    colind : numpy array of 32bit integers
+        CSR column array.
+    rowptr : numpy array of 32bit integers
+        CSR row pointer.
+
+    Returns
+    -------
+    sparse_matrix : :class:`proteus.superluWrappers.SparseMatrix`
+        superlu sparse matrix in CSR format.
+
+    Note
+    ----
+    For the superluWrapper, both the colind and rowptr should use
+    32-bit integer data types.
     """
-    Build a nr x nc sparse matrix from the CSR data structures
-    """
-    import superluWrappers
+    if (colind.dtype != 'int32' or rowptr.dtype != 'int32'):
+        print('ERROR - colind and rowptr must be "int32" numpy arrays for ' \
+              'superluWrappers')
+        sys.exit(1)
     return superluWrappers.SparseMatrix(nr,nc,nnz,nzval,colind,rowptr)
 
 class SparseMatShell:
-    """
-    Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains)
+    """ Build a parallel matrix shell from CSR data structures.
+
+    Parameters
+    ----------
+    ghosted_csr_mat: :class: `proteus.superluWrappers.SparseMatrix`
     """
     def __init__(self,ghosted_csr_mat):
         self.ghosted_csr_mat=ghosted_csr_mat
@@ -260,6 +373,8 @@ class SparseMatShell:
     def create(self, A):
         pass
     def mult(self, A, x, y):
+        assert self.par_b!=None, "The parallel RHS vector par_b must be " \
+                            "initialized before using the mult function"
         logEvent("Using SparseMatShell in LinearSolver matrix multiply")
         if self.xGhosted == None:
             self.xGhosted = self.par_b.duplicate()
@@ -272,10 +387,9 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
 
-
 def l2Norm(x):
     """
-    Compute the parallel l_2 norm
+    Compute the parallel :math:`l_2` norm
     """
     return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
 
