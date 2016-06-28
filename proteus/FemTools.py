@@ -4551,7 +4551,7 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
         self.XdmfWriter.writeFunctionXdmf_DGP1Lagrange(ar,u,tCount=tCount,init=init, dofMap = self.dofMap)
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
-        self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"dgp1_Lagrange",tCount=tCount,init=init, dofMap=self.dofMap)
+        self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"dgp1_Lagrange",tCount=tCount,init=init)
 
     def getValuesAtMeshNodes(self,dof,nodalValues,isVector,dim_dof):
         """
