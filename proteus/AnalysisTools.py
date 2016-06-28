@@ -159,22 +159,21 @@ def zeroCrossing(time,data,Tstart=0.,Tend=1e300,mode="mean",up=True,filt=True,mi
 
 def pressureToHeight(data,Z,depth,wavelength,rho,g):
     k = 2*math.pi/wavelength
-    Kp = rho*g*cosh(k*(depth+Z))/cosh(k*depth)
+    Kp = rho*g*np.cosh(k*(depth+Z))/np.cosh(k*depth)
     return data/Kp
 
-
-def ReflStat(H1,H2,H3,dx,wavelenght):
-    D = 2*math.pi*dx/wavelegth
+def reflStat(H1,H2,H3,dx,wavelength):
+    D = 2*math.pi*dx/wavelength
     Amp =np.array([H1/2.,H2/2.,H3/2.])
-    A1 = Amp[j]*Amp[j]
-    A2 = Amp[j+1]*Amp[j+1]
-    A3 = Amp[j+2]*Amp[j+2]
-    Lamda = (A1 + A3 - 2.*A2*cos(2*D))/(4.*sin(D)*sin(D))
-    Gamma = 0.5*sqrt(
-        ((2*A2-A1-A3)/(2.*sin(D)*sin(D)))**2+((A1-A3)/sin(2*D))**2)
+    A1 = Amp[0]*Amp[0]
+    A2 = Amp[1]*Amp[1]
+    A3 = Amp[2]*Amp[2]
+    Lamda = (A1 + A3 - 2.*A2*np.cos(2*D))/(4.*np.sin(D)*np.sin(D))
+    Gamma = 0.5*np.sqrt(
+        ((2*A2-A1-A3)/(2.*np.sin(D)*np.sin(D)))**2+((A1-A3)/np.sin(2*D))**2)
     
-    Hi = sqrt(Lamda + Gamma) + sqrt(Lamda - Gamma)
-    Hr = sqrt(Lamda + Gamma) - sqrt(Lamda - Gamma)
+    Hi = np.sqrt(Lamda + Gamma) + np.sqrt(Lamda - Gamma)
+    Hr = np.sqrt(Lamda + Gamma) - np.sqrt(Lamda - Gamma)
     Rf = Hr/(Hi+1e-15)
     return [Hi,Hr,Rf]
 
