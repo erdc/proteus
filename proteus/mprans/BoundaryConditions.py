@@ -7,7 +7,7 @@ from proteus import AuxiliaryVariables
 from proteus.BoundaryConditions import (BC_Base,
                                         constantBC,
                                         linearBC)
-from proteus.Profiling import logEvent as log
+from proteus.Profiling import logEvent
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 
@@ -424,7 +424,7 @@ class RelaxationZone:
             self.v = self.setGenerationFunctions(1)
             self.w = self.setGenerationFunctions(2)
         else:
-            log('Wrong zone type: ' + self.zone_type)
+            logEvent('Wrong zone type: ' + self.zone_type)
             sys.exit()
         self.epsFact_solid = epsFact_solid
         self.dragAlpha = dragAlpha

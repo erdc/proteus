@@ -5,8 +5,8 @@ Classes for taking input in other formats
    :parts: 1
 """
 from proteus.EGeometry import *
-def logEvent(string):
-    print string
+from .Profiling import logEvent
+
 class GF:
     """
     Read a file from the vessel database an set up in a domain.
