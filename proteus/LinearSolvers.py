@@ -388,7 +388,8 @@ class KSP_petsc4py(LinearSolver):
         self.par_L   = par_L
         self.petsc_L = par_L
         self.ksp     = p4pyPETSc.KSP().create()
-        self.csr_rep_owned = self.petsc_L.csr_rep_owned
+        # self.csr_rep_owned = self.petsc_L.csr_rep_owned
+        self.csr_rep_local = self.petsc_L.csr_rep_local
         self.csr_rep = self.petsc_L.csr_rep
         #shell for main operator
         self.Lshell = p4pyPETSc.Mat().create()
