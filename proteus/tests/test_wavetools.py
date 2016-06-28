@@ -517,19 +517,32 @@ class VerifyRandomWaves(unittest.TestCase):
         self.assertTrue(round(uy,8) == round(uyRef,8))
         self.assertTrue(round(uz,8) == round(uzRef,8))
 
+        # Asserting write function from Random waves
+        x0 = np.array([0,0,0])
+        Lgen = np.array([5,0,0])
+        Tstart = 0
+        Tend = 2.
+        Tlag = sum(Lgen[:]*normDir[:])/min(omega[:]/ki[:])
+        Tstart2 = Tstart -  Tlag
+        dt = Tp/50.
+        Nf = int((Tend-Tstart2)/dt)
+        tlist = np.linspace(Tstart2,Tend,Nf)
+        etaWrite = np.zeros(len(tlist),)
+        for ii in range(len(tlist)):
+            etaWrite[ii] = a.eta(x0,tlist[ii])
+        fname = "randomSeries.txt"
+        if Tlag < 0.:
+            with self.assertRaises(SystemExit) as cm1:
+                a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+            self.assertEqual(cm1.exception.code, 1 )     
+        else:
+            a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+            series = np.loadtxt(open(fname,"r"))
+            self.assertTrue((abs(series[:,0])- abs(tlist) <= 1e-10  ).all())
+            self.assertTrue((abs(series[:,1])- abs(etaWrite) <= 1e-10).all())
 
-
-
-        aa= RandomWaves(2,
-                     0.1,
-                     0.,#m significant wave height
-                     1. ,           #m depth
-                     np.array([0.,1,0]),
-                     g,      #peak  frequency
-                     N,
-                     bandFactor,         #accelerationof gravity
-                     spectName# random words will result in error and return the available spectra 
-                   )
+                         
+                   
 
 # Test contours
 """
@@ -942,6 +955,26 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             {"Nwaves" : 5,"Tm":1, "Window":"costap"}
             
             )
+        #load successfully - import array
+
+        numarray  =np.zeros((10001,2),float)
+        numarray[:,0] = np.linspace(0,100,10001)
+        numarray[:,1] = np.cos(pi*numarray[:,0])
+        aa= TimeSeries(
+            path+"test_timeSeries.txt",
+            0,
+            np.array([1.,0,0]), 
+            1.  ,
+            64 ,          #number of frequency bins
+            1. ,        
+            np.array([1.,0,0]), 
+            np.array([0,0,-9.81]),
+            0.025,
+            False,
+            {"Nwaves" : 5,"Tm":1, "Window":"costap"},
+            True,
+            numarray
+            )
 
         # Putting too many waves  
         with self.assertRaises(SystemExit) as cm1:
@@ -1062,6 +1095,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
         
 class VerifyTimeSeries(unittest.TestCase):
     def testDirect(self):
+# Testing class while reading from file
         path =getpath()
         from proteus.WaveTools import TimeSeries, costap
         import random
@@ -1097,24 +1131,38 @@ class VerifyTimeSeries(unittest.TestCase):
         norm = max(etaRef)
         err = (etaInt - etaTest)**2
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
+        self.assertTrue(err<1e-2 )     
+# Testing class while getting a timeseries from an array
+        series = np.zeros( (len(timeInt),2),)
+        series[:,0] = timeInt
+        series[:,1] = etaInt
+        aa2= TimeSeries(
+            path+"test_timeSeries.txt",
+            0,
+             np.array([0.,0.,0]),            
+            1.  ,
+            256,          #number of frequency bins
+            1. ,        
+            np.array([1,0,0]), 
+            np.array([0,0,-9.81]),
+            0.025,
+            True,
+            None,
+            True,
+            series
+            )
+        ii = -1
+        for tt in timeInt:                                                                                                                                  
+            ii+=1                                                                                                                                           
+            etaTest[ii] = aa2.eta([x, y, z], tt)                                                                                                         
+        etaInt-=np.mean(etaInt)                                                                                                                            
+        etaInt*=costap(len(data),0.025)                                                                                                                     
+        norm = max(etaRef)                                                                                                                                 
+        err = (etaInt - etaTest)**2                                                                                                                         
+        err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))                                                                                            
+        self.assertTrue(err<1e-2 )                                                                                                                          
 
-        """
-        from matplotlib import pyplot as plt
- 
 
-        fig = plt.figure(2)
-        line2,=plt.plot(timeInt,etaInt,'ko')
-#        print "Timeseries error: %s" % str(err)
-
-#Showing plot of window recontruction
-        
-        line1,=plt.plot(timeInt,etaTest,"b-")
-        plt.grid()
-        fig.legend((line2,line1),("Field data from FRF", "Reconstructed time series"),"upper right",bbox_to_anchor=(0.6,0.9))
-        plt.xlabel("Time (s)",size=20)
-        plt.ylabel("$\eta$ (m)",size=20)
-        plt.savefig("Direct.pdf")
-        """
 
     def testWindow(self):
         path =getpath()
@@ -1156,26 +1204,518 @@ class VerifyTimeSeries(unittest.TestCase):
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
 #        print err
         self.assertTrue(err<1e-2 )     
-"""
-        from matplotlib import pyplot as plt
-
-        fig = plt.figure(2)
-        line2,=plt.plot(timeInt,etaInt,'ko')
-#        print "Timeseries error: %s" % str(err)
-
-#Showing plot of window recontruction
         
-        line1,=plt.plot(timeInt,etaTest,"g-")
+# Testing class while getting a timeseries from an array
+        series = np.zeros( (len(timeInt),2),)
+        series[:,0] = timeInt
+        series[:,1] = etaInt
+        aa2= TimeSeries(
+            path+"test_timeSeries.txt",
+            0,
+             np.array([0.,0.,0]),            
+            1.  ,
+            32,          #number of frequency bins
+            1. ,        
+            np.array([1,0,0]), 
+            np.array([0,0,-9.81]),
+            0.025,
+            False,                                                                                                                                          
+            {"Nwaves":3, "Tm":8, "Window":"costap"},
+            True,
+            series
+            )
+        ii = -1
+        for tt in timeInt:                                                                                                                                  
+            ii+=1                                                                                                                                           
+            etaTest[ii] = aa2.eta([x, y, z], tt)                                                                                                         
+        etaInt-=np.mean(etaInt)                                                                                                                            
+        etaInt*=costap(len(data),0.025)                                                                                                                     
+        norm = max(etaRef)                                                                                                                                 
+        err = (etaInt - etaTest)**2                                                                                                                         
+        err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))                                                                                            
+        self.assertTrue(err<1e-2 )                                                                                                                          
+        
+       
+class VerifyRandomWavesFast(unittest.TestCase):
+# RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
+    def testRandomFast(self):
+        from proteus.WaveTools import RandomWaves,TimeSeries,RandomWavesFast
+        import random
+        path =getpath()
+        fname = path+"randomSeries.txt"
+        # Assinging a random value at a field and getting the expected output
+        Tp = 1. 
+        Hs = 0.15
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 2*random.random() - 1 
+        dir2 = 2*random.random() - 1 
+        waveDir = np.array([dir1,dir2, 0])
+        N = 20
+        phi = 2*pi*np.random.rand(N)
+        TMA = True
+        spectName = "JONSWAP"
+        bandFactor = 2.0
+        Lgen = 5 * waveDir 
+        x0 =  np.array([2.,0.,0 ])
+        Tstart = 0.
+        Tend = 150.
+        aR= RandomWaves(Tp,
+                     Hs,
+                     mwl,
+                     depth ,
+                     waveDir,
+                     g,
+                     N,
+                        bandFactor,       
+                        spectName, 
+                        None,
+                        phi            
+                        
+                   )
+        series = aR.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+        cutoff = 0.2*Tp/(series[-1,0]-series[0,0])
+        aT= TimeSeries(
+            fname,
+            0,
+            x0,
+            depth,
+            32,          #number of frequency bins
+            mwl ,        
+            waveDir,
+            g,
+            cutoff,
+            False,                                                                                                                                          
+            {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
+            True,
+            series
+            )        
+        aRF = RandomWavesFast(Tstart,
+                         Tend,
+                         x0,
+                         Tp,
+                         Hs,
+                         mwl,
+                         depth,
+                         waveDir,
+                         g,
+                         N,
+                         bandFactor,
+                         spectName,
+                         None,
+                         phi,
+                         Lgen)
+        x = x0 + Lgen * random.random()
+        t = Tstart + random.random()*(Tend-Tstart)
+#        print x,t,aT.eta(x,t),aRF.eta(x,t),aT.u(x,t),aRF.u(x,t)
+        self.assertTrue(round(abs(aRF.eta(x,t)/aT.eta(x,t)),8) == 1.)
+        self.assertTrue(round(abs(aRF.u(x,t)[0]/aT.u(x,t)[0]),8) == 1.)
+        self.assertTrue(round(abs(aRF.u(x,t)[1]/aT.u(x,t)[1]),8) == 1.)
+        self.assertTrue(round(abs(aRF.u(x,t)[2]/aT.u(x,t)[2]),8) == 1.)
+
+
+"""
+        eta0 = np.zeros(len(series),)
+        eta1 = eta0.copy()
+        eta2 = eta0.copy()
+        for ii in range(len(series)):
+            t = series[ii,0]
+            eta0[ii] = aR.eta(x,t)
+            eta1[ii] = aT.eta(x,t)
+            eta2[ii] = aRF.eta(x,t)
+        import pylab as plt
+        plt.plot(series[:,0],series[:,1],"ko")
+        plt.plot(series[:,0],eta0,"k-")
+        plt.plot(series[:,0],eta1,"k--")
+        plt.plot(series[:,0],eta2,"k:")
+        plt.xlim(50,65)
         plt.grid()
-        fig.legend((line2,line1),("Field data from FRF", "Reconstructed time series"),"upper right",bbox_to_anchor=(0.6,0.9))
-        plt.xlabel("Time (s)",size=20)
-        plt.ylabel("$\eta$ (m)",size=20)
-        plt.savefig("Window.pdf")
+        plt.savefig("t.pdf")
 """
-        
-        
-        
+class CheckFailureRandomNLWaves(unittest.TestCase):
+    def testFailures(self):
+        waveDir = np.array([0.,0.,1.])
+        Vgen = np.array([0.,0.,-1])
+        from proteus.WaveTools import RandomNLWaves
+        RR = RandomNLWaves(0,100,1.,1.,0.,10.,waveDir,np.array([0,-9.81,0]),100,2.,"JONSWAP", spectral_params= None )
+        xi = np.array([0.,0.,0.])
+        t = 0.
+#        print RR.writeEtaSeries(0.,100,1,xi,"aa.txt","blah")
+#Failure 1:  call eta
+        with self.assertRaises(SystemExit) as cm1:    
+            f = RR.eta(xi,t)
+        self.assertEqual(cm1.exception.code, 1 )             
+#Failure 2:  call u
+        with self.assertRaises(SystemExit) as cm2:    
+            f = RR.eta(xi,t)
+        self.assertEqual(cm2.exception.code, 1 )             
+#Failure 3:  call writeEtaSeries with a wrong mode
+        with self.assertRaises(SystemExit) as cm3:    
+            f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","blah")
+        self.assertEqual(cm3.exception.code, 1 )             
+        with self.assertRaises(SystemExit) as cm4:    
+            f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","long",False,Vgen)
+        self.assertEqual(cm4.exception.code, 1 )             
 
+
+
+
+class VerifyRandomNLWaves(unittest.TestCase):
+    def testFunctions(self):
+        from proteus.WaveTools import RandomWaves,TimeSeries,RandomNLWaves,eta_mode
+        import random
+        path =getpath()
+        fname = path+"randomSeries.txt"
+        # Assinging a random value at a field and getting the expected output
+        Tp = 1. 
+        Hs = 0.15
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 2*random.random() - 1 
+        dir2 = 2*random.random() - 1 
+        waveDir = np.array([dir1,dir2, 0])
+        N = 20
+        phi = 2*pi*np.random.rand(N)
+        TMA = True
+        spectName = "JONSWAP"
+        bandFactor = 2.0
+        Lgen = 5 * waveDir 
+        x0 =  np.array([2.,0.,0 ])
+        Tstart = 0.
+        Tend = 150.
+
+
+        aR = RandomWaves(                 
+            Tp,                      #wave period
+            Hs,                      #significant wave height
+            mwl,                     #mean water level
+            depth,                   #water depth          
+            waveDir,                 #wave direction vector with three components
+            g,                       #gravitational accelaration vector with three components      
+            N,                       #number of frequency bins
+            bandFactor,              #width factor for band around peak frequency fp       
+            spectName,               #random words will result in error and return the available spectra 
+            spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+            phi=None                 #array of component phases
+            )
+
+
+        aNL = RandomNLWaves(                 
+            Tstart,
+            Tend,
+            Tp,                      #wave period
+            Hs,                      #significant wave height
+            mwl,                     #mean water level
+            depth,                   #water depth          
+            waveDir,                 #wave direction vector with three components
+            g,                       #gravitational accelaration vector with three components      
+            N,                       #number of frequency bins
+            bandFactor,              #width factor for band around peak frequency fp       
+            spectName,               #random words will result in error and return the available spectra 
+            spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+            phi = aR.phi               #array of component phases
+            )
+
+        x = random.random()*200. - 100.
+        y = random.random()*200. - 100.
+        z =  mwl - depth + random.random()*( depth)
+        t =  random.random()*200. - 100.
+        xi = np.array([x, y, z])
+#        print aR.eta(xi,t),aNL.eta(xi,t)
+ 
+        self.assertTrue(round(aR.eta(xi,t),8) == round(aNL.eta_linear(xi,t),8))
+        
+        etaT = 0. 
+        for ii in range(N):
+            kh = aR.ki[ii]*aR.depth
+            ai = 0.25 * aR.ai[ii]**2 * aR.ki[ii] / tanh(kh) * (2. + 3./(sinh(kh)**2))
+            etaT += eta_mode(xi,t,2.*aR.kDir[ii],2.*aR.omega[ii],2.*aR.phi[ii],ai)
+        # 2nd order testing
+
+        self.assertTrue(round(etaT,8) == round(aNL.eta_2ndOrder(xi,t),8))
+        
+        ww = aR.omega
+        ki = aR.ki
+        
+# Testing higher harmonics
+        etaT = 0.
+        N = aR.N
+        for ii in range(0,N-1):
+            for jj in range(ii+1,N):
+                w1p2 = ww[ii] + ww[jj]
+                w1p2_sq = ww[ii]**2 + ww[jj]**2
+                k1p2 = abs(ki[ii] + ki[jj])
+                w1b2 = ww[ii]* ww[jj]
+                kh12 = k1p2 * aR.depth
+                k1h = ki[ii] * aR.depth
+                k2h = ki[jj] * aR.depth
+                Dp = (w1p2)**2  - aR.gAbs*k1p2*tanh(kh12)
+                Bp =  w1p2_sq 
+                Bp = Bp - w1b2*( 1. - 1./(tanh(k1h)*tanh(k2h))) * (w1p2**2 + aR.gAbs * k1p2  *tanh(kh12)) / Dp
+                Bp += w1p2*( ww[ii]**3/sinh(k1h)**2 + ww[jj]**3/sinh(k2h)**2)/Dp 
+                Bp =0.5* Bp / aR.gAbs
+
+
+
+                ai = aR.ai[ii]*aR.ai[jj]*Bp
+                etaT += eta_mode(xi,t,aR.kDir[ii] + aR.kDir[jj],w1p2,aR.phi[ii] + aR.phi[jj],ai)
+#        print etaT,aNL.eta_short(xi,t)                
+        self.assertTrue(round(etaT,8) == round(aNL.eta_short(xi,t),8))
+# Testing lower harmonics
+        etaT = 0.
+        N = aR.N
+        for ii in range(0,N-1):
+            for jj in range(ii+1,N):
+                w1p2 = ww[ii] - ww[jj]
+                w1p2_sq = ww[ii]**2 + ww[jj]**2
+                k1p2 = abs(ki[ii] - ki[jj])
+                w1b2 = ww[ii]* ww[jj]
+                kh12 = k1p2 * aR.depth
+                k1h = ki[ii] * aR.depth
+                k2h = ki[jj] * aR.depth
+                Dp = (w1p2)**2  - aR.gAbs*k1p2*tanh(kh12)
+                Bp =  w1p2_sq 
+                Bp = Bp + w1b2*( 1. + 1./(tanh(k1h)*tanh(k2h))) * (w1p2**2 + aR.gAbs * k1p2  *tanh(kh12)) / Dp
+                Bp += w1p2*( ww[ii]**3/sinh(k1h)**2 - ww[jj]**3/sinh(k2h)**2)/Dp 
+                Bp =0.5* Bp / aR.gAbs
+
+
+
+                ai = aR.ai[ii]*aR.ai[jj]*Bp
+                etaT += eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai)
+
+        self.assertTrue(round(etaT,8) == round(aNL.eta_long(xi,t),8))
+
+# Testing setup
+        etaT = 0.
+        N = aR.N
+        for ii in range(0,N-1):
+            setup =  0.5*aR.ai[ii]*aR.ai[ii]*aR.ki[ii]/sinh(2.*ki[ii]*aR.depth)
+            etaT += setup
+
+        self.assertTrue(round(etaT,8) == round(aNL.eta_setUp(xi,t),8))
+        etaT =aNL.eta_linear(xi,t)+aNL.eta_2ndOrder(xi,t)+aNL.eta_short(xi,t)+aNL.eta_long(xi,t) 
+        self.assertTrue(round(etaT,8) == round(aNL.eta_overall(xi,t),8))        
+        etaT= etaT - aNL.eta_setUp(xi,t)
+        self.assertTrue(round(etaT,8) == round(aNL.eta_overall(xi,t,True),8))        
+
+# Test writing series for different modes
+        Tstart = 0
+        Tend = 2.
+        dt = 1.
+        fname = "2ndorderseries.txt"
+
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"all",False)
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_overall(xi,float(ii)),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_overall(xi,float(ii)),8) )
+        fid.close()
+
+
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"all",True)
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_overall(xi,float(ii),True),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_overall(xi,float(ii),True),8) )
+        fid.close()
+
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"linear")
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_linear(xi,float(ii)),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_linear(xi,float(ii)),8) )
+        fid.close()
+
+
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"short")
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_short(xi,float(ii))+aNL.eta_2ndOrder(xi,float(ii)),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_short(xi,float(ii))+aNL.eta_2ndOrder(xi,float(ii)),8) )
+        fid.close()
+
+
+
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"long")
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_long(xi,float(ii)),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_long(xi,float(ii)),8) )
+        fid.close()
+
+
+        series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"setup")
+        fid = open(fname,"r")
+        seriesFile = np.loadtxt(fid)
+        
+        for ii in range(3):
+            self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_setUp(xi,float(ii)),8) )
+            self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_setUp(xi,float(ii)),8) )
+        fid.close()
+
+class VerifyRandomNLWavesFast(unittest.TestCase):
+# RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
+    def testRandomNLFast(self):
+        from proteus.WaveTools import RandomNLWaves,RandomNLWavesFast,TimeSeries
+        import random
+        path =getpath()
+        fname = path+"randomNLSeries.txt"
+        # Assinging a random value at a field and getting the expected output
+        Tp = 2. 
+        Hs = 0.001
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 2*random.random() - 1 
+        dir2 = 2*random.random() - 1 
+        waveDir = np.array([dir1,dir2, 0])
+        N = 3
+        phi = 2*pi*np.random.rand(N)
+        TMA = True
+        spectName = "JONSWAP"
+        bandFactor = 3.
+        Lgen = 5 * waveDir 
+        x0 =  np.array([2.,0.,0 ])
+        Tstart = 0.
+        Tend = 80.
+        aR= RandomNLWaves(
+            Tstart,
+            Tend,
+            Tp,
+            Hs,
+            mwl,
+            depth,
+            waveDir,
+            g,
+            N,
+            bandFactor,
+            spectName,
+            None,
+            phi)
+        
+        aRF= RandomNLWavesFast(
+            Tstart,
+            Tend,
+            x0,
+            Tp,
+            Hs,
+            mwl,
+            depth,
+            waveDir,
+            g,
+            N,
+            bandFactor,
+            spectName,
+            None,
+            phi,
+            Lgen)
+
+        Tmax = 4*pi/(max(aR.omega) - min(aR.omega))
+        
+        dt_s = (Tp/50.)/2.2
+        dt =  (Tp/50.)/1.1
+        dt_l = Tmax/50.
+
+
+        series = aR.writeEtaSeries(Tstart,Tend,dt,x0,fname,"linear",False,Lgen)
+        series_l = aR.writeEtaSeries(Tstart,Tend,dt_l,x0,fname,"long",False,Lgen)
+        series_s = aR.writeEtaSeries(Tstart,Tend,dt_s,x0,fname,"short",False ,Lgen)
+        Tstart = series_s[0,0]
+        Tend = series_s[-1,0]
+        cutoff = 0.2*Tp/(Tend-Tstart)
+
+
+        aT_s= TimeSeries(
+            fname,
+            0,
+            x0,
+            depth,
+            32,          #number of frequency bins
+            mwl ,        
+            waveDir,
+            g,
+            cutoff,
+            False,                                                                                                                                      
+            {"Nwaves":15, "Tm":Tp/2.2, "Window":"costap"},
+            True,
+            series_s
+            )        
+        Tstart = series[0,0]
+        Tend = series[-1,0]
+        cutoff = 0.2*Tp/(Tend-Tstart)
+
+        aT= TimeSeries(
+            fname,
+            0,
+            x0,
+            depth,
+            32,          #number of frequency bins
+            mwl ,        
+            waveDir,
+            g,
+            cutoff,
+            False,                                                                                                                                      
+            {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
+            True,
+            series
+            )        
+        Tstart = series_l[0,0]
+        Tend = series_l[-1,0]
+        cutoff = 0.2*Tp/(Tend-Tstart)
+
+        aT_l= TimeSeries(
+            fname,
+            0,
+            x0,
+            depth,
+            32,          #number of frequency bins
+            mwl ,        
+            waveDir,
+            g,
+            cutoff,
+            False,                                                          
+            {"Nwaves":15, "Tm":Tmax, "Window":"costap"},
+            True,
+            series_l
+            )        
+
+
+        
+        x = x0 + Lgen * random.random()
+        t = Tstart + random.random()*(Tend-Tstart)
+#        print x,t,aT.eta(x,t),aRF.eta(x,t),aT.u(x,t),aRF.u(x,t)
+        etaT = [Tstart,Tend, fname,
+                0,
+                x0,
+                depth,
+                32,
+                mwl,
+                waveDir,
+                g,##
+                
+                cutoff,
+                False,
+                {"Nwaves":15 ,"Tm":Tp/2.2,"Window":"costap"},
+                True,
+                series_l]
+        self.assertTrue(round(aRF.eta(x,t),8) == round(aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t),8))
+        self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
