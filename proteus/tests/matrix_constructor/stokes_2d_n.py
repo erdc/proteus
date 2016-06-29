@@ -7,8 +7,8 @@ from stokes_2d_p import *
 # context variables
 nLevels = 1
 numeric_scheme = "TH"
-useWeakBoundaryConditions = False
-solveIteratively = False
+useWeakBoundaryConditions = True
+solveIteratively = True
 solveInParallel = False
 
 #######################################################
@@ -116,6 +116,7 @@ else:
     else:
         pass
 
+linearSmoother = NavierStokes3D
 #linear solver relative convergence test
 linTolFac = 0.0
 #linear solver absolute convergence test

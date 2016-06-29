@@ -12630,3 +12630,73 @@ void Mass_3D_Evaluate(const int nPoints,
   }
 }
 	
+void B_2D_Evaluate(const int nPoints,
+		   double *grad_p,
+		   double *u,
+		   double *v,
+		   double *mass_adv,
+		   double *dmass_adv_u,
+		   double *dmass_adv_v,
+		   double *mom_u_ham,
+		   double *mom_v_ham,
+		   double *dmom_u_ham_grad_p,
+		   double *dmom_v_ham_grad_p)
+{
+  int k;
+
+
+  for (k=0; k<nPoints; k++){
+    
+    mass_adv[k*2+0] = u[k];
+    mass_adv[k*2+1] = v[k];
+
+    dmass_adv_u[k*2+0] = 1.0;
+    dmass_adv_v[k*2+1] = 1.0;
+
+    mom_u_ham[k] = grad_p[k*2+0];
+    dmom_u_ham_grad_p[k*2+0] = 1.0;
+
+    mom_v_ham[k] = grad_p[k*2+1];
+    dmom_v_ham_grad_p[k*2+1] = 1.0;
+
+  }
+}
+
+
+void B_3D_Evaluate(const int nPoints,
+		   double *grad_p,
+		   double *u,
+		   double *v,
+		   double *w,
+		   double *mass_adv,
+		   double *dmass_adv_u,
+		   double *dmass_adv_v,
+		   double *dmass_adv_w,
+		   double *mom_u_ham,
+		   double *mom_v_ham,
+		   double *mom_w_ham,
+		   double *dmom_u_ham_grad_p,
+		   double *dmom_v_ham_grad_p,
+		   double *dmom_w_ham_grad_p)
+{
+  int k;
+  for (k=0; k<nPoints; k++){
+
+    mass_adv[k*3+0] = u[k];
+    mass_adv[k*3+1] = v[k];
+    mass_adv[k*3+2] = w[k];
+
+    dmass_adv_u[k*3+0] = 1.0;
+    dmass_adv_v[k*3+1] = 1.0;
+    dmass_adv_w[k*3+2] = 1.0;
+
+    mom_u_ham[k] = grad_p[k*3+0];
+    dmom_u_ham_grad_p[k*3+0] = 1.0;
+
+    mom_v_ham[k] = grad_p[k*3+1];
+    dmom_v_ham_grad_p[k*3+1] = 1.0;
+      
+    mom_w_ham[k] = grad_p[k*3+2];
+    dmom_w_ham_grad_p[k*3+2] = 1.0;
+  }
+}

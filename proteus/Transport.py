@@ -27,6 +27,7 @@ import Comm
 import flcbdfWrappers
 import cmeshTools
 from .Profiling import logEvent
+import superluWrappers
 
 class StorageSet(set):
     def __init__(self,initializer=[],shape=(0,),storageType='d'):
@@ -5963,7 +5964,7 @@ class OneLevelTransport(NonlinearEquation):
 
     def attachMassOperator(self,rho=1.):
         """Attach a discrete Mass operator to the Transport class. """
-        import superluWrappers
+
         self.mass_val = self.nzval.copy()
         self.MassOperator = SparseMat(self.nFreeVDOF_global,
                                       self.nFreeVDOF_global,
@@ -5980,8 +5981,7 @@ class OneLevelTransport(NonlinearEquation):
 
         self.Mass_q = {}
         scalar_quad = StorageSet(shape=(self.mesh.nElements_global,
-                                        self.nQuadraturePoints_element,
-                                        3))
+                                        self.nQuadraturePoints_element))
         trial_shape_X_test_shape_quad = StorageSet(shape={})
         scalar_quad |= set([('u',ci) for ci in range(self.nc)])
         scalar_quad |= set([('m',ci) for ci in self.MassOperatorCoeff.mass.keys()])
@@ -6036,10 +6036,85 @@ class OneLevelTransport(NonlinearEquation):
                                                                           Mass_Jacobian[ci][cj],
                                                                           self.MassOperator)
 
-    def getMassOperator(self):
-        """Return the mass operator object. """
-        pass
+    def attachBOperator(self):
+        """ Attach an operator B to the Transport class """
+        # NOTE - Need weakBoundaryConditions set to TRUE
+        # NOTE - This function only make sense for saddle point problems
+        # NOTE - currently only works for 2D.
+        
+        self.B_val = self.nzval.copy()
+        self.BOperator = SparseMat(self.nFreeVDOF_global,
+                                   self.nFreeVDOF_global,
+                                   self.nnz,
+                                   self.B_val,
+                                   self.colind,
+                                   self.rowptr)
+        _nd = self.coefficients.nd
+        self.BOperatorCoeff = DiscreteBMatrix(nd=_nd)
+        _t = 1.0
 
+        self.B_q = {}
+        scalar_quad = StorageSet(shape=(self.mesh.nElements_global,
+                                        self.nQuadraturePoints_element))
+        vector_quad = StorageSet(shape=(self.mesh.nElements_global,
+                                         self.nQuadraturePoints_element,
+                                         self.nSpace_global))
+        trial_shape_X_test_grad_quad = StorageSet(shape={})
+
+        vector_quad |= set([('grad(u)',0)])
+        vector_quad |= set([('f',0)])
+        scalar_quad |= set([('u',ci) for ci in xrange(self.nc)])
+        scalar_quad |= set([('H',ci) for ci in xrange(1,self.nc)])
+        for ci,cjDict in self.BOperatorCoeff.advection.iteritems():
+            trial_shape_X_test_grad_quad |= set([('v_X_grad_w_dV',cj,ci) for cj in cjDict.keys()])
+
+        for k in trial_shape_X_test_grad_quad:
+            self.B_q[k] = numpy.zeros((self.mesh.nElements_global,
+                                       self.nQuadraturePoints_element,
+                                       self.nDOF_trial_element[k[1]],
+                                       self.nDOF_test_element[k[2]],
+                                       _nd),'d')
+        
+        for ci,cjDict in self.BOperatorCoeff.advection.iteritems():
+            vector_quad |= set([('df',ci,cj) for cj in cjDict.keys()])
+
+        for ci,cjDict in self.BOperatorCoeff.hamiltonian.iteritems():
+            vector_quad |= set([('dH',ci,cj) for cj in cjDict.keys()])
+
+        scalar_quad.allocate(self.B_q)
+        vector_quad.allocate(self.B_q)
+        
+        import pdb
+        pdb.set_trace()
+
+        for ci in zip(range(self.nc),range(self.nc)):
+            cfemIntegrals.calculateShape_X_weightedGradShape(self.q[('v',ci[1])],
+                                                             self.q[('grad(w)*dV_f',ci[0])],
+                                                             self.Mass_q[('v_X_grad_w_dV',ci[1],ci[0])])
+
+        if _nd==2:
+            self.BOperatorCoeff.evaluate(_t,self.B_q)
+
+        B_Jacobian = {}
+        for ci in range(self.nc):
+            B_Jacobian[ci] = {}
+            for cj in range(self.nc):
+                if cj in self.BOperatorCoeff.stencil[ci]:
+                    B_Jacobian[ci][cj] = numpy.zeros(
+                        (self.mesh.nElements_global,
+                         self.nDOF_test_element[ci],
+                         self.nDOF_trial_element[cj]),
+                        'd')
+
+        for ci,cjDict in self.BOperatorCoeff.advection.iteritems():
+            for cj in cjDict:
+                cfemIntegrals.updateAdvectionJacobian_weak(self.B_q[('df',ci,cj)],
+                                                           self.B_q[('v_X_grad_w_dV',cj,ci)],
+                                                           B_Jacobian[ci][cj])
+
+        print "TEST"
+        import pdb
+        pdb.set_trace()
 
 
 #end Transport definition
