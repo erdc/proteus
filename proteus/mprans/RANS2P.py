@@ -465,10 +465,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebq_dragBeta[eN,ebN_element,:] = self.dragBetaTypes[self.elementMaterialTypes[eN]]
          #
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        #VRANS
-        x = cebqe['x']
-        x = numpy.resize(x, (x.shape[0]*x.shape[1],3))
-        numpy.savetxt("ebqe_points.txt", x)
+        # #VRANS
+        # x = cebqe['x']
+        # #import pdb
+        # #pdb.set_trace()
+        # x = numpy.resize(x, (x.shape[0]*x.shape[1],3))
+        # numpy.savetxt("ebqe_points.txt", x)
 
         log("ebqe_global allocations in coefficients")
         self.ebqe_porosity = numpy.ones(cebqe[('u',1)].shape,'d')
@@ -935,6 +937,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe_stress_v_x = numpy.zeros(self.ebqe[('u',0)].shape)
         self.ebqe_stress_v_y = numpy.zeros(self.ebqe[('u',0)].shape)
         self.ebqe_stress_v_z = numpy.zeros(self.ebqe[('u',0)].shape)
+        self.ebqe_x = numpy.zeros(self.ebqe[('u',0)].shape)
+        self.ebqe_y = numpy.zeros(self.ebqe[('u',0)].shape)
+        self.ebqe_z = numpy.zeros(self.ebqe[('u',0)].shape)
+  
 
         #VRANS start, defaults to RANS
         self.q[('r',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
@@ -1459,7 +1465,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe_stress_p_z,
             self.ebqe_stress_v_x,
             self.ebqe_stress_v_y,
-            self.ebqe_stress_v_z)
+            self.ebqe_stress_v_z,
+            self.ebqe_x,
+            self.ebqe_y,
+            self.ebqe_z)
 	from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
@@ -1846,6 +1855,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         numpy.savetxt("ebqe_stress_v_x_" + `self.timeIntegration.t` + ".txt" , self.ebqe_stress_v_x, header = `t`)
         numpy.savetxt("ebqe_stress_v_y_" + `self.timeIntegration.t` + ".txt" , self.ebqe_stress_v_y, header = `t`)
         numpy.savetxt("ebqe_stress_v_z_" + `self.timeIntegration.t` + ".txt" , self.ebqe_stress_v_z, header = `t`)
+        numpy.savetxt("ebqe_x_" + `self.timeIntegration.t` + ".txt" , self.ebqe_x, header = `t`)
+        numpy.savetxt("ebqe_y_" + `self.timeIntegration.t` + ".txt" , self.ebqe_y, header = `t`)
+        numpy.savetxt("ebqe_z_" + `self.timeIntegration.t` + ".txt" , self.ebqe_z, header = `t`)
 
     def updateAfterMeshMotion(self):
         pass

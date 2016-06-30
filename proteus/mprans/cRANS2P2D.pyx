@@ -159,7 +159,10 @@ cdef extern from "RANS2P2D.h" namespace "proteus":
 				   double* ebqe_stress_p_z,
 				   double* ebqe_stress_v_x,
 				   double* ebqe_stress_v_y,
-				   double* ebqe_stress_v_z)
+				   double* ebqe_stress_v_z,
+				   double* ebqe_x,
+				   double* ebqe_y,
+				   double* ebqe_z)
         void calculateJacobian(double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -519,7 +522,10 @@ cdef class cRANS2P2D_base:
 				   numpy.ndarray ebqe_stress_p_z,
 				   numpy.ndarray ebqe_stress_v_x,
 				   numpy.ndarray ebqe_stress_v_y,
-				   numpy.ndarray ebqe_stress_v_z):
+				   numpy.ndarray ebqe_stress_v_z,
+				   numpy.ndarray ebqe_x,
+				   numpy.ndarray ebqe_y,
+				   numpy.ndarray ebqe_z):
        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -673,7 +679,10 @@ cdef class cRANS2P2D_base:
 				   <double*> ebqe_stress_p_z.data,
 				   <double*> ebqe_stress_v_x.data,
 				   <double*> ebqe_stress_v_y.data,
-				   <double*> ebqe_stress_v_z.data)
+				   <double*> ebqe_stress_v_z.data,
+				   <double*> ebqe_x.data,
+				   <double*> ebqe_y.data,
+				   <double*> ebqe_z.data)
 
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,

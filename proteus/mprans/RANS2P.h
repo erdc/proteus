@@ -169,7 +169,10 @@ namespace proteus
 				   double* ebqe_stress_p_z,
 				   double* ebqe_stress_v_x,
 				   double* ebqe_stress_v_y,
-				   double* ebqe_stress_v_z)=0;
+				   double* ebqe_stress_v_z,
+				   double* ebqe_x,
+				   double* ebqe_y,
+				   double* ebqe_z)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -1732,7 +1735,10 @@ namespace proteus
 			   double* ebqe_stress_p_z,
 			   double* ebqe_stress_v_x,
 			   double* ebqe_stress_v_y,
-			   double* ebqe_stress_v_z)
+			   double* ebqe_stress_v_z,
+			   double* ebqe_x,
+			   double* ebqe_y,
+			   double* ebqe_z)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -3028,6 +3034,9 @@ namespace proteus
 		  ebqe_stress_v_x[ebNE_kb] = force_v_x;
 		  ebqe_stress_v_y[ebNE_kb] = force_v_y;
 		  ebqe_stress_v_z[ebNE_kb] = force_v_z;
+		  ebqe_x[ebNE_kb] = x_ext;
+		  ebqe_y[ebNE_kb] = y_ext;
+		  ebqe_z[ebNE_kb] = z_ext;
 		}
 	      //
 	      //update residuals
