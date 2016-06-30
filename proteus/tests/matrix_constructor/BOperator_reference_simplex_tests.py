@@ -28,9 +28,11 @@ class TestMassConstruction2D():
         """ Tear down function """
         FileList = ['Mass_matrix_test.xmf',
                     'Mass_matrix_test.h5',
-                    'reference_triangle_2d.ele',
-                    'reference_triangle_2d.node',
-                    'reference_triangle_2d.poly']
+                    'rdomain.ele',
+                    'rdomain.node',
+                    'rdomain.poly',
+                    'rdomain.neig',
+                    'rdomain.edge']
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
@@ -51,22 +53,20 @@ class TestMassConstruction2D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.Boperator_object.modelList[0].levelModelList[0].getJacobian(self.Asys)
         B_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        import pdb
-        pdb.set_trace()
-        comparison_mat = numpy.loadtxt('mass_reference_c0p1_2D.txt')
-        assert numpy.allclose(mass_mat,comparison_mat)
+        comparison_mat = numpy.load('./comparison_files/B_mat_reference_element_1.npy')
+        assert numpy.allclose(B_mat,comparison_mat)
 
 
     def test_2(self):
         """ Tests the attachMassOperator function in one-level-transport """
         mm = self.Boperator_object.modelList[0].levelModelList[0]
-        mm.attachMassOperator()
-        mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(mm.MassOperator)
-        comparison_mat = numpy.loadtxt('mass_reference_c0p1_2D.txt')
-        assert numpy.allclose(mass_mat,comparison_mat)
+        mm.attachBOperator()
+        B_mat = LinearAlgebraTools.superlu_sparse_2_dense(mm.BOperator)
+        comparison_mat = numpy.load('./comparison_files/B_mat_reference_element_1.npy')
+        assert numpy.allclose(B_mat,comparison_mat)
 
 if __name__ == '__main__':
     tt = TestMassConstruction2D()
     tt.setUp()
-    tt.test_1()
+    tt.test_2()
     tt.tearDown()
