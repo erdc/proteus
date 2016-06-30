@@ -64,6 +64,11 @@ class OneLevelTransport(NonlinearEquation):
 
     The rest of the functions in this class are either private functions
     or return various other pieces of information.
+
+    Attributes
+    ----------
+    mesh : :class:`proteus.MeshTools.Mesh`
+        Details of the underlying mesh object.
     """
     def __init__(self,
                  uDict,
@@ -6083,14 +6088,6 @@ class OneLevelTransport(NonlinearEquation):
 
         scalar_quad.allocate(self.B_q)
         vector_quad.allocate(self.B_q)
-        
-        import pdb
-        pdb.set_trace()
-
-        for ci in zip(range(self.nc),range(self.nc)):
-            cfemIntegrals.calculateShape_X_weightedGradShape(self.q[('v',ci[1])],
-                                                             self.q[('grad(w)*dV_f',ci[0])],
-                                                             self.Mass_q[('v_X_grad_w_dV',ci[1],ci[0])])
 
         if _nd==2:
             self.BOperatorCoeff.evaluate(_t,self.B_q)
@@ -6108,13 +6105,28 @@ class OneLevelTransport(NonlinearEquation):
 
         for ci,cjDict in self.BOperatorCoeff.advection.iteritems():
             for cj in cjDict:
-                cfemIntegrals.updateAdvectionJacobian_weak(self.B_q[('df',ci,cj)],
-                                                           self.B_q[('v_X_grad_w_dV',cj,ci)],
-                                                           B_Jacobian[ci][cj])
+                cfemIntegrals.updateAdvectionJacobian_weak_lowmem(self.B_q[('df',ci,cj)],
+                                                                  self.q[('v',cj)],
+                                                                  self.q[('grad(w)*dV_f',ci)],
+                                                                  B_Jacobian[ci][cj])
 
-        print "TEST"
-        import pdb
-        pdb.set_trace()
+        for ci,cjDict in self.BOperatorCoeff.hamiltonian.iteritems():
+            for cj in cjDict:
+                cfemIntegrals.updateHamiltonianJacobian_weak_lowmem(self.B_q[('dH',ci,cj)],
+                                                                    self.q[('grad(v)',cj)],
+                                                                    self.q[('w*dV_H',ci)],
+                                                                    B_Jacobian[ci][cj])
+
+        for ci in range(self.nc):
+            for cj in self.BOperatorCoeff.stencil[ci]:
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[ci]['nFreeDOF'],
+                                                                          self.l2g[ci]['freeLocal'],
+                                                                          self.l2g[cj]['nFreeDOF'],
+                                                                          self.l2g[cj]['freeLocal'],
+                                                                          self.csrRowIndeces[(ci,cj)],
+                                                                          self.csrColumnOffsets[(ci,cj)],
+                                                                          B_Jacobian[ci][cj],
+                                                                          self.BOperator)
 
 
 #end Transport definition
