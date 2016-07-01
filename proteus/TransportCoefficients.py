@@ -1402,7 +1402,7 @@ class ShallowWater(TC_base):
 #                                           c[('H',3)],
 #                                           c[('dH',3,0)])
 
-class Laplace(TC_base):
+class DiscreteLaplaceOperator(TC_base):
     r""" A coefficient class to construct the discrete Laplace Operator.
     
     This class defines the coefficients necessary to construct the
@@ -1417,8 +1417,9 @@ class Laplace(TC_base):
     """
     from ctransportCoefficients import Laplace_2D_Evaluate
     from ctransportCoefficients import Laplace_3D_Evaluate
-    def __init__(self,nd=2):
+    def __init__(self,nd=2,nu=1.0):
         self.nd=nd
+        self.nu=nu # ... Detail I need to worry about later ...
         mass = {}
         advection = {}
         diffusion = {}
