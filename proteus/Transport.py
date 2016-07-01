@@ -102,10 +102,12 @@ class OneLevelTransport(NonlinearEquation):
         Parameters
         ----------
         uDict : dict
-            Dictionary of FiniteElementFunction objects.
+            Dictionary of 
+            :class:`proteus.FemTools.FiniteElementFunction` objects.
 
         phiDict : dict
-            Dictionary of FiniteElementFunction objects.
+            Dictionary of
+            :class:`proteus.FemTools.FiniteElementFunction` objects.
 
         testSpaceDict : dict
             Dictionary of FiniteElementSpace objects
@@ -2732,11 +2734,15 @@ class OneLevelTransport(NonlinearEquation):
                                                                    self.q[('vXgrad(w)*dV_f',cj,ci)],
                                                                    self.elementJacobian[ci][cj])
         ##\todo optimize nonlinear diffusion Jacobian calculation for the  different combinations of nonlinear a and phi
+        import pdb
+        pdb.set_trace()
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck,cjDict in ckDict.iteritems():
                 for cj in set(cjDict.keys()+self.coefficients.potential[ck].keys()):
                     if self.timeIntegration.diffusionIsImplicit[ci]:
                         if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
+                            import pdb
+                            pdb.set_trace()
                             if self.sd:
                                 cfemIntegrals.updateDiffusionJacobian_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                               self.phi[ck].femSpace.dofMap.l2g,
@@ -5986,6 +5992,93 @@ class OneLevelTransport(NonlinearEquation):
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
+
+    def attachLaplaceOperator(self,nu=1.0):
+        """Attach a Discrete Laplace Operator to the Transport Class """
+
+        self.laplace_val = self.nzval.copy()
+        self.LaplaceOperator = SparseMat(self.nFreeVDOF_global,
+                                         self.nFreeVDOF_global,
+                                         self.nnz,
+                                         self.laplace_val,
+                                         self.colind,
+                                         self.rowptr)
+
+        _nd = self.coefficients.nd
+        if self.coefficients.nu != None:
+            _nu = self.coefficients.nu
+        self.LaplaceOperatorCoeff = DiscreteLaplaceOperator(nd=_nd)
+        _t = 1.0
+
+        Laplace_phi = {}
+        Laplace_dphi = {}
+        # ...initialize the phi functions...
+        for ci,space in self.testSpace.iteritems():
+            Laplace_phi[ci] = FiniteElementFunction(space)
+
+        for ck,phi in Laplace_phi.iteritems():
+            Laplace_dphi[(ck,ck)] = FiniteElementFunction(Laplace_phi[ck].femSpace)
+
+        for ci,dphi in Laplace_dphi.iteritems():
+            dphi.dof.fill(1.0)
+
+        self.Laplace_q = {}
+        scalar_quad = StorageSet(shape=(self.mesh.nElements_global,
+                                        self.nQuadraturePoints_element))
+        tensors_quad = StorageSet(shape={})
+        
+        scalar_quad |= set([('u',ci) for ci in range(self.nc)])
+        tensors_quad |= set([('a',ci,ci) for ci in range(self.nc)])
+        tensors_quad |= set([('da',ci,ci,ci) for ci in range(self.nc)])
+
+
+        scalar_quad.allocate(self.Laplace_q)
+        
+        for k in tensors_quad:
+            self.Laplace_q[k] = numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nQuadraturePoints_element,
+                 self.LaplaceOperatorCoeff.sdInfo[(k[1],k[2])][0][self.nSpace_global]),
+                'd')
+
+        if _nd == 2:
+            self.LaplaceOperatorCoeff.evaluate(_t,self.Laplace_q)
+        
+        LaplaceJacobian = {}
+        for ci in range(self.nc):
+            LaplaceJacobian[ci] = {}
+            for cj in range(self.nc):
+                if cj in self.LaplaceOperatorCoeff.stencil[ci]:
+                    LaplaceJacobian[ci][cj] = numpy.zeros(
+                        (self.mesh.nElements_global,
+                         self.nDOF_test_element[ci],
+                         self.nDOF_trial_element[cj]),
+                        'd')
+
+        for ci,ckDict in self.LaplaceOperatorCoeff.diffusion.iteritems():
+            for ck,cjDict in ckDict.iteritems():
+                for cj in set(cjDict.keys()+self.LaplaceOperatorCoeff.potential[ck].keys()):
+                    cfemIntegrals.updateDiffusionJacobian_weak_sd(self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][0],
+                                                                  self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][1],
+                                                                  self.phi[ck].femSpace.dofMap.l2g,
+                                                                  self.Laplace_q[('a',ci,ck)],
+                                                                  self.Laplace_q[('da',ci,ck,cj)],
+                                                                  self.q[('grad(phi)',ck)],
+                                                                  self.q[('grad(w)*dV_a',ck,ci)],
+                                                                  Laplace_dphi[(ck,cj)].dof,
+                                                                  self.q[('v',cj)],
+                                                                  self.q[('grad(v)',cj)],
+                                                                  LaplaceJacobian[ci][cj])
+        for ci in range(self.nc):
+            for cj in self.LaplaceOperatorCoeff.stencil[ci]:
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[ci]['nFreeDOF'],
+                                                                          self.l2g[ci]['freeLocal'],
+                                                                          self.l2g[cj]['nFreeDOF'],
+                                                                          self.l2g[cj]['freeLocal'],
+                                                                          self.csrRowIndeces[(ci,cj)],
+                                                                          self.csrColumnOffsets[(ci,cj)],
+                                                                          LaplaceJacobian[ci][cj],
+                                                                          self.LaplaceOperator)
 
 #end Transport definition
 class MultilevelTransport:
