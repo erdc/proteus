@@ -5,27 +5,27 @@ from proteus import default_s,default_so
 import numpy
 import proteus as pr
 
-p.nd = 2
+p.nd = 3
 p.name = "Laplace_matrix_test"
 
-p.rdomain = pr.Domain.unitSimplex(2)
-p.polyfile = "reference_triangle_2d"
+p.rdomain = pr.Domain.unitSimplex(3)
+p.polyfile = "reference_triangle_3d"
 p.rdomain.writePoly(p.polyfile)
 p.domain = None
 n.triangleOptions = "Yp"
 
-p.nc = 3
+p.nc = 4
 
 def getDBC(x,flag):
     if x[0] in [0.0] and x[1] in [0.0]:
         pass
 
-p.dirichletConditions = {0:getDBC, 1:getDBC, 2:getDBC}
+p.dirichletConditions = {0:getDBC, 1:getDBC, 2:getDBC, 3:getDBC}
 p.advectiveFluxBoundaryConditions = {}
 p.diffusiveFluxBoundaryConditions = {}
 p.periodicDirichletConditions = None
 
-p.coefficients = pr.TransportCoefficients.Laplace(p.nd)
+p.coefficients = pr.TransportCoefficients.DiscreteLaplaceOperator(p.nd)
 
 ############################
 
