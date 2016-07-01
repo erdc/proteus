@@ -2734,15 +2734,11 @@ class OneLevelTransport(NonlinearEquation):
                                                                    self.q[('vXgrad(w)*dV_f',cj,ci)],
                                                                    self.elementJacobian[ci][cj])
         ##\todo optimize nonlinear diffusion Jacobian calculation for the  different combinations of nonlinear a and phi
-        import pdb
-        pdb.set_trace()
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck,cjDict in ckDict.iteritems():
                 for cj in set(cjDict.keys()+self.coefficients.potential[ck].keys()):
                     if self.timeIntegration.diffusionIsImplicit[ci]:
                         if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
-                            import pdb
-                            pdb.set_trace()
                             if self.sd:
                                 cfemIntegrals.updateDiffusionJacobian_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                               self.phi[ck].femSpace.dofMap.l2g,
