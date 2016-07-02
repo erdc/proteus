@@ -1597,8 +1597,6 @@ class Stokes(TC_base):
         modelList[0].pp_hasConstantNullSpace = False
 
     def evaluate(self,t,c):
-        import pdb
-        pdb.set_trace()
         if self.nd==2:
             self.Stokes_2D_Evaluate(self.rho,
                                     self.nu,

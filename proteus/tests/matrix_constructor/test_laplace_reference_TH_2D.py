@@ -9,7 +9,8 @@ cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( ins
 if cmd_folder not in sys.path:
     sys.path.insert(0,cmd_folder)
 
-cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],"import_modules")))
+cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],
+                                                              "import_modules")))
 if cmd_subfolder not in sys.path:
     sys.path.insert(0,cmd_subfolder)
 
@@ -36,13 +37,13 @@ class TestMassConstruction2D():
         
     def tearDown(self):
         """ Tear down function """
-        FileList = ['Mass_matrix_test.xmf',
-                    'Mass_matrix_test.h5',
-                    'rdomain.ele',
-                    'rdomain.node',
-                    'rdomain.poly',
-                    'rdomain.neig',
-                    'rdomain.edge']
+        FileList = ['Laplace_matrix_test.xmf',
+                    'Laplace_matrix_test.h5',
+                    'proteus.log',
+                    "reference_triangle_2d.ele",
+                    "reference_triangle_2d.node",
+                    "reference_triangle_2d.face",
+                    "reference_triangle_2d.poly"]
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)

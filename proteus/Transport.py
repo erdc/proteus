@@ -27,6 +27,7 @@ import Comm
 import flcbdfWrappers
 import cmeshTools
 from .Profiling import logEvent
+from petsc4py import PETSc as p4pyPETSc
 import superluWrappers
 import numpy
 
@@ -6075,6 +6076,29 @@ class OneLevelTransport(NonlinearEquation):
                                                                           self.csrColumnOffsets[(ci,cj)],
                                                                           LaplaceJacobian[ci][cj],
                                                                           self.LaplaceOperator)
+
+        # TODO / THOUGHT - how to extract a submatrix from a CSR sparse representation?  Can this be
+        # done effectively using the superluwrappers?
+
+        self.LaplaceOperatorpetsc = superlu_2_petsc4py(self.LaplaceOperator)
+        
+        var_range = []
+        isp_list = []
+        starting_idx = 0
+        for comp in range(self.nc):
+            comp_num_dof = self.phi[comp].femSpace.dofMap.nDOF
+            var_range.append(numpy.arange(start=starting_idx,
+                                          stop=starting_idx+comp_num_dof,
+                                          dtype='i'))
+            isp_list.append(p4pyPETSc.IS())
+            isp_list[comp].createGeneral(var_range[comp])
+            starting_idx+=comp_num_dof
+
+        self.LaplaceOperatorList = []
+        for comp in range(self.nc):
+            self.LaplaceOperatorList.append(self.LaplaceOperatorpetsc.getSubMatrix
+                                            (isp_list[comp],
+                                             isp_list[comp]))
 
 #end Transport definition
 class MultilevelTransport:
