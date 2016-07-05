@@ -1665,9 +1665,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
 
 #        self.getAverageFlux(ci)
 
-        import pdb
-        pdb.set_trace()
-
         self.buildBDM2rhs(self.BDMprojectionMat_element,
                           self.BDMprojectionMatPivots_element,
                           self.w_dS[ci],
@@ -1678,9 +1675,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                           self.q[('velocity',ci)],
                           self.q[('velocity_dofs',ci)])
 
-        import pdb
-        pdb.set_trace()
-
         self.solveLocalBDM2projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,
                                       self.w_dS[ci],
@@ -1690,15 +1684,9 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                                       self.q[('velocity',ci)],
                                       self.q[('velocity_dofs',ci)])
 
-        import pdb
-        pdb.set_trace()
-
         cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.qv[ci],
                                                                 self.q[('velocity_dofs',ci)],
                                                                 self.vt.q[('velocity',ci)])
-
-        import pdb
-        pdb.set_trace()
 
     def evaluateElementVelocityField(self,x,ci):
         """

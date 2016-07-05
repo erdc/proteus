@@ -2778,7 +2778,6 @@ void buildLocalBDM2projectionMatrices(int degree,
 
 		  for (ibq = 0; ibq < nQuadraturePoints_elementBoundary; ibq++)
 		    {
-
 		      pval =
 		      	ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
 		      	      ebN*nQuadraturePoints_elementBoundary*nSpace+
@@ -3445,7 +3444,6 @@ void getElementBDM2velocityValuesLagrangeRep(int nElements_global,
 \f]
    **********************************************************************/
   int eN,iq,id,k,j;
-
   for (eN = 0; eN < nElements_global; eN++)
     {
       for (iq = 0; iq < nQuadraturePoints_element; iq++)
@@ -3453,10 +3451,9 @@ void getElementBDM2velocityValuesLagrangeRep(int nElements_global,
 	  for (id = 0; id < nSpace; id++)
 	    {
 	      q_velocity[eN*nQuadraturePoints_element*nSpace + iq*nSpace + id] = 0.0;
-	      for (k = 0; k < nSpace+1; k++)
+	      for (k = 0; k < 6; k++)
 		{
-		  j = k*nSpace+ id; /*id*(nSpace+1) + k;*/
-
+		  j = k*nSpace+ id; /*id*(nSpace+1) + k;*/		  
 		  q_velocity[eN*nQuadraturePoints_element*nSpace + iq*nSpace + id] +=
 		    q_v[eN*nQuadraturePoints_element*nDOF_trial_element + iq*nDOF_trial_element + k]
 		    *
@@ -4267,12 +4264,12 @@ void calculateConservationResidualPWL(int nElements_global,
       right_eN = elementBoundaryElements[ebN*2+1];
       left_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       right_ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+1];
-      printf("ebN = %d, left_eN = %d, right_eN = %d, left_ebN_element = %d, right_ebN_element = %d\n",
-	     ebN,
-	     left_eN,
-	     right_eN,
-	     left_ebN_element,
-	     right_ebN_element);
+      /* printf("ebN = %d, left_eN = %d, right_eN = %d, left_ebN_element = %d, right_ebN_element = %d\n", */
+      /* 	     ebN, */
+      /* 	     left_eN, */
+      /* 	     right_eN, */
+      /* 	     left_ebN_element, */
+      /* 	     right_ebN_element); */
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
 	{
           fluxAverage = 0.0;
