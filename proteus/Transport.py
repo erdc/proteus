@@ -3170,6 +3170,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         #get functions of (t,x,u) at the quadrature points
         #
+
         self.coefficients.evaluate(self.timeIntegration.t,self.q)
         if self.movingDomain and self.coefficients.movingDomain:
             self.coefficients.updateToMovingDomain(self.timeIntegration.t,self.q)
@@ -5959,6 +5960,86 @@ class OneLevelTransport(NonlinearEquation):
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
+
+    def attachAdvectionOperator(self,advective_field):
+        """Attach a Discrete Advection Operator to the Transport class.
+        
+        Arguments
+        ---------
+        advective_field : numpy array
+            numpy array of the advection field.
+
+        """
+        # TODO - some type of assert for advective_field...
+        self.advection_val = self.nzval.copy()
+        self.AdvectionOperator = SparseMat(self.nFreeVDOF_global,
+                                           self.nFreeVDOF_global,
+                                           self.nnz,
+                                           self.advection_val,
+                                           self.colind,
+                                           self.rowptr)
+        _nd = self.coefficients.nd
+        self.AdvectionOperatorCoeff = DiscreteAdvectionOperator(advective_field,nd=_nd)
+        _t = 1.0
+        
+        self.Advection_q = {}
+        scalar_quad = StorageSet(shape = (self.mesh.nElements_global,
+                                          self.nQuadraturePoints_element))
+        vector_quad = StorageSet(shape = (self.mesh.nElements_global,
+                                          self.nQuadraturePoints_element,
+                                          self.nSpace_global))
+
+        tensor_quad = StorageSet(shape={})
+        
+        scalar_quad |= set([('u',0)])
+        vector_quad |= set([('f',ci) for ci in range(self.nc)])
+        tensor_quad |= set([('df',0,0)])
+        for i in range(self.nc):
+            for j in range(1,self.nc):
+                tensor_quad |= set([('df',i,j)])
+                
+        scalar_quad.allocate(self.Advection_q)
+        vector_quad.allocate(self.Advection_q)
+
+        for k in tensor_quad:
+            self.Advection_q[k] = numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nQuadraturePoints_element,
+                 _nd),
+                'd')
+
+        if _nd==2:
+            self.AdvectionOperatorCoeff.evaluate(_t,self.Advection_q)
+        
+        AdvectionJacobian = {}
+        for ci in range(self.nc):
+            AdvectionJacobian[ci] = {}
+            for cj in range(self.nc):
+                if cj in self.AdvectionOperatorCoeff.stencil[ci]:
+                    AdvectionJacobian[ci][cj] = numpy.zeros(
+                        (self.mesh.nElements_global,
+                         self.nDOF_test_element[ci],
+                         self.nDOF_test_element[cj]),
+                        'd')
+
+        for ci,ckDict in self.AdvectionOperatorCoeff.advection.iteritems():
+            for ck in ckDict:
+                if self.timeIntegration.advectionIsImplicit[ci]:
+                    if self.lowmem:
+                        cfemIntegrals.updateAdvectionJacobian_weak_lowmem(self.Advection_q[('df',ci,ck)],
+                                                                          self.q[('v',ck)],
+                                                                          self.q[('grad(w)*dV_f',ci)],
+                                                                          AdvectionJacobian[ci][ck])
+        for ci in range(self.nc):
+            for cj in self.AdvectionOperatorCoeff.stencil[ci]:
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[ci]['nFreeDOF'],
+                                                                          self.l2g[ci]['freeLocal'],
+                                                                          self.l2g[cj]['nFreeDOF'],
+                                                                          self.l2g[cj]['freeLocal'],
+                                                                          self.csrRowIndeces[(ci,cj)],
+                                                                          self.csrColumnOffsets[(ci,cj)],
+                                                                          AdvectionJacobian[ci][cj],
+                                                                          self.AdvectionOperator)
 
 #end Transport definition
 class MultilevelTransport:
