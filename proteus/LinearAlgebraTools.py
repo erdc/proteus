@@ -57,8 +57,6 @@ def superlu_sparse_2_dense(sparse_matrix,output=False):
     -----
     This function should not be used for large matrices.
     """
-    import pdb
-    pdb.set_trace()
     rowptr = sparse_matrix.getCSRrepresentation()[0]
     colptr = sparse_matrix.getCSRrepresentation()[1]
     data   = sparse_matrix.getCSRrepresentation()[2]
