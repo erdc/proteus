@@ -72,6 +72,9 @@ class ShapeRANS(Shape):
                 self.auxiliaryVariables[key] = self.zones
             if str(key).startswith('Gauge_'):
                 self.auxiliaryVariables[key] = gauge
+        elif str(key).startswith('Gauge_') \
+            and gauge not in self.auxiliaryVariables[key]:
+                self.auxiliaryVariables[key] += gauge
 
     def setRigidBody(self, holes=None):
         """
