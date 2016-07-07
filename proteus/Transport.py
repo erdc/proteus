@@ -27,6 +27,8 @@ import Comm
 import flcbdfWrappers
 import cmeshTools
 from .Profiling import logEvent
+import superluWrappers
+import numpy
 
 class StorageSet(set):
     def __init__(self,initializer=[],shape=(0,),storageType='d'):
@@ -1747,8 +1749,6 @@ class OneLevelTransport(NonlinearEquation):
         #imax = numpy.argmax(r); imin = numpy.argmin(r)
         #print "getResidual max,index r[%s]= %s min,index= r[%s] r= %s " % (imax,r[imax],imin,r[imin])
     def getJacobian(self,jacobian,skipMassTerms=False):
-        import superluWrappers
-        import numpy
         ##\todo clean up update,calculate,get,intialize usage
         self.calculateElementBoundaryJacobian()
         self.calculateExteriorElementBoundaryJacobian()
