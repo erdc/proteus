@@ -57,17 +57,21 @@ class ShapeRANS(Shape):
         self.auxiliaryVariables = {}  # list of auxvar attached to shape
         self.It = None  # inertia tensor
 
-    def _attachAuxiliaryVariable(self, key):
+    def _attachAuxiliaryVariable(self, key, gauge = None):
         """
         Attaches an auxiliary variable to the auxiliaryVariables dictionary of
         the shape (used in buildDomain function)
         (!) should not be used manually
+
+        # a hack for now, but gauge is a gauge type which should have some sort of value
         """
         if key not in self.auxiliaryVariables:
             if key == 'RigidBody':
                 self.auxiliaryVariables[key] = True
             if key == 'RelaxZones':
                 self.auxiliaryVariables[key] = self.zones
+            if str(key).startswith('Gauge_'):
+                self.auxiliaryVariables[key] = gauge
 
     def setRigidBody(self, holes=None):
         """
