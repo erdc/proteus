@@ -150,7 +150,7 @@ class TC_base:
                 self.elementIntegralKeys.append(('a',ci,ck))
                 self.elementBoundaryIntegralKeys.append(('a',ci,ck))
                 if not self.potential.has_key(ck):
-                    print("""a[ci=%d][ck=%d] is non-zero but phi[ck=%d] is undefined. Setting
+                    logEvent("""a[ci=%d][ck=%d] is non-zero but phi[ck=%d] is undefined. Setting
                     phi[ck=%d]=u[ck=%d], the potential definition
                     should be corrected in the future\n""" % (ci,ck,ck,ck,ck))
                     self.potential[ck]='u'
