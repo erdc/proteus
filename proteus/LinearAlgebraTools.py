@@ -132,9 +132,9 @@ class ParVec:
                 self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,nghosts,subdomain2global,array,1)
         self.nghosts = nghosts
     def scatter_forward_insert(self):
-       self.cparVec.scatter_forward_insert()
+        self.cparVec.scatter_forward_insert()
     def scatter_reverse_add(self):
-       self.cparVec.scatter_reverse_add()
+        self.cparVec.scatter_reverse_add()
 
 
 class ParVec_petsc4py(p4pyPETSc.Vec):
@@ -353,8 +353,8 @@ def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
     32-bit integer data types.
     """
     if (colind.dtype != 'int32' or rowptr.dtype != 'int32'):
-        print('ERROR - colind and rowptr must be "int32" numpy arrays for ' \
-              'superluWrappers')
+        logEvent('ERROR - colind and rowptr must be "int32" numpy arrays for ' \
+                 'superluWrappers')
         sys.exit(1)
     return superluWrappers.SparseMatrix(nr,nc,nnz,nzval,colind,rowptr)
 
