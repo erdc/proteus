@@ -132,9 +132,9 @@ class ParVec:
                 self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,nghosts,subdomain2global,array,1)
         self.nghosts = nghosts
     def scatter_forward_insert(self):
-        self.cparVec.scatter_forward_insert()
+       self.cparVec.scatter_forward_insert()
     def scatter_reverse_add(self):
-        self.cparVec.scatter_reverse_add()
+       self.cparVec.scatter_reverse_add()
 
 
 class ParVec_petsc4py(p4pyPETSc.Vec):
