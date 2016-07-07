@@ -231,3 +231,6 @@ linearSolverConvergenceTest = 'r' #r,its,r-true for true residual
 
 bcsTimeDependent = True
 """Allow optimizations if boundary conditions are not time dependent"""
+
+boundaryCreatesNullSpace = False
+""" Flag for Dirichlet boundary with null space. """

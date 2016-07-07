@@ -946,7 +946,7 @@ class UnitCubeRotation(TC_base):
                                       c[('m',0)],c[('dm',0,0)],
                                       c[('f',0)],c[('df',0,0)])
 
-class AdvectionOperator(TC_base):
+class DiscreteAdvectionOperator(TC_base):
     r""" A coefficient class to build the discrete advection operator.
 
     This class defines the coefficients necessary to construct the
@@ -972,18 +972,22 @@ class AdvectionOperator(TC_base):
     """
     from ctransportCoefficients import Advection_2D_Evaluate
     from ctransportCoefficients import Advection_3D_Evaluate
-    def __init__(self,nd=2):
+    def __init__(self,u,nd=2):
         self.nd=nd
-        self.u=u
+        self.advection_field_u = numpy.copy(u[...,0])
+        self.advection_field_v = numpy.copy(u[...,1])
+        if self.nd==3:
+            self.advection_field_w = numpy.copy(u[...,2])
         mass = {}
         advection = {}
         diffusion = {}
         potential = {}
         reaction = {}
         hamiltonian = {}
-        if nd==2:
+        if self.nd==2:
             variableNames=['p','u','v']
-            advection = {0:{1:'linear',
+            advection = {0:{0:'linear',
+                            1:'linear',
                             2:'linear'},
                          1:{1:'nonlinear',
                             2:'nonlinear'},
@@ -999,9 +1003,10 @@ class AdvectionOperator(TC_base):
                              hamiltonian,
                              variableNames)
             self.vectorComponents = [1,2]
-        if nd==3:
+        if self.nd==3:
             variableNames=['p','u','v','w']
-            advection = {0:{1:'linear',
+            advection = {0:{0:'linear',
+                            1:'linear',
                             2:'linear',
                             3:'linear'},
                          1:{1:'nonlinear',
@@ -1023,41 +1028,43 @@ class AdvectionOperator(TC_base):
                              hamiltonian,
                              variableNames)
             self.vectorComponents = [1,2,3]
-        def evaluate(self,t,c):
-            if self.nd==2:
-                self.Advection_2D_Evaluate(p,
-                                           u,
-                                           v,
-                                           c[('f',0)],
-                                           c[('f',1)],
-                                           c[('f',2)],
-                                           c[('df',0,1)],
-                                           c[('df',0,2)],
-                                           c[('df',1,1)],
-                                           c[('df',1,2)],
-                                           c[('df',2,1)],
-                                           c[('df',2,2)])
-            elif self.nd==3:
-                self.Advection_3D_Evaluate(p,
-                                           u,
-                                           v,
-                                           w,
-                                           c[('f',0)],
-                                           c[('f',1)],
-                                           c[('f',2)],
-                                           c[('f',3)],
-                                           c[('df',0,1)],
-                                           c[('df',0,2)],
-                                           c[('df',0,3)],
-                                           c[('df',1,1)],
-                                           c[('df',1,2)],
-                                           c[('df',1,3)],
-                                           c[('df',2,1)],
-                                           c[('df',2,2)],
-                                           c[('df',2,3)],
-                                           c[('df',3,1)],
-                                           c[('df',3,2)],
-                                           c[('df',3,3)])
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.Advection_2D_Evaluate(c[('u',0)],
+                                       self.advection_field_u,
+                                       self.advection_field_v,
+                                       c[('f',0)],
+                                       c[('f',1)],
+                                       c[('f',2)],
+                                       c[('df',0,0)],
+                                       c[('df',0,1)],
+                                       c[('df',0,2)],
+                                       c[('df',1,1)],
+                                       c[('df',1,2)],
+                                       c[('df',2,1)],
+                                       c[('df',2,2)])
+        elif self.nd==3:
+            self.Advection_3D_Evaluate(c[('u',0)],
+                                       self.advection_field_u,
+                                       self.advection_field_v,
+                                       self.advection_field_w,
+                                       c[('f',0)],
+                                       c[('f',1)],
+                                       c[('f',2)],
+                                       c[('f',3)],
+                                       c[('df',0,0)],
+                                       c[('df',0,1)],
+                                       c[('df',0,2)],
+                                       c[('df',0,3)],
+                                       c[('df',1,1)],
+                                       c[('df',1,2)],
+                                       c[('df',1,3)],
+                                       c[('df',2,1)],
+                                       c[('df',2,2)],
+                                       c[('df',2,3)],
+                                       c[('df',3,1)],
+                                       c[('df',3,2)],
+                                       c[('df',3,3)])
 
 
 class NavierStokes(TC_base):
