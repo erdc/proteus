@@ -1191,9 +1191,17 @@ def assembleDomain(domain):
 
 def assembleAuxiliaryVariables(domain):
     """
+    Adds the auxiliary variables to the domain.
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    Notes
+    -----
     Should be called after assembleGeometry
     """
-    domain.auxiliaryVariables = []
+    domain.auxiliaryVariables = {'twp': [], 'vof': []}
     zones_global = {}
     start_region = 0
     start_rflag = 0
@@ -1203,7 +1211,7 @@ def assembleAuxiliaryVariables(domain):
         # ----------------------------
         # RIGID BODIES
         if 'RigidBody' in shape.auxiliaryVariables.keys():
-            aux += [RigidBody(shape)]
+            aux['twp'] += [RigidBody(shape)]
             # fixing mesh on rigid body
             body = aux[-1]
             for boundcond in shape.BC_list:
@@ -1216,7 +1224,7 @@ def assembleAuxiliaryVariables(domain):
         # ABSORPTION/GENERATION ZONES
         if 'RelaxZones' in shape.auxiliaryVariables.keys():
             if not zones_global:
-                aux += [bc.RelaxationZoneWaveGenerator(zones_global,
+                aux['twp'] += [bc.RelaxationZoneWaveGenerator(zones_global,
                                                        domain.nd)]
             if not hasattr(domain, 'porosityTypes'):
                 # create arrays of default values

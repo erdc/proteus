@@ -30,7 +30,7 @@ class D_base:
         # list of boundary conditions
         self.bc = []
         # list of auxiliaryVariables
-        self.auxiliaryVariables = []
+        self.auxiliaryVariables = {}
         # attach a MeshOption class
         self.MeshOptions = MeshOptions(self.nd)
 
