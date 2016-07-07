@@ -1213,13 +1213,13 @@ def assembleAuxiliaryVariables(domain):
         if 'RigidBody' in shape.auxiliaryVariables.keys():
             aux['twp'] += [RigidBody(shape)]
             # fixing mesh on rigid body
-            body = aux[-1]
+            body = aux['twp']
             for boundcond in shape.BC_list:
                 boundcond.setMoveMesh(body.last_position, body.h,
                                       body.rotation_matrix)
             # update the indice for force/moment calculations
-            aux[-1].i_start = start_flag+1
-            aux[-1].i_end = start_flag+1+len(shape.BC_list)
+            aux['twp'].i_start = start_flag+1
+            aux['twp'].i_end = start_flag+1+len(shape.BC_list)
         # ----------------------------
         # ABSORPTION/GENERATION ZONES
         if 'RelaxZones' in shape.auxiliaryVariables.keys():
@@ -1244,6 +1244,18 @@ def assembleAuxiliaryVariables(domain):
                 key = flag+start_rflag
                 zones_global[key] = zone
         start_flag += len(shape.BC_list)
+        #[temp] add gauges
+        # ----------------------------
+        # GAUGES
+        gauge_dict = {key: shape.auxiliaryVariables.get(key,[])
+                      for key in shape.auxiliaryVariables.keys()
+                      if str(key).startswith('Gauge_')} #[temp] This ...should gracefully fail if it's not a string?
+        for key in gauge_dict.keys():
+            key_name = key.split('_', 1)[1] # Cutting off "Gauge_"
+            if key_name not in aux:
+                aux[key_name] = []
+            aux[key_name] += [gauge_dict[key],]
+        #[temp] add gauges
         if shape.regions is not None:
             start_region += len(shape.regions)
             start_rflag += max(domain.regionFlags[0:start_region])
