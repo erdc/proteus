@@ -1142,11 +1142,12 @@ class SchurPrecon:
         L_sizes = self.L.getSizes()
         L_range = self.L.getOwnershipRange()
         neqns = L_sizes[0][0]
+        nc = self.L.pde.nc
         rank = p4pyPETSc.COMM_WORLD.rank
+        pSpace = self.L.pde.u[0].femSpace
+        pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
+        nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
         if self.L.pde.stride[0] == 1:#assume end to end
-            pSpace = self.L.pde.u[0].femSpace
-            pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
-            nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
             self.pressureDOF = numpy.arange(start=L_range[0],
                                             stop=L_range[0]+nDOF_pressure,
                                             dtype="i")
@@ -1157,15 +1158,17 @@ class SchurPrecon:
         else: #assume blocked
             self.pressureDOF = numpy.arange(start=L_range[0],
                                             stop=L_range[0]+neqns,
-                                            step=4,
+                                            step=nc,
                                             dtype="i")
             velocityDOF = []
-            for start in range(1,4):
+            for start in range(1,nc):
                 velocityDOF.append(numpy.arange(start=L_range[0]+start,
                                                 stop=L_range[0]+neqns,
-                                                step=4,
+                                                step=nc,
                                                 dtype="i"))
             self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
+            import pdb
+            pdb.set_trace()
         self.pc = p4pyPETSc.PC().create()
         if prefix:
             self.pc.setOptionsPrefix(prefix)
