@@ -10,6 +10,8 @@ import superluWrappers
 from petsc4py import PETSc as p4pyPETSc
 from math import *
 from .Profiling import logEvent
+import pdb
+
 
 class LinearSolver:
     """
@@ -552,6 +554,7 @@ class KSP_petsc4py(LinearSolver):
                 self.preconditioner.setUp()
             self.pc.setUp()
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
+
         self.ksp.setUp()
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
         if par_b.proteus2petsc_subdomain is not None:
@@ -581,8 +584,25 @@ class KSP_petsc4py(LinearSolver):
                 self.ksp.setNullSpace(self.preconditioner.nsp)
         except:
             pass
-        self.ksp.solve(par_b,par_u)
-        logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
+
+        try:
+            if isinstance(self.preconditioner, DarcyMSDG):
+                logEvent("Updating the corrected residual for MSDG before KSP solver")
+                reduced_vector = par_b.duplicate() # duplicate the par_b with zero entries
+                self.par_L.mult(self.preconditioner.RHS, reduced_vector)
+                par_b.axpy(-1, reduced_vector)
+                self.ksp.solve(par_b,par_u)
+                logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
+                                                                                                                     self.ksp.atol,
+                                                                                                                     self.ksp.converged,
+                                                                                                                     self.ksp.its,
+                                                                                                                     self.ksp.norm,
+                                                                                                                     self.ksp.reason))
+                par_u.axpy(1, reduced_vector)
+                par_b.axpy(-1, reduced_vector)
+        except:
+            self.ksp.solve(par_b,par_u)
+            logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
                                                                                                              self.ksp.converged,
                                                                                                              self.ksp.its,
@@ -854,6 +874,7 @@ class NavierStokesPressureCorrection:
 
 class DarcyMSDG:
     def __init__(self,L,prefix=None):
+
         self.L = L
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
@@ -873,7 +894,7 @@ class DarcyMSDG:
             [L_sizes[0][0], L_sizes[0][0]],
             [3*self.L.pde.u_cg[0].nDOF_global, 3*self.L.pde.u_cg[0].nDOF_global]])
         self.Ishell.setType('python')
-        self.Icontext, self.I  = self.L.pde.getInterpolation()
+        self.Icontext, self.I, self.RHS  = self.L.pde.getInterpolation()
         self.Ishell.setPythonContext(self.Icontext)
         #self.Rshell = p4pyPETSc.Mat().create()
         #self.Rshell.setSizes([
@@ -891,7 +912,7 @@ class DarcyMSDG:
         self.hasNullSpace=False
         #logEvent("Done setting up Interpolation")
     def setUp(self):
-        self.Icontext, self.I  = self.L.pde.getInterpolation()
+        self.Icontext, self.I, self.RHS  = self.L.pde.getInterpolation()
         #self.pc.setType('mg')
         #self.pc.setFromOptions()
         #self.pc.setMGInterpolation(1,self.I)
