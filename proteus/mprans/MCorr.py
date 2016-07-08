@@ -600,8 +600,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
         logEvent("Global residual",level=9,data=r)
-        self.coefficients.massConservationError = fabs(globalSum(sum(r.flat[:self.mesh.nNodes_owned])))
-        assert self.coefficients.massConservationError == fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
+        self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         logEvent("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy == None:
