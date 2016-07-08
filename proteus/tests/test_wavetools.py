@@ -837,9 +837,9 @@ class VerifyDirectionals(unittest.TestCase):
                 uyRef += normDir[1]*ai[jj,ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
                 uzRef +=  ai[jj,ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
         self.assertTrue(round(eta,8) == round(etaRef,8) )
-        self.assertTrue(round(ux,8) == round(uxRef,8))
-        self.assertTrue(round(uy,8) == round(uyRef,8))
-        self.assertTrue(round(uz,8) == round(uzRef,8))
+        self.assertTrue(round(ux,8) == round(uxRef,8)   )
+        self.assertTrue(round(uy,8) == round(uyRef,8)   )
+        self.assertTrue(round(uz,8) == round(uzRef,8)   )
 
 
         
@@ -1261,7 +1261,13 @@ class VerifyRandomWavesFast(unittest.TestCase):
         Lgen = 5 * waveDir 
         x0 =  np.array([2.,0.,0 ])
         Tstart = 0.
-        Tend = 150.
+
+        Tend = 5*Tp + round(random.random())*145*Tp
+        if Tend < 15.*Tp:
+            rec_d =True
+        else:
+            rec_d= False
+#        print Tend
         aR= RandomWaves(Tp,
                      Hs,
                      mwl,
@@ -1269,12 +1275,13 @@ class VerifyRandomWavesFast(unittest.TestCase):
                      waveDir,
                      g,
                      N,
-                        bandFactor,       
-                        spectName, 
-                        None,
-                        phi            
+                     bandFactor,       
+                     spectName, 
+                     None,
+                     phi            
                         
                    )
+        
         series = aR.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
         cutoff = 0.2*Tp/(series[-1,0]-series[0,0])
         aT= TimeSeries(
@@ -1287,7 +1294,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
             waveDir,
             g,
             cutoff,
-            False,                                                                                                                                          
+            rec_d,                                                                                                                                          
             {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
             True,
             series
@@ -1589,11 +1596,16 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         phi = 2*pi*np.random.rand(N)
         TMA = True
         spectName = "JONSWAP"
-        bandFactor = 3.
-        Lgen = 5 * waveDir 
+        bandFactor = 2.
+        Lgen = 5. * waveDir 
+        NLongW = 10.
+
+
         x0 =  np.array([2.,0.,0 ])
+
         Tstart = 0.
-        Tend = 80.
+        Tend = 100.
+
         aR= RandomNLWaves(
             Tstart,
             Tend,
@@ -1626,14 +1638,17 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
             phi,
             Lgen)
 
-        Tmax = 4*pi/(max(aR.omega) - min(aR.omega))
+        Tm = Tp/1.1
+        Ts = Tm/2.
+        Tmax = NLongW*Tp
         
         dt_s = (Tp/50.)/2.2
         dt =  (Tp/50.)/1.1
-        dt_l = Tmax/50.
+        dt_l = NLongW*Tp
 
 
         series = aR.writeEtaSeries(Tstart,Tend,dt,x0,fname,"linear",False,Lgen)
+        
         series_l = aR.writeEtaSeries(Tstart,Tend,dt_l,x0,fname,"long",False,Lgen)
         series_s = aR.writeEtaSeries(Tstart,Tend,dt_s,x0,fname,"short",False ,Lgen)
         Tstart = series_s[0,0]
@@ -1641,6 +1656,11 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         cutoff = 0.2*Tp/(Tend-Tstart)
 
 
+        if int(Tend-Tstart)/(Ts) < 15:
+            rec_d = True
+        else:
+            rec_d = False
+        
         aT_s= TimeSeries(
             fname,
             0,
@@ -1651,8 +1671,8 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
             waveDir,
             g,
             cutoff,
-            False,                                                                                                                                      
-            {"Nwaves":15, "Tm":Tp/2.2, "Window":"costap"},
+            rec_d,                                                                                                                                      
+            {"Nwaves":15, "Tm":Ts, "Window":"costap"},
             True,
             series_s
             )        
@@ -1660,6 +1680,10 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         Tend = series[-1,0]
         cutoff = 0.2*Tp/(Tend-Tstart)
 
+        if int(Tend-Tstart)/(Tm) < 15:
+            rec_d = True
+        else:
+            rec_d = False
         aT= TimeSeries(
             fname,
             0,
@@ -1670,14 +1694,20 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
             waveDir,
             g,
             cutoff,
-            False,                                                                                                                                      
-            {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
+            rec_d,                                                                                                                                      
+            {"Nwaves":15, "Tm":Tm, "Window":"costap"},
             True,
             series
             )        
+
+
         Tstart = series_l[0,0]
         Tend = series_l[-1,0]
         cutoff = 0.2*Tp/(Tend-Tstart)
+        if int(Tend-Tstart)/Tmax < 15:
+            rec_d = True
+        else:
+            rec_d = False
 
         aT_l= TimeSeries(
             fname,
@@ -1689,31 +1719,55 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
             waveDir,
             g,
             cutoff,
-            False,                                                          
+            rec_d,                                                          
             {"Nwaves":15, "Tm":Tmax, "Window":"costap"},
             True,
             series_l
             )        
 
 
-        
+#Checking consistency with RandomNLWaves class
+        sumerr = 0
+        sumabs = 0
+
+        for aa in range(len(series)):
+            Tcut =  0.2*Tp
+            if (series[aa,0] > Tcut) and (series[aa,0] < series[-1,0] - Tcut):
+                sumerr += (aR.eta_linear(x0,series[aa,0]) - aT.eta(x0,series[aa,0]))**2
+                sumabs += abs(aR.eta_linear(x0,series[aa,0]))
+
+        err = np.sqrt(sumerr)/len(series)
+        err = err / (sumabs/len(series))
+        self.assertTrue(err < 0.01)
+        print err
+
+
+
+        for aa in range(len(series_s)):
+            Tcut =  0.2*Tp
+            if (series_s[aa,0] > Tcut) and (series_s[aa,0] < series_s[-1,0] - Tcut):
+                sumerr += (aR.eta_short(x0,series_s[aa,0])+aR.eta_2ndOrder(x0,series_s[aa,0]) - aT_s.eta(x0,series_s[aa,0]))**2
+                sumabs += abs( aR.eta_short(x0,series_s[aa,0])+ aR.eta_2ndOrder(x0,series_s[aa,0]) )
+        err = np.sqrt(sumerr)/len(series_s)
+        err = err / (sumabs/len(series_s))
+        self.assertTrue(err < 0.01)
+        print err
+
+        for aa in range(len(series_l)):
+            Tcut =  0.2*Tp
+            if (series_l[aa,0] > Tcut) and (series_l[aa,0] < series_l[-1,0] - Tcut):
+                sumerr += (aR.eta_long(x0,series_l[aa,0]) - aT_l.eta(x0,series_l[aa,0]))**2
+                sumabs += abs(aR.eta_linear(x0,series_l[aa,0]))
+        err = np.sqrt(sumerr)/len(series_l)
+        err = err / (sumabs/len(series_l))
+        self.assertTrue(err < 0.01)
+        print err
+
+
+#Cjecking consistency of the timeSeriesClass
         x = x0 + Lgen * random.random()
-        t = Tstart + random.random()*(Tend-Tstart)
-#        print x,t,aT.eta(x,t),aRF.eta(x,t),aT.u(x,t),aRF.u(x,t)
-        etaT = [Tstart,Tend, fname,
-                0,
-                x0,
-                depth,
-                32,
-                mwl,
-                waveDir,
-                g,##
-                
-                cutoff,
-                False,
-                {"Nwaves":15 ,"Tm":Tp/2.2,"Window":"costap"},
-                True,
-                series_l]
+        t = 50.
+        print aRF.eta(x,t),aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t)
         self.assertTrue(round(aRF.eta(x,t),8) == round(aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t),8))
         self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
 
