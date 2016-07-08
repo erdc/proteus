@@ -14,17 +14,18 @@ import TriangleFileUtils
 
 
 class TriangleBaseMesh:
-    """ This is basically a wrapper for the triangulateio interface
+    """A triangulation interface wrapper.
+
+    This is basically a wrapper for the triangulation interface
     that should be able to create a triangle mesh in different ways
 
-       from .ele and .node files
-       from a .poly file
-       from a proteus mesh
+    * from .ele and .node files
+    * from a .poly file
+    * from a proteus mesh
 
     It should also be able to generate a proteus mesh from the
     triangle representation and allow the user to access the basic
     data arrays in triangle
-
     """
 
     def __init__(self,baseFlags="zen",nbase=0,verbose=0):
@@ -560,9 +561,19 @@ number of edges         = %d
         #do I need to clean up explicitly?
         del tri0
     def readFromPolyFile(self,filebase,flagsAdd="",verbose=0):
-        """
-        read triangle representation from filebase.poly file
-        assumes the nbase data member is set appropriately
+        """Reads in the triangle representation from filebase.poly file.
+
+        Parameters
+        ----------
+        filebase : str
+            The filename with the triangluation.
+        flagsAdd : str
+        verbose : int
+            A flag indicating how much information to pipe to stdout.
+
+        Notes
+        -----
+        Function assumes the nbase data member is set appropriately.
         """
         reader = TriangleUtils.TriangleInputFileReader()
         if verbose > 0:
