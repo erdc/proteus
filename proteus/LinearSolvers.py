@@ -7,6 +7,9 @@ A hierarchy of classes for linear algebraic system solvers.
 from LinearAlgebraTools import *
 import lapackWrappers
 import superluWrappers
+import TransportCoefficients
+import cfemIntegrals
+import Quadrature
 from petsc4py import PETSc as p4pyPETSc
 from math import *
 from .Profiling import logEvent
@@ -687,6 +690,7 @@ class SchurOperatorConstructor:
         self.linear_smoother=linear_smoother
         self.L = linear_smoother.L
         self.pde_type = pde_type
+        self.opBuilder = OperatorConstructor(self.L.pde)
 
     def getQp(self, output_matrix=False):
         """ Return the pressure mass matrix Qp.
@@ -702,7 +706,8 @@ class SchurOperatorConstructor:
             The pressure mass matrix.
         """
         self.Qsys_petsc4py = self._massMatrix()
-        self.Qp = self.Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,self.linear_smoother.isp)
+        self.Qp = self.Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                                  self.linear_smoother.isp)
         if output_matrix==True:
             self._exportMatrix(self.Qp,"Qp")
         return self.Qp
@@ -720,7 +725,8 @@ class SchurOperatorConstructor:
         Qv : matrix
             The velocity mass matrix.
         """
-        Qsys_petsc4py = self._massMatrix()
+        self._massMatrix()
+        Qsys_petsc4py = self.L.pde.MatrixOperator()
         self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
                                              self.linear_smoother.isv)
         if output_matrix==True:
@@ -908,7 +914,7 @@ class SchurOperatorConstructor:
         return self.Av
 
     def _massMatrix(self):
-        """ Generates and returns the mass matrix.
+        """ Generates a the mass matrix.
 
         This function generates and returns the mass matrix for the system. This
         function is internal to the class and called by public functions which 
@@ -919,36 +925,10 @@ class SchurOperatorConstructor:
         Qsys : matrix
             The system's mass matrix.
         """
-        # TODO - figure out why the following commented line doesn't work
-#        Qsys = self._initializeMatrix()
-        rowptr,colind,nzval = self.L.pde.jacobian.getCSRrepresentation()
-        Qsys_rowptr = rowptr.copy()
-        Qsys_colind = colind.copy()
-        Qsys_nzval = nzval.copy()
-        nr = rowptr.shape[0] - 1
-        nc = nr
-        Qsys = SparseMat(nr,nc,
-                         Qsys_nzval.shape[0],
-                         Qsys_nzval,
-                         Qsys_colind,
-                         Qsys_rowptr)
-        self.L.pde.q[('dm',0,0)][:] = 1.0
-        self.L.pde.q[('dm',1,1)][:] = 1.0
-        self.L.pde.q[('dm',2,2)][:] = 1.0
-        self.L.pde.getMassJacobian(Qsys)
-        Qsys_petsc4py = self.L.duplicate()
-        L_sizes = self.L.getSizes()
-        Q_csr_rep_local = Qsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
-        Qsys_petsc4py.setValuesLocalCSR(Q_csr_rep_local[0],
-                                        Q_csr_rep_local[1],
-                                        Q_csr_rep_local[2],
-                                        p4pyPETSc.InsertMode.INSERT_VALUES)
-        Qsys_petsc4py.assemblyBegin()
-        Qsys_petsc4py.assemblyEnd()
-        self.L.pde.q[('dm',0,0)][:] = 0.0
-        self.L.pde.q[('dm',1,1)][:] = 0.0
-        self.L.pde.q[('dm',2,2)][:] = 0.0
-        return Qsys_petsc4py
+        self.opBuilder.attachMassOperator()
+        import pdb
+        pdb.set_trace()
+        return superlu_2_petsc4py(self.opBuilder.MassOperator)
 
     def _getLaplace(self,output_matrix=False):
         """ Return the Laplacian pressure matrix Ap.
@@ -2452,4 +2432,248 @@ if __name__ == '__main__':
     raw_input('Please press return to continue... \n')
 
 
+class StorageSet(set):
+    def __init__(self,initializer=[],shape=(0,),storageType='d'):
+        set.__init__(self,initializer)
+        self.shape = shape
+        self.storageType = storageType
+    def allocate(self,storageDict):
+        for k in self:
+            storageDict[k] = numpy.zeros(self.shape,self.storageType)
+
+class OperatorConstructor:
+    """ A class for building common discrete operators. 
     
+    Arguments
+    ---------
+    OLT : :class:`proteus.Transport.OneLevelTransport`
+        One level transport class from which operator construction 
+        will be based.
+    """
+    def __init__(self,OLT):
+        self.OLT = OLT
+        self._initializeOperatorConstruction()
+        self.massOperatorAttached = False
+
+    def _initializeOperatorConstruction(self):
+        """ Collect basic values used by all attach operators functions. """
+        self._operatorQ = {}
+        self._attachJacobianInfo(self._operatorQ)
+        self._attachTestInfo(self._operatorQ)
+        self._attachTrialInfo(self._operatorQ)
+
+    def _attachJacobianInfo(self,Q):
+        """ This helper function attaches quadrature data related to 'J'
+
+        Arguments
+        ---------
+        Q : dict
+            A dictionary to store values at quadrature points.
+        """
+        scalar_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                        self.OLT.nQuadraturePoints_element) ) 
+        tensor_quad = StorageSet(shape={})
+
+        tensor_quad |= set(['J',
+                            'inverse(J)'])
+        scalar_quad |= set(['det(J)',
+                            'abs(det(J))'])
+
+        for k in tensor_quad:
+            Q[k] = numpy.zeros((self.OLT.mesh.nElements_global,
+                                self.OLT.nQuadraturePoints_element,
+                                self.OLT.nSpace_global,
+                                self.OLT.nSpace_global),
+                                'd')
+
+        scalar_quad.allocate(Q)
+
+        self.OLT.u[0].femSpace.elementMaps.getJacobianValues(self.OLT.elementQuadraturePoints,
+                                                             Q['J'],
+                                                             Q['inverse(J)'],
+                                                             Q['det(J)'])
+        Q['abs(det(J))'] = numpy.absolute(Q['det(J)'])
+
+    def _attachTestInfo(self,Q):
+        """ Attach quadrature data for test functions.
+        
+        Arguments
+        ---------
+        Q : dict
+            A dictionary to store values at quadrature points.
+        """
+        test_shape_quad = StorageSet(shape={})
+
+        test_shape_quad |= set([('w',ci) for ci in range(self.OLT.nc)])
+        
+        for k in test_shape_quad:
+            Q[k] = numpy.zeros(
+                (self.OLT.mesh.nElements_global,
+                 self.OLT.nQuadraturePoints_element,
+                 self.OLT.nDOF_test_element[k[-1]]),
+                'd')
+
+        for ci in range(self.OLT.nc):
+            if Q.has_key(('w',ci)):
+                self.OLT.testSpace[ci].getBasisValues(self.OLT.elementQuadraturePoints,
+                                                      Q[('w',ci)])                                                    
+
+    def _attachTrialInfo(self,Q):
+        """ Attach quadrature data for trial functions.
+
+        Arguments
+        ---------
+        Q : dict
+            A dictionary to store values at quadrature points.
+        """
+        trial_shape_quad = StorageSet(shape={})
+        
+        trial_shape_quad |= set([('v',ci) for ci in range(self.OLT.nc)])
+
+        for k in trial_shape_quad:
+            Q[k] = numpy.zeros(
+                (self.OLT.mesh.nElements_global,
+                 self.OLT.nQuadraturePoints_element,
+                 self.OLT.nDOF_test_element[k[-1]]),
+                'd')
+
+        for ci in range(self.OLT.nc):
+            if Q.has_key(('v',ci)):
+                self.OLT.testSpace[ci].getBasisValues(self.OLT.elementQuadraturePoints,
+                                                      Q[('v',ci)])
+        
+    def _allocateMatrixSpace(self,coeff,matrixDict):
+        """ Allocate space for Operator Matrix """
+        for ci in range(self.OLT.nc):
+            matrixDict[ci] = {}
+            for cj in range(self.OLT.nc):
+                if cj in coeff.stencil[ci]:
+                    matrixDict[ci][cj] = numpy.zeros(
+                        (self.OLT.mesh.nElements_global,
+                         self.OLT.nDOF_test_element[ci],
+                         self.OLT.nDOF_trial_element[cj]),
+                        'd')
+
+    def _createOperator(self,coeff,matrixDict,A):
+        """ Takes the matrix dictionary and creates a CSR matrix """
+        for ci in range(self.OLT.nc):
+            for cj in coeff.stencil[ci]:
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.OLT.l2g[ci]['nFreeDOF'],
+                                                                          self.OLT.l2g[ci]['freeLocal'],
+                                                                          self.OLT.l2g[cj]['nFreeDOF'],
+                                                                          self.OLT.l2g[cj]['freeLocal'],
+                                                                          self.OLT.csrRowIndeces[(ci,cj)],
+                                                                          self.OLT.csrColumnOffsets[(ci,cj)],
+                                                                          matrixDict[ci][cj],
+                                                                          A)
+
+
+    def attachMassOperator(self,rho=1.,recalculate=False):
+        """Attach a discrete Mass Operator to the Transport class. """
+        mass_val = self.OLT.nzval.copy()
+        self.MassOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                      self.OLT.nFreeVDOF_global,
+                                      self.OLT.nnz,
+                                      mass_val,
+                                      self.OLT.colind,
+                                      self.OLT.rowptr)
+
+        _nd = self.OLT.coefficients.nd
+        if self.OLT.coefficients.rho != None:
+            _rho = self.OLT.coefficients.rho
+        self.MassOperatorCoeff = TransportCoefficients.DiscreteMassMatrix(rho=_rho, nd=_nd)
+        _t = 1.0
+
+        Mass_q = {}
+        self._allocateMassOperatorQStorageSpace(Mass_q)
+        self._calculateMassOperatorQ(Mass_q)
+        
+        if _nd == 2:
+            self.MassOperatorCoeff.evaluate(_t,Mass_q)
+
+        Mass_Jacobian = {}
+        self._allocateMatrixSpace(self.MassOperatorCoeff,
+                                  Mass_Jacobian)
+   
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            for cj in cjDict:
+                cfemIntegrals.updateMassJacobian_weak(Mass_q[('dm',ci,cj)],
+                                                      Mass_q[('vXw*dV_m',cj,ci)],
+                                                      Mass_Jacobian[ci][cj])
+
+
+        self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.MassOperator)
+        self.massOperatorAttached = True
+        import pdb
+        pdb.set_trace()
+
+        
+    def _allocateMassOperatorQStorageSpace(self,Q):
+        """ Allocate space for mass operator values. """
+        test_shape_quad = StorageSet(shape={})
+        trial_shape_quad = StorageSet(shape={})
+        trial_shape_X_test_shape_quad = StorageSet(shape={})
+        tensor_quad = StorageSet(shape={})
+        scalar_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                        self.OLT.nQuadraturePoints_element,
+                                        3))
+  
+        scalar_quad |= set([('u',ci) for ci in range(self.OLT.nc)])
+        scalar_quad |= set([('m',ci) for ci in self.MassOperatorCoeff.mass.keys()])
+
+        test_shape_quad |= set([('w*dV_m',ci) for ci in self.MassOperatorCoeff.mass.keys()])
+
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            trial_shape_X_test_shape_quad |= set([('vXw*dV_m',cj,ci) for cj in cjDict.keys()])
+
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            scalar_quad |= set([('dm',ci,cj) for cj in cjDict.keys()])
+
+        for k in tensor_quad:
+            Q[k] = numpy.zeros(
+                (self.OLT.mesh.nElements_global,
+                 self.OLT.nQuadraturePoints_element,
+                 self.OLT.nSpace_global,
+                 self.OLT.nSpace_global),
+                'd')
+
+        for k in test_shape_quad:
+            Q[k] = numpy.zeros(
+                (self.OLT.mesh.nElements_global,
+                 self.OLT.nQuadraturePoints_element,
+                 self.OLT.nDOF_test_element[k[-1]]),
+                'd')
+
+        for k in trial_shape_X_test_shape_quad:
+            Q[k] = numpy.zeros((self.OLT.mesh.nElements_global,
+                                self.OLT.nQuadraturePoints_element,
+                                self.OLT.nDOF_trial_element[k[1]],
+                                self.OLT.nDOF_test_element[k[2]]),'d')
+
+        scalar_quad.allocate(Q)
+
+    def _calculateMassOperatorQ(self,Q):
+        """ Calculate values for mass operator. """
+        elementQuadratureDict = {}
+
+        elementQuadrature = Quadrature.SimplexGaussQuadrature(nd=self.OLT.nSpace_global,order=4)
+
+        for ci in self.MassOperatorCoeff.mass.keys():
+            elementQuadratureDict[('m',ci)] = elementQuadrature
+        (elementQuadraturePoints,elementQuadratureWeights,
+         elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
+
+
+
+        for ci in range(self.OLT.nc):
+            if Q.has_key(('w*dV_m',ci)):
+                print "***" + `ci` + "***"
+                cfemIntegrals.calculateWeightedShape(elementQuadratureWeights[('m',ci)],
+                                                     self._operatorQ['abs(det(J))'],
+                                                     self._operatorQ[('w',ci)],
+                                                     Q[('w*dV_m',ci)])
+
+        for ci in zip(range(self.OLT.nc),range(self.OLT.nc)):
+                cfemIntegrals.calculateShape_X_weightedShape(self._operatorQ[('v',ci[1])],
+                                                             Q[('w*dV_m',ci[0])],
+                                                             Q[('vXw*dV_m',ci[1],ci[0])])

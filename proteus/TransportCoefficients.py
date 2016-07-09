@@ -10508,4 +10508,3 @@ class DiscreteMassMatrix(TC_base):
                                   c[('dm',1,1)],
                                   c[('dm',2,2)],
                                   c[('dm',3,3)])
->>>>>>> mass_matrix
