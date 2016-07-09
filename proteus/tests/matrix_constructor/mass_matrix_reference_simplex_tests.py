@@ -2,6 +2,15 @@
 """
 Test module for 2D Quadrilateral Meshes
 """
+import os,sys,inspect
+
+cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe()  ))[0]))
+if cmd_folder not in sys.path:
+    sys.path.insert(0,cmd_folder)
+
+cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],"import_modules")))
+if cmd_subfolder not in sys.path:
+    sys.path.insert(0,cmd_subfolder)
 
 from proteus.iproteus import *
 from proteus import Comm
@@ -51,16 +60,19 @@ class TestMassConstruction2D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.mass_matrix_object.modelList[0].levelModelList[0].getMassJacobian(self.Asys)
         mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        comparison_mat = numpy.loadtxt('mass_reference_c0p1_2D.txt')
+        comparison_mat = numpy.loadtxt('./comparison_files/mass_reference_c0p1_2D.txt')
         assert numpy.allclose(mass_mat,comparison_mat)
 
 
     def test_2(self):
         """ Tests the attachMassOperator function in one-level-transport """
         mm = self.mass_matrix_object.modelList[0].levelModelList[0]
-        mm.attachMassOperator()
-        mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(mm.MassOperator)
-        comparison_mat = numpy.loadtxt('mass_reference_c0p1_2D.txt')
+        op_constructor = LinearSolvers.OperatorConstructor(mm)
+        op_constructor.attachMassOperator()
+        mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.MassOperator)
+        comparison_mat = numpy.loadtxt('./comparison_files/mass_reference_c0p1_2D.txt')
+        import pdb
+        pdb.set_trace()
         assert numpy.allclose(mass_mat,comparison_mat)
 
 if __name__ == '__main__':

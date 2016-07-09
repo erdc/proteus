@@ -428,7 +428,7 @@ class NS_base:  # (HasTraits):
                 computeLevelSolverRates=n.computeLevelLinearSolverRates,
                 printLevelSolverInfo=n.printLevelLinearSolverInfo,
                 smootherType = n.linearSmoother,
-                boundaryNullSpace = n.boundaryCreatesNullSpace,
+                boundaryNullSpace = p.boundaryCreatesNullSpace,
                 computeSmootherRates=n.computeLinearSmootherRates,
                 printSmootherInfo=n.printLinearSmootherInfo,
                 prolongList = model.meshTransfers.prolongList,

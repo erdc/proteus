@@ -710,8 +710,6 @@ class LSCInv_shell(InvOperatorShell):
         pass
 
 
-=======
->>>>>>> mass_matrix
 def l2Norm(x):
     """
     Compute the parallel :math:`l_2` norm
