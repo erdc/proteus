@@ -4,7 +4,18 @@
 Test module for the pressure mass matrix schur complement
 
 """
-import os
+import os,sys,inspect
+cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
+if cmd_folder not in sys.path:
+    sys.path.insert(0,cmd_folder)
+
+cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],
+                                                              "import_modules")))
+cmd_subfolder_0 = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],
+                                                              "comparison_files")))
+if cmd_subfolder not in sys.path:
+    sys.path.insert(0,cmd_subfolder)
+
 import tables
 import numpy as np
 from proteus.iproteus import *
@@ -99,21 +110,17 @@ class TestStokesOperatorConstruction():
         Qv_petsc = self.operator_constructor.getQv()
         Qv_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qv_petsc)
 
-        pressure_mass_matrix = np.loadtxt('pressure_mass_matrix.txt')
-        velocity_mass_matrix = np.loadtxt('velocity_mass_matrix.txt')
+        pressure_mass_matrix = np.loadtxt('./comparison_files/pressure_mass_matrix.txt')
+        velocity_mass_matrix = np.loadtxt('./comparison_files/velocity_mass_matrix.txt')
 
         assert np.allclose(pressure_mass_matrix,Qp_dense)
         assert np.allclose(velocity_mass_matrix,Qv_dense)
 
     def test_02_PressureLaplace(self):
         ''' Test the pressure Lapacian matrix '''
-        # ARB : I don't remember why I need to do this!
-        self.ns.modelList[0].levelModelList[1].dphi[(0,0)].dof[:] = 1.0
-        self.ns.modelList[0].levelModelList[1].dphi[(1,1)].dof[:] = 1.0
-        self.ns.modelList[0].levelModelList[1].dphi[(2,2)].dof[:] = 1.0
         Ap_raw = self.operator_constructor.getAp()
         Ap_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Ap_raw)
-        pressure_laplace_matrix = np.loadtxt('pressure_laplace_matrix.txt')
+        pressure_laplace_matrix = np.loadtxt('./comparison_files/pressure_laplace_matrix.txt')
         assert np.allclose(pressure_laplace_matrix,Ap_dense)
 
     def test_03_B(self):
@@ -131,8 +138,9 @@ class TestStokesOperatorConstruction():
     def test_05_FullRun(self):
         """ Test the Poiseulle Flow runs and produces expected h5 output """
         self.ns.calculateSolution('test_Qp_mat')
-        test_path = os.path.dirname(os.path.abspath(__file__))
-        expected = tables.openFile(os.path.join(test_path,
+        import pdb
+        pdb.set_trace()
+        expected = tables.openFile(os.path.join(cmd_subfolder_0,
                                    'poiseulleFlow_expected.h5'),
                                    'r')
         actual = tables.openFile('poiseulleFlow.h5','r')
@@ -148,5 +156,6 @@ if __name__ == '__main__':
     comm = Comm.init()   
     test = TestStokesOperatorConstruction()
     test.setUp()
-#    test.test_02_PressureLaplace()
     test.test_05_FullRun()
+#    test.test_02_MassMatrix()
+    test.tearDown()

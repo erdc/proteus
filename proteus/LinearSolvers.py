@@ -726,8 +726,7 @@ class SchurOperatorConstructor:
         Qv : matrix
             The velocity mass matrix.
         """
-        self._massMatrix()
-        Qsys_petsc4py = self.L.pde.MatrixOperator()
+        Qsys_petsc4py = self._massMatrix()
         self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
                                              self.linear_smoother.isv)
         if output_matrix==True:
@@ -927,8 +926,6 @@ class SchurOperatorConstructor:
             The system's mass matrix.
         """
         self.opBuilder.attachMassOperator()
-        import pdb
-        pdb.set_trace()
         return superlu_2_petsc4py(self.opBuilder.MassOperator)
 
     def _getLaplace(self,output_matrix=False):
@@ -946,74 +943,8 @@ class SchurOperatorConstructor:
 
         TODO (ARB)  Write supporting tests.
         """
-        #modify the diffusion term in the mass equation so the p-p block is Ap
-        self.L.pde.coefficients.evaluate(0.0,self.L.pde.q)
-        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-        self.Asys_rowptr = rowptr.copy()
-        self.Asys_colind = colind.copy()
-        self.Asys_nzval = nzval.copy()
-        L_sizes = self.L.getSizes()
-        nr = L_sizes[0][0]
-        nc = L_sizes[1][0]
-        self.Asys =SparseMat(nr,nc,
-                             self.Asys_nzval.shape[0],
-                             self.Asys_nzval,
-                             self.Asys_colind,
-                             self.Asys_rowptr)
-        # Set the diffusion coefficient terms to the same thing
-        # as the velocity coeffiicents.
-        self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
-        # Remove the coefficients on the advection terms.
-        self.L.pde.q[('df',0,0)][:] = 0.0
-        self.L.pde.q[('df',0,1)][:] = 0.0
-        self.L.pde.q[('df',0,2)][:] = 0.0
-
-        tmp1 = self.L.pde.q[('f',1)].copy()
-        tmp2 = self.L.pde.q[('f',2)].copy()
-     
-        tmp3 = self.L.pde.q[('df',1,0)].copy()
-        tmp4 = self.L.pde.q[('df',1,1)].copy()
-        tmp5 = self.L.pde.q[('df',1,2)].copy()
-        
-        tmp6 = self.L.pde.q[('df',2,0)].copy()
-        tmp7 = self.L.pde.q[('df',2,1)].copy()
-        tmp8 = self.L.pde.q[('df',2,2)].copy()
-
-        self.L.pde.q[('f',1)][:] = 0.0
-        self.L.pde.q[('f',2)][:] = 0.0
-
-        self.L.pde.q[('df',1,0)][:] = 0.0
-        self.L.pde.q[('df',1,1)][:] = 0.0
-        self.L.pde.q[('df',1,2)][:] = 0.0
-
-        self.L.pde.q[('df',2,0)][:] = 0.0
-        self.L.pde.q[('df',2,1)][:] = 0.0
-        self.L.pde.q[('df',2,2)][:] = 0.0
-
-        self.L.pde.getSpatialJacobian(self.Asys)#notice switched to  Spatial
-        Asys_petsc4py = self.L.duplicate()
-        A_csr_rep_local = self.Asys.getSubMatCSRrepresentation(0,L_sizes[0][0])
-        Asys_petsc4py.setValuesLocalCSR(A_csr_rep_local[0],
-                                        A_csr_rep_local[1],
-                                        A_csr_rep_local[2],
-                                        p4pyPETSc.InsertMode.INSERT_VALUES)
-        Asys_petsc4py.assemblyBegin()
-        Asys_petsc4py.assemblyEnd()
-        self.L.pde.q[('a',0,0)][:] = 0.0
-        self.L.pde.q[('df',0,1)][...,0] = 1.0
-        self.L.pde.q[('df',0,2)][...,1] = 1.0
-
-        self.L.pde.q[('f',1)] = tmp1
-        self.L.pde.q[('f',2)] = tmp2
-
-        self.L.pde.q[('df',1,0)] = tmp3
-        self.L.pde.q[('df',1,1)] = tmp4
-        self.L.pde.q[('df',1,2)] = tmp5
-
-        self.L.pde.q[('df',2,0)] = tmp6
-        self.L.pde.q[('df',2,1)] = tmp7
-        self.L.pde.q[('df',2,2)] = tmp8
-        return Asys_petsc4py
+        self.opBuilder.attachLaplaceOperator()
+        return superlu_2_petsc4py(self.opBuilder.LaplaceOperator)
 
     def _setupB(self):
         """ Initializes construction of the B operator. """
