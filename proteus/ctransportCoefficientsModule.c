@@ -2935,6 +2935,7 @@ static PyObject* ctransportCoefficientsMass_3D_Evaluate(PyObject* self,
 
   Py_INCREF(Py_None);
   return Py_None;
+}
 
 static PyObject* ctransportCoefficientsLaplace_2D_Evaluate(PyObject* self,
 							PyObject* args)
@@ -2956,17 +2957,17 @@ static PyObject* ctransportCoefficientsLaplace_2D_Evaluate(PyObject* self,
     nPoints *= SHAPE(p)[i];
   }
 
-  Laplace_Evaluate2D(nPoints,
-		   DDATA(mom_p_diff_ten),
-		   DDATA(mom_u_diff_ten),
-		   DDATA(mom_v_diff_ten));
+  Laplace_2D_Evaluate(nPoints,
+		      DDATA(mom_p_diff_ten),
+		      DDATA(mom_u_diff_ten),
+		      DDATA(mom_v_diff_ten));
 
   Py_INCREF(Py_None);
   return Py_None;	
 }
 
 static PyObject* ctransportCoefficientsLaplace_3D_Evaluate(PyObject* self,
-							PyObject* args)
+							   PyObject* args)
 {
   int i,nPoints=1;
   PyObject *u,*v,*w,*p,*mom_u_diff_ten,*mom_v_diff_ten,
@@ -2987,15 +2988,14 @@ static PyObject* ctransportCoefficientsLaplace_3D_Evaluate(PyObject* self,
     nPoints *= SHAPE(p)[i];
   }
 
-  Laplace_Evaluate3D(nPoints,
-		   DDATA(mom_p_diff_ten),
-		   DDATA(mom_u_diff_ten),
-		   DDATA(mom_v_diff_ten),
-		   DDATA(mom_w_diff_ten));
+  Laplace_3D_Evaluate(nPoints,
+		      DDATA(mom_p_diff_ten),
+		      DDATA(mom_u_diff_ten),
+		      DDATA(mom_v_diff_ten),
+		      DDATA(mom_w_diff_ten));
 
   Py_INCREF(Py_None);
   return Py_None;	
->>>>>>> laplace_matrix
 }
 
 
