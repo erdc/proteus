@@ -43,7 +43,8 @@ class TestAdvectionConstruction2D():
                     "reference_triangle_2d.ele",
                     "reference_triangle_2d.node",
                     "reference_triangle_2d.face",
-                    "reference_triangle_2d.poly"]
+                    "reference_triangle_2d.poly",
+                    "rdomain.poly"]
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
