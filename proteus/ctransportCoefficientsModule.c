@@ -2998,6 +2998,131 @@ static PyObject* ctransportCoefficientsLaplace_3D_Evaluate(PyObject* self,
   return Py_None;	
 }
 
+static PyObject* ctransportCoefficientsAdvection_2D_Evaluate(PyObject* self,
+							     PyObject* args)
+{
+  int i,nPoints=1;
+  PyObject *p,
+    *u,
+    *v,
+    *mass_adv,
+    *dmass_adv_p,
+    *dmass_adv_u,
+    *dmass_adv_v,
+    *mom_u_adv,
+    *dmom_u_adv_u,
+    *dmom_u_adv_v,
+    *mom_v_adv,
+    *dmom_v_adv_u,
+    *dmom_v_adv_v;
+  
+  if (!PyArg_ParseTuple(args,"OOOOOOOOOOOOO",
+			&p,
+			&u,
+			&v,
+			&mass_adv,
+			&mom_u_adv,
+			&mom_v_adv,
+			&dmass_adv_p,
+			&dmass_adv_u,
+			&dmass_adv_v,
+			&dmom_u_adv_u,
+			&dmom_u_adv_v,
+			&dmom_v_adv_u,
+			&dmom_v_adv_v))
+  return NULL;
+
+  for (i=0;i<ND(p);i++)
+    nPoints *= SHAPE(p)[i];
+
+
+  Advection_2D_Evaluate(nPoints,
+			DDATA(p),
+			DDATA(u),
+			DDATA(v),
+			DDATA(mass_adv),
+			DDATA(dmass_adv_p),
+			DDATA(dmass_adv_u),
+			DDATA(dmass_adv_v),
+			DDATA(mom_u_adv),
+			DDATA(dmom_u_adv_u),
+			DDATA(dmom_u_adv_v),
+			DDATA(mom_v_adv),
+			DDATA(dmom_v_adv_u),
+			DDATA(dmom_v_adv_v));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject* ctransportCoefficientsAdvection_3D_Evaluate(PyObject* self,
+							     PyObject* args)
+{
+  int i,nPoints=1;
+  PyObject *p,
+    *u,
+    *v,
+    *w,
+    *mass_adv,
+    *dmass_adv_u,
+    *dmass_adv_v,
+    *dmass_adv_w,
+    *mom_u_adv,
+    *dmom_u_adv_u,
+    *dmom_u_adv_v,
+    *dmom_u_adv_w,
+    *mom_v_adv,
+    *dmom_v_adv_u,
+    *dmom_v_adv_v,
+    *dmom_v_adv_w,
+    *mom_w_adv,
+    *dmom_w_adv_u,
+    *dmom_w_adv_v,
+    *dmom_w_adv_w;
+  if (!PyArg_ParseTuple(args,"OOOOOOOOOOOOOOOOOOOO",
+			&mass_adv,
+			&mom_u_adv,
+			&mom_v_adv,
+			&mom_w_adv,
+			&dmass_adv_u,
+			&dmass_adv_v,
+			&dmass_adv_w,
+			&dmom_u_adv_u,
+			&dmom_u_adv_v,
+			&dmom_u_adv_w,
+			&dmom_v_adv_u,
+			&dmom_v_adv_v,
+			&dmom_v_adv_w,
+			&dmom_w_adv_u,
+			&dmom_w_adv_v,
+			&dmom_w_adv_w))
+  return NULL;
+  for (i=0;i<ND(p);i++)
+    nPoints *= SHAPE(p)[i];
+
+  Advection_3D_Evaluate(nPoints,
+			DDATA(p),
+			DDATA(u),
+			DDATA(v),
+			DDATA(w),
+			DDATA(mass_adv),
+			DDATA(dmass_adv_u),
+			DDATA(dmass_adv_v),
+			DDATA(dmass_adv_w),
+			DDATA(mom_u_adv),
+			DDATA(dmom_u_adv_u),
+			DDATA(dmom_u_adv_v),
+			DDATA(dmom_u_adv_w),
+			DDATA(mom_v_adv),
+			DDATA(dmom_v_adv_u),
+			DDATA(dmom_v_adv_v),
+			DDATA(dmom_v_adv_w),
+			DDATA(mom_w_adv),
+			DDATA(dmom_w_adv_u),
+			DDATA(dmom_w_adv_v),
+			DDATA(dmom_w_adv_w));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
 
 static PyObject* ctransportCoefficientsNavierStokes_2D_Evaluate(PyObject* self, 
                                                                 PyObject* args)
@@ -9860,6 +9985,14 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
     ctransportCoefficientsMass_3D_Evaluate,
     METH_VARARGS, 
     "evaluate the coefficients  of a 3D mass matrix"}, 
+  { "Advection_2D_Evaluate", 
+    ctransportCoefficientsAdvection_2D_Evaluate,
+    METH_VARARGS, 
+    "evaluate the coefficients  of the 2D Advection equations"}, 
+  { "Advection_3D_Evaluate", 
+    ctransportCoefficientsAdvection_3D_Evaluate,
+    METH_VARARGS, 
+    "evaluate the coefficients  of the 3D Advection equations"}, 
   { "NavierStokes_2D_Evaluate", 
     ctransportCoefficientsNavierStokes_2D_Evaluate,
     METH_VARARGS, 

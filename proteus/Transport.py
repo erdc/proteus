@@ -3199,6 +3199,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         #get functions of (t,x,u) at the quadrature points
         #
+
         self.coefficients.evaluate(self.timeIntegration.t,self.q)
         if self.movingDomain and self.coefficients.movingDomain:
             self.coefficients.updateToMovingDomain(self.timeIntegration.t,self.q)
