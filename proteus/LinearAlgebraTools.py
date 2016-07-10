@@ -396,6 +396,127 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
 
+class MatrixShell:
+    """ A shell class for a matrix. """
+    def __init__(self,A):
+        """
+        Specifies a basic matrix shell.
+
+        Parameters
+        ----------
+        A : matrix
+            A petsc4py matrix object
+        """
+        self.A = A
+    def create(self,A):
+        pass
+    def mult(self,A,x,y):
+        """
+        Multiply the matrix and x.
+
+        Parameters
+        ----------
+        A : matrix
+            Dummy place holder for PETSc compatibility
+        x : vector
+
+        Returns
+        -------
+        y : vector
+        """
+        self.A.mult(x,y)
+
+class MatrixInvShell:
+    """ A PETSc shell class for a inverse operator. """
+    def __init__(self, A):
+        """
+        Initializes operators and solvers for inverse operator.
+
+        Parameters
+        ----------
+        A : PETSc matrix
+            This is the matrix object used to construct the inverse.
+        """
+        self.A = A
+        self.ksp = p4pyPETSc.KSP().create()
+        self.ksp.setOperators(self.A,self.A)
+        self.ksp.setType('preonly')
+        self.ksp.pc.setType('lu')
+        self.ksp.setUp()
+    def create(self,A):
+        pass
+    def apply(self,A,x,y):
+        """
+        Apply the inverse pressure mass matrix.
+
+        Parameters
+        ----------
+        A : matrix
+            Dummy place holder for PETSc compatibility
+        x : vector
+
+        Returns
+        -------
+        y : vector
+        """
+        self.ksp.solve(x,y)
+
+class PCDInv_shell:
+    """ Shell class for the PCD Inverse preconditioner """
+    def __init__(self,Qp_matrix,Fp_matrix,Ap_matrix):
+        """
+        Initializes the pressure-convection-diffusion inverse operator.
+
+        Parameters
+        ----------
+        Qp_matrix : petsc4py matrix object
+                    The pressure mass matrix.
+        Fp_matrix : petsc4py matrix object
+                    Convection-diffusion operator.
+        Ap_matrix : petsc4py matrix object
+                    The pressure Laplacian operator.
+        """
+        self.Qp = Qp_matrix
+        self.Fp = Fp_matrix
+        self.Ap = Ap_matrix
+        # initialize kspAp
+        self.kspAp = p4pyPETSc.KSP().create()
+        self.kspAp.setOperators(self.Ap,self.Ap)
+        self.kspAp.setType('preonly')
+        self.kspAp.pc.setType('lu')
+        self.kspAp.setUp()
+        # initialize kspQp
+        self.kspQp = p4pyPETSc.KSP().create()
+        self.kspQp.setOperators(self.Qp,self.Qp)
+        self.kspQp.setType('preonly')
+        self.kspQp.pc.setType('lu')
+        self.kspQp.setUp()
+    def create(self,A):
+        pass
+    def apply(self,A,x,y):
+        """  
+        Apply the inverse pressure-convection-diffusion operator.
+
+        Parameters
+        ----------
+        A : matrix
+            Dummy variable needed to interface with PETSc.
+        x : vector
+
+        Returns
+        -------
+        y : vector
+        """
+        temp1 = p4pyPETSc.Vec().create()
+        temp1.setType('seq')
+        temp2 = p4pyPETSc.Vec().create()
+        temp2.setType('seq')
+        temp1 = y.copy()
+        temp2 = y.copy()
+        self.kspAp.solve(x,temp1)
+        self.Fp.mult(temp1,temp2)
+        self.kspQp.solve(temp2,y)
+
 def l2Norm(x):
     """
     Compute the parallel :math:`l_2` norm
