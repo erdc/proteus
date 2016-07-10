@@ -78,5 +78,5 @@ class TestMassConstruction2D():
 if __name__ == '__main__':
     tt = TestMassConstruction2D()
     tt.setUp()
-    tt.test_2()
+    tt.test_1()
     tt.tearDown()

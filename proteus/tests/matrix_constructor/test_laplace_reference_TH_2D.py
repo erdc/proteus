@@ -71,16 +71,17 @@ class TestMassConstruction2D():
     def test_2(self):
         """ Tests the attachMassOperator function in one-level-transport """
         mm = self.Laplace_object.modelList[0].levelModelList[0]
-        mm.attachLaplaceOperator()
-        Laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(mm.LaplaceOperator)
+        op_constructor = LinearSolvers.OperatorConstructor(mm)
+        op_constructor.attachLaplaceOperator()
+        Laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.LaplaceOperator)
         comparison_mat = numpy.load('./comparison_files/Laplace_mat_reference_element_1.npy')
         assert numpy.allclose(Laplace_mat,comparison_mat)
 
 if __name__ == '__main__':
     tt = TestMassConstruction2D()
     tt.setUp()
+#    tt.test_2()
+#    tt.tearDown()
+ #   tt.setUp()
     tt.test_2()
-    tt.tearDown()
-    tt.setUp()
-    tt.test_1()
     tt.tearDown()

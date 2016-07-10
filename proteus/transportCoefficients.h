@@ -2010,6 +2010,18 @@ void ThreephaseNavierStokes_ST_LS_SO_3D_Evaluate(const int nPoints,
 						 double *mom_w_ham,
 						 double *dmom_w_ham_grad_p);
 
+
+void Laplace_2D_Evaluate(const int nPoints,
+			 double *mom_p_diff_ten,
+			 double *mom_u_diff_ten,
+			 double *mom_v_diff_ten);
+
+void Laplace_3D_Evaluate(const int nPoints,
+			 double *mom_p_diff_ten,
+			 double *mom_u_diff_ten,
+			 double *mom_v_diff_ten,
+			 double *mom_w_diff_ten);
+
 /* int findInterval(const double* vertices, int nv, double x, int* ival, double tol); */
 
 /* void piecewiseLinearTableLookup(double x, */
