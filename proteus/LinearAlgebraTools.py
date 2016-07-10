@@ -353,8 +353,8 @@ def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
     32-bit integer data types.
     """
     if (colind.dtype != 'int32' or rowptr.dtype != 'int32'):
-        print('ERROR - colind and rowptr must be "int32" numpy arrays for ' \
-              'superluWrappers')
+        logEvent('ERROR - colind and rowptr must be "int32" numpy arrays for ' \
+                 'superluWrappers')
         sys.exit(1)
     return superluWrappers.SparseMatrix(nr,nc,nnz,nzval,colind,rowptr)
 
