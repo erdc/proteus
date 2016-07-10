@@ -2455,6 +2455,8 @@ class OperatorConstructor:
         self.OLT = OLT
         self._initializeOperatorConstruction()
         self.massOperatorAttached = False
+        self.laplaceOperatorAttached = False
+        self.advectionOperatorAttached = False
 
     def attachMassOperator(self,rho=1.,recalculate=False):
         """Create a discrete Mass Operator matrix. """
@@ -2474,11 +2476,10 @@ class OperatorConstructor:
 
         Mass_q = {}
         self._allocateMassOperatorQStorageSpace(Mass_q)
-        self._calculateMassOperatorQ(Mass_q)
-        
         if _nd == 2:
             self.MassOperatorCoeff.evaluate(_t,Mass_q)
-
+        self._calculateMassOperatorQ(Mass_q)
+        
         Mass_Jacobian = {}
         self._allocateMatrixSpace(self.MassOperatorCoeff,
                                   Mass_Jacobian)
@@ -2513,12 +2514,11 @@ class OperatorConstructor:
         self._initializeLaplacePhiFunctions(Laplace_phi,Laplace_dphi)
 
         Laplace_q = {}
-        self._initializeLaplaceOperatorQStorageSpace(Laplace_q)
-        self._calculateLaplaceOperatorQ(Laplace_q)
-        
+        self._allocateLaplaceOperatorQStorageSpace(Laplace_q)
         if _nd==2:
             self.LaplaceOperatorCoeff.evaluate(_t,Laplace_q)
-
+        self._calculateLaplaceOperatorQ(Laplace_q)
+        
         Laplace_Jacobian = {}
         self._allocateMatrixSpace(self.LaplaceOperatorCoeff,
                                   Laplace_Jacobian)
@@ -2543,12 +2543,70 @@ class OperatorConstructor:
         self.laplaceOperatorAttached = True
 
 
+    def attachAdvectionOperator(self,advective_field):
+        """Attach a Discrete Advection Operator to the Transport class.
+        
+        Arguments
+        ---------
+        advective_field : numpy array
+            numpy array of the advection field.
+        """
+        self._advective_field = advective_field
+        self._advection_val = self.OLT.nzval.copy()
+        self.AdvectionOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                           self.OLT.nFreeVDOF_global,
+                                           self.OLT.nnz,
+                                           self._advection_val,
+                                           self.OLT.colind,
+                                           self.OLT.rowptr)
+        _nd = self.OLT.coefficients.nd
+        self.AdvectionOperatorCoeff = TransportCoefficients.DiscreteAdvectionOperator(self._advective_field,
+                                                                                    nd=_nd)
+        _t = 1.0
+
+        Advection_q = {}
+        self._allocateAdvectionOperatorQStorageSpace(Advection_q)
+        if _nd==2:
+            self.AdvectionOperatorCoeff.evaluate(_t,Advection_q)
+        self._calculateAdvectionOperatorQ(Advection_q)
+
+        Advection_Jacobian = {}
+        self._allocateMatrixSpace(self.AdvectionOperatorCoeff,
+                                  Advection_Jacobian)
+        
+        for ci,ckDict in self.AdvectionOperatorCoeff.advection.iteritems():
+            for ck in ckDict:
+                cfemIntegrals.updateAdvectionJacobian_weak_lowmem(Advection_q[('df',ci,ck)],
+                                                                  self._operatorQ[('v',ck)],
+                                                                  Advection_q[('grad(w)*dV_f',ci)],
+                                                                  Advection_Jacobian[ci][ck])
+        self._createOperator(self.AdvectionOperatorCoeff,
+                             Advection_Jacobian,
+                             self.AdvectionOperator)
+        self.advectionOperatorAttached = True
+
+
     def _initializeOperatorConstruction(self):
         """ Collect basic values used by all attach operators functions. """
         self._operatorQ = {}
         self._attachJacobianInfo(self._operatorQ)
+        self._attachQuadratureInfo()
         self._attachTestInfo(self._operatorQ)
         self._attachTrialInfo(self._operatorQ)
+
+    def _attachQuadratureInfo(self,_nd=2,_order=4):
+        """Define the quadrature type used to build operators.
+        
+        Arguments
+        ---------
+        _nd : int
+            The number of spatial dimensions
+        _order : int
+            The order of the quadrature space.
+        """
+        self._elementQuadrature = Quadrature.SimplexGaussQuadrature(nd=_nd,
+                                                                    order=_order)
+        
 
     def _attachJacobianInfo(self,Q):
         """ This helper function attaches quadrature data related to 'J'
@@ -2688,7 +2746,17 @@ class OperatorConstructor:
                                                                           matrixDict[ci][cj],
                                                                           A)
 
-        
+    def _initializeLaplacePhiFunctions(self,Laplace_phi,Laplace_dphi):
+        """ Initialize the phi functions for the Laplace operator """
+        for ci,space in self.OLT.testSpace.iteritems():
+            Laplace_phi[ci] = FemTools.FiniteElementFunction(space)
+
+        for ck,phi in Laplace_phi.iteritems():
+            Laplace_dphi[(ck,ck)] = FemTools.FiniteElementFunction(Laplace_phi[ck].femSpace)
+
+        for ci,dphi in Laplace_dphi.iteritems():
+            dphi.dof.fill(1.0)
+
     def _allocateMassOperatorQStorageSpace(self,Q):
         """ Allocate space for mass operator values. """
         test_shape_quad = StorageSet(shape={})
@@ -2733,41 +2801,9 @@ class OperatorConstructor:
 
         scalar_quad.allocate(Q)
 
-    def _calculateMassOperatorQ(self,Q):
-        """ Calculate values for mass operator. """
-        elementQuadratureDict = {}
 
-        elementQuadrature = Quadrature.SimplexGaussQuadrature(nd=self.OLT.nSpace_global,order=4)
 
-        for ci in self.MassOperatorCoeff.mass.keys():
-            elementQuadratureDict[('m',ci)] = elementQuadrature
-        (elementQuadraturePoints,elementQuadratureWeights,
-         elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
-
-        for ci in range(self.OLT.nc):
-            if Q.has_key(('w*dV_m',ci)):
-                cfemIntegrals.calculateWeightedShape(elementQuadratureWeights[('m',ci)],
-                                                     self._operatorQ['abs(det(J))'],
-                                                     self._operatorQ[('w',ci)],
-                                                     Q[('w*dV_m',ci)])
-
-        for ci in zip(range(self.OLT.nc),range(self.OLT.nc)):
-                cfemIntegrals.calculateShape_X_weightedShape(self._operatorQ[('v',ci[1])],
-                                                             Q[('w*dV_m',ci[0])],
-                                                             Q[('vXw*dV_m',ci[1],ci[0])])
-
-    def _initializeLaplacePhiFunctions(self,Laplace_phi,Laplace_dphi):
-        """ Initialize the phi functions for the Laplace operator """
-        for ci,space in self.OLT.testSpace.iteritems():
-            Laplace_phi[ci] = FemTools.FiniteElementFunction(space)
-
-        for ck,phi in Laplace_phi.iteritems():
-            Laplace_dphi[(ck,ck)] = FemTools.FiniteElementFunction(Laplace_phi[ck].femSpace)
-
-        for ci,dphi in Laplace_dphi.iteritems():
-            dphi.dof.fill(1.0)
-
-    def _initializeLaplaceOperatorQStorageSpace(self,Laplace_q):
+    def _allocateLaplaceOperatorQStorageSpace(self,Q):
         """Initialize the storage space for the Laplace operator vals. """
         scalar_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
                                         self.OLT.nQuadraturePoints_element))
@@ -2787,32 +2823,91 @@ class OperatorConstructor:
         for ci,ckDict in self.LaplaceOperatorCoeff.diffusion.iteritems():
             vectors_quad |= set([('grad(phi)',ck) for ck in ckDict.keys()])
 
-        scalar_quad.allocate(Laplace_q)
-        vectors_quad.allocate(Laplace_q)
+        scalar_quad.allocate(Q)
+        vectors_quad.allocate(Q)
 
         for k in tensors_quad:
-            Laplace_q[k] = numpy.zeros(
+            Q[k] = numpy.zeros(
                 (self.OLT.mesh.nElements_global,
                  self.OLT.nQuadraturePoints_element,
                  self.LaplaceOperatorCoeff.sdInfo[(k[1],k[2])][0][self.OLT.nSpace_global]),
                 'd')
 
         for k in gradients:
-            Laplace_q[k] = numpy.zeros(
+            Q[k] = numpy.zeros(
                 (self.OLT.mesh.nElements_global,
                  self.OLT.nQuadraturePoints_element,
                  self.OLT.nDOF_test_element[k[-1]],
                  self.OLT.nSpace_global),
                 'd')
 
+    def _allocateAdvectionOperatorQStorageSpace(self,Q):
+        """Allocate storage space for the Advection operator values. """
+        scalar_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                        self.OLT.nQuadraturePoints_element))
+        vector_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                        self.OLT.nQuadraturePoints_element,
+                                        self.OLT.nSpace_global))
+        tensor_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                        self.OLT.nQuadraturePoints_element,
+                                        self.OLT.nSpace_global))
+        gradients = StorageSet(shape={})
+
+        scalar_quad |= set([('u',0)])
+        vector_quad |= set([('f',ci) for ci in range(self.OLT.nc)])
+        tensor_quad |= set([('df',0,0)])
+
+        for i in range(self.OLT.nc):
+            for j in range(1,self.OLT.nc):
+                tensor_quad |= set([('df',i,j)])
+
+        gradients |= set([('grad(w)*dV_f',ci) for ci in self.AdvectionOperatorCoeff.advection.keys()])
+
+        scalar_quad.allocate(Q)
+        vector_quad.allocate(Q)
+        
+        for k in tensor_quad:
+            Q[k] = numpy.zeros(
+                (self.OLT.mesh.nElements_global,
+                 self.OLT.nQuadraturePoints_element,
+                 self.OLT.nSpace_global),
+                'd')
+
+        for k in gradients:
+            Q[k] = numpy.zeros(
+                (self.OLT.mesh.nElements_global,
+                 self.OLT.nQuadraturePoints_element,
+                 self.OLT.nDOF_test_element[k[-1]],
+                 self.OLT.nSpace_global),
+                'd')
+
+    def _calculateMassOperatorQ(self,Q):
+        """ Calculate values for mass operator. """
+        elementQuadratureDict = {}
+
+        for ci in self.MassOperatorCoeff.mass.keys():
+            elementQuadratureDict[('m',ci)] = self._elementQuadrature
+        (elementQuadraturePoints,elementQuadratureWeights,
+         elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
+
+        for ci in range(self.OLT.nc):
+            if Q.has_key(('w*dV_m',ci)):
+                cfemIntegrals.calculateWeightedShape(elementQuadratureWeights[('m',ci)],
+                                                     self._operatorQ['abs(det(J))'],
+                                                     self._operatorQ[('w',ci)],
+                                                     Q[('w*dV_m',ci)])
+
+        for ci in zip(range(self.OLT.nc),range(self.OLT.nc)):
+                cfemIntegrals.calculateShape_X_weightedShape(self._operatorQ[('v',ci[1])],
+                                                             Q[('w*dV_m',ci[0])],
+                                                             Q[('vXw*dV_m',ci[1],ci[0])])
+
     def _calculateLaplaceOperatorQ(self,Q):
         """Calculate quadrature values for Laplace operator. """
         elementQuadratureDict = {}
-        elementQuadrature = Quadrature.SimplexGaussQuadrature(nd=self.OLT.nSpace_global,
-                                                              order = 4)
         
         for ci in self.LaplaceOperatorCoeff.diffusion.keys():
-            elementQuadratureDict[('a',ci)] = elementQuadrature
+            elementQuadratureDict[('a',ci)] = self._elementQuadrature
 
         (elementQuadraturePoints,elementQuadratureWeights,
          elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
@@ -2827,3 +2922,21 @@ class OperatorConstructor:
                                                               self._operatorQ['abs(det(J))'],
                                                               self._operatorQ[('grad(w)',ci)],
                                                               Q[('grad(w)*dV_a',ck,ci)])
+
+
+    def _calculateAdvectionOperatorQ(self,Q):
+        """Calculate quadrature values for Advection operator. """
+        elementQuadratureDict = {}
+
+        for ci in self.AdvectionOperatorCoeff.advection.keys():
+            elementQuadratureDict[('f',ci)] = self._elementQuadrature
+
+        (elementQuadraturePoints,elementQuadratureWeights,
+         elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
+            
+        for ci in range(self.OLT.nc):
+            cfemIntegrals.calculateWeightedShapeGradients(elementQuadratureWeights[('f',ci)],
+                                                          self._operatorQ['abs(det(J))'],
+                                                          self._operatorQ[('grad(w)',ci)],
+                                                          Q[('grad(w)*dV_f',ci)])
+        

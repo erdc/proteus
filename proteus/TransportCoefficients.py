@@ -946,19 +946,143 @@ class UnitCubeRotation(TC_base):
                                       c[('m',0)],c[('dm',0,0)],
                                       c[('f',0)],c[('df',0,0)])
 
-##\brief Incompressible Navier-Stokes equations
-#
-#The equations are formulated as
-#
-#\f{eqnarray*}
-#\nabla \cdot \mathbf{v} &=& 0 \\
-#\frac{\partial \left \mathbf{v}\right }{\partial t} + \nabla \cdot \left(\mathbf{v} \otimes \mathbf{v} - \nu \Delta \mathbf{f} \right) + \frac{\nabla p}{\rho}- \mathbf{g} &=& 0
-#\f}
-#
-#where \f$\mathbf{v}\f$ is the velocity, \f$p\f$ is the pressure, \f$\nu\f$ is the kinematic viscosity, \f$\rho\f$ is the density, and \f$\mathbf{g}\f$ is the gravitational acceleration.
-class NavierStokes(TC_base):
+class DiscreteAdvectionOperator(TC_base):
+    r""" A coefficient class to build the discrete advection operator.
+
+    This class defines the coefficients necessary to construct the
+    discrete advection operator :math:`N` where
+    
+    .. math::
+
+       n^{c}_{i,j} = \int_{T} (\mathbf{w}_{h} \phi_{j}) \cdot
+       \nabla \phi_{i} d T
+
+    for all :math:`T \in \Omega`, :math:`c = 0,...nc-1` and
+    :math:`phi^{c}_{i}`, `i=0,\cdot k-1` is a basis component for
+    :math:`c`.  Also note, :math:`\mathbf{w}_{h}` is a vector field 
+    (often the solution from the last non-linear iteration).
+    
+    Parameters
+    ----------
+    nd : int
+        The dimension of the physical domain
+    u : numpy array
+        An array of arrays with the advective field evaluated at the 
+        quadrature points.
     """
-    The coefficients for the incompressible Navier-Stokes equations.
+    from ctransportCoefficients import Advection_2D_Evaluate
+    from ctransportCoefficients import Advection_3D_Evaluate
+    def __init__(self,u,nd=2):
+        self.nd=nd
+        self.advection_field_u = numpy.copy(u[...,0])
+        self.advection_field_v = numpy.copy(u[...,1])
+        if self.nd==3:
+            self.advection_field_w = numpy.copy(u[...,2])
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if self.nd==2:
+            variableNames=['p','u','v']
+            advection = {0:{0:'linear',
+                            1:'linear',
+                            2:'linear'},
+                         1:{1:'nonlinear',
+                            2:'nonlinear'},
+                         2:{1:'nonlinear',
+                            2:'nonlinear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents = [1,2]
+        if self.nd==3:
+            variableNames=['p','u','v','w']
+            advection = {0:{0:'linear',
+                            1:'linear',
+                            2:'linear',
+                            3:'linear'},
+                         1:{1:'nonlinear',
+                            2:'nonlinear',
+                            3:'nonlinear'},
+                         2:{1:'nonlinear',
+                            2:'nonlinear',
+                            3:'nonlinear'},
+                          3:{1:'nonlinear',
+                             2:'nonlinear',
+                             3:'nonlinear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents = [1,2,3]
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.Advection_2D_Evaluate(c[('u',0)],
+                                       self.advection_field_u,
+                                       self.advection_field_v,
+                                       c[('f',0)],
+                                       c[('f',1)],
+                                       c[('f',2)],
+                                       c[('df',0,0)],
+                                       c[('df',0,1)],
+                                       c[('df',0,2)],
+                                       c[('df',1,1)],
+                                       c[('df',1,2)],
+                                       c[('df',2,1)],
+                                       c[('df',2,2)])
+        elif self.nd==3:
+            self.Advection_3D_Evaluate(c[('u',0)],
+                                       self.advection_field_u,
+                                       self.advection_field_v,
+                                       self.advection_field_w,
+                                       c[('f',0)],
+                                       c[('f',1)],
+                                       c[('f',2)],
+                                       c[('f',3)],
+                                       c[('df',0,0)],
+                                       c[('df',0,1)],
+                                       c[('df',0,2)],
+                                       c[('df',0,3)],
+                                       c[('df',1,1)],
+                                       c[('df',1,2)],
+                                       c[('df',1,3)],
+                                       c[('df',2,1)],
+                                       c[('df',2,2)],
+                                       c[('df',2,3)],
+                                       c[('df',3,1)],
+                                       c[('df',3,2)],
+                                       c[('df',3,3)])
+
+
+class NavierStokes(TC_base):
+    r""" The coefficients for the incompressible Navier-Stokes equations.
+
+    .. math::
+
+       \nabla \cdot \mathbf{v} = 0
+   
+    .. math::
+
+       \dfrac{\partial \mathbf{v} }{\partial t} + \nabla \cdot 
+       (\mathbf{v} \otimes \mathbf{v} - \nu \Delta \mathbf{f}) 
+       + \frac{\nabla p}{\rho}- \mathbf{g} = 0
+
+    where :math:`\mathbf{v}` is the velocity, :math:`p` is the pressure,
+    :math:`\nu` is the kinematic viscosity, :math:`\rho` is the density, 
+    and :math:`g` is the gravitational acceleration.
     """
     from ctransportCoefficients import NavierStokes_2D_Evaluate
     from ctransportCoefficients import NavierStokes_3D_Evaluate

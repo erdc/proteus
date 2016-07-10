@@ -1852,7 +1852,123 @@ void Laplace_3D_Evaluate(const int nPoints,
     } 
 }
 
+void Advection_2D_Evaluate(const int nPoints,
+			   const double *p,
+			   const double *u,
+			   const double *v,
+			   double *mass_adv,
+			   double *dmass_adv_p,
+			   double *dmass_adv_u,
+			   double *dmass_adv_v,
+			   double *mom_u_adv,
+			   double *dmom_u_adv_u,
+			   double *dmom_u_adv_v,
+			   double *mom_v_adv,
+			   double *dmom_v_adv_u,
+			   double *dmom_v_adv_v)
+{
+  int k;
+  for (k=0;k<nPoints;k++)
+    {
+      //mass advective flux
+      mass_adv[k*2+0]=u[k]*p[k];
+      mass_adv[k*2+1]=v[k]*p[k];
+      
+      dmass_adv_p[k*2+0] = u[k];
+      dmass_adv_p[k*2+1] = v[k];
+      dmass_adv_u[k*2+0]= 0.0;
+      dmass_adv_v[k*2+1]= 0.0;
+      
+      mom_u_adv[k*2+0] = u[k]*u[k];
+      mom_u_adv[k*2+1] = u[k]*v[k];
+      
+      dmom_u_adv_u[k*2+0] = 2.0*u[k];
+      dmom_u_adv_u[k*2+1] = v[k];
+      
+      dmom_u_adv_v[k*2+1] = u[k];
+      
+      mom_v_adv[k*2+0] = v[k]*u[k];
+      mom_v_adv[k*2+1] = v[k]*v[k];
+  
+      dmom_v_adv_u[k*2+0] = v[k];
 
+      dmom_v_adv_v[k*2+0] = u[k];
+      dmom_v_adv_v[k*2+1] = 2.0*v[k];
+    }
+}
+
+void Advection_3D_Evaluate(const int nPoints,
+			   const double *p,
+			   const double *u,
+			   const double *v,
+			   const double *w,
+			   double *mass_adv,
+			   double *dmass_adv_u,
+			   double *dmass_adv_v,
+			   double *dmass_adv_w,
+			   double *mom_u_adv,
+			   double *dmom_u_adv_u,
+			   double *dmom_u_adv_v,
+			   double *dmom_u_adv_w,
+			   double *mom_v_adv,
+			   double *dmom_v_adv_u,
+			   double *dmom_v_adv_v,
+			   double *dmom_v_adv_w,
+			   double *mom_w_adv,
+			   double *dmom_w_adv_u,
+			   double *dmom_w_adv_v,
+			   double *dmom_w_adv_w)
+{
+  int k;
+  for (k=0;k<nPoints;k++)
+    {
+      //mass advective flux
+      mass_adv[k*3+0]=u[k];
+      mass_adv[k*3+1]=v[k];
+      mass_adv[k*3+2]=w[k];
+
+      dmass_adv_u[k*3+0]=1.0;
+      dmass_adv_v[k*3+1]=1.0;
+      dmass_adv_w[k*3+2]=1.0;
+
+      mom_u_adv[k*3+0] = u[k]*u[k];
+      mom_u_adv[k*3+1] = u[k]*v[k];
+      mom_u_adv[k*3+2] = u[k]*w[k];
+
+      dmom_u_adv_u[k*3+0] = 2.0*u[k];
+      dmom_u_adv_u[k*3+1] = v[k];
+      dmom_u_adv_u[k*3+2] = w[k];
+
+      dmom_u_adv_v[k*3+1] = u[k];
+      dmom_u_adv_w[k*3+2] = u[k];
+      
+      mom_v_adv[k*3+0] = v[k]*u[k];
+      mom_v_adv[k*3+1] = v[k]*v[k];
+      mom_v_adv[k*3+2] = v[k]*w[k];
+
+      dmom_v_adv_u[k*3+0] = v[k];
+
+      dmom_v_adv_v[k*3+0] = u[k];
+      dmom_v_adv_v[k*3+1] = 2.0*v[k];
+      dmom_v_adv_v[k*3+2] = w[k];
+
+      dmom_v_adv_w[k*3+2] = v[k];
+
+      mom_w_adv[k*3+0] = w[k]*u[k];
+      mom_w_adv[k*3+1] = w[k]*v[k];
+      mom_w_adv[k*3+2] = w[k]*w[k];
+
+      dmom_w_adv_u[k*3+0] = w[k];
+      
+      dmom_w_adv_v[k*3+0] = w[k];
+      
+      dmom_w_adv_w[k*3+0] = u[k];
+      dmom_w_adv_w[k*3+1] = v[k];
+      dmom_w_adv_w[k*3+2] = 2.0*w[k];
+    }
+}
+
+			   
 void NavierStokes_2D_Evaluate(const int nPoints,
                               const double rho,
                               const double nu,
