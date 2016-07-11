@@ -75,6 +75,57 @@ class ShapeRANS(Shape):
         elif str(key).startswith('Gauge_') \
             and gauge not in self.auxiliaryVariables[key]:
                 self.auxiliaryVariables[key] += gauge
+            #[temp] Gauge Logic: start a gauge with tank.attachPointGauges('twp', [all those gauge details]).  Can be retrieved by .get('twp', [])
+
+    def attachPointGauges(self, model_key, gauges, activeTime=None,
+                          sampleRate=0,
+                          fileName='point_gauges.csv'):
+        """Attaches Point Gauges (in the Proteus/Gauges.py style) to the shape.
+
+        Parameters
+        ----------
+        model_key: string
+            Label of the model to use as a key for selecting particular gauges.
+        See proteus Gauges.py PointGauges class for the remaining parameters.
+        """
+        new_gauges = Gauges.PointGauges(gauges, activeTime, sampleRate,
+                                        fileName)
+        self._attachAuxiliaryVariable('Gauge_' + model_key,
+                                      gauge=new_gauges)
+
+    def attachLineGauges(self, model_key, gauges, activeTime=None,
+                         sampleRate=0,
+                         fileName='line_gauges.csv'):
+        """Attaches Line Gauges (in the Proteus/Gauges.py style) to the shape.
+
+        Parameters
+        ----------
+        model_key: string
+            Label of the model to use as a key for selecting particular gauges.
+        See proteus Gauges.py LineGauges class for the remaining parameters.
+        """
+        new_gauges = Gauges.LineGauges(gauges, activeTime, sampleRate,
+                                       fileName)
+        self._attachAuxiliaryVariable('Gauge_' + model_key,
+                                      gauge=new_gauges)
+
+    def attachLineIntegralGauges(self, model_key, gauges, activeTime=None,
+                                 sampleRate=0,
+                                 fileName='line_integral_gauges.csv'):
+        """Attaches Line Integral Gauges (in the Proteus/Gauges.py style).
+
+        Parameters
+        ----------
+        model_key: string
+            Label of the model to use as a key for selecting particular gauges.
+        See proteus Gauges.py LineIntegralGauges class for the remaining parameters.
+        """
+        new_gauges = Gauges.LineIntegralGauges(gauges, activeTime,
+                                               sampleRate, fileName)
+        self._attachAuxiliaryVariable('Gauge_' + model_key,
+                                      gauge=new_gauges)
+
+#[temp] end gauges
 
     def setRigidBody(self, holes=None):
         """
@@ -1208,7 +1259,15 @@ def assembleAuxiliaryVariables(domain):
     -----
     Should be called after assembleGeometry
     """
-    domain.auxiliaryVariables = {'twp': [], 'vof': []}
+    domain.auxiliaryVariables = {
+        'dissipation': [],
+        'kappa': [],
+        'ls': [],
+        'ls_consrv': [],
+        'redist': [],
+        'twp': [],
+        'vof': []
+    }
     zones_global = {}
     start_region = 0
     start_rflag = 0
@@ -1258,9 +1317,15 @@ def assembleAuxiliaryVariables(domain):
                       for key in shape.auxiliaryVariables.keys()
                       if str(key).startswith('Gauge_')} #[temp] This ...should gracefully fail if it's not a string?
         for key in gauge_dict.keys():
-            key_name = key.split('_', 1)[1] # Cutting off "Gauge_"
+            key_name = key.split('_', 1)[1] # Cutting off "Gauge_" prefix
             if key_name not in aux:
-                aux[key_name] = []
+                # aux[key_name] = []
+                ValueError('ERROR: Gauge key ',
+                           key_name,
+                           ' is not a recognized model by SpatialTools.',
+                           ' The known models in our dictionary are ',
+                           str(aux.keys())
+                           )
             aux[key_name] += [gauge_dict[key],]
         #[temp] add gauges
         if shape.regions is not None:
