@@ -71,11 +71,11 @@ class ShapeRANS(Shape):
             if key == 'RelaxZones':
                 self.auxiliaryVariables[key] = self.zones
             if str(key).startswith('Gauge_'):
-                self.auxiliaryVariables[key] = gauge
+                self.auxiliaryVariables[key] = [gauge]
         elif str(key).startswith('Gauge_') \
             and gauge not in self.auxiliaryVariables[key]:
-                self.auxiliaryVariables[key] += gauge
-            #[temp] Gauge Logic: start a gauge with tank.attachPointGauges('twp', [all those gauge details]).  Can be retrieved by .get('twp', [])
+                self.auxiliaryVariables[key] += [gauge]
+#[temp] Gauge Logic: start a gauge with tank.attachPointGauges('twp', [all those gauge details]).  Can be retrieved by .get('twp', [])
 
     def attachPointGauges(self, model_key, gauges, activeTime=None,
                           sampleRate=0,
@@ -1279,13 +1279,13 @@ def assembleAuxiliaryVariables(domain):
         if 'RigidBody' in shape.auxiliaryVariables.keys():
             aux['twp'] += [RigidBody(shape)]
             # fixing mesh on rigid body
-            body = aux['twp']
+            body = aux['twp'][-1]
             for boundcond in shape.BC_list:
                 boundcond.setMoveMesh(body.last_position, body.h,
                                       body.rotation_matrix)
             # update the indice for force/moment calculations
-            aux['twp'].i_start = start_flag+1
-            aux['twp'].i_end = start_flag+1+len(shape.BC_list)
+            body.i_start = start_flag+1
+            body.i_end = start_flag+1+len(shape.BC_list)
         # ----------------------------
         # ABSORPTION/GENERATION ZONES
         if 'RelaxZones' in shape.auxiliaryVariables.keys():
@@ -1326,7 +1326,7 @@ def assembleAuxiliaryVariables(domain):
                            ' The known models in our dictionary are ',
                            str(aux.keys())
                            )
-            aux[key_name] += [gauge_dict[key],]
+            aux[key_name] += gauge_dict[key]
         #[temp] add gauges
         if shape.regions is not None:
             start_region += len(shape.regions)
