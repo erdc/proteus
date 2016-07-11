@@ -1320,13 +1320,14 @@ def assembleAuxiliaryVariables(domain):
             key_name = key.split('_', 1)[1] # Cutting off "Gauge_" prefix
             if key_name not in aux:
                 # aux[key_name] = []
-                ValueError('ERROR: Gauge key ',
-                           key_name,
-                           ' is not a recognized model by SpatialTools.',
-                           ' The known models in our dictionary are ',
-                           str(aux.keys())
-                           )
-            aux[key_name] += gauge_dict[key]
+                raise ValueError('ERROR: Gauge key ',
+                                 key_name,
+                                 ' is not a recognized model by SpatialTools.',
+                                 ' The known models in our dictionary are ',
+                                 str(aux.keys())
+                                 )
+            else:
+                aux[key_name] += gauge_dict[key]
         #[temp] add gauges
         if shape.regions is not None:
             start_region += len(shape.regions)

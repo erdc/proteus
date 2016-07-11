@@ -245,6 +245,8 @@ class TestShapeRANS(unittest.TestCase):
         assert tank.auxiliaryVariables.get('Gauge_vof', None) is not None
         assert len(tank.auxiliaryVariables['Gauge_kappa']) is 2
         assert len(tank.auxiliaryVariables['Gauge_vof']) is 1
+        self.assertIsInstance(tank.auxiliaryVariables['Gauge_kappa'][0],
+                              Gauges.Gauges)
         assert tank.auxiliaryVariables['Gauge_kappa'][0].activeTime == (0.,1.)
         assert tank.auxiliaryVariables['Gauge_kappa'][1].activeTime == (0.,2.)
         assert tank.auxiliaryVariables['Gauge_vof'][0].sampleRate == 0.5
@@ -253,19 +255,20 @@ class TestShapeRANS(unittest.TestCase):
 
         assert domain.auxiliaryVariables.get('kappa', None) is not None
         assert domain.auxiliaryVariables.get('vof', None) is not None
+        self.assertIsInstance(domain.auxiliaryVariables['vof'][0],
+                              Gauges.Gauges)
         assert len(domain.auxiliaryVariables['kappa']) is 2
         assert len(domain.auxiliaryVariables['vof']) is 1
         assert domain.auxiliaryVariables['kappa'][0].activeTime == (0., 1.)
         assert domain.auxiliaryVariables['kappa'][1].activeTime == (0., 2.)
         assert domain.auxiliaryVariables['vof'][0].sampleRate == 0.5
 
-        #[temp] The beginnings of a test for an exception (a ValueError that should occur if we give it an unrecognized name) is below. I just don't know the best way to test that yet with all the different testing schema used
-        # tank.attachPointGauges('voff',
-        #                        gauges=((('vof',), ((0., 0., 0.),))),
-        #                        activeTime=(0., 1.),
-        #                        sampleRate=0.5,
-        #                        fileName='point2.csv')
-        # assembleDomainRANS(domain)
+        tank.attachPointGauges('voff',
+                                gauges=((('vof',), ((0., 0., 0.),)),),
+                                activeTime=(0., 1.),
+                                sampleRate=0.5,
+                                fileName='point2.csv')
+        self.assertRaises(ValueError,assembleDomainRANS,domain)
 
 
     def test_rigid_body(self):
