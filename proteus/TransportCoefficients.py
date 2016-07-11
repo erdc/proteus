@@ -974,10 +974,10 @@ class DiscreteAdvectionOperator(TC_base):
     from ctransportCoefficients import Advection_3D_Evaluate
     def __init__(self,u,nd=2):
         self.nd=nd
-        self.advection_field_u = numpy.copy(u[...,0])
-        self.advection_field_v = numpy.copy(u[...,1])
+        self.advection_field_u = numpy.copy(u[0])
+        self.advection_field_v = numpy.copy(u[1])
         if self.nd==3:
-            self.advection_field_w = numpy.copy(u[...,2])
+            self.advection_field_w = numpy.copy(u[2])
         mass = {}
         advection = {}
         diffusion = {}

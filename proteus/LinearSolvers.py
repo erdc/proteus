@@ -795,47 +795,18 @@ class SchurOperatorConstructor:
         """
         #modify the diffusion term in the mass equation so the p-p block is Fp
         # First generate the advection part of Fp
-        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-        self.Fsys_rowptr = rowptr.copy()
-        self.Fsys_colind = colind.copy()
-        self.Fsys_nzval = nzval.copy()
-        self.Fsys_nzval.fill(0.0)
+        import pdb
+        pdb.set_trace()
+        self._u = numpy.copy(self.L.pde.q[('u',1)])
+        self._v = numpy.copy(self.L.pde.q[('u',2)])
+        self._advectiveField = [self._u,self._v]
 
-        L_sizes = self.L.getSizes()
-        nr = L_sizes[0][0]
-        nc = L_sizes[1][0]
-
-        self.Fsys = SparseMat(nr,nc,
-                              self.Fsys_nzval.shape[0],
-                              self.Fsys_nzval,
-                              self.Fsys_colind,
-                              self.Fsys_rowptr)
-        self.L.pde.q[('df',0,0)][...,0] = self.L.pde.q[('u',1)]
-        self.L.pde.q[('df',0,0)][...,1] = self.L.pde.q[('u',2)]
- #        self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
-        self.L.pde.getSpatialJacobian(self.Fsys)#notice, switched  to spatial
-        self.Fsys_petsc4py = self.L.duplicate()
-        F_csr_rep_local = self.Fsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
-        self.Fsys_petsc4py.setValuesLocalCSR(F_csr_rep_local[0],
-                                             F_csr_rep_local[1],
-                                             F_csr_rep_local[2],
-                                             p4pyPETSc.InsertMode.INSERT_VALUES)
-
-        self.Fsys_petsc4py.assemblyBegin()
-        self.Fsys_petsc4py.assemblyEnd()
-
-        self.Cp = self.Fsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
-                                                  self.linear_smoother.isp)
-
-
-        self.L.pde.q[('df',0,0)].fill(0.0)
-
-        self.Fp = p4pyPETSc.Mat().createAIJ(self.getAp().getSize())
-        self.Fp.setUp()
-        self.getAp().copy(self.Fp) 
-        self.Fp.axpy(1.0,self.Cp)
+        Fp_sys_petsc4py = self._getAdvection()
+        self.Fp = Fp_sys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                               self.linear_smoother.isp)
         if output_matrix==True:
             self._exportMatrix(self.Fp,'Fp')
+
         return self.Fp
 
     def getB(self,output_matrix=False):
@@ -945,6 +916,17 @@ class SchurOperatorConstructor:
         """
         self.opBuilder.attachLaplaceOperator()
         return superlu_2_petsc4py(self.opBuilder.LaplaceOperator)
+    
+    def _getAdvection(self,output_matrix=False):
+        """ Return the advection matrix Fp.
+
+        Returns
+        -------
+        Fp : petsc4py matrix
+            A petsc4py matrix.
+        """
+        self.opBuilder.attachAdvectionOperator(self._advectiveField)
+        return superlu_2_petsc4py(self.opBuilder.AdvectionOperator)
 
     def _setupB(self):
         """ Initializes construction of the B operator. """
@@ -2492,7 +2474,7 @@ class OperatorConstructor:
                                            self.OLT.rowptr)
         _nd = self.OLT.coefficients.nd
         self.AdvectionOperatorCoeff = TransportCoefficients.DiscreteAdvectionOperator(self._advective_field,
-                                                                                    nd=_nd)
+                                                                                      nd=_nd)
         _t = 1.0
 
         Advection_q = {}

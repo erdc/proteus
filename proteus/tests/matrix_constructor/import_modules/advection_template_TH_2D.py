@@ -26,9 +26,12 @@ p.diffusiveFluxBoundaryConditions = {}
 p.periodicDirichletConditions = None
 
 #Define a simple advection field
-u_field = numpy.ones((1,6,2))
+u_field = numpy.ones((1,6,1))
+v_field = numpy.ones((1,6,1))
+advective_field = [u_field,v_field]
 
-p.coefficients = pr.TransportCoefficients.DiscreteAdvectionOperator(u_field,p.nd)
+p.coefficients = pr.TransportCoefficients.DiscreteAdvectionOperator(advective_field,
+                                                                    p.nd)
 
 ############################
 

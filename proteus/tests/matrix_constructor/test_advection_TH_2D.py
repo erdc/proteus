@@ -72,8 +72,10 @@ class TestAdvectionConstruction2D():
         """ Tests the attachAdvectionOperator function """
         mm = self.Advection_object.modelList[0].levelModelList[0]
         op_constructor = LinearSolvers.OperatorConstructor(mm)
-        u_field = numpy.ones((1,6,2))
-        op_constructor.attachAdvectionOperator(u_field)
+        u_field = numpy.ones((1,6,1))
+        v_field = numpy.ones((1,6,1))
+        advection_field = [u_field,v_field]
+        op_constructor.attachAdvectionOperator(advection_field)
         comparison_A = numpy.load('./comparison_files/advection_reference_triangle_2d.npy')
         A = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.AdvectionOperator)
         assert numpy.allclose(A,comparison_A)
