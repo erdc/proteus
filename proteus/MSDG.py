@@ -62,11 +62,35 @@ class OneLevelMSDG(Transport.OneLevelTransport):
         self.u_cg = {}
         self.nd = coefficients.nd
         from proteus import FemTools
-        for i in range(self.nd + 1):
-            self.cg_spaces[i] = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.mesh,
-                                                                                self.nd) # needs to be changed for more general choice of space
-            self.u_cg[i] = FemTools.FiniteElementFunction(
-                self.cg_spaces[i], name=self.u[i].name)
+        # add the choice of the cg space
+        # import pdb; pdb.set_trace()
+        if 'TransferredSpace' in dir(options):
+            logEvent('Setting cg space')
+            for i in range(self.nd + 1):
+                self.cg_spaces[i] = options.TransferredSpace[i](self.mesh,self.nd)
+                self.u_cg[i] = FemTools.FiniteElementFunction(
+                    self.cg_spaces[i], name=self.u[i].name)
+
+        else:
+            for i in range(self.nd + 1):
+                self.cg_spaces[i] = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.mesh,
+                                                                                    self.nd) # needs to be changed for more general choice of space
+                self.u_cg[i] = FemTools.FiniteElementFunction(
+                    self.cg_spaces[i], name=self.u[i].name)
+
+        # local penalty coeffcients setup
+        if 'alpha_p' in dir(options):
+            self.alpha_p = options.alpha_p
+            logEvent('Setting input local alpha_p = {}'.format(self.alpha_p))
+        else:
+            self.alpha_p = 0.9
+            logEvent('Setting default local alpha_p = {}'.format(self.alpha_p))
+        if 'alpha_beta' in dir(options):
+            self.alpha_beta = options.alpha_beta
+            logEvent('Setting input local alpha_beta = {}'.format(self.alpha_beta))
+        else:
+            self.alpha_beta = 1.0
+            logEvent('Setting default local alpha_beta = {}'.format(self.alpha_beta))
         # self.cg_transport = Transport.OneLevelTransport(self.u_cg,
         #                                                 self.u_cg,
         #                                                 self.cg_spaces,
@@ -152,6 +176,7 @@ class OneLevelMSDG(Transport.OneLevelTransport):
         import numpy as np
         from numpy import linalg
         import cfemIntegrals
+        logEvent('Initializing MSDG local transfer operators T from global problem')
         self.til_M = []
         self.bar_M = []
         self.T = []
@@ -192,9 +217,19 @@ class OneLevelMSDG(Transport.OneLevelTransport):
 
         self.rhs_source = []
 
+        #specify the size of the mapping matrices
+        self.til_M = [np.zeros((self.nc * self.nDOF_test_element[0], self.nc * self.nDOF_trial_element[0]), 'd') for iM in range(self.mesh.nElements_global)]
+        self.bar_M = [np.zeros((self.nc * self.nDOF_test_element[0], self.nc * self.cg_spaces[0].max_nDOF_element), 'd') for iM in range(self.mesh.nElements_global)]
+        self.T = [np.zeros((self.nc * self.nDOF_test_element[0], self.nc * self.cg_spaces[0].max_nDOF_element), 'd') for iM in range(self.mesh.nElements_global)]
+        self.rhs_source = [np.zeros((self.nc * self.nDOF_test_element[0], 1), 'd') for iM in range(self.mesh.nElements_global)]
+        self.Trhs = [np.zeros((self.nc * self.nDOF_test_element[0], ), 'd') for iM in range(self.mesh.nElements_global)]
+
+
+        logEvent('Initializing MSDG local transfer operator T finished')
+        logEvent('Setting the extra boundary terms in MSDG local Transfer operator T')
         # add boundary integral terms
-        self.alpha_p = 0.9
-        self.alpha_beta = 1.0
+        # self.alpha_p = 0.9
+        # self.alpha_beta = 1.0
         for eN in range(self.mesh.nElements_global):
             for ebN in range(self.mesh.nElementBoundaries_element):
                 # assumes equal  order across  components
@@ -217,22 +252,36 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                             self.transfer_lhs[(0, 0)][eN, i, j] += self.alpha_beta * lambda_norm / h * self.ebq[
                                 ('v', 0)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
                             # til_C_k
-                            self.transfer_lhs[(0, 1)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 0] * self.ebq[
-                                ('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
-                            self.transfer_lhs[(0, 2)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 1] * self.ebq[
-                                ('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
-                            # no til_Bk terms from boundary
+                            for ic in range(self.nd):
+                                self.transfer_lhs[(0, ic + 1)][eN, i, j] -= self.ebq['n'][eN, ebN, k, ic] * self.ebq[
+                                    ('v', ic + 1)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
+
+                            # explicit expression of til_C_k
+                            # self.transfer_lhs[(0, 1)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 0] * self.ebq[
+                            #     ('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
+                            # self.transfer_lhs[(0, 2)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 1] * self.ebq[
+                            #     ('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
+
+                            # # no til_Bk terms from boundary
                             #
                             # til_Ak
-                            self.transfer_lhs[(1, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
-                                'n'][eN, ebN, k, 0] * self.ebq[('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
-                            self.transfer_lhs[(2, 2)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 1] * self.ebq[
-                                'n'][eN, ebN, k, 1] * self.ebq[('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_f', 2)][eN, ebN, k, i]
-                            # add more terms
-                            self.transfer_lhs[(1, 2)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
-                                'n'][eN, ebN, k, 1] * self.ebq[('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
-                            self.transfer_lhs[(2, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 1] * self.ebq[
-                                'n'][eN, ebN, k, 0] * self.ebq[('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', 2)][eN, ebN, k, i]
+                            for ia in range(self.nd):
+                                for ja in range(self.nd):
+                                    self.transfer_lhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
+                                        'n'][eN, ebN, k, ja] * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia +1)][eN, ebN, k, i]
+
+                            # explicit til_Ak terms
+                            # self.transfer_lhs[(1, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
+                            #     'n'][eN, ebN, k, 0] * self.ebq[('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
+                            # self.transfer_lhs[(2, 2)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 1] * self.ebq[
+                            #     'n'][eN, ebN, k, 1] * self.ebq[('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_f', 2)][eN, ebN, k, i]
+
+                            # # add more terms
+
+                            # self.transfer_lhs[(1, 2)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
+                            #     'n'][eN, ebN, k, 1] * self.ebq[('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
+                            # self.transfer_lhs[(2, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 1] * self.ebq[
+                            #     'n'][eN, ebN, k, 0] * self.ebq[('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', 2)][eN, ebN, k, i]
 
                             #
                             # rhs matrix
@@ -241,36 +290,51 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                             self.transfer_rhs[(0, 0)][eN, i, j] += self.alpha_beta * lambda_norm / h * self.ebq[
                                 ('v', 0)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
                             # bar_C_k
-                            self.transfer_rhs[(0, 1)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 0] * self.ebq[
-                                ('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
-                            self.transfer_rhs[(0, 2)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 1] * self.ebq[
-                                ('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
+                            for ic in range(self.nd):
+                                    self.transfer_rhs[(0, ic + 1)][eN, i, j] -= self.ebq['n'][eN, ebN, k, ic] * self.ebq[
+                                        ('v', ic + 1)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
+                            #explicit expression of bar_C_k
+                            # self.transfer_rhs[(0, 1)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 0] * self.ebq[
+                            #     ('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
+                            # self.transfer_rhs[(0, 2)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 1] * self.ebq[
+                            #     ('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]
                             # bar_Bk
-                            self.transfer_rhs[(1, 0)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 0] * self.ebq[
-                                ('v', 0)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
-                            self.transfer_rhs[(2, 0)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 1] * self.ebq[
-                                ('v', 0)][eN, ebN, k, j] * self.ebq[('w*dS_f', 2)][eN, ebN, k, i]
-                            # bar_Ak
-                            self.transfer_rhs[(1, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
-                                'n'][eN, ebN, k, 0] * self.ebq[('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
-                            self.transfer_rhs[(2, 2)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 1] * self.ebq[
-                                'n'][eN, ebN, k, 1] * self.ebq[('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_f', 2)][eN, ebN, k, i]
-                            # add more terms
-                            self.transfer_rhs[(1, 2)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
-                                'n'][eN, ebN, k, 1] * self.ebq[('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
-                            self.transfer_rhs[(2, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 1] * self.ebq[
-                                'n'][eN, ebN, k, 0] * self.ebq[('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', 2)][eN, ebN, k, i]
+                            for ib in range(self.nd):
+                                    self.transfer_rhs[(ib + 1, 0)][eN, i, j] -= self.ebq['n'][eN, ebN, k, ib] * self.ebq[
+                                        ('v', 0)][eN, ebN, k, j] * self.ebq[('w*dS_f', ib + 1)][eN, ebN, k, i]
+                            # #explicit expression for bar_BK
+                            # self.transfer_rhs[(1, 0)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 0] * self.ebq[
+                            #     ('v', 0)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
+                            # self.transfer_rhs[(2, 0)][eN, i, j] -= self.ebq['n'][eN, ebN, k, 1] * self.ebq[
+                            #     ('v', 0)][eN, ebN, k, j] * self.ebq[('w*dS_f', 2)][eN, ebN, k, i]
 
-            self.til_M.append(
-                np.zeros((3 * self.nDOF_test_element[0], 3 * self.nDOF_trial_element[0]), 'd'))
-            self.bar_M.append(
-                np.zeros((3 * self.nDOF_test_element[0], 3 * self.nDOF_trial_element[0]), 'd'))
-            self.T.append(
-                np.zeros((3 * self.nDOF_test_element[0], 3 * self.nDOF_trial_element[0]), 'd'))
-            self.rhs_source.append(
-                np.zeros((3 * self.nDOF_test_element[0], 1), 'd'))
-            self.Trhs.append(
-                np.zeros((3 * self.nDOF_test_element[0], ), 'd'))
+                            # bar_Ak
+                            for ia in range(self.nd):
+                                for ja in range(self.nd):
+                                    self.transfer_rhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
+                                        'n'][eN, ebN, k, ja] * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia + 1)][eN, ebN, k, i]
+
+                            # # explicit expression for bar_Ak
+                            # self.transfer_rhs[(1, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
+                            #     'n'][eN, ebN, k, 0] * self.ebq[('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
+                            # self.transfer_rhs[(2, 2)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 1] * self.ebq[
+                            #     'n'][eN, ebN, k, 1] * self.ebq[('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_f', 2)][eN, ebN, k, i]
+                            # # add more terms
+                            # self.transfer_rhs[(1, 2)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
+                            #     'n'][eN, ebN, k, 1] * self.ebq[('v', 2)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
+                            # self.transfer_rhs[(2, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 1] * self.ebq[
+                            #     'n'][eN, ebN, k, 0] * self.ebq[('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', 2)][eN, ebN, k, i]
+
+            # self.til_M.append(
+            #     np.zeros((3 * self.nDOF_test_element[0], 3 * self.nDOF_trial_element[0]), 'd'))
+            # self.bar_M.append(
+            #     np.zeros((3 * self.nDOF_test_element[0], 3 * self.nDOF_trial_element[0]), 'd'))
+            # self.T.append(
+            #     np.zeros((3 * self.nDOF_test_element[0], 3 * self.nDOF_trial_element[0]), 'd'))
+            # self.rhs_source.append(
+            #     np.zeros((3 * self.nDOF_test_element[0], 1), 'd'))
+            # self.Trhs.append(
+            #     np.zeros((3 * self.nDOF_test_element[0], ), 'd'))
 
             for i in range(self.nDOF_test_element[0]):
                 for j in range(self.nDOF_trial_element[0]):
@@ -290,9 +354,18 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                         self.rhs_source[eN][ic * self.nDOF_test_element[0] + i] = self.transfer_source[ic][eN][i]
                     # T
             # pdb.set_trace()
+            for i in range(self.nDOF_test_element[0]):
+                for j in range(self.cg_spaces[0].max_nDOF_element):
+                    for ic in range(self.nc):
+                        for jc in range(self.nc):
+                            # bar_M
+                            self.bar_M[eN][ic * self.nDOF_test_element[0] + i,
+                                           jc * self.cg_spaces[0].max_nDOF_element + j] \
+                                = self.transfer_rhs[(ic, jc)][eN, i, j]
+
             self.T[eN] = np.dot(linalg.inv(self.til_M[eN]), self.bar_M[eN])
             self.Trhs[eN] = np.dot(linalg.inv(self.til_M[eN]),self.rhs_source[eN])
-
+        logEvent('Setting the extra boundary terms in MSDG local Transfer operator T finished')
         # we would then need to assemble the element Jacobians  into a global Jacobian based on the continuous element maps
         # this approach would need formal MSDG space with knowledge of  coarse and fine  spaces
         # let's first check  if M and T are right
@@ -348,7 +421,6 @@ class OneLevelMSDG(Transport.OneLevelTransport):
             self.RHS = PETSc.Vec().createWithArray(np.zeros((3 * self.u[0].femSpace.dim,), 'd'))
             # self.RHS = PETSc.Vec().create()
             # self.RHS.setSizes(3 * self.u_cg[0].femSpace.dim,)
-
 
         logEvent("Assemble global transfer operator in PETSc")
         for eN in range(self.mesh.nElements_global):
