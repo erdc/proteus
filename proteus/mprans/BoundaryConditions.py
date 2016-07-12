@@ -363,9 +363,9 @@ class BC_RANS(BC_Base):
         self.w_diffusive = constantBC(0.)
 
     # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
-    def hydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
-                                           refLevel, pRef=0.0, vert_axis=None,
-                                           air=1.0, water=0.0):
+    def setHydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
+                                              refLevel, pRef=0.0, vert_axis=None,
+                                              air=1.0, water=0.0):
         """Imposes a hydrostatic pressure profile and open boundary conditions
         with a known otuflow depth
         :param rhoUp: Phase density of the upper part.
