@@ -1068,8 +1068,8 @@ class TimeSeries:
         :param x: floating point x coordinate
         :param t: time"""
         Eta=0.
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
-            x1 = np.array(x)-[self.x0, self.y0, self.z0]
             Eta+= eta_mode(x1,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
         return Eta
 
@@ -1081,8 +1081,8 @@ class TimeSeries:
         :param t: time
         """
         U=0.
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
-            x1 = x-[self.x0, self.y0, self.z0]
             U+= vel_mode(x1, t-self.t0, self.kDir[ii],self.ki[ii], self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
 
@@ -1107,8 +1107,8 @@ class TimeSeries:
         kDir = self.decompose_window[Nw][4]
         t0 = self.windows_rec[Nw][0,0]
         Eta=0.
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
-            x1 = np.array(x)-[self.x0, self.y0, self.z0]
             Eta+= eta_mode(x1, t-t0, kDir[ii], omega[ii], phi[ii], ai[ii])
         return Eta
 
@@ -1127,8 +1127,8 @@ class TimeSeries:
         ki = self.decompose_window[Nw][5]
         t0 = self.windows_rec[Nw][0,0]
         U=0.
+        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
-            x1 =  np.array(x)-[self.x0, self.y0, self.z0]
             U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
 
@@ -1184,6 +1184,7 @@ class RandomWavesFast(RandomWaves):
                              )
             fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
             series = self.writeEtaSeries(Tstart,Tend,x0,fname,Lgen)
+            cutoff = 0.2*self.Tp/(series[-1,0]-series[0,0])
             TS = TimeSeries(
                  fname, # e.g.= "Timeseries.txt",
                  0,
@@ -1193,7 +1194,7 @@ class RandomWavesFast(RandomWaves):
                  self.mwl ,        #mean water level
                  self.waveDir,
                  self.g,
-                 cutoffTotal = 0.2*self.Tp,
+                 cutoffTotal = cutoff,
                  rec_direct = False,
                  window_params = {"Nwaves":15 ,"Tm":self.Tp/1.1,"Window":"costap"},
                  arrayData = True,
