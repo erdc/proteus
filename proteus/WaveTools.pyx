@@ -1246,7 +1246,6 @@ class RandomNLWaves(RandomWaves):
         self.u = self.wtError
     def eta_linear(self, x, t):
         """Free surface displacement
-
         :param x: floating point x coordinate
         :param t: time"""
         Eta=0.
@@ -1378,7 +1377,7 @@ class RandomNLWavesFast:
         self.omega = aR.omega
 
 
-        Tmax =  NLongW*Tp
+        Tmax =  NLongW*Tp/1.1
         modes = ["short","linear","long"]
         periods = [Tp/2./1.1,Tp/1.1, Tmax]
         self.TS= []
@@ -1389,7 +1388,7 @@ class RandomNLWavesFast:
             dt = periods[ii]/50.
             series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Vgen)
             Tstart_temp = series[0,0]
-            cutoff = 0.2*Tp/(Tend-Tstart_temp)
+            cutoff = 0.2*periods[ii]/(Tend-Tstart_temp)
             
             #Checking if there are enough windows
             Nwaves_tot = int((Tend-Tstart_temp)/periods[ii])
@@ -1416,11 +1415,10 @@ class RandomNLWavesFast:
                     arrayData = True,
                     seriesArray = series)
                            )
-#        self.series = ii
 
                            
     def eta(self,x,t):
-        etaR = self.TS[0].eta(x,t)+ self.TS[1].eta(x,t)+self.TS[2].eta(x,t)
+        etaR =   self.TS[0].eta(x,t) + self.TS[1].eta(x,t) + self.TS[2].eta(x,t)
         return etaR
 
     
