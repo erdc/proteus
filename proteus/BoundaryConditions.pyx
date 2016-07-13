@@ -8,7 +8,7 @@ Module for creating boundary conditions. Imported in SpatialTools.py
 
 class BC_Base(object):
     """
-    Generic class regrouping boundary conditions 
+    Generic class regrouping boundary conditions
     """
     def __init__(self, shape=None, name=None, b_or=None, b_i=None):
         self.Shape = shape
@@ -30,7 +30,8 @@ class BC_Base(object):
         """
         setattr(cls, name, default_value)
 
-    def getContext(self, context=None):
+    @classmethod
+    def getContext(cls, context=None):
         """
         Gets context from proteus.Context or
 
@@ -41,9 +42,9 @@ class BC_Base(object):
         """
         if context is None:
             from proteus import Context
-            self.ct = Context.get()
+            cls.ct = Context.get()
         else:
-            self.ct = context
+            cls.ct = context
 
 
 class BoundaryCondition():
