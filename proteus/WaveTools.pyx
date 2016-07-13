@@ -1167,7 +1167,9 @@ class RandomWavesFast(RandomWaves):
                  spectName ,# random words will result in error and return the available spectra
                  spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  phi=None,
-                 Lgen = np.array([0., 0. ,0. ])
+                 Lgen = np.array([0., 0. ,0. ]),
+                 Nwaves = 15,
+                 Nfreq = 32
                  ):
             RandomWaves.__init__(self,
                                  Tp, # np array with
@@ -1185,18 +1187,31 @@ class RandomWavesFast(RandomWaves):
             fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
             series = self.writeEtaSeries(Tstart,Tend,x0,fname,Lgen)
             cutoff = 0.2*self.Tp/(series[-1,0]-series[0,0])
+            Tm = self.Tp/1.1
+
+            #Checking if there are enough windows
+            Nwaves_tot = round((series[-1,0]-series[0,0])/Tm)
+            Nwaves = min(Nwaves,Nwaves_tot)
+            Nwind = int(Nwaves_tot/Nwaves)
+            if Nwind < 3:
+                rec_d = True
+            else:
+                rec_d = False
+            
+
+
             TS = TimeSeries(
                  fname, # e.g.= "Timeseries.txt",
                  0,
                  x0,
                  self.depth ,
-                 32 ,          #number of frequency bins
+                 Nfreq ,          #number of frequency bins
                  self.mwl ,        #mean water level
                  self.waveDir,
                  self.g,
                  cutoffTotal = cutoff,
-                 rec_direct = False,
-                 window_params = {"Nwaves":15 ,"Tm":self.Tp/1.1,"Window":"costap"},
+                 rec_direct = rec_d,
+                 window_params = {"Nwaves":Nwaves ,"Tm":Tm,"Window":"costap"},
                  arrayData = True,
                  seriesArray = series
                  )
@@ -1226,9 +1241,17 @@ class RandomNLWaves(RandomWaves):
         RandomWaves.__init__(self,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
 
 
-        self.eta_linear = self.eta
+#        self.eta_linear = self.eta
         self.eta = self.wtError
         self.u = self.wtError
+    def eta_linear(self, x, t):
+        """Free surface displacement
+        :param x: floating point x coordinate
+        :param t: time"""
+        Eta=0.
+        for ii in range(self.N):
+            Eta+= eta_mode(x, t,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
+        return Eta
 
     def eta_2ndOrder(self,x,t):
         Eta2nd = 0.
@@ -1344,13 +1367,17 @@ class RandomNLWavesFast:
                  spectName,               #random words will result in error and return the available spectra
                  spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  phi=None,
-                 Vgen = np.array([0.,0.,0.])    #array of component phases
+                 Vgen = np.array([0.,0.,0.]),    #array of component phases
+                 Nwaves = 15,
+                 Nfreq = 32,
+                 NLongW = 10.
                  ):
         aR = RandomWaves(Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
         aRN = RandomNLWaves(Tstart,Tend,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
         self.omega = aR.omega
 
-        Tmax = 4.*pi/(max(self.omega)-min(self.omega))
+
+        Tmax =  NLongW*Tp/1.1
         modes = ["short","linear","long"]
         periods = [Tp/2./1.1,Tp/1.1, Tmax]
         self.TS= []
@@ -1361,45 +1388,40 @@ class RandomNLWavesFast:
             dt = periods[ii]/50.
             series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Vgen)
             Tstart_temp = series[0,0]
-            cutoff = 0.2*Tp/(Tend-Tstart_temp)
+            cutoff = 0.2*periods[ii]/(Tend-Tstart_temp)
+            
+            #Checking if there are enough windows
+            Nwaves_tot = int((Tend-Tstart_temp)/periods[ii])
+            Nwaves = min(Nwaves,Nwaves_tot)
+            Nwind = int(Nwaves_tot/Nwaves)
+            if Nwind < 3:
+                rec_d = True
+            else:
+                rec_d = False
+            
+
             self.TS.append(TimeSeries(
                     fname,
                     0,
                     x0,
                     depth,
-                    32,
+                    Nfreq,
                     mwl,
                     waveDir,
                     g,
                     cutoffTotal = cutoff,
-                    rec_direct = False,
-                    window_params = {"Nwaves":15 ,"Tm":periods[ii],"Window":"costap"},
+                    rec_direct = rec_d,
+                    window_params = {"Nwaves":Nwaves ,"Tm":periods[ii],"Window":"costap"},
                     arrayData = True,
                     seriesArray = series)
                            )
-        self.series =  [ Tstart,Tend,
-                         fname,
-                    0,
-                    x0,
-                    depth,
-                    32,
-                    mwl,
-                    waveDir,
-                    g,
-                    cutoff,
-                     False,
-                     {"Nwaves":15 ,"Tm":periods[ii],"Window":"costap"},
-                     True,
-                     series]
 
-#        self.series = ii
-
-
+                           
     def eta(self,x,t):
-        etaR = self.TS[0].eta(x,t)+ self.TS[1].eta(x,t)+self.TS[2].eta(x,t)
+        etaR =   self.TS[0].eta(x,t) + self.TS[1].eta(x,t) + self.TS[2].eta(x,t)
         return etaR
 
-
+    
     def u(self,x,t):
         uR = self.TS[0].u(x,t)+ self.TS[1].u(x,t)+self.TS[2].u(x,t)
         return uR
