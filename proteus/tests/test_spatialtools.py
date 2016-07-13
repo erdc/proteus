@@ -231,7 +231,7 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(rectangle.holes.tolist(), [[1., 1.]])
         npt.assert_equal(rectangle.auxiliaryVariables['RigidBody'], True)
         assembleDomainRANS(domain)
-        isRigidBody = isinstance(domain.auxiliaryVariables[0], RigidBody)
+        isRigidBody = isinstance(domain.auxiliaryVariables['twp'][0], RigidBody)
         npt.assert_equal(isRigidBody, True)
 
     def test_set_constraints(self):
