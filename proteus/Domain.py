@@ -301,6 +301,27 @@ shipout();
     def writeXdmf(self,ar):
         raise UserWarning("Xdmf output not implemented")
 
+class GMSH_3D_Domain(D_base):
+    """
+    A domain described by a gmsh .geo file
+
+    Parameters
+    ----------
+    geofile : str
+              The base filename of the main .geo file
+    he : float
+         The maximum element diameter (this should go way)
+    name : str
+           A name for the domain
+    units : str
+            The units of length
+    """
+    def __init__(self, geofile, he, name="GMSH_Domain", units="m"):
+        D_base.__init__(self, 2, name, units)
+        self.geofile=geofile+".geo"
+        self.polyfile=geofile
+        self.he = he
+
 class PlanarStraightLineGraphDomain(D_base):
     """
     2D domains described by planar straight line graphs.
