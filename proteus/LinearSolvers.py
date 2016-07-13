@@ -585,25 +585,26 @@ class KSP_petsc4py(LinearSolver):
         except:
             pass
 
-        try:
-            if isinstance(self.preconditioner, DarcyMSDG):
-                logEvent("Updating the corrected residual for MSDG before KSP solver")
-                reduced_vector = par_b.duplicate() # duplicate the par_b with zero entries
-                self.par_L.mult(self.preconditioner.RHS, reduced_vector)
-                par_b.axpy(-1, reduced_vector)
-                self.ksp.solve(par_b,par_u)
-                logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
-                                                                                                                     self.ksp.atol,
-                                                                                                                     self.ksp.converged,
-                                                                                                                     self.ksp.its,
-                                                                                                                     self.ksp.norm,
-                                                                                                                     self.ksp.reason))
-                par_u.axpy(1, reduced_vector)
-                par_b.axpy(-1, reduced_vector)
-        except:
+
+        if isinstance(self.preconditioner, DarcyMSDG):
+            logEvent("Updating the corrected residual for MSDG before KSP solver")
+            reduced_vector = par_b.duplicate() # duplicate the par_b with zero entries
+            self.par_L.mult(self.preconditioner.RHS, reduced_vector)
+            par_b.axpy(-1, reduced_vector)
             self.ksp.solve(par_b,par_u)
             logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
-                                                                                                             self.ksp.atol,
+                                                                                                                 self.ksp.atol,
+                                                                                                                 self.ksp.converged,
+                                                                                                                 self.ksp.its,
+                                                                                                                 self.ksp.norm,
+                                                                                                                 self.ksp.reason))
+            par_u.axpy(1, reduced_vector)
+            par_b.axpy(-1, reduced_vector)
+        else:
+            self.ksp.solve(par_b,par_u)
+            logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
+
+                                                                                                                 self.ksp.atol,
                                                                                                              self.ksp.converged,
                                                                                                              self.ksp.its,
                                                                                                              self.ksp.norm,
