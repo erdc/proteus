@@ -1385,7 +1385,9 @@ def assembleAuxiliaryVariables(domain):
     -----
     Should be called after assembleGeometry
     """
-    domain.auxiliaryVariables = {'twp': [], 'vof': []}
+    domain.auxiliaryVariables = {'twp': [], 'vof': [], 'ls': [], 'redist': [],
+                                 'ls_consrv': [], 'kappa': [],
+                                 'dissipation': [], 'moveMesh': []}
     zones_global = {}
     start_region = 0
     start_rflag = 0
@@ -1395,15 +1397,15 @@ def assembleAuxiliaryVariables(domain):
         # ----------------------------
         # RIGID BODIES
         if 'RigidBody' in shape.auxiliaryVariables.keys():
-            aux['twp'] += [RigidBody(shape)]
+            body = RigidBody(shape)
+            aux['twp'] += [body]
             # fixing mesh on rigid body
-            body = aux[-1]
             for boundcond in shape.BC_list:
                 boundcond.setMoveMesh(body.last_position, body.h,
                                       body.rotation_matrix)
             # update the indice for force/moment calculations
-            aux[-1].i_start = start_flag+1
-            aux[-1].i_end = start_flag+1+len(shape.BC_list)
+            body.i_start = start_flag+1
+            body.i_end = start_flag+1+len(shape.BC_list)
         # ----------------------------
         # ABSORPTION/GENERATION ZONES
         if 'RelaxZones' in shape.auxiliaryVariables.keys():
