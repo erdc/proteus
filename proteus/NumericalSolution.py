@@ -239,26 +239,57 @@ class NS_base:  # (HasTraits):
                                                                      parallelPartitioningType=n.parallelPartitioningType)
 
             elif isinstance(p.domain,Domain.PlanarStraightLineGraphDomain):
-                logEvent("Calling Triangle to generate 2D mesh for"+p.name)
-                tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
-                                                       nbase=1,
-                                                       verbose=10)
-                if comm.isMaster() and p.genMesh:
-                    tmesh.readFromPolyFile(p.domain.polyfile)
-                    tmesh.writeToFile(p.domain.polyfile)
-                    logEvent("Converting to Proteus Mesh")
-                    mesh=tmesh.convertToProteusMesh(verbose=1)
-                comm.barrier()
-                if not comm.isMaster() or not p.genMesh:
-                    mesh = MeshTools.TriangularMesh()
-                    mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
-                mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
-                                                            nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                            parallelPartitioningType=n.parallelPartitioningType)
-                logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
-                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
-                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                      parallelPartitioningType=n.parallelPartitioningType)
+                if p.domain.MeshOptions.use_gmsh is True:
+                    if p.domain.nd == 2:
+                        logEvent("Running gmsh to generate 2D mesh for "+p.name,level=1)
+                        gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s}  -format msh -clmax {2:f}".format(p.domain.geofile, p.domain.polyfile+".msh", p.domain.MeshOptions.he)
+                        logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
+                        check_call(gmsh_cmd, shell=True)
+
+                        logEvent("Done running gmsh; converting to triangle")
+
+                        from proteus.gmsh2triangle import msh2triangle
+                        msh2triangle(p.domain.polyfile)
+
+                        mesh = MeshTools.TriangularMesh()
+                        mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
+                                                                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                    parallelPartitioningType=n.parallelPartitioningType)
+                        logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
+                        if opts.generatePartitionedMeshFromFiles:
+                            logEvent("Generating partitioned mesh from Triangle files")
+                            mlMesh.generatePartitionedMeshFromTetgenFiles(p.domain.polyfile,nbase,mesh,n.nLevels,
+                                                                        nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                        parallelPartitioningType=n.parallelPartitioningType)
+                        else:
+                            logEvent("Generating coarse global mesh from Triangle files")
+                            mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
+                            logEvent("Generating partitioned %i-level mesh from coarse global Triangle mesh" % (n.nLevels,))
+                            mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                                nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                parallelPartitioningType=n.parallelPartitioningType)
+                else:
+                    logEvent("Calling Triangle to generate 2D mesh for"+p.name)
+                    tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
+                                                        nbase=1,
+                                                        verbose=10)
+                    if comm.isMaster() and p.genMesh:
+                        tmesh.readFromPolyFile(p.domain.polyfile)
+                        tmesh.writeToFile(p.domain.polyfile)
+                        logEvent("Converting to Proteus Mesh")
+                        mesh=tmesh.convertToProteusMesh(verbose=1)
+                    comm.barrier()
+                    if not comm.isMaster() or not p.genMesh:
+                        mesh = MeshTools.TriangularMesh()
+                        mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
+                    mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
+                                                                nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                parallelPartitioningType=n.parallelPartitioningType)
+                    logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
+                    mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                        nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                        parallelPartitioningType=n.parallelPartitioningType)
+
             elif isinstance(p.domain,Domain.PiecewiseLinearComplexDomain):
                 from subprocess import call
                 import sys
@@ -403,6 +434,8 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
 
+
+            
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
