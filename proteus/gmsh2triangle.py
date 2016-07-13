@@ -27,7 +27,10 @@ def msh2triangle(fileprefix):
                 node_nb = int(words[0])
             else:
                 nid = int(words[0])
-                x, y, z = float(words[1]), float(words[2]), float(words[3])
+                if nd == 2:
+                    x, y, z = float(words[1]), float(words[2]), 0
+                elif nd == 3:
+                    x, y, z = float(words[1]), float(words[2]), float(words[3])
                 nodes += [[nid, x, y, z, 0]]
         if switch == 'elements' and switch_count >= 0:
             words = line.split()
