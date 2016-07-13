@@ -209,6 +209,7 @@ class MeshOptions:
         self.nd = nd
         self.he = None
         self.genMesh = True
+        self.use_gmsh = False
         self.outputFiles = {'name': 'mesh',
                             'poly': True,
                             'ply': False,
