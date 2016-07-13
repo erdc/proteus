@@ -31,6 +31,10 @@ class D_base:
         self.bc = []
         # list of auxiliaryVariables
         self.auxiliaryVariables = []
+        # needed for gmsh
+        self.volumes = []
+        self.holes_ind = []
+        self.boundaryTags = {}
         # attach a MeshOption class
         self.MeshOptions = MeshOptions(self.nd)
 
@@ -57,6 +61,144 @@ class D_base:
             xMin = min(row[d] for row in self.vertices)
             self.x += [xMin]
             self.L += [xMax-xMin]
+
+
+    def writeGeo(self, fileprefix, group_names=False):
+        """
+        Write the PSLG using gmsh geo format incomplete write now
+        probably run into problems with orientation, no concept of a
+        line loop dummyAxis (0,1,2) is the remaining axis for
+        embedding the 2d geometry in 3d and xref is the constant value
+        for that axis
+        """
+        self.geofile = fileprefix+'.geo'
+        self.polyfile = fileprefix
+        geo = open(self.geofile,'w')
+        pp = {}  # physical points
+        pl = {}  # physical lines
+        ps = {}  # physical surfaces
+        pv = {}  # physical volume
+        sN = len(self.segments)
+
+        # Vertices
+        print self.vertices
+        geo.write('\n// Points\n')
+        z = 0
+        for i, v in enumerate(self.vertices):
+            if self.nd == 3:
+                z = v[2]
+            geo.write("Point(%d) = {%g,%g,%g};\n" % (i+1,v[0],v[1], z))
+            if self.vertexFlags:
+                flag = self.vertexFlags[i]
+                if flag in pp:
+                    pp[flag] += [i+1]
+                else:
+                    pp[flag] = [i+1]
+        nb_points = i+1
+
+        lines_dict = {}
+        for i in range(nb_points):
+            lines_dict[i] = {}
+
+        # Lines
+        geo.write('\n// Lines\n')
+        # line_list = []
+        for i, s in enumerate(self.segments):
+            geo.write("Line(%d) = {%d,%d};\n" % (i+1,s[0]+1,s[1]+1))
+            # add segments in dictionary
+            lines_dict[s[0]][s[1]] = i
+            if self.segmentFlags:
+                flag = self.segmentFlags[i]
+                if flag in pl:
+                    pl[flag] += [i+1]
+                else:
+                    pl[flag] = [i+1]
+
+        # Surfaces
+        geo.write('\n// Surfaces\n')
+        lines = 0
+        lineloop_count = 0
+        surface_line_list = []  # need to store for mesh constraints later
+        # facet
+        for i, f in enumerate(self.facets):
+            seg_flag = sN+i+1
+            lineloop = []
+            lineloops = []
+            lineloops_list = []
+            line_list = []
+            # subfacet
+            if i not in self.holes_ind:
+                for j, subf in enumerate(f):
+                    lineloop = []
+                    # vertices in facet
+                    print 'subf'+str(subf)
+                    for k, ver in enumerate(subf):
+                        if ver in lines_dict[subf[k-1]].keys():
+                            lineloop += [lines_dict[subf[k-1]][ver]+1]
+                        elif subf[k-1] in lines_dict[ver].keys():
+                            # reversed
+                            lineloop += [-(lines_dict[ver][subf[k-1]]+1)]
+                        else:
+                            ind = seg_flag+lines
+                            lines += 1
+                            geo.write('Line(%d) = {%d,%d};\n' % (ind, subf[k-1]+1, ver+1))
+                            lineloop += [ind]
+                    line_list += lineloop
+                    geo.write('Line Loop(%d) = {%s};\n' % (lineloop_count+1, str(lineloop)[1:-1]))
+                    lineloops += [lineloop_count+1]
+                    lineloop_count += 1
+                    # print i, j
+                surface_line_list += [line_list]
+                geo.write('Plane Surface(%d) = {%s};\n' % (i+1, str(lineloops)[1:-1]))
+                if self.facetFlags:
+                    flag = self.facetFlags[i]
+                    if flag in ps:
+                        ps[flag] += [i+1]
+                    else:
+                        ps[flag] = [i+1]
+
+        # Volumes
+        geo.write('\n// Volumes\n')
+        for i, V in enumerate(self.volumes):
+            surface_loops = []
+            if i not in self.holes_ind:
+                for j, sV in enumerate(V):
+                    lineloop_count += 1
+                    geo.write('Surface Loop(%d) = {%s};\n' % (lineloop_count, str((np.array(sV)+1).tolist())[1:-1]))
+                    surface_loops += [lineloop_count]
+                geo.write('Volume(%d) = {%s};\n' % (i+1, str(surface_loops)[1:-1]))
+                flag = self.regionFlags[i]
+                if self.regionFlags:
+                    if flag in pv:
+                        pv[flag] += [i+1]
+                    else:
+                        pv[flag] = [i+1]
+
+        # Physical Groups
+        geo.write('\n// Physical Groups\n')
+        if self.boundaryTags:
+            inv_bt = {v: k for k, v in self.boundaryTags.iteritems()}
+        for flag in pp:
+            ind = pp[flag]
+            if self.boundaryTags and group_names is True:
+                flag = '"'+inv_bt[flag]+'", '+str(flag)
+            geo.write("Physical Point({0}) = {{{1}}};\n".format(str(flag), str(ind)[1:-1]))
+        for flag in pl:
+            ind = pl[flag]
+            if self.boundaryTags and group_names is True:
+                flag = '"'+inv_bt[flag]+'", '+str(flag)
+            geo.write("Physical Line({0}) = {{{1}}};\n".format(str(flag), str(ind)[1:-1]))
+        for flag in ps:
+            ind = ps[flag]
+            if self.boundaryTags and group_names is True:
+                flag = '"'+inv_bt[flag]+'", '+str(flag)
+            geo.write("Physical Surface({0}) = {{{1}}};\n".format(str(flag), str(ind)[1:-1]))
+        for flag in pv:
+            ind = pv[flag]
+            if self.boundaryTags and group_names is True:
+                flag = '"'+inv_bt[flag]+'", '+str(flag)
+            geo.write("Physical Volume({0}) = {{{1}}};\n".format(str(flag), str(ind)[1:-1]))
+
 
 
 class MeshOptions:
@@ -598,112 +740,6 @@ property float z
         Store the PSLG domain in an XDMF file. For now we store the information on holes in and Information element.
         """
         raise UserWarning("Xdmf output not implemented")
-    def writeGeo(self,fileprefix,dummyAxis=2,xref=0.):
-        """
-        Write the planar straight line graph domain in the gmsh geo format.
-        dummyAxis (0,1,2) is the remaining axis for
-        embedding the 2d geometry in 3d and xref is the constant value
-        for that axis
-        """
-        if True:#overwrite
-            pf = open(fileprefix+'.geo','w')
-            if self.vertexFlags :
-                hasVertexFlags=1
-            else:
-                hasVertexFlags=0
-            if self.segmentFlags :
-                hasSegmentFlags=1
-            else:
-                hasSegmentFlags=0
-            #hack
-            hasSegmentFlags=False
-            hasVertexFlags=False
-            pf.write("""
-//format gmsh geo
-//comment author: Proteus
-//comment object: %s
-""" % (self.name,))
-
-            #write the vertices
-            if dummyAxis == 0:
-                for vN,v in enumerate(self.vertices):
-                    pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,xref,v[0],v[1]))
-            elif dummyAxis == 1:
-                for vN,v in enumerate(self.vertices):
-                    pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,v[0],xref,v[1]))
-            else:
-                for vN,v in enumerate(self.vertices):
-                    pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,v[0],v[1],xref))
-            # find point indices => physical point
-            if self.vertexFlags :
-                vertFlagDict={}
-                for vN,v in enumerate(self.vertices):
-                    if not vertFlagDict.has_key(self.vertexFlags[vN]):
-                        vertFlagDict[self.vertexFlags[vN]] = []
-
-                    vertFlagDict[self.vertexFlags[vN]].append(vN+1)
-
-                # Physical Surfaces
-                pvN=0
-                for pv in vertFlagDict:
-                    pvN+=1
-                    pf.write('Physical Point(%d) = {%d' % (pvN,vertFlagDict[pv][0]) )
-                    for vN in range(1,len(vertFlagDict[pv])):
-                        pf.write(',%d' %(vertFlagDict[pv][vN]))
-                    pf.write('};\n' )
-
-
-            #write the facets
-            lN = 0
-            fNN = 0
-
-            lineLoop={}
-            #write the lines
-            for vN in range(0,len(self.segments)):
-                lN+=1
-                pf.write('Line(%d) = {%d,%d};\n'% (lN,self.segments[vN][0]+1,self.segments[vN][1]+1))
-                lineLoop[vN] = lN;
-
-            #write the lineloop
-            fNN+=1
-            pf.write('Line Loop(%d) = {%d' % (fNN,lineLoop[0]) )
-            for vN in range(1,len(self.segments)):
-                pf.write(',%d' %(lineLoop[vN]))
-            pf.write('};\n' )
-
-            #write the surface
-            pf.write('Plane Surface(%d) = {%d};\n'% (fNN,fNN))
-
-            #todo add physical surfaces or lines?
-            pf.close()
-        else:
-            print "File already exists, not writing polyfile: " +`self.polyfile`
-    def writeGMSH(self,fileprefix,dummyAxis=2,xref=0.):
-        """
-        Write the PSLG using gmsh geo format incomplete write now
-        probably run into problems with orientation, no concept of a
-        line loop dummyAxis (0,1,2) is the remaining axis for
-        embedding the 2d geometry in 3d and xref is the constant value
-        for that axis
-        """
-        base =1
-        assert dummyAxis in [0,1,2]
-        pf = open(fileprefix+'.geo','w')
-        if dummyAxis == 0:
-            for vN,v in enumerate(self.vertices):
-                pf.write("Point(%d) = {%g,%g,%g}; \n" % (vN+base,xref,v[0],v[1]))
-        elif dummyAxis == 1:
-            for vN,v in enumerate(self.vertices):
-                pf.write("Point(%d) = {%g,%g,%g}; \n" % (vN+base,v[0],xref,v[1]))
-        else:
-            for vN,v in enumerate(self.vertices):
-                pf.write("Point(%d) = {%g,%g,%g}; \n" % (vN+base,v[0],v[1],xref))
-
-        #
-        for sN,s in enumerate(self.segments):
-            pf.write("Line(%d) = {%d,%d}; \n" % (sN+base,s[0]+base,s[1]+base))
-        pf.close()
-
 
 class InterpolatedBathymetryDomain(PlanarStraightLineGraphDomain):
     """
@@ -1126,107 +1162,6 @@ dotfactor=12;
 
     def writeXdmf(self,fileprefix):
         pass
-
-    def writeGeo(self,fileprefix):
-        """
-        Write the PLC domain in the gmsh geo format.
-        """
-        if True:#overwrite
-            pf = open(fileprefix+'.geo','w')
-            if self.vertexFlags:
-                hasVertexFlags=1
-            else:
-                hasVertexFlags=0
-            if self.facetFlags :
-                hasFacetFlags=1
-            else:
-                hasFacetFlags=0
-            hasFacetFlags=False
-            hasVertexFlags=False
-            pf.write("""
-//format gmsh geo
-//comment author: Proteus
-//comment object: %s
-""" % (self.name,))
-
-            #write the vertices
-            for vN, v in enumerate(self.vertices):
-                pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1, v[0], v[1], v[2]))
-
-            # find point indices => physical point
-            if self.vertexFlags:
-                vertFlagDict = {}
-                for vN, v in enumerate(self.vertices):
-                    if not vertFlagDict.has_key(self.vertexFlags[vN]):
-                        vertFlagDict[self.vertexFlags[vN]] = []
-
-                    vertFlagDict[self.vertexFlags[vN]].append(vN+1)
-
-                print "vertexFlags"
-                print vertFlagDict
-                # Physical Surfaces
-                pvN = 0
-                for pv in vertFlagDict:
-                    pvN+=1
-                    pf.write('Physical Point(%d) = {%d' % (pvN, vertFlagDict[pv][0]))
-                    for vN in range(1,len(vertFlagDict[pv])):
-                        pf.write(',%d' % (vertFlagDict[pv][vN]))
-                    pf.write('};\n')
-
-
-            #write the facets
-            lN = 0
-            fNN = 0
-            for fN,f in enumerate(self.facets):
-                for segmentList in f:
-                    lineLoop={}
-                    #write the lines
-                    for vN in range(0,len(segmentList)):
-                        lN+=1
-                        pf.write('Line(%d) = {%d,%d};\n'% (lN,segmentList[vN-1]+1,segmentList[vN]+1))
-                        lineLoop[vN] = lN;
-
-                    #write the lineloop
-                    fNN+=1
-                    pf.write('Line Loop(%d) = {%d' % (fNN,lineLoop[0]) )
-                    for vN in range(1,len(segmentList)):
-                        pf.write(',%d' %(lineLoop[vN]))
-                    pf.write('};\n' )
-
-                    #write the surface
-                    pf.write('Plane Surface(%d) = {%d};\n'% (fNN,fNN))
-
-            # Find Face indices   => Physical Surfaces
-            if self.facetFlags :
-                facetFlagDict={}
-
-                fNN = 0
-                for fN,f in enumerate(self.facets):
-                    if not facetFlagDict.has_key(self.facetFlags[fN]):
-                        facetFlagDict[self.facetFlags[fN]] = []
-
-                    for segmentList in f:
-                        fNN+=1
-                        facetFlagDict[self.facetFlags[fN]].append(fNN)
-
-                print  "facetFlags"
-                print  facetFlagDict
-
-                # Physical Surfaces
-                psN=0
-                for ps in facetFlagDict:
-                    psN+=1
-                    pf.write('Physical Surface(%d) = {%d' % (psN,facetFlagDict[ps][0]) )
-                    for vN in range(1,len(facetFlagDict[ps])):
-                        pf.write(',%d' %(facetFlagDict[ps][vN]))
-                    pf.write('};\n' )
-
-
-
-
-            pf.close()
-        else:
-            print "File already exists, not writing polyfile: " +`self.polyfile`
 
 
 
