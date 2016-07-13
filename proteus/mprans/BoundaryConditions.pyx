@@ -144,9 +144,10 @@ class BC_RANS(BC_Base):
         self.w_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
 
-    def setOpenAir(self, orientation=None):
+    def setAtmosphere(self, orientation=None):
         """
-        Sets open boundary conditions (water can come out)
+        Sets atmosphere boundary conditions (water can come out)
+        (!) pressure dirichlet set to 0 for this BC
 
         Parameters
         ----------
@@ -235,7 +236,7 @@ class BC_RANS(BC_Base):
             VOF value of air (default is 1.)
         vof_water: Optional[float]
             VOF value of water (default is 0.)
-        
+
         Below the sea water level: fluid velocity to wave speed.
         Above the sea water level: fluid velocity set to wind speed.
         (!) Boundary condition relies on specific variables defined in Context:
