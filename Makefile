@@ -249,6 +249,11 @@ check:
 	${PROTEUS_ENV} python proteus/MeshAdaptPUMI/test/errorCheck/errorCheck.py
 	@echo "************************"
 
+	@echo "SCOREC-Gmsh Flow Test"
+	${PROTEUS_ENV} python proteus/MeshAdaptPUMI/test/gmshCheck/gmshCheck.py
+	@echo "************************"
+
+
 #doc: install
 doc:
 	@echo "************************************"
