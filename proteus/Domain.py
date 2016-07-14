@@ -127,7 +127,7 @@ class D_base:
             lineloops_list = []
             line_list = []
             # subfacet
-            if i not in self.holes_ind:
+            if self.nd == 3 or (self.nd == 2 and i not in self.holes_ind):
                 for j, subf in enumerate(f):
                     lineloop = []
                     # vertices in facet
