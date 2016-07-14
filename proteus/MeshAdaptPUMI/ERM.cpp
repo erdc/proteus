@@ -862,7 +862,8 @@ void MeshAdaptPUMIDrvr::get_local_error()
   apf::Field* visc = getViscosityField(voff);
 
   //***** Compute diffusive flux *****//
-  computeDiffusiveFlux(m,voff,visc,pref,velf);
+  if(hasBC)
+    computeDiffusiveFlux(m,voff,visc,pref,velf);
 
   //Initialize the Error Fields
   freeField(err_reg);
@@ -1035,7 +1036,8 @@ if(comm_rank==0 && testcount==eID){
     int F_idx[ndofs];
     bflux = (double*) calloc(ndofs,sizeof(double));
 
-    getBoundaryFlux(m, ent,bflux);
+    if(hasBC)
+      getBoundaryFlux(m, ent,bflux);
     for(int s=0;s<ndofs;s++){
       F_idx[s]=s;
     }
@@ -1173,7 +1175,8 @@ std::cout<<"Error estimate "<<err_est_total<<std::endl;
   getERMSizeField(err_est_total);
   apf::destroyField(visc);
   apf::destroyField(estimate);
-  removeBCData();
+  if(hasBC)
+    removeBCData();
   printf("It cleared the function.\n");
 }
 
