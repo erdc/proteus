@@ -43,7 +43,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   modelFileName = NULL; 
   adapt_type_config = maType;
   logging_config = logType;
-  hasBC = false;
+  has_gBC = false;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -69,8 +69,10 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
     std::cout<<"Boundary Condition functionality has not been built in for gmsh yet. Press any key.\n";
     std::cin.ignore();
   }
-  else
+  else{
     m = apf::loadMdsMesh(modelFile, meshFile);
+    has_gBC=true;
+  }
 
   m->verify();
   comm_size = PCU_Comm_Peers();
@@ -207,7 +209,6 @@ void MeshAdaptPUMIDrvr::simmetrixBCreloaded(const char* modelFile)
   {
     modelFileName=(char *) malloc(sizeof(char) * strlen(modelFile));
     strcpy(modelFileName,modelFile);
-    hasBC=true;
   }
 /*
   for(int i=0;i<comm_size;i++){
@@ -287,7 +288,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     mymass.close();
   }
   if(size_field_config=="alvin"){
-    if (hasBC)
+    if (has_gBC)
       simmetrixBCreloaded(modelFileName);
     if(logging_config=="on"){
       char namebuffer[20];
