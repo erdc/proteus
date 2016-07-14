@@ -581,10 +581,11 @@ class Tank3D(ShapeRANS):
         segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
         segmentFlags = [bt['z-'], bt['z-'], bt['z-'], bt['z-']]
         facets = [[[0, 1, 2, 3]]]
+        volumes = [[[0]]]
         facetFlags = [bt['z-']]
         regions = [[(x0+x1)/2., (y0+y1)/2., (z0+z1)/2.]]
         regionFlags = [1]
-        self.regionIndice = {0: 'tank'}
+        self.regionIndice = {'tank': 0}
         v_i = 4  # index of next vector to add
         r_i = 1  # index of next region to add
         nb_sponge = 0  # number of sponge layers defined
@@ -634,6 +635,7 @@ class Tank3D(ShapeRANS):
             vertexFlags += [bt['z-'], bt['z-']]
             segmentFlags += [bt['z-'], bt['z-'], bt['z-']]
             facetFlags += [bt['z-']]
+            volumes += [[[len(facetFlags)-1]]]
         # ---------------------------------------------
         # Then add the rest of the vectors (top) by symmetry
         # ---------------------------------------------
@@ -651,29 +653,81 @@ class Tank3D(ShapeRANS):
         segments += segments_top.tolist()
         facets_top = np.array(facets)
         facets_top += v_i
+        for vol in volumes:
+            vol[0] += [vol[0][0]+len(facetFlags)/2]
         facets += facets_top.tolist()
         # getting sides
         for s in segments_bottom:  # for vertical facets
             facets += [[[s[0], s[1], s[1]+v_i, s[0]+v_i]]]
             if vertices[s[0]][0] == vertices[s[1]][0] == x0:
+                if y_n > 0 and (vertices[s[0]][1] == y0-y_n or vertices[s[1]][1] == y0-y_n):
+                    volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
+                elif y_p > 0 and (vertices[s[0]][1] == y1+y_p or vertices[s[1]][1] == y1+y_p):
+                    volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
+                else:
+                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
+                if x_n > 0:
+                    volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
+                    facetFlags += [bt['sponge']]
+                else:
+                    facetFlags += [bt['x-']]
+            elif vertices[s[0]][0] == vertices[s[1]][0] == x0-x_n and x_n > 0:
+                volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
                 facetFlags += [bt['x-']]
             elif vertices[s[0]][0] == vertices[s[1]][0] == x1:
+                if y_n > 0 and (vertices[s[0]][1] == y0-y_n or vertices[s[1]][1] == y0-y_n):
+                    volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
+                elif y_p > 0 and (vertices[s[0]][1] == y1+y_p or vertices[s[1]][1] == y1+y_p):
+                    volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
+                else:
+                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
+                if x_p > 0:
+                    volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
+                    facetFlags += [bt['sponge']]
+                else:
+                    facetFlags += [bt['x+']]
+            elif vertices[s[0]][0] == vertices[s[1]][0] == x1+x_p and x_p > 0:
+                volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
                 facetFlags += [bt['x+']]
-            elif vertices[s[0]][1] == vertices[s[1]][1] == y0:
+            if vertices[s[0]][1] == vertices[s[1]][1] == y0:
+                if x_n > 0 and (vertices[s[0]][0] == x0-x_n or vertices[s[1]][0] == x0-x_n):
+                    volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
+                elif x_p > 0 and (vertices[s[0]][0] == x1+x_p or vertices[s[1]][0] == x1+x_p):
+                    volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
+                else:
+                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
+                if y_n > 0:
+                    volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
+                    facetFlags += [bt['sponge']]
+                else:
+                    facetFlags += [bt['y-']]
+            elif vertices[s[0]][1] == vertices[s[1]][1] == y0-y_n and y_n > 0:
+                volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
                 facetFlags += [bt['y-']]
             elif vertices[s[0]][1] == vertices[s[1]][1] == y1:
-                facetFlags += [bt['y+']]
-            else:
-                facetFlags += [bt['sponge']]
-        for i in range(v_i):  # for vertical segments
+                if x_n > 0 and (vertices[s[0]][0] == x0-x_n or vertices[s[1]][0] == x0-x_n):
+                    volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
+                elif x_p > 0 and (vertices[s[0]][0] == x1+x_p or vertices[s[1]][0] == x1+x_p):
+                    volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
+                else:
+                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
+                if y_p > 0:
+                    volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
+                    facetFlags += [bt['sponge']]
+                else:
+                    facetFlags += [bt['y+']]
+            elif vertices[s[0]][1] == vertices[s[1]][1] == y1+y_p and y_p > 0:
+                volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
+        # vertical segments
+        for i in range(v_i):
             segments += [[i, i+v_i]]
-            if vertices[i][0] == vertices[i+v_i][0] == x0:
+            if vertices[i][0] == vertices[i+v_i][0] == x0-x_n:
                 segmentFlags += [bt['x-']]
-            elif vertices[i][0] == vertices[i+v_i][0] == x1:
+            elif vertices[i][0] == vertices[i+v_i][0] == x1+x_p:
                 segmentFlags += [bt['x+']]
-            elif vertices[i][1] == vertices[i+v_i][1] == y0:
+            elif vertices[i][1] == vertices[i+v_i][1] == y0-x_n:
                 segmentFlags += [bt['y-']]
-            elif vertices[i][1] == vertices[i+v_i][1] == y1:
+            elif vertices[i][1] == vertices[i+v_i][1] == y1+x_p:
                 segmentFlags += [bt['y+']]
             else:
                 segmentFlags += [bt['sponge']]
@@ -686,6 +740,7 @@ class Tank3D(ShapeRANS):
         self.facetFlags = np.array(facetFlags)
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
+        self.volumes = np.array(volumes)
 
 
     def setAbsorptionZones(self, allSponge=False, y_n=False, y_p=False,
@@ -912,6 +967,8 @@ class Tank2D(ShapeRANS):
         segmentFlags = [bt['y-'], bt['x+'], bt['y+'], bt['x-']]  # y-, x+, y+, x-
         regions = [[(x0-leftSponge+x0)/2., regions_y]]
         regionFlags = [1]
+        facets = [[[0, 1, 2, 3]]]
+        facetFlags = [1]
         self.regionIndice = {'tank': 0}
         ind_region = 1
         av = 0 # added vertices
@@ -925,6 +982,8 @@ class Tank2D(ShapeRANS):
             self.regionIndice['x-'] = ind_region
             ind_region += 1
             regionFlags += [ind_region]
+            facets += [[[0, 4+av, 5+av, 3]]]
+            facetFlags += [ind_region]
             av += 2
         if rightSponge:
             vertices += [[x1+rightSponge, y0], [x1+rightSponge, y1]]
@@ -933,9 +992,11 @@ class Tank2D(ShapeRANS):
             segmentFlags += [bt['y-'], bt['x+'], bt['y+']]
             segmentFlags[1] = bt['sponge']
             regions += [[((x1+rightSponge)+x1)/2., regions_y]]
+            facets += [[[1, 4+av, 5+av, 2]]]
             self.regionIndice['x+'] = ind_region
             ind_region += 1
             regionFlags += [ind_region]
+            facetFlags += [ind_region]
             av += 2
         # need to check that original region is not in new sponge regions!
         self.vertices = np.array(vertices)
@@ -943,6 +1004,8 @@ class Tank2D(ShapeRANS):
         self.segments = np.array(segments)
         self.segmentFlags = np.array(segmentFlags)
         self.regions = np.array(regions)
+        self.facets = np.array(facets)
+        self.facetFlags = np.array(facetFlags)
         self.regionFlags = np.array(regionFlags)
 
     def setSponge(self, x_n=None, x_p=None):
