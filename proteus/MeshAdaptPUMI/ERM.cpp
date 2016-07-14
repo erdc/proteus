@@ -467,7 +467,7 @@ std::cout<<"Initialized flux"<<std::endl;
         int tag = m->getModelTag(me);
         apf::ModelEntity* boundary_face = m->findModelEntity(nsd-1,tag);
 
-        if(me==boundary_face){
+        if(me==boundary_face && has_gBC){
           int BCtype[4];
           double fluxdata[4][numbqpt];
           //for(int i=1;i<nsd+1;i++){ //ignores 0th index because that's pressure
@@ -626,7 +626,7 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf:
             int numqpt = apf::countIntPoints(b_elem,int_order); 
             int BCtype[nsd];
             double fluxdata[4][numqpt];
-            if(me==boundary_face){
+            if(me==boundary_face && has_gBC){
               m->getIntTag(bent,BCtag,&(BCtype[0]));                 
               for(int i=1;i<nsd+1;i++){ //ignores 0th index because that's pressure
                 //m->getIntTag(bent,BCtag[i],&BCtype[i]);                 
@@ -813,26 +813,27 @@ void MeshAdaptPUMIDrvr::removeBCData()
   apf::MeshIterator* fIter = m->begin(2);
   while(ent=m->iterate(fIter))
   {
-    if(m->hasTag(ent,BCtag))
+    if(has_gBC && m->hasTag(ent,BCtag)){
       m->removeTag(ent,BCtag);
+      for(int i=0;i<4;i++)
+      {
+        if(i>0 && m->hasTag(ent,fluxtag[i]))
+          m->removeTag(ent,fluxtag[i]);
+      }
+    }
+    if(m->hasTag(ent,diffFlux))
+      m->removeTag(ent,diffFlux);
+
+  }
+  std::cout<<"Flag 1"<<std::endl;
+  m->end(fIter);
+  if(has_gBC){
+    m->destroyTag(BCtag);
     for(int i=0;i<4;i++)
     {
-/*
-      if(m->hasTag(ent,BCtag[i]))
-        m->removeTag(ent,BCtag[i]);
-*/
-      if(i>0 && m->hasTag(ent,fluxtag[i]))
-        m->removeTag(ent,fluxtag[i]);
-      if(m->hasTag(ent,diffFlux))
-        m->removeTag(ent,diffFlux);
+      if(i>0)
+        m->destroyTag(fluxtag[i]);
     }
-  }
-  m->end(fIter);
-  m->destroyTag(BCtag);
-  for(int i=0;i<4;i++)
-  {
-    if(i>0)
-      m->destroyTag(fluxtag[i]);
   }
   m->destroyTag(diffFlux);
   if(comm_rank==0) std::cout<<"Destroyed BC and flux tags"<<std::endl;
@@ -862,8 +863,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
   apf::Field* visc = getViscosityField(voff);
 
   //***** Compute diffusive flux *****//
-  if(hasBC)
-    computeDiffusiveFlux(m,voff,visc,pref,velf);
+  computeDiffusiveFlux(m,voff,visc,pref,velf);
 
   //Initialize the Error Fields
   freeField(err_reg);
@@ -1036,8 +1036,7 @@ if(comm_rank==0 && testcount==eID){
     int F_idx[ndofs];
     bflux = (double*) calloc(ndofs,sizeof(double));
 
-    if(hasBC)
-      getBoundaryFlux(m, ent,bflux);
+    getBoundaryFlux(m, ent,bflux);
     for(int s=0;s<ndofs;s++){
       F_idx[s]=s;
     }
@@ -1175,8 +1174,7 @@ std::cout<<"Error estimate "<<err_est_total<<std::endl;
   getERMSizeField(err_est_total);
   apf::destroyField(visc);
   apf::destroyField(estimate);
-  if(hasBC)
-    removeBCData();
+  removeBCData();
   printf("It cleared the function.\n");
 }
 
