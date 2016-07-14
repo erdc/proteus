@@ -1,5 +1,6 @@
 #include <gmi_mesh.h>
 #include <gmi_sim.h>
+#include <gmi_null.h>
 #include <ma.h>
 #include <maShape.h>
 #include <apfMDS.h>
@@ -34,6 +35,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   err_reg = 0;
   gmi_register_mesh();
   gmi_register_sim();
+  gmi_register_null();
   approximation_order = 2;
   integration_order = 3;//approximation_order * 2;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
@@ -54,7 +56,9 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
 
 int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshFile)
 {
-  m = apf::loadMdsMesh(modelFile, meshFile);
+  //m = apf::loadMdsMesh(modelFile, meshFile);
+  
+  m = apf::loadMdsFromGmsh(gmi_load(modelFile), meshFile);
   m->verify();
   comm_size = PCU_Comm_Peers();
   comm_rank = PCU_Comm_Self();
