@@ -1276,6 +1276,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
                         
                    )
         series = aR.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+        cutoff = 0.2*Tp/(series[-1,0]-series[0,0])
         aT= TimeSeries(
             fname,
             0,
@@ -1285,7 +1286,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
             mwl ,        
             waveDir,
             g,
-            0.2*Tp,
+            cutoff,
             False,                                                                                                                                          
             {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
             True,
