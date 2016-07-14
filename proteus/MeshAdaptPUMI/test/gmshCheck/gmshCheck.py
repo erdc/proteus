@@ -17,8 +17,7 @@ from petsc4py import PETSc
 import os
 print os.getcwd()
 
-#testDir='./proteus/MeshAdaptPUMI/test/gmshCheck/'
-testDir='./'
+testDir='./proteus/MeshAdaptPUMI/test/gmshCheck/'
 Model=testDir + 'Couette.null'
 Mesh=testDir + 'Couette.msh'
 
