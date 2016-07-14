@@ -54,11 +54,20 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   Sim_unregisterAllKeys();
 }
 
+
+static bool ends_with(std::string const& str, std::string const& ext)
+{
+  return str.size() >= ext.size() &&
+         str.compare(str.size() - ext.size(), ext.size(), ext) == 0;
+}
+
 int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshFile)
 {
-  //m = apf::loadMdsMesh(modelFile, meshFile);
-  
-  m = apf::loadMdsFromGmsh(gmi_load(modelFile), meshFile);
+  if (ends_with(meshFile, ".msh"))
+    m = apf::loadMdsFromGmsh(gmi_load(modelFile), meshFile);
+  else
+    m = apf::loadMdsMesh(modelFile, meshFile);
+
   m->verify();
   comm_size = PCU_Comm_Peers();
   comm_rank = PCU_Comm_Self();
