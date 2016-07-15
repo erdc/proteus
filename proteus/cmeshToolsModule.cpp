@@ -1198,6 +1198,14 @@ SparsityInfo_init(SparsityInfo *self, PyObject *args, PyObject *kwds)
   return 0;
 }
 
+static void
+SparsityInfo_dealloc(SparsityInfo *self)
+{
+  self->columnIndecesMap.clear();
+  self->columnOffsetsMap.clear();
+  self->ob_type->tp_free((PyObject*)self);
+}
+
 
 static PyObject* SparsityInfo_findNonzeros(SparsityInfo *self,
                                            PyObject *args)
@@ -1426,6 +1434,7 @@ static PyObject* SparsityInfo_findNonzeros(SparsityInfo *self,
 //         std::cout<<*sit<<'\t';
 //       std::cout<<std::endl;
 //     }
+
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -1759,7 +1768,7 @@ static PyObject* SparsityInfo_getCSR(SparsityInfo *self,
       max_nonzeros = std::max(max_nonzeros,rowptr_[I+1] - rowptr_[I]);
     }
   //std::cout<<"Proteus: Maximum nonzeros in any row is "<<max_nonzeros<<std::endl;
-  return Py_BuildValue("(O,O,i,O)",PyArray_Return(rowptr),PyArray_Return(colind),nnz,PyArray_Return(nzval));
+  return Py_BuildValue("(N,N,i,N)",PyArray_Return(rowptr),PyArray_Return(colind),nnz,PyArray_Return(nzval));
 }
 
 
@@ -1827,7 +1836,7 @@ static PyTypeObject SparsityInfoType = {
   "cmeshTools.SparsityInfo",             /*tp_name*/
   sizeof(SparsityInfo), /*tp_basicsize*/
   0,                         /*tp_itemsize*/
-  0,                         /*tp_dealloc*/
+  (destructor) SparsityInfo_dealloc,                         /*tp_dealloc*/
   0,                         /*tp_print*/
   0,                         /*tp_getattr*/
   0,                         /*tp_setattr*/
