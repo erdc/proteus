@@ -1,11 +1,13 @@
 """
 An extension of the TransportCoefficients module for two-phase flow in porous media
+
+.. inheritance-diagram:: proteus.TwophaseDarcyCoefficients
+   :parts: 1
 """
 from math import *
 from TransportCoefficients import TC_base
 import numpy
-import Profiling
-log = Profiling.logEvent
+from Profiling import logEvent
 
 #base class for setting up fluid and material properties
 class TwophaseDarcyFlow_base(TC_base):

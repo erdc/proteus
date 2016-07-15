@@ -2,6 +2,9 @@
 """
 Collect classes and routines for postprocessing solution to get
  quantities like conservative velocities, higher accuracy, etc
+
+.. inheritance-diagram:: proteus.PostProcessingTools
+   :parts: 1
 """
 import numpy
 import FemTools
@@ -9,7 +12,7 @@ import LinearSolvers
 from LinearAlgebraTools import Mat,Vec,SparseMatFromDict
 import cfemIntegrals
 import cpostprocessing
-from Profiling import logEvent
+from .Profiling import logEvent
 import Norms
 import Archiver
 
@@ -484,6 +487,12 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         #how is the local velocity represented
         #  2 -- RT0, local rep is \sum^d_{i=0}V^i\vec N_{T,i},
         #           \vec N_{T,i} = \frac{1}{d|E|}(\vec x - p_i), i=0,...,d
+        if self.vt.mesh.meshType() != 'simplex':
+            raise Exception, 'Proteus currently only supports conservative '\
+                'flux post-processing on triangular and tetrahedral meshes.  ' \
+                'Try removing the post-processing flag or changing your ' \
+                'mesh/finite element type.'
+
         self.localVelocityRepresentationFlag = 2
 
         self.omitFluxBoundaryNodes=omitFluxBoundaryNodes
