@@ -1,18 +1,49 @@
 """
 AuxiliaryVariables subclasses for extracting isosurfaces and contours
+
+.. inheritance-diagram:: proteus.Isosurface
+   :parts: 1
 """
 from collections import defaultdict, OrderedDict
 from itertools import product
-from proteus.EGeometry import etriple, ecross, enorm, edot
+#from proteus.EGeometry import etriple, ecross, enorm, edot
 
 from mpi4py import MPI
 from petsc4py import PETSc
 import numpy as np
+cimport numpy as np
 from numpy.linalg import norm
 
 from . import Comm
 from .AuxiliaryVariables import AV_base
 from .Profiling import logEvent as log
+
+from libc.math cimport sqrt
+
+DEF X=0
+DEF Y=1
+DEF Z=2
+
+cdef np.ndarray[np.float64_t,ndim=1] EVec(double x=0.0, double y=0.0, double z=0.0):
+    cdef  np.ndarray [np.float64_t, ndim=1] v = np.zeros((3,),'d')
+    v[X] = x
+    v[Y] = y
+    v[Z] = z
+    return v
+
+cdef double enorm(np.ndarray[np.float64_t, ndim=1] v):
+    return sqrt(v[X]**2 + v[Y]**2 + v[Z]**2)
+
+cdef double edot(np.ndarray[np.float64_t, ndim=1] v0, np.ndarray[np.float64_t, ndim=1] v1):
+    return v0[X]*v1[X] + v0[Y]*v1[Y] + v0[Z]*v1[Z]
+
+cdef np.ndarray[np.float64_t, ndim=1] ecross(np.ndarray[np.float64_t, ndim=1] v0,  np.ndarray[np.float64_t, ndim=1] v1):
+    return EVec(v0[Y]*v1[Z] - v0[Z]*v1[Y],
+                v0[Z]*v1[X] - v0[X]*v1[Z],
+                v0[X]*v1[Y] - v0[Y]*v1[X])
+
+cdef double etriple(np.ndarray[np.float64_t, ndim=1] v0, np.ndarray[np.float64_t, ndim=1] v1, np.ndarray[np.float64_t, ndim=1] v2):
+    return edot(v0,ecross(v1,v2))
 
 
 class Isosurface(AV_base):
@@ -99,32 +130,35 @@ class Isosurface(AV_base):
         self.writeSceneHeader()
         return self
 
-    def attachHDF5(self, h5, step):
+    def attachHDF5(self, h5, step, cam=None):
         """
         Attach this isosurface to and HDF5 archive
         """
         from collections import namedtuple
         self.fieldNames = [isosurface[0] for isosurface in self.isosurfaces]
         self.elementNodesArray = h5.getNode("/elementsSpatial_Domain" +
-                                            repr(step))
-        self.nodeArray = h5.getNode("/nodesSpatial_Domain" + repr(step))
+                                            repr(step))[:]
+        self.nodeArray = h5.getNode("/nodesSpatial_Domain" + repr(step))[:]
         self.num_owned_elements = len(self.elementNodesArray)
         self.u = {}
         FemField = namedtuple('FemField', ['dof'])
         for field_i, field in enumerate(self.fieldNames):
             self.u[field_i] = FemField(dof=h5.getNode("/" +
                                                       self.isosurfaces[0][0] +
-                                                      repr(step)))
+                                                      repr(step))[:])
         self.nFrames = step
         self.last_output = None
         if step == 0:
-            self.writeSceneHeader()
+            self.writeSceneHeader(cam)
         return self
 
     def triangulateIsosurface(self, field, value):
         """
         Build a triangular mesh of the isosurface
         """
+        cdef int eN, i, J, I, nMinus, nPlus, nZeros, nN_start
+        cdef double eps, s
+        cdef np.ndarray[np.float64_t, ndim=1] x, normal
         self.nodes[(field, value)] = nodes = []
         self.elements[(field, value)] = elements = []
         self.normals[(field, value)] = normals = []
@@ -486,7 +520,7 @@ vertex_vectors {"""
                 return
         assert self.elementNodesArray.shape[1] == 4, \
             "Elements have {0:d} vertices but algorithm is for tets".format(
-                elementNodesArray.shape[1])
+                self.elementNodesArray.shape[1])
         for field, values in self.isosurfaces:
             for v in values:
                 self.triangulateIsosurface(field, v)
@@ -495,7 +529,7 @@ vertex_vectors {"""
         if checkTime:
             self.last_output = time
 
-    def writeSceneHeader(self):
+    def writeSceneHeader(self, cam = None):
         """
         Write a scene description (can be modified before running povray)
         """
@@ -503,14 +537,10 @@ vertex_vectors {"""
         if self.comm.isMaster():
             look_at = [0.5 * (x + L)
                        for x, L in zip(self.domain.x, self.domain.L)]
-            cam = [0.5 *
-                   (self.domain.x[0] +
-                    self.domain.L[0]), self.domain.x[1] -
-                   2 *
-                   self.domain.L[1], self.domain.x[2] +
-                   0.85 *
-                   (self.domain.L[2] +
-                       self.domain.x[2])]
+            if cam == None:
+                cam = [0.5*(self.domain.x[0] + self.domain.L[0]),
+                       self.domain.x[1] - 2*self.domain.L[1],
+                       self.domain.x[2] + 0.85*(self.domain.L[2] + self.domain.x[2])]
             light = [0.5 * (x + L)
                      for x, L in zip(self.domain.x, self.domain.L)]
             light[2] = self.domain.x[2] + 5 * self.domain.L[2]
