@@ -69,9 +69,12 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
     std::cout<<"Boundary Condition functionality has not been built in for gmsh yet. Press any key.\n";
     std::cin.ignore();
   }
-  else{
+  else if (ends_with(modelFile,".smd")){
     m = apf::loadMdsMesh(modelFile, meshFile);
     has_gBC=true;
+  }
+  else{
+    m = apf::loadMdsMesh(modelFile, meshFile);
   }
 
   m->verify();
