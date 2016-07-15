@@ -115,6 +115,7 @@ PROTEUS_SCOREC_LIBS = [
     'mth',
     'gmi',
     'pcu',
+    'lion',
     'zoltan',
     'parmetis',
     'metis',
