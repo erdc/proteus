@@ -1001,7 +1001,8 @@ class DiscreteAdvectionOperator(TC_base):
                              potential,
                              reaction,
                              hamiltonian,
-                             variableNames)
+                             variableNames,
+                             sparseDiffusionTensors={})
             self.vectorComponents = [1,2]
         if self.nd==3:
             variableNames=['p','u','v','w']
@@ -1586,7 +1587,8 @@ class DiscreteLaplaceOperator(TC_base):
                              reaction,
                              hamiltonian,
                              variableNames,
-                             useSparseDiffusion=True)
+                             sparseDiffusionTensors = {},
+                             useSparseDiffusion=False)
             self.vectorComponents=[1,2]
         if nd==3:
             variableNames=['p','u','v','w']
@@ -10670,7 +10672,8 @@ class DiscreteMassMatrix(TC_base):
                              potential,
                              reaction,
                              hamiltonian,
-                             variableNames)
+                             variableNames,
+                             sparseDiffusionTensors={})
             self.vectorComponents = [1,2]
         elif nd==3:
             variableNames = ['p','u','v','w']
