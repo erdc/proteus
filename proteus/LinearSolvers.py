@@ -419,7 +419,7 @@ class KSP_petsc4py(LinearSolver):
 
         # create petsc4py KSP object and attach operators
         self.ksp = p4pyPETSc.KSP().create()
-        self.__setMatOperators()
+        self._setMatOperators()
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
 
         # set the ksp residual tolerance, options prefix and function handle for convergence message.
@@ -429,18 +429,21 @@ class KSP_petsc4py(LinearSolver):
         if convergenceTest == 'r-true':
             self.r_work = self.petsc_L.getVecLeft()
             self.rnorm0 = None
-            self.ksp.setConvergenceTest(self.__converged_trueRes)
+            self.ksp.setConvergenceTest(self._converged_trueRes)
         else:
             self.r_work = None
-        if prefix != None:
-            self.ksp.setOptionsPrefix(prefix)
+        ### DO NOT MERGE - THIS NEEDS TO BE FIXED!!!!
+#        if prefix != None:
+#            self.ksp.setOptionsPrefix(prefix)
 
         # set ksp preconditioner
         if Preconditioner != None:
-            self.__setPreconditioner(Preconditioner,par_L,prefix)
+            self._setPreconditioner(Preconditioner,par_L,prefix)
             self.ksp.setPC(self.pc)
         # set the ksp options
         self.ksp.setFromOptions()
+        import pdb
+        pdb.set_trace()
 
     def setResTol(self,rtol,atol,maxIts):
         """ Set the ksp object's residual and maximum iterations. """
@@ -548,7 +551,7 @@ class KSP_petsc4py(LinearSolver):
             raise Exception('The nullspace assigned to the ksp operator is not correct.')
         
 
-    def __setMatOperators(self):
+    def _setMatOperators(self):
         """ Initializes python context for the ksp matrix operator """
         self.Lshell = p4pyPETSc.Mat().create()
         L_sizes = self.petsc_L.getSizes()
@@ -556,10 +559,9 @@ class KSP_petsc4py(LinearSolver):
         self.Lshell.setSizes(L_sizes)
         self.Lshell.setType('python')
         self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
-        self.Lshell.setPythonContext(self.matcontext)        
+        self.Lshell.setPythonContext(self.matcontext)
 
-
-    def __converged_trueRes(self,ksp,its,rnorm):
+    def _converged_trueRes(self,ksp,its,rnorm):
         """ Function handle to feed to ksp's setConvergenceTest  """
         ksp.buildResidual(self.r_work)
         truenorm = self.r_work.norm()
@@ -567,19 +569,27 @@ class KSP_petsc4py(LinearSolver):
             self.rnorm0 = truenorm
             logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
             logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
-            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,truenorm,(truenorm/ self.rnorm0),ksp.atol,ksp.rtol))
+            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
+                                                                                              truenorm,
+                                                                                              (truenorm/ self.rnorm0),
+                                                                                              ksp.atol,
+                                                                                              ksp.rtol))
             return False
         else:
             logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
             logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
-            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,truenorm,(truenorm/ self.rnorm0),ksp.atol,ksp.rtol))
+            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
+                                                                                              truenorm,
+                                                                                              (truenorm/ self.rnorm0),
+                                                                                              ksp.atol,
+                                                                                              ksp.rtol))
             if truenorm < self.rnorm0*ksp.rtol:
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
             if truenorm < ksp.atol:
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
         return False
 
-    def __setPreconditioner(self,Preconditioner,par_L,prefix):
+    def _setPreconditioner(self,Preconditioner,par_L,prefix):
         """ Sets the preconditioner type used in the KSP object """
         if Preconditioner != None:
             if Preconditioner == Jacobi:
@@ -646,6 +656,8 @@ class KSP_petsc4py(LinearSolver):
                 logEvent("NAHeader Preconditioner PCD" )
                 self.preconditioner = NavierStokes3D_PCD(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
+                import pdb
+                pdb.set_trace()
             elif Preconditioner == NavierStokes3D_LSC:
                 logEvent("NAHeader Preconditioner LSC" )
                 self.preconditioner = NavierStokes3D_LSC(par_L,prefix,self.bdyNullSpace)
@@ -775,6 +787,13 @@ class SchurOperatorConstructor:
 
         
     def getFp(self,output_matrix=False):
+        """ Return the convection-diffusion matrix for the pressure """
+        self.Fp = self.getCp()
+        Ap = self.getAp()
+        self.Fp.axpy(1.0,Ap)
+        return self.Fp
+
+    def getCp(self,output_matrix=True):
         """
         Return the convection matrix for the pressure Fp.
 
@@ -795,19 +814,17 @@ class SchurOperatorConstructor:
         """
         #modify the diffusion term in the mass equation so the p-p block is Fp
         # First generate the advection part of Fp
-        import pdb
-        pdb.set_trace()
         self._u = numpy.copy(self.L.pde.q[('u',1)])
         self._v = numpy.copy(self.L.pde.q[('u',2)])
         self._advectiveField = [self._u,self._v]
 
-        Fp_sys_petsc4py = self._getAdvection()
-        self.Fp = Fp_sys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+        Cp_sys_petsc4py = self._getAdvection()
+        self.Cp = Cp_sys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                self.linear_smoother.isp)
         if output_matrix==True:
-            self._exportMatrix(self.Fp,'Fp')
+            self._exportMatrix(self.Cp,'Cp')
 
-        return self.Fp
+        return self.Cp
 
     def getB(self,output_matrix=False):
         """ Create the B operator.
@@ -993,7 +1010,7 @@ class SchurOperatorConstructor:
         export_name : str
                     Export file name.
         """
-        from LinearAlgebraTools import __petsc_view
+        from LinearAlgebraTools import _petsc_view
         _petsc_view(operator, export_name) #write to export_name.m
         #running export_name.m will load into matlab  sparse matrix
         #runnig operatorf = full(Mat_...) will get the full matrix
@@ -1061,11 +1078,10 @@ class SchurPrecon:
                                                 step=nc,
                                                 dtype="i"))
             self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
-            import pdb
-            pdb.set_trace()
         self.pc = p4pyPETSc.PC().create()
-        if prefix:
-            self.pc.setOptionsPrefix(prefix)
+        # DO NOT MERGE - THIS NEEDS TO BE FIXED!!!!
+#        if prefix:
+#            self.pc.setOptionsPrefix(prefix)
         self.pc.setType('fieldsplit')
         self.isp = p4pyPETSc.IS()
         self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
@@ -1099,6 +1115,8 @@ class NavierStokesSchur(SchurPrecon):
         """
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
+        import pdb
+        pdb.set_trace()
         self._setSchurlog(global_ksp)
 
     def _setSchurlog(self,global_ksp):
@@ -1114,12 +1132,20 @@ class NavierStokesSchur(SchurPrecon):
             self.rnorm0 = truenorm
             logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
             logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
-            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,truenorm,(truenorm/ self.rnorm0),ksp.atol,ksp.rtol))
+            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
+                                                                                              truenorm,
+                                                                                              (truenorm/ self.rnorm0),
+                                                                                              ksp.atol,
+                                                                                              ksp.rtol))
             return False
         else:
             logEvent("NumericalAnalytics KSPSchurResidual: %12.5e" %(truenorm) )
             logEvent("NumericalAnalytics KSPSchurResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
-            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,truenorm,(truenorm/ self.rnorm0),ksp.atol,ksp.rtol))
+            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
+                                                                                              truenorm,
+                                                                                              (truenorm/ self.rnorm0),
+                                                                                              ksp.atol,
+                                                                                              ksp.rtol))
             if truenorm < self.rnorm0*ksp.rtol:
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
             if truenorm < ksp.atol:
@@ -1220,6 +1246,7 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         self.Fp = self.operator_constructor.getFp()
         self.Ap = self.operator_constructor.getAp()
         # Step-2: Set up the Shell for the  PETSc operator
+        self.Fp.axpy(1.0,self.Ap)
         # Qp
         L_sizes = self.Qp.size
         # ??? Is L_range necessary ???
@@ -1234,6 +1261,8 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        import pdb
+        pdb.set_trace()
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
@@ -1277,6 +1306,8 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        import pdb
+        pdb.set_trace()
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
@@ -2403,7 +2434,6 @@ class OperatorConstructor:
                                                       Mass_q[('vXw*dV_m',cj,ci)],
                                                       Mass_Jacobian[ci][cj])
 
-
         self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.MassOperator)
         self.massOperatorAttached = True
 
@@ -2425,6 +2455,7 @@ class OperatorConstructor:
         Laplace_phi = {}
         Laplace_dphi = {}
         self._initializeLaplacePhiFunctions(Laplace_phi,Laplace_dphi)
+        self._initializeSparseDiffusionTensor(self.LaplaceOperatorCoeff)
 
         Laplace_q = {}
         self._allocateLaplaceOperatorQStorageSpace(Laplace_q)
@@ -2670,6 +2701,22 @@ class OperatorConstructor:
         for ci,dphi in Laplace_dphi.iteritems():
             dphi.dof.fill(1.0)
 
+    def _initializeSparseDiffusionTensor(self,coeff):
+        """Intialize the sparse diffusion tensor for the lapalce matrix.
+
+        Arguments
+        ---------
+        coeff : `proteus:TransporCoefficients:DiscreteLaplaceOperator`
+        """
+        for ci,ckDict in coeff.diffusion.iteritems():
+            for ck in ckDict.keys():
+                if not coeff.sdInfo.has_key((ci,ck)):
+                    coeff.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=self.OLT.nSpace_global**2+1,
+                                                          step=self.OLT.nSpace_global,
+                                                          dtype='i'),
+                                             numpy.array([range(self.OLT.nSpace_global) for row in range(self.OLT.nSpace_global)],
+                                                         dtype='i'))
+
     def _allocateMassOperatorQStorageSpace(self,Q):
         """ Allocate space for mass operator values. """
         test_shape_quad = StorageSet(shape={})
@@ -2738,7 +2785,7 @@ class OperatorConstructor:
 
         scalar_quad.allocate(Q)
         vectors_quad.allocate(Q)
-
+    
         for k in tensors_quad:
             Q[k] = numpy.zeros(
                 (self.OLT.mesh.nElements_global,
