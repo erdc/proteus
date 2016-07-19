@@ -901,12 +901,11 @@ class NS_base:  # (HasTraits):
                 #assuming same for all physics and numerics  for now
                 p0 = self.pList[0]
                 n0 = self.nList[0]
-                #can only handle PUMIDomain's for now
+
+                adaptMeshNow = False
                 if (isinstance(p0.domain, Domain.PUMIDomain) and
                     n0.adaptMesh and
-                    self.nSequenceSteps%n0.adaptMesh_nSteps == 0 and
                     self.so.useOneMesh):
-                    logEvent("Entering mesh adaption block")
                     logEvent("Copying coordinates to PUMI")
                     p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                         self.modelList[0].levelModelList[0].mesh.nodeArray)
@@ -938,32 +937,48 @@ class NS_base:  # (HasTraits):
                     g = numpy.asarray(self.pList[0].g)
                     p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
                     del rho, nu, g
-                    #
-                    # zhang-alvin's BC communication for N-S error estimation
-                    #
-                      #for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
-                        #if idx>0:
-                        #    diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
-                        #else:
-                        #    diff_flux = numpy.empty([2,2]) #dummy diff flux
-                        #p.domain.PUMIMesh.transferBCtagsToProteus(
-                        #    self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
-                        #    idx,
-                        #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-                        #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-                        #    diff_flux)
-                        #p.domain.PUMIMesh.transferBCtagsToProteus(
-                        #    self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
-                        #    idx,
-                        #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-                        #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-                        #    diff_flux)
 
                     #
                     # Should we put in a hook here for forcing refinements?
                     # (e.g. set size  field  based on proteus calcualtions?)
                     # ...
                     #
+=======
+                    logEvent("Estimate Error")
+                    sfConfig = p0.domain.PUMIMesh.size_field_config()
+                    if(sfConfig=="alvin"):
+                      p0.domain.PUMIMesh.get_local_error()
+                      if(p0.domain.PUMIMesh.willAdapt()):
+                        adaptMeshNow=True
+                        logEvent("Need to Adapt")
+                    if(sfConfig=='farhad' and self.nSequenceSteps%n0.adaptMesh_nSteps==0 ):
+                      adaptMeshNow=True
+                      logEvent("Need to Adapt")
+
+
+                #can only handle PUMIDomain's for now
+                if(adaptMeshNow):
+                    ##
+                    ## zhang-alvin's BC communication for N-S error estimation
+                    ##
+                    #  #for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
+                    #    #if idx>0:
+                    #    #    diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
+                    #    #else:
+                    #    #    diff_flux = numpy.empty([2,2]) #dummy diff flux
+                    #    #p.domain.PUMIMesh.transferBCtagsToProteus(
+                    #    #    self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
+                    #    #    idx,
+                    #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+                    #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+                    #    #    diff_flux)
+                    #    #p.domain.PUMIMesh.transferBCtagsToProteus(
+                    #    #    self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
+                    #    #    idx,
+                    #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+                    #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+                    #    #    diff_flux)
+
                     logEvent("h-adapt mesh by calling AdaptPUMIMesh")
                     p0.domain.PUMIMesh.adaptPUMIMesh()
                     logEvent("Converting PUMI mesh to Proteus")

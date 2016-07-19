@@ -24,6 +24,7 @@ class MeshAdaptPUMIDrvr{
   int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   int transferBCsToProteus();
   int commuSizeField();
+  int willAdapt();
   int adaptPUMIMesh();
 
   void numberLocally();
@@ -43,6 +44,9 @@ class MeshAdaptPUMIDrvr{
   int numIter;
   int nAdapt; //counter for number of adapt steps
   int nsd; //number of spatial dimensions
+  std::string size_field_config;
+  std::string adapt_type_config;
+  std::string logging_config;
 
   //Element Residual Method
   void get_local_error();
@@ -66,6 +70,7 @@ class MeshAdaptPUMIDrvr{
   int integration_order; //determines number of integration points
   int num_quadrature; 
   int num_quarature_boundary;
+  double total_error;
 
   private: 
   apf::Mesh2* m;
