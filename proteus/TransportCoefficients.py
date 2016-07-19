@@ -2187,10 +2187,10 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
             kappa = self.q_kappa
             #slopeAngle=0.1*math.pi/2.0#math.pi/4.0
             #surfaceNormal = [-sin(slopeAngle),cos(slopeAngle)]
-            #waterLevel=0.5
+            #water_level=0.5
             #for eN in range(phi.shape[0]):
             #   for k in range(phi.shape[1]):
-            #       phi[eN,k] = (c['x'][eN,k,0] - 0.5)*surfaceNormal[0]+(c['x'][eN,k,1] - waterLevel)*surfaceNormal[1]
+            #       phi[eN,k] = (c['x'][eN,k,0] - 0.5)*surfaceNormal[0]+(c['x'][eN,k,1] - water_level)*surfaceNormal[1]
         elif c[('u',0)].shape == self.ebqe_phi.shape:
             phi   = self.ebqe_phi
             n     = self.ebqe_n
@@ -2204,7 +2204,7 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
         #for i in range(len(phi.flat)):
             #if abs(phi.flat[i]) > 0.0:
             #    assert abs(phi.flat[i] - (c['x'].flat[3*i+1] - waterLevelBase)) <= 1.0e-5, "Problem with phi t=%s phi.shape=%s i=%s phi=%s y=%s wl=%s " % (t,phi.shape,i,phi.flat[i],c['x'].flat[3*i+1],waterLevelBase)
-            #phi.flat[i] = c['x'].flat[3*i+1] - waterLevelBase#self.waterLevel
+            #phi.flat[i] = c['x'].flat[3*i+1] - waterLevelBase#self.water_level
         #self.sd=False
         if self.nd==2:
             if self.sd:

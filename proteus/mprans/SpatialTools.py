@@ -1497,16 +1497,16 @@ def assembleAuxiliaryVariables(domain):
                 key = flag+start_rflag
                 zones_global[key] = zone
         start_flag += len(shape.BC_list)
-        #[temp] add gauges
         # ----------------------------
         # GAUGES
         gauge_dict = {key: shape.auxiliaryVariables.get(key,[])
                       for key in shape.auxiliaryVariables.keys()
-                      if str(key).startswith('Gauge_')} #[temp] This ...should gracefully fail if it's not a string?
+                      if str(key).startswith('Gauge_')}
         for key in gauge_dict.keys():
             key_name = key.split('_', 1)[1] # Cutting off "Gauge_" prefix
             if key_name not in aux:
-                # aux[key_name] = []
+                # It is probably too dangerous to simply put "aux[key_name] = []"
+                # as this system is fragile to typos. Instead, we throw an error.
                 raise ValueError('ERROR: Gauge key ',
                                  key_name,
                                  ' is not a recognized model by SpatialTools.',
@@ -1515,7 +1515,6 @@ def assembleAuxiliaryVariables(domain):
                                  )
             else:
                 aux[key_name] += gauge_dict[key]
-        #[temp] add gauges
         if shape.regions is not None:
             start_region += len(shape.regions)
             start_rflag += max(domain.regionFlags[0:start_region])

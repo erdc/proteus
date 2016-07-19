@@ -105,6 +105,7 @@ class Shape(object):
         ----------
         list_of_lists: list
         """
+
         assert len(list_of_lists[0]) == self.nd, 'must have be a list of: ' \
             'lists of length ' + self.nd
 
@@ -836,18 +837,19 @@ def _assembleGeometry(domain, BC_class):
             start_rflag = 0
         domain.bc += shape.BC_list
         # making copies of shape properties before operations/modifications
-        vertices = shape.vertices.copy()
-        vertexFlags = shape.vertexFlags.copy()
+        # the np.array() will make a copy, as well as guarantee the type
+        vertices = np.array(shape.vertices)
+        vertexFlags = np.array(shape.vertexFlags)
         if shape.segments is not None:
-            segments = shape.segments.copy()
+            segments = np.array(shape.segments)
         if shape.facets is not None:
-            facets = shape.facets.copy()
+            facets = np.array(shape.facets)
         # deleting duplicate vertices and updating segment/facets accordingly
         del_v = 0
-        for i_s, vertex in enumerate(shape.vertices):
+        for i_s, vertex in enumerate(np.array(shape.vertices)):
             if vertex.tolist() in domain.vertices:
                 vertices = np.delete(vertices, i_s-del_v, axis=0)
-                verticesFlags = np.delete(vertexFlags, i_s-del_v)
+                vertexFlags = np.delete(vertexFlags, i_s-del_v)
                 i_s -= del_v
                 del_v += 1
                 i_d = domain.vertices.index(vertex.tolist())
@@ -870,15 +872,15 @@ def _assembleGeometry(domain, BC_class):
         domain.barycenters = np.append(domain.barycenters, barycenters, axis=0)
         if shape.segments is not None:
             domain.segments += (segments+start_vertex).tolist()
-            domain.segmentFlags += (shape.segmentFlags+start_flag).tolist()
+            domain.segmentFlags += (np.array(shape.segmentFlags)+start_flag).tolist()
         if shape.facets is not None:
             domain.facets += (facets+start_vertex).tolist()
-            domain.facetFlags += (shape.facetFlags+start_flag).tolist()
+            domain.facetFlags += (np.array(shape.facetFlags)+start_flag).tolist()
         if shape.regions is not None:
-            domain.regions += (shape.regions).tolist()
-            domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
+            domain.regions += (np.array(shape.regions)).tolist()
+            domain.regionFlags += (np.array(shape.regionFlags)+start_rflag).tolist()
         if shape.holes is not None:
-            domain.holes += (shape.holes).tolist()
+            domain.holes += (np.array(shape.holes)).tolist()
         domain.getBoundingBox()
 
 
