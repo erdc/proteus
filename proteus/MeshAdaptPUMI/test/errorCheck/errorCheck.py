@@ -68,8 +68,29 @@ del scalar
 scalar = numpy.zeros((mesh.nNodes_global,1),'d')+1.0
 domain.PUMIMesh.transferFieldToPUMI("vof", scalar)
 
+domain.PUMIMesh.get_local_error()
+if(domain.PUMIMesh.willAdapt()):
+  print "Success!"
 
 domain.PUMIMesh.adaptPUMIMesh()
+
+
+
+#mesh = MeshTools.TetrahedralMesh()
+#mesh.convertFromPUMI(domain.PUMIMesh,
+#                 domain.faceList,
+#                 parallel = comm.size() > 1,
+#                 dim = domain.nd)
+#mlMesh = MeshTools.MultilevelTetrahedralMesh(
+#  0,0,0,skipInit=True,
+#  nLayersOfOverlap=0,
+#  parallelPartitioningType=MeshTools.MeshParallelPartitioningTypes.element)
+
+#mlMesh.generateFromExistingCoarseMesh(
+#    mesh,1,
+#    nLayersOfOverlap=0,
+#    parallelPartitioningType=MeshTools.MeshParallelPartitioningTypes.element)
+
 
 '''
 #Poiseuille Flow
