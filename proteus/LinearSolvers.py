@@ -839,7 +839,7 @@ class SchurOperatorConstructor:
         B : matrix
             The operator B matrix.
         """
-        self._setupB()
+        Bsys_petsc4py = self._getB()
         self.B = self.Bsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                  self.linear_smoother.isv)
         if output_matrix==True:
@@ -945,39 +945,21 @@ class SchurOperatorConstructor:
         self.opBuilder.attachAdvectionOperator(self._advectiveField)
         return superlu_2_petsc4py(self.opBuilder.AdvectionOperator)
 
-    def _setupB(self):
-        """ Initializes construction of the B operator. """
-        rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
-        self.B_rowptr = rowptr.copy()
-        self.B_colind = colind.copy()
-        self.B_nzval = nzval.copy()
-        L_sizes = self.L.getSizes()
-        nr = L_sizes[0][0]
-        nc = L_sizes[1][0]
-        self.B =SparseMat(nr,nc,
-                          self.B_nzval.shape[0],
-                          self.B_nzval,
-                          self.B_colind,
-                          self.B_rowptr)
-        self.L.pde.q[('f',0)][...,0] = self.L.pde.q[('u',1)]
-        self.L.pde.q[('f',0)][...,1] = self.L.pde.q[('u',2)]
-        self.L.pde.q[('df',0,1)][...,0] = 1.0
-        self.L.pde.q[('df',0,2)][...,1] = 1.0
-        self.L.pde.q[('H',1)][:] = self.L.pde.q[('grad(u)',0)][...,0]
-        self.L.pde.q[('H',2)][:] = self.L.pde.q[('grad(u)',0)][...,1]
-        self.L.pde.q[('dH',1,0)][...,0] = 1.0
-        self.L.pde.q[('dH',2,0)][...,1] = 1.0
-        self.L.pde.getSpatialJacobian(self.B)
-        self.Bsys_petsc4py = self.L.duplicate()
-        B_csr_rep_local = self.B.getSubMatCSRrepresentation(0,L_sizes[0][0])
-        self.Bsys_petsc4py.setValuesLocalCSR(B_csr_rep_local[0],
-                                             B_csr_rep_local[1],
-                                             B_csr_rep_local[2],
-                                             p4pyPETSc.InsertMode.INSERT_VALUES)
-        self.Bsys_petsc4py.assemblyBegin()
-        self.Bsys_petsc4py.assemblyEnd()
-        # from nose.tools import set_trace
-        # set_trace()
+    def _setupB(self,output_matrix=False):
+        """ Return the discrete B-operator.
+        
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether matrix should be exported.
+
+        Returns
+        -------
+        A : matrix
+            The B operator matrix.
+        """
+        self.opBuilder.attachBOperator()
+        return superlu_2_petsc4py(self.opBuilder.BOperator)
 
     def _initializeMatrix(self):
         """ Allocates memory for the matrix operators.
@@ -2401,6 +2383,7 @@ class OperatorConstructor:
         self.massOperatorAttached = False
         self.laplaceOperatorAttached = False
         self.advectionOperatorAttached = False
+        self.BOperatorAttached = False
 
     def attachMassOperator(self,rho=1.,recalculate=False):
         """Create a discrete Mass Operator matrix. """
@@ -2529,6 +2512,48 @@ class OperatorConstructor:
                              self.AdvectionOperator)
         self.advectionOperatorAttached = True
 
+    def attachBOperator(self):
+        """Attach a discrete B operator to the Operator Constructor """
+        self._B_val = self.OLT.nzval.copy()
+        self.BOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                   self.OLT.nFreeVDOF_global,
+                                   self.OLT.nnz,
+                                   self._B_val,
+                                   self.OLT.colind,
+                                   self.OLT.rowptr)
+        _nd = self.OLT.coefficients.nd
+        self.BOperatorCoeff = TransportCoefficients.DiscreteBOperator(nd=_nd)
+        _t = 1.0
+        
+        B_q = {}
+        self._allocateBOperatorQStorageSpace(B_q)
+
+        if _nd==2:
+            self.BOperatorCoeff.evaluate(_t,B_q)
+        self._calculateBOperatorQ(B_q)
+        
+        B_Jacobian = {}
+        self._allocateMatrixSpace(self.BOperatorCoeff,
+                                  B_Jacobian)
+
+        for ci,cjDict in self.BOperatorCoeff.advection.iteritems():
+            for cj in cjDict:
+                cfemIntegrals.updateAdvectionJacobian_weak_lowmem(B_q[('df',ci,cj)],
+                                                                  self._operatorQ[('v',cj)],
+                                                                  B_q[('grad(w)*dV_f',ci)],
+                                                                  B_Jacobian[ci][cj])
+
+        for ci,cjDict in self.BOperatorCoeff.hamiltonian.iteritems():
+            for cj in cjDict:
+                cfemIntegrals.updateHamiltonianJacobian_weak_lowmem(B_q[('dH',ci,cj)],
+                                                                    self._operatorQ[('grad(v)',cj)],
+                                                                    B_q[('w*dV_H',ci)],
+                                                                    B_Jacobian[ci][cj])
+        self._createOperator(self.BOperatorCoeff,
+                             B_Jacobian,
+                             self.BOperator)
+
+        self.BOperatorAttached = True
 
     def _initializeOperatorConstruction(self):
         """ Collect basic values used by all attach operators functions. """
@@ -2841,6 +2866,59 @@ class OperatorConstructor:
                  self.OLT.nSpace_global),
                 'd')
 
+    def _allocateBOperatorQStorageSpace(self,Q):
+        """Allocate storage space for the B-operator matrix. """
+        scalar_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                        self.OLT.nQuadraturePoints_element))
+        vector_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                        self.OLT.nQuadraturePoints_element,
+                                        self.OLT.nSpace_global))
+        test_shape_quad = StorageSet(shape={})
+        trial_shape_X_test_grad_quad = StorageSet(shape={})
+        gradients = StorageSet(shape={})
+
+        scalar_quad |= set([('u',ci) for ci in xrange(self.OLT.nc)])
+        scalar_quad |= set([('H',ci) for ci in xrange(self.OLT.nc)])
+
+        vector_quad |= set([('grad(u)',0)])
+        vector_quad |= set([('f',0)])
+        for ci,cjDict in self.BOperatorCoeff.advection.iteritems():
+            vector_quad |= set([('df',ci,cj) for cj in cjDict.keys()])
+        for ci,cjDict in self.BOperatorCoeff.hamiltonian.iteritems():
+            vector_quad |= set([('dH',ci,cj) for cj in cjDict.keys()])
+
+        test_shape_quad |= set([('w*dV_H',ci) for ci in self.BOperatorCoeff.hamiltonian.keys()])
+
+        for ci,cjDict in self.BOperatorCoeff.advection.iteritems():
+            trial_shape_X_test_grad_quad |= set([('v_X_grad_w_dV',cj,ci) for cj in cjDict.keys()])
+
+        gradients |= set([('grad(w)*dV_f',ci) for ci in self.BOperatorCoeff.advection.keys()])
+        
+        scalar_quad.allocate(Q)
+        vector_quad.allocate(Q)
+
+        for k in test_shape_quad:
+            Q[k] = numpy.zeros((self.OLT.mesh.nElements_global,
+                                self.OLT.nQuadraturePoints_element,
+                                self.OLT.nDOF_test_element[k[-1]]),
+                               'd')
+        
+        for k in trial_shape_X_test_grad_quad:
+            Q[k] = numpy.zeros((self.OLT.mesh.nElements_global,
+                                self.OLT.nQuadraturePoints_element,
+                                self.OLT.nDOF_trial_element[k[1]],
+                                self.OLT.nDOF_test_element[k[2]],
+                                self.OLT.coefficients.nd),'d')
+
+        for k in gradients:
+            Q[k] = numpy.zeros(
+                (self.OLT.mesh.nElements_global,
+                 self.OLT.nQuadraturePoints_element,
+                 self.OLT.nDOF_test_element[k[-1]],
+                 self.OLT.nSpace_global),
+                'd')
+
+
     def _calculateMassOperatorQ(self,Q):
         """ Calculate values for mass operator. """
         elementQuadratureDict = {}
@@ -2900,3 +2978,27 @@ class OperatorConstructor:
                                                           self._operatorQ[('grad(w)',ci)],
                                                           Q[('grad(w)*dV_f',ci)])
         
+    
+    def _calculateBOperatorQ(self,Q):
+        """Calculate quadrature values for B operator """
+        elementQuadratureDict = {}
+        
+        for ci in self.BOperatorCoeff.advection.keys():
+            elementQuadratureDict[('f',ci)] = self._elementQuadrature
+        for ci in self.BOperatorCoeff.hamiltonian.keys():
+            elementQuadratureDict[('H',ci)] = self._elementQuadrature
+
+        (elementQuadraturePoints,elementQuadratureWeights,
+         elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
+        
+        for ci in self.BOperatorCoeff.advection.keys():
+            cfemIntegrals.calculateWeightedShapeGradients(elementQuadratureWeights[('f',ci)],
+                                                          self._operatorQ['abs(det(J))'],
+                                                          self._operatorQ[('grad(w)',ci)],
+                                                          Q[('grad(w)*dV_f',ci)])
+        
+        for ci in self.BOperatorCoeff.hamiltonian.keys():
+            cfemIntegrals.calculateWeightedShape(elementQuadratureWeights[('H',ci)],
+                                                 self._operatorQ['abs(det(J))'],
+                                                 self._operatorQ[('w',ci)],
+                                                 Q[('w*dV_H',ci)])
