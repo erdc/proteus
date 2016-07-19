@@ -1468,7 +1468,7 @@ class ShallowWater(TC_base):
                                           c['x'],
                                           grad_b,
                                           c[('u',0)],
-                                          c[('u',1)],
+                                          c[('u',1)],
                                           c[('u',2)],
                                           c[('H',0)],
                                           c[('m',0)],
@@ -10717,3 +10717,89 @@ class DiscreteMassMatrix(TC_base):
                                   c[('dm',1,1)],
                                   c[('dm',2,2)],
                                   c[('dm',3,3)])
+
+class DiscreteBOperator(TC_base):
+    r"""Coefficients class for the discrete B Operator.
+    
+    This class defines the coefficients necessary to construct
+    this discrete Saddle Point operator :math:`B`
+    
+    .. math::
+
+        b_{i,j} = \int_{T} \mathbf{u} \cdot \nabla q dT
+
+    for all :math:`T \in \Omega` for 
+    :math:`\mathbf{u} = \begin{pmatrix} u \\ v \\ w \end{pmatrix}`
+    and :math:`q` is the pressure.
+    """
+    from ctransportCoefficients import B_2D_Evaluate
+    from ctransportCoefficients import B_3D_Evaluate
+    def __init__(self,nd=2):
+        self.nd = nd
+        mass = {}
+        advection= {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames = ['p','u','v']
+            advection = {0:{1:'linear',
+                            2:'linear'}}
+            hamiltonian = {1:{0:'linear'},
+                           2:{0:'linear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectoComponents=[1,2]
+        elif nd==3:
+            variableNames=['p','u','v','w']
+            advection = {0:{1:'linear',
+                            2:'linear'}}
+            hamiltonian = {1:{0:'linear'},
+                           2:{0:'linear'},
+                           3:{0:'linear'}}
+            TC_basi.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.B_2D_Evaluate(c[('u',0)],
+                               c[('grad(u)',0)],
+                               c[('u',1)],
+                               c[('u',2)],
+                               c[('f',0)],
+                               c[('df',0,1)],
+                               c[('df',0,2)],
+                               c[('H',1)],
+                               c[('H',2)],
+                               c[('dH',1,0)],
+                               c[('dH',2,0)])
+        elif self.nd==3:
+            self.B_3D_Evaluate(c[('u',0)],
+                               c[('grad(u)',0)],
+                               c[('u',1)],
+                               c[('u',2)],
+                               c[('u',3)],
+                               c[('f',0)],
+                               c[('df',0,1)],
+                               c[('df',0,2)],
+                               c[('df',0,3)],
+                               c[('H',1)],
+                               c[('H',2)],
+                               c[('H',3)],
+                               c[('dH',1,0)],
+                               c[('dH',2,0)],
+                               c[('dH',3,0)])
