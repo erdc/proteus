@@ -23,9 +23,9 @@ comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
 import numpy.testing as npt
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
-from nose.tools import set_trace
+# from nose.tools import ok_ as ok
+# from nose.tools import eq_ as eq
+# from nose.tools import set_trace
 from petsc4py import PETSc as p4pyPETSc
 
 from scipy.sparse import csr_matrix
@@ -118,8 +118,8 @@ def test_lsc_shell():
 
 class TestNSEDrivenCavity():
     """ This class runs a small NSE test problem """
-    
-    def setUp(self):
+    @classmethod
+    def setup_class(self):
         import nseDrivenCavity_2d_p
         import nseDrivenCavity_2d_n
         pList = [nseDrivenCavity_2d_p]
@@ -132,13 +132,31 @@ class TestNSEDrivenCavity():
         opts.profile=True
         self._setPETSc()
         self.ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
-
-    def tearDown(self):
-        pass
+    
+    @classmethod
+    def teardown_class(self):
+        """ Tear down function """
+        FileList = ['drivenCavityNSETrial.h5',
+                    'drivenCavityNSETrial.xmf',
+                    'Cp.m',
+                    'Cp',
+                    'Cp.info',
+                    'proteus.log',
+                    'proteus_default.log',
+                    'rdomain.edge',
+                    'rdomain.ele',
+                    'rdomain.neig',
+                    'rdomain.node',
+                    'rdomain.poly']
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
 
     def test_01_FullRun(self):
         self.ns.calculateSolution('test_nse')
+        assert(0==1)
 
+    @classmethod
     def _setPETSc(self):
         petsc4py.PETSc.Options().setValue("ksp_type","fgmres")
         petsc4py.PETSc.Options().setValue("ksp_atol",1e-20)

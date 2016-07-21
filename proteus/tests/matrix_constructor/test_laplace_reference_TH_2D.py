@@ -28,14 +28,13 @@ from nose.tools import set_trace
 
 class TestMassConstruction2D():
     """ Verify construction of 2D Mass Matrix using transport coefficients """
-    def __init__(self):
-        pass
-
-    def setUp(self):
+    @classmethod
+    def setup_class(self):
         """ Initialize the test problem """
         self.Laplace_object = L_2d.ns
         
-    def tearDown(self):
+    @classmethod
+    def teardown_class(self):
         """ Tear down function """
         FileList = ['Laplace_matrix_test.xmf',
                     'Laplace_matrix_test.h5',

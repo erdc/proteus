@@ -1,3 +1,7 @@
+from proteus.iproteus import *
+reload(default_p)
+reload(default_n)
+reload(default_so)
 from proteus import iproteus as ip
 from proteus import default_p as p
 from proteus import default_n as n

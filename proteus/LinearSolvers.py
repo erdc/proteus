@@ -442,8 +442,6 @@ class KSP_petsc4py(LinearSolver):
             self.ksp.setPC(self.pc)
         # set the ksp options
         self.ksp.setFromOptions()
-        import pdb
-        pdb.set_trace()
 
     def setResTol(self,rtol,atol,maxIts):
         """ Set the ksp object's residual and maximum iterations. """
@@ -656,8 +654,6 @@ class KSP_petsc4py(LinearSolver):
                 logEvent("NAHeader Preconditioner PCD" )
                 self.preconditioner = NavierStokes3D_PCD(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
-                import pdb
-                pdb.set_trace()
             elif Preconditioner == NavierStokes3D_LSC:
                 logEvent("NAHeader Preconditioner LSC" )
                 self.preconditioner = NavierStokes3D_LSC(par_L,prefix,self.bdyNullSpace)
@@ -840,8 +836,8 @@ class SchurOperatorConstructor:
             The operator B matrix.
         """
         Bsys_petsc4py = self._getB()
-        self.B = self.Bsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
-                                                 self.linear_smoother.isv)
+        self.B = Bsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                            self.linear_smoother.isv)
         if output_matrix==True:
             self._exportMatrix(self.B,'B')
         return self.B
@@ -859,9 +855,9 @@ class SchurOperatorConstructor:
         B : matrix
             The operator B matrix.
         """
-        self._setupB()
-        self.Bt = self.Bsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
-                                                  self.linear_smoother.isp)
+        Bsys_petsc4py = self._getB()
+        self.Bt = Bsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+                                             self.linear_smoother.isp)
         if output_matrix==True:
             self._exportMatrix(self.Bt,'Bt')
         return self.Bt
@@ -945,7 +941,7 @@ class SchurOperatorConstructor:
         self.opBuilder.attachAdvectionOperator(self._advectiveField)
         return superlu_2_petsc4py(self.opBuilder.AdvectionOperator)
 
-    def _setupB(self,output_matrix=False):
+    def _getB(self,output_matrix=False):
         """ Return the discrete B-operator.
         
         Parameters
@@ -1243,8 +1239,8 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
-        import pdb
-        pdb.set_trace()
+#        import pdb
+#        pdb.set_trace()
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)

@@ -10,6 +10,7 @@ if cmd_folder not in sys.path:
 
 cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],
                                                               "import_modules")))
+
 if cmd_subfolder not in sys.path:
     sys.path.insert(0,cmd_subfolder)
 
@@ -27,25 +28,27 @@ from nose.tools import set_trace
 
 class TestMassConstruction2D():
     """ Verify construction of 2D Mass Matrix using transport coefficients """
-    def __init__(self):
-        pass
-
-    def setUp(self):
+    @classmethod
+    def setup_class(self):
         """ Initialize the test problem """
         self.Boperator_object = B_2d.ns
-        
-    def tearDown(self):
+        self._setRelativePath()
+
+    @classmethod
+    def teardown_class(self):
         """ Tear down function """
-        FileList = ['Mass_matrix_test.xmf',
-                    'Mass_matrix_test.h5',
-                    'rdomain.ele',
-                    'rdomain.node',
-                    'rdomain.poly',
-                    'rdomain.neig',
-                    'rdomain.edge']
+        FileList = ['Laplace_matrix_test.xmf',
+                    'Laplace_matrix_test.h5',
+                    'proteus.log',
+                    'reference_triangle_2d.ele',
+                    'reference_triangle_2d.node',
+                    'reference_triangle_2d.poly']
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
+    @classmethod
+    def _setRelativePath(self):
+        self.scriptdir = os.path.dirname(__file__)
 
     def test_1(self):
         """ An initial test of the coefficient class. """
@@ -63,11 +66,9 @@ class TestMassConstruction2D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.Boperator_object.modelList[0].levelModelList[0].getJacobian(self.Asys)
         B_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        comparison_mat = numpy.load('./comparison_files/B_mat_reference_element_1.npy')
-        import pdb
-        pdb.set_trace()
+        rel_path = "comparison_files/B_mat_reference_element_1.npy"
+        comparison_mat = numpy.load(os.path.join(self.scriptdir, rel_path))
         assert numpy.allclose(B_mat,comparison_mat)
-
 
     def test_2(self):
         """ Tests the attachMassOperator function in one-level-transport """
@@ -75,7 +76,8 @@ class TestMassConstruction2D():
         op = LinearSolvers.OperatorConstructor(mm)
         op.attachBOperator()
         B_mat = LinearAlgebraTools.superlu_sparse_2_dense(op.BOperator)
-        comparison_mat = numpy.load('./comparison_files/B_mat_reference_element_1.npy')
+        rel_path = "comparison_files/B_mat_reference_element_1.npy"
+        comparison_mat = numpy.load(os.path.join(self.scriptdir, rel_path))
         assert numpy.allclose(B_mat,comparison_mat)
 
 if __name__ == '__main__':

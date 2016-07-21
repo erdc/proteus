@@ -21,22 +21,23 @@ Profiling.logLevel=7
 Profiling.verbose=True
 import numpy
 import numpy.testing as npt
-#import advection_template_TH_2D as A_2d
-import advection_template_pressure_8 as AP_2d
+
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 from nose.tools import set_trace
 
 class TestAdvectionConstruction2D():
     """ Verify construction of 2D Mass Matrix using transport coefficients """
-    def __init__(self):
-        pass
 
-    def setUp(self):
+    @classmethod
+    def setup_class(self):
         """ Initialize the test problem """
+        import advection_template_TH_2D as A_2d
         self.Advection_object = A_2d.ns
+        self._setRelativePath()
         
-    def tearDown(self):
+    @classmethod
+    def teardown_class(self):
         """ Tear down function """
         FileList = ['Advection_matrix_test.xmf',
                     'Advection_matrix_test.h5',
@@ -49,6 +50,10 @@ class TestAdvectionConstruction2D():
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
+
+    @classmethod
+    def _setRelativePath(self):
+        self.scriptdir = os.path.dirname(__file__)
 
     def test_1(self):
         """ An initial test of the advection operator coefficient class """
@@ -66,7 +71,8 @@ class TestAdvectionConstruction2D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.Advection_object.modelList[0].levelModelList[0].getJacobian(self.Asys)
         A = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        comparison_A = numpy.load('./comparison_files/advection_reference_triangle_2d.npy')
+        rel_path = "comparison_files/advection_reference_triangle_2d.npy"
+        comparison_A = numpy.load(os.path.join(self.scriptdir, rel_path))
         assert numpy.allclose(A,comparison_A)
 
     def test_2(self):
@@ -77,60 +83,11 @@ class TestAdvectionConstruction2D():
         v_field = numpy.ones((1,6,1))
         advection_field = [u_field,v_field]
         op_constructor.attachAdvectionOperator(advection_field)
-        comparison_A = numpy.load('./comparison_files/advection_reference_triangle_2d.npy')
+        rel_path = "comparison_files/advection_reference_triangle_2d.npy"
+        comparison_A = numpy.load(os.path.join(self.scriptdir, rel_path))
         A = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.AdvectionOperator)
         assert numpy.allclose(A,comparison_A)
 
-class TestAdvectionConstruction2D_mesh8():
-    """ Verify construction of 2D Mass Matrix using transport coefficients """
-    def __init__(self):
-        pass
-
-    def setUp(self):
-        """ Initialize the test problem """
-        self.Advection_object = AP_2d.ns
-        
-    def tearDown(self):
-        """ Tear down function """
-        FileList = ['Advection_matrix_test.xmf',
-                    'Advection_matrix_test.h5',
-                    'proteus.log',
-                    "reference_triangle_2d.ele",
-                    "reference_triangle_2d.node",
-                    "reference_triangle_2d.face",
-                    "reference_triangle_2d.poly",
-                    "rdomain.poly"]
-        for file in FileList:
-            if os.path.isfile(file):
-                os.remove(file)
-
-    def test_1(self):
-        """ Tests the attachAdvectionOperator function """
-        mm = self.Advection_object.modelList[0].levelModelList[0]
-        op_constructor = LinearSolvers.OperatorConstructor(mm)
-        # need to create the advection field
-        func_x = lambda x,y : 2*(x+y)
-        func_y = lambda x,y : -y
-        u_field = numpy.ones((mm.mesh.nElements_global,6))
-        v_field = numpy.ones((mm.mesh.nElements_global,6))
-        for k in range(mm.mesh.nElements_global):
-            for j,pt in enumerate(mm.q['x'][k]):
-                u_field[k][j] = func_x(pt[0],pt[1])
-                v_field[k][j] = func_y(pt[0],pt[1])       
-        advection_field = [u_field,v_field]
-        op_constructor.attachAdvectionOperator(advection_field)
-        A = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.AdvectionOperator)
-        numpy.save('advection_pressure_mesh_8',A[0:9,0:9])
-        comparison_A = numpy.load('./comparison_files/advection_pressure_mesh_8.npy')
-        assert numpy.allclose(A[0:9,0:9],comparison_A)
-
 
 if __name__ == '__main__':
-    # tt = TestAdvectionConstruction2D()
-    # tt.setUp()
-    # tt.test_2()
-    # tt.tearDown()
-    t1 = TestAdvectionConstruction2D_mesh8()
-    t1.setUp()
-    t1.test_1()
-    t1.tearDown()
+    pass
