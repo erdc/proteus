@@ -24,14 +24,13 @@ Profiling.verbose = True
 
 class TestLaplaceConstruction2D():
     """ Run tests to verify the construction of the 2D Laplace operator """
-    def __init__(self):
-        pass
-
-    def setUp(self):
+    @classmethod
+    def setup_class(self):
         """ Initialize the test problem """
         self.laplace_object = tp_2d.ns
 
-    def tearDown(self):
+    @classmethod
+    def teardown_class(self):
         """ Tear down function """
         FileList = ["Laplace_matrix_test.h5",
                     "Laplace_matrix_test.xmf",

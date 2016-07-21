@@ -26,14 +26,14 @@ from nose.tools import set_trace
 
 class TestMassConstruction2D():
     """ Verify construction of 2D Mass Matrix using transport coefficients """
-    def __init__(self):
-        pass
-
-    def setUp(self):
+    @classmethod
+    def setup_class(self):
         """ Initialize the test problem """
         self.mass_matrix_object = mm_2d.ns
+        self._setRelativePath()
         
-    def tearDown(self):
+    @classmethod
+    def teardown_class(self):
         """ Tear down function """
         FileList = ['Mass_matrix_test.xmf',
                     'Mass_matrix_test.h5',
@@ -43,6 +43,10 @@ class TestMassConstruction2D():
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
+
+    @classmethod
+    def _setRelativePath(self):
+        self.scriptdir = os.path.dirname(__file__)
 
     def test_1(self):
         """ An initial test of the coefficient class. """
@@ -60,7 +64,8 @@ class TestMassConstruction2D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.mass_matrix_object.modelList[0].levelModelList[0].getMassJacobian(self.Asys)
         mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        comparison_mat = numpy.loadtxt('./comparison_files/mass_reference_c0p1_2D.txt')
+        rel_path = "comparison_files/mass_reference_c0p1_2D.txt"
+        comparison_mat = numpy.loadtxt(os.path.join(self.scriptdir,rel_path))
         assert numpy.allclose(mass_mat,comparison_mat)
 
 
@@ -70,9 +75,8 @@ class TestMassConstruction2D():
         op_constructor = LinearSolvers.OperatorConstructor(mm)
         op_constructor.attachMassOperator()
         mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.MassOperator)
-        comparison_mat = numpy.loadtxt('./comparison_files/mass_reference_c0p1_2D.txt')
-        import pdb
-        pdb.set_trace()
+        rel_path = "comparison_files/mass_reference_c0p1_2D.txt"
+        comparison_mat = numpy.loadtxt(os.path.join(self.scriptdir,rel_path))
         assert numpy.allclose(mass_mat,comparison_mat)
 
 if __name__ == '__main__':

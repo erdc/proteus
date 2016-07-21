@@ -32,6 +32,9 @@ from petsc4py import PETSc as p4pyPETSc
 
 from scipy.sparse import csr_matrix
 
+def _setRelativePath():
+    return os.path.dirname(__file__)
+
 def test_sparse_2_dense():
     '''
     This function tests the petsc4py_sparse_2_dense function in the
@@ -46,7 +49,8 @@ def test_sparse_2_dense():
                                           csr  = (row_idx, col_idx, vals))
     dense_mat = LinearAlgebraTools.petsc4py_sparse_2_dense \
                 (petsc_mat)
-    comparison_mat = np.loadtxt('sparse_mat_1.txt')
+    rel_path = "comparison_files/sparse_mat_1.txt"
+    comparison_mat = np.loadtxt(os.path.join(_setRelativePath(),rel_path))
     assert np.allclose(dense_mat,comparison_mat)
 
 def test_pressure_mass_matrix_shell():
@@ -78,8 +82,8 @@ def test_pressure_mass_matrix_shell():
 
 class TestStokesOperatorConstruction():
     """ This class tests the operator construction for a 2D Stokes Poiseulle Flow problem """
-    
-    def setUp(self):
+    @classmethod
+    def setup_class(self):
         import stokes_2d_p
         import stokes_2d_n
         pList = [stokes_2d_p]
@@ -94,14 +98,27 @@ class TestStokesOperatorConstruction():
         smoother = LinearSolvers.NavierStokes3D_Qp(L=self.ns.modelList[0].par_jacobianList[1])
         self.operator_constructor = LinearSolvers.SchurOperatorConstructor(smoother, 'stokes')
         self.ns.modelList[0].par_jacobianList[1].pde.scale_dt = False
+        self._setRelativePath()
 
-    def tearDown(self):
-        if os.path.exists('proteus.log'):
-            os.remove('proteus.log')
-        else:
-            pass
-        os.remove('poiseulleFlow.h5')
-        os.remove('poiseulleFlow.xmf')
+    @classmethod
+    def teardown_class(self):
+        """ Tear down function """
+        FileList = ['proteus.log',
+                    'poiseulleFlow.h5',
+                    'poiseulleFlow.xmf',                    
+                    'rdomain.edge',
+                    'rdomain.ele',
+                    'rdomain.neig',
+                    'rdomain.node',
+                    'rdomain.poly']
+
+        for file in FileList:
+            if os.path.isfile(file):
+                os.remove(file)
+
+    @classmethod
+    def _setRelativePath(self):
+        self.scriptdir = os.path.dirname(__file__)
 
     def test_01_MassMatrix(self):
         ''' Verify that Q returns the correct pressure and velocity mass matrix  '''
@@ -110,8 +127,11 @@ class TestStokesOperatorConstruction():
         Qv_petsc = self.operator_constructor.getQv()
         Qv_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Qv_petsc)
 
-        pressure_mass_matrix = np.loadtxt('./comparison_files/pressure_mass_matrix.txt')
-        velocity_mass_matrix = np.loadtxt('./comparison_files/velocity_mass_matrix.txt')
+        rel_path_1 = "comparison_files/pressure_mass_matrix.txt"
+        rel_path_2 = "comparison_files/velocity_mass_matrix.txt"
+
+        pressure_mass_matrix = np.loadtxt(os.path.join(self.scriptdir,rel_path_1))
+        velocity_mass_matrix = np.loadtxt(os.path.join(self.scriptdir,rel_path_2))
 
         assert np.allclose(pressure_mass_matrix,Qp_dense)
         assert np.allclose(velocity_mass_matrix,Qv_dense)
@@ -120,7 +140,8 @@ class TestStokesOperatorConstruction():
         ''' Test the pressure Lapacian matrix '''
         Ap_raw = self.operator_constructor.getAp()
         Ap_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Ap_raw)
-        pressure_laplace_matrix = np.loadtxt('./comparison_files/pressure_laplace_matrix.txt')
+        rel_path = "comparison_files/pressure_laplace_matrix.txt"
+        pressure_laplace_matrix = np.loadtxt(os.path.join(self.scriptdir,rel_path))
         assert np.allclose(pressure_laplace_matrix,Ap_dense)
 
     def test_03_B(self):
@@ -138,8 +159,6 @@ class TestStokesOperatorConstruction():
     def test_05_FullRun(self):
         """ Test the Poiseulle Flow runs and produces expected h5 output """
         self.ns.calculateSolution('test_Qp_mat')
-        import pdb
-        pdb.set_trace()
         expected = tables.openFile(os.path.join(cmd_subfolder_0,
                                    'poiseulleFlow_expected.h5'),
                                    'r')
@@ -157,5 +176,4 @@ if __name__ == '__main__':
     test = TestStokesOperatorConstruction()
     test.setUp()
     test.test_05_FullRun()
-#    test.test_02_MassMatrix()
     test.tearDown()
