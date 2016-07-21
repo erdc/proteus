@@ -104,9 +104,6 @@ class MeshAdaptPUMIDrvr{
       apf::MeshEntity* ent);
 
   bool has_gBC;
-  std::string size_field_config;
-  std::string adapt_type_config;
-  std::string logging_config;
 };
 
 
