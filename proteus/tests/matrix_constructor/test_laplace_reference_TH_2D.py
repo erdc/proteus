@@ -32,7 +32,8 @@ class TestMassConstruction2D():
     def setup_class(self):
         """ Initialize the test problem """
         self.Laplace_object = L_2d.ns
-        
+        self._setRelativePath()
+
     @classmethod
     def teardown_class(self):
         """ Tear down function """
@@ -46,6 +47,9 @@ class TestMassConstruction2D():
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
+    @classmethod
+    def _setRelativePath(self):
+        self._scriptdir = os.path.dirname(__file__)
 
     def test_1(self):
         """ An initial test of the coefficient class. """
@@ -63,7 +67,8 @@ class TestMassConstruction2D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.Laplace_object.modelList[0].levelModelList[0].getJacobian(self.Asys)
         Laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        comparison_mat = numpy.load('./comparison_files/Laplace_mat_reference_element_1.npy')
+        rel_path = "comparison_files/Laplace_mat_reference_element_1.npy"
+        comparison_mat = numpy.load(os.path.join(self._scriptdir,rel_path))
         assert numpy.allclose(Laplace_mat,comparison_mat)
 
 
@@ -73,7 +78,8 @@ class TestMassConstruction2D():
         op_constructor = LinearSolvers.OperatorConstructor(mm)
         op_constructor.attachLaplaceOperator()
         Laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.LaplaceOperator)
-        comparison_mat = numpy.load('./comparison_files/Laplace_mat_reference_element_1.npy')
+        rel_path = "comparison_files/Laplace_mat_reference_element_1.npy"
+        comparison_mat = numpy.load(os.path.join(self._scriptdir,rel_path))
         assert numpy.allclose(Laplace_mat,comparison_mat)
 
 if __name__ == '__main__':

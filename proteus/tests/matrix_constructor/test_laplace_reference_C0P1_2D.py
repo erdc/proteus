@@ -28,6 +28,7 @@ class TestLaplaceConstruction2D():
     def setup_class(self):
         """ Initialize the test problem """
         self.laplace_object = tp_2d.ns
+        self._setRelativePath()
 
     @classmethod
     def teardown_class(self):
@@ -42,6 +43,10 @@ class TestLaplaceConstruction2D():
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)
+
+    @classmethod
+    def _setRelativePath(self):
+        self._scriptdir = os.path.dirname(__file__)
 
     def test_1(self):
         """ Initial test to check whether this is working """
@@ -59,7 +64,8 @@ class TestLaplaceConstruction2D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.laplace_object.modelList[0].levelModelList[0].getSpatialJacobian(self.Asys)
         laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        comparison_mat = numpy.loadtxt('./comparison_files/laplace_reference_c0p1_2D.txt')
+        rel_path = "comparison_files/laplace_reference_c0p1_2D.txt"
+        comparison_mat = numpy.loadtxt(os.path.join(self._scriptdir,rel_path))
         assert numpy.allclose(laplace_mat,comparison_mat)
 
 if __name__ == "__main__":
