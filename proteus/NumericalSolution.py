@@ -943,7 +943,6 @@ class NS_base:  # (HasTraits):
                     # (e.g. set size  field  based on proteus calcualtions?)
                     # ...
                     #
-=======
                     logEvent("Estimate Error")
                     sfConfig = p0.domain.PUMIMesh.size_field_config()
                     if(sfConfig=="alvin"):
