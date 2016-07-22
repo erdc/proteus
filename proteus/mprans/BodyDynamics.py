@@ -1,3 +1,4 @@
+import numpy as np
 from proteus import AuxiliaryVariables
 
 
@@ -31,7 +32,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.barycenter = np.zeros(3)
         self.i_start = None  # will be retrieved from setValues() of Domain
         self.i_end = None  # will be retrieved from setValues() of Domain
-        self.It = self.shape.It
+        self.It = self.Shape.It
         if 'RigidBody' not in shape.auxiliaryVariables:
             shape.auxiliaryVariables['RigidBody'] = self
 
@@ -82,6 +83,48 @@ class RigidBody(AuxiliaryVariables.AV_base):
             self.record_file = os.path.join(Profiling.logDir,
                                             self.record_filename)
 
+    def getPressureForces(self):
+        i0, i1 = self.i_start, self.i_end
+        return self.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
+
+    def getShearForces(self):
+        i0, i1 = self.i_start, self.i_end
+        return self.model.levelModelList[-1].coefficients.netForces_v[i0:i1, :]
+
+    def getGravityForce(self):
+        return self.Fg
+
+    def getMoments(self):
+        i0, i1 = self.i_start, self.i_end
+        return self.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
+
+    def getTotalMoments(self):
+        M = getMoments()
+        M_t = np.sum(M)
+        return M_t
+
+    def getTotalForce(self):
+        F_p = getPressureForces()
+        F_v = getShearForces()
+        F_g = self.Fg
+        F_t = np.sum(F_p + F_v, axis=0) + F_g
+        return F_t
+
+    def getAcceleration(self):
+        a = self.F/self.mass
+        return a
+
+    def getAngularAcceleration(self):
+        if sum(self.M) != 0:
+            self.inertia = self.getInertia(self.M, self.Shape.barycenter)
+            assert self.inertia != 0, 'Zero inertia: inertia tensor (It)' \
+                                      'was not set correctly!'
+            ang_acc = self.M[:]/self.inertia
+        else:
+            self.inertia = None
+            ang_acc = np.array([0., 0., 0.])
+        return ang_acc
+
     def calculate(self):
         """
         Function called at each time step by proteus.
@@ -102,16 +145,12 @@ class RigidBody(AuxiliaryVariables.AV_base):
         # update forces and moments for current body/shape
         i0, i1 = self.i_start, self.i_end
         # get forces
-        F_p = self.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
-        F_v = self.model.levelModelList[-1].coefficients.netForces_v[i0:i1, :]
-        F_g = self.Fg
-        F = np.sum(F_p + F_v, axis=0) + F_g
-        # get moments
-        M_t = self.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
-        M = np.sum(M_t, axis=0)
-        # store F and M with DOF constraints to body
+        F = getTotalForce()
+        M = getTotalMoments()
         self.F[:] = F2 = F*self.free_x
+        # get moments
         self.M[:] = M2 = M*self.free_r
+        # store F and M with DOF constraints to body
         # calculate new properties
         self.step(dt)
         # log values
@@ -153,7 +192,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
             (rot_x, rot_y, rot_z))
         logEvent("================================================================")
 
-    def step(self, dt):
+    def step(self, dt, substeps=20):
         """
         Step for rigid body calculations in Python
 
@@ -163,29 +202,22 @@ class RigidBody(AuxiliaryVariables.AV_base):
             time step
         """
         nd = self.Shape.Domain.nd
-        # acceleration from force
-        self.acceleration = self.F/self.mass
-        # angular acceleration from moment
-        if sum(self.M) != 0:
-            self.inertia = self.getInertia(self.M, self.Shape.barycenter)
-            assert self.inertia != 0, 'Zero inertia: inertia tensor (It)' \
-                                      'was not set correctly!'
-            ang_acc = self.M[:]/self.inertia
-        else:
-            self.inertia = None
-            ang_acc = np.array([0., 0., 0.])
-        # substeps for smoother motion between timesteps
+        # reinitialise displacement values
         ang_disp = 0
-        substeps = 20
-        dt_sub = dt/float(substeps)
         self.h[:] = np.zeros(3)
+        # acceleration from force
+        self.acceleration = getAcceleration()
+        # angular acceleration from moment
+        ang_acc = getAngularAcceleration()
+        # substeps for smoother motion between timesteps
+        dt_sub = dt/float(substeps)
         for i in range(substeps):
             # displacement
-            self.velocity += self.acceleration*dt_sub
-            self.h += self.velocity*dt_sub
+            self.h[:], self.velocity[:] = forward_euler(p0=self.h, v0=self.velocity,
+                                                        a=self.acceleration, dt=dt_sub)
             # rotation
-            self.angvel += ang_acc*dt_sub
-            ang_disp += self.angvel*dt_sub
+            ang_disp, self.angvel[:] = forward_euler(p0=ang_disp, v0=self.angvel,
+                                                     a=ang_acc, dt=dt_sub)
         # translate
         self.Shape.translate(self.h[:nd])
         # rotate
@@ -306,7 +338,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
         if self.volume:
             self.mass = self.density*self.volume
 
-    def _setInertiaTensor(self, It):
+    def setInertiaTensor(self, It):
         """
         Set the inertia tensor of the shape
 
@@ -435,12 +467,12 @@ class RigidBody(AuxiliaryVariables.AV_base):
 
 
 
-def forward_euler(a, p0, v0, dt):
+def forward_euler(p0, v0, a, dt):
     v1 = v0+a*dt
     p1 = p0+v1*dt
-    return p1, h
+    return p1, v1
 
-def leapfrog(a, p0, v0, dt):
+def leapfrog(p0, v0, a, dt):
     p1 = p0+v0*dt+0.5*a*dt**2
     v1 = v0+a*dt
-    return p1, h
+    return p1, v1
