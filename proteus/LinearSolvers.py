@@ -785,7 +785,17 @@ class SchurOperatorConstructor:
     def getFp(self,output_matrix=False):
         """ Return the convection-diffusion matrix for the pressure """
         self.Fp = self.getCp()
+        import pdb
+        pdb.set_trace()
+#        self.Fp.scale(-1.)
         Ap = self.getAp()
+#        Ap.scale(1./self.L.pde.coefficients.nu)
+        if self.L.pde.timeTerm:
+            del_t = (self.L.pde.timeIntegration.t -
+                     self.L.pde.timeIntegration.tLast)
+            Mp = self.getQp()
+            Mp.scale(1./del_t)
+            self.Fp.axpy(1.0,Mp)
         self.Fp.axpy(1.0,Ap)
         return self.Fp
 
@@ -988,8 +998,8 @@ class SchurOperatorConstructor:
         export_name : str
                     Export file name.
         """
-        from LinearAlgebraTools import _petsc_view
-        _petsc_view(operator, export_name) #write to export_name.m
+        from LinearAlgebraTools import petsc_view
+        petsc_view(operator, export_name) #write to export_name.m
         #running export_name.m will load into matlab  sparse matrix
         #runnig operatorf = full(Mat_...) will get the full matrix
 
@@ -1223,8 +1233,10 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         self.Qp = self.operator_constructor.getQp()
         self.Fp = self.operator_constructor.getFp()
         self.Ap = self.operator_constructor.getAp()
+        petsc_view(self.Qp,'Qp')
+        petsc_view(self.Fp,'Fp')
+        petsc_view(self.Ap,'Ap')
         # Step-2: Set up the Shell for the  PETSc operator
-        self.Fp.axpy(1.0,self.Ap)
         # Qp
         L_sizes = self.Qp.size
         # ??? Is L_range necessary ???
@@ -1232,7 +1244,6 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         self.PCDInv_shell = p4pyPETSc.Mat().create()
         self.PCDInv_shell.setSizes(L_sizes)
         self.PCDInv_shell.setType('python')
-        # ***
         self.matcontext_inv = PCDInv_shell(self.Qp,self.Fp,self.Ap)
         self.PCDInv_shell.setPythonContext(self.matcontext_inv)
         self.PCDInv_shell.setUp()
@@ -2476,6 +2487,7 @@ class OperatorConstructor:
         """
         self._advective_field = advective_field
         self._advection_val = self.OLT.nzval.copy()
+        self._advection_val.fill(0.)
         self.AdvectionOperator = SparseMat(self.OLT.nFreeVDOF_global,
                                            self.OLT.nFreeVDOF_global,
                                            self.OLT.nnz,
@@ -2497,6 +2509,7 @@ class OperatorConstructor:
         self._allocateMatrixSpace(self.AdvectionOperatorCoeff,
                                   Advection_Jacobian)
         
+
         for ci,ckDict in self.AdvectionOperatorCoeff.advection.iteritems():
             for ck in ckDict:
                 cfemIntegrals.updateAdvectionJacobian_weak_lowmem(Advection_q[('df',ci,ck)],
@@ -2710,6 +2723,7 @@ class OperatorConstructor:
                                                                           self.OLT.csrColumnOffsets[(ci,cj)],
                                                                           matrixDict[ci][cj],
                                                                           A)
+
 
     def _initializeLaplacePhiFunctions(self,Laplace_phi,Laplace_dphi):
         """ Initialize the phi functions for the Laplace operator """
