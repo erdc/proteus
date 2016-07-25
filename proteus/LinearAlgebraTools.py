@@ -19,7 +19,7 @@ from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
 from . import flcbdfWrappers
 
-def _petsc_view(obj, filename):
+def petsc_view(obj, filename):
     """Saves object to disk using a PETSc binary viewer.
     """
     viewer = p4pyPETSc.Viewer().createBinary(filename, 'w')
@@ -212,14 +212,11 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
             self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
 
     def save(self, filename):
-        """Saves to disk using a PETSc binary viewer.
-        """
-        _petsc_view(self, filename)
+        """Saves to disk using a PETSc binary viewer. """
+        petsc_view(self, filename)
 
 class ParMat_petsc4py(p4pyPETSc.Mat):
-    """
-    Parallel matrix based on petsc4py's wrappers for PETSc.
-    """
+    """Parallel matrix based on petsc4py's wrappers for PETSc. """
     def __init__(self,ghosted_csr_mat=None,par_bs=None,par_n=None,par_N=None,par_nghost=None,subdomain2global=None,blockVecType="simple",pde=None, par_nc=None, par_Nc=None, proteus_jacobian=None, nzval_proteus2petsc=None):
         p4pyPETSc.Mat.__init__(self)
         if ghosted_csr_mat == None:
@@ -276,7 +273,7 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
     def save(self, filename):
         """Saves to disk using a PETSc binary viewer.
         """
-        _petsc_view(self, filename)
+        petsc_view(self, filename)
 
 def Vec(n):
     """
@@ -561,6 +558,7 @@ class PCDInv_shell(InvOperatorShell):
         self.kspQp.setType('preonly')
         self.kspQp.pc.setType('lu')
         self.kspQp.setUp()
+
     def apply(self,A,x,y):
         """  
         Apply the inverse pressure-convection-diffusion operator.
@@ -581,9 +579,11 @@ class PCDInv_shell(InvOperatorShell):
         temp2.setType('seq')
         temp1 = y.copy()
         temp2 = y.copy()
-        self.kspAp.solve(x,temp1)
+        self.kspQp.solve(x,temp1)
         self.Fp.mult(temp1,temp2)
-        self.kspQp.solve(temp2,y)
+        self.kspAp.solve(temp2,y)
+
+
 
 class LSCInv_shell(InvOperatorShell):
     """ Shell class for the LSC Inverse Preconditioner 
