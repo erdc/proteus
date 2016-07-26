@@ -86,7 +86,7 @@ clean:
 distclean: clean
 	-rm -f stack.done
 	-rm -rf ${PROTEUS_PREFIX}
-	-rm -rf build src/*.pyc proteus/*.so proteus/*.a
+	-rm -rf build src/*.pyc proteus/*.so proteus/*.a proteus/MeshAdaptPUMI/*.so
 
 update:
 	@echo "Manually trying to update all repositories"
