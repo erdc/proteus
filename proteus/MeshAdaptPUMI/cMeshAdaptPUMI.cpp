@@ -207,8 +207,10 @@ int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
 {
   double THRESHOLD = 0.0;
   int adaptFlag=0;
-  if(total_error > THRESHOLD)
+  if(total_error > THRESHOLD){
+    removeBCData();
     adaptFlag = 1;
+  }
   return adaptFlag;
 }
 
