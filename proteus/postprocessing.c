@@ -2778,6 +2778,24 @@ void buildLocalBDM2projectionMatrices(int degree,
 
 		  for (ibq = 0; ibq < nQuadraturePoints_elementBoundary; ibq++)
 		    {
+		      if (eN==0 && ibq==0){
+			printf("ebN=%d,ebq_n=%.4f,w_dS_f=%.4f,ebq_v=%.4f,entry=%d\n",ebN,
+		      	ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
+		      	      ebN*nQuadraturePoints_elementBoundary*nSpace+
+		      	      ibq*nSpace+
+		      	      l],
+		      	w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+
+		      	       ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+
+		      	       ibq*nDOFs_test_element+
+		      	       kp],
+		      	ebq_v[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_trial_boundary_element+
+		      	      ebN*nQuadraturePoints_elementBoundary*nDOFs_trial_boundary_element+
+		      	      ibq*nDOFs_trial_boundary_element+
+		      	      k],
+			eN*dof*dof + irow + j*nVDOFs_element
+			       );
+		      }
+
 		      pval =
 		      	ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
 		      	      ebN*nQuadraturePoints_elementBoundary*nSpace+
@@ -3112,22 +3130,22 @@ void buildBDM2rhs(int nElements_global,
   	      for (ibq = 0; ibq < nQuadraturePoints_elementBoundary; ibq++)
   		{
   		  for (J = 0; J < nSpace; J++) {
-  		    /* { */
-		    /*   if (ebN==0 && irow==2){ */
-		    /* 	printf("ebq_n=%.2f,ebq_velocity=%.2f,w_dS_f=%.2f\n", */
-		    /* 	       ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+ */
-		    /* 		     ebN*nQuadraturePoints_elementBoundary*nSpace+ */
-		    /* 		     ibq*nSpace+ */
-		    /* 		     J], */
-		    /* 	       ebq_velocity[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+ */
-		    /* 			    ebN*nQuadraturePoints_elementBoundary*nSpace+ */
-		    /* 			    ibq*nSpace+ */
-		    /* 			    J], */
-		    /* 	       w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+ */
-		    /* 		      ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+ */
-		    /* 		      ibq*nDOFs_test_element+ */
-		    /* 		      kp]); */
-		    /*   } */
+
+		      /* if (eN==1 && ebN==0) { */
+		      /* 	printf("ebq_n=%.2f,ebq_velocity=%.2f,w_dS_f=%.2f\n", */
+		      /* 	       ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+ */
+		      /* 		     ebN*nQuadraturePoints_elementBoundary*nSpace+ */
+		      /* 		     ibq*nSpace+ */
+		      /* 		     J], */
+		      /* 	       ebq_velocity[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+ */
+		      /* 			    ebN*nQuadraturePoints_elementBoundary*nSpace+ */
+		      /* 			    ibq*nSpace+ */
+		      /* 			    J], */
+		      /* 	       w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+ */
+		      /* 		      ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+ */
+		      /* 		      ibq*nDOFs_test_element+ */
+		      /* 		      kp]); */
+		      /* } */
 
   		      btmp +=
   			ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
@@ -3146,6 +3164,10 @@ void buildBDM2rhs(int nElements_global,
 
 		  }/*J*/
 		}/*ibq*/
+	      if (eN==1){
+	      printf("Matrix Entry = %d, btmp = %.4f\n",eN*nVDOFs_element+irow,
+		                                        btmp);
+	      }
   	      p1_velocity_dofs[eN*nVDOFs_element+irow] = btmp;
 	    }
 	}/*ebN*/
@@ -3177,6 +3199,12 @@ void buildBDM2rhs(int nElements_global,
 	      btmp += pvalx + pvaly;
 
 	  }  /* end ibq */
+	  
+	  if (eN==1){
+	    printf("Matrix Entry = %d, btmp = %.4f\n",eN*nVDOFs_element+irow,
+		   btmp);
+	  }
+	  
 	    p1_velocity_dofs[eN*nVDOFs_element+irow] = btmp;
       }    /* end s */
 
@@ -3186,14 +3214,31 @@ void buildBDM2rhs(int nElements_global,
 
       for (ibq = 0; ibq < nQuadraturePoints_elementInterior; ibq++){
 
-	pvalx = q_velocity[eN*6*nQuadraturePoints_elementInterior +
+	if (eN==1){
+
+	printf("q_velocity_x = %.4f, w_interior_divfree_x = %.4f, q_velocity_y = %.4f, w_interior_divfree_y = %.4f\n",
+	       q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
+			   ibq*nSpace +  0 ],
+	       w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+
+				 ibq*nSpace +	  0 ],
+	       q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
+			   ibq*nSpace +   1 ],
+                w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+
+				   ibq*nSpace +   1 ] );
+	printf("idx_1 = %d, idx_2 = %d\n",
+	       eN*nQuadraturePoints_elementInterior*nSpace +  ibq*nSpace +  0,
+	       eN*nQuadraturePoints_elementInterior*nSpace +  ibq*nSpace +  1 );
+
+	}
+
+	pvalx = q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
 			   ibq*nSpace + 
 			   0 ]
 	  *   w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+
 				 ibq*nSpace +
 				 0 ];
 
-	pvaly = q_velocity[eN*6*nQuadraturePoints_elementInterior +
+	pvaly = q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
 			   ibq*nSpace + 
 			   1 ]	  * 	       
                 w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+
@@ -3204,6 +3249,11 @@ void buildBDM2rhs(int nElements_global,
  
 	       //w_interior_divfree;
        }
+      	  if (eN==1){
+	    printf("Matrix Entry = %d, btmp = %.4f\n",eN*nVDOFs_element+(nVDOFs_element-1),
+		   btmp);
+	  }
+
       p1_velocity_dofs[eN*nVDOFs_element + (nVDOFs_element-1) ] = btmp;
       
       
@@ -3444,6 +3494,7 @@ void getElementBDM2velocityValuesLagrangeRep(int nElements_global,
 \f]
    **********************************************************************/
   int eN,iq,id,k,j;
+  printf("nSpace = %d\n",nSpace);
   for (eN = 0; eN < nElements_global; eN++)
     {
       for (iq = 0; iq < nQuadraturePoints_element; iq++)
@@ -3454,6 +3505,12 @@ void getElementBDM2velocityValuesLagrangeRep(int nElements_global,
 	      for (k = 0; k < 6; k++)
 		{
 		  j = k*nSpace+ id; /*id*(nSpace+1) + k;*/		  
+		  if (eN==0){
+		    printf("qv = %.4f,p1_velocity_dofs=%.4f, j=%d \n",
+			 q_v[eN*nQuadraturePoints_element*nDOF_trial_element + iq*nDOF_trial_element + k],
+			   p1_velocity_dofs[eN*nVDOF_element + j],
+			   j);
+		  }
 		  q_velocity[eN*nQuadraturePoints_element*nSpace + iq*nSpace + id] +=
 		    q_v[eN*nQuadraturePoints_element*nDOF_trial_element + iq*nDOF_trial_element + k]
 		    *

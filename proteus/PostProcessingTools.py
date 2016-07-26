@@ -1513,7 +1513,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
             for k in range(n_xi):
                 for j in [0,1]:
                     # J_{T} \hat{p}
-                    self.weightedInteriorDivFreeElement[eN,k,j] = self.interiorDivFreeElement[eN,k,0]*self.q['J'][eN][k][j][0] + self.interiorDivFreeElement[eN,k,1]*self.q['J'][eN][k][j][1]
+                    self.weightedInteriorDivFreeElement[eN,k,j] = (self.interiorDivFreeElement[eN,k,0]*self.q['J'][eN][k][j][0] + 
+                                                                   self.interiorDivFreeElement[eN,k,1]*self.q['J'][eN][k][j][1])
                     # 1/|J_{T}| multiplicative term
                     self.weightedInteriorDivFreeElement[eN,k,j] *= 1./self.vt.q['abs(det(J))'][eN][k]
                     # quadrature weight
@@ -1531,9 +1532,15 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                     basis_function_component = i/2
                     self.piola_trial_function[eN,k,i,0] = self.q['J'][eN][k][0][J_component]*self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
                     self.piola_trial_function[eN,k,i,1] = self.q['J'][eN][k][1][J_component]*self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
+        import pdb
+        pdb.set_trace()
+        print "TEST"
+
 
 
     def computeBDM2projectionMatrices(self):
+#        import pdb
+#        pdb.set_trace()
         cpostprocessing.buildLocalBDM2projectionMatrices(self.degree,
                                                          self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
                                                          self.vt.ebq['n'],
@@ -1544,7 +1551,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                                                          self.piola_trial_function,                # interior integrals - divFree part
                                                          self.BDMprojectionMat_element)            # projection matrix
 
-
+#        pdb.set_trace()
         cpostprocessing.factorLocalBDM2projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
 
@@ -1664,6 +1671,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
 #        assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
 #        self.getAverageFlux(ci)
+        import pdb
+        pdb.set_trace()
 
         self.buildBDM2rhs(self.BDMprojectionMat_element,
                           self.BDMprojectionMatPivots_element,
@@ -1675,6 +1684,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                           self.q[('velocity',ci)],
                           self.q[('velocity_dofs',ci)])
 
+        pdb.set_trace()
+
         self.solveLocalBDM2projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,
                                       self.w_dS[ci],
@@ -1684,9 +1695,12 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                                       self.q[('velocity',ci)],
                                       self.q[('velocity_dofs',ci)])
 
+        pdb.set_trace()
+
         cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.qv[ci],
                                                                 self.q[('velocity_dofs',ci)],
                                                                 self.vt.q[('velocity',ci)])
+        pdb.set_trace()
 
     def evaluateElementVelocityField(self,x,ci):
         """
