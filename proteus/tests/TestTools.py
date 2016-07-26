@@ -23,11 +23,11 @@ def addSubFolders(currentframe):
     if cmd_subfolder not in sys.path:
         sys.path.insert(0,cmd_subfolder)
 
-class SimulationTest():
-    """Base class for simulation tests.
-    
-    TODO (ARB) - Is this even helpful?
-    """
+def closeFiles(filelist):
+    """Close a set of files. """
+    for file in FileList:
+        if os.path.isfile(file):
+            os.remove(file)
 
 class NumericResults:
     """Parse and stores numerical data from a Proteus log file.
