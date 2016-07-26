@@ -1405,7 +1405,7 @@ class RandomNLWavesFast:
         aR = RandomWaves(Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
         aRN = RandomNLWaves(Tstart,Tend,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
         self.omega = aR.omega
-
+        self.mwl = mwl
 
         Tmax =  NLongW*Tp/1.1
         modes = ["short","linear","long"]
@@ -1419,7 +1419,7 @@ class RandomNLWavesFast:
             series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Vgen)
             Tstart_temp = series[0,0]
             cutoff = 0.2*periods[ii]/(Tend-Tstart_temp)
-            
+    
             #Checking if there are enough windows
             Nwaves_tot = int((Tend-Tstart_temp)/periods[ii])
             Nwaves = min(Nwaves,Nwaves_tot)
