@@ -318,7 +318,7 @@ class NS_base:  # (HasTraits):
                   mesh = MeshTools.TetrahedralMesh()
                 else:
                   mesh = MeshTools.TriangularMesh()
-                log("Converting PUMI mesh to Proteus")
+                logEvent("Converting PUMI mesh to Proteus")
                 mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
                     parallel = comm.size() > 1, dim = p.domain.nd)
                 if p.domain.nd == 3:
@@ -331,7 +331,7 @@ class NS_base:  # (HasTraits):
                       0,0,0,skipInit=True,
                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                       parallelPartitioningType=n.parallelPartitioningType)
-                log("Generating %i-level mesh from PUMI mesh" % (n.nLevels,))
+                logEvent("Generating %i-level mesh from PUMI mesh" % (n.nLevels,))
                 if comm.size()==1:
                   mlMesh.generateFromExistingCoarseMesh(
                       mesh,n.nLevels,
@@ -906,10 +906,10 @@ class NS_base:  # (HasTraits):
                 if (isinstance(p0.domain, Domain.PUMIDomain) and
                     n0.adaptMesh and
                     self.so.useOneMesh):
-                    log("Copying coordinates to PUMI")
+                    logEvent("Copying coordinates to PUMI")
                     p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                         self.modelList[0].levelModelList[0].mesh.nodeArray)
-                    log("Copying DOF and parameters to PUMI")
+                    logEvent("Copying DOF and parameters to PUMI")
                     for m in self.modelList:
                       for lm in m.levelModelList:
                         coef = lm.coefficients
@@ -938,16 +938,16 @@ class NS_base:  # (HasTraits):
                     p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
                     del rho, nu, g
 
-                    log("Estimate Error")
+                    logEvent("Estimate Error")
                     sfConfig = p0.domain.PUMIMesh.size_field_config()
                     if(sfConfig=="alvin"):
                       p0.domain.PUMIMesh.get_local_error()
                       if(p0.domain.PUMIMesh.willAdapt()):
                         adaptMeshNow=True
-                        log("Need to Adapt")
+                        logEvent("Need to Adapt")
                     if(sfConfig=='farhad' and self.nSequenceSteps%n0.adaptMesh_nSteps==0 ):
                       adaptMeshNow=True
-                      log("Need to Adapt")
+                      logEvent("Need to Adapt")
 
 
                 #can only handle PUMIDomain's for now
@@ -975,7 +975,7 @@ class NS_base:  # (HasTraits):
 
 
                     p0.domain.PUMIMesh.adaptPUMIMesh()
-                    log("Converting PUMI mesh to Proteus")
+                    logEvent("Converting PUMI mesh to Proteus")
                     #ibaned: PUMI conversion #2
                     #TODO: this code is nearly identical to
                     #PUMI conversion #1, they should be merged
@@ -988,7 +988,7 @@ class NS_base:  # (HasTraits):
                                          p0.domain.faceList,
                                          parallel = self.comm.size() > 1,
                                          dim = p0.domain.nd)
-                    log("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
+                    logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
                     if p0.domain.nd == 3:
                       mlMesh = MeshTools.MultilevelTetrahedralMesh(
                           0,0,0,skipInit=True,
@@ -1013,9 +1013,9 @@ class NS_base:  # (HasTraits):
                         self.mlMesh_nList.append(mlMesh)
                     #may want to trigger garbage collection here
                     modelListOld = self.modelList
-                    log("Allocating models on new mesh")
+                    logEvent("Allocating models on new mesh")
                     self.allocateModels()
-                    log("Attach auxiliary variables to new models")
+                    logEvent("Attach auxiliary variables to new models")
                     #(cut and pasted from init, need to cleanup)
                     self.simOutputList = []
                     self.auxiliaryVariables = {}
@@ -1049,7 +1049,7 @@ class NS_base:  # (HasTraits):
                     for avList in self.auxiliaryVariables.values():
                         for av in avList:
                             av.attachAuxiliaryVariables(self.auxiliaryVariables)
-                    log("Transfering fields from PUMI to Proteus")
+                    logEvent("Transfering fields from PUMI to Proteus")
                     for m in self.modelList:
                       for lm in m.levelModelList:
                         coef = lm.coefficients
@@ -1068,7 +1068,7 @@ class NS_base:  # (HasTraits):
                                 coef.variableNames[ci], scalar)
                             lm.u[ci].dof[:] = scalar[:,0]
                             del scalar
-                    log("Attaching models on new mesh to each other")
+                    logEvent("Attaching models on new mesh to each other")
                     for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
                         for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
                             save_dof=[]
@@ -1088,9 +1088,9 @@ class NS_base:  # (HasTraits):
                         m.stepController.t_model = mOld.stepController.t_model
                         m.stepController.t_model_last = mOld.stepController.t_model_last
                         m.stepController.substeps = mOld.stepController.substeps
-                    log("Evaluating residuals and time integration")
+                    logEvent("Evaluating residuals and time integration")
                     for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
-                        log("Attaching models to model "+ptmp.name)
+                        logEvent("Attaching models to model "+ptmp.name)
                         m.attachModels(self.modelList)
                         for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                             lm.timeTerm=True
@@ -1108,7 +1108,7 @@ class NS_base:  # (HasTraits):
                         assert(m.stepController.dt_model == mOld.stepController.dt_model)
                         assert(m.stepController.t_model == mOld.stepController.t_model)
                         assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
-                        log("Initializing time history for model step controller")
+                        logEvent("Initializing time history for model step controller")
                         m.stepController.initializeTimeHistory()
                     p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
                     self.systemStepController.modelList = self.modelList
