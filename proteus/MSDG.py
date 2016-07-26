@@ -290,12 +290,12 @@ class OneLevelMSDG(Transport.OneLevelTransport):
 
 
 
-                                    self.transfer_lhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm \
-                                        * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia +1)][eN, ebN, k, i]
+                                    # self.transfer_lhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm \
+                                    #     * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia +1)][eN, ebN, k, i]
 
-                                    # self.transfer_lhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
-                                    #     'n'][eN, ebN, k, ja] * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia +1)][eN, ebN, k, i]
-                                    # #
+                                    self.transfer_lhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
+                                        'n'][eN, ebN, k, ja] * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia +1)][eN, ebN, k, i]
+                                    #
                             # explicit til_Ak terms
                             # self.transfer_lhs[(1, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
                             #     'n'][eN, ebN, k, 0] * self.ebq[('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
@@ -348,12 +348,12 @@ class OneLevelMSDG(Transport.OneLevelTransport):
 
 
 
-                                    self.transfer_rhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm \
-                                        * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia + 1)][eN, ebN, k, i]
+                                    # self.transfer_rhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm \
+                                    #     * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia + 1)][eN, ebN, k, i]
 
-                                    # self.transfer_rhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
-                                    #     'n'][eN, ebN, k, ja] * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia + 1)][eN, ebN, k, i]
-                                    # #
+                                    self.transfer_rhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
+                                        'n'][eN, ebN, k, ja] * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia + 1)][eN, ebN, k, i]
+                                    #
                             # # explicit expression for bar_Ak
                             # self.transfer_rhs[(1, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
                             #     'n'][eN, ebN, k, 0] * self.ebq[('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
