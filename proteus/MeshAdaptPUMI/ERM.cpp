@@ -375,7 +375,7 @@ if(k==0)
 }
 
 void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf){
-  std::cout<<"Begin computeDiffusiveFlux()"<<std::endl;
+  std::cerr<<"Begin computeDiffusiveFlux()"<<std::endl;
   int numbqpt, nshl;
   int hier_off = 4;
   apf::MeshEntity* bent,*ent;
@@ -418,7 +418,7 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
   m->end(iter);
   free(flux);
 
-std::cout<<"Initialized flux"<<std::endl;
+std::cerr<<"Initialized flux"<<std::endl;
   //loop over regions
   PCU_Comm_Begin();
   iter = m->begin(nsd);
@@ -541,7 +541,7 @@ if(localNumber(ent)==eID && l==0){
     } //end loop over faces
   } //end loop over regions
   m->end(iter);
-std::cout<<"Sending flux"<<std::endl;
+std::cerr<<"Sending flux"<<std::endl;
   PCU_Comm_Send(); 
   flux = (double*) calloc(numbqpt*nsd*2,sizeof(double));
   while(PCU_Comm_Receive())
@@ -561,7 +561,7 @@ std::cout<<"Sending flux"<<std::endl;
   }
   PCU_Barrier();
   free(flux);
-  std::cout<<"End computeDiffusiveFlux()"<<std::endl;
+  std::cerr<<"End computeDiffusiveFlux()"<<std::endl;
 }
 
 void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux){
@@ -1156,27 +1156,18 @@ testcount++;
 
   PCU_Barrier();
   PCU_Add_Doubles(&err_est_total,1);
-  err_est_total = sqrt(err_est_total);
+  //err_est_total = sqrt(err_est_total);
+  total_error = sqrt(err_est_total);
 
 if(comm_rank==0){
-/*
-star_total = -2*(0.5*(err_est_total)-star_total); //before square root is taken
-if(star_total<0){ star_total=star_total*-1;std::cout<<"star err Was negative "<<std::endl;}
-star_total = sqrt(star_total);
-L2_total = sqrt(L2_total);
-*/
 std::cout<<std::setprecision(10)<<std::endl;
-std::cout<<"Error estimate "<<err_est_total<<std::endl;
-//std::cout<<"Err_est "<<err_est_total<<" L2 "<<L2_total<<" Average "<<err_est_total/L2_total<<std::endl;
-//std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est_total/star_total<<std::endl;
+std::cout<<"Error estimate "<<total_error<<std::endl;
 }
-  m->end(iter);
 
+  m->end(iter);
   apf::destroyField(visc);
   apf::destroyField(estimate);
-  removeBCData();
   printf("It cleared the function.\n");
-  total_error = err_est_total;
 }
 
 
