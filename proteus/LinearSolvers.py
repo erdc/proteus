@@ -10,6 +10,9 @@ import superluWrappers
 from petsc4py import PETSc as p4pyPETSc
 from math import *
 from .Profiling import logEvent
+import pdb
+import numpy as np
+
 
 class LinearSolver:
     """
@@ -380,6 +383,25 @@ class KSP_petsc4py(LinearSolver):
         self.pccontext = None
         self.preconditioner = None
         self.pc = None
+        assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
+        assert isinstance(par_L,ParMat_petsc4py)
+        self.solverName  = "PETSc"
+        self.par_fullOverlap = True
+        self.par_firstAssembly=True
+        self.par_L   = par_L
+        self.petsc_L = par_L
+        self.ksp     = p4pyPETSc.KSP().create()
+        # self.csr_rep_owned = self.petsc_L.csr_rep_owned
+        self.csr_rep_local = self.petsc_L.csr_rep_local
+        self.csr_rep = self.petsc_L.csr_rep
+        #shell for main operator
+        self.Lshell = p4pyPETSc.Mat().create()
+        sizes = self.petsc_L.getSizes()
+        self.Lshell.setSizes([[sizes[0][0],None],[sizes[0][1],None]])
+        self.Lshell.setType('python')
+        self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
+        self.Lshell.setPythonContext(self.matcontext)
+        par_L.shell = self.Lshell
         if Preconditioner != None:
             if Preconditioner == Jacobi:
                 self.pccontext= Preconditioner(L,
@@ -445,6 +467,12 @@ class KSP_petsc4py(LinearSolver):
             elif Preconditioner == NavierStokesPressureCorrection:
                 self.preconditioner = NavierStokesPressureCorrection(par_L)
                 self.pc = self.preconditioner.pc
+#special for MSDG
+            elif Preconditioner == DarcyMSDG:
+                self.preconditioner = DarcyMSDG(par_L)
+                self.pc = self.preconditioner.pc
+        #self.ksp.setOperators(self.Lshell,self.Lshell)#,self.petsc_L)
+#add after in master, may cause problem in running MSDG
         assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
         assert isinstance(par_L,ParMat_petsc4py)
         self.solverName  = "PETSc"
@@ -464,6 +492,7 @@ class KSP_petsc4py(LinearSolver):
         self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
         self.Lshell.setPythonContext(self.matcontext)
         #self.ksp.setOperators(self.petsc_L,self.Lshell)#,self.petsc_L)
+#extra adding ends
         #
         try:
             if self.preconditioner.hasNullSpace:
@@ -519,13 +548,14 @@ class KSP_petsc4py(LinearSolver):
             self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],p4pyPETSc.InsertMode.ADD_VALUES)
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
+        self.ksp.setOperators(self.petsc_L,self.petsc_L)
         if self.pc != None:
             self.pc.setOperators(self.petsc_L,self.petsc_L)
-            self.pc.setUp()
             if self.preconditioner:
                 self.preconditioner.setUp()
-        self.ksp.setOperators(self.petsc_L,self.petsc_L)
+            self.pc.setUp()
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
+
         self.ksp.setUp()
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
         if par_b.proteus2petsc_subdomain is not None:
@@ -555,9 +585,45 @@ class KSP_petsc4py(LinearSolver):
                 self.ksp.setNullSpace(self.preconditioner.nsp)
         except:
             pass
-        self.ksp.solve(par_b,par_u)
-        logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
-                                                                                                             self.ksp.atol,
+
+
+        if isinstance(self.preconditioner, DarcyMSDG):
+            logEvent("Updating the corrected residual for MSDG before KSP solver")
+            reduced_vector = par_b.duplicate() # duplicate the par_b with zero entries
+            self.par_L.mult(self.preconditioner.RHS, reduced_vector)
+            import pdb; pdb.set_trace()
+            par_b.axpy(-1, reduced_vector)
+            #create coarseLevel solution vector
+            # create an empty vector to store coarse solution
+
+            self.coarseSolution = ParVec_petsc4py().createWithArray(np.zeros(self.preconditioner.I.getSizes()[1][0],))
+            self.coarseRHS = ParVec_petsc4py().createWithArray(np.zeros(self.preconditioner.I.getSizes()[1][0],))
+            # self.coarseResidual = ParVec_petsc4py().createWithArray(np.zeros(self.preconditioner.I.getSizes()[1][0],))
+            # self.fineSolution = ParVec_petsc4py().createWithArray(np.zeros(self.preconditioner.I.getSizes()[0][0],))
+            self.fineResidual = ParVec_petsc4py().createWithArray(np.zeros(self.preconditioner.I.getSizes()[0][0],))
+
+            import pdb; pdb.set_trace()
+            self.ksp.pc.setMGX(0, self.coarseSolution)
+            self.ksp.pc.setMGRhs(0, self.coarseRHS)
+            # self.ksp.pc.setMGR(0, self.coarseResidual)
+            # self.ksp.pc.setMGX(1, self.fineSolution)
+            self.ksp.pc.setMGR(1, self.fineResidual)
+            self.ksp.solve(par_b,par_u) # par_b is righthandside, par_u is solution
+            import pdb; pdb.set_trace()
+            logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
+                                                                                                                 self.ksp.atol,
+                                                                                                                 self.ksp.converged,
+                                                                                                                 self.ksp.its,
+                                                                                                                 self.ksp.norm,
+                                                                                                                 self.ksp.reason))
+            # par_u.axpy(1, reduced_vector)
+            par_u.axpy(1, self.preconditioner.RHS)
+            par_b.axpy(1, reduced_vector)
+        else:
+            self.ksp.solve(par_b,par_u)
+            logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
+
+                                                                                                                 self.ksp.atol,
                                                                                                              self.ksp.converged,
                                                                                                              self.ksp.its,
                                                                                                              self.ksp.norm,
@@ -825,6 +891,52 @@ class NavierStokesPressureCorrection:
         self.L.setNullSpace(self.nsp)
     def setUp(self):
         pass
+
+class DarcyMSDG:
+    def __init__(self,L,prefix=None):
+
+        self.L = L
+        L_sizes = L.getSizes()
+        L_range = L.getOwnershipRange()
+        #print "L_sizes",L_sizes
+        neqns = L_sizes[0][0]
+        #print "neqns",neqns
+        self.pc = p4pyPETSc.PC().create()
+        if prefix:
+            self.pc.setOptionsPrefix(prefix)
+        self.pc.setType('mg')
+        self.pc.setFromOptions()
+        L_sizes = self.L.getSizes()
+        assert(L_sizes[0][0] == 3*self.L.pde.u[0].nDOF_global)
+        #Interpolation from CG to DG
+        self.Ishell = p4pyPETSc.Mat().create()
+        self.Ishell.setSizes([
+            [L_sizes[0][0], L_sizes[0][0]],
+            [3*self.L.pde.u_cg[0].nDOF_global, 3*self.L.pde.u_cg[0].nDOF_global]])
+        self.Ishell.setType('python')
+        self.Icontext, self.I, self.RHS  = self.L.pde.getInterpolation()
+        self.Ishell.setPythonContext(self.Icontext)
+        #self.Rshell = p4pyPETSc.Mat().create()
+        #self.Rshell.setSizes([
+        #    [3*self.L.pde.u_cg[0].nDOF_global, 3*self.L.pde.u_cg[0].nDOF_global],
+        #    [L_sizes[0][1], L_sizes[0][1]]])
+        #self.Rshell.setType('python')
+        #self.Rcontext = self.L.pde.getRestriction()
+        #self.Rshell.setPythonContext(self.Rcontext)
+        logEvent("Number of MG  levels "  + `self.pc.getMGLevels()`)
+        #self.pc.setMGRestriction(1,self.Rshell)
+        #self.pc.setMGRestriction(1,self.R)
+        logEvent("Done setting up Restriction")
+        #self.pc.setMGInterpolation(1,self.Ishell)
+        self.pc.setMGInterpolation(1,self.I)
+        self.hasNullSpace=False
+        #logEvent("Done setting up Interpolation")
+    def setUp(self):
+        self.Icontext, self.I, self.RHS  = self.L.pde.getInterpolation()
+        #self.pc.setType('mg')
+        #self.pc.setFromOptions()
+        #self.pc.setMGInterpolation(1,self.I)
+        logEvent("setting up PC")
 
 class SimpleDarcyFC:
     def __init__(self,L):
