@@ -1155,27 +1155,19 @@ testcount++;
 
   PCU_Barrier();
   PCU_Add_Doubles(&err_est_total,1);
-  err_est_total = sqrt(err_est_total);
+  //err_est_total = sqrt(err_est_total);
+  total_error = sqrt(err_est_total);
 
 if(comm_rank==0){
-/*
-star_total = -2*(0.5*(err_est_total)-star_total); //before square root is taken
-if(star_total<0){ star_total=star_total*-1;std::cout<<"star err Was negative "<<std::endl;}
-star_total = sqrt(star_total);
-L2_total = sqrt(L2_total);
-*/
 std::cout<<std::setprecision(10)<<std::endl;
-std::cout<<"Error estimate "<<err_est_total<<std::endl;
-//std::cout<<"Err_est "<<err_est_total<<" L2 "<<L2_total<<" Average "<<err_est_total/L2_total<<std::endl;
-//std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est_total/star_total<<std::endl;
+std::cout<<"Error estimate "<<total_error<<std::endl;
 }
-  m->end(iter);
 
+  m->end(iter);
   apf::destroyField(visc);
   apf::destroyField(estimate);
   removeBCData();
   printf("It cleared the function.\n");
-  total_error = err_est_total;
 }
 
 
