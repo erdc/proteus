@@ -958,14 +958,18 @@ class Tank2D(ShapeRANS):
 
 
     def _findEdges(self, dim, coords, from_0):
-        if not from_0 and coords is None:
+
+        if from_0 and (coords == [x * 0.5 for x in dim]):
+            coords = None
+
+        if not from_0 and (coords is None):
             raise ValueError("Cannot locate tank center. Either set from_0 = "
                              "True, or pass in center coordinates in [coords]")
-        elif from_0 and coords is not None:
-            raise ValueError("Multiple definitions of tank center. from_0 = "
-                             "True, but coords = " + str(coords) + " Unable "
-                             "to reconcile multiple definitions.")
-        elif from_0 and coords is None:
+        elif from_0 and (coords is not None):
+            raise ValueError("The center of the tank cannot be at coords = "
+                             + str(coords) + " while also starting from_0 = "
+                             "True and dimensions: " + str(dim))
+        elif from_0 and (coords is None):
             self.x0 = 0
             self.x1 = dim[0]
             self.y0 = 0
@@ -1036,13 +1040,13 @@ class Tank2D(ShapeRANS):
                          0.5 * (self.y0 + self.y1)]]
             ind_region += 1
             regionFlags += [ind_region]
-            self.regionIndice['x-'] = [ind_region - 1]
+            self.regionIndice['x-'] = ind_region - 1
         if self.spongeLayers['x+']:
             regions += [[self.x1 + 0.5 * self.spongeLayers['x+'],
                          0.5 * (self.y0 + self.y1)]]
             ind_region += 1
             regionFlags += [ind_region]
-            self.regionIndice['x+'] = [ind_region - 1]
+            self.regionIndice['x+'] = ind_region - 1
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
 
