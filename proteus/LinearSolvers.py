@@ -11,6 +11,7 @@ from petsc4py import PETSc as p4pyPETSc
 from math import *
 from .Profiling import logEvent
 import pdb
+import numpy as np
 
 
 class LinearSolver:
@@ -590,16 +591,34 @@ class KSP_petsc4py(LinearSolver):
             logEvent("Updating the corrected residual for MSDG before KSP solver")
             reduced_vector = par_b.duplicate() # duplicate the par_b with zero entries
             self.par_L.mult(self.preconditioner.RHS, reduced_vector)
+            import pdb; pdb.set_trace()
             par_b.axpy(-1, reduced_vector)
-            self.ksp.solve(par_b,par_u)
+            #create coarseLevel solution vector
+            # create an empty vector to store coarse solution
+
+            self.coarseSolution = ParVec_petsc4py().createWithArray(np.zeros(self.preconditioner.I.getSizes()[1][0],))
+            self.coarseRHS = ParVec_petsc4py().createWithArray(np.zeros(self.preconditioner.I.getSizes()[1][0],))
+            # self.coarseResidual = ParVec_petsc4py().createWithArray(np.zeros(self.preconditioner.I.getSizes()[1][0],))
+            # self.fineSolution = ParVec_petsc4py().createWithArray(np.zeros(self.preconditioner.I.getSizes()[0][0],))
+            self.fineResidual = ParVec_petsc4py().createWithArray(np.zeros(self.preconditioner.I.getSizes()[0][0],))
+
+            import pdb; pdb.set_trace()
+            self.ksp.pc.setMGX(0, self.coarseSolution)
+            self.ksp.pc.setMGRhs(0, self.coarseRHS)
+            # self.ksp.pc.setMGR(0, self.coarseResidual)
+            # self.ksp.pc.setMGX(1, self.fineSolution)
+            self.ksp.pc.setMGR(1, self.fineResidual)
+            self.ksp.solve(par_b,par_u) # par_b is righthandside, par_u is solution
+            import pdb; pdb.set_trace()
             logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                                  self.ksp.atol,
                                                                                                                  self.ksp.converged,
                                                                                                                  self.ksp.its,
                                                                                                                  self.ksp.norm,
                                                                                                                  self.ksp.reason))
-            par_u.axpy(1, reduced_vector)
-            par_b.axpy(-1, reduced_vector)
+            # par_u.axpy(1, reduced_vector)
+            par_u.axpy(1, self.preconditioner.RHS)
+            par_b.axpy(1, reduced_vector)
         else:
             self.ksp.solve(par_b,par_u)
             logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
