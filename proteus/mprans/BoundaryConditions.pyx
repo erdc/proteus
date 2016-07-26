@@ -144,7 +144,7 @@ class BC_RANS(BC_Base):
         self.w_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
 
-    def setAtmosphere(self, orientation=None):
+    def setAtmosphere(self, orientation=None, vof_air=1.):
         """
         Sets atmosphere boundary conditions (water can come out)
         (!) pressure dirichlet set to 0 for this BC
@@ -177,7 +177,7 @@ class BC_RANS(BC_Base):
         self.v_dirichlet.uOfXT = get_ux_dirichlet(1)
         if len(b_or) > 2:
             self.w_dirichlet.uOfXT = get_ux_dirichlet(2)
-        self.vof_dirichlet.setConstantBC(1.)  # air
+        self.vof_dirichlet.setConstantBC(vof_air)  # air
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)

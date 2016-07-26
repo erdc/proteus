@@ -93,7 +93,7 @@ class ShapeRANS(Shape):
         elif str(key).startswith('Gauge_') \
             and gauge not in self.auxiliaryVariables[key]:
                 self.auxiliaryVariables[key] += [gauge]
-#[temp] Gauge Logic: start a gauge with tank.attachPointGauges('twp', [all those gauge details]).  Can be retrieved by .get('twp', [])
+#[temp] Gauge Logic: start a gauge with tank.attachPointGauges('twp', [all those gauge details]).  Can be retrieved by .get('twp', []) or just by ['twp'] (but be sure you have the right tags)
 
     def attachPointGauges(self, model_key, gauges, activeTime=None,
                           sampleRate=0,
@@ -894,27 +894,28 @@ class Tank2D(ShapeRANS):
         Domain class instance that hold all the geometrical informations and
         boundary conditions of the shape.
     dim: Optional[array_like]
-        Dimensions of the cuboid.
+        Dimensions of the tank (excluding sponge layers).
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
     from_0: Optional[bool]
-        If True (default), the tank extends from the origin to postive x, y, z
+        If True (default), the tank extends from the origin to positive x, y, z
     """
     count = 0
 
-    def __init__(self, domain, dim=(0., 0.), coords=None, from_0=True):
+    def __init__(self, domain, dim=(0.,0.), coords=None, from_0=True):
         super(Tank2D, self).__init__(domain, nd=2)
-        self.__class__.count += 1
-        self.name = "tank2d" + str(self.__class__.count)
-        self.dim = np.array(dim)
-        self.from_0 = from_0
+        self._nameSelf()
+        self._setupBCs()
         self.spongeLayers = {'x-': None,
                              'x+': None}
-        if coords is None:
-            self.coords = self.dim/2.
-        else:
-            self.coords = coords
-            self.from_0 = False
+        self._findEdges(dim, coords, from_0)
+        self.constructShape()
+
+    def _nameSelf(self):
+        self.__class__.count += 1
+        self.name = "tank2D" + str(self.__class__.count)
+
+    def _setupBCs(self):
         self.boundaryTags = {'y-': 1, 'x+': 2, 'y+': 3, 'x-': 4, 'sponge': 5}
         self.b_or = np.array([[0., -1.],
                               [1., 0.],
@@ -937,69 +938,111 @@ class Tank2D(ShapeRANS):
         # self.BC = BCContainer(self.BC_dict)
         for i in range(4):
             self.BC_list[i].setTank()
-        self.setDimensions(dim)
 
-    def setDimensions(self, dim):
+    def constructShape(self):
         """
-        Set dimension of the tank
+        Construct the geometry of the tank: segments, regions, etc.
 
         Parameters
         ----------
-        dim: array_like
-            dimensions of the tank (excluding sponge layers), array of length 2.
+        dim: Optional[array_like]
+            Dimensions of the tank (excluding sponge layers).
+        coords: Optional[array_like]
+            Coordinates of the centroid of the shape.
+        from_0: Optional[bool]
+            If True (default), the tank extends from the origin to positive x, y, z
         """
-        self.dim = L, H = dim
-        if self.from_0 is True:
-            x, y = L/2., H/2.
-        else:
-            x, y = 0., 0.
-        self.coords = [x, y]
-        x0, x1 = x-0.5*L, x+0.5*L
-        y0, y1 = y-0.5*H, y+0.5*H
-        bt = self.boundaryTags
-        # add attributes
-        leftSponge = self.spongeLayers['x-'] or 0.
-        rightSponge = self.spongeLayers['x+'] or 0.
-        regions_y = y1-y1/100.  # y coord of regions
-        vertices = [[x-0.5*L, y-0.5*H],
-                    [x+0.5*L, y-0.5*H],
-                    [x+0.5*L, y+0.5*H],
-                    [x-0.5*L, y+0.5*H]]
-        vertexFlags = [bt['y-'], bt['y-'], bt['y+'], bt['y+']]
-        segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
-        segmentFlags = [bt['y-'], bt['x+'], bt['y+'], bt['x-']]  # y-, x+, y+, x-
-        regions = [[(x0-leftSponge+x0)/2., regions_y]]
-        regionFlags = [1]
-        self.regionIndice = {'tank': 0}
-        ind_region = 1
-        av = 0 # added vertices
-        if leftSponge:
-            vertices += [[x0-leftSponge, y0], [x0-leftSponge, y1]]
-            vertexFlags += [bt['y-'], bt['y+']]
-            segments += [[0, 4+av], [4+av, 5+av], [5+av, 3]]
-            segmentFlags += [bt['y-'], bt['x-'], bt['y+']]
-            segmentFlags[3] = bt['sponge']
-            regions += [[(x0-leftSponge+x0)/2., regions_y]]
-            self.regionIndice['x-'] = ind_region
-            ind_region += 1
-            regionFlags += [ind_region]
-            av += 2
-        if rightSponge:
-            vertices += [[x1+rightSponge, y0], [x1+rightSponge, y1]]
-            vertexFlags += [bt['y-'], bt['y+']]
-            segments += [[1, 4+av], [4+av, 5+av], [5+av, 2]]
-            segmentFlags += [bt['y-'], bt['x+'], bt['y+']]
-            segmentFlags[1] = bt['sponge']
-            regions += [[((x1+rightSponge)+x1)/2., regions_y]]
-            self.regionIndice['x+'] = ind_region
-            ind_region += 1
-            regionFlags += [ind_region]
-            av += 2
-        # need to check that original region is not in new sponge regions!
+        self._constructVertices()
+        self._constructSegments()
+        self._constructRegions()
+
+
+    def _findEdges(self, dim, coords, from_0):
+        if not from_0 and coords is None:
+            raise ValueError("Cannot locate tank center. Either set from_0 = "
+                             "True, or pass in center coordinates in [coords]")
+        elif from_0 and coords is not None:
+            raise ValueError("Multiple definitions of tank center. from_0 = "
+                             "True, but coords = " + str(coords) + " Unable "
+                             "to reconcile multiple definitions.")
+        elif from_0 and coords is None:
+            self.x0 = 0
+            self.x1 = dim[0]
+            self.y0 = 0
+            self.y1 = dim[1]
+        else: # not from_0 and coords is not None
+            self.x0 = coords[0] - 0.5 * dim[0]
+            self.x1 = coords[0] + 0.5 * dim[0]
+            self.y0 = coords[1] - 0.5 * dim[1]
+            self.y1 = coords[1] + 0.5 * dim[1]
+
+    def _constructVertices(self):
+        vertices = [[self.x0, self.y0],
+                    [self.x1, self.y0],
+                    [self.x1, self.y1],
+                    [self.x0, self.y1]]
+        vertexFlags = [self.boundaryTags['y-'],
+                       self.boundaryTags['y-'],
+                       self.boundaryTags['y+'],
+                       self.boundaryTags['y+']]
+        if self.spongeLayers['x-']:
+            vertices += [[self.x0 - self.spongeLayers['x-'], self.y0],
+                         [self.x0 - self.spongeLayers['x-'], self.y1]]
+            vertexFlags += [self.boundaryTags['y-'],
+                            self.boundaryTags['y+']]
+        if self.spongeLayers['x+']:
+            vertices += [[self.x1 + self.spongeLayers['x+'], self.y0],
+                         [self.x1 + self.spongeLayers['x+'], self.y1]]
+            vertexFlags += [self.boundaryTags['y-'],
+                            self.boundaryTags['y+']]
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)
+
+    def _constructSegments(self):
+        segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
+        segmentFlags = [self.boundaryTags['y-'],
+                        self.boundaryTags['x+'],
+                        self.boundaryTags['y+'],
+                        self.boundaryTags['x-']]
+        added_vertices = 0
+        if self.spongeLayers['x-']:
+            segments += [[0, 4 + added_vertices],
+                         [4 + added_vertices, 5 + added_vertices],
+                         [5 + added_vertices, 3]]
+            segmentFlags += [self.boundaryTags['y-'],
+                             self.boundaryTags['x-'],
+                             self.boundaryTags['y+']]
+            segmentFlags[3] = self.boundaryTags['sponge']
+            added_vertices += 2
+        if self.spongeLayers['x+']:
+            segments += [[1, 4 + added_vertices],
+                         [4 + added_vertices, 5 + added_vertices],
+                         [5 + added_vertices, 2]]
+            segmentFlags += [self.boundaryTags['y-'],
+                             self.boundaryTags['x+'],
+                             self.boundaryTags['y+']]
+            segmentFlags[1] = self.boundaryTags['sponge']
+            added_vertices += 2
         self.segments = np.array(segments)
         self.segmentFlags = np.array(segmentFlags)
+
+    def _constructRegions(self):
+        regions = [[0.5 * (self.x0 + self.x1), 0.5 * (self.y0 + self.y1)],]
+        ind_region = 1
+        regionFlags = [ind_region,]
+        self.regionIndice = {'tank': ind_region - 1}
+        if self.spongeLayers['x-']:
+            regions += [[self.x0 - 0.5 * self.spongeLayers['x-'],
+                         0.5 * (self.y0 + self.y1)]]
+            ind_region += 1
+            regionFlags += [ind_region]
+            self.regionIndice['x-'] = [ind_region - 1]
+        if self.spongeLayers['x+']:
+            regions += [[self.x1 + 0.5 * self.spongeLayers['x+'],
+                         0.5 * (self.y0 + self.y1)]]
+            ind_region += 1
+            regionFlags += [ind_region]
+            self.regionIndice['x+'] = [ind_region - 1]
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
 
@@ -1018,7 +1061,7 @@ class Tank2D(ShapeRANS):
         """
         self.spongeLayers['x-'] = x_n
         self.spongeLayers['x+'] = x_p
-        self.setDimensions(self.dim)
+        self.constructShape()
 
     def setAbsorptionZones(self, x_n=False, x_p=False, dragAlpha=0.5/1.005e-6,
                            dragBeta=0., porosity=1.):
@@ -1045,10 +1088,10 @@ class Tank2D(ShapeRANS):
         if x_n or x_p:
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
-            center = list(self.coords)
+            center = [self.x0 - 0.5 * self.spongeLayers['x-'],
+                      0.5 * (self.y0 + self.y1)]
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            center[0] += -0.5*self.spongeLayers['x-']-0.5*self.dim[0]
             epsFact_solid = self.spongeLayers['x-']/2.
             orientation = [1., 0.]
             self.zones[flag] = bc.RelaxationZone(shape=self,
@@ -1062,10 +1105,10 @@ class Tank2D(ShapeRANS):
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
         if x_p is True:
-            center = list(self.coords)
+            center = [self.x1 + 0.5 * self.spongeLayers['x+'],
+                      0.5 * (self.y0 + self.y1)]
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            center[0] += 0.5*self.dim[0]+self.spongeLayers['x+']/2.
             epsFact_solid = self.spongeLayers['x+']/2.
             orientation = [-1., 0.]
             self.zones[flag] = bc.RelaxationZone(shape=self,
@@ -1109,10 +1152,10 @@ class Tank2D(ShapeRANS):
         if x_n or x_p:
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
-            center = list(self.coords)
+            center = [self.x0 - 0.5 * self.spongeLayers['x-'],
+                      0.5 * (self.y0 + self.y1)]
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
-            center[0] += -0.5*self.dim[0]-self.spongeLayers['x-']/2.
             epsFact_solid = self.spongeLayers['x-']/2.
             orientation = [1., 0.]
             self.zones[flag] = bc.RelaxationZone(shape=self,
@@ -1128,10 +1171,10 @@ class Tank2D(ShapeRANS):
             self.BC['x-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                            wind_speed=wind_speed)
         if x_p is True:
-            center = list(self.coords)
+            center = [self.x0 + 0.5 * self.spongeLayers['x+'],
+                      0.5 * (self.y0 + self.y1)]
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
-            center[0] += 0.5*self.dim[0]+self.spongeLayers['x+']/2.
             epsFact_solid = self.spongeLayers['x+']/2.
             orientation = [-1., 0.]
             self.zones[flag] = bc.RelaxationZone(shape=self,
@@ -1146,6 +1189,37 @@ class Tank2D(ShapeRANS):
                                                  porosity=porosity)
             self.BC['x+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                            wind_speed=wind_speed)
+
+class TankWithObstacles2D(Tank2D):
+    """
+    Class to create a 2D rectangular tank with obstacles built out of any wall.
+
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    dim: Optional[array_like]
+        Dimensions of the cuboid.
+    obstacles: Optional[array_like]
+        A list of lists of (x,y) coordinates.  Each (x,y) coordinate is a length
+        and height relative to the x-,y- corner of the tank.  Each list of
+        coordinates is an obstacle defined by points connected in the order of
+        their index.  The list of lists gives all such obstacles.
+        The location of these obstacles and their intersection with tank walls
+        will be deduced by the code.
+        If None (default), no obstacles are included and this defaults to the
+        Tank2D case.
+    coords: Optional[array_like]
+        Coordinates of the centroid of the shape.
+    from_0: Optional[bool]
+        If True (default), the tank extends from the origin to positive x, y, z
+    """
+    #[temp] need to check if Tank2D.count can be set by Tank2D, or if we need to work around (so that we are giving Tank2D a count that starts at 0 no matter which type is used first and increments off of Tank2D's initialization if possible.  It should... work this way.
+    def __init__(self, domain, dim=(0., 0.),
+                 obstacles = None, coords=None, from_0=True):
+        super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
+        self.obstacles = obstacles
 
 
 class RigidBody(AuxiliaryVariables.AV_base):
