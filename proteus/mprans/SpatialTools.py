@@ -1175,7 +1175,7 @@ class Tank2D(ShapeRANS):
             self.BC['x-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                            wind_speed=wind_speed)
         if x_p is True:
-            center = [self.x0 + 0.5 * self.spongeLayers['x+'],
+            center = [self.x1 + 0.5 * self.spongeLayers['x+'],
                       0.5 * (self.y0 + self.y1)]
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
