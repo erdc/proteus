@@ -5,18 +5,18 @@ Test module for 2D Quadrilateral Meshes
 
 """
 from proteus.iproteus import *
+from proteus.tests import TestTools
 from proteus import Comm
 comm = Comm.get()
+proteus.tests.TestTools.addSubFolders( inspect.currentframe() )
+import stokes_2d_p
+import stokes_2d_n
 #Profiling.logLevel=7
 #Profiling.verbose=True
-import numpy.testing as npt
-import nose
-from nose.plugins.attrib import attr
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
-from nose.tools import set_trace
+import pytest
+import inspect
+pytestmark = pytest.mark.meshtest
 
-@attr('fast','mesh')
 def test_mesh_build():
     """  Test mesh generation and refinment """
     nnx = 4
@@ -39,14 +39,21 @@ def test_mesh_build():
     assert mlMesh.meshList[0].nElements_global == (nnx-1)*(nny-1), 'Mesh generator has built incorrect number of quads'
     assert mlMesh.meshList[1].nElements_global == 4*(nnx-1)*(nny-1), 'Mesh generator has built incorrect number of quads'
 
-@attr('fast','stokes','mesh')
 class Test2DStokesOnQuads():
     """ Runs a simple 2D Poiseulle Stokes problem on Quads with TH elements """
-
-    def setUp(self):
+    @classmethod    
+    def setup_class(cls):
         """ Initialize the test problem """
-        import stokes_2d_p
-        import stokes_2d_n
+        pass
+
+    @classmethod
+    def teardown_class(cls):
+        """Pass """
+        pass
+
+    def setup_method(self,method):
+        reload(stokes_2d_p)
+        reload(stokes_2d_n)
         pList = [stokes_2d_p]
         nList = [stokes_2d_n]    
         so = default_so
@@ -56,24 +63,28 @@ class Test2DStokesOnQuads():
         opts.verbose=True
         opts.profile=True
         opts.gatherArchive=True
+        self._scriptdir = os.path.dirname(__file__)
         self.ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
 
-    def tearDown(self):
-        if os.path.exists('proteus.log'):
-            os.remove('proteus.log')
-        else:
-            pass
-        os.remove('poiseulleFlow.xmf')
-        os.remove('poiseulleFlow.h5')
-
+    def teardown_method(self,method):
+        Filelist = ["rdomain.edge",
+                    "rdomain.ele",
+                    "rdomain.neig",
+                    "rdomain.node",
+                    "rdomain.poly",
+                    "reference_triangle.poly",
+                    "reference_simplex.poly",
+                    "proteus.log",
+                    "poiseulleFlow.xmf",
+                    "poiseulleFlow.h5"]
+        proteus.tests.TestTools.closeFiles(Filelist)
+       
     def test_01_FullRun(self):
         import filecmp
         self.ns.calculateSolution('test1')
-        xmf_file = filecmp.cmp('poiseulleFlow.xmf','proteus/tests/mesh_tests/poiseulle_xmf.output')
+        relpath = "comparison_files/poiseulle_xmf.output"
+        xmf_file = filecmp.cmp('poiseulleFlow.xmf',os.path.join(self._scriptdir,relpath))
         assert xmf_file == True, '******** xmf_file compare failed **********'
 
 if __name__ == '__main__':
-    from proteus import Comm
-    comm = Comm.init()
-    nose.main()
-
+    pass
