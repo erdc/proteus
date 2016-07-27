@@ -258,6 +258,6 @@ doc:
 test:
 	@echo "************************************"
 	@echo "Running travis-ci test suite"
-	nosetests -vv --traverse-namespace proteus/tests proteus/tests/ci  proteus/tests/poisson_2d  proteus/tests/mesh_tests -a '!slow'
+	py.test -vv proteus/tests proteus/tests/ci  proteus/tests/poisson_2d  proteus/tests/mesh_tests
 	@echo "Tests complete "
 	@echo "************************************"
