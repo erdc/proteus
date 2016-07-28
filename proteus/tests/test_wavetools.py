@@ -939,7 +939,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
 
     def testWindTimeSeriesFailureModes(self):
         from proteus.WaveTools import TimeSeries
-        #load successfully - direct decomposition
+        #load successfully - window decomposition
         path = getpath()
         aa= TimeSeries(
             path+"test_timeSeries.txt",
@@ -1074,7 +1074,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
  
         self.assertEqual(cm4.exception.code, 1 )     
 
-
+#Wrong cut-off
         with self.assertRaises(SystemExit) as cm5:
         
             aa= TimeSeries(
@@ -1088,10 +1088,31 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 np.array([0,0,-9.81]),
                 0.025,
                 False,
-                {"Nwaves":5, "Tm":1, "Window":"costap", "Cutoff" : 0.4}
+                {"Nwaves":5, "Tm":1, "Window":"costap", "Cutoff" : 0.8}
             
             )
         self.assertEqual(cm5.exception.code, 1 )     
+
+
+#Using not enough overlap for absorption zone
+        with self.assertRaises(SystemExit) as cm6:
+        
+            aa= TimeSeries(
+                path+"test_timeSeries.txt",
+                0,
+                np.array([1.,0,0]), 
+                1.  ,
+                4 ,          #number of frequency bins
+                1. ,        
+                np.array([1.,0,0]), 
+                np.array([0,0,-9.81]),
+                0.025,
+                False,
+                {"Nwaves":5, "Tm":1, "Window":"costap"},
+                Lgen = np.array([5.,0.,0.])
+            
+            )
+        self.assertEqual(cm6.exception.code, 1 )     
         
 class VerifyTimeSeries(unittest.TestCase):
     def testDirect(self):
@@ -1233,8 +1254,31 @@ class VerifyTimeSeries(unittest.TestCase):
         norm = max(etaRef)                                                                                                                                 
         err = (etaInt - etaTest)**2                                                                                                                         
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))                                                                                            
-        self.assertTrue(err<1e-2 )                                                                                                                          
-        
+        self.assertTrue(err<1e-2 )     
+
+                                                                                                                     
+class CheckRandomWavesFastFailureModes(unittest.TestCase):
+    def testRandomWavesFastFailure(self):
+        from proteus.WaveTools import RandomWavesFast
+        with self.assertRaises(SystemExit) as cm1:
+            aRF = RandomWavesFast(0,
+                         100,
+                         np.array([0.,0.,0.]),
+                         2.,
+                         0.1,
+                         0.,
+                         1.,
+                         np.array([1.,0.,0.]),
+                         np.array([0.,9.81,0.]),
+                         100,
+                         2.,
+                         "JONSWAP",
+                         None,
+                         None,
+                         Nfreq = 4
+                              )
+        self.assertEqual(cm1.exception.code, 1 )             
+       
        
 class VerifyRandomWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
@@ -1246,20 +1290,20 @@ class VerifyRandomWavesFast(unittest.TestCase):
         # Assinging a random value at a field and getting the expected output
         Tp = 1. 
         Hs = 0.15
-        mwl = 4.5
+        mwl = 0.
         depth = 0.9
         g = np.array([0,0,-9.81])
         gAbs = 9.81
         dir1 = 2*random.random() - 1 
         dir2 = 2*random.random() - 1 
-        waveDir = np.array([dir1,dir2, 0])
-        N = 20
+        waveDir = np.array([dir1,dir2, 0.])
+        N = 100
+        Nf =32
         phi = 2*pi*np.random.rand(N)
-        TMA = True
         spectName = "JONSWAP"
         bandFactor = 2.0
-        Lgen = 5 * waveDir 
-        x0 =  np.array([2.,0.,0 ])
+        Lgen = 1.5 * waveDir 
+        x0 =  np.array([2.,0.,-0.2 ])
         Tstart = 0.
 
         Tend = 5*Tp + round(random.random())*145*Tp
@@ -1282,19 +1326,19 @@ class VerifyRandomWavesFast(unittest.TestCase):
                         
                    )
         
-        series = aR.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+        series = aR.writeEtaSeries(Tstart,Tend,x0,fname, 4.*Lgen)
         cutoff = 0.2*Tp/(series[-1,0]-series[0,0])
         aT= TimeSeries(
             fname,
             0,
             x0,
             depth,
-            32,          #number of frequency bins
+            Nf,          #number of frequency bins
             mwl ,        
             waveDir,
             g,
             cutoff,
-            rec_d,                                                                                                                                          
+            rec_d,                                                                                                                                        
             {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
             True,
             series
@@ -1313,10 +1357,11 @@ class VerifyRandomWavesFast(unittest.TestCase):
                          spectName,
                          None,
                          phi,
-                         Lgen)
+                         Lgen,
+                         Nfreq=Nf,
+                         Nwaves = 15)
         x = x0 + Lgen * random.random()
-        t = Tstart + random.random()*(Tend-Tstart)
-#        print x,t,aT.eta(x,t),aRF.eta(x,t),aT.u(x,t),aRF.u(x,t)
+        t = series[0,0]+2.*Tp + random.random()*(series[-1,0]-2*Tp-series[-1,0])
         self.assertTrue(round(abs(aRF.eta(x,t)/aT.eta(x,t)),8) == 1.)
         self.assertTrue(round(abs(aRF.u(x,t)[0]/aT.u(x,t)[0]),8) == 1.)
         self.assertTrue(round(abs(aRF.u(x,t)[1]/aT.u(x,t)[1]),8) == 1.)
@@ -1387,7 +1432,6 @@ class VerifyRandomNLWaves(unittest.TestCase):
         waveDir = np.array([dir1,dir2, 0])
         N = 20
         phi = 2*pi*np.random.rand(N)
-        TMA = True
         spectName = "JONSWAP"
         bandFactor = 2.0
         Lgen = 5 * waveDir 
