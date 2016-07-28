@@ -359,7 +359,12 @@ class NS_base:  # (HasTraits):
 
                     logEvent("Done running gmsh; converting to tetgen")
 
-                    gmsh2tetgen_cmd = "gmsh2tetgen {0}".format(p.domain.name+".mesh")
+                    gmsh2tetgen_cmd = "gmsh2tetgen {0} {1:f} {2:d} {3:d} {4:d}".format(
+                        p.domain.name+".mesh",
+                        p.domain.length_scale,
+                        p.domain.permute_dims[0]+1,
+                        p.domain.permute_dims[1]+1,
+                        p.domain.permute_dims[2]+1)
 
                     check_call(gmsh2tetgen_cmd, shell=True)
 
