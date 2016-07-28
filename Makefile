@@ -254,3 +254,10 @@ doc:
 	@echo "../proteus-website/index.html"
 	@echo "**********************************"
 	-sensible-browser ../proteus-website/index.html &
+
+test:
+	@echo "************************************"
+	@echo "Running travis-ci test suite"
+	py.test -vv proteus/tests proteus/tests/ci  proteus/tests/poisson_2d  proteus/tests/mesh_tests
+	@echo "Tests complete "
+	@echo "************************************"
