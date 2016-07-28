@@ -15,10 +15,14 @@ program gmsh2tetgen
   integer, allocatable :: hFace_IEN(:,:)
   integer, allocatable :: IEN(:,:), o2n(:), n2o(:)
   logical, allocatable :: check(:)
-  
   character(len=30) :: fname
+  character(len=30) :: length_scale_string
+  character(len=30) :: perm_x_string
+  character(len=30) :: perm_y_string
+  character(len=30) :: perm_z_string
   character(len=40) :: ctmp
-
+  real(kind=8) length_scale
+  integer :: perm(3)
   EType = 2
   NSHL  = 4
   NSHLb = 3
@@ -27,10 +31,28 @@ program gmsh2tetgen
   ! Read mesh in .mesh format
   !==================================
   meshf = 11      
+  length_scale=1.0
+  perm(1) = 1
+  perm(2) = 2
+  perm(3) = 3      
   i = iargc()
   if (i.eq.1) then  
     call getarg(1,fname)
-  else
+  else if (i.eq.2) then
+    call getarg(1,fname)
+    call getarg(2,length_scale_string)
+    read (length_scale_string,*) length_scale  
+  else if (i.eq.5) then
+    call getarg(1,fname)
+    call getarg(2,length_scale_string)
+    read (length_scale_string,*) length_scale  
+    call getarg(3,perm_x_string)           
+    read (perm_x_string,*) perm(1)  
+    call getarg(4,perm_y_string)           
+    read (perm_y_string,*) perm(2)  
+    call getarg(5,perm_z_string)           
+    read (perm_z_string,*) perm(3)  
+  else 
     write(*,*) 'Wrong input'
     stop
   endif    
@@ -130,7 +152,7 @@ program gmsh2tetgen
   open(meshf, file = fname, status = 'unknown')
   write(meshf,*) NNode, NSD, 0,0 
   do i = 1, NNode
-    write(meshf,'(I8,x, 3E17.9)') i, (  xg(n2o(i),j)/1000.0, j = 1, NSD)
+    write(meshf,'(I8,x, 3E17.9)') i, (  xg(n2o(i),perm(j))*length_scale, j = 1, NSD)
   end do  
   close(meshf)
 
