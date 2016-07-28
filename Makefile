@@ -189,6 +189,9 @@ install: profile $(shell find proteus -type f) $(wildcard *.py) proteus
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
+	@echo "installing scripts"
+	cd scripts && ${PROTEUS_ENV} make
+	@echo "************************"
 	@echo "Installation complete"
 	@echo "************************"
 	@echo ""
@@ -207,6 +210,9 @@ develop: proteus profile
 	@echo "************************"
 	$(call show_info)
 	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG" ${PROTEUS_DEVELOP_CMD}
+	@echo "************************"
+	@echo "installing scripts"
+	cd scripts && ${PROTEUS_ENV} PROTEUS_PREFIX=${PROTEUS_PREFIX} make
 	@echo "************************"
 	@echo "Development installation complete"
 	@echo "************************"
