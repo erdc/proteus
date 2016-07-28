@@ -130,7 +130,7 @@ program gmsh2tetgen
   open(meshf, file = fname, status = 'unknown')
   write(meshf,*) NNode, NSD, 0,0 
   do i = 1, NNode
-    write(meshf,'(I8,x, 3E17.9)') i, (  xg(n2o(i),j), j = 1, NSD)
+    write(meshf,'(I8,x, 3E17.9)') i, (  xg(n2o(i),j)/1000.0, j = 1, NSD)
   end do  
   close(meshf)
 
