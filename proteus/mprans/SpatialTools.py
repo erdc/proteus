@@ -1318,25 +1318,38 @@ class TankWithObstacles2D(Tank2D):
 
             return corner_vertices, corner_flags
 
-        def addAllCorners():
+        def addRemainingCorners(first, last):
+            if first == last:
+                if (vertices[0][0] - vertices[-1][0]
+                    + vertices[0][1] - vertices[-1][1]) > 0:
+                    # if the starting point is "in front of" the last point
+                    return
+                else:
+                    return addAllCorners(first)
+            else:
+                return addIntermediateCorners(first, last)
+
+        def addAllCorners(starting_point):
             """
             Returns all corners and flags.
             """
             corner_vertices = []
             corner_flags = []
 
-            for corner in self.corners.keys():
-                self.corners[corner] = True
-                vertex, flag = addCorner(corner)
-                corner_vertices += vertex
-                corner_flags += flag
+            ordering = getClockwiseOrder(starting_point)
+
+            for potential_corner in ordering:
+                if potential_corner in self.corners.keys():
+                    vertex, flag = addCorner(potential_corner)
+                    corner_vertices += vertex
+                    corner_flags += flag
 
             return corner_vertices, corner_flags
 
         #--------------------------------------------------------#
         vertices = []
         vertexFlags = []
-        former_end = 'x-y-'
+        former_end = None
         first_start = None
 
         for obstacle in self.obstacles:
@@ -1350,10 +1363,11 @@ class TankWithObstacles2D(Tank2D):
                 vertices.pop()
                 vertexFlags.pop()
 
-            # ---- Corner Vertices ---- #
-            new_vertices, new_flags = addIntermediateCorners(former_end,start)
-            vertices += new_vertices
-            vertexFlags += new_flags
+            # ---- In-Between Corner Vertices ---- #
+            if former_end is not None:
+                new_vertices, new_flags = addIntermediateCorners(former_end, start)
+                vertices += new_vertices
+                vertexFlags += new_flags
 
             # ---- Obstacle ---- #
             vertices += obstacle
@@ -1366,10 +1380,10 @@ class TankWithObstacles2D(Tank2D):
 
         # ---- Remaining Corner Vertices ---- #
         if first_start is not None:
-            new_vertices, new_flags = addIntermediateCorners(former_end,
-                                                             first_start)
+            new_vertices, new_flags = addRemainingCorners(former_end,
+                                                          first_start)
         else:
-            new_vertices, new_flags = addAllCorners()
+            new_vertices, new_flags = addAllCorners('x-')
 
         vertices += new_vertices
         vertexFlags += new_flags
