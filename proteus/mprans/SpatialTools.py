@@ -93,6 +93,7 @@ class ShapeRANS(Shape):
         elif str(key).startswith('Gauge_') \
             and gauge not in self.auxiliaryVariables[key]:
                 self.auxiliaryVariables[key] += [gauge]
+
 #[temp] Gauge Logic: start a gauge with tank.attachPointGauges('twp', [all those gauge details]).  Can be retrieved by .get('twp', []) or just by ['twp'] (but be sure you have the right tags)
 
     def attachPointGauges(self, model_key, gauges, activeTime=None,
@@ -945,17 +946,27 @@ class Tank2D(ShapeRANS):
 
         Parameters
         ----------
-        dim: Optional[array_like]
-            Dimensions of the tank (excluding sponge layers).
-        coords: Optional[array_like]
-            Coordinates of the centroid of the shape.
-        from_0: Optional[bool]
-            If True (default), the tank extends from the origin to positive x, y, z
+        frame: array_like
+            An array of (x,y) coordinates in counterclockwise order to define
+            the boundaries of the main (that is, excluding extensions such as
+            sponge zones) shape.  This can be generated with tank2DFrame or
+            subclass specific methods.
+        frame_flags: array_like
+            A corresponding array of boundary tags associated with each point
+            in the frame.  This can be generated with tank2DFrame or subclass
+            specific methods.
         """
-        self._constructVertices()
-        self._constructSegments()
-        self._constructRegions()
+        vertices, vertexFlags = self._constructVertices()
+        segments, segmentFlags = self._constructSegments(vertices, vertexFlags)
+        regions, regionFlags = self._constructRegions(vertices, vertexFlags,
+                                                      segments, segmentFlags)
 
+        self.vertices     = np.array(vertices)
+        self.vertexFlags  = np.array(vertexFlags)
+        self.segments     = np.array(segments)
+        self.segmentFlags = np.array(segmentFlags)
+        self.regions      = np.array(regions)
+        self.regionFlags  = np.array(regionFlags)
 
     def _findEdges(self, dim, coords, from_0):
 
@@ -967,8 +978,8 @@ class Tank2D(ShapeRANS):
                              "True, or pass in center coordinates in [coords]")
         elif from_0 and (coords is not None):
             raise ValueError("The center of the tank cannot be at coords = "
-                             + str(coords) + " while also starting from_0 = "
-                             "True and dimensions: " + str(dim))
+                             + str(coords) + " while also starting from_0  "
+                             "(True) with dimensions: " + str(dim))
         elif from_0 and (coords is None):
             self.x0 = 0
             self.x1 = dim[0]
@@ -999,10 +1010,9 @@ class Tank2D(ShapeRANS):
                          [self.x1 + self.spongeLayers['x+'], self.y1]]
             vertexFlags += [self.boundaryTags['y-'],
                             self.boundaryTags['y+']]
-        self.vertices = np.array(vertices)
-        self.vertexFlags = np.array(vertexFlags)
+        return vertices, vertexFlags
 
-    def _constructSegments(self):
+    def _constructSegments(self, vertices, vertexFlags):
         segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
         segmentFlags = [self.boundaryTags['y-'],
                         self.boundaryTags['x+'],
@@ -1027,10 +1037,9 @@ class Tank2D(ShapeRANS):
                              self.boundaryTags['y+']]
             segmentFlags[1] = self.boundaryTags['sponge']
             added_vertices += 2
-        self.segments = np.array(segments)
-        self.segmentFlags = np.array(segmentFlags)
+        return segments, segmentFlags
 
-    def _constructRegions(self):
+    def _constructRegions(self, vertices, vertexFlags, segments, segmentFlags):
         regions = [[0.5 * (self.x0 + self.x1), 0.5 * (self.y0 + self.y1)],]
         ind_region = 1
         regionFlags = [ind_region,]
@@ -1047,8 +1056,7 @@ class Tank2D(ShapeRANS):
             ind_region += 1
             regionFlags += [ind_region]
             self.regionIndice['x+'] = ind_region - 1
-        self.regions = np.array(regions)
-        self.regionFlags = np.array(regionFlags)
+        return regions, regionFlags
 
     def setSponge(self, x_n=None, x_p=None):
         """
@@ -1194,9 +1202,19 @@ class Tank2D(ShapeRANS):
             self.BC['x+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                            wind_speed=wind_speed)
 
+#[temp] no tests yet!
 class TankWithObstacles2D(Tank2D):
     """
     Class to create a 2D rectangular tank with obstacles built out of any wall.
+
+    An obstacle is defined by a contiguous list of points which start and end
+    on the walls or corners of the tank.
+
+    (!) Warning: If each of the four corners of the rectangular tank is inside
+    an obstacle or a vertex for an obstacle, then the tank's region is defined
+    in a pseudorandom manner, which may make it unreliable when dealing with
+    holes caused by other shapes.
+    (!) Warning: Vertex boundary tags are currently keyed to 'y-' universally.
 
     Parameters
     ----------
@@ -1209,21 +1227,307 @@ class TankWithObstacles2D(Tank2D):
         A list of lists of (x,y) coordinates.  Each (x,y) coordinate is a length
         and height relative to the x-,y- corner of the tank.  Each list of
         coordinates is an obstacle defined by points connected in the order of
-        their index.  The list of lists gives all such obstacles.
-        The location of these obstacles and their intersection with tank walls
-        will be deduced by the code.
-        If None (default), no obstacles are included and this defaults to the
-        Tank2D case.
+        their index.  The list of lists gives all such obstacles in a
+        counterclockwise manner of which they should be appended, starting from
+        the (x-,y-) corner.
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
     from_0: Optional[bool]
         If True (default), the tank extends from the origin to positive x, y, z
     """
-    #[temp] need to check if Tank2D.count can be set by Tank2D, or if we need to work around (so that we are giving Tank2D a count that starts at 0 no matter which type is used first and increments off of Tank2D's initialization if possible.  It should... work this way.
     def __init__(self, domain, dim=(0., 0.),
                  obstacles = None, coords=None, from_0=True):
+        if obstacles:
+            self.obstacles = obstacles
+        else:
+            self.obstacles = []
+        self.corners = {'x-y-': False, 'x+y-': False,
+                        'x+y+': False, 'x-y+': False}
+        #self.corners = {'x-y-': False, 'x+y-': False, 'x+y+': False, 'x-y+': False} #[temp] for testing purposes
         super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
-        self.obstacles = obstacles
+
+    def _constructVertices(self):
+
+        def getClockwiseOrder(first_point):
+            clockwise_ordering = ('x-y-', 'y-', 'x+y-', 'x+',
+                                  'x+y+', 'y+', 'x-y+', 'x-')
+            index = clockwise_ordering.index(first_point)
+            return clockwise_ordering[index:] + clockwise_ordering[:index]
+
+
+        def findLocation(vertex):
+            """
+            Given an (x,y) coordinate gives a label associated to corner or edge
+            """
+            dim = [self.x1 - self.x0, self.y1 - self.y0]
+            if np.isclose(vertex[0],0) and np.isclose(vertex[1],0):
+                return 'x-y-'
+            elif np.isclose(vertex[0],dim[0]) and np.isclose(vertex[1],dim[1]):
+                return 'x+y+'
+            elif np.isclose(vertex[0],0) and np.isclose(vertex[1],dim[1]):
+                return 'x-y+'
+            elif np.isclose(vertex[0],dim[0]) and np.isclose(vertex[1],0):
+                return 'x+y-'
+            elif np.isclose(vertex[0],0):
+                return 'x-'
+            elif np.isclose(vertex[0],dim[0]):
+                return 'x+'
+            elif np.isclose(vertex[1],0):
+                return 'y-'
+            elif np.isclose(vertex[1],dim[1]):
+                return 'y+'
+            else:
+                raise ValueError("Point " + str(vertex) + " does not seem to"
+                                 "be on a tank wall.")
+
+        def checkClosure(start_point, end_point):
+            if start_point == end_point:
+                return True
+
+        def addCorner(corner_flag):
+            if corner_flag == 'x-y-':
+                corner = [[self.x0, self.y0]]
+            elif corner_flag == 'x+y-':
+                corner = [[self.x1, self.y0]]
+            elif corner_flag == 'x+y+':
+                corner = [[self.x1, self.y1]]
+            elif corner_flag == 'x-y+':
+                corner = [[self.x0, self.y1]]
+            # vertex flags
+            if corner_flag in ['x-y-', 'x+y-']:
+                corner_tag = [self.boundaryTags['y-']]
+            else:
+                corner_tag = [self.boundaryTags['y+']]
+
+            return corner, corner_tag
+
+        def addIntermediateCorners(first, last):
+            """
+            Returns corner vertices (and flags) in between two segments
+            """
+            ordering = getClockwiseOrder(first)
+            corner_vertices = []
+            corner_flags = []
+
+            for corner in self.corners.keys():
+                if ordering.index(corner) < ordering.index(last):
+                    self.corners[corner] = True
+                    vertex, flag = addCorner(corner)
+                    corner_vertices += vertex
+                    corner_flags += flag
+
+            return corner_vertices, corner_flags
+
+        def addAllCorners():
+            """
+            Returns all corners and flags.
+            """
+            corner_vertices = []
+            corner_flags = []
+
+            for corner in self.corners.keys():
+                self.corners[corner] = True
+                vertex, flag = addCorner(corner)
+                corner_vertices += vertex
+                corner_flags += flag
+
+            return corner_vertices, corner_flags
+
+        #--------------------------------------------------------#
+        vertices = []
+        vertexFlags = []
+        former_end = 'x-y-'
+        first_start = None
+
+        for obstacle in self.obstacles:
+            start = findLocation(obstacle[0])
+            end = findLocation(obstacle[-1])
+
+            if start == end and checkClosure(obstacle[0],obstacle[-1]):
+                raise ValueError("Obstacles must be open (start and end"
+                                 " vertices must be distinct)")
+            if start == former_end and checkClosure(obstacle[0], vertices[-1]):
+                vertices.pop()
+                vertexFlags.pop()
+
+            # ---- Corner Vertices ---- #
+            new_vertices, new_flags = addIntermediateCorners(former_end,start)
+            vertices += new_vertices
+            vertexFlags += new_flags
+
+            # ---- Obstacle ---- #
+            vertices += obstacle
+            vertexFlags += [self.boundaryTags['y-'] for i in range(len(obstacle))]
+
+            # ---- Paperwork ---- #
+            former_end = end
+            if first_start is None:
+                first_start = start
+
+        # ---- Remaining Corner Vertices ---- #
+        if first_start is not None:
+            new_vertices, new_flags = addIntermediateCorners(former_end,
+                                                             first_start)
+        else:
+            new_vertices, new_flags = addAllCorners()
+
+        vertices += new_vertices
+        vertexFlags += new_flags
+
+        return vertices, vertexFlags
+
+
+
+    def _constructSegments(self, vertices, vertexFlags):
+        # if EITHER are x+  --> segment is x+
+        #                       UNLESS the other is x-  --> y+
+        # if EITHER are x-  --> segment is x-
+        #                       UNLESS the other is x+  --> y-
+        # if it STARTS y-   --> segment is y-
+        #                       UNLESS they are vertical --> x+
+        # if it STARTS y+   --> segment is y+
+        #                       UNLESS they are vertical --> x-
+        # if BOTH are ***   --> segment is ***
+        # (if two different *** are around, it takes the first)
+        segments = []
+        segmentFlags = []
+
+        def getSegmentFlag(start, end):
+            if vertexFlags[start] == self.boundaryTags['x+']:
+                if vertexFlags[end] == self.boundaryTags['x-']:
+                    return [self.boundaryTags['y+'], ]
+                else:
+                    return [self.boundaryTags['x+'], ]
+
+            elif vertexFlags[start] == self.boundaryTags['x-']:
+                if vertexFlags[end] == self.boundaryTags['x+']:
+                    return [self.boundaryTags['y-'], ]
+                else:
+                    return [self.boundaryTags['x-'], ]
+
+            elif vertexFlags[end] == self.boundaryTags['x+']:
+                return [self.boundaryTags['x+'], ]
+
+            elif vertexFlags[end] == self.boundaryTags['x-']:
+                return [self.boundaryTags['x-'], ]
+
+            elif vertexFlags[start] == self.boundaryTags['y-']:
+                if (vertexFlags[end] == self.boundaryTags['y+']
+                    and np.isclose(vertices[start][0], vertices[end][0])
+                    ):
+                    return [self.boundaryTags['x+'], ]
+                else:
+                    return [self.boundaryTags['y-'], ]
+
+            elif vertexFlags[start] == self.boundaryTags['y+']:
+                if (vertexFlags[end] == self.boundaryTags['y-']
+                    and np.isclose(vertices[start][0], vertices[end][0])
+                    ):
+                    return [self.boundaryTags['x-'], ]
+                else:
+                    return [self.boundaryTags['y+'], ]
+
+            else:
+                return [vertexFlags[start], ]
+
+        for i in range(len(vertices) - 1):
+            segments += [[i, i + 1], ]
+            segmentFlags += getSegmentFlag(i, i + 1)
+        segments += [[len(vertices) - 1, 0], ]
+        segmentFlags += getSegmentFlag(len(vertices) - 1, 0)
+
+        return segments, segmentFlags
+
+    def _constructRegions(self, vertices, vertexFlags, segments, segmentFlags):
+        if True in self.corners.values():
+            regions = self._getCornerRegion()
+        else:
+            regions = self._getRandomRegion(vertices, segments) #[temp] test with some safe (no extra pieces) tanks
+
+        ind_region = 1
+        regionFlags = [ind_region,]
+        self.regionIndice = {'tank': ind_region - 1}
+        if self.spongeLayers['x-']:
+            regions += [[self.x0 - 0.5 * self.spongeLayers['x-'],
+                         0.5 * (self.y0 + self.y1)]]
+            ind_region += 1
+            regionFlags += [ind_region]
+            self.regionIndice['x-'] = ind_region - 1
+        if self.spongeLayers['x+']:
+            regions += [[self.x1 + 0.5 * self.spongeLayers['x+'],
+                         0.5 * (self.y0 + self.y1)]]
+            ind_region += 1
+            regionFlags += [ind_region]
+            self.regionIndice['x+'] = ind_region - 1
+        return regions, regionFlags
+
+    def _findExtrema(self, points):
+        """
+        Return the extrema of a series of points in n dimensions in the form:
+        max(x1), max(x2), ... , max(xn), min(x1), ... , min(xn)
+        """
+        points = np.array(points)
+        return np.max(points,0).tolist() + np.min(points,0).tolist()
+
+    def _getCornerRegion(self):
+        eps = np.finfo(float).eps
+        if self.corners['x-y-']:
+            return [[self.x0 + eps, self.y0 + eps], ]
+        elif self.corners['x+y-']:
+            return [[self.x1 - eps, self.y0 + eps], ]
+        elif self.corners['x+y+']:
+            return [[self.x1 - eps, self.y1 - eps], ]
+        elif self.corners['x-y+']:
+            return [[self.x0 + eps, self.y1 - eps], ]
+
+    def _getRandomRegion(self, vertices, segments):
+        x_p, y_p, x_n, y_n = self._findExtrema(vertices)
+
+        count = 0
+        allowed_tries = 100
+
+        while True:
+            count += 1
+            vertical_line = np.random.uniform(x_n, x_p)
+            if True in [np.isclose(vertical_line, vertex[0]) for vertex in
+                        vertices]:
+                continue
+
+            lowest_intersect = second_intersect = y_p
+
+            for segment in segments:
+                line_x0 = vertices[segment[0]][0]
+                line_y0 = vertices[segment[0]][1]
+                line_x1 = vertices[segment[1]][0]
+                line_y1 = vertices[segment[1]][1]
+                if (line_x0 < vertical_line < line_x1
+                    or line_x0 > vertical_line > line_x1):
+                    # (due to the strict inequality check and
+                    # our selection of vertical_line - x1 > x0 should be sure)
+                    intersection_height = line_y0 + (
+                        (line_y1 - line_y0)
+                        * (vertical_line - line_x0)
+                        / (line_x1 - line_x0)
+                    )
+                    if intersection_height < lowest_intersect:
+                        second_intersect = lowest_intersect
+                        lowest_intersect = intersection_height
+                    elif intersection_height < second_intersect:
+                        second_intersect = intersection_height
+
+            interior_point = 0.5 * (lowest_intersect + second_intersect)
+
+            if lowest_intersect < interior_point < second_intersect:
+                break
+            if count > allowed_tries:
+                ValueError(
+                    "Cannot find a proper interior point of the defined "
+                    "shape after " + str(count) + " tries.")
+
+        return [[vertical_line, interior_point], ]
+
+
+
 
 
 class RigidBody(AuxiliaryVariables.AV_base):
