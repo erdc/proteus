@@ -367,7 +367,12 @@ class NS_base:  # (HasTraits):
                         p.domain.permute_dims[2]+1)
 
                     check_call(gmsh2tetgen_cmd, shell=True)
-
+                    check_call("tetgen -Vfeen %s.ele" % ("mesh",), shell=True)
+                    check_call("mv %s.1.ele %s.ele" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.node %s.node" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.face %s.face" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.neigh %s.neigh" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.edge %s.edge" % ("mesh","mesh"), shell=True)
                     elefile  = "mesh.ele"
                     nodefile = "mesh.node"
                     facefile = "mesh.face"
