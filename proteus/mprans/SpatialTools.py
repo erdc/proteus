@@ -1371,7 +1371,8 @@ class TankWithObstacles2D(Tank2D):
 
             # ---- Obstacle ---- #
             vertices += obstacle
-            vertexFlags += [self.boundaryTags['y-'] for i in range(len(obstacle))]
+            vertexFlags += [self.boundaryTags[start]
+                            for i in range(len(obstacle))]
 
             # ---- Paperwork ---- #
             former_end = end
