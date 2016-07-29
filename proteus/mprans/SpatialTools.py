@@ -1210,11 +1210,18 @@ class TankWithObstacles2D(Tank2D):
     An obstacle is defined by a contiguous list of points which start and end
     on the walls or corners of the tank.
 
+    This also covers special boundary conditions.  To tag a segment with a
+    unique boundary tag, add the starting vertex (in the counterclockwise
+    format the shape is generated in) of the segment as a value in a dictionary
+    element keyed to the name of the boundary tag.
+
     (!) Warning: If each of the four corners of the rectangular tank is inside
     an obstacle or a vertex for an obstacle, then the tank's region is defined
     in a pseudorandom manner, which may make it unreliable when dealing with
     holes caused by other shapes.
-    (!) Warning: Vertex boundary tags are currently keyed to 'y-' universally.
+    (!) Warning: Obstacle boundary tags are keyed to whichever edge they started
+    from.  If this is undesirable, it may be manually overriden by applying
+    special boundary conditions to affected segments.
 
     Parameters
     ----------
@@ -1230,21 +1237,45 @@ class TankWithObstacles2D(Tank2D):
         their index.  The list of lists gives all such obstacles in a
         counterclockwise manner of which they should be appended, starting from
         the (x-,y-) corner.
+    special_boundaries: Optional[mapping]
+        A dictionary of lists of vertices keyed to boundary names. The vertices
+        listed will be given the boundary name they are keyed to, overriding
+        any other designation they would be given.
+        If this is a distinct boundary name, the segment starting from the vertex
+        will be assigned the same boundary tag.
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
     from_0: Optional[bool]
         If True (default), the tank extends from the origin to positive x, y, z
     """
     def __init__(self, domain, dim=(0., 0.),
-                 obstacles = None, coords=None, from_0=True):
+                 obstacles = None, special_boundaries = None,
+                 coords=None, from_0=True):
         if obstacles:
             self.obstacles = obstacles
         else:
             self.obstacles = []
+
+        self.special_boundaries = []
+        self.special_BC_vertices = []
+        if special_boundaries:
+            for key in special_boundaries.keys():
+                self.special_boundaries += [key for v in special_boundaries[key]]
+                self.special_BC_vertices += special_boundaries[key]
+
+
         self.corners = {'x-y-': False, 'x+y-': False,
                         'x+y+': False, 'x-y+': False}
         #self.corners = {'x-y-': False, 'x+y-': False, 'x+y+': False, 'x-y+': False} #[temp] for testing purposes
         super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
+
+    def _setupBCs(self):
+        super(TankWithObstacles2D, self)._setupBCs()
+        for boundary in self.special_boundaries:
+            if boundary not in self.boundaryTags.keys():
+                self.boundaryTags[boundary] = len(self.boundaryTags) + 1
+                self.BC[boundary] = self.BC_class(shape=self, name=boundary)
+                self.BC_list += [self.BC[boundary]]
 
     def _constructVertices(self):
 
@@ -1389,9 +1420,14 @@ class TankWithObstacles2D(Tank2D):
         vertices += new_vertices
         vertexFlags += new_flags
 
+        # ---- Check for Special Conditions ---- #
+        for vertex in self.special_BC_vertices:
+            flag_index = vertices.index(vertex)
+            boundary_index = self.special_BC_vertices.index(vertex)
+            boundary_name = self.special_boundaries[boundary_index]
+            vertexFlags[flag_index] = self.boundaryTags[boundary_name]
+
         return vertices, vertexFlags
-
-
 
     def _constructSegments(self, vertices, vertexFlags):
         # if EITHER are x+  --> segment is x+
