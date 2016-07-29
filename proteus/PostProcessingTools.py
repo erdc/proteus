@@ -734,7 +734,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         compute mass conservative velocity field following Larson and Niklasson assuming a P^k C0
         Galerkin solution has already been found
         """
-
         #must zero first time for average velocity
         self.nodeStarFactors[ci].setU(0.0)
         #correct first time through, in case there are Flux boundaries that
@@ -763,6 +762,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                      self.fluxBoundaryNodes[ci],
                                                      self.nodeStarFactors[ci])
         #
+
         self.getConservationResidualPWL(ci,correctFlux=False)
 
         #add back fluxes for elementBoundaries that were Neumann but
@@ -772,14 +772,13 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         if verbose > 0:
             logEvent("Max local conservation (dgp1 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.nElements_owned])))
 
+
     def getConservationResidualPWL(self,ci,correctFlux=False):
         """
         compute conservation resiudal using current guess for element boundary flux
         """
         if correctFlux == True:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
-        import pdb
-#        pdb.set_trace()
 
         cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
                                                          self.vt.mesh.exteriorElementBoundariesArray,
@@ -801,8 +800,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                          self.ebq_global[('velocity',ci)],    # output
                                                          self.ebq[('velocity',ci)])           # output
         #set boundary flux
-        import pdb
-#        pdb.set_trace()
         updateCoef = 0.0 #overwrite first
         cfemIntegrals.loadBoundaryFluxIntoGlobalElementBoundaryVelocity(self.vt.mesh.exteriorElementBoundariesArray,
                                                                         self.fluxElementBoundaries[ci],
@@ -811,8 +808,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                                         updateCoef,
                                                                         self.vt.ebq_global[('velocity',ci)])
 
-        import pdb
-#        pdb.set_trace()
         cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
                                                                          self.vt.mesh.exteriorElementBoundariesArray,
                                                                          self.vt.mesh.elementBoundaryElementsArray,
@@ -820,18 +815,17 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                                          self.vt.ebq_global[('velocity',ci)],
                                                                          self.vt.ebq[('velocity',ci)])
 
-
         cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
                                                                                        self.vt.mesh.elementBoundaryElementsArray,
                                                                                        self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                        self.vt.ebq_global[('velocity',ci)],
                                                                                        self.vt.ebqe[('velocity',ci)])
 
-
         #end set boundary flux
         #go from boundary flux to local element boundary representation
         self.evaluateLocalVelocityRepresentation(ci)
         self.getElementwiseFlux(ci)
+
     #
     def getConservationJacobianPWL(self,ci):
         """
@@ -882,7 +876,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                            self.q[('velocity_dofs',ci)],
                                                            vx)
         return vx
-
 class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
     """Base class for higher order RT elements.
 
@@ -1319,9 +1312,6 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.nDOFs_element[ci]),dtype='i').reshape((self.vt.mesh.nElements_global,self.nDOFs_element[ci]))
         #
 
-#        import pdb
-#        pdb.set_trace()
-
         self.BDMcomponent=self.vtComponents[0]
         self.BDMprojectionMat_element = numpy.zeros((self.vt.mesh.nElements_global,
                                                      self.nDOFs_element[self.BDMcomponent],
@@ -1390,7 +1380,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
 
         return vx
 
-class VPP_PWL_BDM2(VPP_PWL_RT1):
+class VPP_PWL_BDM2(VPP_PWL_RT0):
     """
     WIP - this class is intended to implement BDM2 elements in proteus
 
@@ -1398,7 +1388,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
     from cpostprocessing import buildLocalBDM2projectionMatrices,factorLocalBDM2projectionMatrices  #NEED TO CHANGE THESE TO BDM2 AS YOU PROGRESS
     from cpostprocessing import solveLocalBDM2projection,getElementBDM2velocityValuesLagrangeRep,buildBDM2rhs
     def __init__(self,vectorTransport=None,vtComponents=[0]):
-        VPP_PWL_RT1.__init__(self,vectorTransport=vectorTransport,vtComponents=vtComponents)
+        VPP_PWL_RT0.__init__(self,vectorTransport=vectorTransport,vtComponents=vtComponents)
         self.postProcessingType = 'pwl-bdm2'
         self.localVelocityRepresentationFlag = 0
         self.degree = 2
@@ -1434,6 +1424,29 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
         self.computeBDM2projectionMatrices()
         
 
+    def setInteriorVelocityValues(self,ci):
+        #self.q[('velocity',ci)].fill(0.0)
+        if self.vt.q.has_key(('a',ci,ci)):
+            assert self.vt.q.has_key(('grad(phi)',ci))
+            updateCoef = 0.0 #overwrite first time
+            if self.vt.sd:
+                cpostprocessing.updateDiffusiveVelocityPointEval_sd(updateCoef,
+                                                                    self.vt.coefficients.sdInfo[(ci,ci)][0],self.vt.coefficients.sdInfo[(ci,ci)][1],
+                                                                    self.vt.q[('a',ci,ci)],
+                                                                    self.vt.q[('grad(phi)',ci)],
+                                                                    self.q[('velocity',ci)])
+            else:
+                cpostprocessing.updateDiffusiveVelocityPointEval(updateCoef,
+                                                              self.vt.q[('a',ci,ci)],
+                                                              self.vt.q[('grad(phi)',ci)],
+                                                                 self.q[('velocity',ci)])
+        if self.vt.q.has_key(('f',ci)):
+            updateCoef = 1.0
+            cpostprocessing.updateAdvectiveVelocityPointEval(updateCoef,
+                                                             self.vt.q[('f',ci)],
+                                                             self.q[('velocity',ci)])
+
+
     def set_BDM_dimensions(self,degree):
         ''' Calculate and set the BDM polynomial dimension
             input - degree
@@ -1457,8 +1470,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
         '''
         Calculate and return the gradient values for polynomials of degree 1
         '''
-        import pdb
-        #pdb.set_trace()
         # Initialze some arrays to store the results...
         self.interiorTestGradients = numpy.zeros((self.vt.mesh.nElements_global,
                                               self.vt.nQuadraturePoints_element,
@@ -1473,10 +1484,11 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
         self.interiorTestSpace.getBasisGradientValues(self.vt.elementQuadraturePoints,
                                                       self.vt.q['inverse(J)'],
                                                       self.interiorTestGradients)
-        cfemIntegrals.calculateWeightedPiolaShapeGradients(self.vt.elementQuadratureWeights[('f',0)],
-                                                           self.vt.q['abs(det(J))'],
-                                                           self.interiorTestGradients,
-                                                           self.weightedInteriorTestGradients)
+        # TODO - remove weighted shape PIOLa
+        cfemIntegrals.calculateWeightedShapeGradients(self.vt.elementQuadratureWeights[('f',0)],
+                                                      self.vt.q['abs(det(J))'],
+                                                      self.interiorTestGradients,
+                                                      self.weightedInteriorTestGradients)
 
     def sigmaBasisElement(self,component,point):
         if component == 0:
@@ -1518,7 +1530,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                     # 1/|J_{T}| multiplicative term
                     self.weightedInteriorDivFreeElement[eN,k,j] *= 1./self.vt.q['abs(det(J))'][eN][k]
                     # quadrature weight
-                    self.weightedInteriorDivFreeElement[eN,k,j] *= self.vt.elementQuadratureWeights[('f',0)][k]
+                    self.weightedInteriorDivFreeElement[eN,k,j] *= self.vt.q['dV'][eN][k]
         # Second - need the Piola adjusted trial functions
         self.piola_trial_function = numpy.zeros((self.vt.mesh.nElements_global,
                                                   self.vt.nQuadraturePoints_element,
@@ -1530,28 +1542,29 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                 for i in range(self.dim):
                     J_component = i%2
                     basis_function_component = i/2
-                    self.piola_trial_function[eN,k,i,0] = self.q['J'][eN][k][0][J_component]*self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
-                    self.piola_trial_function[eN,k,i,1] = self.q['J'][eN][k][1][J_component]*self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
-        import pdb
-        pdb.set_trace()
-        print "TEST"
+                    if i%2==0:
+                        self.piola_trial_function[eN,k,i,0] = self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
+                        self.piola_trial_function[eN,k,i,1] = 0.
+                    else:
+                        self.piola_trial_function[eN,k,i,0] = 0.
+                        self.piola_trial_function[eN,k,i,1] = self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
+#                    self.piola_trial_function[eN,k,i,0] = self.q['J'][eN][k][0][J_component]*self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
+#                    self.piola_trial_function[eN,k,i,1] = self.q['J'][eN][k][1][J_component]*self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
 
 
 
     def computeBDM2projectionMatrices(self):
-#        import pdb
-#        pdb.set_trace()
         cpostprocessing.buildLocalBDM2projectionMatrices(self.degree,
-                                                         self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
+                                                         self.vt.ebq[('w*dS_u',self.BDMcomponent)],
+#                                                         self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
                                                          self.vt.ebq['n'],
                                                          self.vt.ebq[('v',self.BDMcomponent)],#self.w[self.BDMcomponent]
-                                                         self.q[('w',self.BDMcomponent)],          # interior integrals - gradient part
+                                                         self.vt.q[('w',self.BDMcomponent)],          # interior integrals - gradient part
                                                          self.weightedInteriorTestGradients,       # interior integrals - gradient part
                                                          self.weightedInteriorDivFreeElement,      # interior integrals - divFree part
                                                          self.piola_trial_function,                # interior integrals - divFree part
                                                          self.BDMprojectionMat_element)            # projection matrix
 
-#        pdb.set_trace()
         cpostprocessing.factorLocalBDM2projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
 
@@ -1671,12 +1684,13 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
 #        assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
 #        self.getAverageFlux(ci)
-        import pdb
-        pdb.set_trace()
+        for ci in self.vtComponents:
+            self.setInteriorVelocityValues(ci)
 
         self.buildBDM2rhs(self.BDMprojectionMat_element,
                           self.BDMprojectionMatPivots_element,
-                          self.w_dS[ci],
+                          self.ebq[('w*dS_u',self.BDMcomponent)],
+#                          self.w_dS[ci],
                           self.vt.ebq['n'],
                           self.weightedInteriorTestGradients,
                           self.weightedInteriorDivFreeElement,
@@ -1684,24 +1698,19 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
                           self.q[('velocity',ci)],
                           self.q[('velocity_dofs',ci)])
 
-        pdb.set_trace()
-
         self.solveLocalBDM2projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,
-                                      self.w_dS[ci],
+#                                      self.w_dS[ci],
+                                      self.ebq[('w*dS_u',self.BDMcomponent)],
                                       self.vt.ebq['n'],
                                       self.weightedInteriorTestGradients,
                                       self.ebq[('velocity',ci)],
                                       self.q[('velocity',ci)],
                                       self.q[('velocity_dofs',ci)])
 
-        pdb.set_trace()
-
-        cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.qv[ci],
+        cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.vt.q[('w',ci)],
                                                                 self.q[('velocity_dofs',ci)],
                                                                 self.vt.q[('velocity',ci)])
-        pdb.set_trace()
-
     def evaluateElementVelocityField(self,x,ci):
         """
         evaluate velocity field assuming velocity_dofs already calculated

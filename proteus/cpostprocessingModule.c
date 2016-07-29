@@ -1476,6 +1476,8 @@ cpostprocessingCalculateConservationResidualPWL(PyObject* self,
 				   SHAPE(w)[2]
 				   /*nQuadraturePoints_elementBoundary*/,
 				   SHAPE(w)[3]
+				   /*nNodes_element*/,
+				   SHAPE(dofMapl2g)[1]
 				   /*nDOF_element*/,
 				   SHAPE(n)[2]
 				   /*nSpace */,
@@ -1548,6 +1550,7 @@ cpostprocessingCalculateConservationJacobianPWL(PyObject* self,
 				     SHAPE(w)[1],
 				     SHAPE(w)[2],
 				     SHAPE(w)[3],
+				     SHAPE(dofMapl2g)[1],
 				     SHAPE(n)[2],
 				     IDATA(interiorElementBoundaries),
 				     IDATA(exteriorElementBoundaries),

@@ -2778,23 +2778,6 @@ void buildLocalBDM2projectionMatrices(int degree,
 
 		  for (ibq = 0; ibq < nQuadraturePoints_elementBoundary; ibq++)
 		    {
-		      if (eN==0 && ibq==0){
-			printf("ebN=%d,ebq_n=%.4f,w_dS_f=%.4f,ebq_v=%.4f,entry=%d\n",ebN,
-		      	ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
-		      	      ebN*nQuadraturePoints_elementBoundary*nSpace+
-		      	      ibq*nSpace+
-		      	      l],
-		      	w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+
-		      	       ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+
-		      	       ibq*nDOFs_test_element+
-		      	       kp],
-		      	ebq_v[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_trial_boundary_element+
-		      	      ebN*nQuadraturePoints_elementBoundary*nDOFs_trial_boundary_element+
-		      	      ibq*nDOFs_trial_boundary_element+
-		      	      k],
-			eN*dof*dof + irow + j*nVDOFs_element
-			       );
-		      }
 
 		      pval =
 		      	ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
@@ -2884,14 +2867,18 @@ void buildLocalBDM2projectionMatrices(int degree,
       	for (ibq=0; ibq<nQuadraturePoints_elementInterior; ibq++)
       	{
 	  	  
-            pval = w_int_div_free[eN * 2 * nQuadraturePoints_elementInterior +
-      				  2 * ibq]
+	  
+
+            pval = w_int_div_free[eN * nSpace * nQuadraturePoints_elementInterior +
+      				  nSpace * ibq
+				  +0 ]
       	         * piola_trial_fun[eN * 12 * 2 * nQuadraturePoints_elementInterior +
       				   ibq * 12 * 2 +
       				   j * 2]
       	         +
-      	          w_int_div_free[eN*2*nQuadraturePoints_elementInterior +
-      				2 * ibq + 1]
+      	          w_int_div_free[eN*nSpace*nQuadraturePoints_elementInterior +
+      				 nSpace * ibq 
+				 + 1]
       	         * piola_trial_fun[eN* 12 * 2 * nQuadraturePoints_elementInterior +
       				   ibq * 12 * 2 +
       				   j * 2 + 1];
@@ -3164,10 +3151,6 @@ void buildBDM2rhs(int nElements_global,
 
 		  }/*J*/
 		}/*ibq*/
-	      if (eN==1){
-	      printf("Matrix Entry = %d, btmp = %.4f\n",eN*nVDOFs_element+irow,
-		                                        btmp);
-	      }
   	      p1_velocity_dofs[eN*nVDOFs_element+irow] = btmp;
 	    }
 	}/*ebN*/
@@ -3182,14 +3165,14 @@ void buildBDM2rhs(int nElements_global,
 	  for (ibq=0; ibq < nQuadraturePoints_elementInterior; ibq++){
 	  // Iterate over quadrature points
 
-	      pvalx = q_velocity[eN*6*nQuadraturePoints_elementInterior +
+	      pvalx = q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
 				 ibq*nSpace + 
 				 0]
 		* w_interior_grads[eN*2*interiorPspace*nQuadraturePoints_elementInterior+
 				   s*2 +
 				   ibq*2*interiorPspace];
 
-	      pvaly = q_velocity[eN*6*nQuadraturePoints_elementInterior +
+	      pvaly = q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
 				 ibq*nSpace + 
 				 1]
 		* w_interior_grads[eN*2*interiorPspace*nQuadraturePoints_elementInterior+
@@ -3200,10 +3183,6 @@ void buildBDM2rhs(int nElements_global,
 
 	  }  /* end ibq */
 	  
-	  if (eN==1){
-	    printf("Matrix Entry = %d, btmp = %.4f\n",eN*nVDOFs_element+irow,
-		   btmp);
-	  }
 	  
 	    p1_velocity_dofs[eN*nVDOFs_element+irow] = btmp;
       }    /* end s */
@@ -3214,22 +3193,22 @@ void buildBDM2rhs(int nElements_global,
 
       for (ibq = 0; ibq < nQuadraturePoints_elementInterior; ibq++){
 
-	if (eN==1){
+	/* if (eN==1){ */
 
-	printf("q_velocity_x = %.4f, w_interior_divfree_x = %.4f, q_velocity_y = %.4f, w_interior_divfree_y = %.4f\n",
-	       q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
-			   ibq*nSpace +  0 ],
-	       w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+
-				 ibq*nSpace +	  0 ],
-	       q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
-			   ibq*nSpace +   1 ],
-                w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+
-				   ibq*nSpace +   1 ] );
-	printf("idx_1 = %d, idx_2 = %d\n",
-	       eN*nQuadraturePoints_elementInterior*nSpace +  ibq*nSpace +  0,
-	       eN*nQuadraturePoints_elementInterior*nSpace +  ibq*nSpace +  1 );
+	/* printf("q_velocity_x = %.4f, w_interior_divfree_x = %.4f, q_velocity_y = %.4f, w_interior_divfree_y = %.4f\n", */
+	/*        q_velocity[eN*nQuadraturePoints_elementInterior*nSpace + */
+	/* 		   ibq*nSpace +  0 ], */
+	/*        w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+ */
+	/* 			 ibq*nSpace +	  0 ], */
+	/*        q_velocity[eN*nQuadraturePoints_elementInterior*nSpace + */
+	/* 		   ibq*nSpace +   1 ], */
+        /*         w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+ */
+	/* 			   ibq*nSpace +   1 ] ); */
+	/* printf("idx_1 = %d, idx_2 = %d\n", */
+	/*        eN*nQuadraturePoints_elementInterior*nSpace +  ibq*nSpace +  0, */
+	/*        eN*nQuadraturePoints_elementInterior*nSpace +  ibq*nSpace +  1 ); */
 
-	}
+	/* } */
 
 	pvalx = q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
 			   ibq*nSpace + 
@@ -3249,10 +3228,6 @@ void buildBDM2rhs(int nElements_global,
  
 	       //w_interior_divfree;
        }
-      	  if (eN==1){
-	    printf("Matrix Entry = %d, btmp = %.4f\n",eN*nVDOFs_element+(nVDOFs_element-1),
-		   btmp);
-	  }
 
       p1_velocity_dofs[eN*nVDOFs_element + (nVDOFs_element-1) ] = btmp;
       
@@ -3297,7 +3272,7 @@ void solveLocalBDM2projection(int nElements_global,
       dgetrs_(&TRANS,
   	      &nE_n,
   	      &NRHS,
-  	      &BDMprojectionMatFact_element[eN*nVDOFs_element2],
+  	      &BDMprojectionMatFact_element[eN*nVDOFs_element*nVDOFs_element],
   	      &nE_n,
   	      &pivots_element[0],
   	      &p1_velocity_dofs[eN*nVDOFs_element],
@@ -3494,7 +3469,6 @@ void getElementBDM2velocityValuesLagrangeRep(int nElements_global,
 \f]
    **********************************************************************/
   int eN,iq,id,k,j;
-  printf("nSpace = %d\n",nSpace);
   for (eN = 0; eN < nElements_global; eN++)
     {
       for (iq = 0; iq < nQuadraturePoints_element; iq++)
@@ -3505,12 +3479,6 @@ void getElementBDM2velocityValuesLagrangeRep(int nElements_global,
 	      for (k = 0; k < 6; k++)
 		{
 		  j = k*nSpace+ id; /*id*(nSpace+1) + k;*/		  
-		  if (eN==0){
-		    printf("qv = %.4f,p1_velocity_dofs=%.4f, j=%d \n",
-			 q_v[eN*nQuadraturePoints_element*nDOF_trial_element + iq*nDOF_trial_element + k],
-			   p1_velocity_dofs[eN*nVDOF_element + j],
-			   j);
-		  }
 		  q_velocity[eN*nQuadraturePoints_element*nSpace + iq*nSpace + id] +=
 		    q_v[eN*nQuadraturePoints_element*nDOF_trial_element + iq*nDOF_trial_element + k]
 		    *
@@ -4245,6 +4213,7 @@ void calculateConservationResidualPWL(int nElements_global,
 				      int nExteriorElementBoundaries_global,
 				      int nElementBoundaries_element,
 				      int nQuadraturePoints_elementBoundary,
+				      int nNodes_element,
 				      int nDOF_element,
 				      int nSpace,
 				      int* interiorElementBoundaries,
@@ -4289,19 +4258,19 @@ void calculateConservationResidualPWL(int nElements_global,
   /*initial residual with element residual*/
   for (eN=0;eN<nElements_global;eN++)
    {
-     for (nN=0;nN<nDOF_element;nN++)
+     for (nN=0;nN<nNodes_element;nN++)
        {
 	 nN_global = dofMapl2g[eN*nDOF_element+
-				  nN];
-	 eN_star  = nodeStarElements[eN*nDOF_element+
+			       nN];
+	 eN_star  = nodeStarElements[eN*nNodes_element+
 				     nN];
 	 starR[nN_global][eN_star] 
 	   = 
-	   elementResidual[eN*nDOF_element+
+	   elementResidual[eN*nNodes_element+
 			   nN];
 	 conservationResidual[eN]
 	   += 
-	   elementResidual[eN*nDOF_element+
+	   elementResidual[eN*nNodes_element+
 			   nN];
 	 /*mwf debug
 	 printf("calcConsResPWL eN=%d nN=%d starR=%g\n",eN,nN,
@@ -4362,26 +4331,27 @@ void calculateConservationResidualPWL(int nElements_global,
                        k*nSpace+
                        I];
             }
-          for (nN=0;nN<nDOF_element;nN++)
+          for (nN=0;nN<nNodes_element;nN++)
 	    {
+	      // ARB CHANGE
 	      nN_global = dofMapl2g[left_eN*nDOF_element+
 				      nN];
-	      left_eN_star = nodeStarElements[left_eN*nDOF_element+
+	      left_eN_star = nodeStarElements[left_eN*nNodes_element+
 					      nN];
 	      /* check if node is opposite element boundary we're computing and ignore 0 contribution */
 	      /* this shouldn't be necessary */
 	      if (nN != left_ebN_element)
 		{
-		  right_eN_star = nodeStarElementNeighbors[left_eN*nDOF_element*nElementBoundaries_element+
+		  right_eN_star = nodeStarElementNeighbors[left_eN*nNodes_element*nElementBoundaries_element+
 							   nN*nElementBoundaries_element+
 							   left_ebN_element];
                   fluxCorrection = (starU[nN_global][left_eN_star]
                                     -
                                     starU[nN_global][right_eN_star])
                     *
-                    w[left_eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_element+
-                      left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_element+
-                      k*nDOF_element+
+                    w[left_eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nNodes_element+
+                      left_ebN_element*nQuadraturePoints_elementBoundary*nNodes_element+
+                      k*nNodes_element+
                       nN];
 		  for (I=0;I<nSpace;I++)
 		    {
@@ -4395,9 +4365,9 @@ void calculateConservationResidualPWL(int nElements_global,
                                k*nSpace+
                                I];
 		    }
-		  flux = (fluxAverage*w[left_eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_element+
-                                        left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_element+
-                                        k*nDOF_element+
+		  flux = (fluxAverage*w[left_eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nNodes_element+
+                                        left_ebN_element*nQuadraturePoints_elementBoundary*nNodes_element+
+                                        k*nNodes_element+
                                         nN]
                           + fluxCorrection)*dx;
 		  starR[nN_global][left_eN_star]
@@ -4457,11 +4427,11 @@ void calculateConservationResidualPWL(int nElements_global,
                        k*nSpace+
                        I];
             }
-	  for (nN=0;nN<nDOF_element;nN++)
+	  for (nN=0;nN<nNodes_element;nN++)
 	    {
 	      nN_global = dofMapl2g[eN*nDOF_element+
 				       nN];
-	      eN_star = nodeStarElements[eN*nDOF_element+
+	      eN_star = nodeStarElements[eN*nNodes_element+
 					      nN];
 	      /* check if this node lies opposite the element boundary whose contribution we're computing */
 	      /* in that case there is no flux contribution because the test function is zero*/
@@ -4470,9 +4440,9 @@ void calculateConservationResidualPWL(int nElements_global,
 		{
                   fluxCorrection = starU[nN_global][eN_star]
                     *
-                    w[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_element+
-                      ebN_element*nQuadraturePoints_elementBoundary*nDOF_element+
-                      k*nDOF_element+
+                    w[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nNodes_element+
+                      ebN_element*nQuadraturePoints_elementBoundary*nNodes_element+
+                      k*nNodes_element+
                       nN]; 
 		  for (I=0;I<nSpace;I++)
                     vConservative[ebN*nQuadraturePoints_elementBoundary*nSpace+
@@ -4485,9 +4455,9 @@ void calculateConservationResidualPWL(int nElements_global,
                              I];
 		  flux = (fluxAverage
                           *
-                          w[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_element+
-                            ebN_element*nQuadraturePoints_elementBoundary*nDOF_element+
-                            k*nDOF_element+
+                          w[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nNodes_element+
+                            ebN_element*nQuadraturePoints_elementBoundary*nNodes_element+
+                            k*nNodes_element+
                             nN]
                           +
                           fluxCorrection)*dx;
@@ -4608,6 +4578,7 @@ void calculateConservationJacobianPWL(int nDOF_global,
 				      int nElementBoundaries_element,
 				      int nQuadraturePoints_elementBoundary,
 				      int nNodes_element,
+				      int nDOF_element,
 				      int nSpace,
 				      int* interiorElementBoundaries,
 				      int* exteriorElementBoundaries,
@@ -4662,8 +4633,8 @@ void calculateConservationJacobianPWL(int nDOF_global,
 	{
 	  for (nN=0;nN<nNodes_element;nN++)
 	    {
-	      nN_global = dofMapl2g[left_eN*nNodes_element+
-				      nN];
+	      nN_global = dofMapl2g[left_eN*nDOF_element+
+				    nN];
 	      left_eN_star = dofStarElements[left_eN*nNodes_element+
 					      nN];
 	      /* check if node is opposite element boundary we're computing and ignore 0 contribution */
@@ -4705,8 +4676,8 @@ void calculateConservationJacobianPWL(int nDOF_global,
 	{
 	  for (nN=0;nN<nNodes_element;nN++)
 	    {
-	      nN_global =  dofMapl2g[eN*nNodes_element+
-				       nN];
+	      nN_global = dofMapl2g[eN*nDOF_element+
+				    nN];
 	      eN_star = dofStarElements[eN*nNodes_element+
 					 nN];
 	      /* check if this node lies opposite the element boundary whose contribution we're computing */
@@ -4789,7 +4760,6 @@ void calculateConservationJacobianPWL(int nDOF_global,
         /*   } */
 	/*assert(INFO == 0);*//*need to turn off if use dgetc2*/
     }
-    printf("break6\n");
 }
 void calculateConservationFluxPWL(int nNodes_global,
 				  int nNodes_internal,

@@ -6468,6 +6468,8 @@ void calculateWeightedShapeGradients(int nElements_global,
             abs_det_jac[eN*nQuadraturePoints_element+
                         k];
 }
+
+/// THIS SHOULD BE REMOVED BEFORE MERGE
 void calculateWeightedPiolaShapeGradients(int nElements_global,
 					  int nQuadraturePoints_element,
 					  int nDOF_test_element,
@@ -6492,7 +6494,8 @@ void calculateWeightedPiolaShapeGradients(int nElements_global,
                    i*nSpace+
                    I]
             *
-            dVR[k];
+            dVR[k]
+	    ;
 }
 
 void calculateWeightedShapeHessians(int nElements_global,
