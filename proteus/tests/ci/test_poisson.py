@@ -21,7 +21,9 @@ OptDB.setValue("pc_type", "gamg")
 
 def test_c0p1():
     import poisson_3d_p
+    reload(poisson_3d_p)
     import poisson_3d_c0p1_n
+    reload(poisson_3d_c0p1_n)
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0p1_n]
     so = default_so
@@ -41,7 +43,9 @@ def test_c0p1():
 
 def test_c0p2():
     import poisson_3d_p
+    reload(poisson_3d_p)
     import poisson_3d_c0p2_n
+    reload(poisson_3d_c0p2_n)
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0p2_n]
     so = default_so
@@ -58,7 +62,9 @@ def test_c0p2():
 
 def check_c0q1(test_hexMesh_3x3=False,use_petsc=False,name="_hexMesh_"):
     import poisson_3d_p
+    reload(poisson_3d_p)
     import poisson_3d_c0q1_n
+    reload(poisson_3d_c0q1_n)
     poisson_3d_c0q1_n.hex=True
     if test_hexMesh_3x3 == True:
         poisson_3d_p.meshfile='hexMesh_3x3'
@@ -100,6 +106,7 @@ def test_c0q2():
     import poisson_3d_p
     reload(poisson_3d_p)
     import poisson_3d_c0q2_n
+    reload(poisson_3d_c0q2_n)
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0q2_n]
     so = default_so
