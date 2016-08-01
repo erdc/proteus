@@ -258,6 +258,6 @@ doc:
 test:
 	@echo "************************************"
 	@echo "Running travis-ci test suite"
-	py.test -vv proteus/tests proteus/tests/ci  proteus/tests/poisson_2d  proteus/tests/mesh_tests --ignore proteus/tests/POD --ignore testRandom --ignore test_sshaped_region
+	py.test -v proteus/tests --ignore proteus/tests/POD
 	@echo "Tests complete "
 	@echo "************************************"
