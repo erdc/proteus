@@ -11,6 +11,10 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PROTEUS/linux2-scorec/lib/:$MPI_ROOT/li
 export EDITOR=vim
 export PATH=$PROTEUS/hashdist/bin:$PATH
 
+#GMSH support
+
+export PATH=/users/zhanga/gmsh-2.10.1-Linux/bin:$PATH
+
 #export PETSC_DIR=/users/zhanga/Projects/PETSc/petsc
 #export PETSC_ARCH=arch-linux2-c-debug
 
