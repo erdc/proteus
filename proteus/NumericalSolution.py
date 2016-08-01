@@ -1009,10 +1009,12 @@ class NS_base:  # (HasTraits):
                       if(p0.domain.PUMIMesh.willAdapt()):
                         adaptMeshNow=True
                         logEvent("Need to Adapt")
-                    if(sfConfig=='farhad' and self.nSequenceSteps%n0.adaptMesh_nSteps==0 ):
+                    elif(sfConfig=='farhad' and self.nSequenceSteps%n0.adaptMesh_nSteps==0 ):
                       adaptMeshNow=True
                       logEvent("Need to Adapt")
-
+                    else:
+                      adaptMeshNow=True
+                      logEvent("Need to Adapt")
 
                 #can only handle PUMIDomain's for now
                 if(adaptMeshNow):
