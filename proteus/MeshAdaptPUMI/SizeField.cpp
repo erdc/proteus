@@ -254,8 +254,8 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
 
   if(adapt_type=="isotropic"){
     scale = apf::Vector3(1,1,1) * h_dest;
-    //for(int i=0;i<3;i++)
-    //  clamp(scale[i], hmin, hmax);
+    for(int i=0;i<3;i++)
+      clamp(scale[i], hmin, hmax);
   }
   else if(adapt_type=="anisotropic") { 
     double epsilon = 7.0* hmin; 
@@ -510,8 +510,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 //    if(alpha>1)
 //      alpha=1.0;
   }
-  //else 
-  //  alpha = tolerance/rel_err_total; //refinement constant
+  else 
+    alpha = 0.6;//tolerance/rel_err_total; //refinement constant
 
   freeField(size_frame);
   freeField(size_scale);
@@ -535,7 +535,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   double err_dest = alpha*err_total/sqrt(numel);
 if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<err_dest<<" numel "<<numel<<std::endl;
   double err_curr = 0.0;
-  double rel = 0.0;
   apf::Vector3 err_vect;
   //compute the new size field
   apf::MeshElement* element;

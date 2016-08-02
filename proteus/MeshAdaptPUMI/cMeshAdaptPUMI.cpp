@@ -25,7 +25,6 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   numIter=NumIter;
   nAdapt=0;
   nEstimate=0;
-  PE_total_before=-1.1180;//-0.0074163; //based on specific case
   if(PCU_Comm_Self()==0)
      printf("MeshAdapt: Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
        hmax, hmin, numIter);
@@ -41,6 +40,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   approximation_order = 2;
   integration_order = 3;//approximation_order * 2;
   total_error = 0.0;
+  rel_err_total = 0.0;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
   size_field_config = sfConfig;
   modelFileName = NULL; 
