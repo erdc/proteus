@@ -1195,6 +1195,7 @@ testcount++;
 
   total_error = sqrt(err_est_total);
   u_norm_total = sqrt(u_norm_total);
+  rel_err_total = total_error/u_norm_total;
 
   if(comm_rank==0){
     std::cout<<std::setprecision(10)<<std::endl;
