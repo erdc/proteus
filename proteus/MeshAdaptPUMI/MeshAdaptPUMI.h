@@ -44,7 +44,6 @@ class MeshAdaptPUMIDrvr{
   int numIter;
   int nAdapt; //counter for number of adapt steps
   int nEstimate; //counter for number of error estimator calls
-  double PE_total_before;
   int nsd; //number of spatial dimensions
   std::string size_field_config;
   std::string adapt_type_config;
@@ -73,6 +72,7 @@ class MeshAdaptPUMIDrvr{
   int num_quadrature; 
   int num_quarature_boundary;
   double total_error;
+  double rel_err_total;
 
   private: 
   apf::Mesh2* m;
