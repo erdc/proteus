@@ -20,6 +20,7 @@ double a_kl = 0.5; //flux term weight
 int testcount = 0;
 
 int eID = -1;
+//int eID = 5081;
 //int eID = 3865; // water element
 //int eID = 7418; // air element  
 //int eID = 4482; //mixed element
@@ -177,11 +178,9 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
           double c_term = 0;
           //a(u,v) and c(u,u,v) term
           for(int j=0;j<nsd;j++){
-            //temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
-            //temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
             a_term += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
-            a_rho_term += visc_val*(grad_vel[i][j]+grad_vel[j][i])*shpval[s]*grad_density[j]/(density*density);
-            c_term += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
+            a_rho_term += visc_val*(grad_vel[i][j]+grad_vel[j][i])*shpval[s]*grad_density[j]/(density);
+            c_term += -shpval[s]*grad_vel[i][j]*vel_vect[j];///density;
           }
 /*
 if(testcount==eID){
@@ -495,8 +494,9 @@ std::cerr<<"Initialized flux"<<std::endl;
           tempbflux = (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
               -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1);
           bflux = tempbflux*normal;
-/*
-if(localNumber(ent)==eID && l==0){
+//*
+if(comm_rank==0 && localNumber(ent)==eID){
+  std::cout<<"quadrature point "<<l<<" value "<<bqpt<<" weight "<<weight<<" Jdet "<<Jdet<<std::endl;
   std::cout<<"velocity gradient "<<std::endl;
   std::cout<<tempgrad_velo<<std::endl;
   std::cout<<"Viscosity value "<<getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)<<std::endl;
@@ -509,7 +509,7 @@ if(localNumber(ent)==eID && l==0){
   std::cout<<"bflux "<<tempbflux*normal<<std::endl;
 
 }
-*/ 
+//*/ 
         } //end if boundary
         bflux = bflux*weight*Jdet;
         bflux.toArray(&(tempflux[l*nsd]));
@@ -563,7 +563,7 @@ std::cerr<<"Sending flux"<<std::endl;
   free(flux);
   std::cerr<<"End computeDiffusiveFlux()"<<std::endl;
 }
-
+/*
 void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux){
 
     int nshl;
@@ -689,6 +689,7 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf:
         }
     } //end loop over adjacent faces
 }//end function
+*/
 
 void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, double * endflux){
 
@@ -820,6 +821,15 @@ void MeshAdaptPUMIDrvr::removeBCData()
         if(i>0 && m->hasTag(ent,fluxtag[i]))
           m->removeTag(ent,fluxtag[i]);
       }
+/*
+    for(int i=0;i<4;i++)
+    {
+      if(i>0 && m->hasTag(ent,fluxtag[i]))
+        m->removeTag(ent,fluxtag[i]);
+      if(m->hasTag(ent,diffFlux))
+        m->removeTag(ent,diffFlux);
+>>>>>>> remotes/origin/local_adapt
+*/
     }
     if(m->hasTag(ent,diffFlux))
       m->removeTag(ent,diffFlux);
@@ -839,8 +849,6 @@ void MeshAdaptPUMIDrvr::removeBCData()
   if(comm_rank==0) std::cout<<"Destroyed BC and flux tags"<<std::endl;
 }
 
-
-//double MeshAdaptPUMIDrvr::get_local_error() 
 void MeshAdaptPUMIDrvr::get_local_error() 
 //This function aims to compute error at each element via ERM.
 //First get the mesh and impose a 2nd order field
@@ -901,6 +909,7 @@ double L2_total=0;
 double star_total=0;
 double err_est = 0;
 double err_est_total=0;
+double u_norm_total=0;
   while(ent = m->iterate(iter)){ //loop through all elements
     
     elem_type = m->getType(ent);
@@ -987,6 +996,24 @@ double err_est_total=0;
           std::cout<<testpt<<" ";
         }
         std::cout<<std::endl;
+  
+        apf::Vector3 vectpt;
+        std::cout<<"Velocity at Nodes\n";
+        for(int test_count=0;test_count<4;test_count++){
+          apf::getVector(velf,dbg_vadj[test_count],0,vectpt);
+          std::cout<<vectpt<<" ";
+        }
+        std::cout<<std::endl;
+        
+        double pressurept;
+        std::cout<<"Pressure at Nodes\n";
+        for(int test_count=0;test_count<4;test_count++){
+          pressurept = apf::getScalar(pref,dbg_vadj[test_count],0);
+          std::cout<<pressurept<<" ";
+        }
+        std::cout<<std::endl;
+
+
         std::cout<<"nshl & numqpt "<<nshl<<" "<<numqpt<<std::endl;
         std::cout<<"Quadrature point "<<k<<std::endl;
         std::cout<<"quad pt" <<qpt<<std::endl;
@@ -1027,12 +1054,6 @@ double err_est_total=0;
     VecAssemblyBegin(F);
     VecAssemblyEnd(F); 
     VecScale(F,Jdet); //must be done after assembly
-/*
-if(comm_rank==0 && testcount==eID){ 
-      std::cout<<" NOW VECTOR with just a(.,.)+b+c" <<std::endl;
-      VecView(F,PETSC_VIEWER_STDOUT_SELF);
-}
-*/
     double* bflux;
     int F_idx[ndofs];
     bflux = (double*) calloc(ndofs,sizeof(double));
@@ -1042,6 +1063,13 @@ if(comm_rank==0 && testcount==eID){
       F_idx[s]=s;
     }
     VecSetValues(F,ndofs,F_idx,bflux,ADD_VALUES);
+if(comm_rank==0 && testcount==eID){
+  std::cout<<"What is bflux?\n";
+  for(int s=0;s<ndofs;s++){
+    std::cout<<bflux[s]<<std::endl;
+  }
+  std::cout<<"End of bflux "<<std::endl;
+}
     VecAssemblyBegin(F); VecAssemblyEnd(F);
     free(bflux);
     Vec coef;
@@ -1055,10 +1083,8 @@ if(testcount==eID && comm_rank==0){
 //Save Temporarily for Debugging
       std::ofstream myfile ("stiffness.csv");
       std::ofstream myfile2 ("force.csv");
-      std::ofstream myfilegsl("stiffness.txt");
       myfile<<std::scientific<<std::setprecision(15);
       myfile2<<std::scientific<<std::setprecision(15);
-      myfilegsl<<std::scientific<<std::setprecision(15);
       PetscScalar matstor;  
       PetscScalar vecstor;  
       int idxr[ndofs], idxc[ndofs];
@@ -1068,13 +1094,13 @@ if(testcount==eID && comm_rank==0){
           idxc[jj]=jj;
           MatGetValues(K,1,&idxr[ii],1,&idxc[jj],&matstor);
           myfile<<matstor<<","; 
-          myfilegsl<<matstor<<std::endl;
         }
         myfile<<std::endl;
         VecGetValues(F,1,&idxr[ii],&vecstor);
         myfile2<<vecstor<<std::endl;
       }
       myfile.close();
+      myfile2.close();
     //MatView(K,PETSC_VIEWER_STDOUT_SELF);
     //VecView(F,PETSC_VIEWER_STDOUT_SELF);
 }
@@ -1091,8 +1117,6 @@ if(testcount==eID && comm_rank==0){
     KSPSetFromOptions(ksp);
 
     KSPSolve(ksp,F,coef);
-//std::cout<<"Final error "<<std::endl;
-//VecView(coef,PETSC_VIEWER_STDOUT_SELF);
     
     KSPDestroy(&ksp); //destroy ksp
     //PCDestroy(&pc);
@@ -1102,7 +1126,12 @@ if(testcount==eID && comm_rank==0){
     //compute the local error  
     double Acomp=0;
     double Bcomp=0;
+    double visc_avg=0;
+    double u_norm = 0;
     apf::Matrix3x3 phi_ij;
+    apf::Matrix3x3 vel_ij;
+    apf::Vector3 vel_vect;
+    apf::Vector3 grad_vof;
 
     est_elem= apf::createElement(estimate,element);   
     for(int k=0; k<numqpt;k++){ 
@@ -1126,37 +1155,46 @@ if(testcount==eID && comm_rank==0){
         apf::multiply(shgval_copy[i],invJ_copy,shdrv[i]); 
       }
       double visc_val = apf::getScalar(visc_elem,qpt);
+      double pres_val = apf::getScalar(pres_elem,qpt);
+      double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
       apf::getVectorGrad(est_elem,qpt,phi_ij);
+      apf::getGrad(vof_elem,qpt,grad_vof);
+      apf::getVector(velo_elem,qpt,vel_vect);
+      apf::getVectorGrad(velo_elem,qpt,vel_ij);
+      vel_ij = apf::transpose(vel_ij);
       phi_ij = apf::transpose(phi_ij);
-      Acomp = Acomp + getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
+
+      Acomp = Acomp + visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
       Bcomp = Bcomp + apf::getDiv(velo_elem,qpt)*apf::getDiv(velo_elem,qpt)*weight;
+      visc_avg = visc_avg + visc_val*weight;
+      u_norm = u_norm + visc_val*getDotProduct(vel_ij,vel_ij+apf::transpose(vel_ij))*weight;
+
     } //end compute local error
-    Acomp = Acomp*Jdet; //Jacobian+nondimensionalize
+    visc_avg = visc_avg*Jdet/apf::measure(element);
+    Acomp = Acomp*Jdet/visc_avg; //nondimensionalize with average viscosity, Jacobians can cancel out, but this is done for clarity
     Bcomp = Bcomp*Jdet;
+    u_norm = u_norm/visc_avg*Jdet;
     err_est = sqrt(Acomp+Bcomp); 
+
     apf::Vector3 err_in(err_est,Acomp,Bcomp);
     apf::setVector(err_reg,ent,0,err_in);
     err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
-/*
-    double L2err= getL2error(m,ent,voff,visc,pref,velf); //non-dimensional
-    L2_total = L2_total+L2err;
-    double starerr = getStarerror(m,ent,voff,visc,pref,velf,estimate);
-    star_total = star_total+starerr;
-*/
+    u_norm_total = u_norm_total + u_norm;
    
     MatDestroy(&K); //destroy the matrix
     VecDestroy(&F); //destroy vector
     VecDestroy(&coef); //destroy vector
 
-  
     apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);apf::destroyElement(vof_elem);
 testcount++;
 
   } //end element loop
 
-  PCU_Barrier();
   PCU_Add_Doubles(&err_est_total,1);
+  PCU_Add_Doubles(&u_norm_total,1);
+
   total_error = sqrt(err_est_total);
+  u_norm_total = sqrt(u_norm_total);
 
   if(comm_rank==0){
     std::cout<<std::setprecision(10)<<std::endl;
@@ -1174,6 +1212,7 @@ testcount++;
   m->end(iter);
   apf::destroyField(visc);
   apf::destroyField(estimate);
+
   printf("It cleared the function.\n");
 }
 
