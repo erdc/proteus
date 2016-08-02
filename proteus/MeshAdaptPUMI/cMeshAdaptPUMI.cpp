@@ -14,7 +14,7 @@
 #include "MeshAdaptPUMI.h"
 
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
-    const char* sfConfig, const char* maType,const char* logType)
+    const char* sfConfig, const char* maType,const char* logType, double targetError)
 {
   m = 0;
   PCU_Comm_Init();
@@ -25,6 +25,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   numIter=NumIter;
   nAdapt=0;
   nEstimate=0;
+  PE_total_before=-1.1180;//-0.0074163; //based on specific case
   if(PCU_Comm_Self()==0)
      printf("MeshAdapt: Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
        hmax, hmin, numIter);
@@ -46,6 +47,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   adapt_type_config = maType;
   logging_config = logType;
   has_gBC = false;
+  target_error = targetError;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
