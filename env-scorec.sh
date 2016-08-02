@@ -10,6 +10,7 @@ export MPI_ROOT=/usr/local/mpich3/3.1.2-thread-multiple
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PROTEUS/linux2-scorec/lib/:$MPI_ROOT/lib
 export EDITOR=vim
 export PATH=$PROTEUS/hashdist/bin:$PATH
+export PATH=$PROTEUS/scripts:$PATH
 
 #export PETSC_DIR=/users/zhanga/Projects/PETSc/petsc
 #export PETSC_ARCH=arch-linux2-c-debug
