@@ -1156,13 +1156,20 @@ testcount++;
 
   PCU_Barrier();
   PCU_Add_Doubles(&err_est_total,1);
-  //err_est_total = sqrt(err_est_total);
   total_error = sqrt(err_est_total);
 
-if(comm_rank==0){
-std::cout<<std::setprecision(10)<<std::endl;
-std::cout<<"Error estimate "<<total_error<<std::endl;
-}
+  if(comm_rank==0){
+    std::cout<<std::setprecision(10)<<std::endl;
+    std::cout<<"Error estimate "<<total_error<<std::endl;
+  }
+
+  if(logging_config=="on"){
+    std::cout<<"outputting error field\n";
+    char namebuffer[20];
+    sprintf(namebuffer,"err_reg_%i",nEstimate);
+    apf::writeVtkFiles(namebuffer, m);
+    nEstimate++;
+  }
 
   m->end(iter);
   apf::destroyField(visc);
