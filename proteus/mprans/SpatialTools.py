@@ -1276,6 +1276,32 @@ class TankWithObstacles2D(Tank2D):
                 self.BC[boundary] = self.BC_class(shape=self, name=boundary)
                 self.BC_list += [self.BC[boundary]]
 
+    def _resetEdgesFromVertices(self, vertices, dimension):
+        """
+        Resets self.x0, self.x1, self.y0, self.y1 based on the actual shape.
+
+        This can be used to better set up sponge layers.
+
+        Parameters
+        ----------
+        vertices: array_like
+        dimension: string
+            may be "x" or "y".  Only one can be reset.
+        """
+        #[temp]
+        if dimension == 'y':
+            sorted_vertices = sorted(vertices,
+                                     key = lambda vertex: vertex[1])
+            self.y0 = sorted_vertices[0][1]
+            self.y1 = sorted_vertices[-1][1]
+        elif dimension == 'x':
+            sorted_vertices = sorted(vertices,
+                                     key=lambda vertex: vertex[0])
+            self.x0 = sorted_vertices[0][0]
+            self.x1 = sorted_vertices[-1][0]
+        else:
+            raise ValueError("Dimension " + str(dimension) + " not understood")
+
     def _constructVertices(self):
 
         def getClockwiseOrder(first_point):
@@ -1334,16 +1360,21 @@ class TankWithObstacles2D(Tank2D):
             """
             Returns corner vertices (and flags) in between two segments
             """
+            import pdb
+            pdb.set_trace()
             ordering = getClockwiseOrder(first)
+            corners = [x for x in ordering
+                       if x in self.corners.keys()
+                       and ordering.index(x) < ordering.index(last)
+                       ]
             corner_vertices = []
             corner_flags = []
 
-            for corner in self.corners.keys():
-                if ordering.index(corner) < ordering.index(last):
-                    self.corners[corner] = True
-                    vertex, flag = addCorner(corner)
-                    corner_vertices += vertex
-                    corner_flags += flag
+            for corner in corners:
+                self.corners[corner] = True
+                vertex, flag = addCorner(corner)
+                corner_vertices += vertex
+                corner_flags += flag
 
             return corner_vertices, corner_flags
 
@@ -1380,6 +1411,7 @@ class TankWithObstacles2D(Tank2D):
         vertexFlags = []
         former_end = None
         first_start = None
+        #[temp] !!!!! The corner vertices are not added in the right order!
 
         for obstacle in self.obstacles:
             start = findLocation(obstacle[0])
@@ -1424,6 +1456,10 @@ class TankWithObstacles2D(Tank2D):
             boundary_index = self.special_BC_vertices.index(vertex)
             boundary_name = self.special_boundaries[boundary_index]
             vertexFlags[flag_index] = self.boundaryTags[boundary_name]
+
+        # ---- Adjustments for Sponge Zones ---- #
+        self._resetEdgesFromVertices(vertices=vertices,
+                                     dimension='y')
 
         return vertices, vertexFlags
 
