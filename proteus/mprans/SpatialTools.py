@@ -1263,10 +1263,9 @@ class TankWithObstacles2D(Tank2D):
                 self.special_boundaries += [key for v in special_boundaries[key]]
                 self.special_BC_vertices += special_boundaries[key]
 
-
         self.corners = {'x-y-': False, 'x+y-': False,
                         'x+y+': False, 'x-y+': False}
-        #self.corners = {'x-y-': False, 'x+y-': False, 'x+y+': False, 'x-y+': False} #[temp] for testing purposes
+
         super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
 
     def _setupBCs(self):
@@ -1284,7 +1283,6 @@ class TankWithObstacles2D(Tank2D):
                                   'x+y+', 'y+', 'x-y+', 'x-')
             index = clockwise_ordering.index(first_point)
             return clockwise_ordering[index:] + clockwise_ordering[:index]
-
 
         def findLocation(vertex):
             """
@@ -1430,6 +1428,8 @@ class TankWithObstacles2D(Tank2D):
         return vertices, vertexFlags
 
     def _constructSegments(self, vertices, vertexFlags):
+        # VertexFlag --> SegmentFlag logic:
+        #
         # if EITHER are x+  --> segment is x+
         #                       UNLESS the other is x-  --> y+
         # if EITHER are x-  --> segment is x-
@@ -1457,10 +1457,14 @@ class TankWithObstacles2D(Tank2D):
                     return [self.boundaryTags['x-'], ]
 
             elif vertexFlags[end] == self.boundaryTags['x+']:
-                return [self.boundaryTags['x+'], ]
+                if vertexFlags[start] in [self.boundaryTags['y-'],
+                                          self.boundaryTags['y+']]:
+                    return [self.boundaryTags['x+'], ]
 
             elif vertexFlags[end] == self.boundaryTags['x-']:
-                return [self.boundaryTags['x-'], ]
+                if vertexFlags[start] in [self.boundaryTags['y-'],
+                                          self.boundaryTags['y+']]:
+                    return [self.boundaryTags['x-'], ]
 
             elif vertexFlags[start] == self.boundaryTags['y-']:
                 if (vertexFlags[end] == self.boundaryTags['y+']
