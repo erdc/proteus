@@ -430,117 +430,117 @@ class CheckRandomWavesFailures(unittest.TestCase):
         RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.}, phi = np.zeros(100, float) )
         self.assertTrue(None == None)
 
-class VerifyRandomWaves(unittest.TestCase):
-    @pytest.mark.skip(reason="nosetests vs pytest issue")
-    def testRandom(self):
-        from proteus.WaveTools import RandomWaves
-        import random
-        # Assinging a random value at a field and getting the expected output
-        Tp = 1.
-        Hs = 0.15
-        mwl = 4.5
-        depth = 0.9
-        g = np.array([0,0,-9.81])
-        gAbs = 9.81
-        dir1 = 2*random.random() - 1
-        dir2 = 2*random.random() - 1
-        waveDir = np.array([dir1,dir2, 0])
-        N = 100
-        phi = np.random.rand(N)
-        gamma = 1.2
-        TMA = True
-        spectName = "JONSWAP"
-        bandFactor = 2.0
+# class VerifyRandomWaves(unittest.TestCase):
+#     @pytest.mark.skip(reason="nosetests vs pytest issue")
+#     def testRandom(self):
+#         from proteus.WaveTools import RandomWaves
+#         import random
+#         # Assinging a random value at a field and getting the expected output
+#         Tp = 1.
+#         Hs = 0.15
+#         mwl = 4.5
+#         depth = 0.9
+#         g = np.array([0,0,-9.81])
+#         gAbs = 9.81
+#         dir1 = 2*random.random() - 1
+#         dir2 = 2*random.random() - 1
+#         waveDir = np.array([dir1,dir2, 0])
+#         N = 100
+#         phi = np.random.rand(N)
+#         gamma = 1.2
+#         TMA = True
+#         spectName = "JONSWAP"
+#         bandFactor = 2.0
 
-        a= RandomWaves(Tp,
-                     Hs,
-                     mwl,#m significant wave height
-                     depth ,           #m depth
-                     waveDir,
-                     g,      #peak  frequency
-                     N,
-                     bandFactor,         #accelerationof gravity
-                     spectName# random words will result in error and return the available spectra
-                   )
-        x = random.random()*200. - 100.
-        y = random.random()*200. - 100.
-        z =  mwl - depth + random.random()*( depth)
-        t =  random.random()*200. - 100.
-        # Just loading functions
-        eta = a.eta([x, y, z], t)
-        ux, uy, uz = a.u([x, y, z], t)
+#         a= RandomWaves(Tp,
+#                      Hs,
+#                      mwl,#m significant wave height
+#                      depth ,           #m depth
+#                      waveDir,
+#                      g,      #peak  frequency
+#                      N,
+#                      bandFactor,         #accelerationof gravity
+#                      spectName# random words will result in error and return the available spectra
+#                    )
+#         x = random.random()*200. - 100.
+#         y = random.random()*200. - 100.
+#         z =  mwl - depth + random.random()*( depth)
+#         t =  random.random()*200. - 100.
+#         # Just loading functions
+#         eta = a.eta([x, y, z], t)
+#         ux, uy, uz = a.u([x, y, z], t)
 
-        # Testing with a specific phi array
-        a= RandomWaves(
-            Tp,
-            Hs,
-            mwl,#m significant wave height
-            depth ,           #m depth
-            waveDir,
-            g,      #peak  frequency
-            N,
-            bandFactor,         #accelerationof gravity
-            spectName,
-            spectral_params =  {"gamma": gamma, "TMA": TMA,"depth": depth},
-            phi = phi# random words will result in error and return the available spectra
-    )
-        eta = a.eta([x, y, z], t)
-        ux, uy, uz = a.u([x, y, z], t)
-
-
-        # setDirVector are tested above
-        from proteus.WaveTools import setDirVector, dispersion, reduceToIntervals, returnRectangles, JONSWAP
-        fmin = 1./(Tp * bandFactor)
-        fmax = bandFactor/(Tp)
-        fi = np.linspace(fmin,fmax,N)
-        df = (fmax-fmin)/(N -1 )
-        ki = dispersion(2*pi*fi,depth)
-        z0 = z - mwl
-        normDir = setDirVector(waveDir)
-        fim = reduceToIntervals(fi,df)
-        Si_Jm = JONSWAP(fim,1./Tp,Hs,gamma,TMA, depth)
-        ai = np.sqrt(2.*returnRectangles(Si_Jm,fim))
-        omega = 2*pi*fi
-        etaRef = 0.
-        uxRef = 0.
-        uyRef = 0.
-        uzRef = 0.
-
-        for ii in range(N):
-            etaRef+=ai[ii]*cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])
-            uxRef += normDir[0]*ai[ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) *cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
-            uyRef += normDir[1]*ai[ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
-            uzRef +=  ai[ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
+#         # Testing with a specific phi array
+#         a= RandomWaves(
+#             Tp,
+#             Hs,
+#             mwl,#m significant wave height
+#             depth ,           #m depth
+#             waveDir,
+#             g,      #peak  frequency
+#             N,
+#             bandFactor,         #accelerationof gravity
+#             spectName,
+#             spectral_params =  {"gamma": gamma, "TMA": TMA,"depth": depth},
+#             phi = phi# random words will result in error and return the available spectra
+#     )
+#         eta = a.eta([x, y, z], t)
+#         ux, uy, uz = a.u([x, y, z], t)
 
 
-        self.assertTrue(round(eta,8) == round(etaRef,8) )
-        self.assertTrue(round(ux,8) == round(uxRef,8))
-        self.assertTrue(round(uy,8) == round(uyRef,8))
-        self.assertTrue(round(uz,8) == round(uzRef,8))
+#         # setDirVector are tested above
+#         from proteus.WaveTools import setDirVector, dispersion, reduceToIntervals, returnRectangles, JONSWAP
+#         fmin = 1./(Tp * bandFactor)
+#         fmax = bandFactor/(Tp)
+#         fi = np.linspace(fmin,fmax,N)
+#         df = (fmax-fmin)/(N -1 )
+#         ki = dispersion(2*pi*fi,depth)
+#         z0 = z - mwl
+#         normDir = setDirVector(waveDir)
+#         fim = reduceToIntervals(fi,df)
+#         Si_Jm = JONSWAP(fim,1./Tp,Hs,gamma,TMA, depth)
+#         ai = np.sqrt(2.*returnRectangles(Si_Jm,fim))
+#         omega = 2*pi*fi
+#         etaRef = 0.
+#         uxRef = 0.
+#         uyRef = 0.
+#         uzRef = 0.
 
-        # Asserting write function from Random waves
-        x0 = np.array([0,0,0])
-        Lgen = np.array([5,0,0])
-        Tstart = 0
-        Tend = 2.
-        Tlag = sum(Lgen[:]*normDir[:])/min(omega[:]/ki[:])
-        Tstart2 = Tstart -  Tlag
-        dt = Tp/50.
-        Nf = int((Tend-Tstart2)/dt)
-        tlist = np.linspace(Tstart2,Tend,Nf)
-        etaWrite = np.zeros(len(tlist),)
-        for ii in range(len(tlist)):
-            etaWrite[ii] = a.eta(x0,tlist[ii])
-        fname = "randomSeries.txt"
-        if Tlag < 0.:
-            with self.assertRaises(SystemExit) as cm1:
-                a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
-            self.assertEqual(cm1.exception.code, 1 )
-        else:
-            a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
-            series = np.loadtxt(open(fname,"r"))
-            self.assertTrue((abs(series[:,0])- abs(tlist) <= 1e-10  ).all())
-            self.assertTrue((abs(series[:,1])- abs(etaWrite) <= 1e-10).all())
+#         for ii in range(N):
+#             etaRef+=ai[ii]*cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])
+#             uxRef += normDir[0]*ai[ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) *cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
+#             uyRef += normDir[1]*ai[ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
+#             uzRef +=  ai[ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
+
+
+#         self.assertTrue(round(eta,8) == round(etaRef,8) )
+#         self.assertTrue(round(ux,8) == round(uxRef,8))
+#         self.assertTrue(round(uy,8) == round(uyRef,8))
+#         self.assertTrue(round(uz,8) == round(uzRef,8))
+
+#         # Asserting write function from Random waves
+#         x0 = np.array([0,0,0])
+#         Lgen = np.array([5,0,0])
+#         Tstart = 0
+#         Tend = 2.
+#         Tlag = sum(Lgen[:]*normDir[:])/min(omega[:]/ki[:])
+#         Tstart2 = Tstart -  Tlag
+#         dt = Tp/50.
+#         Nf = int((Tend-Tstart2)/dt)
+#         tlist = np.linspace(Tstart2,Tend,Nf)
+#         etaWrite = np.zeros(len(tlist),)
+#         for ii in range(len(tlist)):
+#             etaWrite[ii] = a.eta(x0,tlist[ii])
+#         fname = "randomSeries.txt"
+#         if Tlag < 0.:
+#             with self.assertRaises(SystemExit) as cm1:
+#                 a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+#             self.assertEqual(cm1.exception.code, 1 )
+#         else:
+#             a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
+#             series = np.loadtxt(open(fname,"r"))
+#             self.assertTrue((abs(series[:,0])- abs(tlist) <= 1e-10  ).all())
+#             self.assertTrue((abs(series[:,1])- abs(etaWrite) <= 1e-10).all())
 
 
 
@@ -1281,91 +1281,91 @@ class CheckRandomWavesFastFailureModes(unittest.TestCase):
         self.assertEqual(cm1.exception.code, 1 )
 
 
-class VerifyRandomWavesFast(unittest.TestCase):
-# RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
-    @pytest.mark.skip(reason="nosetests vs pytest issue")
-    def testRandomFast(self):
-        from proteus.WaveTools import RandomWaves,TimeSeries,RandomWavesFast
-        import random
-        path =getpath()
-        fname = path+"randomSeries.txt"
-        # Assinging a random value at a field and getting the expected output
-        Tp = 1.
-        Hs = 0.15
-        mwl = 0.
-        depth = 0.9
-        g = np.array([0,0,-9.81])
-        gAbs = 9.81
-        dir1 = 2*random.random() - 1
-        dir2 = 2*random.random() - 1
-        waveDir = np.array([dir1,dir2, 0.])
-        N = 100
-        Nf =32
-        phi = 2*pi*np.random.rand(N)
-        spectName = "JONSWAP"
-        bandFactor = 2.0
-        Lgen = 1.5 * waveDir
-        x0 =  np.array([2.,0.,-0.2 ])
-        Tstart = 0.
+# class VerifyRandomWavesFast(unittest.TestCase):
+# # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
+#     @pytest.mark.skip(reason="nosetests vs pytest issue")
+#     def testRandomFast(self):
+#         from proteus.WaveTools import RandomWaves,TimeSeries,RandomWavesFast
+#         import random
+#         path =getpath()
+#         fname = path+"randomSeries.txt"
+#         # Assinging a random value at a field and getting the expected output
+#         Tp = 1.
+#         Hs = 0.15
+#         mwl = 0.
+#         depth = 0.9
+#         g = np.array([0,0,-9.81])
+#         gAbs = 9.81
+#         dir1 = 2*random.random() - 1
+#         dir2 = 2*random.random() - 1
+#         waveDir = np.array([dir1,dir2, 0.])
+#         N = 100
+#         Nf =32
+#         phi = 2*pi*np.random.rand(N)
+#         spectName = "JONSWAP"
+#         bandFactor = 2.0
+#         Lgen = 1.5 * waveDir
+#         x0 =  np.array([2.,0.,-0.2 ])
+#         Tstart = 0.
 
-        Tend = 5*Tp + round(random.random())*145*Tp
-        if Tend < 15.*Tp:
-            rec_d =True
-        else:
-            rec_d= False
-#        print Tend
-        aR= RandomWaves(Tp,
-                     Hs,
-                     mwl,
-                     depth ,
-                     waveDir,
-                     g,
-                     N,
-                     bandFactor,
-                     spectName,
-                     None,
-                     phi
-                   )
+#         Tend = 5*Tp + round(random.random())*145*Tp
+#         if Tend < 15.*Tp:
+#             rec_d =True
+#         else:
+#             rec_d= False
+# #        print Tend
+#         aR= RandomWaves(Tp,
+#                      Hs,
+#                      mwl,
+#                      depth ,
+#                      waveDir,
+#                      g,
+#                      N,
+#                      bandFactor,
+#                      spectName,
+#                      None,
+#                      phi
+#                    )
 
-        series = aR.writeEtaSeries(Tstart,Tend,x0,fname, 4.*Lgen)
-        cutoff = 0.2*Tp/(series[-1,0]-series[0,0])
-        aT= TimeSeries(
-            fname,
-            0,
-            x0,
-            depth,
-            Nf,          #number of frequency bins
-            mwl ,
-            waveDir,
-            g,
-            cutoff,
-            rec_d,                                                                          {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
-            True,
-            series
-            )
-        aRF = RandomWavesFast(Tstart,
-                         Tend,
-                         x0,
-                         Tp,
-                         Hs,
-                         mwl,
-                         depth,
-                         waveDir,
-                         g,
-                         N,
-                         bandFactor,
-                         spectName,
-                         None,
-                         phi,
-                         Lgen,
-                         Nfreq=Nf,
-                         Nwaves = 15)
-        x = x0 + Lgen * random.random()
-        t = series[0,0]+2.*Tp + random.random()*(series[-1,0]-2*Tp-series[-1,0])
-        self.assertTrue(round(abs(aRF.eta(x,t)/aT.eta(x,t)),8) == 1.)
-        self.assertTrue(round(abs(aRF.u(x,t)[0]/aT.u(x,t)[0]),8) == 1.)
-        self.assertTrue(round(abs(aRF.u(x,t)[1]/aT.u(x,t)[1]),8) == 1.)
-        self.assertTrue(round(abs(aRF.u(x,t)[2]/aT.u(x,t)[2]),8) == 1.)
+#         series = aR.writeEtaSeries(Tstart,Tend,x0,fname, 4.*Lgen)
+#         cutoff = 0.2*Tp/(series[-1,0]-series[0,0])
+#         aT= TimeSeries(
+#             fname,
+#             0,
+#             x0,
+#             depth,
+#             Nf,          #number of frequency bins
+#             mwl ,
+#             waveDir,
+#             g,
+#             cutoff,
+#             rec_d,                                                                          {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
+#             True,
+#             series
+#             )
+#         aRF = RandomWavesFast(Tstart,
+#                          Tend,
+#                          x0,
+#                          Tp,
+#                          Hs,
+#                          mwl,
+#                          depth,
+#                          waveDir,
+#                          g,
+#                          N,
+#                          bandFactor,
+#                          spectName,
+#                          None,
+#                          phi,
+#                          Lgen,
+#                          Nfreq=Nf,
+#                          Nwaves = 15)
+#         x = x0 + Lgen * random.random()
+#         t = series[0,0]+2.*Tp + random.random()*(series[-1,0]-2*Tp-series[-1,0])
+#         self.assertTrue(round(abs(aRF.eta(x,t)/aT.eta(x,t)),8) == 1.)
+#         self.assertTrue(round(abs(aRF.u(x,t)[0]/aT.u(x,t)[0]),8) == 1.)
+#         self.assertTrue(round(abs(aRF.u(x,t)[1]/aT.u(x,t)[1]),8) == 1.)
+#         self.assertTrue(round(abs(aRF.u(x,t)[2]/aT.u(x,t)[2]),8) == 1.)
 
 
 """
