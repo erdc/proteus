@@ -229,7 +229,7 @@ void MeshAdaptPUMIDrvr::simmetrixBCreloaded(const char* modelFile)
 
 int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
 {
-  double THRESHOLD = 0.0;
+  double THRESHOLD = target_error;
   int adaptFlag=0;
   if(total_error > THRESHOLD){
     removeBCData();
