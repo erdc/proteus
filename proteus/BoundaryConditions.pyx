@@ -47,7 +47,7 @@ class BC_Base(object):
             cls.ct = context
 
 
-class BoundaryCondition:
+class BoundaryCondition(BC_Base):
     """
     Boundary condition class
 
