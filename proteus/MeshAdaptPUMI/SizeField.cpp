@@ -511,7 +511,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 //      alpha=1.0;
   }
   else 
-    alpha = 0.6;//tolerance/rel_err_total; //refinement constant
+    alpha = 0.125;//tolerance/rel_err_total; //refinement constant
 
   freeField(size_frame);
   freeField(size_scale);
