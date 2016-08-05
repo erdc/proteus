@@ -232,7 +232,6 @@ int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
   double THRESHOLD = target_error;
   int adaptFlag=0;
   if(total_error > THRESHOLD){
-    removeBCData();
     adaptFlag = 1;
   }
   return adaptFlag;
@@ -243,6 +242,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   if (size_field_config == "farhad")
     calculateAnisoSizeField();
   else if (size_field_config == "alvin"){
+      removeBCData();
       double t1 = PCU_Time();
       getERMSizeField(total_error);
       freeField(err_reg); //mAdapt will throw error if not destroyed. what about free?
