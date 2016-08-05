@@ -346,37 +346,43 @@ class BC_RANS(BC_Base):
         if vert_axis is None:
             vert_axis = self.Shape.Domain.nd - 1
 
-        def get_inlet_ux_dirichlet(ux):
-            def ux_dirichlet(x, t):
+        def get_inlet_ux_dirichlet_cython(i):
+            def get_inlet_ux_dirichlet():
+                def ux_dirichlet(x, t):
+                    if x[vert_axis] < waterLevel:
+                        return U[i]
+                    elif x[vert_axis] >= waterLevel and U[i] == 0:
+                        return 0.
+                return ux_dirichlet
+            return get_inlet_ux_dirichlet
+
+        def inlet_vof_dirichlet_cython():
+            def inlet_vof_dirichlet(x, t):
                 if x[vert_axis] < waterLevel:
-                    return ux
-                elif x[vert_axis] >= waterLevel and ux == 0:
-                    return 0.
-            return ux_dirichlet
+                    return water
+                elif x[vert_axis] >= waterLevel:
+                    return air
+            return inlet_vof_dirichlet
 
-        def inlet_vof_dirichlet(x, t):
-            if x[vert_axis] < waterLevel:
-                return water
-            elif x[vert_axis] >= waterLevel:
-                return air
+        def inlet_p_advective_cython():
+            def inlet_p_advective(x, t):
+                b_or = self._b_or[self._b_i]
+                u_p = np.sum(U * b_or)
+                # This is the normal velocity, based on the inwards boundary
+                # orientation -b_or
+                u_p = -u_p
+                if x[vert_axis] < waterLevel:
+                    return u_p
+                elif x[vert_axis] >= waterLevel:
+                    return None
+            return inlet_p_advective
 
-        def inlet_p_advective(x, t, u=U):
-            b_or = self._b_or[self._b_i]
-            u_p = np.sum(U*b_or)
-            # This is the normal velocity, based on the inwards boundary
-            # orientation -b_or
-            u_p = -u_p
-            if x[vert_axis] < waterLevel:
-                return u_p
-            elif x[vert_axis] >= waterLevel:
-                return None
-
-        self.u_dirichlet.init_cython = get_inlet_ux_dirichlet(U[0])
-        self.v_dirichlet.init_cython  = get_inlet_ux_dirichlet(U[1])
+        self.u_dirichlet.init_cython = get_inlet_ux_dirichlet_cython(0)
+        self.v_dirichlet.init_cython = get_inlet_ux_dirichlet_cython(1)
         if len(U) == 3:
-                self.w_dirichlet.init_cython  = get_inlet_ux_dirichlet(U[2])
-        self.vof_dirichlet.init_cython  = inlet_vof_dirichlet
-        self.p_advective.init_cython  = inlet_p_advective
+                self.w_dirichlet.init_cython = get_inlet_ux_dirichlet_cython(2)
+        self.vof_dirichlet.init_cython = inlet_vof_dirichlet_cython
+        self.p_advective.init_cython = inlet_p_advective_cython
 
     def setHydrostaticPressureOutlet(self, rho, g, refLevel, vof, pRef=0.0,
                                     vert_axis=-1):

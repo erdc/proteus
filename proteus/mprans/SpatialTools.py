@@ -1360,8 +1360,6 @@ class TankWithObstacles2D(Tank2D):
             """
             Returns corner vertices (and flags) in between two segments
             """
-            import pdb
-            pdb.set_trace()
             ordering = getClockwiseOrder(first)
             corners = [x for x in ordering
                        if x in self.corners.keys()
@@ -1411,7 +1409,6 @@ class TankWithObstacles2D(Tank2D):
         vertexFlags = []
         former_end = None
         first_start = None
-        #[temp] !!!!! The corner vertices are not added in the right order!
 
         for obstacle in self.obstacles:
             start = findLocation(obstacle[0])
