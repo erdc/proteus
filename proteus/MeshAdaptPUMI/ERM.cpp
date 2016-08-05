@@ -494,7 +494,7 @@ std::cerr<<"Initialized flux"<<std::endl;
           tempbflux = (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
               -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1);
           bflux = tempbflux*normal;
-//*
+/*
 if(comm_rank==0 && localNumber(ent)==eID){
   std::cout<<"quadrature point "<<l<<" value "<<bqpt<<" weight "<<weight<<" Jdet "<<Jdet<<std::endl;
   std::cout<<"velocity gradient "<<std::endl;
@@ -509,7 +509,7 @@ if(comm_rank==0 && localNumber(ent)==eID){
   std::cout<<"bflux "<<tempbflux*normal<<std::endl;
 
 }
-//*/ 
+*/ 
         } //end if boundary
         bflux = bflux*weight*Jdet;
         bflux.toArray(&(tempflux[l*nsd]));
@@ -1174,11 +1174,11 @@ if(testcount==eID && comm_rank==0){
     Acomp = Acomp*Jdet/visc_avg; //nondimensionalize with average viscosity, Jacobians can cancel out, but this is done for clarity
     Bcomp = Bcomp*Jdet;
     u_norm = u_norm/visc_avg*Jdet;
-    err_est = sqrt(Acomp+Bcomp); 
+    err_est = sqrt(Acomp); 
 
     apf::Vector3 err_in(err_est,Acomp,Bcomp);
     apf::setVector(err_reg,ent,0,err_in);
-    err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
+    err_est_total = err_est_total+(Acomp); //for tracking the upper bound
     u_norm_total = u_norm_total + u_norm;
    
     MatDestroy(&K); //destroy the matrix
