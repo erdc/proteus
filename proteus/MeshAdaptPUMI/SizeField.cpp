@@ -551,7 +551,7 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<e
     if(alpha==1)
       h_new = h_old;
     else
-      h_new = h_old*sqrt(err_dest/err_curr);
+      h_new = h_old*(err_dest/err_curr);
     apf::setScalar(size_iso_reg,reg,0,h_new);
   }
   apf::destroyMeshElement(element);
