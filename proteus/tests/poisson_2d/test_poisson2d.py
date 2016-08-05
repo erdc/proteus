@@ -24,8 +24,10 @@ def test_c0p1(use_strong_constraints=False):
     import poisson_het_2d_c0pk_n
     pList = [poisson_het_2d_p]
     nList = [poisson_het_2d_c0pk_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "poisson_2d_c0p1"+"pe"+`comm.size()`
+    reload(default_s)
     so.sList=[default_s]
     opts.logLevel=7
     opts.verbose=True
@@ -43,6 +45,7 @@ def test_c0p1(use_strong_constraints=False):
     #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution(soln_name)
+    del ns
 
 def test_c0p1_strong():
     return test_c0p1(use_strong_constraints=True)
@@ -53,8 +56,10 @@ def test_c0p2(use_strong_constraints=False,test_superlu=False):
     import poisson_het_2d_c0pk_n
     pList = [poisson_het_2d_p]
     nList = [poisson_het_2d_c0pk_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "poisson_2d_c0p2"+"pe"+`comm.size()`
+    reload(default_s)
     so.sList=[default_s]
     opts.logLevel=7
     opts.verbose=True
@@ -79,6 +84,7 @@ def test_c0p2(use_strong_constraints=False,test_superlu=False):
     #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution(soln_name)
+    del ns
 
 def test_c0p2_strong():
     return test_c0p2(use_strong_constraints=True)
@@ -89,8 +95,10 @@ def compute_load_vector(use_weak_dirichlet=False):
     import poisson_het_2d_c0pk_n
     pList = [poisson_het_2d_p]
     nList = [poisson_het_2d_c0pk_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "poisson_2d_c0p1"+"pe"+`comm.size()`
+    reload(default_s)
     so.sList=[default_s]
     opts.logLevel=7
     opts.verbose=True
@@ -106,7 +114,6 @@ def compute_load_vector(use_weak_dirichlet=False):
 
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_2d_c0p1')
-
     #test load vector calculation in a crude way
     #see if sum over test functions of residual is same as the sum over the test functions of the load vector
     #should be if have strong bc's and no other terms in residual besides stiffness and load
@@ -120,7 +127,9 @@ def compute_load_vector(use_weak_dirichlet=False):
     utmp = np.zeros((nr,),'d')
     finest_model.getResidual(utmp,r)
     finest_model.getLoadVector(f)
+    del ns
     return r,f
+
 def notest_load_vector():
     for name,use_num_flux in zip(['Strong_Dir','Weak_Dir'],[False,True]):
         r,f = compute_load_vector(use_num_flux)
