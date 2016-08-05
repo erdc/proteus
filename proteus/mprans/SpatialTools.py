@@ -1243,6 +1243,9 @@ class TankWithObstacles2D(Tank2D):
         any other designation they would be given.
         If this is a distinct boundary name, the segment starting from the vertex
         will be assigned the same boundary tag.
+    full_circle: Optional[bool]
+        A boolean tag to check if the final obstacle ends on the same edge that
+        the first obstacle starts on.  Default is False.
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
     from_0: Optional[bool]
@@ -1250,6 +1253,7 @@ class TankWithObstacles2D(Tank2D):
     """
     def __init__(self, domain, dim=(0., 0.),
                  obstacles = None, special_boundaries = None,
+                 full_circle = False,
                  coords=None, from_0=True):
         if obstacles:
             self.obstacles = obstacles
@@ -1258,6 +1262,7 @@ class TankWithObstacles2D(Tank2D):
 
         self.special_boundaries = []
         self.special_BC_vertices = []
+        self.full_circle = full_circle
         if special_boundaries:
             for key in special_boundaries.keys():
                 self.special_boundaries += [key for v in special_boundaries[key]]
@@ -1378,10 +1383,8 @@ class TankWithObstacles2D(Tank2D):
 
         def addRemainingCorners(first, last):
             if first == last:
-                if (vertices[0][0] - vertices[-1][0]
-                    + vertices[0][1] - vertices[-1][1]) > 0:
-                    # if the starting point is "in front of" the last point
-                    return
+                if self.full_circle:
+                    return []
                 else:
                     return addAllCorners(first)
             else:
