@@ -29,7 +29,7 @@ import os
 import numpy as np
 from proteus import AuxiliaryVariables, Archiver, Comm, Profiling, Gauges
 from proteus.Profiling import logEvent
-from . import BoundaryConditions as bc
+from proteus.mprans import BoundaryConditions as bc
 from proteus.SpatialTools import (Shape,
                                   Cuboid,
                                   Rectangle,
