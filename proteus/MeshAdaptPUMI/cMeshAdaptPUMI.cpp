@@ -75,7 +75,6 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
   }
   else if (ends_with(modelFile,".smd")){
     m = apf::loadMdsMesh(modelFile, meshFile);
-    has_gBC=true;
   }
   else{
     m = apf::loadMdsMesh(modelFile, meshFile);
@@ -104,10 +103,7 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   if (acase){
      if(comm_rank==0)std::cout<<"Found case, setting the model"<<std::endl;
      AttCase_setModel(acase,model);
-  } else {
-      std::cout<<"Case not found, rename case to geom\n"<<std::endl;
-      exit(1);
-  }
+     has_gBC=true;
   AttCase_associate(acase,NULL);
 
   pGFace gFace;
@@ -206,6 +202,11 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   }//end while
   m->end(fIter);
   AMAN_release( attmngr );
+  } else {
+      std::cout<<"Case not found, no BCs?\n"<<std::endl;
+      //exit(1);
+  }
+
   if(comm_rank==0)std::cout<<"Finished reading and storing diffusive flux BCs\n"; 
   return 0;
 } 
