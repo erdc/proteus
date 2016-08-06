@@ -270,9 +270,14 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   /// Adapt the mesh
   ma::Input* in = ma::configure(m, size_scale, size_frame);
   ma::validateInput(in);
+/*
   in->shouldRunPreZoltan = true;
   in->shouldRunMidZoltan = true;
   in->shouldRunPostZoltan = true;
+*/
+  in->shouldRunPreParma = true;
+  in->shouldRunMidParma = true;
+  in->shouldRunPostParma = true;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->shouldFixShape = true;
