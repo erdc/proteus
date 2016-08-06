@@ -1202,11 +1202,13 @@ testcount++;
     std::cout<<"Error estimate "<<total_error<<std::endl;
   }
 
-  if(logging_config=="on"){
-    std::cout<<"outputting error field\n";
+  if(logging_config=="errorOnly"){ //feature to just look at the error fields without adapting the mesh
+    if(comm_rank==0)
+      std::cout<<"outputting error field\n";
     char namebuffer[20];
     sprintf(namebuffer,"err_reg_%i",nEstimate);
     apf::writeVtkFiles(namebuffer, m);
+    target_error = total_error*2; //this is a hack to prevent adapting
     nEstimate++;
   }
 
@@ -1214,7 +1216,8 @@ testcount++;
   apf::destroyField(visc);
   apf::destroyField(estimate);
 
-  printf("It cleared the function.\n");
+  if(comm_rank==0)
+    printf("It cleared the function.\n");
 }
 
 
