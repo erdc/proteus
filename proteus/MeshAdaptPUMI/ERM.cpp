@@ -374,7 +374,8 @@ if(k==0)
 }
 
 void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf){
-  std::cerr<<"Begin computeDiffusiveFlux()"<<std::endl;
+  if(comm_rank==0)
+    std::cerr<<"Begin computeDiffusiveFlux()"<<std::endl;
   int numbqpt, nshl;
   int hier_off = 4;
   apf::MeshEntity* bent,*ent;
@@ -417,7 +418,8 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
   m->end(iter);
   free(flux);
 
-std::cerr<<"Initialized flux"<<std::endl;
+  if(comm_rank==0)
+   std::cerr<<"Initialized flux"<<std::endl;
   //loop over regions
   PCU_Comm_Begin();
   iter = m->begin(nsd);
@@ -541,7 +543,8 @@ if(comm_rank==0 && localNumber(ent)==eID){
     } //end loop over faces
   } //end loop over regions
   m->end(iter);
-std::cerr<<"Sending flux"<<std::endl;
+  if(comm_rank==0)
+    std::cerr<<"Sending flux"<<std::endl;
   PCU_Comm_Send(); 
   flux = (double*) calloc(numbqpt*nsd*2,sizeof(double));
   while(PCU_Comm_Receive())
@@ -561,7 +564,8 @@ std::cerr<<"Sending flux"<<std::endl;
   }
   PCU_Barrier();
   free(flux);
-  std::cerr<<"End computeDiffusiveFlux()"<<std::endl;
+  if(comm_rank==0)
+    std::cerr<<"End computeDiffusiveFlux()"<<std::endl;
 }
 /*
 void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux){
@@ -835,7 +839,6 @@ void MeshAdaptPUMIDrvr::removeBCData()
       m->removeTag(ent,diffFlux);
 
   }
-  std::cout<<"Flag 1"<<std::endl;
   m->end(fIter);
   if(has_gBC){
     m->destroyTag(BCtag);
