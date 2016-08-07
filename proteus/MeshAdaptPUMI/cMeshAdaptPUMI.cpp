@@ -69,6 +69,8 @@ static bool ends_with(std::string const& str, std::string const& ext)
 
 int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshFile)
 {
+  comm_size = PCU_Comm_Peers();
+  comm_rank = PCU_Comm_Self();
   if (ends_with(meshFile, ".msh")){
     m = apf::loadMdsFromGmsh(gmi_load(modelFile), meshFile);
     std::cout<<"Boundary Condition functionality has not been built in for gmsh yet.\n";
@@ -84,8 +86,6 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
   }
 
   m->verify();
-  comm_size = PCU_Comm_Peers();
-  comm_rank = PCU_Comm_Self();
   return 0;
 }
 
@@ -206,7 +206,8 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   m->end(fIter);
   AMAN_release( attmngr );
   } else {
-      std::cout<<"Case not found, no BCs?\n"<<std::endl;
+      if(comm_rank==0)
+        std::cout<<"Case not found, no BCs?\n"<<std::endl;
       //exit(1);
   }
 
