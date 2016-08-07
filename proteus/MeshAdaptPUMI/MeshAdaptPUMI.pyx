@@ -22,7 +22,6 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         string size_field_config, adapt_type_config
         int loadModelAndMesh(char *, char*)
         int getSimmetrixBC()
-        void simmetrixBCreloaded(char*)
         int constructFromSerialPUMIMesh(Mesh&)
         int constructFromParallelPUMIMesh(Mesh&, Mesh&)
         int updateMaterialArrays(Mesh&, int, int)
@@ -57,8 +56,6 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.numIter
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
-    def simmetrixBCreloaded(self,modelFile):
-        return self.thisptr.simmetrixBCreloaded(modelFile)
     def constructFromSerialPUMIMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.constructFromSerialPUMIMesh(cmesh_ptr.mesh)

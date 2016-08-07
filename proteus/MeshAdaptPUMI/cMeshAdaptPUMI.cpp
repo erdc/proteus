@@ -214,16 +214,6 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   return 0;
 } 
 
-void MeshAdaptPUMIDrvr::simmetrixBCreloaded(const char* modelFile)
-{ 
-  if(modelFileName == NULL)
-  {
-    modelFileName=(char *) malloc(sizeof(char) * strlen(modelFile));
-    strcpy(modelFileName,modelFile);
-  }
-  getSimmetrixBC();
-}
-
 int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
 {
   double THRESHOLD = target_error;
@@ -310,7 +300,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
   if(size_field_config=="alvin"){
     if (has_gBC)
-      getSimmetrixBC();//simmetrixBCreloaded(modelFileName);
+      getSimmetrixBC();
     if(logging_config=="on"){
       char namebuffer[20];
       sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
