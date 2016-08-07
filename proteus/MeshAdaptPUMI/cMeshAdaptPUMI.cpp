@@ -75,6 +75,9 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
   }
   else if (ends_with(modelFile,".smd")){
     m = apf::loadMdsMesh(modelFile, meshFile);
+    modelFileName=(char *) malloc(sizeof(char) * strlen(modelFile));
+    strcpy(modelFileName,modelFile);
+    getSimmetrixBC();
   }
   else{
     m = apf::loadMdsMesh(modelFile, meshFile);
@@ -218,13 +221,6 @@ void MeshAdaptPUMIDrvr::simmetrixBCreloaded(const char* modelFile)
     modelFileName=(char *) malloc(sizeof(char) * strlen(modelFile));
     strcpy(modelFileName,modelFile);
   }
-/*
-  for(int i=0;i<comm_size;i++){
-    if(comm_rank==i)
-      getSimmetrixBC();
-    PCU_Barrier();
-  }
-*/
   getSimmetrixBC();
 }
 
@@ -314,7 +310,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   }
   if(size_field_config=="alvin"){
     if (has_gBC)
-      simmetrixBCreloaded(modelFileName);
+      getSimmetrixBC();//simmetrixBCreloaded(modelFileName);
     if(logging_config=="on"){
       char namebuffer[20];
       sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
