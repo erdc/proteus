@@ -1665,15 +1665,21 @@ class TankWithObstacles2D(Tank2D):
         ind_region = 1
         regionFlags = [ind_region,]
         self.regionIndice = {'tank': ind_region - 1}
+
+        sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
+        sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
+        sponge_x0 = self.x0y0[0]
+        sponge_x1 = self.x1y0[1]
+
         if self.spongeLayers['x-']:
-            regions += [[self.x0 - 0.5 * self.spongeLayers['x-'],
-                         0.5 * (self.y0 + self.y1)]]
+            regions += [[sponge_x0 - 0.5 * self.spongeLayers['x-'],
+                         sponge_half_height_x0]]
             ind_region += 1
             regionFlags += [ind_region]
             self.regionIndice['x-'] = ind_region - 1
         if self.spongeLayers['x+']:
-            regions += [[self.x1 + 0.5 * self.spongeLayers['x+'],
-                         0.5 * (self.y0 + self.y1)]]
+            regions += [[sponge_x1 + 0.5 * self.spongeLayers['x+'],
+                         sponge_half_height_x1]]
             ind_region += 1
             regionFlags += [ind_region]
             self.regionIndice['x+'] = ind_region - 1
