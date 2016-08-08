@@ -1263,6 +1263,10 @@ class TankWithObstacles2D(Tank2D):
         self.special_boundaries = []
         self.special_BC_vertices = []
         self.full_circle = full_circle
+
+        self.spongeLayers = {'x-': None,
+                             'x+': None}
+
         if special_boundaries:
             for key in special_boundaries.keys():
                 self.special_boundaries += [key for v in special_boundaries[key]]
@@ -1281,31 +1285,56 @@ class TankWithObstacles2D(Tank2D):
                 self.BC[boundary] = self.BC_class(shape=self, name=boundary)
                 self.BC_list += [self.BC[boundary]]
 
-    def _resetEdgesFromVertices(self, vertices, dimension):
+    # [temp] THis is not a viable strategy.
+    # New strategy: Build new sponge layer logic that depends on four corners,
+    # have this function find the four corners, and just build vertices/segments
+    # off of those.
+    # The segment logic can detect when a vertex is a corner based on being at
+    # the coordinates specified by a corner in this new system.  It then can
+    # rewrite vertex flags as needed while also setting segment flags to sponge
+    # up until it runs into the next vertex.
+    # It only has to make this check on every vertex IF there are sponge layers
+    # (class known) and IF they haven't already been found (locally known)
+    def _resetEdgesFromVertices(self, vertices):
         """
         Resets self.x0, self.x1, self.y0, self.y1 based on the actual shape.
 
-        This can be used to better set up sponge layers.
+        In particular, they will form a bounding box form around the shape -
+        the furthest points in x and y dimensions, both high and low.
 
         Parameters
         ----------
         vertices: array_like
-        dimension: string
-            may be "x" or "y".  Only one can be reset.
         """
-        #[temp]
-        if dimension == 'y':
-            sorted_vertices = sorted(vertices,
-                                     key = lambda vertex: vertex[1])
-            self.y0 = sorted_vertices[0][1]
-            self.y1 = sorted_vertices[-1][1]
-        elif dimension == 'x':
-            sorted_vertices = sorted(vertices,
-                                     key=lambda vertex: vertex[0])
-            self.x0 = sorted_vertices[0][0]
-            self.x1 = sorted_vertices[-1][0]
-        else:
-            raise ValueError("Dimension " + str(dimension) + " not understood")
+        sorted_vertices = sorted(vertices, key=lambda vertex: vertex[1])
+        self.y0 = sorted_vertices[0][1]
+        self.y1 = sorted_vertices[-1][1]
+        sorted_vertices = sorted(vertices, key=lambda vertex: vertex[0])
+        self.x0 = sorted_vertices[0][0]
+        self.x1 = sorted_vertices[-1][0]
+
+    def _findSpongeLayerCorners(self, vertices):
+        """
+        Finds the corners for horizontal (x-, x+) sponge layers.
+
+        Parameters
+        ----------
+        vertices: array_like
+        """
+        self._resetEdgesFromVertices(vertices)
+
+        potential_x_n_corners = [vertex for vertex in vertices
+                                 if np.isclose(vertex[0], self.x0)]
+        potential_x_p_corners = [vertex for vertex in vertices
+                                 if np.isclose(vertex[0], self.x1)]
+
+        potential_x_n_corners.sort(key=lambda vertex: vertex[1])
+        potential_x_p_corners.sort(key=lambda vertex: vertex[1])
+
+        self.x0y0 = potential_x_n_corners[0]
+        self.x0y1 = potential_x_n_corners[-1]
+        self.x1y0 = potential_x_p_corners[0]
+        self.x1y1 = potential_x_p_corners[-1]
 
     def _constructVertices(self):
 
@@ -1407,6 +1436,21 @@ class TankWithObstacles2D(Tank2D):
 
             return corner_vertices, corner_flags
 
+        def addSpongeVertices():
+            sponge_vertices = []
+            sponge_vertexFlags = []
+            if self.spongeLayers['x-']:
+                sponge_vertices += [[v[0] - self.spongeLayers['x-'], v[1]]
+                                    for v in [self.x0y0, self.x0y1]]
+                sponge_vertexFlags += [self.boundaryTags['y-'],
+                                       self.boundaryTags['y+']]
+            if self.spongeLayers['x+']:
+                sponge_vertices += [[v[0] + self.spongeLayers['x+'], v[1]]
+                                    for v in [self.x1y0, self.x1y1]]
+                sponge_vertexFlags += [self.boundaryTags['y-'],
+                                       self.boundaryTags['y+']]
+            return sponge_vertices, sponge_vertexFlags
+
         #--------------------------------------------------------#
         vertices = []
         vertexFlags = []
@@ -1458,8 +1502,12 @@ class TankWithObstacles2D(Tank2D):
             vertexFlags[flag_index] = self.boundaryTags[boundary_name]
 
         # ---- Adjustments for Sponge Zones ---- #
-        self._resetEdgesFromVertices(vertices=vertices,
-                                     dimension='y')
+        self._findSpongeLayerCorners(vertices=vertices)
+
+        # ---- Add Sponge Zone Vertices ---- #
+        new_vertices, new_flags = addSpongeVertices()
+        vertices += new_vertices
+        vertexFlags += new_flags
 
         return vertices, vertexFlags
 
@@ -1478,6 +1526,8 @@ class TankWithObstacles2D(Tank2D):
         # (if two different *** are around, it takes the first)
         segments = []
         segmentFlags = []
+
+        onSpongeEdge = False
 
         def getSegmentFlag(start, end):
             if vertexFlags[start] == self.boundaryTags['x+']:
@@ -1521,11 +1571,42 @@ class TankWithObstacles2D(Tank2D):
             else:
                 return [vertexFlags[start], ]
 
-        for i in range(len(vertices) - 1):
+        # ---- Initial Sponge Logic ---- #
+        sponge_vertex_count = 0
+
+        if self.spongeLayers['x-']:
+            sponge_vertex_count += 2
+        if self.spongeLayers['x+']:
+            sponge_vertex_count += 2
+
+        # ---- Build Main Segments ---- #
+        for i in range(len(vertices) - 1 - sponge_vertex_count):
             segments += [[i, i + 1], ]
             segmentFlags += getSegmentFlag(i, i + 1)
-        segments += [[len(vertices) - 1, 0], ]
-        segmentFlags += getSegmentFlag(len(vertices) - 1, 0)
+        segments += [[len(vertices) - 1 - sponge_vertex_count, 0], ]
+        segmentFlags += getSegmentFlag(len(vertices) - 1 - sponge_vertex_count,
+                                       0)
+
+        # ---- Build Sponge Segments ---- #
+        if self.spongeLayers['x-']:
+            segments += [[vertices.index(self.x0y0),
+                          len(vertices) - sponge_vertex_count],
+                         [len(vertices) - sponge_vertex_count,
+                          len(vertices) - sponge_vertex_count + 1],
+                         [len(vertices) - sponge_vertex_count + 1,
+                          vertices.index(self.x0y1)]
+                         ]
+            segmentFlags += [self.boundaryTags['y-'],
+                             self.boundaryTags['x-'],
+                             self.boundaryTags['y+']]
+        if self.spongeLayers['x+']:
+            segments += [[vertices.index(self.x0y0), len(vertices) - 2],
+                         [len(vertices) - 2, len(vertices) - 1],
+                         [len(vertices) - 1, vertices.index(self.x0y1)]
+                         ]
+            segmentFlags += [self.boundaryTags['y-'],
+                             self.boundaryTags['x+'],
+                             self.boundaryTags['y+']]
 
         return segments, segmentFlags
 
@@ -1616,6 +1697,145 @@ class TankWithObstacles2D(Tank2D):
                     "shape after " + str(count) + " tries.")
 
         return [[vertical_line, interior_point], ]
+
+    def setAbsorptionZones(self, x_n=False, x_p=False, dragAlpha=0.5/1.005e-6,
+                           dragBeta=0., porosity=1.):
+        """
+        Sets regions (x+, x-) to absorption zones
+
+        Parameters
+        ----------
+        allSponge: bool
+            If True, all sponge layers are converted to absorption zones.
+        x_p: bool
+            If True, x+ region is converted to absorption zone.
+        x_n: bool
+            If True, x- region is converted to absorption zone.
+        dragAlpha: Optional[float]
+            Porous module parameter.
+        dragBeta: Optional[float]
+            Porous module parameter.
+        porosity: Optional[float]
+            Porous module parameter.
+        """
+        sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
+        sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
+        sponge_x0 = self.x0y0[0]
+        sponge_x1 = self.x1y0[1]
+
+        waves = None
+        wind_speed = (0., 0., 0.)
+        if x_n or x_p:
+            self._attachAuxiliaryVariable('RelaxZones')
+        if x_n is True:
+            center = [sponge_x0 - 0.5 * self.spongeLayers['x-'],
+                      sponge_half_height_x0]
+            ind = self.regionIndice['x-']
+            flag = self.regionFlags[ind]
+            epsFact_solid = self.spongeLayers['x-']/2.
+            orientation = [1., 0.]
+            self.zones[flag] = bc.RelaxationZone(shape=self,
+                                                 zone_type='absorption',
+                                                 orientation=orientation,
+                                                 center=center,
+                                                 waves=waves,
+                                                 wind_speed=wind_speed,
+                                                 epsFact_solid=epsFact_solid,
+                                                 dragAlpha=dragAlpha,
+                                                 dragBeta=dragBeta,
+                                                 porosity=porosity)
+        if x_p is True:
+            center = [sponge_x1 + 0.5 * self.spongeLayers['x+'],
+                      sponge_half_height_x1]
+            ind = self.regionIndice['x+']
+            flag = self.regionFlags[ind]
+            epsFact_solid = self.spongeLayers['x+']/2.
+            orientation = [-1., 0.]
+            self.zones[flag] = bc.RelaxationZone(shape=self,
+                                                 zone_type='absorption',
+                                                 orientation=orientation,
+                                                 center=center,
+                                                 waves=waves,
+                                                 wind_speed=wind_speed,
+                                                 epsFact_solid=epsFact_solid,
+                                                 dragAlpha=dragAlpha,
+                                                 dragBeta=dragBeta,
+                                                 porosity=porosity)
+
+    def setGenerationZones(self, waves=None, wind_speed=(0., 0., 0.),
+                           x_n=False, x_p=False,  dragAlpha=0.5/1.005e-6,
+                           dragBeta=0., porosity=1.):
+        """
+        Sets regions (x+, x-) to generation zones
+
+        Parameters
+        ----------
+        waves: proteus.WaveTools
+            Class instance of wave generated from proteus.WaveTools.
+        wind_speed: Optional[array_like]
+            Speed of wind in generation zone (default is (0., 0., 0.))
+        allSponge: bool
+            If True, all sponge layers are converted to generation zones.
+        x_p: bool
+            If True, x+ region is converted to generation zone.
+        x_n: bool
+            If True, x- region is converted to generation zone.
+        dragAlpha: Optional[float]
+            Porous module parameter.
+        dragBeta: Optional[float]
+            Porous module parameter.
+        porosity: Optional[float]
+            Porous module parameter.
+        """
+        sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
+        sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
+        sponge_x0 = self.x0y0[0]
+        sponge_x1 = self.x1y0[1]
+
+        waves = waves
+        wind_speed = wind_speed
+        if x_n or x_p:
+            self._attachAuxiliaryVariable('RelaxZones')
+        if x_n is True:
+
+            center = [sponge_x0 - 0.5 * self.spongeLayers['x-'],
+                      sponge_half_height_x0]
+            ind = self.regionIndice['x-']
+            flag = self.regionFlags[ind]
+            epsFact_solid = self.spongeLayers['x-']/2.
+            orientation = [1., 0.]
+            self.zones[flag] = bc.RelaxationZone(shape=self,
+                                                 zone_type='generation',
+                                                 orientation=orientation,
+                                                 center=center,
+                                                 waves=waves,
+                                                 wind_speed=wind_speed,
+                                                 epsFact_solid=epsFact_solid,
+                                                 dragAlpha=dragAlpha,
+                                                 dragBeta=dragBeta,
+                                                 porosity=porosity)
+            self.BC['x-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                           wind_speed=wind_speed)
+        if x_p is True:
+
+            center = [sponge_x1 + 0.5 * self.spongeLayers['x+'],
+                      sponge_half_height_x1]
+            ind = self.regionIndice['x+']
+            flag = self.regionFlags[ind]
+            epsFact_solid = self.spongeLayers['x+']/2.
+            orientation = [-1., 0.]
+            self.zones[flag] = bc.RelaxationZone(shape=self,
+                                                 zone_type='generation',
+                                                 orientation=orientation,
+                                                 center=center,
+                                                 waves=waves,
+                                                 wind_speed=wind_speed,
+                                                 epsFact_solid=epsFact_solid,
+                                                 dragAlpha=dragAlpha,
+                                                 dragBeta=dragBeta,
+                                                 porosity=porosity)
+            self.BC['x+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                           wind_speed=wind_speed)
 
 
 
