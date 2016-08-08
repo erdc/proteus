@@ -964,7 +964,8 @@ class NS_base:  # (HasTraits):
                 adaptMeshNow = False
                 if (isinstance(p0.domain, Domain.PUMIDomain) and
                     n0.adaptMesh and
-                    self.so.useOneMesh):
+                    self.so.useOneMesh and 
+                    self.nSequenceSteps%n0.adaptMesh_nSteps==0):
                     logEvent("Copying coordinates to PUMI")
                     p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                         self.modelList[0].levelModelList[0].mesh.nodeArray)
@@ -1010,7 +1011,7 @@ class NS_base:  # (HasTraits):
                       if(p0.domain.PUMIMesh.willAdapt()):
                         adaptMeshNow=True
                         logEvent("Need to Adapt")
-                    elif(sfConfig=='farhad' and self.nSequenceSteps%n0.adaptMesh_nSteps==0 ):
+                    elif(sfConfig=='farhad' ):
                       adaptMeshNow=True
                       logEvent("Need to Adapt")
                     else:
