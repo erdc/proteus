@@ -691,9 +691,9 @@ int MeshAdaptPUMIDrvr::testIsotropicSizeField()
     size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
     apf::MeshIterator* it = m->begin(0);
     apf::MeshEntity* v;
-    apf::Field* phif = m->findField("phi");
+    //apf::Field* phif = m->findField("phi");
     while(v = m->iterate(it)){
-      double phi = apf::getScalar(phif, v, 0);
+      double phi = hmin;//apf::getScalar(phif, v, 0);
       clamp(phi,hmin,hmax);
       apf::Vector3 scale = (apf::Vector3(1.0,1.0,1.0))*phi;
       apf::setVector(size_scale, v, 0, scale);
