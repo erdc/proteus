@@ -20,15 +20,15 @@ import Quadrature
 from TimeIntegration import *
 from NonlinearSolvers import *
 import cfemIntegrals
-import Profiling
 from TransportCoefficients import *
 import NumericalFlux
 import cnumericalFlux
 import Comm
 import flcbdfWrappers
 import cmeshTools
-
-log = Profiling.logEvent
+from .Profiling import logEvent
+import superluWrappers
+import numpy
 
 class StorageSet(set):
     def __init__(self,initializer=[],shape=(0,),storageType='d'):
@@ -259,7 +259,7 @@ class OneLevelTransport(NonlinearEquation):
                     if not coefficients.sdInfo.has_key((ci,ck)):
                         coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=self.nSpace_global**2+1,step=self.nSpace_global,dtype='i'),
                                                         numpy.array([range(self.nSpace_global) for row in range(self.nSpace_global)],dtype='i'))
-                    log("Sparse diffusion information key "+`(ci,ck)`+' = '+`coefficients.sdInfo[(ci,ck)]`)
+                    logEvent("Sparse diffusion information key "+`(ci,ck)`+' = '+`coefficients.sdInfo[(ci,ck)]`)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -776,7 +776,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nSpace_global,
                      self.nSpace_global),
                     'd')
-        log(memory("element quadrature","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature","OneLevelTransport"),level=4)
         #
         # element boundary quadrature
         #
@@ -826,7 +826,7 @@ class OneLevelTransport(NonlinearEquation):
                                            max(1,self.nSpace_global-1),
                                            max(1,self.nSpace_global-1)),
                                           'd')
-            log(memory("element boundary quadrature","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature","OneLevelTransport"),level=4)
         #
         # exterior element boundary quadrature
         #
@@ -861,7 +861,7 @@ class OneLevelTransport(NonlinearEquation):
                                        max(1,self.nSpace_global-1),
                                        max(1,self.nSpace_global-1)),
                                       'd')
-        log(memory("global exterior element boundary quadrature","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature","OneLevelTransport"),level=4)
         self.forceStrongConditions= numericalFluxType.useStrongDirichletConstraints
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
@@ -887,7 +887,7 @@ class OneLevelTransport(NonlinearEquation):
             self.scalars_elementBoundaryQuadrature_global.allocate(self.ebq_global)
             #allocate vectors element boundary quadrature global
             self.vectors_elementBoundaryQuadrature_global.allocate(self.ebq_global)
-            log(memory("element boundary quadrature global","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature global","OneLevelTransport"),level=4)
         #
         # phi interpolation points
         #
@@ -966,7 +966,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nSpace_global),
                         'd')
 
-        log(memory("interpolation points","OneLevelTransport"),level=4)
+        logEvent(memory("interpolation points","OneLevelTransport"),level=4)
         #
         # shape
         #
@@ -979,7 +979,7 @@ class OneLevelTransport(NonlinearEquation):
                 kv = kv0
             if self.testIsTrial:
                 if kv in sd.keys():
-                    log("Shallow copy of trial shape is being used for test shape %s " % kw[0],level=4)
+                    logEvent("Shallow copy of trial shape is being used for test shape %s " % kw[0],level=4)
                     sd[kw] = sd[kv]
                     aliased=True
             return aliased
@@ -992,7 +992,7 @@ class OneLevelTransport(NonlinearEquation):
             k0 = (ks,)+(refi,)
             if self.reuse_test_trial_quadrature and refi != None:
                 if k0 in sd.keys():
-                    log("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
+                    logEvent("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
                     sd[k] = sd[k0]
                     aliased=True
             return aliased
@@ -1018,7 +1018,7 @@ class OneLevelTransport(NonlinearEquation):
         for k in trial_shape_quadrature_duplicate:
             self.q[k] = self.q[trial_shape_quadrature_duplicate_map[k]]
         #mwf trial-dup end
-        log(memory("element quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
         #allocate phi trial shape functions
         refComponent_phi = findReferenceComponent_phi(self.coefficients.diffusion)
         for k in sorted(self.phi_trial_shape_quadrature):
@@ -1028,7 +1028,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nQuadraturePoints_element,
                      self.nDOF_phi_trial_element[k[-1]]),
                     'd')
-        log(memory("element quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
         #allocate test shape functions
         for k in self.test_shape_quadrature:
             if not makeAlias(self.q,k):
@@ -1037,7 +1037,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nQuadraturePoints_element,
                      self.nDOF_test_element[k[-1]]),
                     'd')
-        log(memory("element quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
         #allocate trial shape function gradients
         for k in sorted(self.trial_shapeGradient_quadrature):
             if not makeAliasForComponent1(self.q,k,['grad(v)'],refi=0):#need to handle multiple component combinations
@@ -1047,7 +1047,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_trial_element[k[-1]],
                      self.nSpace_global),
                     'd')
-        log(memory("element quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
         #allocate phi trial shape function gradients
         for k in sorted(self.phi_trial_shapeGradient_quadrature):
             if not makeAliasForComponent1(self.q,k,['grad(v)'],refi=refComponent_phi):
@@ -1057,7 +1057,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_phi_trial_element[k[-1]],
                      self.nSpace_global),
                     'd')
-        log(memory("element quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
         #allocate test shape function gradients
         for k in self.test_shapeGradient_quadrature:
             if not makeAlias(self.q,k):
@@ -1088,7 +1088,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nSpace_global,
                          self.nSpace_global),
                         'd')
-        log(memory("element quadrature, test/trial functions test_shapeGradient","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions test_shapeGradient","OneLevelTransport"),level=4)
         if not self.lowmem:
             #allocate trial shape function X test shape functions
             for k in self.trial_shape_X_test_shape_quadrature:
@@ -1098,7 +1098,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_trial_element[k[1]],
                      self.nDOF_test_element[k[2]]),
                     'd')
-            log(memory("element quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
             #allocate phi trial shape function X test shape functions
             for k in self.phi_trial_shape_X_test_shape_quadrature:
                 self.q[k]=numpy.zeros(
@@ -1107,7 +1107,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_phi_trial_element[k[1]],
                      self.nDOF_test_element[k[2]]),
                     'd')
-            log(memory("element quadrature, test/trial functions phi_trial_shape_X_test_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions phi_trial_shape_X_test_shape","OneLevelTransport"),level=4)
             #allocate gradient X test shape function gradients
             for k in self.gradient_X_test_shapeGradient_quadrature:
                 self.q[k]=numpy.zeros(
@@ -1117,7 +1117,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nSpace_global,
                      self.nSpace_global),
                     'd')
-            log(memory("element quadrature, test/trial functions gradient_X_test_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions gradient_X_test_shapeGradient","OneLevelTransport"),level=4)
             #allocate trial shape function X shape function gradients
             for k in self.trial_shape_X_test_shapeGradient_quadrature:
                 self.q[k]=numpy.zeros(
@@ -1127,7 +1127,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_test_element[k[2]],
                      self.nSpace_global),
                     'd')
-            log(memory("element quadrature, test/trial functions trial_shape_X_test_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions trial_shape_X_test_shapeGradient","OneLevelTransport"),level=4)
             #
             #allocate trial shape function gradient X test shape function
             for k in self.trial_shapeGradient_X_test_shape_quadrature:
@@ -1138,7 +1138,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_test_element[k[2]],
                      self.nSpace_global),
                     'd')
-            log(memory("element quadrature, test/trial functions trial_shapeGradient_X_test_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions trial_shapeGradient_X_test_shape","OneLevelTransport"),level=4)
 
             #allocate trial shape function gradient X test shape function gradients
             for k in self.trial_shapeGradient_X_test_shapeGradient_quadrature:
@@ -1150,7 +1150,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nSpace_global,
                      self.nSpace_global),
                     'd')
-            log(memory("element quadrature, test/trial functions trial_shapeGradient_X_test_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions trial_shapeGradient_X_test_shapeGradient","OneLevelTransport"),level=4)
             #allocate phi trial shape function gradient X test shape function gradients
             for k in self.phi_trial_shapeGradient_X_test_shapeGradient_quadrature:
                 self.q[k]=numpy.zeros(
@@ -1161,7 +1161,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nSpace_global,
                      self.nSpace_global),
                     'd')
-            log(memory("element quadrature, test/trial functions phi_trial_shapeGradient_X_test_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions phi_trial_shapeGradient_X_test_shapeGradient","OneLevelTransport"),level=4)
         #
         # element boundary quadrature
         #
@@ -1175,7 +1175,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                          self.nDOF_trial_element[k[-1]]),
                         'd')
-            log(memory("element boundary quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
             #allocate phi trial shape element boundary quadrature
             for k in sorted(self.phi_trial_shape_elementBoundaryQuadrature):
                 if not makeAliasForComponent1(self.ebq,k,['v'],refi=refComponent_phi):
@@ -1185,7 +1185,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                          self.nDOF_phi_trial_element[k[-1]]),
                         'd')
-            log(memory("element boundary quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
             #allocate test shape element boundary quadrature
             for k in self.test_shape_elementBoundaryQuadrature:
                 if not makeAlias(self.ebq,k):
@@ -1195,7 +1195,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                          self.nDOF_test_element[k[-1]]),
                         'd')
-            log(memory("element boundary quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
             #allocate trial shape gradient element boundary quadrature
             for k in sorted(self.trial_shapeGradient_elementBoundaryQuadrature):
                 if not makeAliasForComponent1(self.ebq,k,['grad(v)'],refi=0):
@@ -1206,7 +1206,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nDOF_trial_element[k[-1]],
                          self.nSpace_global),
                         'd')
-            log(memory("element boundary quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
             #allocate phi trial shape gradient element boundary quadrature
             for k in sorted(self.phi_trial_shapeGradient_elementBoundaryQuadrature):
                 if not makeAliasForComponent1(self.ebq,k,['grad(v)'],refi=refComponent_phi):
@@ -1217,7 +1217,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nDOF_phi_trial_element[k[-1]],
                          self.nSpace_global),
                         'd')
-            log(memory("element boundary quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
             #allocate trial shape X test shape element boundary quadratre
             if not self.lowmem:
                 for k in self.trial_shape_X_test_shape_elementBoundaryQuadrature:
@@ -1228,7 +1228,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nDOF_trial_element[k[1]],
                          self.nDOF_test_element[k[2]]),
                         'd')
-                log(memory("element boundary quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
+                logEvent(memory("element boundary quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
         #
         # global exterior element boundary quadrature
         #
@@ -1241,7 +1241,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.nDOF_trial_element[k[-1]]),
                     'd')
-        log(memory("global exterior element boundary quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
         #allocate phi trial shape element boundary quadrature
         for k in sorted(self.phi_trial_shape_elementBoundaryQuadrature):
             if not makeAliasForComponent1(self.ebqe,k,['v'],refi=refComponent_phi):
@@ -1250,7 +1250,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.nDOF_phi_trial_element[k[-1]]),
                     'd')
-        log(memory("global exterior element boundary quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
         #allocate test shape element boundary quadrature
         for k in self.test_shape_elementBoundaryQuadrature:
             if not makeAlias(self.ebqe,k):
@@ -1259,7 +1259,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.nDOF_test_element[k[-1]]),
                     'd')
-        log(memory("global exterior element boundary quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
         #allocate trial shape gradient element boundary quadrature
         for k in sorted(self.trial_shapeGradient_elementBoundaryQuadrature):
             if not makeAliasForComponent1(self.ebqe,k,['grad(v)'],refi=0):
@@ -1269,7 +1269,7 @@ class OneLevelTransport(NonlinearEquation):
                  self.nDOF_trial_element[k[-1]],
                  self.nSpace_global),
                 'd')
-        log(memory("global exterior element boundary quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
         #allocate phi trial shape gradient element boundary quadrature
         for k in sorted(self.phi_trial_shapeGradient_elementBoundaryQuadrature):
             #if not makeAlias(self.ebqe,k):
@@ -1280,7 +1280,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_phi_trial_element[k[-1]],
                      self.nSpace_global),
                     'd')
-        log(memory("global exterior element boundary quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
         #allocate trial shape X test shape element boundary quadratre
         if not self.lowmem:
             for k in self.trial_shape_X_test_shape_elementBoundaryQuadrature:
@@ -1290,18 +1290,18 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_trial_element[k[1]],
                      self.nDOF_test_element[k[2]]),
                     'd')
-            log(memory("global exterior element boundary quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
-        log("Dumping quadrature shapes for model %s" % self.name,level=9)
-        log("Element quadrature array (q)", level=9)
-        for (k,v) in self.q.iteritems(): log(str((k,v.shape)),level=9)
-        log("Element boundary quadrature (ebq)",level=9)
-        for (k,v) in self.ebq.iteritems(): log(str((k,v.shape)),level=9)
-        log("Global element boundary quadrature (ebq_global)",level=9)
-        for (k,v) in self.ebq_global.iteritems(): log(str((k,v.shape)),level=9)
-        log("Exterior element boundary quadrature (ebqe)",level=9)
-        for (k,v) in self.ebqe.iteritems(): log(str((k,v.shape)),level=9)
-        log("Interpolation points for nonlinear diffusion potential (phi_ip)",level=9)
-        for (k,v) in self.phi_ip.iteritems(): log(str((k,v.shape)),level=9)
+            logEvent(memory("global exterior element boundary quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
+        logEvent("Dumping quadrature shapes for model %s" % self.name,level=9)
+        logEvent("Element quadrature array (q)", level=9)
+        for (k,v) in self.q.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Element boundary quadrature (ebq)",level=9)
+        for (k,v) in self.ebq.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Global element boundary quadrature (ebq_global)",level=9)
+        for (k,v) in self.ebq_global.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Exterior element boundary quadrature (ebqe)",level=9)
+        for (k,v) in self.ebqe.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Interpolation points for nonlinear diffusion potential (phi_ip)",level=9)
+        for (k,v) in self.phi_ip.iteritems(): logEvent(str((k,v.shape)),level=9)
         #
         # allocate residual and Jacobian storage
         #
@@ -1331,7 +1331,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nDOF_test_element[ci],
                          self.nDOF_trial_element[cj]),
                         'd')
-        log(memory("element Jacobian","OneLevelTransport"),level=4)
+        logEvent(memory("element Jacobian","OneLevelTransport"),level=4)
         self.fluxJacobian = {}
         self.fluxJacobian_eb = {}
         self.fluxJacobian_exterior = {}
@@ -1457,7 +1457,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         #
         #
-        log(memory("element and element boundary Jacobians","OneLevelTransport"),level=4)
+        logEvent(memory("element and element boundary Jacobians","OneLevelTransport"),level=4)
         self.inflowBoundaryBC = {}
         self.inflowBoundaryBC_values = {}
         self.inflowFlux = {}
@@ -1483,10 +1483,10 @@ class OneLevelTransport(NonlinearEquation):
         #
         del self.internalNodes
         self.internalNodes = None
-        log("Updating local to global mappings",2)
+        logEvent("Updating local to global mappings",2)
         self.updateLocal2Global()
-        log("Building time integration object",2)
-        log(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
+        logEvent("Building time integration object",2)
+        logEvent(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
         #mwf for interpolating subgrid error for gradients etc
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
@@ -1495,8 +1495,8 @@ class OneLevelTransport(NonlinearEquation):
 
         if options != None:
             self.timeIntegration.setFromOptions(options)
-        log(memory("TimeIntegration","OneLevelTransport"),level=4)
-        log("Calculating numerical quadrature formulas",2)
+        logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
+        logEvent("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
 
         comm = Comm.get()
@@ -1513,7 +1513,7 @@ class OneLevelTransport(NonlinearEquation):
             interleave_DOF=False
         self.setupFieldStrides(interleaved=interleave_DOF)
 
-        log(memory("stride+offset","OneLevelTransport"),level=4)
+        logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
             if options == None or options.periodicDirichletConditions == None:
                 self.numericalFlux = numericalFluxType(self,
@@ -1543,12 +1543,12 @@ class OneLevelTransport(NonlinearEquation):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
-        log(memory("numericalFlux","OneLevelTransport"),level=4)
+        logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
-        log(memory("velocity postprocessor","OneLevelTransport"),level=4)
+        logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         import Archiver
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
@@ -1713,17 +1713,17 @@ class OneLevelTransport(NonlinearEquation):
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    u[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN]#load the BC value directly into the global array
+                    u[self.offset[cj]+self.stride[cj]*dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)#load the BC value directly into the global array
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
         self.calculateCoefficients()
         self.calculateElementResidual()
         self.scale_dt = False
-        log("Element residual",level=9,data=self.elementResidual)
+        logEvent("Element residual",level=9,data=self.elementResidual)
         if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
             self.scale_dt = True
-            log("Rescaling residual for small time steps")
+            logEvent("Rescaling residual for small time steps")
         else:
             self.scale_dt = False
         for ci in range(self.nc):
@@ -1736,7 +1736,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.l2g[ci]['freeGlobal'],
                                                                   self.elementResidual[ci],
                                                                   r);
-        log("Global residual",level=9,data=r)
+        logEvent("Global residual",level=9,data=r)
         if self.forceStrongConditions:#
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1749,8 +1749,6 @@ class OneLevelTransport(NonlinearEquation):
         #imax = numpy.argmax(r); imin = numpy.argmin(r)
         #print "getResidual max,index r[%s]= %s min,index= r[%s] r= %s " % (imax,r[imax],imin,r[imin])
     def getJacobian(self,jacobian,skipMassTerms=False):
-        import superluWrappers
-        import numpy
         ##\todo clean up update,calculate,get,intialize usage
         self.calculateElementBoundaryJacobian()
         self.calculateExteriorElementBoundaryJacobian()
@@ -1774,14 +1772,14 @@ class OneLevelTransport(NonlinearEquation):
             for ci in self.fluxJacobian_hj.keys():
                 for cj in self.fluxJacobian_hj[ci].keys():
                     self.fluxJacobian_hj[ci][cj] *= self.timeIntegration.dt
-        log("Element Jacobian ",level=10,data=self.elementJacobian)
+        logEvent("Element Jacobian ",level=10,data=self.elementJacobian)
         if self.matType == superluWrappers.SparseMatrix:
             self.getJacobian_CSR(jacobian)
         elif self.matType  == numpy.array:
             self.getJacobian_dense(jacobian)
         else:
             raise TypeError("Matrix type must be SparseMatrix or array")
-        log("Jacobian ",level=10,data=jacobian)
+        logEvent("Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
@@ -3136,7 +3134,7 @@ class OneLevelTransport(NonlinearEquation):
                     if self.stabilization and self.stabilization.trackSubScales:# or self.stabilization.usesGradientStabilization):
                         #mwf this needs to be dmt_sge, but needs to go after calculateSubgridError then
                         #mwf debug
-                        log("Transport adding adjoint mass term dmt_sge(%s,%s) max=%s min=%s " % (ci,cj,cq[('dmt_sge',ci,cj)].max(),cq[('dmt_sge',ci,cj)].min()))
+                        logEvent("Transport adding adjoint mass term dmt_sge(%s,%s) max=%s min=%s " % (ci,cj,cq[('dmt_sge',ci,cj)].max(),cq[('dmt_sge',ci,cj)].min()))
                         cfemIntegrals.updateMass_adjoint(cq[('dmt_sge',ci,cj)],
                                                          cq[('w*dV_stab',ci)],
                                                          cq[('Lstar*w*dV',cj,ci)])
@@ -3187,7 +3185,7 @@ class OneLevelTransport(NonlinearEquation):
 #                                     for I in range(self.nSpace_global):
 #                                         self.q[('df',ci,cj)][eN,k,I]-=self.q[('dm',ci,cj)][eN,k]*self.q['xt'][eN,k,I]
 #                     print "f",ci,self.q[('f',ci)]
-        log("Coefficients on element",level=10,data=self.q)
+        logEvent("Coefficients on element",level=10,data=self.q)
         #
         # let the time integrator calculate m_t and possibly other coefficients at the quadrature points
         #
@@ -3565,11 +3563,11 @@ class OneLevelTransport(NonlinearEquation):
 
 
     def calculateQuadrature(self):
-        log("Element Quadrature",level=3)
+        logEvent("Element Quadrature",level=3)
         self.calculateElementQuadrature()
-        log("Element Boundary Quadrature",level=3)
+        logEvent("Element Boundary Quadrature",level=3)
         self.calculateElementBoundaryQuadrature()
-        log("Global Exterior Element Boundary Quadrature",level=3)
+        logEvent("Global Exterior Element Boundary Quadrature",level=3)
         self.calculateExteriorElementBoundaryQuadrature()
     def updateAfterMeshMotion(self):
         self.calculateQuadrature()#not always the right thing to do (e.g. for optimized models)
@@ -4245,7 +4243,7 @@ class OneLevelTransport(NonlinearEquation):
                                         self.timeIntegration.shockCapturingIsImplicit[ci])
 
         columnIndecesDict={}#replace with C++ map (this  collects column indeces for each row)
-        log("Building sparse matrix structure",level=2)
+        logEvent("Building sparse matrix structure",level=2)
         self.sparsityInfo = cmeshTools.SparsityInfo()
         useC=True
         for ci in range(self.nc):
@@ -4420,24 +4418,24 @@ class OneLevelTransport(NonlinearEquation):
                 memory()
                 self.csrRowIndeces[(ci,cj)] = numpy.zeros((self.mesh.nElements_global,
                                                              self.nDOF_test_element[ci]),'i')
-                log(memory("csrRowIndeces","OneLevelTransport"),level=4)
+                logEvent(memory("csrRowIndeces","OneLevelTransport"),level=4)
                 self.csrColumnOffsets[(ci,cj)] = numpy.zeros((self.mesh.nElements_global,
                                                                 self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
-                log(memory("csrColumnOffsets","OneLevelTransport"),level=4)
+                logEvent(memory("csrColumnOffsets","OneLevelTransport"),level=4)
                 if hasDiffusionInMixedForm:
                     self.csrColumnOffsets_eNebN[(ci,cj)] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,
                                                                         self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
                 else:
                     self.csrColumnOffsets_eNebN[(ci,cj)] = numpy.zeros((0,),'i')
-                log(memory("csrColumnOffsets_eNebN","OneLevelTransport"),level=4)
+                logEvent(memory("csrColumnOffsets_eNebN","OneLevelTransport"),level=4)
                 self.csrColumnOffsets_eb[(ci,cj)] = numpy.zeros((self.mesh.nElementBoundaries_global,2,2,self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
-                log(memory("csrColumnOffsets_eb","OneLevelTransport"),level=4)
+                logEvent(memory("csrColumnOffsets_eb","OneLevelTransport"),level=4)
                 if hasDiffusionInMixedForm:
                     self.csrColumnOffsets_eb_eNebN[(ci,cj)] = numpy.zeros((self.mesh.nElementBoundaries_global,2,2,self.mesh.nElementBoundaries_element,
                                                                            self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
                 else:
                     self.csrColumnOffsets_eb_eNebN[(ci,cj)] = numpy.zeros((0,),'i')
-                log(memory("csrColumnOffsets_eb_eNebN","OneLevelTransport"),level=4)
+                logEvent(memory("csrColumnOffsets_eb_eNebN","OneLevelTransport"),level=4)
                 if useC:
                     self.sparsityInfo.setOffsets_CSR(self.mesh.nElements_global,
                                                      self.nDOF_test_element[ci],
@@ -5604,7 +5602,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         for key in q_save.keys():
             self.q[key].flat[:] = q_save[key].flat[:]
-        log("Coefficients on element",level=10,data=self.q)
+        logEvent("Coefficients on element",level=10,data=self.q)
         ## exterior element boundaries
     def calculateElementLoad_inhomogeneous(self):
         """
@@ -5809,7 +5807,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.l2g[ci]['freeGlobal'],
                                                                   self.elementResidual[ci],
                                                                   f);
-        log("Global Load Vector",level=9,data=f)
+        logEvent("Global Load Vector",level=9,data=f)
 
 
     def getMassJacobian(self,jacobian):
@@ -5819,7 +5817,7 @@ class OneLevelTransport(NonlinearEquation):
         import superluWrappers
         import numpy
         self.calculateElementMassJacobian()
-        log("Element Mass Jacobian ",level=10,data=self.elementJacobian)
+        logEvent("Element Mass Jacobian ",level=10,data=self.elementJacobian)
         if self.matType == superluWrappers.SparseMatrix:
             cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                            jacobian)
@@ -5860,7 +5858,7 @@ class OneLevelTransport(NonlinearEquation):
 
         else:
             raise TypeError("Matrix type must be SparseMatrix or array")
-        log("Mass Jacobian ",level=10,data=jacobian)
+        logEvent("Mass Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
@@ -5895,10 +5893,10 @@ class OneLevelTransport(NonlinearEquation):
         self.calculateCoefficients()
         self.calculateElementResidual()
         self.scale_dt = False
-        log("Element spatial residual",level=9,data=self.elementSpatialResidual)
+        logEvent("Element spatial residual",level=9,data=self.elementSpatialResidual)
         if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
             self.scale_dt = True
-            log("Rescaling residual for small time steps")
+            logEvent("Rescaling residual for small time steps")
         else:
             self.scale_dt = False
         for ci in range(self.nc):
@@ -5911,7 +5909,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.l2g[ci]['freeGlobal'],
                                                                   self.elementSpatialResidual[ci],
                                                                   r);
-        log("Global spatial residual",level=9,data=r)
+        logEvent("Global spatial residual",level=9,data=r)
         if self.forceStrongConditions:#
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -5941,10 +5939,10 @@ class OneLevelTransport(NonlinearEquation):
             elementMassResidual[ci]-= self.elementSpatialResidual[ci]
 
         self.scale_dt = False
-        log("Element Mass residual",level=9,data=elementMassResidual)
+        logEvent("Element Mass residual",level=9,data=elementMassResidual)
         if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
             self.scale_dt = True
-            log("Rescaling residual for small time steps")
+            logEvent("Rescaling residual for small time steps")
         else:
             self.scale_dt = False
         for ci in range(self.nc):
@@ -5957,7 +5955,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.l2g[ci]['freeGlobal'],
                                                                   elementMassResidual[ci],
                                                                   r);
-        log("Global mass residual",level=9,data=r)
+        logEvent("Global mass residual",level=9,data=r)
         if self.forceStrongConditions:#
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -6066,7 +6064,7 @@ class MultilevelTransport:
         self.phiSpaceDictList = []
         #self.phiSpaceListDict = {}
 
-        log("Building Transport for each mesh",level=2)
+        logEvent("Building Transport for each mesh",level=2)
         for  cj in TrialSpaceTypeDict.keys():
             self.trialSpaceListDict[cj]=[]
             self.bcListDict[cj]=[]
@@ -6075,32 +6073,32 @@ class MultilevelTransport:
        #     pdb.set_trace()
             sdmesh = mesh.subdomainMesh
             memory()
-            log("Generating Trial Space",level=2)
+            logEvent("Generating Trial Space",level=2)
             trialSpaceDict = dict([ (cj,TrialSpaceType(sdmesh,nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.iteritems()])
             self.trialSpaceDictList.append(trialSpaceDict)
-            log("Generating Test Space",level=2)
+            logEvent("Generating Test Space",level=2)
             testSpaceDict = dict([(ci,TestSpaceType(sdmesh,nd)) for (ci,TestSpaceType) in TestSpaceTypeDict.iteritems()])
             self.testSpaceDictList.append(testSpaceDict)
-            log("Allocating u",level=2)
+            logEvent("Allocating u",level=2)
             uDict = dict([(cj,FiniteElementFunction(trialSpace,name=coefficients.variableNames[cj])) for (cj,trialSpace) in trialSpaceDict.iteritems()])
             #11/11/09 allow FiniteElementFunction to communicate uknowns across procs
             for cj in uDict.keys():
                 uDict[cj].setupParallelCommunication()
             self.uDictList.append(uDict)
-            log("Allocating phi")
+            logEvent("Allocating phi")
             phiSpaceDict = dict([ (cj,PhiSpaceType(sdmesh,nd)) for (cj,PhiSpaceType) in PhiSpaceTypeDict.iteritems()])
             self.phiSpaceDictList.append(phiSpaceDict)
             phiDict = dict([(cj,FiniteElementFunction(phiSpace)) for (cj,phiSpace) in phiSpaceDict.iteritems()])
             #need to communicate phi if nonlinear potential and there is spatial dependence in potential function
             for cj in phiDict.keys():
                 phiDict[cj].setupParallelCommunication()
-            log(memory("finite element spaces","MultilevelTransport"),level=4)
-            log("Setting Boundary Conditions")
+            logEvent(memory("finite element spaces","MultilevelTransport"),level=4)
+            logEvent("Setting Boundary Conditions")
             if numericalFluxType==None:
                 useWeakDirichletConditions=False
             else:
                 useWeakDirichletConditions=numericalFluxType.useWeakDirichletConditions
-            log("Setting Boundary Conditions-1")
+            logEvent("Setting Boundary Conditions-1")
             import pdb
 #            pdb.set_trace()
             for cj in trialSpaceDict.keys():
@@ -6108,20 +6106,20 @@ class MultilevelTransport:
                     dirichletConditionsSetterDict[cj] = None
                 if not fluxBoundaryConditionsDict.has_key(cj):
                     fluxBoundaryConditionsDict[cj] = None
-            log("Setting Boundary Conditions-2")
+            logEvent("Setting Boundary Conditions-2")
             if options == None or options.periodicDirichletConditions == None or options.parallelPeriodic==True:
-                log("Setting Boundary Conditions-2a")
+                logEvent("Setting Boundary Conditions-2a")
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions))
                                               for (cj,trialSpace) in trialSpaceDict.iteritems()])
             else:
-                log("Setting Boundary Conditions-2b")
+                logEvent("Setting Boundary Conditions-2b")
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions,options.periodicDirichletConditions[cj]))
                                               for (cj,trialSpace) in trialSpaceDict.iteritems()])
-            log("Setting Boundary Conditions-3")
+            logEvent("Setting Boundary Conditions-3")
             self.bcDictList.append(dirichletConditionsDict)
-            log("Setting Boundary Conditions-4")
+            logEvent("Setting Boundary Conditions-4")
             for cj in TrialSpaceTypeDict.keys():
                 self.trialSpaceListDict[cj].append(trialSpaceDict[cj])
                 self.bcListDict[cj].append(dirichletConditionsDict[cj])
@@ -6130,10 +6128,10 @@ class MultilevelTransport:
             import Comm
             comm = Comm.get()
             if options.periodicDirichletConditions and options.parallelPeriodic:
-                log("Generating Trial Space--Parallel Periodic",level=2)
+                logEvent("Generating Trial Space--Parallel Periodic",level=2)
                 #the global mesh has been renumbered so all this is in the new (partitioned) numberings
                 trialSpace_global = TrialSpaceType(mesh,nd)
-                log("Setting Boundary Conditions--Parallel Periodic")
+                logEvent("Setting Boundary Conditions--Parallel Periodic")
                 #get new global numbering of DOF that maps periodic DOF to a single master DOF
                 periodicConditions_global=DOFBoundaryConditions(trialSpace_global,
                                                                 lambda x,flag: None,
@@ -6203,8 +6201,8 @@ class MultilevelTransport:
                     testSpaceDict[ci].dofMap.nDOF_subdomain_owned = trialSpaceDict[0].dofMap.nDOF_subdomain_owned
             #
             #
-            log(memory("boundary conditions","MultilevelTransport"),level=4)
-            log("Initializing OneLevelTransport",level=2)
+            logEvent(memory("boundary conditions","MultilevelTransport"),level=4)
+            logEvent("Initializing OneLevelTransport",level=2)
             transport=self.OneLevelTransportType(uDict,
                                             phiDict,
                                             testSpaceDict,
@@ -6233,18 +6231,18 @@ class MultilevelTransport:
             self.strideListList.append(transport.stride)
             memory()
             self.levelModelList.append(transport)
-            log("Allocating residual and solution vectors",level=2)
+            logEvent("Allocating residual and solution vectors",level=2)
             u = numpy.zeros((transport.dim,),'d')
             du = numpy.zeros((transport.dim,),'d')
             r = numpy.zeros((transport.dim,),'d')
             self.uList.append(u)
             self.duList.append(du)
             self.rList.append(r)
-            log("Allocating Jacobian",level=2)
+            logEvent("Allocating Jacobian",level=2)
             jacobian = transport.initializeJacobian()
             self.jacobianList.append(jacobian)
             par_bs = transport.coefficients.nc
-            log("Allocating parallel storage",level=2)
+            logEvent("Allocating parallel storage",level=2)
             comm = Comm.get()
             self.comm=comm
             if (comm.size() > 1):
@@ -6461,23 +6459,23 @@ class MultilevelTransport:
                         transport.owned_local = numpy.arange(par_n*par_bs)
                         par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
                         subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
-                        log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                        logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                         par_u = ParVec_petsc4py(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
                         par_r = ParVec_petsc4py(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                        log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                        logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                         par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
-                        log("Allocating matrix on rank %i" % comm.rank(),level=2)
+                        logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                         par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
                 else:
                     par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
                     subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
                     max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
-                    log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                    logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                     par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
                     par_r = ParVec(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                    log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                    logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                     par_du = ParVec(du,par_bs,par_n,par_N)
-                    log("Allocating matrix on rank %i" % comm.rank(),level=2)
+                    logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = flcbdfWrappers.ParMat(par_bs,par_n,par_N,par_nghost,max_dof_neighbors,subdomain2global,jacobian)
             elif  (options.multilevelLinearSolver == PETSc or
                    options.levelLinearSolver == PETSc):
@@ -6487,12 +6485,12 @@ class MultilevelTransport:
                 par_nghost = 0
                 subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
                 max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
-                log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
                 par_r = ParVec(r,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
-                log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 par_du = ParVec(du,par_bs,par_n,par_N)
-                log("Allocating matrix on rank %i" % comm.rank(),level=2)
+                logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                 par_jacobian = flcbdfWrappers.ParMat(par_bs,par_n,par_N,par_nghost,max_dof_neighbors,subdomain2global[:par_n],jacobian)
             elif  (options.multilevelLinearSolver == KSP_petsc4py or
                    options.levelLinearSolver == KSP_petsc4py):
@@ -6504,7 +6502,7 @@ class MultilevelTransport:
                     if ts.dofMap.nDOF_all_processes != par_N:
                         mixed=True
                 par_nghost = 0
-                log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 if mixed:
                     par_N = par_n = sum([ts.dofMap.nDOF_all_processes for ts in trialSpaceDict.values()])
                     transport.owned_local = numpy.arange(par_n)
@@ -6512,9 +6510,9 @@ class MultilevelTransport:
                                                      offset,ts in zip(transport.offset,trialSpaceDict.values())])
                     par_u = ParVec_petsc4py(u,1,par_n,par_N,par_nghost,subdomain2global[:par_n])
                     par_r = ParVec_petsc4py(r,1,par_n,par_N,par_nghost,subdomain2global[:par_n])
-                    log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                    logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                     par_du = ParVec_petsc4py(du,1,par_n,par_N)
-                    log("Allocating matrix on rank %i" % comm.rank(),level=2)
+                    logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = ParMat_petsc4py(jacobian,1,par_n,par_N,par_nghost,subdomain2global,pde=transport)
                 else:
                     transport.owned_local = numpy.arange(par_n*par_bs)
@@ -6522,9 +6520,9 @@ class MultilevelTransport:
                     max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
                     par_u = ParVec_petsc4py(u,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
                     par_r = ParVec_petsc4py(r,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
-                    log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                    logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                     par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
-                    log("Allocating matrix on rank %i" % comm.rank(),level=2)
+                    logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
             else:
                 transport.owned_local = numpy.arange(transport.dim)
@@ -6536,8 +6534,8 @@ class MultilevelTransport:
             self.par_duList.append(par_du)
             self.par_rList.append(par_r)
             self.par_jacobianList.append(par_jacobian)
-            log(memory("global Jacobian and vectors","MultilevelTransport"),level=4)
-        log("Building Mesh Transfers",level=2)
+            logEvent(memory("global Jacobian and vectors","MultilevelTransport"),level=4)
+        logEvent("Building Mesh Transfers",level=2)
         MultilevelProjectionOperatorType = MultilevelProjectionOperators
         self. meshTransfers = MultilevelProjectionOperatorType(
             mlMesh,
@@ -6545,11 +6543,11 @@ class MultilevelTransport:
             self.offsetListList,
             self.strideListList,
             self.bcDictList)
-        log(memory("mesh transfers","MultilevelTransport"),level=4)
+        logEvent(memory("mesh transfers","MultilevelTransport"),level=4)
         #mwf hack keep reference to mlMesh in Transport ctor for now
         self.mlMeshSave = mlMesh
     def setInitialConditions(self,getInitialConditionsDict,T=0.0):
-        log("Setting initial conditions on model "+self.name)
+        logEvent("Setting initial conditions on model "+self.name)
         self.t=T
         for m,u in zip(self.levelModelList,self.uList):
             m.setInitialConditions(getInitialConditionsDict,T)
@@ -6578,11 +6576,11 @@ class MultilevelTransport:
         for idx, par_jacobian in enumerate(self.par_jacobianList):
             if hasattr(par_jacobian, 'save'):
                 filename = file_prefix + 'par_j' + '_' + str(idx)
-                log('Saving Parallel Jacobian to %s' % filename)
+                logEvent('Saving Parallel Jacobian to %s' % filename)
                 par_jacobian.save(filename)
         if b and hasattr(b, 'save'):
             filename = file_prefix + 'b'
-            log('Saving right-hand-side to %s' % filename)
+            logEvent('Saving right-hand-side to %s' % filename)
             b.save(filename)
 
 ## @}

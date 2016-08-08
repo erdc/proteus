@@ -4,8 +4,7 @@ A class hierarchy for methods of controlling the step size
 .. inheritance-diagram:: proteus.StepControl
    :parts: 1
 """
-import Profiling
-log = Profiling.logEvent
+from .Profiling import logEvent
 #mwf add Comm for saving info about time step in separate file
 import Comm
 from flcbdfWrappers import globalMax
@@ -78,7 +77,7 @@ class SC_base:
                 self.set_dt_allLevels()
                 retry = True
             else:
-                log("Time step reduced to machine precision",level=1)
+                logEvent("Time step reduced to machine precision",level=1)
         return retry
     def retryStep_errorFailure(self):
         self.errorFailures += 1
@@ -90,11 +89,11 @@ class SC_base:
                 self.set_dt_allLevels()
                 retry = True
             else:
-                log("Time step reduced to machine precision",level=1)
+                logEvent("Time step reduced to machine precision",level=1)
         return retry
     def stepExact_model(self,tOut):
         if self.t_model > tOut - tOut*1.0e-8:
-            log("StepControl base stepExact t_model= %s tOut= %s t_model_last= %s dt_model= %s setting to %s " % (self.t_model,tOut,self.t_model_last,
+            logEvent("StepControl base stepExact t_model= %s tOut= %s t_model_last= %s dt_model= %s setting to %s " % (self.t_model,tOut,self.t_model_last,
                                                                                                                   self.dt_model,tOut-self.t_model_last),1)
             self.dt_model = tOut - self.t_model_last
             self.set_dt_allLevels()
@@ -111,7 +110,7 @@ class SC_base:
         self.set_dt_allLevels()
         #self.substeps = [self.t_model]
         self.setSubsteps([self.t_model])
-        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+        logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
     def updateSubstep(self):
@@ -225,7 +224,7 @@ class PsiTCtte_controller(SC_base):
         for levelSolver in self.model.solver.solverList:
             levelSolver.maxIts=1
             levelSolver.convergenceTest = 'its'
-        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+        logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
     def setInitialGuess(self,uList,rList):
@@ -262,7 +261,7 @@ class PsiTCtte_controller(SC_base):
             if self.substeps[-1] != self.t_model:
                 self.substeps.append(self.t_model)#set to new  time step
             else:
-                log("PsiTC converged ||res|| = %12.5e" % res)
+                logEvent("PsiTC converged ||res|| = %12.5e" % res)
         self.nssteps +=1
     def choose_dt_model(self):
         #don't modify dt_model
@@ -311,7 +310,7 @@ class Osher_controller(SC_base):
         #for levelSolver in self.model.solver.solverList:
         #    levelSolver.maxIts=1
         #    levelSolver.convergenceTest = 'its'
-        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+        logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
     def updateSubstep(self):
@@ -346,7 +345,7 @@ class Osher_controller(SC_base):
             if self.substeps[-1] != self.t_model:
                 self.substeps[-1] = self.t_model#set to new time step#.append(self.t_model)#set to new  time step
             else:
-                log("Osher converged %12.5e" % (ssError))
+                logEvent("Osher converged %12.5e" % (ssError))
             self.nSteps=0
 
     def choose_dt_model(self):
@@ -395,7 +394,7 @@ class Osher_PsiTC_controller(SC_base):
         self.t = tOut
         self.setSubsteps([tOut])
         self.nSteps=0
-        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+        logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
     def updateSubstep(self):
@@ -421,17 +420,17 @@ class Osher_PsiTC_controller(SC_base):
             self.dt_model = m.timeIntegration.dt
             if self.nSteps >= self.nStepsOsher:#start ramping up the time step
                 self.dt_model = m.timeIntegration.dt*2.0**(self.nSteps-self.nStepsOsher)
-            log("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
+            logEvent("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
             self.set_dt_allLevels()
             #physical time step
             self.t_model = self.substeps[0]
             self.substeps.append(self.substeps[0])
-            log("Osher-PsiTC iteration %d |res| = %12.5e" %(self.nSteps,res),level=1)
+            logEvent("Osher-PsiTC iteration %d |res| = %12.5e" %(self.nSteps,res),level=1)
         elif self.nSteps >= self.nStepsMax:
-            log("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" %(res,))
+            logEvent("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" %(res,))
             self.nSteps=0
         else:
-            log("Osher-PsiTC converged |res| = %12.5e" %(res,))
+            logEvent("Osher-PsiTC converged |res| = %12.5e" %(res,))
             self.nSteps=0
     def choose_dt_model(self):
         #don't modify dt_model
@@ -488,7 +487,7 @@ class Osher_PsiTC_controller2(SC_base):
 
 
 
-        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+        logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
     def updateSubstep(self):
@@ -516,19 +515,19 @@ class Osher_PsiTC_controller2(SC_base):
             self.dt_model = m.timeIntegration.dt
             if self.nSteps >= self.nStepsOsher:#start ramping up the time step
                 self.dt_model = self.dt_model*self.red_ratio
-            #log("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
+            #logEvent("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
             self.set_dt_allLevels()
             #physical time step
             self.t_model = self.substeps[0]
             self.substeps.append(self.substeps[0])
 
 
-            log("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " %(self.nSteps,self.dt_model,res,(res/self.res0)*100.0),level=1)
+            logEvent("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " %(self.nSteps,self.dt_model,res,(res/self.res0)*100.0),level=1)
         elif self.nSteps >= self.nStepsMax:
-            log("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" %(res,))
+            logEvent("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" %(res,))
             self.nSteps=0
         else:
-            log("Osher-PsiTC converged |res| = %12.5e %12.5e" %(res,ssError*100.0))
+            logEvent("Osher-PsiTC converged |res| = %12.5e %12.5e" %(res,ssError*100.0))
             self.nSteps=0
     def choose_dt_model(self):
         #don't modify dt_model
@@ -618,7 +617,7 @@ class Osher_FMM_controller(Osher_controller):
             if self.substeps[-1] != self.t_model:
                 self.substeps[-1] = self.t_model#set to new time step#.append(self.t_model)#set to new  time step
             else:
-                log("Osher FMM finished")
+                logEvent("Osher FMM finished")
             self.nSteps=0
 
 class Min_dt_controller(SC_base):
@@ -632,7 +631,7 @@ class Min_dt_controller(SC_base):
         self.dt_model = m.timeIntegration.dt
         self.set_dt_allLevels()
         self.substeps = [self.t_model]
-        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+        logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
     def choose_dt_model(self):
@@ -653,7 +652,7 @@ class Min_dt_controller(SC_base):
         for m in self.model.levelModelList:
             m.timeIntegration.generateSubsteps(tList)
         self.substeps = self.model.levelModelList[-1].timeIntegration.substeps
-        log("Min_dt_controller setSubsteps tList=%s self.t_model=%s self.substeps= %s " % (tList,self.t_model,self.substeps))
+        logEvent("Min_dt_controller setSubsteps tList=%s self.t_model=%s self.substeps= %s " % (tList,self.t_model,self.substeps))
 class Min_dt_RKcontroller(SC_base):
     def __init__(self,model,nOptions):
         SC_base.__init__(self,model,nOptions)
@@ -666,7 +665,7 @@ class Min_dt_RKcontroller(SC_base):
         self.set_dt_allLevels()
         #self.substeps = m.timeIntegration.substeps
         self.setSubsteps([self.t_model_last + self.dt_model])
-        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+        logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
     def choose_dt_model(self):
@@ -724,7 +723,7 @@ class Min_dt_cfl_controller(Min_dt_controller):
             self.dt_model = self.dt_model_last*self.dt_ratio_max
         self.set_dt_allLevels()
         self.substeps = [self.t_model]
-        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+        logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
     def choose_dt_model(self):
@@ -872,7 +871,7 @@ class FLCBDF_controller(SC_base):
         self.dt_model_last = self.dt_model
         self.set_dt_allLevels()
         self.setSubsteps([self.t_model])
-        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+        logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
     def choose_dt_model(self):
@@ -1017,7 +1016,7 @@ class HeuristicNL_dt_controller(SC_base):
                 self.setSubsteps([self.t_model])
                 retry = True
             else:
-                log("Time step reduced to machine precision",level=1)
+                logEvent("Time step reduced to machine precision",level=1)
         return retry
     def retryStep_errorFailure(self):
         self.errorFailures += 1
@@ -1207,7 +1206,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
                 #for m in self.model.levelModelList:
                 #    m.timeIntegration.setInitialGuess()
             else:
-                log("Time step reduced to machine precision",level=1)
+                logEvent("Time step reduced to machine precision",level=1)
                 self.writeSolverStatisticsForStep()
         else:
             self.writeSolverStatisticsForStep()
@@ -1231,7 +1230,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
             import pdb
             pdb.set_trace()
         assert r < 1.0, "Gustaffson solver failure r= %s should have r decrease dt_in= %s alpha=%s alpha_ref=%s nnl=%s nnl_ref=%s r_a=%s, dtout=%s " % (r,dt,alpha,alpha_ref,nnl,nnl_ref,r_a,dtout)
-        log("Gustafsson solver failure dt_in= %s alpha=%s alpha_ref=%s nnl=%s nnl_ref=%s r_a=%s, dtout=%s " % (dt,alpha,alpha_ref,nnl,nnl_ref,r_a,dtout),level=1)
+        logEvent("Gustafsson solver failure dt_in= %s alpha=%s alpha_ref=%s nnl=%s nnl_ref=%s r_a=%s, dtout=%s " % (dt,alpha,alpha_ref,nnl,nnl_ref,r_a,dtout),level=1)
         return dtout
     def choose_dt_solverSuccess(self,dt):
         alpha = self.model.solver.solverList[-1].gustafsson_alpha
@@ -1245,7 +1244,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
             r_a = self.phi(alpha_ref/alpha)
         r = min(self.nonlinearGrowthRateMax,max(self.nonlinearGrowthRateMin,r_a))
         dtout = dt*r
-        log("Gustafsson solver success dt_in= %s alpha=%s alpha_ref=%s nnl=%s nnl_ref=%s r_a=%s, dtout=%s " % (dt,alpha,alpha_ref,nnl,nnl_ref,r_a,dtout),level=1)
+        logEvent("Gustafsson solver success dt_in= %s alpha=%s alpha_ref=%s nnl=%s nnl_ref=%s r_a=%s, dtout=%s " % (dt,alpha,alpha_ref,nnl,nnl_ref,r_a,dtout),level=1)
         return dtout
 
     def retryStep_errorFailure(self):
@@ -1270,10 +1269,10 @@ class GustafssonFullNewton_dt_controller(SC_base):
                 #for m in self.model.levelModelList:
                 #    m.timeIntegration.setInitialGuess()
 
-                log("Gustafsson error failure dt_e= %s dt_a=%s dt_model=%s" % (dt_e,dt_a,self.dt_model),level=1)
+                logEvent("Gustafsson error failure dt_e= %s dt_a=%s dt_model=%s" % (dt_e,dt_a,self.dt_model),level=1)
                 retry = True
             else:
-                log("Time step reduced to machine precision",level=1)
+                logEvent("Time step reduced to machine precision",level=1)
                 self.writeSolverStatisticsForStep()
 
         else:
@@ -1296,7 +1295,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
             self.errorEstimate = max(localError.values())
         else:
             self.errorEstimate = None
-        log("Gustafsson estimateError t=%s dt=%s error= %s" % (self.t_model,self.dt_model,self.errorEstimate))
+        logEvent("Gustafsson estimateError t=%s dt=%s error= %s" % (self.t_model,self.dt_model,self.errorEstimate))
 
     def choose_dt_fromError(self,dtIn):
         """
@@ -1313,7 +1312,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
             r  = self.errorSafetyFactor*(self.timeErrorTolerance/minErr)**ordInv
             r_e = min(self.errorGrowthRateMax,max(self.errorGrowthRateMin,r))
             dt_e = r_e*dtIn
-            log("Gustafsson choose_dt_fromError self t=%s dt=%s error= %s minErr= %s r_e=%s r= %s" % (self.t_model,self.dt_model,
+            logEvent("Gustafsson choose_dt_fromError self t=%s dt=%s error= %s minErr= %s r_e=%s r= %s" % (self.t_model,self.dt_model,
                                                                                                       self.errorEstimate,
                                                                                                       minErr,
                                                                                                       r_e,r))
@@ -1336,7 +1335,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
                 if m.q.has_key(('cfl',ci)):
                     maxCFL=max(maxCFL,globalMax(m.q[('cfl',ci)].max()))
                     #mwf debug
-                    log("Gustafsson cfl initial step ci = %s maxCFL= %s " % (ci,maxCFL))
+                    logEvent("Gustafsson cfl initial step ci = %s maxCFL= %s " % (ci,maxCFL))
             self.dt_model = min(self.cfl_for_initial_dt/maxCFL,m.timeIntegration.dt)
         else:
             self.dt_model = m.timeIntegration.dt
@@ -1344,7 +1343,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
         self.dt_model = min(self.dt_model,1.0e-3*(tOut-t0))
         self.set_dt_allLevels()
         self.setSubsteps([self.t_model])
-        log("Gustafsson Initializing time step on model %s to dt = %12.5e t_model_last= %s" % (self.model.name,
+        logEvent("Gustafsson Initializing time step on model %s to dt = %12.5e t_model_last= %s" % (self.model.name,
                                                                                                self.dt_model,
                                                                                                self.t_model_last),
             level=1)
@@ -1364,9 +1363,9 @@ class GustafssonFullNewton_dt_controller(SC_base):
             self.dt_model = dt_a
         self.set_dt_allLevels()
         self.setSubsteps([self.t_model])
-        log("Gustafsson choose_dt_model dt_e= %s dt_a=%s t_model_last= %s dt_model=%s t_model= %s" % (dt_e,dt_a,self.t_model_last,self.dt_model,self.t_model),level=1)
+        logEvent("Gustafsson choose_dt_model dt_e= %s dt_a=%s t_model_last= %s dt_model=%s t_model= %s" % (dt_e,dt_a,self.t_model_last,self.dt_model,self.t_model),level=1)
     def updateTimeHistory(self,resetFromDOF=False):
-        log("Gustafsson updateTimeHistory t_model_last= %s dt_model=%s t_model=%s" % (self.t_model_last,self.dt_model,self.t_model),level=1)
+        logEvent("Gustafsson updateTimeHistory t_model_last= %s dt_model=%s t_model=%s" % (self.t_model_last,self.dt_model,self.t_model),level=1)
         self.writeSolverStatisticsForStep()
         self.solverFailures=0
         self.errorFailures=0
@@ -1400,7 +1399,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
 
     def stepExact_model(self,tOut):
         if self.t_model > tOut - tOut*1.0e-8:
-            log("StepControl Gustafsson stepExact t_model= %s tOut= %s t_model_last= %s dt_model= %s setting to %s " % (self.t_model,tOut,self.t_model_last,
+            logEvent("StepControl Gustafsson stepExact t_model= %s tOut= %s t_model_last= %s dt_model= %s setting to %s " % (self.t_model,tOut,self.t_model_last,
                                                                                                                   self.dt_model,tOut-self.t_model_last),1)
             self.dt_model = tOut - self.t_model_last
             self.set_dt_allLevels()
