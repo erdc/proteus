@@ -9,7 +9,7 @@ import numpy as np
 import array
 from Archiver import *
 from LinearAlgebraTools import ParVec_petsc4py
-from Profiling import logEvent,memory
+from .Profiling import logEvent,memory
 
 class Node:
     """A numbered point in 3D Euclidean space
@@ -577,13 +577,13 @@ class Mesh:
         import flcbdfWrappers
         comm = Comm.get()
         self.comm=comm
-        log(memory("partitionMesh 1","MeshTools"),level=4)
-        log("Partitioning mesh among %d processors using partitioningType = %d" % (comm.size(),parallelPartitioningType))
+        logEvent(memory("partitionMesh 1","MeshTools"),level=4)
+        logEvent("Partitioning mesh among %d processors using partitioningType = %d" % (comm.size(),parallelPartitioningType))
         self.subdomainMesh=self.__class__()
         self.subdomainMesh.globalMesh = self
         self.subdomainMesh.cmesh=cmeshTools.CMesh()
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
-        log(memory("partitionMesh 2","MeshTools"),level=4)
+        logEvent(memory("partitionMesh 2","MeshTools"),level=4)
         if parallelPartitioningType == MeshParallelPartitioningTypes.node:
             #mwf for now always gives 1 layer of overlap
             (self.elementOffsets_subdomain_owned,
@@ -612,7 +612,7 @@ class Mesh:
              self.edgeNumbering_subdomain2global,
              self.edgeNumbering_global2original) = flcbdfWrappers.partitionElements(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         #
-        log(memory("partitionMesh 3","MeshTools"),level=4)
+        logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
         self.subdomainMesh.nElements_owned = self.elementOffsets_subdomain_owned[comm.rank()+1] - self.elementOffsets_subdomain_owned[comm.rank()]
         self.subdomainMesh.nNodes_owned = self.nodeOffsets_subdomain_owned[comm.rank()+1] - self.nodeOffsets_subdomain_owned[comm.rank()]
@@ -620,17 +620,17 @@ class Mesh:
         self.subdomainMesh.nEdges_owned = self.edgeOffsets_subdomain_owned[comm.rank()+1] - self.edgeOffsets_subdomain_owned[comm.rank()]
 
         comm.barrier()
-        log(memory("partitionMesh 4","MeshTools"),level=4)
-        log("Number of Subdomain Elements Owned= "+str(self.subdomainMesh.nElements_owned))
-        log("Number of Subdomain Elements = "+str(self.subdomainMesh.nElements_global))
-        log("Number of Subdomain Nodes Owned= "+str(self.subdomainMesh.nNodes_owned))
-        log("Number of Subdomain Nodes = "+str(self.subdomainMesh.nNodes_global))
-        log("Number of Subdomain elementBoundaries Owned= "+str(self.subdomainMesh.nElementBoundaries_owned))
-        log("Number of Subdomain elementBoundaries = "+str(self.subdomainMesh.nElementBoundaries_global))
-        log("Number of Subdomain Edges Owned= "+str(self.subdomainMesh.nEdges_owned))
-        log("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
+        logEvent(memory("partitionMesh 4","MeshTools"),level=4)
+        logEvent("Number of Subdomain Elements Owned= "+str(self.subdomainMesh.nElements_owned))
+        logEvent("Number of Subdomain Elements = "+str(self.subdomainMesh.nElements_global))
+        logEvent("Number of Subdomain Nodes Owned= "+str(self.subdomainMesh.nNodes_owned))
+        logEvent("Number of Subdomain Nodes = "+str(self.subdomainMesh.nNodes_global))
+        logEvent("Number of Subdomain elementBoundaries Owned= "+str(self.subdomainMesh.nElementBoundaries_owned))
+        logEvent("Number of Subdomain elementBoundaries = "+str(self.subdomainMesh.nElementBoundaries_global))
+        logEvent("Number of Subdomain Edges Owned= "+str(self.subdomainMesh.nEdges_owned))
+        logEvent("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
         comm.barrier()
-        log("Finished partitioning")
+        logEvent("Finished partitioning")
         par_nodeDiametersArray = ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
                                                  bs=1,
                                                  n=self.subdomainMesh.nNodes_owned,
@@ -641,10 +641,10 @@ class Mesh:
         # comm.beginSequential()
         # from Profiling import memory
         # memory()
-        # log(memory("Partitioning Mesh","Mesh"),level=1)
+        # logEvent(memory("Partitioning Mesh","Mesh"),level=1)
         # del self.cmesh
         # #cmeshTools.deleteMeshDataStructures(self.cmesh)
-        # log(memory("Without global mesh","Mesh"),level=1)
+        # logEvent(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
     def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import cmeshTools
@@ -652,13 +652,13 @@ class Mesh:
         import flcbdfWrappers
         comm = Comm.get()
         self.comm=comm
-        log(memory("partitionMesh 1","MeshTools"),level=4)
-        log("Partitioning mesh among %d processors using partitioningType = %d" % (comm.size(),parallelPartitioningType))
+        logEvent(memory("partitionMesh 1","MeshTools"),level=4)
+        logEvent("Partitioning mesh among %d processors using partitioningType = %d" % (comm.size(),parallelPartitioningType))
         self.subdomainMesh=self.__class__()
         self.subdomainMesh.globalMesh = self
         self.subdomainMesh.cmesh=cmeshTools.CMesh()
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
-        log(memory("partitionMesh 2","MeshTools"),level=4)
+        logEvent(memory("partitionMesh 2","MeshTools"),level=4)
         if parallelPartitioningType == MeshParallelPartitioningTypes.node:
             #mwf for now always gives 1 layer of overlap
             (self.elementOffsets_subdomain_owned,
@@ -679,7 +679,7 @@ class Mesh:
              self.edgeOffsets_subdomain_owned,
              self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElementsFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         #
-        log(memory("partitionMesh 3","MeshTools"),level=4)
+        logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.buildFromCNoArrays(self.cmesh)
         self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
         self.subdomainMesh.nElements_owned = self.elementOffsets_subdomain_owned[comm.rank()+1] - self.elementOffsets_subdomain_owned[comm.rank()]
@@ -688,17 +688,17 @@ class Mesh:
         self.subdomainMesh.nEdges_owned = self.edgeOffsets_subdomain_owned[comm.rank()+1] - self.edgeOffsets_subdomain_owned[comm.rank()]
 
         comm.barrier()
-        log(memory("partitionMesh 4","MeshTools"),level=4)
-        log("Number of Subdomain Elements Owned= "+str(self.subdomainMesh.nElements_owned))
-        log("Number of Subdomain Elements = "+str(self.subdomainMesh.nElements_global))
-        log("Number of Subdomain Nodes Owned= "+str(self.subdomainMesh.nNodes_owned))
-        log("Number of Subdomain Nodes = "+str(self.subdomainMesh.nNodes_global))
-        log("Number of Subdomain elementBoundaries Owned= "+str(self.subdomainMesh.nElementBoundaries_owned))
-        log("Number of Subdomain elementBoundaries = "+str(self.subdomainMesh.nElementBoundaries_global))
-        log("Number of Subdomain Edges Owned= "+str(self.subdomainMesh.nEdges_owned))
-        log("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
+        logEvent(memory("partitionMesh 4","MeshTools"),level=4)
+        logEvent("Number of Subdomain Elements Owned= "+str(self.subdomainMesh.nElements_owned))
+        logEvent("Number of Subdomain Elements = "+str(self.subdomainMesh.nElements_global))
+        logEvent("Number of Subdomain Nodes Owned= "+str(self.subdomainMesh.nNodes_owned))
+        logEvent("Number of Subdomain Nodes = "+str(self.subdomainMesh.nNodes_global))
+        logEvent("Number of Subdomain elementBoundaries Owned= "+str(self.subdomainMesh.nElementBoundaries_owned))
+        logEvent("Number of Subdomain elementBoundaries = "+str(self.subdomainMesh.nElementBoundaries_global))
+        logEvent("Number of Subdomain Edges Owned= "+str(self.subdomainMesh.nEdges_owned))
+        logEvent("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
         comm.barrier()
-        log("Finished partitioning")
+        logEvent("Finished partitioning")
         par_nodeDiametersArray = ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
                                                  bs=1,
                                                  n=self.subdomainMesh.nNodes_owned,
@@ -709,10 +709,10 @@ class Mesh:
         # comm.beginSequential()
         # from Profiling import memory
         # memory()
-        # log(memory("Partitioning Mesh","Mesh"),level=1)
+        # logEvent(memory("Partitioning Mesh","Mesh"),level=1)
         # del self.cmesh
         # #cmeshTools.deleteMeshDataStructures(self.cmesh)
-        # log(memory("Without global mesh","Mesh"),level=1)
+        # logEvent(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
         if self.arGridCollection != None:
@@ -987,7 +987,7 @@ class Mesh:
     def buildFromC(self,cmesh):
         import cmeshTools
         #
-        log(memory("buildFromC","MeshTools"),level=4)
+        logEvent(memory("buildFromC","MeshTools"),level=4)
         self.cmesh = cmesh
         (self.nElements_global,
          self.nNodes_global,
@@ -1041,11 +1041,11 @@ class Mesh:
         self.nElements_owned = self.nElements_global
         self.nElementBoundaries_owned = self.nElementBoundaries_global
         self.nEdges_owned = self.nEdges_global
-        log(memory("buildFromC","MeshTools"),level=4)
+        logEvent(memory("buildFromC","MeshTools"),level=4)
     def buildFromCNoArrays(self,cmesh):
         import cmeshTools
         #
-        log(memory("buildFromC","MeshTools"),level=4)
+        logEvent(memory("buildFromC","MeshTools"),level=4)
         self.cmesh = cmesh
         (self.nElements_global,
          self.nNodes_global,
@@ -1063,7 +1063,7 @@ class Mesh:
          self.sigmaMax,
          self.volume) = cmeshTools.buildPythonMeshInterfaceNoArrays(self.cmesh)
         self.hasGeometricInfo = False
-        log(memory("buildFromCNoArrays","MeshTools"),level=4)
+        logEvent(memory("buildFromCNoArrays","MeshTools"),level=4)
     def buildNodeStarArrays(self):
         if self.nodeStarArray == None:
             #cek old
@@ -2083,10 +2083,10 @@ class MultilevelRectangularGrid(MultilevelMesh):
         self.refineFactorList=[EVec(0,0,0)]
         self.meshList.append(RectangularGrid(nx,ny,nz,Lx,Ly,Lz))
         self.elementChildren = []
-        log(self.meshList[0].meshInfo())
+        logEvent(self.meshList[0].meshInfo())
         for l in range(1,refinementLevels+1):
             self.refine()
-            log(self.meshList[-1].meshInfo())
+            logEvent(self.meshList[-1].meshInfo())
 
     def refine():
         self.meshList.append(RectangularMesh())
@@ -2280,7 +2280,7 @@ class TetrahedralMesh(Mesh):
         self.boundaryNodes=set()
         self.interiorEdges=set()
         self.interiorNodes=set()
-        log("Building triangle,edge, and node maps")
+        logEvent("Building triangle,edge, and node maps")
         for T in self.tetrahedronList:
             for localTriangleNumber,t in enumerate(T.triangles):
                 self.triangleMap[t.N].append((T.N,localTriangleNumber))
@@ -2288,17 +2288,17 @@ class TetrahedralMesh(Mesh):
                 self.edgeMap[e.N].append((T.N,localEdgeNumber))
             for localNodeNumber,n in enumerate(T.nodes):
                 self.nodeMap[n.N].append((T.N,localNodeNumber))
-        log("Extracting boundary and interior triangles")
+        logEvent("Extracting boundary and interior triangles")
         for tN,etList in enumerate(self.triangleMap):
             if len(etList) == 1:
                 self.boundaryTriangles.add(self.triangleList[tN])
             else:
                 self.interiorTriangles.add(self.triangleList[tN])
-        log("Extracting boundary edges and nodes")
+        logEvent("Extracting boundary edges and nodes")
         for t in self.boundaryTriangles:
             self.boundaryEdges.update(t.edges)
             self.boundaryNodes.update(t.nodes)
-        log("Extracting interior edges and nodes")
+        logEvent("Extracting interior edges and nodes")
         for t in self.interiorTriangles:
             self.interiorEdges.update(t.edges)
             self.interiorNodes.update(t.nodes)
@@ -2342,13 +2342,13 @@ class TetrahedralMesh(Mesh):
         meshIn = open(filename+'.3dm','r')
         firstLine = meshIn.readline()
         firstWords = firstLine.split()
-        log("Reading object=%s from file=%s" % (firstWords[0],filename))
+        logEvent("Reading object=%s from file=%s" % (firstWords[0],filename))
         line = meshIn.readline()
         columns = line.split()
         tets = []
         tetEdges=set()
         tetTriangles=set()
-        log("Reading "+`filename`+" and building node lists for tetrahedra,triangles, and edges")
+        logEvent("Reading "+`filename`+" and building node lists for tetrahedra,triangles, and edges")
         #assume test are ordered by tet number
         while (columns[0] == 'E4T'):
             nodeNumbers = [int(c) - adhBase for c in columns[2:6]]
@@ -2542,7 +2542,7 @@ class TetrahedralMesh(Mesh):
         return childrenDict
 
     def refineFreudenthalBey(self,oldMesh):
-        log("Refining the mesh using Freudenthal-Bey refinement")
+        logEvent("Refining the mesh using Freudenthal-Bey refinement")
         childrenDict={}
         for T in oldMesh.tetrahedronDict.values():
             #deep copy old nodes because we'll renumber
@@ -2650,19 +2650,19 @@ class TetrahedralMesh(Mesh):
 
     def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True,parallel=False):
         import cmeshTools
-        log(memory("declaring CMesh"),level=4)
+        logEvent(memory("declaring CMesh"),level=4)
         self.cmesh = cmeshTools.CMesh()
-        log(memory("Initializing CMesh"),level=4)
+        logEvent(memory("Initializing CMesh"),level=4)
         if parallel:
             cmeshTools.generateFromTetgenFilesParallel(self.cmesh,filebase,base)
         else:
             cmeshTools.generateFromTetgenFiles(self.cmesh,filebase,base)
-        log(memory("calling cmeshTools.generateFromTetgenFiles","cmeshTools"),level=4)
+        logEvent(memory("calling cmeshTools.generateFromTetgenFiles","cmeshTools"),level=4)
         if skipGeometricInit == False:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
         self.buildFromC(self.cmesh)
-        log(memory("calling buildFromC"),level=4)
+        logEvent(memory("calling buildFromC"),level=4)
     def generateFrom3DMFile(self,filebase,base=1):
         import cmeshTools
         self.cmesh = cmeshTools.CMesh()
@@ -2798,7 +2798,7 @@ class HexahedralMesh(Mesh):
         self.boundaryNodes=set()
         self.interiorEdges=set()
         self.interiorNodes=set()
-        log("Building triangle,edge, and node maps")
+        logEvent("Building triangle,edge, and node maps")
         for T in self.elemList:
             for localFaceNumber,t in enumerate(T.faces):
                 self.faceMap[t.N].append((T.N,localFaceNumber))
@@ -2806,17 +2806,17 @@ class HexahedralMesh(Mesh):
                 self.edgeMap[e.N].append((T.N,localEdgeNumber))
             for localNodeNumber,n in enumerate(T.nodes):
                 self.nodeMap[n.N].append((T.N,localNodeNumber))
-        log("Extracting boundary and interior triangles")
+        logEvent("Extracting boundary and interior triangles")
         for tN,etList in enumerate(self.faceMap):
             if len(etList) == 1:
                 self.boundaryFaces.add(self.faceList[tN])
             else:
                 self.interiorFaces.add(self.faceList[tN])
-        log("Extracting boundary edges and nodes")
+        logEvent("Extracting boundary edges and nodes")
         for t in self.boundaryTriangles:
             self.boundaryEdges.update(t.edges)
             self.boundaryNodes.update(t.nodes)
-        log("Extracting interior edges and nodes")
+        logEvent("Extracting interior edges and nodes")
         for t in self.interiorTriangles:
             self.interiorEdges.update(t.edges)
             self.interiorNodes.update(t.nodes)
@@ -2887,7 +2887,7 @@ class Mesh2DM(Mesh):
         meshIn = open(filename+'.3dm','r')
         firstLine = meshIn.readline()
         firstWords = firstLine.split()
-        log("Reading object=%s from file=%s" % (firstWords[0],filename))
+        logEvent("Reading object=%s from file=%s" % (firstWords[0],filename))
         line = meshIn.readline()
         columns = line.split()
         #read in the tetrahedra and nodes as memory-efficiently as possible
@@ -3562,7 +3562,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
         MultilevelMesh.__init__(self)
         self.useC = True
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
-        log("Generating tetrahedral mesh")
+        logEvent("Generating tetrahedral mesh")
         if not skipInit:
             if self.useC:
                 self.meshList.append(TetrahedralMesh())
@@ -3586,10 +3586,10 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                 self.meshList[0].nodeArray[:,1] += y
                 self.meshList[0].nodeArray[:,2] += z
                 self.elementChildren=[]
-                log(self.meshList[0].meshInfo())
+                logEvent(self.meshList[0].meshInfo())
                 for l in range(1,refinementLevels):
                     self.refine()
-                    log(self.meshList[-1].meshInfo())
+                    logEvent(self.meshList[-1].meshInfo())
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.element):
@@ -3601,11 +3601,11 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
         self.cmultilevelMesh = None
         if self.useC:
             self.meshList.append(mesh0)
-            log("cmeshTools.CMultilevelMesh")
+            logEvent("cmeshTools.CMultilevelMesh")
             self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
-            log("buildFromC")
+            logEvent("buildFromC")
             self.buildFromC(self.cmultilevelMesh)
-            log("partitionMesh")
+            logEvent("partitionMesh")
             self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
             for l in range(1,refinementLevels):
                 self.meshList.append(TetrahedralMesh())
@@ -3618,11 +3618,11 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
             self.meshList[0].rectangularToTetrahedral(grid)
             self.meshList[0].subdomainMesh = self.meshList[0]
             self.elementChildren=[]
-            log(self.meshList[0].meshInfo())
+            logEvent(self.meshList[0].meshInfo())
             for l in range(1,refinementLevels):
                 self.refine()
                 self.meshList[l].subdomainMesh = self.meshList[l]
-                log(self.meshList[-1].meshInfo())
+                logEvent(self.meshList[-1].meshInfo())
             self.buildArrayLists()
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):
@@ -3637,11 +3637,11 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
         self.elementParents = None
         self.cmultilevelMesh = None
         self.meshList.append(mesh0)
-        log("cmeshTools.CMultilevelMesh")
+        logEvent("cmeshTools.CMultilevelMesh")
         self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
-        log("buildFromC")
+        logEvent("buildFromC")
         self.buildFromC(self.cmultilevelMesh)
-        log("partitionMesh")
+        logEvent("partitionMesh")
         self.meshList[0].partitionMeshFromFiles(filebase,base,nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
     def refine(self):
         self.meshList.append(TetrahedralMesh())
@@ -3670,7 +3670,7 @@ class MultilevelHexahedralMesh(MultilevelMesh):
         else:
             self.useC = False
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
-        log("Generating hexahedral mesh")
+        logEvent("Generating hexahedral mesh")
         if not skipInit:
             if self.useC:
                 self.meshList.append(HexahedralMesh())
@@ -3691,11 +3691,11 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                 self.meshList.append(HexahedralMesh())
                 self.elementChildren=[]
                 self.meshList[0].sigmaMax=0.0
-                log(self.meshList[0].meshInfo())
+                logEvent(self.meshList[0].meshInfo())
                 for l in range(1,refinementLevels):
                     self.refine()
                     self.meshList[-1].sigmaMax=0.0
-                    log(self.meshList[-1].meshInfo())
+                    logEvent(self.meshList[-1].meshInfo())
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.element):
@@ -4056,7 +4056,7 @@ class TriangularMesh(Mesh):
         return childrenDict
 
     def refineFreudenthalBey(self,oldMesh):
-        log("Refining the mesh using Freudenthal-Bey refinement")
+        logEvent("Refining the mesh using Freudenthal-Bey refinement")
         childrenDict={}
         for t in oldMesh.triangleDict.values():
             #deep copy old nodes because we'll renumber
@@ -4120,7 +4120,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
         columns = line.split()
         triangles = []
         triangleEdges=set()
-        log("Reading "+`filename`+ \
+        logEvent("Reading "+`filename`+ \
                 " and building node lists for triangles, and edges")
         #assume triangles are ordered by triangle number
         while (columns[0] == 'E3T'):
@@ -4471,7 +4471,7 @@ Number of nodes : %d\n""" % (self.nElements_global,
         return node
 
     def refine(self,oldMesh):
-        log("Refining Using Standard Quadrilateral Refinement")
+        logEvent("Refining Using Standard Quadrilateral Refinement")
         import pdb
 #        pdb.set_trace()
         childrenDict={}
@@ -4608,11 +4608,11 @@ class MultilevelTriangularMesh(MultilevelMesh):
                 self.meshList[0].nodeArray[:,2] += z
                 self.meshList[0].subdomainMesh = self.meshList[0]
                 self.elementChildren=[]
-                log(self.meshList[0].meshInfo())
+                logEvent(self.meshList[0].meshInfo())
                 for l in range(1,refinementLevels):
                     self.refine()
                     self.meshList[l].subdomainMesh = self.meshList[l]
-                    log(self.meshList[-1].meshInfo())
+                    logEvent(self.meshList[-1].meshInfo())
                 self.buildArrayLists()
     #
     #mwf what's the best way to build from an existing mesh
@@ -4640,11 +4640,11 @@ class MultilevelTriangularMesh(MultilevelMesh):
             self.meshList[0].rectangularToTriangular(grid)
             self.meshList[0].subdomainMesh = self.meshList[0]
             self.elementChildren=[]
-            log(self.meshList[0].meshInfo())
+            logEvent(self.meshList[0].meshInfo())
             for l in range(1,refinementLevels):
                 self.refine()
                 self.meshList[l].subdomainMesh = self.meshList[l]
-                log(self.meshList[-1].meshInfo())
+                logEvent(self.meshList[-1].meshInfo())
             self.buildArrayLists()
 
     def refine(self):
@@ -4660,14 +4660,14 @@ class MultilevelTriangularMesh(MultilevelMesh):
 
         flagForRefineType = 0 -- newest node, 1 -- 4T, 2 -- U4T
         """
-        log("MultilevelTriangularMesh:locallyRefine")
+        logEvent("MultilevelTriangularMesh:locallyRefine")
         if flagForRefineType == 0:
-            log("MultilevelTriangularMesh: calling cmeshTools.setNewestNodeBases")
+            logEvent("MultilevelTriangularMesh: calling cmeshTools.setNewestNodeBases")
             self.cmeshTools.setNewestNodeBases(2,self.cmultilevelMesh)
         if self.useC:
-            log("MultilevelTriangularMesh: calling locallRefineMultilevelMesh")
+            logEvent("MultilevelTriangularMesh: calling locallRefineMultilevelMesh")
             self.cmeshTools.locallyRefineMultilevelMesh(2,self.cmultilevelMesh,elementTagArray,flagForRefineType)
-            log("MultilevelTriangularMesh: calling buildFromC")
+            logEvent("MultilevelTriangularMesh: calling buildFromC")
             self.buildFromC(self.cmultilevelMesh)
             self.meshList.append(TriangularMesh())
             self.meshList[self.nLevels-1].cmesh = self.cmeshList[self.nLevels-1]
@@ -4701,7 +4701,7 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                 self.meshList[0].rectangularToQuadrilateral(grid,x,y,z)
                 self.meshList[0].subdomainMesh = self.meshList[0]
                 self.elementChildren=[]
-                log(self.meshList[0].meshInfo())
+                logEvent(self.meshList[0].meshInfo())
                 self.meshList[0].globalMesh = self.meshList[0]
 
                 # The following four lines should be called elsewhere...Most of this is don in
@@ -4720,7 +4720,7 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                 for l in range(1,refinementLevels):
                     self.refine()
                     self.meshList[l].subdomainMesh = self.meshList[l]
-                    log(self.meshList[-1].meshInfo())
+                    logEvent(self.meshList[-1].meshInfo())
                 self.buildArrayLists()
 
     def refine(self):
@@ -4776,13 +4776,13 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         self.bathyAssignmentScheme=bathyAssignmentScheme
         self.errorNormType = errorNormType
 
-        log("InterpolatedBathymetryMesh: Calling Triangle to generate 2D coarse mesh for "+self.domain.name)
+        logEvent("InterpolatedBathymetryMesh: Calling Triangle to generate 2D coarse mesh for "+self.domain.name)
         tmesh = TriangleTools.TriangleBaseMesh(baseFlags=self.triangleOptions,
                                                nbase=1,
                                                verbose=10)
         tmesh.readFromPolyFile(domain.polyfile)
 
-        log("InterpolatedBathymetryMesh: Converting to Proteus Mesh")
+        logEvent("InterpolatedBathymetryMesh: Converting to Proteus Mesh")
         self.coarseMesh=tmesh.convertToProteusMesh(verbose=1)
         MultilevelTriangularMesh.__init__(self,0,0,0,skipInit=True,nLayersOfOverlap=0,
                                           parallelPartitioningType=MeshParallelPartitioningTypes.element)
@@ -4791,7 +4791,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         self.computeGeometricInfo()
         print self.meshList[-1].volume
         #allocate some arrays based on the bathymetry data
-        log("InterpolatedBathymetryMesh:Allocating data structures for bathymetry interpolation algorithm")
+        logEvent("InterpolatedBathymetryMesh:Allocating data structures for bathymetry interpolation algorithm")
         if bathyType == "points":
             self.nPoints_global = self.domain.bathy.shape[0]
             self.pointElementsArray_old = -np.ones((self.nPoints_global,),'i')
@@ -4810,27 +4810,27 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
             self.bathyInterpolant = scipy_interpolate.RectBivariateSpline(x,y,z,kx=1,ky=1)
             #self.bathyInterpolant = scipy_interpolate.interp2d(x,y,z)
         #
-        log("InterpolatedBathymetryMesh: Locating points on initial mesh")
+        logEvent("InterpolatedBathymetryMesh: Locating points on initial mesh")
         self.locatePoints_initial(self.meshList[-1])
-        log("InterpolatedBathymetryMesh:setting mesh bathymetry from data")
+        logEvent("InterpolatedBathymetryMesh:setting mesh bathymetry from data")
         self.setMeshBathymetry(self.meshList[-1])
-        log("InterpolatedBathymetryMesh: tagging elements for refinement")
+        logEvent("InterpolatedBathymetryMesh: tagging elements for refinement")
         self.tagElements(self.meshList[-1])
         levels = 0
         error = 1.0;
         while error >= 1.0 and self.meshList[-1].nNodes_global < self.maxNodes and levels < self.maxLevels:
             levels += 1
-            log("InterpolatedBathymetryMesh: Locally refining, level = %i" % (levels,))
+            logEvent("InterpolatedBathymetryMesh: Locally refining, level = %i" % (levels,))
             self.locallyRefine(self.meshList[-1].elementTags,flagForRefineType=refineType)
-            log("InterpolatedBathymetryMesh: interpolating bathymetry from parent mesh to refined mesh")
+            logEvent("InterpolatedBathymetryMesh: interpolating bathymetry from parent mesh to refined mesh")
             self.interpolateBathymetry()
-            log("InterpolatedBathymetryMesh: Locating points on child mesh")
+            logEvent("InterpolatedBathymetryMesh: Locating points on child mesh")
             self.locatePoints_refined(self.meshList[-1])
-            log("InterpolatedBathymetryMesh: setting mesh bathmetry from data")
+            logEvent("InterpolatedBathymetryMesh: setting mesh bathmetry from data")
             self.setMeshBathymetry(self.meshList[-1])
-            log("InterpolatedBathymetryMesh: tagging elements for refinement")
+            logEvent("InterpolatedBathymetryMesh: tagging elements for refinement")
             error = self.tagElements(self.meshList[-1])
-            log("InterpolatedBathymetryMesh: error = %f atol = %f rtol = %f number of elements tagged = %i" % (error,self.atol,self.rtol,self.meshList[-1].elementTags.sum()))
+            logEvent("InterpolatedBathymetryMesh: error = %f atol = %f rtol = %f number of elements tagged = %i" % (error,self.atol,self.rtol,self.meshList[-1].elementTags.sum()))
 
     def setMeshBathymetry(self,mesh):
         if self.bathyAssignmentScheme == "interpolation":
@@ -5728,7 +5728,7 @@ class MultilevelNURBSMesh(MultilevelMesh):
         MultilevelMesh.__init__(self)
         self.useC = True
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
-        log("Generating NURBS mesh")
+        logEvent("Generating NURBS mesh")
         if not skipInit:
             self.meshList.append(NURBSMesh())
             self.meshList[0].generateNURBSMeshFromRectangularGrid(nx,ny,nz,px,py,pz,Lx,Ly,Lz)
