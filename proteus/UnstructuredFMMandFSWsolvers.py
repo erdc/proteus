@@ -1,5 +1,8 @@
 """
 Fast marching and fast sweeping solvers
+
+.. inheritance-diagram:: proteus.UnstructuredFMMandFSWsolvers
+   :parts: 1
 """
 import numpy
 import math

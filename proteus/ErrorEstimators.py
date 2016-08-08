@@ -1,5 +1,8 @@
 """
 Classes for a posteriori error estimation
+
+.. inheritance-diagram:: proteus.ErrorEstimators
+   :parts: 1
 """
 from Profiling import logEvent
 
