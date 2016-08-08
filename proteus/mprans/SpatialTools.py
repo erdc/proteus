@@ -1527,49 +1527,95 @@ class TankWithObstacles2D(Tank2D):
         segments = []
         segmentFlags = []
 
-        onSpongeEdge = False
+        on_sponge_edge = {'x-': False, 'x+': False}
+        sponge_edges_covered = {'x-': False, 'x+': False}
+
+        def checkSpongeStatus(start_index, end_index):
+            start_vertex = vertices[start_index]
+            if self.spongeLayers['x-']:
+                if not on_sponge_edge['x-']:
+                    if start_vertex in (self.x0y0, self.x0y1):
+                        on_sponge_edge['x-'] = True
+                elif not sponge_edges_covered['x-']:
+                    if start_vertex in (self.x0y0, self.x0y1):
+                        on_sponge_edge['x-'] = False
+                        sponge_edges_covered['x-'] = True
+                    else:
+                        vertexFlags[start_index] = self.boundaryTags['sponge']
+                else:
+                    pass
+
+            if self.spongeLayers['x+']:
+                if not on_sponge_edge['x+']:
+                    if start_vertex in (self.x1y0, self.x1y1):
+                        on_sponge_edge['x+'] = True
+                elif not sponge_edges_covered['x+']:
+                    if start_vertex in (self.x1y0, self.x1y1):
+                        on_sponge_edge['x+'] = False
+                        sponge_edges_covered['x+'] = True
+                    else:
+                        vertexFlags[start_index] = self.boundaryTags['sponge']
+                else:
+                    pass
+
+            end_vertex = vertices[end_index]
+            if on_sponge_edge['x-']:
+                if end_vertex not in (self.x0y0, self.x0y1):
+                    vertexFlags[end_index] = self.boundaryTags['sponge']
+            if on_sponge_edge['x+']:
+                if end_vertex not in (self.x1y0, self.x1y1):
+                    vertexFlags[end_index] = self.boundaryTags['sponge']
+
 
         def getSegmentFlag(start, end):
-            if vertexFlags[start] == self.boundaryTags['x+']:
-                if vertexFlags[end] == self.boundaryTags['x-']:
-                    return [self.boundaryTags['y+'], ]
-                else:
-                    return [self.boundaryTags['x+'], ]
+            if ((self.spongeLayers['x-'] and not sponge_edges_covered['x-']) or
+                (self.spongeLayers['x+'] and not sponge_edges_covered['x+'])):
+                checkSpongeStatus(start, end)
 
-            elif vertexFlags[start] == self.boundaryTags['x-']:
-                if vertexFlags[end] == self.boundaryTags['x+']:
-                    return [self.boundaryTags['y-'], ]
-                else:
-                    return [self.boundaryTags['x-'], ]
-
-            elif vertexFlags[end] == self.boundaryTags['x+']:
-                if vertexFlags[start] in [self.boundaryTags['y-'],
-                                          self.boundaryTags['y+']]:
-                    return [self.boundaryTags['x+'], ]
-
-            elif vertexFlags[end] == self.boundaryTags['x-']:
-                if vertexFlags[start] in [self.boundaryTags['y-'],
-                                          self.boundaryTags['y+']]:
-                    return [self.boundaryTags['x-'], ]
-
-            elif vertexFlags[start] == self.boundaryTags['y-']:
-                if (vertexFlags[end] == self.boundaryTags['y+']
-                    and np.isclose(vertices[start][0], vertices[end][0])
-                    ):
-                    return [self.boundaryTags['x+'], ]
-                else:
-                    return [self.boundaryTags['y-'], ]
-
-            elif vertexFlags[start] == self.boundaryTags['y+']:
-                if (vertexFlags[end] == self.boundaryTags['y-']
-                    and np.isclose(vertices[start][0], vertices[end][0])
-                    ):
-                    return [self.boundaryTags['x-'], ]
-                else:
-                    return [self.boundaryTags['y+'], ]
+            if on_sponge_edge['x-'] or on_sponge_edge['x+']:
+                return [self.boundaryTags['sponge'], ]
 
             else:
-                return [vertexFlags[start], ]
+                if vertexFlags[start] == self.boundaryTags['x+']:
+                    if vertexFlags[end] == self.boundaryTags['x-']:
+                        return [self.boundaryTags['y+'], ]
+                    else:
+                        return [self.boundaryTags['x+'], ]
+
+                elif vertexFlags[start] == self.boundaryTags['x-']:
+                    if vertexFlags[end] == self.boundaryTags['x+']:
+                        return [self.boundaryTags['y-'], ]
+                    else:
+                        return [self.boundaryTags['x-'], ]
+
+                elif vertexFlags[end] == self.boundaryTags['x+']:
+                    if vertexFlags[start] in [self.boundaryTags['y-'],
+                                              self.boundaryTags['y+']]:
+                        return [self.boundaryTags['x+'], ]
+
+                elif vertexFlags[end] == self.boundaryTags['x-']:
+                    if vertexFlags[start] in [self.boundaryTags['y-'],
+                                              self.boundaryTags['y+']]:
+                        return [self.boundaryTags['x-'], ]
+
+                elif vertexFlags[start] == self.boundaryTags['y-']:
+                    if (vertexFlags[end] == self.boundaryTags['y+']
+                        and np.isclose(vertices[start][0], vertices[end][0])
+                        ):
+                        return [self.boundaryTags['x+'], ]
+                    else:
+                        return [self.boundaryTags['y-'], ]
+
+                elif vertexFlags[start] == self.boundaryTags['y+']:
+                    if (vertexFlags[end] == self.boundaryTags['y-']
+                        and np.isclose(vertices[start][0], vertices[end][0])
+                        ):
+                        return [self.boundaryTags['x-'], ]
+                    else:
+                        return [self.boundaryTags['y+'], ]
+
+                else:
+                    return [vertexFlags[start], ]
 
         # ---- Initial Sponge Logic ---- #
         sponge_vertex_count = 0
@@ -1614,7 +1660,7 @@ class TankWithObstacles2D(Tank2D):
         if True in self.corners.values():
             regions = self._getCornerRegion()
         else:
-            regions = self._getRandomRegion(vertices, segments) #[temp] test with some safe (no extra pieces) tanks
+            regions = self._getRandomRegion(vertices, segments)
 
         ind_region = 1
         regionFlags = [ind_region,]
