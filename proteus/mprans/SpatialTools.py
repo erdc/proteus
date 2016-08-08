@@ -961,8 +961,6 @@ class Tank2D(ShapeRANS):
         regions, regionFlags = self._constructRegions(vertices, vertexFlags,
                                                       segments, segmentFlags)
 
-        import pdb
-        pdb.set_trace()
         self.vertices     = np.array(vertices)
         self.vertexFlags  = np.array(vertexFlags)
         self.segments     = np.array(segments)
