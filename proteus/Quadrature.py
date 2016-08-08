@@ -5,7 +5,7 @@ A class hierarchy for numerical integration on reference domains in 1,2, and 3D.
    :parts: 1
 """
 from EGeometry import *
-from Profiling import logEvent
+from .Profiling import logEvent
 from math import *
 
 class Q_base:
