@@ -71,6 +71,7 @@ class MeshAdaptPUMIDrvr{
   int num_quadrature; 
   int num_quarature_boundary;
   double total_error;
+  double errRate_max;
   double rel_err_total;
 
   private: 
@@ -84,6 +85,7 @@ class MeshAdaptPUMIDrvr{
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* err_reg; //error field from ERM
+  apf::Field* errRate_reg; //error-rate field from ERM
   /* this field stores isotropic size */
   apf::Field* size_iso;
   /* these fields store anisotropic size */
