@@ -961,6 +961,8 @@ class Tank2D(ShapeRANS):
         regions, regionFlags = self._constructRegions(vertices, vertexFlags,
                                                       segments, segmentFlags)
 
+        import pdb
+        pdb.set_trace()
         self.vertices     = np.array(vertices)
         self.vertexFlags  = np.array(vertexFlags)
         self.segments     = np.array(segments)
@@ -1430,6 +1432,7 @@ class TankWithObstacles2D(Tank2D):
 
             for potential_corner in ordering:
                 if potential_corner in self.corners.keys():
+                    self.corners[potential_corner] = True
                     vertex, flag = addCorner(potential_corner)
                     corner_vertices += vertex
                     corner_flags += flag
@@ -1646,9 +1649,9 @@ class TankWithObstacles2D(Tank2D):
                              self.boundaryTags['x-'],
                              self.boundaryTags['y+']]
         if self.spongeLayers['x+']:
-            segments += [[vertices.index(self.x0y0), len(vertices) - 2],
+            segments += [[vertices.index(self.x1y0), len(vertices) - 2],
                          [len(vertices) - 2, len(vertices) - 1],
-                         [len(vertices) - 1, vertices.index(self.x0y1)]
+                         [len(vertices) - 1, vertices.index(self.x1y1)]
                          ]
             segmentFlags += [self.boundaryTags['y-'],
                              self.boundaryTags['x+'],
@@ -1669,7 +1672,7 @@ class TankWithObstacles2D(Tank2D):
         sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
         sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
         sponge_x0 = self.x0y0[0]
-        sponge_x1 = self.x1y0[1]
+        sponge_x1 = self.x1y0[0]
 
         if self.spongeLayers['x-']:
             regions += [[sponge_x0 - 0.5 * self.spongeLayers['x-'],
@@ -1683,6 +1686,7 @@ class TankWithObstacles2D(Tank2D):
             ind_region += 1
             regionFlags += [ind_region]
             self.regionIndice['x+'] = ind_region - 1
+
         return regions, regionFlags
 
     def _findExtrema(self, points):
@@ -1706,6 +1710,10 @@ class TankWithObstacles2D(Tank2D):
 
     def _getRandomRegion(self, vertices, segments):
         x_p, y_p, x_n, y_n = self._findExtrema(vertices)
+        if self.spongeLayers['x-']:
+            x_n += self.spongeLayers['x-']
+        if self.spongeLayers['x+']:
+            x_p -= self.spongeLayers['x+']
 
         count = 0
         allowed_tries = 100
@@ -1773,7 +1781,7 @@ class TankWithObstacles2D(Tank2D):
         sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
         sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
         sponge_x0 = self.x0y0[0]
-        sponge_x1 = self.x1y0[1]
+        sponge_x1 = self.x1y0[0]
 
         waves = None
         wind_speed = (0., 0., 0.)
@@ -1842,7 +1850,7 @@ class TankWithObstacles2D(Tank2D):
         sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
         sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
         sponge_x0 = self.x0y0[0]
-        sponge_x1 = self.x1y0[1]
+        sponge_x1 = self.x1y0[0]
 
         waves = waves
         wind_speed = wind_speed
