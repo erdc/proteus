@@ -564,7 +564,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     if(alpha==1)
       h_new = h_old;
     else
-      h_new = h_old*(err_dest/err_curr);
+      h_new = h_old*sqrt(apf::measure(element))/sqrt(volTotal)*target_error/err_curr;//h_old*(err_dest/err_curr);
     apf::setScalar(size_iso_reg,reg,0,h_new);
     
     //Test feature estimate the number of elements
