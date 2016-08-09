@@ -2642,7 +2642,7 @@ void calculateSubgridErrorStokes2D_GLS_tau(int nElements_global,
                                                  double* tau1)
 {
   int eN,k,nSpace2=nSpace*nSpace;
-  double h,viscosity;/*mwf need rho now to get right scaling?*/
+  double h,viscosity;//caller should scale if kinematic viscosity
   for(eN=0;eN<nElements_global;eN++)
     {
       h = elementDiameter[eN];
