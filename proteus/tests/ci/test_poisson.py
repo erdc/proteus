@@ -26,6 +26,7 @@ def test_c0p1():
     reload(poisson_3d_c0p1_n)
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0p1_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "poisson_3d_c0p1"+"pe"+`comm.size()`
     so.sList=[default_s]
@@ -39,6 +40,7 @@ def test_c0p1():
     #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_3d_c0p1')
+    del ns
     assert(True)
 
 def test_c0p2():
@@ -48,6 +50,7 @@ def test_c0p2():
     reload(poisson_3d_c0p2_n)
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0p2_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "poisson_3d_c0p2"+"pe"+`comm.size()`
     so.sList=[default_s]
@@ -58,6 +61,7 @@ def test_c0p2():
     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_3d_c0p2')
+    del ns
     assert(True)
 
 def check_c0q1(test_hexMesh_3x3=False,use_petsc=False,name="_hexMesh_"):
@@ -73,6 +77,7 @@ def check_c0q1(test_hexMesh_3x3=False,use_petsc=False,name="_hexMesh_"):
         poisson_3d_p.L  = ( 6., 6., 6.)
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0q1_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "poisson_3d_c0q1"+name+"pe"+`comm.size()`
     so.sList=[default_s]
@@ -84,6 +89,7 @@ def check_c0q1(test_hexMesh_3x3=False,use_petsc=False,name="_hexMesh_"):
         nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_3d_c0q1')
+    del ns
     assert(True)
 
 def test_c0q1():
@@ -109,6 +115,7 @@ def test_c0q2():
     reload(poisson_3d_c0q2_n)
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0q2_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "poisson_3d_c0q2"+"pe"+`comm.size()`
     so.sList=[default_s]
@@ -118,6 +125,7 @@ def test_c0q2():
     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_3d_c0q2')
+    del ns
     assert(True)
 
 if __name__ == '__main__':
