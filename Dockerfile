@@ -6,7 +6,7 @@ USER root
 
 # Install all OS dependencies for fully functional notebook server
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update && apt-get install -yq --no-install-recommends \
+RUN apt-get update && apt-get install -yq --no-install-recommends --fix-missing \
     git \
     vim \
     jed \
@@ -87,6 +87,8 @@ RUN mkdir /home/$NB_USER/work && \
 #    cat /home/$NB_USER/.hashdist/config.yaml
 
 WORKDIR /home/$NB_USER
+
+RUN git clone https://github.com/erdc-cm/workshops -b erdc-fsi-tutorials
 
 RUN git clone https://github.com/erdc-cm/proteus && \
     cd proteus && \

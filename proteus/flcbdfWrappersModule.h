@@ -27,6 +27,7 @@ namespace Daetk
 #define PROTEUSREDEFINECPP
 #endif
 #include "mpi.h"
+#include "hdf5.h"
 #ifdef PETSC_INCLUDE_AS_C
 #define PETSC_RESTRICT __restrict__
 #define PETSC_C_RESTRICT __restrict__

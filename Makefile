@@ -9,8 +9,8 @@ SHELL=/usr/bin/env bash
 
 PROTEUS ?= $(shell python -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
-PROTEUS_INSTALL_CMD = python setup.py install
-PROTEUS_DEVELOP_CMD = pip install -e .
+PROTEUS_INSTALL_CMD = python setup.py install -O2
+PROTEUS_DEVELOP_CMD = pip install -v -e .
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
@@ -206,7 +206,7 @@ develop: proteus profile
 	@echo "Installing development version"
 	@echo "************************"
 	$(call show_info)
-	${PROTEUS_ENV} ${PROTEUS_DEVELOP_CMD}
+	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG" ${PROTEUS_DEVELOP_CMD}
 	@echo "************************"
 	@echo "Development installation complete"
 	@echo "************************"
@@ -240,5 +240,17 @@ check:
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
-doc: install
+doc:
+	@echo "************************************"
+	@echo "Generating documentation with Sphinx"
+	@echo "Be sure to first run"
+	@echo "make develop"
+	@echo "or"
+	@echo "make install"
+	@echo "************************************"
 	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
+	@echo "**********************************"
+	@echo "Trying to open the html at"
+	@echo "../proteus-website/index.html"
+	@echo "**********************************"
+	-sensible-browser ../proteus-website/index.html &
