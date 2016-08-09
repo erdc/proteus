@@ -839,6 +839,7 @@ class StokesStabilization_1(SGE_base):
 class StokesASGS_velocity(SGE_base):
     def __init__(self,coefficients,nd):
         SGE_base.__init__(self,coefficients,nd,lag=False)
+        self.stabilizationFlag = '1'
         coefficients.stencil[0].add(0)
         if nd == 2:
             coefficients.stencil[1].add(2)
@@ -850,8 +851,6 @@ class StokesASGS_velocity(SGE_base):
             coefficients.stencil[2].add(3)
             coefficients.stencil[3].add(1)
             coefficients.stencil[3].add(2)
-    def initializeElementQuadrature(self,mesh,t,cq):
-        self.mesh=mesh
     def calculateSubgridError(self,q):
         if self.nd == 2:
             if self.coefficients.sd:
@@ -1518,6 +1517,7 @@ class StokesASGS_velocity_pressure(SGE_base):
                                                                     q[('a',1,1)],
                                                                     self.tau[0],
                                                                     self.tau[1])
+            self.tau[1] /= q[('dH',1,0)][...,0]#if mom. eqn. is scaled by density, rescale tau
             if self.lag:
                 tau0=self.tau_last[0]
                 tau1=self.tau_last[1]

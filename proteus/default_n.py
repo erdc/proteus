@@ -181,7 +181,7 @@ linearPreSmooths = 3
 
 linearPostSmooths = 3
 
-computeNonlinearSolverRates=True
+computeNonlinearSolverRates=False
 
 printNonlinearSolverInfo=False
 
