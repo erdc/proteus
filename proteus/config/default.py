@@ -22,7 +22,7 @@ if sys.platform == 'darwin':
     platform_lapack_integer = '__CLPK_integer'
     platform_blas_h = r'<Accelerate/Accelerate.h>'
     platform_lapack_h = r'<Accelerate/Accelerate.h>'
-elif sys.platform == 'linux2':
+else:
     platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C']
     platform_extra_link_args = ['-Wl,-rpath,' + PROTEUS_LIB_DIR]
     platform_blas_h = r'"proteus_blas.h"'
@@ -59,7 +59,7 @@ PROTEUS_EXTRA_FC_LINK_ARGS=['-lblas']
 
 PROTEUS_SUPERLU_INCLUDE_DIR, PROTEUS_SUPERLU_LIB_DIR = get_flags('superlu')
 PROTEUS_SUPERLU_H   = r'"slu_ddefs.h"'
-PROTEUS_SUPERLU_LIB = 'superlu_4.1'
+PROTEUS_SUPERLU_LIB = 'superlu_4.3'
 
 PROTEUS_BLAS_INCLUDE_DIR   = '.'
 if platform_blas_h:
