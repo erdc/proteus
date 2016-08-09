@@ -1,5 +1,8 @@
 """
 A hierarchy of classes for nonlinear algebraic system solvers.
+
+.. inheritance-diagram:: proteus.NonlinearSolvers
+   :parts: 1
 """
 
 import numpy

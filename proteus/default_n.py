@@ -118,7 +118,7 @@ multilevelNonlinearSolver  = NLNI
 levelNonlinearSolver = Newton
 """A nonlinear solver class of type :class:`proteus.NonlinearSolvers.NonlinearSolver`"""
 
-nonlinearSmoother = NLGaussSeidel
+nonlinearSmoother = None
 """A nonlinear solver class of type :class:`proteus.NonlinearSolvers.NonlinearSolver`"""
 
 fullNewtonFlag = True
@@ -147,7 +147,7 @@ computeEigenvalues = False
 
 computeEigenvectors = None#'left','right'
 
-linearSmoother = StarILU#GaussSeidel
+linearSmoother = None
 
 linTolFac = 0.001
 
