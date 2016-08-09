@@ -2580,7 +2580,27 @@ void buildLocalBDM1projectionMatrices(int nElements_global,
 				      double * BDMprojectionMat_element)
 {
   /***********************************************************************
-    loop through and build local \f$BDM_1\f$ projection representation for
+
+Input Variables
+
+     nElements_global - Number of elements in triangulation
+
+     nElementBoundaries_element - Number of boundaries per element for
+     2D triangles this is 3, quarilateral - 4 etc.
+
+     nQuadraturePoints_elementBoundary - This is the number of quadrature
+     points taken along the boundary.  This value is typically set in 
+     the numerics file with a flag like quad_order.
+
+     nSpace - dimension of the problem (typically 2 or 3)
+
+     nDOFs_test_element - 
+ 
+     nDOFs_trial_element - 
+
+     nVDOFs_element - number of velocity DoF per element
+
+  loop through and build local \f$BDM_1\f$ projection representation for
     each element for a simplicial mesh in 2d or 3d. Involves
     integration over each face, e, of normal flux weighted by basis
     for \f$P^1(e)\f$. Local velocity space is \f$P^1(E)\f$
@@ -2629,10 +2649,13 @@ void buildLocalBDM1projectionMatrices(int nElements_global,
 		  k = j / nSpace;
 		  l = j % nSpace;
 		  kp= (ebN+s+1) % nSimplex; /*neighbor (s) of node k*/
-		  /*mwf debug
+		  		   /*mwf debug
 		  printf("BDM1 new eN=%d ebN=%d s=%d irow=%d j=%d k=%d l=%d kp=%d\n",
 			 eN,ebN,s,irow,j,k,l,kp);
-		  */
+		  printf("BDMprojectionMat_element: %d\n", eN*nVDOFs_element2 + irow + j*nVDOFs_element);
+		  printf("nQuadraturePoints_elementBoundary: %d \n", nQuadraturePoints_elementBoundary);
+		   */
+
 		  if (TRANSPOSE_FOR_LAPACK > 0)
 		    BDMprojectionMat_element[eN*nVDOFs_element2 + irow + j*nVDOFs_element] = 0.0;
 		  else
