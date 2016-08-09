@@ -34,7 +34,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             self.numDiff_last=[]
             for ci in range(self.nc):
                 self.numDiff_last.append(self.numDiff[ci].copy())
-        log("RDLS: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
+        #log("RDLS: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),),level=7)
 
 class PsiTC(proteus.StepControl.SC_base):
     def __init__(self,model,nOptions):

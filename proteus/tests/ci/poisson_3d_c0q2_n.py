@@ -14,18 +14,18 @@ elementQuadrature = CubeGaussQuadrature(nd,5)
 elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,5)
 
 #number of nodes in x,y,z
-nnx = 7
-nny = 7
-nnz = 7
+nnx = 11
+nny = 11
+nnz = 11
 #if unstructured would need triangleOptions flag to be set
 
 
 hex=True
-##NURBS=True
+NURBS=False
+px=1
+py=1
+pz=1
 
-px=2
-py=2
-pz=2
 
 #number of levels in mesh
 nLevels = 1
@@ -39,7 +39,7 @@ shockCapturing = None
 multilevelNonlinearSolver  = Newton
 levelNonlinearSolver = Newton
 #linear problem so force 1 iteration allowed
-maxNonlinearIts = 2
+maxNonlinearIts = 1
 maxLineSearches = 1
 fullNewtonFlag = True
 #absolute nonlinear solver residual tolerance
@@ -55,29 +55,36 @@ matrix = SparseMatrix
 parallel = True
 
 if parallel:
-    multilevelLinearSolver = KSP_petsc4py#o rPETSc
+    multilevelLinearSolver = KSP_petsc4py
     #for petsc do things lie
     #"-ksp_type cg -pc_type asm -pc_asm_type basic -ksp_atol  1.0e-10 -ksp_rtol 1.0e-10 -ksp_monitor_draw" or
     #-pc_type lu -pc_factor_mat_solver_package
     #can also set -pc_asm_overlap 2 with default asm type (restrict)
-    levelLinearSolver = KSP_petsc4py#PETSc#
+    levelLinearSolver = KSP_petsc4py#
+    #for petsc do things like
+    #"-ksp_type cg -pc_type asm -pc_asm_type basic -ksp_atol  1.0e-10 -ksp_rtol 1.0e-10 -ksp_monitor_draw" or
+    #-pc_type lu -pc_factor_mat_solver_package
+    #can also set -pc_asm_overlap 2 with default asm type (restrict)
+    #levelLinearSolver = PETSc#
     #pick number of layers to use in overlap
     nLayersOfOverlapForParallel = 0
     #type of partition
     #parallelPartitioningType = MeshParallelPartitioningTypes.node
     parallelPartitioningType = MeshParallelPartitioningTypes.element
     #have to have a numerical flux in parallel
-    numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
+    numericalFluxType = ConstantAdvection_Diffusion_SIPG_exterior#Advection_DiagonalUpwind_Diffusion_IIPG_exterior
     #for true residual test
-    #linearSolverConvergenceTest = 'r-true'
+    linearSolverConvergenceTest = 'r-true'
     #to allow multiple models to set different ksp options
     #linear_solver_options_prefix = 'poisson_'
     linearSmoother = None
 else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
-    numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
+    numericalFluxType = ConstantAdvection_Diffusion_SIPG_exterior
 
+#linear solver parameters
+linearSmoother = None
 #linear solver relative convergence test
 linTolFac = 0.0
 #linear solver absolute convergence test

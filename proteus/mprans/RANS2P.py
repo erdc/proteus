@@ -69,9 +69,9 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             self.lag = True
             for ci in range(1,4):
                 self.numDiff_last[ci] = self.numDiff[ci].copy()
-        log("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
-                                                                    globalMax(self.numDiff_last[2].max()),
-                                                                    globalMax(self.numDiff_last[3].max())))
+        #log("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
+        #                                                            globalMax(self.numDiff_last[2].max()),
+        #                                                            globalMax(self.numDiff_last[3].max())),level=7)
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
@@ -1169,6 +1169,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.elementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
+        log(memory("XdmfWriters","OneLevelTransport"),level=4)
         log("flux bc objects")
         for ci,fbcObject  in self.fluxBoundaryConditionsObjectsDict.iteritems():
             self.ebqe[('advectiveFlux_bc_flag',ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc',ci)].shape,'i')
@@ -1442,13 +1443,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.netForces_p,
             self.coefficients.netForces_v,
             self.coefficients.netMoments)
-	from proteus.flcbdfWrappers import globalSum
-        for i in range(self.coefficients.netForces_p.shape[0]):
-            self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
-            for I in range(3):
-                self.coefficients.netForces_p[i,I]  = globalSum(self.coefficients.netForces_p[i,I])
-                self.coefficients.netForces_v[i,I]  = globalSum(self.coefficients.netForces_v[i,I])
-                self.coefficients.netMoments[i,I] = globalSum(self.coefficients.netMoments[i,I])
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1458,8 +1452,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t) - self.MOVING_DOMAIN*self.mesh.nodeVelocityArray[dofN,cj-1]
 
 
-        cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
-        log("Maximum CFL = " + str(cflMax),level=2)
+        #cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
+        #log("Maximum CFL = " + str(cflMax),level=2)
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
         log("Global residual",level=9,data=r)
@@ -1786,6 +1780,36 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateSolutionAtQuadrature(self):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
+        from mpi4py import MPI
+        comm = Comm.get().comm.tompi4py()
+	# from proteus.flcbdfWrappers import globalSum
+        # test_netForces_p = self.coefficients.netForces_p.copy()
+        # test_netForces_v = self.coefficients.netForces_v.copy()
+        # test_netMoments = self.coefficients.netMoments.copy()
+        # for i in range(self.coefficients.netForces_p.shape[0]):
+        #     self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
+        #     for I in range(3):
+        #         self.coefficients.netForces_p[i,I]  = globalSum(self.coefficients.netForces_p[i,I])
+        #         self.coefficients.netForces_v[i,I]  = globalSum(self.coefficients.netForces_v[i,I])
+        #         self.coefficients.netMoments[i,I] = globalSum(self.coefficients.netMoments[i,I])
+        # #comm.Allreduce([test_netForces_p.copy(),MPI.DOUBLE],[test_netForces_p,MPI.DOUBLE],MPI.SUM)
+        # #comm.Allreduce([test_netForces_v.copy(),MPI.DOUBLE],[test_netForces_v,MPI.DOUBLE],MPI.SUM)
+        # #comm.Allreduce([test_netMoments.copy(),MPI.DOUBLE],[test_netMoments,MPI.DOUBLE],MPI.SUM)
+        # comm.Allreduce(MPI.IN_PLACE, [test_netForces_p,MPI.DOUBLE], MPI.SUM)
+        # comm.Allreduce(MPI.IN_PLACE, [test_netForces_v,MPI.DOUBLE], MPI.SUM)
+        # comm.Allreduce(MPI.IN_PLACE, [test_netMoments,MPI.DOUBLE], MPI.SUM)
+        # assert((test_netForces_p == self.coefficients.netForces_p).all())
+        # assert((test_netForces_v == self.coefficients.netForces_v).all())
+        # assert((test_netMoments == self.coefficients.netMoments).all())
+        comm.Allreduce(MPI.IN_PLACE,
+                       [self.coefficients.netForces_p,MPI.DOUBLE],
+                       MPI.SUM)
+        comm.Allreduce(MPI.IN_PLACE,
+                       [self.coefficients.netForces_v,MPI.DOUBLE],
+                       MPI.SUM)
+        comm.Allreduce(MPI.IN_PLACE,
+                       [self.coefficients.netMoments,MPI.DOUBLE],
+                       MPI.SUM)
         if self.postProcessing and self.conservativeFlux:
             self.rans2p.calculateVelocityAverage(self.mesh.nExteriorElementBoundaries_global,
                                                  self.mesh.exteriorElementBoundariesArray,
