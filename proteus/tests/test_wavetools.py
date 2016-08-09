@@ -431,7 +431,6 @@ class CheckRandomWavesFailures(unittest.TestCase):
         self.assertTrue(None == None)
 
 class VerifyRandomWaves(unittest.TestCase):
-    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandom(self):
         from proteus.WaveTools import RandomWaves
         import random
@@ -1259,6 +1258,7 @@ class VerifyTimeSeries(unittest.TestCase):
 
 
 class CheckRandomWavesFastFailureModes(unittest.TestCase):
+    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandomWavesFastFailure(self):
         from proteus.WaveTools import RandomWavesFast
         with self.assertRaises(SystemExit) as cm1:
@@ -1621,6 +1621,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
 
 class VerifyRandomNLWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
+    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandomNLFast(self):
         from proteus.WaveTools import RandomNLWaves,RandomNLWavesFast,TimeSeries
         import random
