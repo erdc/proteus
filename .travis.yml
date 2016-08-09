@@ -32,7 +32,7 @@ install:
 - ls $SSL_CERT_DIR
 
 script:
-- py.test -v linux2/lib/python2.7/site-packages/proteus-1.1.0-py2.7-linux-x86_64.egg/proteus/tests
+- py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-1.1.0-py2.7-linux-x86_64.egg/proteus/tests
 
 notifications:
   email:
