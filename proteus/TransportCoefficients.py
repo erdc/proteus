@@ -1459,7 +1459,8 @@ class Stokes(TC_base):
                              potential,
                              reaction,
                              hamiltonian,
-                             variableNames)
+                             variableNames,
+                             useSparseDiffusion=False)
             self.vectorComponents=[1,2]
         elif nd==3:
             variableNames=['p','u','v','w']
@@ -1497,7 +1498,8 @@ class Stokes(TC_base):
                              potential,
                              reaction,
                              hamiltonian,
-                             variableNames)
+                             variableNames,
+                             useSparseDiffusion=False)
             self.vectorComponents=[1,2,3]
     def evaluate(self,t,c):
         if self.nd==2:
