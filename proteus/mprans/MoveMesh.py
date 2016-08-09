@@ -531,7 +531,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementResidual[1].fill(0.0)
         if self.nSpace_global==3:
             self.elementResidual[2].fill(0.0)
-
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -739,4 +738,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def postStep(self):
         pass
     def updateAfterMeshMotion(self):
-        pass
+        #cek todo: this needs to be cleaned up and generalized for other models under moving conditions
+        #few  models  actually use  the ebqe['x'] for boundary conditions, but  we need  to make it
+        #consistent  (the  physical coordinates and not the reference domain coordinates)
+        self.calculateElementQuadrature()
+        self.ebqe_old_x = self.ebqe['x'].copy()
+        self.calculateExteriorElementBoundaryQuadrature()#pass
+        for cj in range(self.nc):
+            self.u[cj].femSpace.updateInterpolationPoints()
+            for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN] = self.mesh.nodeArray[dofN]

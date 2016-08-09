@@ -1,87 +1,11 @@
 import proteus
-from proteus.mprans.cRANS2P import *
-from proteus.mprans.cRANS2P2D import *
-from proteus import Profiling
-class SubgridError(proteus.SubgridError.SGE_base):
-    def __init__(self,coefficients,nd,lag=False,nStepsToDelay=0,hFactor=1.0,noPressureStabilization=False):
-        self.noPressureStabilization=noPressureStabilization
-        proteus.SubgridError.SGE_base.__init__(self,coefficients,nd,lag)
-        coefficients.stencil[0].add(0)
-        self.hFactor=hFactor
-        self.nStepsToDelay = nStepsToDelay
-        self.nSteps=0
-        if self.lag:
-            log("RANS2P.SubgridError: lagging requested but must lag the first step; switching lagging off and delaying")
-            self.nStepsToDelay=1
-            self.lag=False
-    def initializeElementQuadrature(self,mesh,t,cq):
-        import copy
-        self.cq=cq
-        self.v_last = self.cq[('velocity',0)]
-    def updateSubgridErrorHistory(self,initializationPhase=False):
-        self.nSteps += 1
-        if self.lag:
-            self.v_last[:] = self.cq[('velocity',0)]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
-            log("RANS2P.SubgridError: switched to lagged subgrid error")
-            self.lag = True
-            self.v_last = self.cq[('velocity',0)].copy()
-    def calculateSubgridError(self,q):
-        pass
+import proteus.mprans.RANS2P as RANS2P
+from proteus.mprans.cRANS2P_IB import *
+import numpy as np
+import beamFEM
+from ArchiveBeams import *
 
-class NumericalFlux(proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior):
-    hasInterior=False
-    def __init__(self,vt,getPointwiseBoundaryConditions,
-                 getAdvectiveFluxBoundaryConditions,
-                 getDiffusiveFluxBoundaryConditions,
-                 getPeriodicBoundaryConditions=None):
-        proteus.NumericalFlux.NavierStokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior.__init__(self,vt,getPointwiseBoundaryConditions,
-                                                                               getAdvectiveFluxBoundaryConditions,
-                                                                               getDiffusiveFluxBoundaryConditions,getPeriodicBoundaryConditions)
-        self.penalty_constant = 2.0
-        self.includeBoundaryAdjoint=True
-        self.boundaryAdjoint_sigma=1.0
-        self.hasInterior=False
-
-class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
-    def __init__(self,coefficients,nd,shockCapturingFactor=0.25,lag=False,nStepsToDelay=3):
-        proteus.ShockCapturing.ShockCapturing_base.__init__(self,coefficients,nd,shockCapturingFactor,lag)
-        self.nStepsToDelay = nStepsToDelay
-        self.nSteps=0
-        if self.lag:
-            log("RANS2P.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
-            self.nStepsToDelay=1
-            self.lag=False
-    def initializeElementQuadrature(self,mesh,t,cq):
-        self.mesh=mesh
-        self.numDiff={}
-        self.numDiff_last={}
-        for ci in range(1,4):
-            self.numDiff[ci] = cq[('numDiff',ci,ci)]
-            self.numDiff_last[ci] = cq[('numDiff',ci,ci)]
-    def updateShockCapturingHistory(self):
-        self.nSteps += 1
-        if self.lag:
-            for ci in range(1,4):
-                self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
-            log("RANS2P.ShockCapturing: switched to lagged shock capturing")
-            self.lag = True
-            for ci in range(1,4):
-                self.numDiff_last[ci] = self.numDiff[ci].copy()
-        log("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
-                                                                    globalMax(self.numDiff_last[2].max()),
-                                                                    globalMax(self.numDiff_last[3].max())))
-
-class Coefficients(proteus.TransportCoefficients.TC_base):
-    """
-    The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
-    """
-    from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate
-    from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate
-    from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
-    from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
-    from proteus.ctransportCoefficients import calculateWaveFunction3d_ref
+class Coefficients(proteus.mprans.RANS2P.Coefficients):
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -89,11 +13,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  rho_1=1.205,nu_1=1.500e-5,
                  g=[0.0,0.0,-9.8],
                  nd=3,
-                 ME_model=0,
                  LS_model=None,
                  VF_model=None,
                  KN_model=None,
-                 Closure_0_model=None, #Turbulence closure model
+                 Closure_0_model=None, #Turbulence closure model 
                  Closure_1_model=None, #Second possible Turbulence closure model
                  epsFact_density=None,
                  stokes=False,
@@ -103,7 +26,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useRBLES=0.0,
                  useMetrics=0.0,
                  useConstant_he=False,
-                 dragAlpha=0.0,
+                 dragAlpha=0.01,
                  dragBeta =0.0,
                  setParamsFunc=None,      #uses setParamsFunc if given
                  dragAlphaTypes=None, #otherwise can use element constant values
@@ -122,550 +45,421 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  eb_adjoint_sigma=1.0,
                  eb_penalty_constant=10.0,
                  forceStrongDirichlet=False,
-                 turbulenceClosureModel=0, #0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega
+                 turbulenceClosureModel=0, #0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega 
                  smagorinskyConstant=0.1,
-                 barycenters=None):
-        self.barycenters=barycenters
-        self.smagorinskyConstant = smagorinskyConstant
-        self.turbulenceClosureModel=turbulenceClosureModel
-        self.forceStrongDirichlet=forceStrongDirichlet
-        self.eb_adjoint_sigma=eb_adjoint_sigma
-        self.eb_penalty_constant=eb_penalty_constant
-        self.movingDomain = movingDomain
-        self.epsFact_solid = epsFact_solid
-        self.useConstant_he = useConstant_he
-        self.useVF=useVF
-        self.useRBLES=useRBLES
-        self.useMetrics=useMetrics
-        self.sd=sd
-        if epsFact_density != None:
-            self.epsFact_density = epsFact_density
-        else:
-            self.epsFact_density = epsFact
-        self.stokes=stokes
-        self.ME_model=ME_model
-        self.LS_model=LS_model
-        self.VF_model=VF_model
-        self.KN_model=KN_model
-        self.Closure_0_model=Closure_0_model
-        self.Closure_1_model=Closure_1_model
-        self.epsFact=epsFact
-        self.eps=None
-        self.sigma=sigma
-        self.rho_0 = rho_0
-        self.nu_0 = nu_0
-        #cek for debugging using single phase test problems
-        self.rho=rho_0
-        self.nu=nu_0
-        self.rho_1 = rho_1
-        self.nu_1 = nu_1
-        self.g = numpy.array(g)
-        self.nd=nd
-        #
-        self.dragAlpha = dragAlpha
-        self.dragBeta = dragBeta
-        self.setParamsFunc=setParamsFunc
-        self.dragAlphaTypes = dragAlphaTypes
-        self.dragBetaTypes = dragBetaTypes
-        self.porosityTypes      = porosityTypes
-        self.killNonlinearDrag  = int(killNonlinearDrag)
-        self.waveFlag=waveFlag
-        self.waveHeight=waveHeight
-        self.waveCelerity=waveCelerity
-        self.waveFrequency=waveFrequency
-        self.waveNumber=waveNumber
-        self.waterDepth=waterDepth
-        self.Omega_s=Omega_s
-        self.epsFact_source=epsFact_source
-        self.linearDragFactor = 1.0;
-        self.nonlinearDragFactor = 1.0
-        if self.killNonlinearDrag:
-            self.nonlinearDragFactor = 0.0
-        mass={}
-        advection={}
-        diffusion={}
-        potential={}
-        reaction={}
-        hamiltonian={}
-        if nd==2:
-            variableNames=['p','u','v']
-            mass= {1:{1:'linear'},
-                   2:{2:'linear'}}
-            advection = {0:{0:'linear',
-                            1:'linear',
-                            2:'linear'},
-                         1:{0:'nonlinear',
-                            1:'nonlinear',
-                            2:'nonlinear'},
-                         2:{0:'nonlinear',
-                            1:'nonlinear',
-                            2:'nonlinear'}}
-            diffusion  = {1:{1:{1:'constant'},2:{2:'constant'}},
-                          2:{2:{2:'constant'},1:{1:'constant'}}}
-            sdInfo  = {(1,1):(numpy.array([0,1,2],dtype='i'),
-                             numpy.array([0,1],dtype='i')),
-                       (1,2):(numpy.array([0,0,1],dtype='i'),
-                              numpy.array([0],dtype='i')),
-                       (2,2):(numpy.array([0,1,2],dtype='i'),
-                              numpy.array([0,1],dtype='i')),
-                       (2,1):(numpy.array([0,1,1],dtype='i'),
-                              numpy.array([1],dtype='i'))}
-            potential= {1:{1:'u'},
-                        2:{2:'u'}}
-            reaction = {0:{0:'constant'},
-                        1:{1:'nonlinear',2:'nonlinear'},
-                        2:{1:'nonlinear',2:'nonlinear'}}
-            hamiltonian = {1:{0:'linear'},
-                           2:{0:'linear'}}
-            TC_base.__init__(self,
-                             3,
-                             mass,
-                             advection,
-                             diffusion,
-                             potential,
-                             reaction,
-                             hamiltonian,
-                             variableNames,
-                             sparseDiffusionTensors=sdInfo,
-                             useSparseDiffusion = sd,
-                             movingDomain=movingDomain)
-            self.vectorComponents=[1,2]
-        elif nd==3:
-            variableNames=['p','u','v','w']
-            mass = {1:{1:'linear'},
-                    2:{2:'linear'},
-                    3:{3:'linear'}}
-            advection = {0:{1:'linear',
-                            2:'linear',
-                            3:'linear'},
-                         1:{0:'nonlinear',
-                            1:'nonlinear',
-                            2:'nonlinear',
-                            3:'nonlinear'},
-                         2:{0:'nonlinear',
-                            1:'nonlinear',
-                            2:'nonlinear',
-                            3:'nonlinear'},
-                         3:{0:'nonlinear',
-                            1:'nonlinear',
-                            2:'nonlinear',
-                            3:'nonlinear'}}
-            diffusion = {1:{1:{1:'constant'},2:{2:'constant'},3:{3:'constant'}},
-                         2:{1:{1:'constant'},2:{2:'constant'},3:{3:'constant'}},
-                         3:{1:{1:'constant'},2:{2:'constant'},3:{3:'constant'}}}
-            sdInfo={}
-            sdInfo  = {(1,1):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
-                       (1,2):(numpy.array([0,0,1,1],dtype='i'),numpy.array([0],dtype='i')),
-                       (1,3):(numpy.array([0,0,0,1],dtype='i'),numpy.array([0],dtype='i')),
-                       (2,1):(numpy.array([0,1,1,1],dtype='i'),numpy.array([1],dtype='i')),
-                       (2,2):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
-                       (2,3):(numpy.array([0,0,0,1],dtype='i'),numpy.array([1],dtype='i')),
-                       (3,1):(numpy.array([0,1,1,1],dtype='i'),numpy.array([2],dtype='i')),
-                       (3,2):(numpy.array([0,0,1,1],dtype='i'),numpy.array([2],dtype='i')),
-                       (3,3):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i'))}
-            potential= {1:{1:'u'},
-                        2:{2:'u'},
-                        3:{3:'u'}}
-            reaction = {0:{0:'constant'},
-                        1:{1:'nonlinear',2:'nonlinear',3:'nonlinear'},
-                        2:{1:'nonlinear',2:'nonlinear',3:'nonlinear'},
-                        3:{1:'nonlinear',2:'nonlinear',3:'nonlinear'}}
-            hamiltonian = {1:{0:'linear'},
-                           2:{0:'linear'},
-                           3:{0:'linear'}}
-            TC_base.__init__(self,
-                             4,
-                             mass,
-                             advection,
-                             diffusion,
-                             potential,
-                             reaction,
-                             hamiltonian,
-                             variableNames,
-                             sparseDiffusionTensors=sdInfo,
-                             useSparseDiffusion = sd,
-                             movingDomain=movingDomain)
-            self.vectorComponents=[1,2,3]
+                 barycenters=None,
+                 beamLocation = [],
+                 beamLength=[],
+                 beamRadius=[],
+                 EI = [],
+                 GJ = [],
+                 nBeamElements=4,
+                 beam_quadOrder=3,
+                 beamFilename = "Beams",
+                 beam_useSparse = False,
+                 beam_Cd = 1.2,
+                 beam_nlTol= 1.0e-5,
+                 beamRigid = True):
+
+        RANS2P.Coefficients.__init__(self,
+                 epsFact=1.5,
+                 sigma=72.8,
+                 rho_0=998.2,nu_0=1.004e-6,
+                 rho_1=1.205,nu_1=1.500e-5,
+                 g=[0.0,0.0,-9.8],
+                 nd=3,
+                 LS_model=None,
+                 VF_model=None,
+                 KN_model=None,
+                 Closure_0_model=None, #Turbulence closure model 
+                 Closure_1_model=None, #Second possible Turbulence closure model
+                 epsFact_density=None,
+                 stokes=False,
+                 sd=True,
+                 movingDomain=False,
+                 useVF=0.0,
+                 useRBLES=0.0,
+                 useMetrics=0.0,
+                 useConstant_he=False,
+                 dragAlpha=0.01,
+                 dragBeta =0.0,
+                 setParamsFunc=None,      #uses setParamsFunc if given
+                 dragAlphaTypes=None, #otherwise can use element constant values
+                 dragBetaTypes=None, #otherwise can use element constant values
+                 porosityTypes=None,
+                 killNonlinearDrag=False,
+                 waveFlag=None,
+                 waveHeight=0.01,
+                 waveCelerity=1.0,
+                 waveFrequency=1.0,
+                 waveNumber=2.0,
+                 waterDepth=0.5,
+                 Omega_s=[[0.45,0.55],[0.2,0.4],[0.0,1.0]],
+                 epsFact_source=1.,
+                 epsFact_solid=None,
+                 eb_adjoint_sigma=1.0,
+                 eb_penalty_constant=10.0,
+                 forceStrongDirichlet=False,
+                 turbulenceClosureModel=0, #0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega 
+                 smagorinskyConstant=0.1,
+                 barycenters=None)
+        self.beamFilename = beamFilename
+        self.beamLength=beamLength
+        self.beamRadius=np.array(beamRadius)
+        self.beamLocation=beamLocation
+        self.beamVolume=math.pi*self.beamRadius*self.beamRadius*self.beamLength
+        self.nBeamElements=nBeamElements
+        self.EI = EI
+        self.GJ = GJ
+        self.beam_quadOrder=beam_quadOrder
+        self.beam_nlTol=beam_nlTol
+        self.beam_useSparse=beam_useSparse
+        self.beam_Cd = beam_Cd
+        self.beam_nlTol = beam_nlTol
+        self.beamRigid= beamRigid
 
     def attachModels(self,modelList):
-        #level set
-        self.model = modelList[self.ME_model]
-        self.model.q['phi_solid'] = self.q_phi_solid
-        self.model.q['velocity_solid'] = self.q_velocity_solid
-        if self.LS_model != None:
-            self.q_phi = modelList[self.LS_model].q[('u',0)]
-            if modelList[self.LS_model].ebq.has_key(('u',0)):
-                self.ebq_phi = modelList[self.LS_model].ebq[('u',0)]
-            else:
-                self.ebq_phi = None
-            self.ebqe_phi   = modelList[self.LS_model].ebqe[('u',0)]
-            self.bc_ebqe_phi = modelList[self.LS_model].numericalFlux.ebqe[('u',0)]
-            #normal
-            self.q_n = modelList[self.LS_model].q[('grad(u)',0)]
-            if modelList[self.LS_model].ebq.has_key(('grad(u)',0)):
-                self.ebq_n = modelList[self.LS_model].ebq[('grad(u)',0)]
-            else:
-                self.ebq_n   = None
-            self.ebqe_n    = modelList[self.LS_model].ebqe[('grad(u)',0)]
-        else:
-            self.q_phi = 10.0*numpy.ones(self.model.q[('u',1)].shape,'d')
-            self.ebqe_phi = 10.0*numpy.ones(self.model.ebqe[('u',1)].shape,'d')
-            self.bc_ebqe_phi = 10.0*numpy.ones(self.model.ebqe[('u',1)].shape,'d')
-            self.q_n = numpy.ones(self.model.q[('velocity',0)].shape,'d')
-            self.ebqe_n    = numpy.ones(self.model.ebqe[('velocity',0)].shape,'d')
-        if self.VF_model != None:
-            self.q_vf = modelList[self.VF_model].q[('u',0)]
-            if modelList[self.VF_model].ebq.has_key(('u',0)):
-                self.ebq_vf = modelList[self.VF_model].ebq[('u',0)]
-            else:
-                self.ebq_vf = None
-            self.ebqe_vf   = modelList[self.VF_model].ebqe[('u',0)]
-            self.bc_ebqe_vf = modelList[self.VF_model].numericalFlux.ebqe[('u',0)]
-        else:
-            self.q_vf = numpy.zeros(self.model.q[('u',1)].shape,'d')
-            self.ebqe_vf = numpy.zeros(self.model.ebqe[('u',1)].shape,'d')
-            self.bc_ebqe_vf = numpy.zeros(self.model.ebqe[('u',1)].shape,'d')
-        #curvature
-        if self.KN_model != None:
-            self.q_kappa    = modelList[self.KN_model].q[('u',0)]
-            self.ebqe_kappa = modelList[self.KN_model].ebqe[('u',0)]
-            if modelList[self.KN_model].ebq.has_key(('u',0)):
-                self.ebq_kappa = modelList[self.KN_model].ebq[('u',0)]
-            else:
-                self.ebq_kappa = None
-        else:
-            self.q_kappa = -numpy.ones(self.model.q[('u',1)].shape,'d')
-            self.ebqe_kappa = -numpy.ones(self.model.ebqe[('u',1)].shape,'d')
-        #Turbulence Closures
-        #only option for now is k-epsilon
-        self.q_turb_var = {}; self.q_turb_var_grad = {}; self.ebqe_turb_var = {};
-        if self.Closure_0_model != None:
-            self.q_turb_var[0] = modelList[self.Closure_0_model].q[('u',0)]
-            self.q_turb_var_grad[0] = modelList[self.Closure_0_model].q[('grad(u)',0)]
-            self.ebqe_turb_var[0] = modelList[self.Closure_0_model].ebqe[('u',0)]
-        else:
-            self.q_turb_var[0] = numpy.ones(self.model.q[('u',1)].shape,'d')
-            self.q_turb_var_grad[0] = numpy.ones(self.model.q[('grad(u)',1)].shape,'d')
-            self.ebqe_turb_var[0] = numpy.ones(self.model.ebqe[('u',1)].shape,'d')
-        if self.Closure_1_model != None:
-            self.q_turb_var[1] = modelList[self.Closure_1_model].q[('u',0)]
-            self.ebqe_turb_var[1] = modelList[self.Closure_1_model].ebqe[('u',0)]
-        else:
-            self.q_turb_var[1] = numpy.ones(self.model.q[('u',1)].shape,'d')
-            self.ebqe_turb_var[1] = numpy.ones(self.model.ebqe[('u',1)].shape,'d')
-        if self.epsFact_solid == None:
-            self.epsFact_solid = numpy.ones(self.model.mesh.elementMaterialTypes.max()+1)
-        assert len(self.epsFact_solid) > self.model.mesh.elementMaterialTypes.max(), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
+        RANS2P.Coefficients.attachModels(self,modelList)
+        self.initializeBeams()
+        self.netBeamDrag = np.array([0.0])
 
-    def initializeMesh(self,mesh):
-        #cek we eventually need to use the local element diameter
-        self.eps_density = self.epsFact_density*mesh.h
-        self.eps_viscosity = self.epsFact*mesh.h
-        self.mesh = mesh
-        self.elementMaterialTypes = mesh.elementMaterialTypes
-        self.eps_source=self.epsFact_source*mesh.h
-        nBoundariesMax = int(globalMax(max(self.mesh.elementBoundaryMaterialTypes)))+1
-        self.wettedAreas = numpy.zeros((nBoundariesMax,),'d')
-        self.netForces_p = numpy.zeros((nBoundariesMax,3),'d')
-        self.netForces_v = numpy.zeros((nBoundariesMax,3),'d')
-        self.netMoments = numpy.zeros((nBoundariesMax,3),'d')
-        if self.barycenters == None:
-            self.barycenters = numpy.zeros((nBoundariesMax,3),'d')
-        comm = Comm.get()
-        import os
-        # if comm.isMaster():
-        #     self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,"wettedAreaHistory.txt"),"w")
-        #     self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,"forceHistory_p.txt"),"w")
-        #     self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,"forceHistory_v.txt"),"w")
-        #     self.momentHistory = open(os.path.join(proteus.Profiling.logDir,"momentHistory.txt"),"w")
-        self.comm = comm
-    #initialize so it can run as single phase
     def initializeElementQuadrature(self,t,cq):
-        #VRANS
-        self.q_phi_solid = numpy.ones(cq[('u',1)].shape,'d')
-        self.q_velocity_solid = numpy.zeros(cq[('velocity',0)].shape,'d')
-        self.q_porosity = numpy.ones(cq[('u',1)].shape,'d')
-        self.q_dragAlpha= numpy.ones(cq[('u',1)].shape,'d')
-        self.q_dragAlpha.fill(self.dragAlpha)
-        self.q_dragBeta= numpy.ones(cq[('u',1)].shape,'d')
-        self.q_dragBeta.fill(self.dragBeta)
-        if self.setParamsFunc != None:
-            self.setParamsFunc(cq['x'],self.q_porosity,self.q_dragAlpha,self.q_dragBeta)
-        else:
-            #TODO make loops faster
-            if self.porosityTypes != None:
-                for eN in range(self.q_porosity.shape[0]):
-                    self.q_porosity[eN,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-            if self.dragAlphaTypes != None:
-                for eN in range(self.q_dragAlpha.shape[0]):
-                    self.q_dragAlpha[eN,:] = self.dragAlphaTypes[self.elementMaterialTypes[eN]]
-            if self.dragBetaTypes != None:
-                for eN in range(self.q_dragBeta.shape[0]):
-                    self.q_dragBeta[eN,:] = self.dragBetaTypes[self.elementMaterialTypes[eN]]
-        #
-    def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        #VRANS
-        self.ebq_porosity = numpy.ones(cebq['det(J)'].shape,'d')
-        self.ebq_dragAlpha= numpy.ones(cebq['det(J)'].shape,'d')
-        self.ebq_dragAlpha.fill(self.dragAlpha)
-        self.ebq_dragBeta= numpy.ones(cebq['det(J)'].shape,'d')
-        self.ebq_dragBeta.fill(self.dragBeta)
-        if self.setParamsFunc != None:
-            self.setParamsFunc(cebq['x'],self.ebq_porosity,self.ebq_dragAlpha,self.ebq_dragBeta)
-        #TODO which mean to use or leave discontinuous
-        #TODO make loops faster
-        if self.porosityTypes != None:
-            for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
-                ebN = self.mesh.interiorElementBoundariesArray[ebNI]
-                eN_left  = self.mesh.elementBoundaryElementsArray[ebN,0]
-                eN_right = self.mesh.elementBoundaryElementsArray[ebN,1]
-                ebN_element_left = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
-                ebN_element_right = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,1]
-                avg = 0.5*(self.porosityTypes[self.elementMaterialTypes[eN_left]]+
-                           self.porosityTypes[self.elementMaterialTypes[eN_right]])
-                self.ebq_porosity[eN_left,ebN_element_left,:]  = self.porosityTypes[self.elementMaterialTypes[eN_left]]
-                self.ebq_porosity[eN_right,ebN_element_right,:]= self.porosityTypes[self.elementMaterialTypes[eN_right]]
-            for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
-                ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
-                eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
-                ebN_element = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
-                self.ebq_porosity[eN,ebN_element,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-        if self.dragAlphaTypes != None:
-            for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
-                ebN = self.mesh.interiorElementBoundariesArray[ebNI]
-                eN_left  = self.mesh.elementBoundaryElementsArray[ebN,0]
-                eN_right = self.mesh.elementBoundaryElementsArray[ebN,1]
-            ebN_element_left = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
-            ebN_element_right = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,1]
-            avg = 0.5*(self.dragAlphaTypes[self.elementMaterialTypes[eN_left]]+
-                       self.dragAlphaTypes[self.elementMaterialTypes[eN_right]])
-            self.ebq_dragAlpha[eN_left,ebN_element_left,:] = self.dragAlphaTypes[self.elementMaterialTypes[eN_left]]
-            self.ebq_dragAlpha[eN_right,ebN_element_right,:] = self.dragAlphaTypes[self.elementMaterialTypes[eN_right]]
-            for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
-                ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
-                eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
-                ebN_element = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
-                self.ebq_dragAlpha[eN,ebN_element,:] = self.dragAlphaTypes[self.elementMaterialTypes[eN]]
-        if self.dragBetaTypes != None:
-            for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
-                ebN = self.mesh.interiorElementBoundariesArray[ebNI]
-                eN_left  = self.mesh.elementBoundaryElementsArray[ebN,0]
-                eN_right = self.mesh.elementBoundaryElementsArray[ebN,1]
-            ebN_element_left = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
-            ebN_element_right = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,1]
-            avg = 0.5*(self.dragBetaTypes[self.elementMaterialTypes[eN_left]]+
-                       self.dragBetaTypes[self.elementMaterialTypes[eN_right]])
-            self.ebq_dragBeta[eN_left,ebN_element_left,:] = self.dragBetaTypes[self.elementMaterialTypes[eN_left]]
-            self.ebq_dragBeta[eN_right,ebN_element_right,:] = self.dragBetaTypes[self.elementMaterialTypes[eN_right]]
-            for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
-                ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
-                eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
-                ebN_element = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
-                self.ebq_dragBeta[eN,ebN_element,:] = self.dragBetaTypes[self.elementMaterialTypes[eN]]
-         #
+        RANS2P.Coefficients.initializeElementQuadrature(self,t,cq)
+        self.q_dragBeam1 = numpy.zeros(cq[('u',1)].shape,'d')
+        self.q_dragBeam2 = numpy.zeros(cq[('u',1)].shape,'d')
+        self.q_dragBeam3 = numpy.zeros(cq[('u',1)].shape,'d')
+
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        #VRANS
-        log("ebqe_global allocations in coefficients")
-        self.ebqe_porosity = numpy.ones(cebqe[('u',1)].shape,'d')
-        self.ebqe_dragAlpha = numpy.ones(cebqe[('u',1)].shape,'d')
-        self.ebqe_dragAlpha.fill(self.dragAlpha)
-        self.ebqe_dragBeta = numpy.ones(cebqe[('u',1)].shape,'d')
-        self.ebqe_dragBeta.fill(self.dragBeta)
-        log("porosity and drag")
-        #TODO make loops faster
-        if self.setParamsFunc != None:
-            self.setParamsFunc(cebqe['x'],self.ebqe_porosity,self.ebqe_dragAlpha,self.ebqe_dragBeta)
-        else:
-            if self.porosityTypes != None:
-                for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
-                    ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
-                    eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
-                    self.ebqe_porosity[ebNE,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-            if self.dragAlphaTypes != None:
-                for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
-                    ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
-                    eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
-                    self.ebqe_dragAlpha[ebNE,:] = self.dragAlphaTypes[self.elementMaterialTypes[eN]]
-            if self.dragBetaTypes != None:
-                for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
-                    ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
-                    eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
-                    self.ebqe_dragBeta[ebNE,:] = self.dragBetaTypes[self.elementMaterialTypes[eN]]
-        #
-    def updateToMovingDomain(self,t,c):
-        pass
-    def evaluateForcingTerms(self,t,c,mesh=None,mesh_trial_ref=None,mesh_l2g=None):
-        if c.has_key('x') and len(c['x'].shape) == 3:
-            if self.nd == 2:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
-                c[('r',0)].fill(0.0)
-                eps_source=self.eps_source
-                if self.waveFlag == 1:#secondOrderStokes:
-                    waveFunctions.secondOrderStokesWave(c[('r',0)].shape[0],
-                                                        c[('r',0)].shape[1],
-                                                        self.waveHeight,
-                                                        self.waveCelerity,
-                                                        self.waveFrequency,
-                                                        self.waveNumber,
-                                                        self.waterDepth,
-                                                        self.Omega_s[0][0],
-                                                        self.Omega_s[0][1],
-                                                        self.Omega_s[1][0],
-                                                        self.Omega_s[1][1],
-                                                        eps_source,
-                                                        c['x'],
-                                                        c[('r',0)],
-                                                        t)
-                elif self.waveFlag == 2:#solitary wave
-                    waveFunctions.solitaryWave(c[('r',0)].shape[0],
-                                               c[('r',0)].shape[1],
-                                               self.waveHeight,
-                                               self.waveCelerity,
-                                               self.waveFrequency,
-                                               self.waterDepth,
-                                               self.Omega_s[0][0],
-                                               self.Omega_s[0][1],
-                                               self.Omega_s[1][0],
-                                               self.Omega_s[1][1],
-                                               eps_source,
-                                               c['x'],
-                                               c[('r',0)],
-                                               t)
+        RANS2P.Coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
+        self.ebqe_dragBeam1 = numpy.zeros(cebqe[('u',1)].shape,'d')
+        self.ebqe_dragBeam2 = numpy.zeros(cebqe[('u',1)].shape,'d')
+        self.ebqe_dragBeam3 = numpy.zeros(cebqe[('u',1)].shape,'d')
 
-                elif self.waveFlag == 0:
-                    waveFunctions.monochromaticWave(c[('r',0)].shape[0],
-                                                    c[('r',0)].shape[1],
-                                                    self.waveHeight,
-                                                    self.waveCelerity,
-                                                    self.waveFrequency,
-                                                    self.Omega_s[0][0],
-                                                    self.Omega_s[0][1],
-                                                    self.Omega_s[1][0],
-                                                    self.Omega_s[1][1],
-                                                    eps_source,
-                                                    c['x'],
-                                                    c[('r',0)],
-                                                    t)
+    def initializeMesh(self, mesh):
+        RANS2P.Coefficients.initializeMesh(self, mesh)
+        if self.comm.isMaster():
+            self.netForceHistory = open("netForceHistory.txt","w")
+            self.forceHistory_drag = open("forceHistory_drag.txt","w")
+            self.velocityAverage=open("velocityAverage.txt","w")
+            self.dragCoefficientHistory=open("dragCoefficientHistory.txt", "w")
+            if self.beamRigid==False:
+                self.deflectionHistory=open("deflectionHistory.txt", "w")
 
-                #mwf debug
-                if numpy.isnan(c[('r',0)].any()):
-                    import pdb
-                    pdb.set_trace()
-            else:
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
-                c[('r',0)].fill(0.0)
-                eps_source=self.eps_source
-                if self.waveFlag == 1:#secondOrderStokes:
-                    waveFunctions.secondOrderStokesWave3d(c[('r',0)].shape[0],
-                                                          c[('r',0)].shape[1],
-                                                          self.waveHeight,
-                                                          self.waveCelerity,
-                                                          self.waveFrequency,
-                                                          self.waveNumber,
-                                                          self.waterDepth,
-                                                          self.Omega_s[0][0],
-                                                          self.Omega_s[0][1],
-                                                          self.Omega_s[1][0],
-                                                          self.Omega_s[1][1],
-                                                          self.Omega_s[2][0],
-                                                          self.Omega_s[2][1],
-                                                          eps_source,
-                                                          c['x'],
-                                                          c[('r',0)],
-                                                          t)
-                elif self.waveFlag == 2:#solitary wave
-                    waveFunctions.solitaryWave3d(c[('r',0)].shape[0],
-                                                 c[('r',0)].shape[1],
-                                                 self.waveHeight,
-                                                 self.waveCelerity,
-                                                 self.waveFrequency,
-                                                 self.waterDepth,
-                                                 self.Omega_s[0][0],
-                                                 self.Omega_s[0][1],
-                                                 self.Omega_s[1][0],
-                                                 self.Omega_s[1][1],
-                                                 self.Omega_s[2][0],
-                                                 self.Omega_s[2][1],
-                                                 eps_source,
-                                                 c['x'],
-                                                 c[('r',0)],
-                                                 t)
-
-                elif self.waveFlag == 0:
-                    waveFunctions.monochromaticWave3d(c[('r',0)].shape[0],
-                                                      c[('r',0)].shape[1],
-                                                      self.waveHeight,
-                                                      self.waveCelerity,
-                                                      self.waveFrequency,
-                                                      self.Omega_s[0][0],
-                                                      self.Omega_s[0][1],
-                                                      self.Omega_s[1][0],
-                                                      self.Omega_s[1][1],
-                                                      self.Omega_s[2][0],
-                                                      self.Omega_s[2][1],
-                                                      eps_source,
-                                                      c['x'],
-                                                      c[('r',0)],
-                                                      t)
-
-        else:
-            assert mesh != None
-            assert mesh_trial_ref != None
-            assert mesh_l2g != None
-            #cek hack
-            pass
-        #            self.calculateWaveFunction3d_ref(mesh_trial_ref,
-        #                                     mesh.nodeArray,
-        #                                     mesh_l2g,
-        #                                     mesh.elementDiametersArray,
-        #                                     numpy.array(self.Omega_s[0]),
-        #                                     numpy.array(self.Omega_s[1]),
-        #                                     numpy.array(self.Omega_s[2]),
-        #                                     t,
-        #                                     self.waveFlag,
-        #                                     self.epsFact_source,
-        #                                     self.waveHeight,
-        #                                     self.waveCelerity,
-        #                                     self.waveFrequency,
-        #                                     self.waveNumber,
-        #                                     self.waterDepth,
-        #                                     c[('r',0)])
-    def evaluate(self,t,c):
-        pass
-    def preStep(self,t,firstStep=False):
-        self.model.dt_last = self.model.timeIntegration.dt
-        pass
-        #if self.comm.isMaster():
-            #print "wettedAreas"
-            #print self.wettedAreas[:]
-            #print "Forces_p"
-            #print self.netForces_p[:,:]
-            #print "Forces_v"
-            #print self.netForces_v[:,:]
     def postStep(self,t,firstStep=False):
-        self.model.dt_last = self.model.timeIntegration.dt
-        self.model.q['dV_last'][:] = self.model.q['dV']
-        # if self.comm.isMaster():
-            #print "wettedAreas"
-            #print self.wettedAreas[:]
-            #print "Forces_p"
-            #print self.netForces_p[:,:]
-            #print "Forces_v"
-            #print self.netForces_v[:,:]
-            # self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
-            # self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
-            # self.forceHistory_p.flush()
-            # self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_v[-1,:]))
-            # self.forceHistory_v.flush()
-            # self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1,:]))
-            # self.momentHistory.flush()
+        
+        self.beamDrag=np.array([0.0,0.0,0.0])
+        if not self.beamRigid:
+            self.updateBeams(t)
+        else:
+            self.updateBeamLoad()
+        if self.comm.isMaster():
+            print "wettedAreas"
+            print self.wettedAreas[:]
+            print "Forces_p"
+            print self.netForces_p[:,:]
+            print "Forces_v"
+            print self.netForces_v[:,:]
+            #self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
+            #self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
+            #self.forceHistory_p.flush()
+            #self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_v[-1,:]))
+            #self.forceHistory_v.flush()
+            #self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1,:]))
+            #self.momentHistory.flush()
+            #self.forceHistory_drag.write("%21.16e %21.16e %21.16e  %21.16e\n" %tuple([t,self.beamDrag[0], self.beamDrag[1], self.beamDrag[2]]))
+            #self.forceHistory_drag.flush()
+            #self.velocityAverage.write("%21.16e %21.16e %21.16e  %21.16e\n" %tuple([t,self.vel_avg[0], self.vel_avg[1], self.vel_avg[2]]))
+            #self.velocityAverage.flush()
+            
+            if self.beamRigid==False:
+                self.deflectionHistory.write("%21.16e %21.16e %21.16e %21.16e\n" %tuple([t, self.avgHeight, self.avgDeflection, self.avgAngle]))
+                self.deflectionHistory.flush()
 
-class LevelModel(proteus.Transport.OneLevelTransport):
-    nCalls=0
+    def delta_h(self, r):
+        if r <= -2.0:
+            return 0.0
+        elif r <= -1.0:
+            return 1.0/8.0*(5.0+2.0*r-(-7.0-12.0*r-4*r*r)**0.5)
+        elif r <= 0.0:
+            return 1.0/8.0*(3.0+2.0*r+(1.0-4.0*r-4.0*r*r)**0.5)
+        elif r <= 1.0:
+            return 1.0/8.0*(3.0-2.0*r+(1.0+4.0*r-4.0*r*r)**0.5)
+        elif r <= 2.0:
+            return 1.0/8.0*(5.0-2.0*r-(-7.0+12.0*r-4.0*r*r)**0.5)
+        else:
+            return 0.0
+
+    def updateBeamLoad(self):
+        from proteus.flcbdfWrappers import globalSum
+
+        for I in range(self.nBeams):
+            if I%self.comm.size() == self.comm.rank():
+                if self.nd==3:
+                    self.Beam_Solver[I].updateLoads(self.q1[I,:],self.q2[I,:], self.q3[I,:])
+                elif self.nd==2:
+                    self.Beam_Solver[I].updateLoads(self.q3[I,:],self.q2[I,:], self.q1[I,:])
+                self.Beam_Solver[I].updateQs(endLoad=[0.0,0.0,0.0],scale=1.0)
+                if self.centerBox[I]==True:
+                    if self.nd==3:
+                        self.beamDrag[0]+= self.Beam_Solver[I].Q1[0]
+                        self.beamDrag[1]+= self.Beam_Solver[I].Q2[0]
+                        self.beamDrag[2]+= self.Beam_Solver[I].Q3[0]
+                    elif self.nd==2:
+                        self.beamDrag[0]+= self.Beam_Solver[I].Q3[0]
+                        self.beamDrag[1]+= self.Beam_Solver[I].Q2[0]
+                        self.beamDrag[2]+= self.Beam_Solver[I].Q1[0]
+        for i in range(3):
+            self.beamDrag.flat[i] = globalSum(self.beamDrag.flat[i])
+ 
+                                                                                                    
+                    
+    def updateBeams(self,t):
+        from proteus.flcbdfWrappers import globalSum
+        self.beamDrag = np.array([0.0,0.0,0.0])
+        loadSteps = 20
+        xv_hold=np.copy(self.xv)
+        yv_hold=np.copy(self.yv)
+        zv_hold=np.copy(self.zv)
+        xq_hold=np.copy(self.xq)
+        yq_hold=np.copy(self.yq)
+        zq_hold=np.copy(self.zq)
+        for I in range(self.nBeams):
+            self.xv[I].flat = 0.0 
+            self.yv[I].flat = 0.0
+            self.zv[I].flat = 0.0
+            self.xq[I].flat = 0.0 
+            self.yq[I].flat = 0.0
+            self.zq[I].flat = 0.0
+            if I%self.comm.size() == self.comm.rank():
+                if self.nd==3:
+                    self.Beam_Solver[I].updateLoads(self.q1[I,:],self.q2[I,:], self.q3[I,:])
+                elif self.nd==2:                   
+                    self.Beam_Solver[I].updateLoads(self.q3[I,:],self.q2[I,:], self.q1[I,:])
+                for j in range(loadSteps):
+                    self.Beam_Solver[I].Phi.flat[:]=0.0
+                    self.Beam_Solver[I].updateQs(endLoad=[0.0,0.0,0.0],scale=float(j)/float(loadSteps))
+                    counter = 0
+                    go = True
+                    Phi=np.copy(self.Beam_Solver[I].Phi)
+                    while go==True:
+                        self.Beam_Solver[I].calculateGradient_Hessian()
+                        self.Beam_Solver[I].setBCs()
+                        self.Beam_Solver[I].reduceOrder()
+                        error=self.Beam_Solver[I].calculateResidual()
+                        self.Beam_Solver[I].updateSolution()
+                        go=self.Beam_Solver[I].checkConvergence()
+                        counter += 1
+                        if counter >= 100:
+                            go = False
+                            self.Beam_Solver[I].Phi=np.copy(Phi)
+                if self.nd==3:
+                    xv , yv, zv =self.Beam_Solver[I].updateCoords()
+                    if np.min(zv) > -1.0e-10:
+                        self.xv[I,:] = xv
+                        self.yv[I,:] = yv
+                        self.zv[I,:] = zv
+                        self.xq[I,:].flat[:], self.yq[I,:].flat[:], self.zq[I,:].flat[:] = self.Beam_Solver[I].getCoords_at_Quad()
+                    else:
+                        self.xv[I,:] = xv_hold[I,:]
+                        self.yv[I,:] = yv_hold[I,:]
+                        self.zv[I,:] = zv_hold[I,:]
+                        self.xq[I,:] = xq_hold[I,:]
+                        self.yq[I,:] = yq_hold[I,:]
+                        self.zq[I,:] = zq_hold[I,:]
+                    self.beamDrag[0]+= self.Beam_Solver[I].Q1[0]
+                    self.beamDrag[1]+= self.Beam_Solver[I].Q2[0]
+                    self.beamDrag[2]+= self.Beam_Solver[I].Q3[0]
+                elif self.nd==2:
+                    self.zv[I,:], self.yv[I,:], self.xv[I,:] = self.Beam_Solver[I].updateCoords()
+                    self.zq[I,:].flat[:], self.yq[I,:].flat[:], self.xq[I,:].flat[:] = self.Beam_Solver[I].getCoords_at_Quad()
+                    self.xq[I,:]+=0.2
+                    self.xv[I,:]+=0.2
+                    self.beamDrag[0]+= self.Beam_Solver[I].Q3[0]
+                    self.beamDrag[1]+= self.Beam_Solver[I].Q2[0]
+                    self.beamDrag[2]+= self.Beam_Solver[I].Q1[0]
+        self.beamDrag[0] = globalSum(self.beamDrag[0])
+        self.beamDrag[1] = globalSum(self.beamDrag[1])
+        self.beamDrag[2] = globalSum(self.beamDrag[2])
+                                     
+        for i in range(self.nBeams*(self.nBeamElements+1)):
+            self.xv.flat[i] = globalSum(self.xv.flat[i])
+            self.yv.flat[i] = globalSum(self.yv.flat[i])
+            self.zv.flat[i] = globalSum(self.zv.flat[i])
+        for i in range(self.nBeams*self.nBeamElements*self.beam_quadOrder):
+            self.xq.flat[i] = globalSum(self.xq.flat[i])
+            self.yq.flat[i] = globalSum(self.yq.flat[i])
+            self.zq.flat[i] = globalSum(self.zq.flat[i])
+                
+        
+        if self.nBeams > 0 and self.comm.isMaster():
+            Archive_time_step(Beam_x=self.xv,
+                              Beam_y=self.yv,
+                              Beam_z=self.zv,
+                              nBeams=self.nBeams,
+                              filename=self.beamFilename,
+                              t=t,
+                              tStep=self.tStep)
+            self.tStep += 1
+            #self.avgHeight=0.0
+            #self.avgDeflection=0.0
+            #self.avgAngle=0.0
+            #nBeamsLocal=0
+            #for I in range(self.nBeams):
+            #    if self.centerBox[I]==True:
+            #        nBeamsLocal+=1
+            #        self.avgHeight+=self.zv[I,-1]
+            #        self.avgDeflection += abs(self.xv[I,-1]-self.xv[I,0])
+            #        self.avgAngle+= math.degrees(math.atan((self.zv[I,-1]-self.zv[I,-2])/(self.xv[I,-1]-self.xv[I,-2])))#self.Beam_Solver[I].Phi[-3]
+            self.avgHeight = np.sum(self.zv[:,-1])/float(self.nBeams)
+            self.avgDeflection = np.sum(np.abs(self.xv[:,-1]-self.xv[:,0]))/float(self.nBeams)
+            self.avgAngle = np.sum(np.rad2deg(np.arctan((self.zv[:,-1]-self.zv[:,-2])/(self.xv[:,-1]-self.xv[:,-2]))))/float(self.nBeams)
+                
+
+                    
+    def initializeBeams(self):
+        comm = Comm.get()
+        self.comm=comm
+
+        bBox=[.25*.69, .69-.25*.69]
+        self.centerBox=[]
+
+        self.nBeams = len(self.beamLocation)
+        # eulerian coords for beam at mesh vertices
+        self.xv=np.zeros((self.nBeams, self.nBeamElements+1))
+        self.yv=np.zeros((self.nBeams, self.nBeamElements+1))
+        self.zv=np.zeros((self.nBeams, self.nBeamElements+1))
+
+        # distributed loads for beam at quadrature points #mesh vertices
+        self.q1=np.zeros((self.nBeams, self.nBeamElements,self.beam_quadOrder)) #np.zeros((self.nBeams, self.nBeamElements+1))
+        self.q2=np.zeros((self.nBeams, self.nBeamElements,self.beam_quadOrder)) #np.zeros((self.nBeams, self.nBeamElements+1))
+        self.q3=np.zeros((self.nBeams, self.nBeamElements,self.beam_quadOrder))#np.zeros((self.nBeams, self.nBeamElements+1))
+
+        #element diameters
+        self.Beam_h = np.zeros((self.nBeams, self.nBeamElements))
+        
+        #eulerian coords for beam at quadrataure points
+        self.xq=np.zeros((self.nBeams, self.nBeamElements,self.beam_quadOrder))
+        self.yq=np.zeros((self.nBeams, self.nBeamElements,self.beam_quadOrder))
+        self.zq=np.zeros((self.nBeams, self.nBeamElements,self.beam_quadOrder))
+
+        #integration constant for beams
+        self.dV_beam = np.zeros((self.nBeams, self.nBeamElements,self.beam_quadOrder))
+
+        self.Beam_mesh=np.zeros((self.nBeams, self.nBeamElements+1))
+        
+        self.Beam_Solver=[]
+        boxCount=0
+        for i in range(self.nBeams):
+            if self.beamLocation[i][1] >= bBox[0] and self.beamLocation[i][1] <= bBox[1]:
+                self.centerBox.append(True)
+                boxCount+=1
+            else:
+                self.centerBox.append(False)
+            self.Beam_Solver.append(beamFEM.FEMTools(L=self.beamLength[i],
+                                          nElements = self.nBeamElements,
+                                          quadOrder= self.beam_quadOrder,
+                                          EI = self.EI[i],
+                                          GJ = self.GJ[i],
+                                          nlTol = self.beam_nlTol,
+                                          useSparse = self.beam_useSparse,
+                                          beamLocation=self.beamLocation[i]))
+            self.Beam_mesh[i,:], self.Beam_h[i,:] = self.Beam_Solver[i].structuredMesh()
+            self.Beam_Solver[i].GaussQuad()
+            self.Beam_Solver[i].basisFunctions()
+            self.Beam_Solver[i].initializePhi()
+            self.Beam_Solver[i].initializeCoords()
+            if self.nd==3:
+		self.xv[i,:], self.yv[i,:], self.zv[i,:] = self.Beam_Solver[i].updateCoords()
+            elif self.nd==2:
+		self.zv[i,:], self.yv[i,:], self.xv[i,:] = self.Beam_Solver[i].updateCoords()
+                self.xv[i,:]+= 0.2
+            #self.xv[i,:], self.yv[i,:], self.zv[i,:] = self.Beam_Solver[i].updateCoords()
+            for j in range(self.nBeamElements):
+                for k in range(self.beam_quadOrder):
+                    self.dV_beam[i,j,k] = 0.5*self.Beam_h[i,j]*self.Beam_Solver[i].w[k]
+           
+            if self.nd==3:
+                self.xq[i,:].flat[:], self.yq[i,:].flat[:], self.zq[i,:].flat[:] = self.Beam_Solver[i].getCoords_at_Quad()
+            elif self.nd==2:
+                self.zq[i,:].flat[:], self.yq[i,:].flat[:], self.xq[i,:].flat[:] = self.Beam_Solver[i].getCoords_at_Quad()
+                self.xq[i,:] += 0.2
+
+            self.tStep=0
+            if self.nBeams > 0 and self.comm.isMaster():
+                Archive_time_step(Beam_x=self.xv,
+                                  Beam_y=self.yv,
+                                  Beam_z=self.zv,
+                                  nBeams=self.nBeams,
+                                  filename=self.beamFilename,
+                                  t=0.0,
+                                  tStep=self.tStep)
+            self.tStep+=1
+        print boxCount
+   
+        
+    pass
+
+class LevelModel(proteus.mprans.RANS2P.LevelModel):
+    # def __init__(self,
+    #              uDict,
+    #              phiDict,
+    #              testSpaceDict,
+    #              matType,
+    #              dofBoundaryConditionsDict,
+    #              dofBoundaryConditionsSetterDict,
+    #              coefficients,
+    #              elementQuadrature,
+    #              elementBoundaryQuadrature,
+    #              fluxBoundaryConditionsDict=None,
+    #              advectiveFluxBoundaryConditionsSetterDict=None,
+    #              diffusiveFluxBoundaryConditionsSetterDictDict=None,
+    #              stressTraceBoundaryConditionsSetterDictDict=None,
+    #              stabilization=None,
+    #              shockCapturing=None,
+    #              conservativeFluxDict=None,
+    #              numericalFluxType=None,
+    #              TimeIntegrationClass=None,
+    #              massLumping=False,
+    #              reactionLumping=False,
+    #              options=None,
+    #              name='RANS2P',
+    #              reuse_trial_and_test_quadrature=True,
+    #              sd = True,
+    #              movingDomain=False):
+    #      RANS2P.LevelModel.__init__(self,
+    #                                       uDict,
+    #                                       phiDict,
+    #                                       testSpaceDict,
+    #                                       matType,
+    #                                       dofBoundaryConditionsDict,
+    #                                       dofBoundaryConditionsSetterDict,
+    #                                       coefficients,
+    #                                       elementQuadrature,
+    #                                       elementBoundaryQuadrature,
+    #                                       fluxBoundaryConditionsDict=None,
+    #                                       advectiveFluxBoundaryConditionsSetterDict=None,
+    #                                       diffusiveFluxBoundaryConditionsSetterDictDict=None,
+    #                                       stressTraceBoundaryConditionsSetterDictDict=None,
+    #                                       stabilization=None,
+    #                                       shockCapturing=None,
+    #                                       conservativeFluxDict=None,
+    #                                       numericalFluxType=None,
+    #                                       TimeIntegrationClass=None,
+    #                                       massLumping=False,
+    #                                       reactionLumping=False,
+    #                                       options=None,
+    #                                       name='RANS2P',
+    #                                       reuse_trial_and_test_quadrature=True,
+    #                                       sd = True,
+    #                                       movingDomain=False)
+    #      self.rans2p_ib = cRANS2P_IB_base(self.nSpace_global,
+    #                                    self.nQuadraturePoints_element,
+    #                                    self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
+    #                                    self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
+    #                                    self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
+    #                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
+    #                                    compKernelFlag)
+
     def __init__(self,
                  uDict,
                  phiDict,
@@ -709,7 +503,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.lowmem=True
         self.timeTerm=True#allow turning off  the  time derivative
         self.testIsTrial=True
-        self.phiTrialIsTrial=True
+        self.phiTrialIsTrial=True            
         self.u = uDict
         self.Hess=False
         if isinstance(self.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
@@ -740,42 +534,42 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization != None:
-	    for ci in range(self.nc):
-		if coefficients.mass.has_key(ci):
-		    for flag in coefficients.mass[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.advection.has_key(ci):
-		    for  flag  in coefficients.advection[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.diffusion.has_key(ci):
-		    for diffusionDict in coefficients.diffusion[ci].values():
-			for  flag  in diffusionDict.values():
-			    if flag != 'constant':
-				self.stabilizationIsNonlinear=True
-		if  coefficients.potential.has_key(ci):
- 		    for flag in coefficients.potential[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.reaction.has_key(ci):
-		    for flag in coefficients.reaction[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.hamiltonian.has_key(ci):
-		    for flag in coefficients.hamiltonian[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
+        if self.stabilization != None:
+            for ci in range(self.nc):
+        	if coefficients.mass.has_key(ci):
+        	    for flag in coefficients.mass[ci].values():
+        		if flag == 'nonlinear':
+        		    self.stabilizationIsNonlinear=True
+        	if  coefficients.advection.has_key(ci):
+        	    for  flag  in coefficients.advection[ci].values():
+        		if flag == 'nonlinear':
+        		    self.stabilizationIsNonlinear=True
+        	if  coefficients.diffusion.has_key(ci):
+        	    for diffusionDict in coefficients.diffusion[ci].values():
+        		for  flag  in diffusionDict.values():
+        		    if flag != 'constant':
+        			self.stabilizationIsNonlinear=True
+        	if  coefficients.potential.has_key(ci):
+        	    for flag in coefficients.potential[ci].values():
+        		if  flag == 'nonlinear':
+        		    self.stabilizationIsNonlinear=True
+        	if coefficients.reaction.has_key(ci):
+        	    for flag in coefficients.reaction[ci].values():
+        		if  flag == 'nonlinear':
+        		    self.stabilizationIsNonlinear=True
+        	if coefficients.hamiltonian.has_key(ci):
+        	    for flag in coefficients.hamiltonian[ci].values():
+        		if  flag == 'nonlinear':
+        		    self.stabilizationIsNonlinear=True
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
-                                                 (numericalFluxType != None) or
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
+                                                 (numericalFluxType != None) or 
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
-	#
+        #
         #calculate some dimensions
         #
         self.nSpace_global    = self.u[0].femSpace.nSpace_global #assume same space dim for all variables
@@ -785,7 +579,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -840,7 +634,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys:
+            for I in self.coefficients.elementBoundaryIntegralKeys: 
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -887,11 +681,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('mt',1)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('mt',2)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('mt',3)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        #self.q[('dV_u',1)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        #self.q[('dV_u',2)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        #self.q[('dV_u',3)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q['dV'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q['dV_last'] = -1000*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('dV_u',1)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('dV_u',2)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('dV_u',3)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('f',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('velocity',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q['velocity_solid'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
@@ -924,7 +716,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('velocity',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         self.ebqe[('velocity',2)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         self.ebqe[('velocity',3)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
-        #VRANS start, defaults to RANS
+        #VRANS start, defaults to RANS 
         self.q[('r',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q['eddy_viscosity'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         #VRANS end
@@ -1060,7 +852,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         log("Dumping quadrature shapes for model %s" % self.name,level=9)
         log("Element quadrature array (q)", level=9)
         for (k,v) in self.q.iteritems(): log(str((k,v.shape)),level=9)
-        log("Element boundary quadrature (ebq)",level=9)
+        log("Element boundary quadrature (ebq)",level=9) 
         for (k,v) in self.ebq.iteritems(): log(str((k,v.shape)),level=9)
         log("Global element boundary quadrature (ebq_global)",level=9)
         for (k,v) in self.ebq_global.iteritems(): log(str((k,v.shape)),level=9)
@@ -1078,15 +870,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 (self.mesh.nElements_global,
                  self.nDOF_test_element[ci]),
                 'd')]
-	self.inflowBoundaryBC = {}
-	self.inflowBoundaryBC_values = {}
-	self.inflowFlux = {}
- 	for cj in range(self.nc):
- 	    self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
- 	    self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
- 	    self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.inflowBoundaryBC = {}
+        self.inflowBoundaryBC_values = {}
+        self.inflowFlux = {}
+        for cj in range(self.nc):
+            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
+            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
+            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.internalNodes = set(range(self.mesh.nNodes_global))
-	#identify the internal nodes this is ought to be in mesh
+        #identify the internal nodes this is ought to be in mesh
         ##\todo move this to mesh
         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -1112,7 +904,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
              self.timeIntegration = TimeIntegrationClass(self)
-
+           
         if options != None:
             self.timeIntegration.setFromOptions(options)
         log(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -1161,7 +953,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         log("setting up post-processing")
         from proteus import PostProcessingTools
-        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
+        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
         log(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         log("initializing archiver")
@@ -1233,14 +1025,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                          compKernelFlag)
         else:
             log("calling  cRANS2P_base ctor")
-            self.rans2p = cRANS2P_base(self.nSpace_global,
+            self.rans2p = cRANS2P_IB_base(self.nSpace_global,
                                        self.nQuadraturePoints_element,
                                        self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
                                        self.u[0].femSpace.referenceFiniteElement.localFunctionSpace.dim,
                                        self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
                                        compKernelFlag)
-
+        
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -1281,10 +1073,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    if cj == 0:
-                        self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-                    else:
-                        self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t) + self.MOVING_DOMAIN*self.mesh.nodeVelocityArray[dofN,cj-1]
+                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        self.r = r
+        #self.beamStep()
+        # self.coefficients.beamDrag=np.array([0.0,0.0,0.0])
+        
+        # self.coefficients.updateBeamLoad()
+        # print self.coefficients.beamDrag
+        # import pdb
+        # pdb.set_trace()
+
         self.rans2p.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1349,7 +1147,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_turb_var[0],
             self.coefficients.q_turb_var[1],
             self.coefficients.q_turb_var_grad[0],
-            self.q['eddy_viscosity'],
             #VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.u[1].femSpace.dofMap.l2g,
@@ -1362,7 +1159,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_vf,
             self.coefficients.q_phi,
             self.coefficients.q_n,
-            self.coefficients.q_kappa,
+            self.coefficients.q_kappa,            
             self.timeIntegration.m_tmp[1],
             self.timeIntegration.m_tmp[2],
             self.timeIntegration.m_tmp[3],
@@ -1370,12 +1167,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[1],
             self.timeIntegration.beta_bdf[2],
             self.timeIntegration.beta_bdf[3],
-            self.q['dV'],
-            self.q['dV_last'],
             self.stabilization.v_last,
             self.q[('cfl',0)],
-            self.q[('numDiff',1,1)],
-            self.q[('numDiff',2,2)],
+            self.q[('numDiff',1,1)], 
+            self.q[('numDiff',2,2)], 
             self.q[('numDiff',3,3)],
             self.shockCapturing.numDiff_last[1],
             self.shockCapturing.numDiff_last[2],
@@ -1435,29 +1230,29 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('velocity',0)],
             self.ebq_global[('totalFlux',0)],
             self.elementResidual[0],
-            self.mesh.elementMaterialTypes,
             self.mesh.elementBoundaryMaterialTypes,
             self.coefficients.barycenters,
             self.coefficients.wettedAreas,
             self.coefficients.netForces_p,
             self.coefficients.netForces_v,
-            self.coefficients.netMoments)
+            self.coefficients.netMoments,
+            self.coefficients.q_dragBeam1,
+            self.coefficients.q_dragBeam2,
+            self.coefficients.q_dragBeam3,
+            self.coefficients.ebqe_dragBeam1,
+            self.coefficients.ebqe_dragBeam2,
+            self.coefficients.ebqe_dragBeam3)
 	from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
             for I in range(3):
-                self.coefficients.netForces_p[i,I]  = globalSum(self.coefficients.netForces_p[i,I])
-                self.coefficients.netForces_v[i,I]  = globalSum(self.coefficients.netForces_v[i,I])
-                self.coefficients.netMoments[i,I] = globalSum(self.coefficients.netMoments[i,I])
+                self.coefficients.netForces_p[i,I]  = globalSum(self.coefficients.netForces_p[i,I]) 
+                self.coefficients.netForces_v[i,I]  = globalSum(self.coefficients.netForces_v[i,I]) 
+                self.coefficients.netMoments[i,I] = globalSum(self.coefficients.netMoments[i,I]) 
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    if cj == 0:
-                        r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-                    else:
-                        r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t) - self.MOVING_DOMAIN*self.mesh.nodeVelocityArray[dofN,cj-1]
-
-
+                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
         cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
         log("Maximum CFL = " + str(cflMax),level=2)
         if self.stabilization:
@@ -1490,7 +1285,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(3,1)] = self.csrColumnOffsets[(0,2)]
             self.csrColumnOffsets_eb[(3,2)] = self.csrColumnOffsets[(0,2)]
             self.csrColumnOffsets_eb[(3,3)] = self.csrColumnOffsets[(0,2)]
-
+  
         self.rans2p.calculateJacobian(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1569,8 +1364,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[1],
             self.timeIntegration.beta_bdf[2],
             self.timeIntegration.beta_bdf[3],
-            self.q['dV'],
-            self.q['dV_last'],
             self.stabilization.v_last,
             self.q[('cfl',0)],
             self.shockCapturing.numDiff_last[1],
@@ -1656,20 +1449,28 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(3,1)],
             self.csrColumnOffsets_eb[(3,2)],
             self.csrColumnOffsets_eb[(3,3)],
-            self.mesh.elementMaterialTypes)
+            self.coefficients.q_dragBeam1,
+            self.coefficients.q_dragBeam2,
+            self.coefficients.q_dragBeam3,
+            self.coefficients.ebqe_dragBeam1,
+            self.coefficients.ebqe_dragBeam2,
+            self.coefficients.ebqe_dragBeam3)
 
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof,numpy.inf),numpy.linalg.norm(self.u[2].dof,numpy.inf),numpy.linalg.norm(self.u[3].dof,numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace=True
         else:
             self.pp_hasConstantNullSpace=False
+
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
+            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
                     for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
                         if (self.colind[i] == global_dofN):
-                            self.nzval[i] = 1.0
+                            #print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s was self.nzval[i]= %s now =%s " % (cj,dofN,global_dofN,self.nzval[i],scaling)
+                            self.nzval[i] = scaling
                         else:
                             self.nzval[i] = 0.0
                             #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
@@ -1677,159 +1478,211 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
-    def calculateElementQuadrature(self,domainMoved=False):
-        """
-        Calculate the physical location and weights of the quadrature rules
-        and the shape information at the quadrature points.
 
-        This function should be called only when the mesh changes.
-        """
-        if self.postProcessing:
-            self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
-                                                      self.q['x'])
-            self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
-                                                             self.q['J'],
-                                                             self.q['inverse(J)'],
-                                                             self.q['det(J)'])
-            self.u[0].femSpace.getBasisValues(self.elementQuadraturePoints,self.q[('v',0)])
-        self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
-        self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
-        self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
-        self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
-        self.u[1].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
-        self.u[1].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
-        self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
-        if self.stabilization != None and not domainMoved:
-            self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
-            self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing != None and not domainMoved:
-            self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
-    def calculateElementBoundaryQuadrature(self, domainMoved=False):
-        """
-        Calculate the physical location and weights of the quadrature rules
-        and the shape information at the quadrature points on element boundaries.
-
-        This function should be called only when the mesh changes.
-        """
-        if self.postProcessing:
-            self.u[0].femSpace.elementMaps.getValuesTrace(self.elementBoundaryQuadraturePoints,
-                                                          self.ebq['x'])
-            self.u[0].femSpace.elementMaps.getJacobianValuesTrace(self.elementBoundaryQuadraturePoints,
-                                                                  self.ebq['inverse(J)'],
-                                                                  self.ebq['g'],
-                                                                  self.ebq['sqrt(det(g))'],
-                                                                  self.ebq['n'])
-            cfemIntegrals.copyLeftElementBoundaryInfo(self.mesh.elementBoundaryElementsArray,
-                                                      self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                      self.mesh.exteriorElementBoundariesArray,
-                                                      self.mesh.interiorElementBoundariesArray,
-                                                      self.ebq['x'],
-                                                      self.ebq['n'],
-                                                      self.ebq_global['x'],
-                                                      self.ebq_global['n'])
-            self.u[0].femSpace.elementMaps.getInverseValuesTrace(self.ebq['inverse(J)'],self.ebq['x'],self.ebq['hat(x)'])
-            self.u[0].femSpace.elementMaps.getPermutations(self.ebq['hat(x)'])
-            self.testSpace[0].getBasisValuesTrace(self.u[0].femSpace.elementMaps.permutations,
-                                                  self.ebq['hat(x)'],
-                                                  self.ebq[('w',0)])
-            self.u[0].femSpace.getBasisValuesTrace(self.u[0].femSpace.elementMaps.permutations,
-                                                                self.ebq['hat(x)'],
-                                                                self.ebq[('v',0)])
-            cfemIntegrals.calculateElementBoundaryIntegrationWeights(self.ebq['sqrt(det(g))'],
-                                                                     self.elementBoundaryQuadratureWeights[('u',0)],
-                                                                     self.ebq[('dS_u',0)])
-    def calculateExteriorElementBoundaryQuadrature(self, domainMoved=False):
-        """
-        Calculate the physical location and weights of the quadrature rules
-        and the shape information at the quadrature points on global element boundaries.
-
-        This function should be called only when the mesh changes.
-        """
-        log("initalizing ebqe vectors for post-procesing velocity")
-        if self.postProcessing:
-            self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
-                                                                    self.ebqe['x'])
-            self.u[0].femSpace.elementMaps.getJacobianValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
-                                                                                self.ebqe['inverse(J)'],
-                                                                                self.ebqe['g'],
-                                                                                self.ebqe['sqrt(det(g))'],
-                                                                                self.ebqe['n'])
-            cfemIntegrals.calculateIntegrationWeights(self.ebqe['sqrt(det(g))'],
-                                                              self.elementBoundaryQuadratureWeights[('u',0)],
-                                                              self.ebqe[('dS_u',0)])
-        #
-        #get physical locations of element boundary quadrature points
-        #
-        #assume all components live on the same mesh
-        log("initalizing basis info")
-        self.u[0].femSpace.elementMaps.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
-        self.u[0].femSpace.elementMaps.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
-        self.u[0].femSpace.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
-        self.u[0].femSpace.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
-        self.u[1].femSpace.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
-        self.u[1].femSpace.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
-        self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
-                                                                    self.ebqe['x'])
-        log("setting flux boundary conditions")
-        if not domainMoved:
-            self.fluxBoundaryConditionsObjectsDict = dict([(cj,FluxBoundaryConditions(self.mesh,
-                                                                                      self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                                                      self.ebqe[('x')],
-                                                                                      self.advectiveFluxBoundaryConditionsSetterDict[cj],
-                                                                                      self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
-                                                           for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
-            log("initializing coefficients ebqe")
-            self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t,self.ebqe)
-        log("done with ebqe")
-    def estimate_mt(self):
-        pass
-    def calculateSolutionAtQuadrature(self):
-        pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
-        if self.postProcessing and self.conservativeFlux:
-            self.rans2p.calculateVelocityAverage(self.mesh.nExteriorElementBoundaries_global,
-                                                 self.mesh.exteriorElementBoundariesArray,
-                                                 self.mesh.nInteriorElementBoundaries_global,
-                                                 self.mesh.interiorElementBoundariesArray,
-                                                 self.mesh.elementBoundaryElementsArray,
-                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                 self.mesh.nodeArray,
-                                                 self.mesh.nodeVelocityArray,
-                                                 self.MOVING_DOMAIN,
-                                                 self.mesh.elementNodesArray,
-                                                 self.u[0].femSpace.elementMaps.psi_trace,
-                                                 self.u[0].femSpace.elementMaps.grad_psi_trace,
-                                                 self.u[0].femSpace.elementMaps.boundaryNormals,
-                                                 self.u[0].femSpace.elementMaps.boundaryJacobians,
-                                                 self.u[1].femSpace.dofMap.l2g,
-                                                 self.u[1].dof,
-                                                 self.u[2].dof,
-                                                 self.u[3].dof,
-                                                 self.u[1].femSpace.psi_trace,
-                                                 self.ebqe[('velocity',0)],
-                                                 self.ebq_global[('velocityAverage',0)])
-            if self.movingDomain:
-                log("Element Quadrature",level=3)
-                self.calculateElementQuadrature(domainMoved=True)
-                log("Element Boundary Quadrature",level=3)
-                self.calculateElementBoundaryQuadrature(domainMoved=True)
-                log("Global Exterior Element Boundary Quadrature",level=3)
-                self.calculateExteriorElementBoundaryQuadrature(domainMoved=True)
-                for ci in range(len(self.velocityPostProcessor.vpp_algorithms)):
-                    for cj in self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian.keys():
-                        self.velocityPostProcessor.vpp_algorithms[ci].updateWeights()
-                        self.velocityPostProcessor.vpp_algorithms[ci].computeGeometricInfo()
-                        self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian[cj] = True
-        OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+        #RANS2P.LevelModel.calculateAuxiliaryQuantitiesAfterStep(self)
+        self.beamStep()
 
-    def updateAfterMeshMotion(self):
-        pass
+    def beamStep(self):
+        self.coefficients.vel_avg=np.array([0.0,0.0,0.0])
+        self.coefficients.q_dragBeam1.flat[:]=0.0
+        self.coefficients.q_dragBeam2.flat[:]=0.0
+        self.coefficients.q_dragBeam3.flat[:]=0.0
+        self.coefficients.ebqe_dragBeam1.flat[:]=0.0
+        self.coefficients.ebqe_dragBeam2.flat[:]=0.0
+        self.coefficients.ebqe_dragBeam3.flat[:]=0.0
+        self.q1 = numpy.zeros(self.coefficients.q1.shape,'d')#.flat[:]
+        self.q2 = numpy.zeros(self.coefficients.q1.shape,'d')#.flat[:]
+        self.q3 = numpy.zeros(self.coefficients.q1.shape,'d')#.flat[:]
+        self.coefficients.netBeamDrag.flat[:]=0.0
+        self.rans2p.calculateBeams(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.nodeVelocityArray,
+            self.MOVING_DOMAIN,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[1].femSpace.psi,
+            self.u[1].femSpace.grad_psi,
+            self.u[1].femSpace.psi,
+            self.u[1].femSpace.grad_psi,
+            #element boundary
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.elementBoundaryQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[1].femSpace.psi_trace,
+            self.u[1].femSpace.grad_psi_trace,
+            self.u[1].femSpace.psi_trace,
+            self.u[1].femSpace.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            #physics
+            self.eb_adjoint_sigma,
+            self.elementDiameter,#mesh.elementDiametersArray,
+            self.mesh.nodeDiametersArray,
+            self.stabilization.hFactor,
+            self.mesh.nElements_global,
+            self.mesh.nElementBoundaries_owned,
+            self.coefficients.useRBLES,
+            self.coefficients.useMetrics,
+            self.timeIntegration.alpha_bdf,
+            self.coefficients.epsFact_density,
+            self.coefficients.epsFact,
+            self.coefficients.sigma,
+            self.coefficients.rho_0,
+            self.coefficients.nu_0,
+            self.coefficients.rho_1,
+            self.coefficients.nu_1,
+            self.coefficients.smagorinskyConstant,
+            self.coefficients.turbulenceClosureModel,
+            self.Ct_sge,
+            self.Cd_sge,
+            self.shockCapturing.shockCapturingFactor,
+            self.numericalFlux.penalty_constant,
+            #VRANS start
+            self.coefficients.epsFact_solid,
+            self.coefficients.q_phi_solid,
+            self.coefficients.q_velocity_solid,
+            self.coefficients.q_porosity,
+            self.coefficients.q_dragAlpha,
+            self.coefficients.q_dragBeta,
+            self.q[('r',0)],
+            self.coefficients.q_turb_var[0],
+            self.coefficients.q_turb_var[1],
+            self.coefficients.q_turb_var_grad[0],
+            #VRANS end
+            self.u[0].femSpace.dofMap.l2g,
+            self.u[1].femSpace.dofMap.l2g,
+            self.u[0].dof,
+            self.u[1].dof,
+            self.u[2].dof,
+            self.u[3].dof,
+            self.coefficients.g,
+            self.coefficients.useVF,
+            self.coefficients.q_vf,
+            self.coefficients.q_phi,
+            self.coefficients.q_n,
+            self.coefficients.q_kappa,            
+            self.timeIntegration.m_tmp[1],
+            self.timeIntegration.m_tmp[2],
+            self.timeIntegration.m_tmp[3],
+            self.q[('f',0)],
+            self.timeIntegration.beta_bdf[1],
+            self.timeIntegration.beta_bdf[2],
+            self.timeIntegration.beta_bdf[3],
+            self.stabilization.v_last,
+            self.q[('cfl',0)],
+            self.q[('numDiff',1,1)], 
+            self.q[('numDiff',2,2)], 
+            self.q[('numDiff',3,3)],
+            self.shockCapturing.numDiff_last[1],
+            self.shockCapturing.numDiff_last[2],
+            self.shockCapturing.numDiff_last[3],
+            self.coefficients.sdInfo[(1,1)][0],self.coefficients.sdInfo[(1,1)][1],
+            self.coefficients.sdInfo[(1,2)][0],self.coefficients.sdInfo[(1,2)][1],
+            self.coefficients.sdInfo[(1,3)][0],self.coefficients.sdInfo[(1,3)][1],
+            self.coefficients.sdInfo[(2,2)][0],self.coefficients.sdInfo[(2,2)][1],
+            self.coefficients.sdInfo[(2,1)][0],self.coefficients.sdInfo[(2,1)][1],
+            self.coefficients.sdInfo[(2,3)][0],self.coefficients.sdInfo[(2,3)][1],
+            self.coefficients.sdInfo[(3,3)][0],self.coefficients.sdInfo[(3,3)][1],
+            self.coefficients.sdInfo[(3,1)][0],self.coefficients.sdInfo[(3,1)][1],
+            self.coefficients.sdInfo[(3,2)][0],self.coefficients.sdInfo[(3,2)][1],
+            self.offset[0],self.offset[1],self.offset[2],self.offset[3],
+            self.stride[0],self.stride[1],self.stride[2],self.stride[3],
+            self.r,
+            self.mesh.nExteriorElementBoundaries_global,
+            self.mesh.exteriorElementBoundariesArray,
+            self.mesh.elementBoundaryElementsArray,
+            self.mesh.elementBoundaryLocalElementBoundariesArray,
+            self.coefficients.ebqe_vf,
+            self.coefficients.bc_ebqe_vf,
+            self.coefficients.ebqe_phi,
+            self.coefficients.bc_ebqe_phi,
+            self.coefficients.ebqe_n,
+            self.coefficients.ebqe_kappa,
+            #VRANS start
+            self.coefficients.ebqe_porosity,
+            self.coefficients.ebqe_turb_var[0],
+            self.coefficients.ebqe_turb_var[1],
+            #VRANS end
+            self.numericalFlux.isDOFBoundary[0],
+            self.numericalFlux.isDOFBoundary[1],
+            self.numericalFlux.isDOFBoundary[2],
+            self.numericalFlux.isDOFBoundary[3],
+            self.ebqe[('advectiveFlux_bc_flag',0)],
+            self.ebqe[('advectiveFlux_bc_flag',1)],
+            self.ebqe[('advectiveFlux_bc_flag',2)],
+            self.ebqe[('advectiveFlux_bc_flag',3)],
+            self.ebqe[('diffusiveFlux_bc_flag',1,1)],
+            self.ebqe[('diffusiveFlux_bc_flag',2,2)],
+            self.ebqe[('diffusiveFlux_bc_flag',3,3)],
+            self.numericalFlux.ebqe[('u',0)],
+            self.ebqe[('advectiveFlux_bc',0)],
+            self.ebqe[('advectiveFlux_bc',1)],
+            self.ebqe[('advectiveFlux_bc',2)],
+            self.ebqe[('advectiveFlux_bc',3)],
+            self.numericalFlux.ebqe[('u',1)],
+            self.ebqe[('diffusiveFlux_bc',1,1)],
+            self.ebqe['penalty'],
+            self.numericalFlux.ebqe[('u',2)],
+            self.ebqe[('diffusiveFlux_bc',2,2)],
+            self.numericalFlux.ebqe[('u',3)],
+            self.ebqe[('diffusiveFlux_bc',3,3)],
+            self.q['x'],
+            self.q[('velocity',0)],
+            self.ebqe[('velocity',0)],
+            self.ebq_global[('totalFlux',0)],
+            self.elementResidual[0],
+            self.mesh.elementBoundaryMaterialTypes,
+            self.coefficients.barycenters,
+            self.coefficients.wettedAreas,
+            self.coefficients.netForces_p,
+            self.coefficients.netForces_v,
+            self.coefficients.netMoments,
+            self.coefficients.q_dragBeam1,
+            self.coefficients.q_dragBeam2,
+            self.coefficients.q_dragBeam3,
+            self.coefficients.ebqe_dragBeam1,
+            self.coefficients.ebqe_dragBeam2,
+            self.coefficients.ebqe_dragBeam3,
+            self.coefficients.nBeams,
+            self.coefficients.nBeamElements,
+            self.coefficients.beam_quadOrder,
+            self.coefficients.beam_Cd,
+            self.coefficients.beamRadius,
+            self.coefficients.xq, #.flat[:],
+            self.coefficients.yq, #.flat[:],
+            self.coefficients.zq, #.flat[:],
+            self.coefficients.Beam_h, #.flat[:],
+            self.coefficients.dV_beam, #.flat[:],
+            self.q1,
+            self.q2,
+            self.q3,
+            self.coefficients.vel_avg,
+            self.coefficients.netBeamDrag)
+        #import pdb
+        #pdb.set_trace()
+ 
+        from proteus.flcbdfWrappers import globalSum
+        for i in range(self.coefficients.nBeams):
+            for j in range(self.coefficients.nBeamElements):
+                for k in range(self.coefficients.beam_quadOrder):
+                    self.coefficients.q1[i,j,k] = globalSum(self.q1[i,j,k])#globalSum(self.q1[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
+                    self.coefficients.q2[i,j,k] = globalSum(self.q2[i,j,k])#globalSum(self.q2[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
+                    self.coefficients.q3[i,j,k] = globalSum(self.q3[i,j,k])#globalSum(self.q3[i*(self.coefficients.nBeamElements*self.coefficients.beam_quadOrder)+j*self.coefficients.beam_quadOrder+k])
+        for i in range(3):
+            self.coefficients.vel_avg[i]=globalSum(self.coefficients.vel_avg[i])
 
-def getErgunDrag(porosity, meanGrainSize,viscosity):
-    #cek hack, this doesn't seem right
-    #cek todo look up correct Ergun model for alpha and beta
-    voidFrac=1.0-porosity
-    if voidFrac > 1.0e-6:
-        dragBeta = porosity*porosity*porosity*meanGrainSize*1.0e-2/voidFrac
-    if (porosity > epsZero and meanGrainSize > epsZero):
-       	dragAlpha = viscosity*180.0*voidFrac*voidFrac/(meanGrainSize*meanGrainSize*porosity)
+        self.coefficients.vel_avg=self.coefficients.vel_avg/0.1472
+        self.coefficients.netBeamDrag[0] = globalSum(self.coefficients.netBeamDrag[0])
+
+        
