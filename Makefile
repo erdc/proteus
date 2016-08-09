@@ -10,7 +10,7 @@ SHELL=/usr/bin/env bash
 PROTEUS ?= $(shell python -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
 PROTEUS_INSTALL_CMD = python setup.py install -O2
-PROTEUS_DEVELOP_CMD = pip install -v -e .
+PROTEUS_DEVELOP_CMD = pip --disable-pip-version-check install -v -e .
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
