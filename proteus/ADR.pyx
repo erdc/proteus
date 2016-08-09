@@ -1,8 +1,24 @@
+# A type of -*- python -*- file
+"""
+An optimized Advection-Diffusion-Reaction module
+"""
+
 import numpy
 cimport numpy
+from math import fabs
 import proteus
-from proteus.Transport import *
+from proteus import  cfemIntegrals, Quadrature
+from proteus.NonlinearSolvers import NonlinearEquation
+from proteus.FemTools import (DOFBoundaryConditions,
+                              FluxBoundaryConditions,
+                              C0_AffineLinearOnSimplexWithNodalBasis)
+from proteus.flcbdfWrappers import globalMax
+from proteus.Profiling import  memory
+from proteus.Profiling import  logEvent as log
 from proteus.Transport import OneLevelTransport
+from proteus.TransportCoefficients import TC_base
+from proteus.SubgridError import SGE_base
+from proteus.ShockCapturing import  ShockCapturing_base
 
 cdef extern from "ADR.h" namespace "proteus":
     cdef cppclass cppADR_base:
@@ -34,7 +50,7 @@ cdef extern from "ADR.h" namespace "proteus":
                                int* u_l2g,
                                double* u_dof,
                                int* sdInfo_u_u_rowptr,
-                               int* sdInfo_u_u_colind,			      
+                               int* sdInfo_u_u_colind,
                                double* q_a,
 			       double* q_v,
                                double* q_r,
@@ -86,7 +102,7 @@ cdef extern from "ADR.h" namespace "proteus":
                                int* u_l2g,
                                double* u_dof,
                                int* sdInfo_u_u_rowptr,
-                               int* sdInfo_u_u_colind,			      
+                               int* sdInfo_u_u_colind,
                                double* q_a,
 			       double* q_v,
                                double* q_r,
@@ -120,80 +136,85 @@ cdef extern from "ADR.h" namespace "proteus":
                         int nQuadraturePoints_elementBoundaryIn,
                         int CompKernelFlag)
 
+
 cdef class ADR:
-   cdef cppADR_base* thisptr
-   def __cinit__(self,
-                 int nSpaceIn,
-                 int nQuadraturePoints_elementIn,
-                 int nDOF_mesh_trial_elementIn,
-                 int nDOF_trial_elementIn,
-                 int nDOF_test_elementIn,
-                 int nQuadraturePoints_elementBoundaryIn,
-                 int CompKernelFlag):
-       self.thisptr = newADR(nSpaceIn,
-                             nQuadraturePoints_elementIn,
-                             nDOF_mesh_trial_elementIn,
-                             nDOF_trial_elementIn,
-                             nDOF_test_elementIn,
-                             nQuadraturePoints_elementBoundaryIn,
-                             CompKernelFlag)
-   def __dealloc__(self):
-       del self.thisptr
-   def calculateResidual(self,
-                         numpy.ndarray mesh_trial_ref,
-                         numpy.ndarray mesh_grad_trial_ref,
-                         numpy.ndarray mesh_dof,
-                         numpy.ndarray mesh_l2g,
-                         numpy.ndarray dV_ref,
-                         numpy.ndarray u_trial_ref,
-                         numpy.ndarray u_grad_trial_ref,
-                         numpy.ndarray u_test_ref,
-                         numpy.ndarray u_grad_test_ref,
-                         numpy.ndarray elementDiameter,
-                         numpy.ndarray cfl,
-                         double CT_sge,
-                         double sc_uref,
-                         double sc_alpha,
-                         double useMetrics,
-                         numpy.ndarray mesh_trial_trace_ref,
-                         numpy.ndarray mesh_grad_trial_trace_ref,
-                         numpy.ndarray dS_ref,
-                         numpy.ndarray u_trial_trace_ref,
-                         numpy.ndarray u_grad_trial_trace_ref,
-                         numpy.ndarray u_test_trace_ref,
-                         numpy.ndarray u_grad_test_trace_ref,
-                         numpy.ndarray normal_ref,
-                         numpy.ndarray boundaryJac_ref,
-                         int nElements_global,
-                         numpy.ndarray u_l2g,
-                         numpy.ndarray u_dof,
-                         numpy.ndarray sdInfo_u_u_rowptr,
-                         numpy.ndarray sdInfo_u_u_colind,			      
-                         numpy.ndarray q_a,
-			 numpy.ndarray q_v,
-                         numpy.ndarray q_r,
-			 int lag_shockCapturing,
-			 double shockCapturingDiffusion,
-			 numpy.ndarray q_numDiff_u,
-			 numpy.ndarray q_numDiff_u_last,
-                         int offset_u, 
-                         int stride_u, 
-                         numpy.ndarray globalResidual,			   
-                         int nExteriorElementBoundaries_global,
-                         numpy.ndarray exteriorElementBoundariesArray,
-                         numpy.ndarray elementBoundaryElementsArray,
-                         numpy.ndarray elementBoundaryLocalElementBoundariesArray,
-                         numpy.ndarray ebqe_a,
-			 numpy.ndarray ebqe_v,
-                         numpy.ndarray isDOFBoundary_u,
-                         numpy.ndarray ebqe_bc_u_ext,
-                         numpy.ndarray isFluxBoundary_u,
-			 numpy.ndarray isAdvectiveFluxBoundary_u,
-                         numpy.ndarray ebqe_bc_flux_u_ext,
-			 numpy.ndarray ebqe_bc_advectiveFlux_u_ext,
-                         numpy.ndarray ebqe_penalty,
-                         double adjoint_sigma):
-       self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
+    """
+    Optimized ADR member functions
+    """
+
+    cdef cppADR_base* thisptr
+    def __cinit__(self,
+                  int nSpaceIn,
+                  int nQuadraturePoints_elementIn,
+                  int nDOF_mesh_trial_elementIn,
+                  int nDOF_trial_elementIn,
+                  int nDOF_test_elementIn,
+                  int nQuadraturePoints_elementBoundaryIn,
+                  int CompKernelFlag):
+        self.thisptr = newADR(nSpaceIn,
+                              nQuadraturePoints_elementIn,
+                              nDOF_mesh_trial_elementIn,
+                              nDOF_trial_elementIn,
+                              nDOF_test_elementIn,
+                              nQuadraturePoints_elementBoundaryIn,
+                              CompKernelFlag)
+    def __dealloc__(self):
+        del self.thisptr
+    def calculateResidual(self,
+                          numpy.ndarray mesh_trial_ref,
+                          numpy.ndarray mesh_grad_trial_ref,
+                          numpy.ndarray mesh_dof,
+                          numpy.ndarray mesh_l2g,
+                          numpy.ndarray dV_ref,
+                          numpy.ndarray u_trial_ref,
+                          numpy.ndarray u_grad_trial_ref,
+                          numpy.ndarray u_test_ref,
+                          numpy.ndarray u_grad_test_ref,
+                          numpy.ndarray elementDiameter,
+                          numpy.ndarray cfl,
+                          double CT_sge,
+                          double sc_uref,
+                          double sc_alpha,
+                          double useMetrics,
+                          numpy.ndarray mesh_trial_trace_ref,
+                          numpy.ndarray mesh_grad_trial_trace_ref,
+                          numpy.ndarray dS_ref,
+                          numpy.ndarray u_trial_trace_ref,
+                          numpy.ndarray u_grad_trial_trace_ref,
+                          numpy.ndarray u_test_trace_ref,
+                          numpy.ndarray u_grad_test_trace_ref,
+                          numpy.ndarray normal_ref,
+                          numpy.ndarray boundaryJac_ref,
+                          int nElements_global,
+                          numpy.ndarray u_l2g,
+                          numpy.ndarray u_dof,
+                          numpy.ndarray sdInfo_u_u_rowptr,
+                          numpy.ndarray sdInfo_u_u_colind,
+                          numpy.ndarray q_a,
+                          numpy.ndarray q_v,
+                          numpy.ndarray q_r,
+                          int lag_shockCapturing,
+                          double shockCapturingDiffusion,
+                          numpy.ndarray q_numDiff_u,
+                          numpy.ndarray q_numDiff_u_last,
+                          int offset_u,
+                          int stride_u,
+                          numpy.ndarray globalResidual,
+                          int nExteriorElementBoundaries_global,
+                          numpy.ndarray exteriorElementBoundariesArray,
+                          numpy.ndarray elementBoundaryElementsArray,
+                          numpy.ndarray elementBoundaryLocalElementBoundariesArray,
+                          numpy.ndarray ebqe_a,
+                          numpy.ndarray ebqe_v,
+                          numpy.ndarray isDOFBoundary_u,
+                          numpy.ndarray ebqe_bc_u_ext,
+                          numpy.ndarray isFluxBoundary_u,
+                          numpy.ndarray isAdvectiveFluxBoundary_u,
+                          numpy.ndarray ebqe_bc_flux_u_ext,
+                          numpy.ndarray ebqe_bc_advectiveFlux_u_ext,
+                          numpy.ndarray ebqe_penalty,
+                          double adjoint_sigma):
+        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
                                        <int*> mesh_l2g.data,
@@ -218,7 +239,7 @@ cdef class ADR:
                                        <double*> normal_ref.data,
                                        <double*> boundaryJac_ref.data,
                                        nElements_global,
-                                       <int*> u_l2g.data, 
+                                       <int*> u_l2g.data,
                                        <double*> u_dof.data,
                                        <int*> sdInfo_u_u_rowptr.data,
                                        <int*> sdInfo_u_u_colind.data,
@@ -229,9 +250,9 @@ cdef class ADR:
 				       shockCapturingDiffusion,
 				       <double*> q_numDiff_u.data,
 				       <double*> q_numDiff_u_last.data,
-                                       offset_u, 
-                                       stride_u, 
-                                       <double*> globalResidual.data,		   
+                                       offset_u,
+                                       stride_u,
+                                       <double*> globalResidual.data,
                                        nExteriorElementBoundaries_global,
                                        <int*> exteriorElementBoundariesArray.data,
                                        <int*> elementBoundaryElementsArray.data,
@@ -246,64 +267,67 @@ cdef class ADR:
 				       <double*> ebqe_bc_advectiveFlux_u_ext.data,
                                        <double*> ebqe_penalty.data,
                                        adjoint_sigma)
-   def calculateJacobian(self,
-                         numpy.ndarray mesh_trial_ref,
-                         numpy.ndarray mesh_grad_trial_ref,
-                         numpy.ndarray mesh_dof,
-                         numpy.ndarray mesh_l2g,
-                         numpy.ndarray dV_ref,
-                         numpy.ndarray u_trial_ref,
-                         numpy.ndarray u_grad_trial_ref,
-                         numpy.ndarray u_test_ref,
-                         numpy.ndarray u_grad_test_ref,
-                         numpy.ndarray elementDiameter,
-                         numpy.ndarray cfl,
-                         double CT_sge,
-                         double sc_uref,
-                         double sc_alpha,
-                         double useMetrics,
-                         numpy.ndarray mesh_trial_trace_ref,
-                         numpy.ndarray mesh_grad_trial_trace_ref,
-                         numpy.ndarray dS_ref,
-                         numpy.ndarray u_trial_trace_ref,
-                         numpy.ndarray u_grad_trial_trace_ref,
-                         numpy.ndarray u_test_trace_ref,
-                         numpy.ndarray u_grad_test_trace_ref,
-                         numpy.ndarray normal_ref,
-                         numpy.ndarray boundaryJac_ref,
-                         int nElements_global,
-                         numpy.ndarray u_l2g,
-                         numpy.ndarray u_dof,
-                         numpy.ndarray sdInfo_u_u_rowptr,
-                         numpy.ndarray sdInfo_u_u_colind,			      
-			 numpy.ndarray q_a,
-			 numpy.ndarray q_v,
-                         numpy.ndarray q_r,
-			 int lag_shockCapturing,
-			 double shockCapturingDiffusion,
-			 numpy.ndarray q_numDiff_u,
-			 numpy.ndarray q_numDiff_u_last,
-                         numpy.ndarray csrRowIndeces_u_u,
-                         numpy.ndarray csrColumnOffsets_u_u,
-                         globalJacobian,
-                         int nExteriorElementBoundaries_global,
-                         numpy.ndarray exteriorElementBoundariesArray,
-                         numpy.ndarray elementBoundaryElementsArray,
-                         numpy.ndarray elementBoundaryLocalElementBoundariesArray,
-                         numpy.ndarray ebqe_a,
-			 numpy.ndarray ebqe_v,
-                         numpy.ndarray isDOFBoundary_u,
-                         numpy.ndarray ebqe_bc_u_ext,
-                         numpy.ndarray isFluxBoundary_u,
-			 numpy.ndarray isAdvectiveFluxBoundary_u,
-                         numpy.ndarray ebqe_bc_flux_u_ext,
-			 numpy.ndarray ebqe_bc_advectiveFlux_u_ext,
-                         numpy.ndarray csrColumnOffsets_eb_u_u,
-                         numpy.ndarray ebqe_penalty,
-                         double adjoint_sigma):
-       cdef numpy.ndarray rowptr,colind,globalJacobian_a
-       (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
-       self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
+    def calculateJacobian(self,
+                          numpy.ndarray mesh_trial_ref,
+                          numpy.ndarray mesh_grad_trial_ref,
+                          numpy.ndarray mesh_dof,
+                          numpy.ndarray mesh_l2g,
+                          numpy.ndarray dV_ref,
+                          numpy.ndarray u_trial_ref,
+                          numpy.ndarray u_grad_trial_ref,
+                          numpy.ndarray u_test_ref,
+                          numpy.ndarray u_grad_test_ref,
+                          numpy.ndarray elementDiameter,
+                          numpy.ndarray cfl,
+                          double CT_sge,
+                          double sc_uref,
+                          double sc_alpha,
+                          double useMetrics,
+                          numpy.ndarray mesh_trial_trace_ref,
+                          numpy.ndarray mesh_grad_trial_trace_ref,
+                          numpy.ndarray dS_ref,
+                          numpy.ndarray u_trial_trace_ref,
+                          numpy.ndarray u_grad_trial_trace_ref,
+                          numpy.ndarray u_test_trace_ref,
+                          numpy.ndarray u_grad_test_trace_ref,
+                          numpy.ndarray normal_ref,
+                          numpy.ndarray boundaryJac_ref,
+                          int nElements_global,
+                          numpy.ndarray u_l2g,
+                          numpy.ndarray u_dof,
+                          numpy.ndarray sdInfo_u_u_rowptr,
+                          numpy.ndarray sdInfo_u_u_colind,
+                          numpy.ndarray q_a,
+                          numpy.ndarray q_v,
+                          numpy.ndarray q_r,
+                          int lag_shockCapturing,
+                          double shockCapturingDiffusion,
+                          numpy.ndarray q_numDiff_u,
+                          numpy.ndarray q_numDiff_u_last,
+                          numpy.ndarray csrRowIndeces_u_u,
+                          numpy.ndarray csrColumnOffsets_u_u,
+                          globalJacobian,
+                          int nExteriorElementBoundaries_global,
+                          numpy.ndarray exteriorElementBoundariesArray,
+                          numpy.ndarray elementBoundaryElementsArray,
+                          numpy.ndarray elementBoundaryLocalElementBoundariesArray,
+                          numpy.ndarray ebqe_a,
+                          numpy.ndarray ebqe_v,
+                          numpy.ndarray isDOFBoundary_u,
+                          numpy.ndarray ebqe_bc_u_ext,
+                          numpy.ndarray isFluxBoundary_u,
+                          numpy.ndarray isAdvectiveFluxBoundary_u,
+                          numpy.ndarray ebqe_bc_flux_u_ext,
+                          numpy.ndarray ebqe_bc_advectiveFlux_u_ext,
+                          numpy.ndarray csrColumnOffsets_eb_u_u,
+                          numpy.ndarray ebqe_penalty,
+                          double adjoint_sigma):
+        """
+        Optimized jacobian calculation
+        """
+        cdef numpy.ndarray rowptr,colind,globalJacobian_a
+        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
+        self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
                                        <int*> mesh_l2g.data,
@@ -358,9 +382,17 @@ cdef class ADR:
                                        <double*> ebqe_penalty.data,
                                        adjoint_sigma)
 
-class SubgridError(proteus.SubgridError.SGE_base):
+
+class SubgridError(SGE_base):
+    """
+    SubgridError approximation for ADR equations
+
+    .. inheritance-diagram:: SubgridError
+       :parts: 2
+    """
+
     def __init__(self,coefficients,nd):
-        proteus.SubgridError.SGE_base.__init__(self,coefficients,nd,lag=False)
+        SGE_base.__init__(self,coefficients,nd,lag=False)
     def initializeElementQuadrature(self,mesh,t,cq):
         pass
     def updateSubgridErrorHistory(self,initializationPhase=False):
@@ -368,9 +400,15 @@ class SubgridError(proteus.SubgridError.SGE_base):
     def calculateSubgridError(self,q):
         pass
 
-class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
+class ShockCapturing(ShockCapturing_base):
+    """
+    Residual-based shock capturing for ADR equations
+
+    .. inheritance-diagram:: ShockCapturing
+       :parts: 2
+    """
     def __init__(self,coefficients,nd,shockCapturingFactor=0.25,lag=True,nStepsToDelay=None):
-        proteus.ShockCapturing.ShockCapturing_base.__init__(self,coefficients,nd,shockCapturingFactor,lag)
+        ShockCapturing_base.__init__(self,coefficients,nd,shockCapturingFactor,lag)
         self.nStepsToDelay = nStepsToDelay
         self.nSteps=0
         if self.lag:
@@ -424,9 +462,15 @@ class NumericalFlux_NIPG(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusio
 NumericalFlux = NumericalFlux_SIPG
 
 class Coefficients(TC_base):
+    """
+    Coefficients of linear ADR equations
+
+    .. inheritance-diagram:: Coefficients
+       :parts: 2
+    """
     from proteus.ctransportCoefficients import L2projectEvaluate
     def __init__(self,aOfX,fOfX,velocity=None,nc=1,nd=2,l2proj=None,
-                 timeVaryingCoefficients=False,                 
+                 timeVaryingCoefficients=False,
                  forceStrongDirichlet=False,
                  useMetrics=0.0,
                  sc_uref=1.0,
@@ -517,6 +561,12 @@ class Coefficients(TC_base):
                     c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
 
 class LevelModel(proteus.Transport.OneLevelTransport):
+    """
+    Optimized LevelModel for ADR equations
+
+    .. inheritance-diagram:: LevelModel
+       :parts: 2
+    """
     nCalls=0
     def __init__(self,
                  uDict,
@@ -616,8 +666,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
+                                                 (numericalFluxType != None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -631,7 +681,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -686,7 +736,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -792,7 +842,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
              self.timeIntegration = TimeIntegrationClass(self)
-        
+
         if options != None:
             self.timeIntegration.setFromOptions(options)
         log(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -838,7 +888,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
-        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
+        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         log(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         from proteus import Archiver
@@ -893,7 +943,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.setUnknowns(u)
-        
+
 
         #no flux boundary conditions
         self.adr.calculateResidual(#element
@@ -905,13 +955,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,            
+            self.u[0].femSpace.grad_psi,
             self.mesh.elementDiametersArray,
             self.q[('cfl',0)],
             self.shockCapturing.shockCapturingFactor,
-	    self.coefficients.sc_uref, 
+	    self.coefficients.sc_uref,
 	    self.coefficients.sc_beta,
-	    self.coefficients.useMetrics, 
+	    self.coefficients.useMetrics,
             #element boundary
             self.u[0].femSpace.elementMaps.psi_trace,
             self.u[0].femSpace.elementMaps.grad_psi_trace,
@@ -974,9 +1024,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementDiametersArray,
             self.q[('cfl',0)],
             self.shockCapturing.shockCapturingFactor,
-	    self.coefficients.sc_uref, 
+	    self.coefficients.sc_uref,
 	    self.coefficients.sc_beta,
-	    self.coefficients.useMetrics, 
+	    self.coefficients.useMetrics,
             #element boundary
             self.u[0].femSpace.elementMaps.psi_trace,
             self.u[0].femSpace.elementMaps.grad_psi_trace,
@@ -1025,7 +1075,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
-        
+
         This function should be called only when the mesh changes.
         """
         self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
