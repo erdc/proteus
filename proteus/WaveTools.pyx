@@ -373,16 +373,16 @@ class MonochromaticWaves:
                 self.k = 2.0*pi/wavelength
                 self.wavelength=wavelength
             except:
-                ValueError("WaveTools.py: Wavelength is not defined for non-"
-                           "linear waves. Enter wavelength in class arguments")
+                raise ValueError("WaveTools.py: Wavelength is not defined for non-"
+                                 "linear waves. Enter wavelength in class arguments")
         self.kDir = self.k * self.waveDir
         self.amplitude = 0.5*self.waveHeight
         self.meanVelocity = np.array(meanVelocity)
 #Checking that meanvelocity is a vector
 
         if(len(meanVelocity) != 3):
-            ValueError("WaveTools.py: meanVelocity should be a "
-                       "vector with 3 components.")
+            raise ValueError("WaveTools.py: meanVelocity should be a "
+                             "vector with 3 components.")
 
         self.Ycoeff = Ycoeff
         self.Bcoeff = Bcoeff
@@ -390,9 +390,9 @@ class MonochromaticWaves:
 # Checking for
         if (Ycoeff==None) or (Bcoeff==None):
             if self.waveType!= "Linear":
-                ValueError("WaveTools.py: Need to define Fenton Fourier "
-                           "coefficients Ycoeff and Bcoeff (free-surface "
-                           "and velocity) for nonlinear waves")
+                raise ValueError("WaveTools.py: Need to define Fenton Fourier "
+                                 "coefficients Ycoeff and Bcoeff (free-surface "
+                                 "and velocity) for nonlinear waves")
     def eta(self, x, t):
         if self.waveType == "Linear":
             return eta_mode(x,t,self.kDir,self.omega,self.phi0,self.amplitude)
