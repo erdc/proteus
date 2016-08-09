@@ -52,7 +52,6 @@ setup(name='proteus',
                   'proteus.tests.ci',
                   'proteus.tests.mesh_tests',
                   'proteus.tests.mesh_tests.import_modules',
-                  'proteus.tests.mesh_tests.comparison_files',
                   'proteus.tests.linalgebra_tests',
                   'proteus.tests.single_phase_gw',
                   'proteus.tests.poisson_2d',],
@@ -345,7 +344,9 @@ setup(name='proteus',
                   (os.path.join(proteus_install_path,'tests'),
                    ['proteus/tests/hex_cube_3x3.xmf',
                     'proteus/tests/hex_cube_3x3.h5',
-                    'proteus/tests/linalgebra_tests/sparse_mat_1.txt'])
+                    'proteus/tests/linalgebra_tests/sparse_mat_1.txt',
+                    'proteus/tests/mesh_tests/comparison_files/poiseulle_xmf.output'
+                   ])
       ],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/povgen.py',
                  'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
