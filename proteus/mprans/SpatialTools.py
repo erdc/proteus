@@ -1285,16 +1285,6 @@ class TankWithObstacles2D(Tank2D):
                 self.BC[boundary] = self.BC_class(shape=self, name=boundary)
                 self.BC_list += [self.BC[boundary]]
 
-    # [temp] THis is not a viable strategy.
-    # New strategy: Build new sponge layer logic that depends on four corners,
-    # have this function find the four corners, and just build vertices/segments
-    # off of those.
-    # The segment logic can detect when a vertex is a corner based on being at
-    # the coordinates specified by a corner in this new system.  It then can
-    # rewrite vertex flags as needed while also setting segment flags to sponge
-    # up until it runs into the next vertex.
-    # It only has to make this check on every vertex IF there are sponge layers
-    # (class known) and IF they haven't already been found (locally known)
     def _resetEdgesFromVertices(self, vertices):
         """
         Resets self.x0, self.x1, self.y0, self.y1 based on the actual shape.
