@@ -6,11 +6,16 @@ are CSR matrices. Parallel vector and matrix are built on top of those
 representations using PETSc.
 
 \todo LinearAlgebraTools: make better use of numpy.linalg and petsc4py to provide the needed functionality and improve test suite
+
+.. inheritance-diagram:: proteus.LinearAlgebraTools
+   :parts: 1
 """
 import numpy
 import math
+import sys
+import superluWrappers
 from .superluWrappers import *
-from Profiling import logEvent
+from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
 from . import flcbdfWrappers
 
@@ -19,6 +24,91 @@ def _petsc_view(obj, filename):
     """
     viewer = p4pyPETSc.Viewer().createBinary(filename, 'w')
     viewer(obj)
+    viewer2 = p4pyPETSc.Viewer().createASCII(filename+".m", 'w')
+    viewer2.setFormat(1)
+    viewer2(obj)
+
+def _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output=False):
+    """ Takes python CSR datatypes and makes a dense matrix """
+    dense_matrix = numpy.zeros(shape = (nr,nc), dtype='float')
+    for idx in range(len(rowptr)-1):
+        row_vals = data[rowptr[idx]:rowptr[idx+1]]
+        for val_idx,j in enumerate(colptr[rowptr[idx]:rowptr[idx+1]]):
+            dense_matrix[idx][j] = row_vals[val_idx]
+    if output!= False:
+        numpy.save(output,dense_matrix)
+    return dense_matrix
+
+def superlu_sparse_2_dense(sparse_matrix,output=False):
+    """ Converts a sparse superluWrapper into a dense matrix.
+
+    Parameters
+    ----------
+    sparse_matrix : 
+    output : str
+        Out file name to store the matrix.
+
+    Returns
+    -------
+    dense_matrix : numpy array
+        A numpy array storing the dense matrix.
+
+    Notes
+    -----
+    This function should not be used for large matrices.
+    """
+    rowptr = sparse_matrix.getCSRrepresentation()[0]
+    colptr = sparse_matrix.getCSRrepresentation()[1]
+    data   = sparse_matrix.getCSRrepresentation()[2]
+    nr     = sparse_matrix.shape[0]
+    nc     = sparse_matrix.shape[1]
+    return _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output)
+
+def petsc4py_sparse_2_dense(sparse_matrix,output=False):
+    """ Converts a PETSc4Py matrix to a dense numpyarray.
+
+    Parameters
+    ----------
+    sparse_matrix : PETSc4py matrix
+    output : str
+        Output file name to store the matrix.
+
+    Returns
+    -------
+    dense_matrix : numpy array
+        A numpy array with the dense matrix.
+    
+    Notes
+    -----
+    This function is very inefficient for large matrices.
+    """
+    rowptr = sparse_matrix.getValuesCSR()[0]
+    colptr = sparse_matrix.getValuesCSR()[1]
+    data   = sparse_matrix.getValuesCSR()[2]
+    nr     = sparse_matrix.getSize()[0]
+    nc     = sparse_matrix.getSize()[1]
+    return _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output)
+
+def superlu_2_petsc4py(sparse_superlu):
+    """ Copy a sparse superlu matrix to a sparse petsc4py matrix
+
+    Parameters
+    ----------
+    sparse_matrix : :class:`proteus.superluWrappers.SparseMatrix`
+
+    Returns
+    -------
+    sparse_matrix : PETSc4py matrix
+    """
+    rowptr, colind, nzval = sparse_superlu.getCSRrepresentation()
+    A_rowptr = rowptr.copy()
+    A_colind = colind.copy()
+    A_nzval  = nzval.copy()
+    nr       = sparse_superlu.shape[0]
+    nc       = sparse_superlu.shape[1]
+    A_petsc4py = p4pyPETSc.Mat().createAIJWithArrays((nr,nc),
+                                                     (A_rowptr,A_colind,A_nzval))
+    return A_petsc4py
 
 class ParVec:
     """
@@ -42,19 +132,27 @@ class ParVec:
                 self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,nghosts,subdomain2global,array,1)
         self.nghosts = nghosts
     def scatter_forward_insert(self):
-        self.cparVec.scatter_forward_insert()
+       self.cparVec.scatter_forward_insert()
     def scatter_reverse_add(self):
-        self.cparVec.scatter_reverse_add()
+       self.cparVec.scatter_reverse_add()
 
 
 class ParVec_petsc4py(p4pyPETSc.Vec):
     """
     Parallel vector using petsc4py's wrappers for PETSc
+    WIP -- This function builds the local to global mapping for the PETSc parallel vectors.  At this
+    point it only works when the variables can be interwoven (eg. stablized elements where velocity and
+    pressure come from the same space).  We would like to extend this functionality to include finite
+    element spaces that cannot be interwoven such as Taylor Hood.
     """
-    def __init__(self,array=None,bs=None,n=None,N=None,nghosts=None,subdomain2global=None,blockVecType="simple"):
-        if array == None:
-            return#cek hack, don't know why init gets called by PETSc.Vec duplicate function
+    def __init__(self,array=None,bs=None,n=None,N=None,nghosts=None,subdomain2global=None,blockVecType="simple",ghosts=None,
+                                                 proteus2petsc_subdomain=None,
+                                                 petsc2proteus_subdomain=None):
         p4pyPETSc.Vec.__init__(self)
+        if array == None:
+            return#when duplicating for petsc usage
+        self.proteus2petsc_subdomain=proteus2petsc_subdomain
+        self.petsc2proteus_subdomain=petsc2proteus_subdomain
         blockSize = max(1,bs)
         self.dim_proc = n*blockSize
         self.nghosts = nghosts
@@ -68,15 +166,16 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
                 self.createWithArray(array,size=(blockSize*n,blockSize*N),bsize=blockSize)
             self.subdomain2global=subdomain2global
             self.petsc_l2g = None
+            self.setUp()
         else:
             assert nghosts >= 0, "The number of ghostnodes must be non-negative"
             assert subdomain2global.shape[0] == (n+nghosts), ("The subdomain2global map is the wrong length n=%i,nghosts=%i,shape=%i \n" % (n,n+nghosts,subdomain2global.shape[0]))
             assert len(array.flat) == (n+nghosts)*blockSize, "%i  != (%i+%i)*%i \n" % (len(array.flat),  n,nghosts,blockSize)
-
             if blockVecType == "simple":
-                ghosts = numpy.zeros((blockSize*nghosts),'i')
-                for j in range(blockSize):
-                    ghosts[j::blockSize]=subdomain2global[n:]*blockSize+j
+                if ghosts == None:
+                    ghosts = numpy.zeros((blockSize*nghosts),'i')
+                    for j in range(blockSize):
+                        ghosts[j::blockSize]=subdomain2global[n:]*blockSize+j
                 self.createGhostWithArray(ghosts,array,size=(blockSize*n,blockSize*N),bsize=1)
                 if blockSize > 1: #have to build in block dofs
                     subdomain2globalTotal = numpy.zeros((blockSize*subdomain2global.shape[0],),'i')
@@ -85,80 +184,97 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
                     self.subdomain2global=subdomain2globalTotal
                 else:
                     self.subdomain2global=subdomain2global
-                self.petsc_l2g = p4pyPETSc.LGMap()
-                self.petsc_l2g.create(self.subdomain2global)
-                self.setLGMap(self.petsc_l2g)
-
             else:
                 #TODO need to debug
                 ghosts = subdomain2global[n:]
                 self.createGhostWithArray(ghosts,array,size=(blockSize*n,blockSize*N),bsize=blockSize)
                 self.subdomain2global = subdomain2global
-                self.petsc_l2g = p4pyPETSc.LGMap()
-                self.petsc_l2g.create(self.subdomain2global)
-                self.setLGMap(self.petsc_l2g)
+            self.setUp()
+            #self.petsc_l2g = p4pyPETSc.LGMap()
+            #self.petsc_l2g.create(self.subdomain2global)
+            #self.setLGMap(self.petsc_l2g)
         self.setFromOptions()
     def scatter_forward_insert(self):
+        if self.proteus2petsc_subdomain is not None:
+            self.proteus_array[:] = self.proteus_array[self.petsc2proteus_subdomain]
         self.ghostUpdateBegin(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
+        if self.proteus2petsc_subdomain is not None:
+            self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
     def scatter_reverse_add(self):
+        if self.proteus2petsc_subdomain is not None:
+            self.proteus_array[:] = self.proteus_array[self.petsc2proteus_subdomain]
         self.ghostUpdateBegin(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
         self.ghostUpdateEnd(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
+        if self.proteus2petsc_subdomain is not None:
+            self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
 
     def save(self, filename):
         """Saves to disk using a PETSc binary viewer.
         """
         _petsc_view(self, filename)
-
 
 class ParMat_petsc4py(p4pyPETSc.Mat):
     """
     Parallel matrix based on petsc4py's wrappers for PETSc.
     """
-    def __init__(self,ghosted_csr_mat,par_bs,par_n,par_N,par_nghost,subdomain2global,blockVecType="simple",pde=None):
-        self.pde = pde
+    def __init__(self,ghosted_csr_mat=None,par_bs=None,par_n=None,par_N=None,par_nghost=None,subdomain2global=None,blockVecType="simple",pde=None, par_nc=None, par_Nc=None, proteus_jacobian=None, nzval_proteus2petsc=None):
         p4pyPETSc.Mat.__init__(self)
+        if ghosted_csr_mat == None:
+            return#when duplicating for petsc usage
+        self.pde = pde
+        if par_nc == None:
+            par_nc = par_n
+        if par_Nc == None:
+            par_Nc = par_N
+        self.proteus_jacobian=proteus_jacobian
+        self.nzval_proteus2petsc = nzval_proteus2petsc
         self.ghosted_csr_mat=ghosted_csr_mat
         self.blockVecType = blockVecType
         assert self.blockVecType == "simple", "petsc4py wrappers require self.blockVecType=simple"
         self.create(p4pyPETSc.COMM_WORLD)
-        blockSize = max(1,par_bs)
-        if blockSize >= 1 and blockVecType != "simple":
+        self.blockSize = max(1,par_bs)
+        if self.blockSize > 1 and blockVecType != "simple":
             ## \todo fix block aij in ParMat_petsc4py
             self.setType('baij')
-            self.setSizes([[blockSize*par_n,blockSize*par_N],[blockSize*par_n,blockSize*par_N]],bsize=blockSize)
-            self.setBlockSize(blockSize)
+            self.setSizes([[self.blockSize*par_n,self.blockSize*par_N],[self.blockSize*par_nc,self.blockSize*par_Nc]],bsize=self.blockSize)
+            self.setBlockSize(self.blockSize)
             self.subdomain2global = subdomain2global #no need to include extra block dofs?
         else:
             self.setType('aij')
-            self.setSizes([[par_n*blockSize,par_N*blockSize],[par_n*blockSize,par_N*blockSize]],bsize=1)
-            if blockSize > 1: #have to build in block dofs
-                subdomain2globalTotal = numpy.zeros((blockSize*subdomain2global.shape[0],),'i')
-                for j in range(blockSize):
-                    subdomain2globalTotal[j::blockSize]=subdomain2global*blockSize+j
+            self.setSizes([[par_n*self.blockSize,par_N*self.blockSize],[par_nc*self.blockSize,par_Nc*self.blockSize]],bsize=1)
+            if self.blockSize > 1: #have to build in block dofs
+                subdomain2globalTotal = numpy.zeros((self.blockSize*subdomain2global.shape[0],),'i')
+                for j in range(self.blockSize):
+                    subdomain2globalTotal[j::self.blockSize]=subdomain2global*self.blockSize+j
                 self.subdomain2global=subdomain2globalTotal
             else:
                 self.subdomain2global=subdomain2global
-        import Comm
+        from proteus import Comm
         comm = Comm.get()
         logEvent("ParMat_petsc4py comm.rank= %s blockSize = %s par_n= %s par_N=%s par_nghost=%s par_jacobian.getSizes()= %s "
-                 % (comm.rank(),blockSize,par_n,par_N,par_nghost,self.getSizes()))
+                 % (comm.rank(),self.blockSize,par_n,par_N,par_nghost,self.getSizes()))
         self.csr_rep = ghosted_csr_mat.getCSRrepresentation()
-        blockOwned = blockSize*par_n
-        self.csr_rep_owned = ghosted_csr_mat.getSubMatCSRrepresentation(0,blockOwned)
+        if self.proteus_jacobian != None:
+            self.proteus_csr_rep = self.proteus_jacobian.getCSRrepresentation()
+        if self.blockSize > 1:
+            blockOwned = self.blockSize*par_n
+            self.csr_rep_local = ghosted_csr_mat.getSubMatCSRrepresentation(0,blockOwned)
+        else:
+            self.csr_rep_local = ghosted_csr_mat.getSubMatCSRrepresentation(0,par_n)
         self.petsc_l2g = p4pyPETSc.LGMap()
         self.petsc_l2g.create(self.subdomain2global)
-        self.colind_global = self.petsc_l2g.apply(self.csr_rep_owned[1]) #prealloc needs global indices
-        self.setPreallocationCSR([self.csr_rep_owned[0],self.colind_global,self.csr_rep_owned[2]])
         self.setUp()
         self.setLGMap(self.petsc_l2g)
+        #
+        self.colind_global = self.petsc_l2g.apply(self.csr_rep_local[1]) #prealloc needs global indices
+        self.setPreallocationCSR([self.csr_rep_local[0],self.colind_global,self.csr_rep_local[2]])
         self.setFromOptions()
 
     def save(self, filename):
         """Saves to disk using a PETSc binary viewer.
         """
         _petsc_view(self, filename)
-
 
 def Vec(n):
     """
@@ -209,15 +325,45 @@ def SparseMatFromDict(nr,nc,aDict):
 
 
 def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
+    """ Build a nr x nc sparse matrix from the CSR data structures
+
+    Parameters
+    ----------
+    nr : int
+        The number of rows.
+    nc : int
+        The number of columns.
+    nnz : int
+        The number of non-zero matrix entries.
+    nzval : numpy array
+        Array with non-zero matrix entries.
+    colind : numpy array of 32bit integers
+        CSR column array.
+    rowptr : numpy array of 32bit integers
+        CSR row pointer.
+
+    Returns
+    -------
+    sparse_matrix : :class:`proteus.superluWrappers.SparseMatrix`
+        superlu sparse matrix in CSR format.
+
+    Note
+    ----
+    For the superluWrapper, both the colind and rowptr should use
+    32-bit integer data types.
     """
-    Build a nr x nc sparse matrix from the CSR data structures
-    """
-    import superluWrappers
+    if (colind.dtype != 'int32' or rowptr.dtype != 'int32'):
+        print('ERROR - colind and rowptr must be "int32" numpy arrays for ' \
+              'superluWrappers')
+        sys.exit(1)
     return superluWrappers.SparseMatrix(nr,nc,nnz,nzval,colind,rowptr)
 
 class SparseMatShell:
-    """
-    Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains)
+    """ Build a parallel matrix shell from CSR data structures.
+
+    Parameters
+    ----------
+    ghosted_csr_mat: :class: `proteus.superluWrappers.SparseMatrix`
     """
     def __init__(self,ghosted_csr_mat):
         self.ghosted_csr_mat=ghosted_csr_mat
@@ -227,6 +373,8 @@ class SparseMatShell:
     def create(self, A):
         pass
     def mult(self, A, x, y):
+        assert self.par_b!=None, "The parallel RHS vector par_b must be " \
+                            "initialized before using the mult function"
         logEvent("Using SparseMatShell in LinearSolver matrix multiply")
         if self.xGhosted == None:
             self.xGhosted = self.par_b.duplicate()
@@ -236,40 +384,34 @@ class SparseMatShell:
         self.xGhosted.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.yGhosted.zeroEntries()
         with self.xGhosted.localForm() as xlf, self.yGhosted.localForm() as ylf:
-            self.ghosted_csr_mat.matvec(xlf,ylf)
+            self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
-
-import Comm
-from mpi4py import MPI
-comm = Comm.get().comm.tompi4py()
 
 def l2Norm(x):
     """
-    Compute the parallel l_2 norm
+    Compute the parallel :math:`l_2` norm
     """
-    #return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
-    rvalue=numpy.array([numpy.dot(x,x)])
-    comm.Allreduce(MPI.IN_PLACE, [rvalue, MPI.DOUBLE], MPI.SUM)
-    return math.sqrt(rvalue[0])
+    return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+
 
 def l1Norm(x):
     """
     Compute the parallel :math:`l_1` norm
-
+    
     The :math:`l_1` norm of a vector :math:`\mathbf{x} \in
     \mathbb{R}^n` is
-
-    .. math::
-
+    
+    .. math:: 
+    
        \| \mathbf{x} \|_{1} = \sum_{i=0} |x_i|
-
+    
     If Python is running in parallel, then the sum is over all
     dimensions on all processors so that the input must not contain
     "ghost" entries.
-
+    
     This implemtation works for a distributed array with no ghost
     components (each component must be on a single processor).
-
+    
     :param x: numpy array of length n
     :return: float
     """
@@ -286,10 +428,10 @@ def lInfNorm(x):
     .. math::
 
        \|x\|_{\infty} = \max_i |x_i|
-
+       
     This implemtation works for a distributed array with no ghost
     components (each component must be on a single processor).
-
+    
     :param x: numpy array of length n
     :return: float
     """
@@ -300,17 +442,17 @@ def wDot(x,y,h):
     """
     Compute the parallel weighted dot product of vectors x and y using
     weight vector h.
-
+    
     The weighted dot product is defined for a weight vector
     :math:`\mathbf{h}` as
 
-    .. math::
+    .. math:: 
 
        (\mathbf{x},\mathbf{y})_h = \sum_{i} h_{i} x_{i} y_{i}
-
+    
     All weight vector components should be positive.
 
-    :param x,y,h: numpy arrays for vectors and weight
+    :param x,y,h: numpy arrays for vectors and weight 
     :return: the weighted dot product
     """
     return flcbdfWrappers.globalSum(numpy.sum(x*y*h))
@@ -390,7 +532,7 @@ class WeightedNorm:
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
-
+    
 
 # def test_MGV():
 #     n=2**8 + 1

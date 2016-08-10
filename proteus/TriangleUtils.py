@@ -5,6 +5,9 @@ Shewchuk's Triangle package. There are a couple of different groups of
 functions.
 
 One is for writing out triangleWrappers data arrays in Triangle's fileformat
+
+.. inheritance-diagram:: proteus.TriangleUtils
+   :parts: 1
 """
 #import standard Python modules
 import sys,os

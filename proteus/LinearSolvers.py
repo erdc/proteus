@@ -1,12 +1,15 @@
 """
 A hierarchy of classes for linear algebraic system solvers.
+
+.. inheritance-diagram:: proteus.LinearSolvers
+   :parts: 1
 """
 from LinearAlgebraTools import *
 import lapackWrappers
 import superluWrappers
 from petsc4py import PETSc as p4pyPETSc
 from math import *
-from Profiling import logEvent
+from .Profiling import logEvent
 
 class LinearSolver:
     """
@@ -450,12 +453,13 @@ class KSP_petsc4py(LinearSolver):
         self.par_L   = par_L
         self.petsc_L = par_L
         self.ksp     = p4pyPETSc.KSP().create()
-        self.csr_rep_owned = self.petsc_L.csr_rep_owned
+        self.csr_rep_local = self.petsc_L.csr_rep_local
         self.csr_rep = self.petsc_L.csr_rep
         #shell for main operator
         self.Lshell = p4pyPETSc.Mat().create()
-        sizes = self.petsc_L.getSizes()
-        self.Lshell.setSizes([[sizes[0][0],None],[sizes[0][1],None]])
+        L_sizes = self.petsc_L.getSizes()
+        L_range = self.petsc_L.getOwnershipRange()
+        self.Lshell.setSizes(L_sizes)
         self.Lshell.setType('python')
         self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
         self.Lshell.setPythonContext(self.matcontext)
@@ -463,7 +467,6 @@ class KSP_petsc4py(LinearSolver):
         #
         try:
             if self.preconditioner.hasNullSpace:
-                self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
                 self.petsc_L.setNullSpace(self.preconditioner.nsp)
                 self.ksp.setNullSpace(self.preconditioner.nsp)
         except:
@@ -503,8 +506,10 @@ class KSP_petsc4py(LinearSolver):
     def prepare(self,b=None):
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
+        if self.petsc_L.proteus_jacobian != None:
+            self.csr_rep[2][self.petsc_L.nzval_proteus2petsc] = self.petsc_L.proteus_csr_rep[2][:]
         if self.par_fullOverlap == True:
-            self.petsc_L.setValuesLocalCSR(self.csr_rep_owned[0],self.csr_rep_owned[1],self.csr_rep_owned[2],p4pyPETSc.InsertMode.INSERT_VALUES)
+            self.petsc_L.setValuesLocalCSR(self.csr_rep_local[0],self.csr_rep_local[1],self.csr_rep_local[2],p4pyPETSc.InsertMode.INSERT_VALUES)
         else:
             if self.par_firstAssembly:
                 self.petsc_L.setOption(p4pyPETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,False)
@@ -523,7 +528,10 @@ class KSP_petsc4py(LinearSolver):
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
         self.ksp.setUp()
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
-        # if self.petsc_L.isSymmetric(tol=1.0e-13):
+        if par_b.proteus2petsc_subdomain is not None:
+            par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
+            par_u.proteus_array[:] = par_u.proteus_array[par_u.petsc2proteus_subdomain]
+        # if self.petsc_L.isSymmetric(tol=1.0e-12):
         #    self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
         #    print "Matrix is symmetric"
         # else:
@@ -557,6 +565,9 @@ class KSP_petsc4py(LinearSolver):
         self.its = self.ksp.its
         if self.printInfo:
             self.info()
+        if par_b.proteus2petsc_subdomain is not None:
+            par_b.proteus_array[:] = par_b.proteus_array[par_b.proteus2petsc_subdomain]
+            par_u.proteus_array[:] = par_u.proteus_array[par_u.proteus2petsc_subdomain]
     def converged(self,r):
         """
         decide on convention to match norms, convergence criteria
@@ -570,25 +581,37 @@ class KSP_petsc4py(LinearSolver):
     def info(self):
         self.ksp.view()
 
-class SimpleNavierStokes3D:
+class NavierStokes3D:
     def __init__(self,L,prefix=None):
         self.L = L
+        self.PCD=False
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
-        #print "L_sizes",L_sizes
         neqns = L_sizes[0][0]
-        #print "neqns",neqns
-        self.pressureDOF = numpy.arange(start=L_range[0],
-                                        stop=L_range[0]+neqns,
-                                        step=4,
-                                        dtype="i")
-        velocityDOF = []
-        for start in range(1,4):
-            velocityDOF.append(numpy.arange(start=L_range[0]+start,
-                                         stop=L_range[0]+neqns,
-                                         step=4,
-                                         dtype="i"))
-        self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
+        rank = p4pyPETSc.COMM_WORLD.rank
+        if self.L.pde.stride[0] == 1:#assume end to end
+            pSpace = self.L.pde.u[0].femSpace
+            pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
+            nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
+            self.pressureDOF = numpy.arange(start=L_range[0],
+                                            stop=L_range[0]+nDOF_pressure,
+                                            dtype="i")
+            self.velocityDOF = numpy.arange(start=L_range[0]+nDOF_pressure,
+                                            stop=L_range[0]+neqns,
+                                            step=1,
+                                            dtype="i")
+        else: #assume blocked
+            self.pressureDOF = numpy.arange(start=L_range[0],
+                                            stop=L_range[0]+neqns,
+                                            step=4,
+                                            dtype="i")
+            velocityDOF = []
+            for start in range(1,4):
+                velocityDOF.append(numpy.arange(start=L_range[0]+start,
+                                                stop=L_range[0]+neqns,
+                                                step=4,
+                                                dtype="i"))
+            self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
         self.pc = p4pyPETSc.PC().create()
         if prefix:
             self.pc.setOptionsPrefix(prefix)
@@ -597,18 +620,123 @@ class SimpleNavierStokes3D:
         self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.isv = p4pyPETSc.IS()
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
-        #self.pc.setFieldSplitIS(self.isv)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
-        #self.pc.setFieldSplitIS(('pressure',self.isp),('velocity',self.isv))
-        #self.pc.setFieldSplitIS(self.velocityDOF)
-        #self.pc.setFieldSplitIS(self.pressureDOF)
+
     def setUp(self):
-        if self.L.pde.pp_hasConstantNullSpace:
-            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                self.kspList = self.pc.getFieldSplitSubKSP()
-                self.kspList[1].setNullSpace(self.nsp)
+        try:
+            if self.L.pde.pp_hasConstantNullSpace:
+                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                    self.kspList = self.pc.getFieldSplitSubKSP()
+                    self.kspList[1].setNullSpace(self.nsp)
+        except:
+            pass
+        if self.PCD:
+            #modify the mass term in the continuity equation so the p-p block is Q
+            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+            self.Qsys_rowptr = rowptr.copy()
+            self.Qsys_colind = colind.copy()
+            self.Qsys_nzval = nzval.copy()
+            nr = rowptr.shape[0] - 1
+            nc = nr
+            self.Qsys =SparseMat(nr,nc,
+                                 self.Qsys_nzval.shape[0],
+                                 self.Qsys_nzval,
+                                 self.Qsys_colind,
+                                 self.Qsys_rowptr)
+            self.L.pde.q[('dm',0,0)][:] = 1.0
+            self.L.pde.getMassJacobian(self.Qsys)
+            self.Qsys_petsc4py = self.L.duplicate()
+            L_sizes = self.L.getSizes()
+            Q_csr_rep_local = self.Qsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
+            self.Qsys_petsc4py.setValuesLocalCSR(Q_csr_rep_local[0],
+                                                 Q_csr_rep_local[1],
+                                                 Q_csr_rep_local[2],
+                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
+            self.Qsys_petsc4py.assemblyBegin()
+            self.Qsys_petsc4py.assemblyEnd()
+            self.Qp = self.Qsys_petsc4py.getSubMatrix(self.isp,self.isp)
+            from LinearAlgebraTools import _petsc_view
+            _petsc_view(self.Qp, "Qp")#write to Qp.m
+            #running Qp.m will load into matlab  sparse matrix
+            #runnig Qpf = full(Mat_...) will get the full matrix
+            #
+            #modify the diffusion term in the mass equation so the p-p block is Ap
+            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+            self.Asys_rowptr = rowptr.copy()
+            self.Asys_colind = colind.copy()
+            self.Asys_nzval = nzval.copy()
+            L_sizes = self.L.getSizes()
+            nr = L_sizes[0][0]
+            nc = L_sizes[1][0]
+            self.Asys =SparseMat(nr,nc,
+                                 self.Asys_nzval.shape[0],
+                                 self.Asys_nzval,
+                                 self.Asys_colind,
+                                 self.Asys_rowptr)
+            self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
+            self.L.pde.q[('df',0,0)][:] = 0.0
+            self.L.pde.q[('df',0,1)][:] = 0.0
+            self.L.pde.q[('df',0,2)][:] = 0.0
+            self.L.pde.q[('df',0,3)][:] = 0.0
+            self.L.pde.getSpatialJacobian(self.Asys)#notice switched to  Spatial
+            self.Asys_petsc4py = self.L.duplicate()
+            A_csr_rep_local = self.Asys.getSubMatCSRrepresentation(0,L_sizes[0][0])
+            self.Asys_petsc4py.setValuesLocalCSR(A_csr_rep_local[0],
+                                                 A_csr_rep_local[1],
+                                                 A_csr_rep_local[2],
+                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
+            self.Asys_petsc4py.assemblyBegin()
+            self.Asys_petsc4py.assemblyEnd()
+            self.Ap = self.Asys_petsc4py.getSubMatrix(self.isp,self.isp)
+            _petsc_view(self.Ap,"Ap")#write to A.m
+            #running A.m will load into matlab  sparse matrix
+            #runnig Af = full(Mat_...) will get the full matrix
+            #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
+            #modify the diffusion term in the mass equation so the p-p block is Ap
+            #modify the diffusion term in the mass equation so the p-p block is Fp
+            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+            self.Fsys_rowptr = rowptr.copy()
+            self.Fsys_colind = colind.copy()
+            self.Fsys_nzval = nzval.copy()
+            L_sizes = self.L.getSizes()
+            nr = L_sizes[0][0]
+            nc = L_sizes[1][0]
+            self.Fsys =SparseMat(nr,nc,
+                                 self.Fsys_nzval.shape[0],
+                                 self.Fsys_nzval,
+                                 self.Fsys_colind,
+                                 self.Fsys_rowptr)
+            self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
+            self.L.pde.q[('df',0,0)][...,0] = self.L.pde.q[('u',1)]
+            self.L.pde.q[('df',0,0)][...,1] = self.L.pde.q[('u',2)]
+            self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
+            self.L.pde.getSpatialJacobian(self.Fsys)#notice, switched  to spatial
+            self.Fsys_petsc4py = self.L.duplicate()
+            F_csr_rep_local = self.Fsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
+            self.Fsys_petsc4py.setValuesLocalCSR(F_csr_rep_local[0],
+                                                 F_csr_rep_local[1],
+                                                 F_csr_rep_local[2],
+                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
+            self.Fsys_petsc4py.assemblyBegin()
+            self.Fsys_petsc4py.assemblyEnd()
+            self.Fp = self.Fsys_petsc4py.getSubMatrix(self.isp,self.isp)
+            _petsc_view(self.Fp, "Fp")#write to F.m
+            #running F.m will load into matlab  sparse matrix
+            #runnig Ff = full(Mat_...) will get the full matrix
+            #Ff(1:np,1:np) whould be Fp, the pressure convection-diffusion matrix
+            #
+            #now zero all the dummy coefficents
+            #
+            self.L.pde.q[('dm',0,0)][:] = 0.0
+            self.L.pde.q[('df',0,0)][:] = 0.0
+            self.L.pde.q[('a',0,0)][:] = 0.0
+            #
+            # I think the next step is to setup something that does
+            #  p = ksp(Qp, Fp*ksp(Ap,b)) for some input b
+            # where p represents the approximate solution of S p = b
+SimpleNavierStokes3D = NavierStokes3D
 
 class SimpleDarcyFC:
     def __init__(self,L):
@@ -632,25 +760,36 @@ class SimpleDarcyFC:
     def setUp(self):
         pass
 
-class SimpleNavierStokes2D:
+class NavierStokes2D:
     def __init__(self,L,prefix=None):
         self.L=L
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
-        #print "L_sizes",L_sizes
         neqns = L_sizes[0][0]
-        #print "neqns",neqns
-        self.pressureDOF = numpy.arange(start=L_range[0],
-                                        stop=L_range[0]+neqns,
-                                        step=3,
-                                        dtype="i")
-        velocityDOF = []
-        for start in range(1,3):
-            velocityDOF.append(numpy.arange(start=L_range[0]+start,
-                                         stop=L_range[0]+neqns,
-                                         step=3,
-                                         dtype="i"))
-        self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
+        rank = p4pyPETSc.COMM_WORLD.rank
+        if self.L.pde.stride[0] == 1:#assume end to end
+            pSpace = self.L.pde.u[0].femSpace
+            pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
+            nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
+            self.pressureDOF = numpy.arange(start=L_range[0],
+                                            stop=L_range[0]+nDOF_pressure,
+                                            dtype="i")
+            self.velocityDOF = numpy.arange(start=L_range[0]+nDOF_pressure,
+                                            stop=L_range[0]+neqns,
+                                            step=1,
+                                            dtype="i")
+        else: #assume blocked
+            self.pressureDOF = numpy.arange(start=L_range[0],
+                                            stop=L_range[0]+neqns,
+                                            step=3,
+                                            dtype="i")
+            velocityDOF = []
+            for start in range(1,3):
+                velocityDOF.append(numpy.arange(start=L_range[0]+start,
+                                                stop=L_range[0]+neqns,
+                                                step=3,
+                                                dtype="i"))
+                self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
         self.pc = p4pyPETSc.PC().create()
         if prefix:
             self.pc.setOptionsPrefix(prefix)
@@ -659,15 +798,18 @@ class SimpleNavierStokes2D:
         self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.isv = p4pyPETSc.IS()
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
-        #self.pc.setFieldSplitIS(self.isv)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
     def setUp(self):
-        if self.L.pde.pp_hasConstantNullSpace:
-            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                self.kspList = self.pc.getFieldSplitSubKSP()
-                self.kspList[1].setNullSpace(self.nsp)
+        try:
+            if self.L.pde.pp_hasConstantNullSpace:
+                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                    self.kspList = self.pc.getFieldSplitSubKSP()
+                    self.kspList[1].setNullSpace(self.nsp)
+        except:
+            pass
+SimpleNavierStokes2D = NavierStokes2D
 
 class NavierStokesPressureCorrection:
     def __init__(self,L,prefix=None):

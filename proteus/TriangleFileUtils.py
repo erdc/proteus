@@ -3,6 +3,9 @@
 """
 A collection of functions for reading and manipulating files so that I
 can try to read and write files in the format that Triangle expects
+
+.. inheritance-diagram:: proteus.TriangleFileUtils
+   :parts: 1
 """
 import sys,os
 import numpy
