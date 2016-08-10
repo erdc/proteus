@@ -1,13 +1,16 @@
 """
 Classes for archiving numerical solution data
+
+.. inheritance-diagram:: proteus.Archiver
+   :parts: 1
 """
 import Profiling
+from Profiling import logEvent
 import Comm
 import numpy
 import os
 from xml.etree.ElementTree import *
 
-log = Profiling.logEvent
 memory = Profiling.memory
 
 def indentXML(elem, level=0):
@@ -238,7 +241,7 @@ class AR_base:
             self.xmlFileGlobal.seek(0)
             self.xmlFileGlobal.truncate()
     def close(self):
-        log("Closing Archive")
+        logEvent("Closing Archive")
         if not self.useGlobalXMF:
             self.xmlFile.close()
         if self.comm.isMaster() and self.useGlobalXMF:
@@ -246,7 +249,7 @@ class AR_base:
             self.xmlFileGlobal.close()
         if self.hdfFile != None:
             self.hdfFile.close()
-        log("Done Closing Archive")
+        logEvent("Done Closing Archive")
         try:
             if not self.useGlobalXMF:
                 if self.gatherAtClose:
@@ -254,7 +257,7 @@ class AR_base:
         except:
             pass
     def allGather(self):
-        log("Gathering Archive")
+        logEvent("Gathering Archive")
         self.comm.barrier()
         if self.rank==0:
             #replace the bottom level grid with a spatial collection
@@ -284,11 +287,11 @@ class AR_base:
             indentXML(self.tree.getroot())
             self.tree.write(f)
             f.close()
-        log("Done Gathering Archive")
+        logEvent("Done Gathering Archive")
     def allGatherIncremental(self):
         import copy
         from mpi4py import MPI
-        log("Gathering Archive Time step")
+        logEvent("Gathering Archive Time step")
         self.comm.barrier()
         XDMF =self.tree.getroot()
         Domain =XDMF[-1]
@@ -359,9 +362,9 @@ class AR_base:
                     if self.comm.isMaster():
                         xml_data[0] = tostring(GridLocal)
         self.n_datasets += 1
-        log("Done Gathering Archive Time Step")
+        logEvent("Done Gathering Archive Time Step")
     def sync(self):
-        log("Syncing Archive",level=3)
+        logEvent("Syncing Archive",level=3)
         memory()
         self.allGatherIncremental()
         self.clear_xml()
@@ -394,8 +397,8 @@ class AR_base:
                 self.comm.barrier()
             else:
                 self.hdfFile.flush()
-        log("Done Syncing Archive",level=3)
-        log(memory("Syncing Archive"),level=4)
+        logEvent("Done Syncing Archive",level=3)
+        logEvent(memory("Syncing Archive"),level=4)
     def create_dataset_async(self,name,data):
         comm_world = self.comm.comm.tompi4py()
         metadata = comm_world.allgather((name,data.shape,data.dtype))
@@ -583,12 +586,14 @@ class XdmfWriter:
                         #    for nN in range(Xdmf_NodesPerElement):
                         #        q_l2g[eN,nN] = eN*Xdmf_NodesPerElement + nN
                         #
-                        q_l2g = numpy.arange(mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank]*Xdmf_NodesPerElement,
-                                             mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank+1]*Xdmf_NodesPerElement,
+                        from proteus import Comm
+                        comm = Comm.get()
+                        q_l2g = numpy.arange(mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank()]*Xdmf_NodesPerElement,
+                                             mesh.globalMesh.elementOffsets_subdomain_owned[comm.rank()+1]*Xdmf_NodesPerElement,
                                              dtype='i').reshape((mesh.nElements_owned,Xdmf_NodesPerElement))
                         if ar.has_h5py:
                             ar.create_dataset_sync('elements'+spaceSuffix+`tCount`,
-                                                   offsets=mesh.globalMesh.elementOffsets_subdomain_owned*Xdmf_NodesPerElement,
+                                                   offsets=mesh.globalMesh.elementOffsets_subdomain_owned,
                                                    data = q_l2g)
                             ar.create_dataset_sync('nodes'+spaceSuffix+`tCount`,
                                                    offsets=mesh.globalMesh.elementOffsets_subdomain_owned*Xdmf_NodesPerElement,
@@ -675,10 +680,10 @@ class XdmfWriter:
                                     "Dimensions":"%i" % (Xdmf_NodesGlobal,)})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+name+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_sync(name+"_p"+"_t"+str(tCount),
-                                           offsets = self.mesh.globalMesh.elementOffsets_subdomain_owned,
-                                           data = u[:self.mesh.nElements_owned].flat)
+                    values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
+                    ar.create_dataset_sync(name+"_t"+str(tCount),
+                                           offsets = self.mesh.globalMesh.elementOffsets_subdomain_owned*u.shape[1], # verify
+                                           data = u[:self.mesh.nElements_owned].reshape((self.mesh.nElements_owned*u.shape[1],)))
                 else:
                     assert False, "global_sync not supported with pytables"
             else:
@@ -719,14 +724,14 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i %i" % (Xdmf_NodesGlobal,Xdmf_StorageDim)})#force 3d vector since points 3d
-            tmp = numpy.zeros((Xdmf_NodesGlobal,Xdmf_StorageDim),'d')
-            tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u[:self.mesh.nElementsOwned].flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
+            tmp = numpy.zeros((self.mesh.nElements_owned*u.shape[1],Xdmf_StorageDim),'d')
+            tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u[:self.mesh.nElements_owned].flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
 
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
-                    ar.create_dataset_sync(name+"_p"+"_t"+str(tCount),
-                                           offsets = self.mesh.globalMesh.elementOffsets_subdomain_owned*u.shape[1]*Xdmf_StorageDim,
+                    values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
+                    ar.create_dataset_sync(name+"_t"+str(tCount),
+                                           offsets = self.mesh.globalMesh.elementOffsets_subdomain_owned*u.shape[1],
                                            data = tmp)
                 else:
                     assert False, "global_sync not supported  with pytables"
@@ -784,8 +789,8 @@ class XdmfWriter:
 
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+name+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_sync(name+"_p"+"_t"+str(tCount),
+                    values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
+                    ar.create_dataset_sync(name+"_t"+str(tCount),
                                            offsets = self.mesh.elementOffsets_subdomain_owned*u.shape[1]*9,
                                            data = tmp)
                 else:
@@ -1292,8 +1297,16 @@ class XdmfWriter:
                 print "No writeMeshXdmf_C0Q2Lagrange for 1D"
                 return 0
             elif spaceDim == 2:
-                print "No writeMeshXdmf_C0Q2Lagrange for 2D"
-                return 0
+                Xdmf_ElementTopology = "Quadrilateral"
+                e2s=[ [0,4,8,7], [7,8,6,3],  [4,1,5,8], [8,5,2,6] ]
+                nsubelements=4
+
+                l2g = numpy.zeros((4*mesh.nElements_global,4),'i')
+                for eN in range(mesh.nElements_global):
+                    dofs=dofMap.l2g[eN,:]
+                    for i in range(4): #loop over subelements
+                        for j in range(4): # loop over nodes of subelements
+                            l2g[4*eN+i,j] = dofs[e2s[i][j]]
             elif spaceDim == 3:
                 Xdmf_ElementTopology = "Hexahedron"
 
@@ -1345,7 +1358,7 @@ class XdmfWriter:
                         if init or meshChanged:
                             if ar.has_h5py:
                                 ar.create_dataset_sync('elements'+spaceSuffix+`tCount`,
-                                                       offsets = mesh.globalMesh.elementOffsets_subdomain_owned*nsubelements,
+                                                       offsets = [x*nsubelements for x in mesh.globalMesh.elementOffsets_subdomain_owned],
                                                        data = dofMap.subdomain2global[l2g[:mesh.nElements_owned*nsubelements]])
                             else:
                                 assert False, "global_sync not implemented for pytables"
@@ -1597,8 +1610,8 @@ class XdmfWriter:
                                     "Dimensions":"%i" % (dofMap.nDOF_all_processes,)})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+u.name+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_sync(u.name+"_p"+"_t"+str(tCount),
+                    values.text = ar.hdfFilename+":/"+u.name+"_t"+str(tCount)
+                    ar.create_dataset_sync(u.name+"_t"+str(tCount),
                                            offsets = dofMap.dof_offsets_subdomain_owned,
                                            data = u.dof[:dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - dofMap.dof_offsets_subdomain_owned[comm.rank()]])
                 else:
@@ -1709,8 +1722,8 @@ class XdmfWriter:
 
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+name+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_sync(name+"_p"+"_t"+str(tCount),
+                    values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
+                    ar.create_dataset_sync(name+"_t"+str(tCount),
                                            offsets = u.femSpace.mesh.globalMesh.elementOffsets_subdomain_owned*Xdmf_NodesPerElement,
                                            data = u_tmp)
                 else:
@@ -1729,8 +1742,8 @@ class XdmfWriter:
                                     "Dimensions":"%i" % (dofMap.nDOF_all_processes,)})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values_dof.text = ar.hdfFilename+":/"+name+"_dof"+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_sync(name+"_dof"+"_p"+"_t"+str(tCount),
+                    values_dof.text = ar.hdfFilename+":/"+name+"_dof"+"_t"+str(tCount)
+                    ar.create_dataset_sync(name+"_dof"+"_t"+str(tCount),
                                            offsets = dofMap.dof_offsets_subdomain_owned,
                                            data = u.dof)
                 else:
@@ -1834,10 +1847,13 @@ class XdmfWriter:
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
                 if ar.hdfFile != None:
                     if ar.has_h5py:
-                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+"_t"+str(tCount)
-                        ar.create_dataset_sync(vectorName+"_p"+"_t"+str(tCount),
-                                               offsets = uList[components[0]].femSpace.dofMap.dof_offsets_subdomain_owned*3,
-                                               data = velocity)
+                        values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
+                        comm = Comm.get()
+                        nDOF_owned = (uList[components[0]].femSpace.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -
+                                      uList[components[0]].femSpace.dofMap.dof_offsets_subdomain_owned[comm.rank()] )
+                        ar.create_dataset_sync(vectorName+"_t"+str(tCount),
+                                               offsets = uList[components[0]].femSpace.dofMap.dof_offsets_subdomain_owned,
+                                               data = velocity[:nDOF_owned])
                     else:
                         assert False, "global_sync not implemented  for pytables"
             else:
@@ -2007,8 +2023,8 @@ class XdmfWriter:
                                     "Dimensions":"%i" % (Xdmf_NodesGlobal,)})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+name+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_sync(name+"_p"+"_t"+str(tCount),
+                    values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
+                    ar.create_dataset_sync(name+"_t"+str(tCount),
                                            offsets = mesh.globalMesh.elementOffsets_subdomain_owned,
                                            data = interpolationValues[:mesh.nElements_owned])
                 else:
@@ -2060,8 +2076,8 @@ class XdmfWriter:
 
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+name+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_sync(name+"_p"+"_t"+str(tCount),
+                    values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
+                    ar.create_dataset_sync(name+"_t"+str(tCount),
                                            offsets = self.mesh.globalMesh.elementOffsets_subdomain_owned*interpolationValues.shape[1],
                                            data = tmp)
                 else:
@@ -2219,8 +2235,8 @@ class XdmfWriter:
                                     "Dimensions":"%i" % (u.femSpace.elementMaps.mesh.globalMesh.nElements_global,)})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+name+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_sync(name+"_p"+"_t"+str(tCount),
+                    values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
+                    ar.create_dataset_sync(name+"_t"+str(tCount),
                                            offsets = u.femSpace.elementMaps.mesh.globalMesh.elementOffsets_subdomain_owned,
                                            data = u.dof[:u.femSpace.elementMaps.mesh.nElements_owned])
                 else:
@@ -2271,8 +2287,8 @@ class XdmfWriter:
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
                 if ar.hdfFile != None:
                     if ar.has_h5py:
-                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+"_t"+str(tCount)
-                        ar.create_dataset_sync(vectorName+"_p"+"_t"+str(tCount),
+                        values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
+                        ar.create_dataset_sync(vectorName+"_t"+str(tCount),
                                                offsets = u.femSpace.elementMaps.mesh.globalMesh.elementOffsets_subdomain_owned,
                                                data = velocity[:u.femSpace.elementMaps.mesh.nElements_owned])
                     else:
@@ -2438,8 +2454,8 @@ class XdmfWriter:
                                     "Dimensions":"%i" % (Xdmf_NumberOfNodes,)})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+name+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_sync(name+"_p"+"_t"+str(tCount),
+                    values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
+                    ar.create_dataset_sync(name+"_t"+str(tCount),
                                            offsets = u.femSpace.mesh.nodeOffsets_subdomain_owned,
                                            data = u.dof[0:u.femSpace.mesh.nNodes_owned])
                 else:
@@ -2485,8 +2501,8 @@ class XdmfWriter:
                                     "Dimensions":"%i" % (u.femSpace.dofMap.nDOF_all_processes,)})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+u.name+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_sync(u.name+"_p"+"_t"+str(tCount),
+                    values.text = ar.hdfFilename+":/"+u.name+"_t"+str(tCount)
+                    ar.create_dataset_sync(u.name+"_t"+str(tCount),
                                            offsets = u.femSpace.dofMap.dof_offsets_subdomain_owned,
                                            data = u.dof[:(u.femSpace.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - u.femSpace.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
                 else:
@@ -2536,8 +2552,8 @@ class XdmfWriter:
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
                 if ar.hdfFile != None:
                     if ar.has_h5py:
-                        values.text = ar.hdfFilename+":/"+vectorName+"_p"+"_t"+str(tCount)
-                        ar.create_dataset_sync(vectorName+"_p"+"_t"+str(tCount),
+                        values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
+                        ar.create_dataset_sync(vectorName+"_t"+str(tCount),
                                                offsets = uList[components[0]].femSpace.mesh.globalMesh.nodeOffsets_subdomain_owned,
                                                data = velocity)
                     else:
@@ -2840,8 +2856,8 @@ class XdmfWriter:
 
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+name+"_p"+"_t"+str(tCount)
-                    ar.create_dataset_async(name+"_p"+"_t"+str(tCount), data = tmp)
+                    values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
+                    ar.create_dataset_async(name+"_t"+str(tCount), data = tmp)
                 else:
                     assert False, "global_sync not implemented for pytables"
             else:

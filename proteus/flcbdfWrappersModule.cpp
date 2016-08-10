@@ -4219,6 +4219,16 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
           int ebN_subdomain  = elementBoundaryNumbering_global2subdomainMap[ebN_global_new];
           newMesh.subdomainp->elementBoundaryMaterialTypes[ebN_subdomain] = ebmp->second;
         }
+      if (!hasVertexMarkers)
+        for (int ebNE = 0; ebNE < newMesh.subdomainp->nExteriorElementBoundaries_global; ebNE++)
+          {
+            int ebN = newMesh.subdomainp->exteriorElementBoundariesArray[ebNE];
+            for (int nN_local = 0; nN_local < newMesh.subdomainp->nNodes_elementBoundary; nN_local++)
+              {
+                int nN = newMesh.subdomainp->elementBoundaryNodesArray[ebN*newMesh.subdomainp->nNodes_elementBoundary+nN_local];
+                newMesh.subdomainp->nodeMaterialTypes[nN] = newMesh.subdomainp->elementBoundaryMaterialTypes[ebN];
+              }
+          }
     }
   elementBoundaryNumbering_global_old2new.resize(0);
   ierr = enforceMemoryLimit(rank, max_rss_gb,"Done with material types");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
@@ -6418,6 +6428,7 @@ static PyObject* flcbdfWrappersGlobalMax(PyObject* self, PyObject* args)
                         "d",
                         &value))
     return NULL;
+
   MPI_Allreduce(&value,&value_new,1,MPI_DOUBLE,MPI_MAX,PROTEUS_COMM_WORLD);
   return Py_BuildValue("d",value_new);
 }
@@ -7307,7 +7318,8 @@ initflcbdfWrappers(void)
 
   // ensure PETSc, then DAETK, are initialized
   // PETSc first, via the proteus.Comm module
-  PyRun_SimpleString("from proteus import Comm; Comm.init()");
+  //this wasn't working anyway... 
+  //PyRun_SimpleString("proteus.Comm.init()");
 
   // DAETK, PETSc is initialized so only initialize subsystem
   Daetk::Petsc::Sys::initialized=true;
