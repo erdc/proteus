@@ -170,7 +170,7 @@ class BC_RANS(BC_Base):
         elif orientation is not None:
             b_or = orientation
         else:
-            ValueError('Boundary orientation needs to be defined')
+            raise ValueError('Boundary orientation needs to be defined')
         self.reset()
         self.p_dirichlet.setConstantBC(0.)
         self.u_dirichlet.uOfXT = get_ux_dirichlet(0)
