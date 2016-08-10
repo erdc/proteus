@@ -19,10 +19,11 @@ from proteus.config import *
 ##\todo Finishing cleaning up setup.py/setup.cfg, config.py...
 from distutils import sysconfig
 cv = sysconfig.get_config_vars()
-cv["OPT"] = cv["OPT"].replace("-DNDEBUG","-DDEBUG")
-cv["OPT"] = cv["OPT"].replace("-O3","-g")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","-DDEBUG")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","-g")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-Wall","-w")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-Wstrict-prototypes","")
+
 
 PROTEUS_PETSC_EXTRA_LINK_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_LINK_ARGS', [])
 PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_ARGS', [])
@@ -39,15 +40,33 @@ for arg in sys.argv:
         break
 
 setup(name='proteus',
-      version='1.0.0',
+      version='1.1.0',
       description='Python tools for multiphysics modeling',
       author='Chris Kees, Matthew Farthing, et al.',
-      author_email='chris.kees@us.army.mil',
-      url='http://proteus.usace.army.mil',
-      packages = ['proteus', 'proteus.config', 'proteus.tests', 'proteus.mprans'],
+      author_email='christopher.e.kees@usace.army.mil',
+      url='http://proteustoolkit.org',
+      packages = ['proteus',
+                  'proteus.mprans',
+                  'proteus.config',
+                  'proteus.tests',
+                  'proteus.tests.ci',
+                  'proteus.tests.mesh_tests',
+                  'proteus.tests.mesh_tests.import_modules',
+                  'proteus.tests.linalgebra_tests',
+                  'proteus.tests.single_phase_gw',
+                  'proteus.tests.poisson_2d',],
       cmdclass = {'build_ext':build_ext},
       ext_package='proteus',
-      ext_modules=[Extension("WaveTools",['proteus/WaveTools.pyx'],
+      ext_modules=[Extension("Isosurface",['proteus/Isosurface.pyx'],
+                             language='c',
+                             include_dirs=[numpy.get_include(),'proteus']),
+                   Extension("BoundaryConditions",['proteus/BoundaryConditions.pyx'],
+                             language='c',
+                             include_dirs=[numpy.get_include(),'proteus']),
+                   Extension("mprans.BoundaryConditions",['proteus/mprans/BoundaryConditions.pyx'],
+                             language='c',
+                             include_dirs=[numpy.get_include(),'proteus']),
+                   Extension("WaveTools",['proteus/WaveTools.pyx'],
                              language='c',
                              include_dirs=[numpy.get_include(),'proteus']),
                    Extension("ADR",['proteus/ADR.pyx'],
@@ -318,9 +337,23 @@ setup(name='proteus',
                              include_dirs=[numpy.get_include(), 'proteus']),
 
                    ],
-      data_files=[(proteus_install_path,['proteus/proteus_blas.h', 'proteus/proteus_lapack.h',
-                                         'proteus/ModelFactory.h', 'proteus/CompKernel.h']),(os.path.join(proteus_install_path,'tests'),['proteus/tests/hex_cube_3x3.xmf','proteus/tests/hex_cube_3x3.h5'])],
-      scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf',
+      data_files=[(proteus_install_path,
+                   ['proteus/proteus_blas.h',
+                    'proteus/proteus_lapack.h',
+                    'proteus/ModelFactory.h',
+                    'proteus/CompKernel.h'
+                   ]),
+                  (os.path.join(proteus_install_path,'tests'),
+                   ['proteus/tests/hex_cube_3x3.xmf',
+                    'proteus/tests/hex_cube_3x3.h5']),
+                  (os.path.join(proteus_install_path,'tests','ci'),
+                   ['proteus/tests/ci/test_bdm_sshaped_region_expected.h5']),
+                  (os.path.join(proteus_install_path,'tests','linalgebra_tests'),
+                   ['proteus/tests/linalgebra_tests/sparse_mat_1.txt']),
+                  (os.path.join(proteus_install_path,'tests','mesh_tests','comparison_files'),
+                   ['proteus/tests/mesh_tests/comparison_files/poiseulle_xmf.output'])
+      ],
+      scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/povgen.py',
                  'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
                  'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec','scripts/gatherTimes.py'],
       requires=['numpy']

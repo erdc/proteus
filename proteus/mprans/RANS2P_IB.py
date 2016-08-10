@@ -849,17 +849,17 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         #
         #show quadrature
         #
-        log("Dumping quadrature shapes for model %s" % self.name,level=9)
-        log("Element quadrature array (q)", level=9)
-        for (k,v) in self.q.iteritems(): log(str((k,v.shape)),level=9)
-        log("Element boundary quadrature (ebq)",level=9) 
-        for (k,v) in self.ebq.iteritems(): log(str((k,v.shape)),level=9)
-        log("Global element boundary quadrature (ebq_global)",level=9)
-        for (k,v) in self.ebq_global.iteritems(): log(str((k,v.shape)),level=9)
-        log("Exterior element boundary quadrature (ebqe)",level=9)
-        for (k,v) in self.ebqe.iteritems(): log(str((k,v.shape)),level=9)
-        log("Interpolation points for nonlinear diffusion potential (phi_ip)",level=9)
-        for (k,v) in self.phi_ip.iteritems(): log(str((k,v.shape)),level=9)
+        logEvent("Dumping quadrature shapes for model %s" % self.name,level=9)
+        logEvent("Element quadrature array (q)", level=9)
+        for (k,v) in self.q.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Element boundary quadrature (ebq)",level=9) 
+        for (k,v) in self.ebq.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Global element boundary quadrature (ebq_global)",level=9)
+        for (k,v) in self.ebq_global.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Exterior element boundary quadrature (ebqe)",level=9)
+        for (k,v) in self.ebqe.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Interpolation points for nonlinear diffusion potential (phi_ip)",level=9)
+        for (k,v) in self.phi_ip.iteritems(): logEvent(str((k,v.shape)),level=9)
         #
         # allocate residual and Jacobian storage
         #
@@ -895,10 +895,10 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         #
         del self.internalNodes
         self.internalNodes = None
-        log("Updating local to global mappings",2)
+        logEvent("Updating local to global mappings",2)
         self.updateLocal2Global()
-        log("Building time integration object",2)
-        log(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
+        logEvent("Building time integration object",2)
+        logEvent(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
         #mwf for interpolating subgrid error for gradients etc
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
@@ -907,8 +907,8 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
            
         if options != None:
             self.timeIntegration.setFromOptions(options)
-        log(memory("TimeIntegration","OneLevelTransport"),level=4)
-        log("Calculating numerical quadrature formulas",2)
+        logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
+        logEvent("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
 
         self.setupFieldStrides()
@@ -918,8 +918,8 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         if comm.size() > 1:
             assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        log("initalizing numerical flux")
-        log(memory("stride+offset","OneLevelTransport"),level=4)
+        logEvent("initalizing numerical flux")
+        logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
             if options == None or options.periodicDirichletConditions == None:
                 self.numericalFlux = numericalFluxType(self,
@@ -935,7 +935,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         else:
             self.numericalFlux = None
         #set penalty terms
-        log("initializing numerical flux penalty")
+        logEvent("initializing numerical flux penalty")
         self.numericalFlux.penalty_constant = self.coefficients.eb_penalty_constant
         #cek todo move into numerical flux initialization
         if self.ebq_global.has_key('penalty'):
@@ -949,19 +949,19 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
-        log(memory("numericalFlux","OneLevelTransport"),level=4)
+        logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
-        log("setting up post-processing")
+        logEvent("setting up post-processing")
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
-        log(memory("velocity postprocessor","OneLevelTransport"),level=4)
+        logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
-        log("initializing archiver")
+        logEvent("initializing archiver")
         from proteus import Archiver
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.elementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
-        log("flux bc objects")
+        logEvent("flux bc objects")
         for ci,fbcObject  in self.fluxBoundaryConditionsObjectsDict.iteritems():
             self.ebqe[('advectiveFlux_bc_flag',ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc',ci)].shape,'i')
             for t,g in fbcObject.advectiveFluxBoundaryConditionsDict.iteritems():
@@ -981,13 +981,13 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         if self.mesh.nodeVelocityArray==None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
         #cek/ido todo replace python loops in modules with optimized code if possible/necessary
-        log("dirichlet conditions")
+        logEvent("dirichlet conditions")
         self.forceStrongConditions=coefficients.forceStrongDirichlet
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
-        log("final allocations")
+        logEvent("final allocations")
         compKernelFlag = 0
         if self.coefficients.useConstant_he:
             self.elementDiameter = self.mesh.elementDiametersArray.copy()
@@ -1015,7 +1015,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
             self.stride.append(self.stride[2])
             self.numericalFlux.isDOFBoundary[3] = self.numericalFlux.isDOFBoundary[2].copy()
             self.numericalFlux.ebqe[('u',3)] = self.numericalFlux.ebqe[('u',2)].copy()
-            log("calling cRANS2P2D_base ctor")
+            logEvent("calling cRANS2P2D_base ctor")
             self.rans2p = cRANS2P2D_base(self.nSpace_global,
                                          self.nQuadraturePoints_element,
                                          self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -1024,7 +1024,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
                                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                                          compKernelFlag)
         else:
-            log("calling  cRANS2P_base ctor")
+            logEvent("calling  cRANS2P_base ctor")
             self.rans2p = cRANS2P_IB_base(self.nSpace_global,
                                        self.nQuadraturePoints_element,
                                        self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -1254,10 +1254,10 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                      r[self.offset[cj]+self.stride[cj]*dofN] = 0
         cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
-        log("Maximum CFL = " + str(cflMax),level=2)
+        logEvent("Maximum CFL = " + str(cflMax),level=2)
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
-        log("Global residual",level=9,data=r)
+        logEvent("Global residual",level=9,data=r)
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
     def getJacobian(self,jacobian):
@@ -1474,7 +1474,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
                         else:
                             self.nzval[i] = 0.0
                             #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
-        log("Jacobian ",level=10,data=jacobian)
+        logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
