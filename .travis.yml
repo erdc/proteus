@@ -32,7 +32,7 @@ install:
 - ls $SSL_CERT_DIR
 
 script:
-- nosetests -vv --traverse-namespace proteus/tests proteus/tests/ci  proteus/tests/poisson_2d
+- py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-1.1.0-py2.7-linux-x86_64.egg/proteus/tests
 
 notifications:
   email:
