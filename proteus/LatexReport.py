@@ -6,6 +6,8 @@ Class and script for generating a report from simulation data.
    :parts: 1
 """
 
+from .Profiling import logEvent
+
 def openLatexReport(filename,reportname):
     latexReport = open(filename,'w')
     latexReport.write(r"""\documentclass{amsart}
