@@ -10,15 +10,11 @@ this module define common PDE's.
 from math import *
 import numpy
 import Norms
-import Profiling
-
-log = Profiling.logEvent
+from Profiling import logEvent
 
 ## \file TransportCoefficients.py
 #
 #@{
-
-log = Profiling.logEvent
 
 ##\brief Base class for transport coefficients classes
 #
@@ -3616,7 +3612,7 @@ class NCLevelSetCoefficients(TC_base):
                                                                      self.model.q['dV'],
                                                                      self.model.q[('u',0)],
                                                                      self.model.mesh.nElements_owned)
-            log("Attach Models NCLS: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Attach Models NCLS: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
             self.totalFluxGlobal=0.0
             self.lsGlobalMassArray = [self.m_pre]
             self.lsGlobalMassErrorArray = [0.0]
@@ -3639,14 +3635,14 @@ class NCLevelSetCoefficients(TC_base):
                                                                      self.model.q['dV'],
                                                                      self.model.q[('u',0)],
                                                                      self.model.mesh.nElements_owned)
-            log("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
             self.m_last = self.m_pre
             # self.m_last = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
             #                                                           self.model.mesh.elementDiametersArray,
             #                                                           self.model.q['dV'],
             #                                                           self.model.timeIntegration.m_last[0],
             #                                                           self.model.mesh.nElements_owned)
-            # log("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
+            # logEvent("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
         #cek todo why is this here
         if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
             self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
@@ -3660,14 +3656,14 @@ class NCLevelSetCoefficients(TC_base):
                                                                       self.model.q['dV'],
                                                                       self.model.q[('u',0)],
                                                                       self.model.mesh.nElements_owned)
-            log("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)
+            logEvent("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)
             #need a flux here not a velocity
             self.fluxIntegral = Norms.fluxDomainBoundaryIntegralFromVector(self.ebqe_dS,
                                                                            self.ebqe_v,
                                                                            self.model.ebqe['n'],
                                                                            self.model.mesh)
-            log("Flux integral = %12.5e" % (self.fluxIntegral,),level=2)
-            log("Phase  0 mass conservation after NCLS step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+            logEvent("Flux integral = %12.5e" % (self.fluxIntegral,),level=2)
+            logEvent("Phase  0 mass conservation after NCLS step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
             self.lsGlobalMass = self.m_post
             self.fluxGlobal = self.fluxIntegral*self.model.timeIntegration.dt
             self.totalFluxGlobal += self.fluxGlobal
@@ -3928,16 +3924,16 @@ class VOFCoefficients(TC_base):
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
                                                      self.model.mesh.nElements_owned)
-            log("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_pre,),level=2)
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
                                                      self.model.mesh.nElements_owned)
-            log("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
+            logEvent("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
             if self.model.ebqe.has_key(('advectiveFlux',0)):
                 self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
                                                                      self.model.ebqe[('advectiveFlux',0)],
                                                                      self.model.mesh)
-                log("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+                logEvent("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
 
     def initializeElementQuadrature(self,t,cq):
         if self.flowModelIndex == None:
@@ -3959,11 +3955,11 @@ class VOFCoefficients(TC_base):
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                     self.model.q[('m',0)],
                                                     self.model.mesh.nElements_owned)
-            log("Phase  0 mass before VOF step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Phase  0 mass before VOF step = %12.5e" % (self.m_pre,),level=2)
             self.m_last = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.timeIntegration.m_last[0],
                                                      self.model.mesh.nElements_owned)
-            log("Phase  0 mass before VOF (m_last) step = %12.5e" % (self.m_last,),level=2)
+            logEvent("Phase  0 mass before VOF (m_last) step = %12.5e" % (self.m_last,),level=2)
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
@@ -3971,17 +3967,17 @@ class VOFCoefficients(TC_base):
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
                                                      self.model.mesh.nElements_owned)
-            log("Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
+            logEvent("Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
             self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
                                                                  self.model.ebqe[('advectiveFlux',0)],
                                                                  self.model.mesh)
-            log("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
-            log("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+            logEvent("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
+            logEvent("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
             divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.model.ebqe['dS'],
                                                                     self.ebqe_v,
                                                                     self.model.ebqe['n'],
                                                                     self.model.mesh)
-            log("Divergence = %12.5e" % (divergence,),level=2)
+            logEvent("Divergence = %12.5e" % (divergence,),level=2)
         copyInstructions = {}
         return copyInstructions
     def updateToMovingDomain(self,t,c):
@@ -4012,7 +4008,7 @@ class VOFCoefficients(TC_base):
                                          c[('f',0)],
                                          c[('df',0,0)])
         if self.checkMass:
-            log("Phase  0 mass in eavl = %12.5e" % (Norms.scalarDomainIntegral(self.model.q['dV'],
+            logEvent("Phase  0 mass in eavl = %12.5e" % (Norms.scalarDomainIntegral(self.model.q['dV'],
                                                                                self.model.q[('m',0)],
                                                                                self.model.mesh.nElements_owned),),level=2)
 
@@ -4124,7 +4120,7 @@ class LevelSetCurvatureCoefficients(TC_base):
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def attachModels(self,modelList):
-        log("Attaching \grad \phi in curvature model")
+        logEvent("Attaching \grad \phi in curvature model")
         self.q_grad_phi    = modelList[self.levelSetModelIndex].q[('grad(u)',0)]
         self.ebqe_grad_phi = modelList[self.levelSetModelIndex].ebqe[('grad(u)',0)]
         if modelList[self.levelSetModelIndex].ebq.has_key(('grad(u)',0)):
@@ -4236,7 +4232,7 @@ class LevelSetConservation(TC_base):
         self.epsDiffusion = self.epsFactDiffusion*mesh.h
     def attachModels(self,modelList):
         import copy
-        log("Attaching models in LevelSetConservation")
+        logEvent("Attaching models in LevelSetConservation")
         #level set
         self.lsModel = modelList[self.levelSetModelIndex]
         self.q_u_ls    = modelList[self.levelSetModelIndex].q[('u',0)]
@@ -4264,7 +4260,7 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMass = Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
                                                                         self.lsModel.q[('u',0)],
                                                                         self.massCorrModel.mesh.nElements_owned)
-                log("Attach Models MCorr: mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+                logEvent("Attach Models MCorr: mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                 self.massCorrModel.q[('r',0)],
                                                                                                 self.massCorrModel.mesh.nElements_owned),),level=2)
                 self.fluxGlobal = 0.0
@@ -4275,10 +4271,10 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMassErrorArray = [self.lsGlobalMass - self.lsGlobalMassArray[0] + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral]
                 self.fluxArray = [self.vofModel.coefficients.fluxIntegral]
                 self.timeArray = [self.vofModel.timeIntegration.t]
-                log("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
-                log("Attach Models MCorr: Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
-                log("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
-                log("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                logEvent("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
+                logEvent("Attach Models MCorr: Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
+                logEvent("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                logEvent("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
     def initializeElementQuadrature(self,t,cq):
         if self.sd and cq.has_key(('a',0,0)):
             cq[('a',0,0)].fill(self.epsDiffusion)
@@ -4290,10 +4286,10 @@ class LevelSetConservation(TC_base):
             cebqe[('a',0,0)].fill(self.epsDiffusion)
     def preStep(self,t,firstStep=False):
         if self.checkMass:
-            log("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                  self.vofModel.q[('m',0)],
                                                                                                  self.massCorrModel.mesh.nElements_owned),),level=2)
-            log("Phase 0 mass before mass correction (LS) %12.5e" % (Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass before mass correction (LS) %12.5e" % (Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
                                                                                                          self.lsModel.q[('m',0)],
                                                                                                          self.massCorrModel.mesh.nElements_owned),),level=2)
         copyInstructions = {'clear_uList':True}
@@ -4322,7 +4318,7 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMass = Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
                                                                         self.lsModel.q[('u',0)],
                                                                         self.massCorrModel.mesh.nElements_owned)
-                log("mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+                logEvent("mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                            self.massCorrModel.q[('r',0)],
                                                                            self.massCorrModel.mesh.nElements_owned),),level=2)
                 self.fluxGlobal = self.vofModel.coefficients.fluxIntegral*self.vofModel.timeIntegration.dt
@@ -4333,10 +4329,10 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMassErrorArray.append(self.lsGlobalMass - self.lsGlobalMassArray[0] + self.totalFluxGlobal)
                 self.fluxArray.append(self.vofModel.coefficients.fluxIntegral)
                 self.timeArray.append(self.vofModel.timeIntegration.t)
-                log("Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
-                log("Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
-                log("Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_last + self.fluxGlobal,),level=2)
-                log("Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_last + self.fluxGlobal,),level=2)
+                logEvent("Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
+                logEvent("Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
+                logEvent("Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_last + self.fluxGlobal,),level=2)
+                logEvent("Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_last + self.fluxGlobal,),level=2)
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):
@@ -4377,10 +4373,10 @@ class LevelSetConservation(TC_base):
         if (self.checkMass and c[('u',0)].shape == self.q_u_ls.shape):
             self.m_tmp[:] = H_vof
             self.m_tmp += self.massCorrModel.q[('r',0)]
-            log("mass correction during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("mass correction during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                      self.massCorrModel.q[('r',0)],
                                                                                      self.massCorrModel.mesh.nElements_owned),),level=2)
-            log("Phase 0 mass during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                  self.m_tmp,
                                                                                   self.massCorrModel.mesh.nElements_owned),),level=2)
 
@@ -5891,7 +5887,7 @@ class RedistanceLevelSet(TC_base):
         import pdb
         #pdb.set_trace()
         if self.nModel != None:
-            log("resetting signed distance level set to current level set",level=2)
+            logEvent("resetting signed distance level set to current level set",level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
             self.rdModel.calculateCoefficients()
             self.rdModel.calculateElementResidual()
@@ -5914,7 +5910,7 @@ class RedistanceLevelSet(TC_base):
     def postStep(self,t,firstStep=False):
         if self.nModel != None:
             if self.applyRedistancing == True:
-                log("resetting level set to signed distance")
+                logEvent("resetting level set to signed distance")
                 self.nModel.u[0].dof.flat[:]  = self.rdModel.u[0].dof.flat[:]
                 self.nModel.calculateCoefficients()
                 self.nModel.calculateElementResidual()
