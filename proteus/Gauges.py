@@ -1,3 +1,10 @@
+"""
+Gauges module
+
+.. inheritance-diagram:: proteus.Gauges
+   :parts: 1
+"""
+import os
 from collections import defaultdict, OrderedDict
 from itertools import product
 
@@ -8,8 +15,9 @@ from numpy.linalg import norm
 
 from . import Comm
 from .AuxiliaryVariables import AV_base
-from .Profiling import logEvent as log
+from .Profiling import logEvent
 from proteus.MeshTools import triangleVerticesToNormals, tetrahedronVerticesToNormals, getMeshIntersections
+from proteus import Profiling
 
 
 def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.csv'):
@@ -178,13 +186,27 @@ class Gauges(AV_base):
         """
 
         # search elements that contain the nearest node
+        patchBoundaryNodes=set()
+        checkedElements=[]
         for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
             eN = femSpace.mesh.nodeElementsArray[eOffset]
+            checkedElements.append(eN)
+            patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
             # evaluate the inverse map for element eN
             xi = femSpace.elementMaps.getInverseValue(eN, location)
             # query whether xi lies within the reference element
             if femSpace.elementMaps.referenceElement.onElement(xi):
                 return eN
+        for node in patchBoundaryNodes:
+            for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+                eN = femSpace.mesh.nodeElementsArray[eOffset]
+                if eN not in checkedElements:
+                    checkedElements.append(eN)
+                    # evaluate the inverse map for element eN
+                    xi = femSpace.elementMaps.getInverseValue(eN, location)
+                    # query whether xi lies within the reference element
+                    if femSpace.elementMaps.referenceElement.onElement(xi):
+                        return eN
         # no elements found
         return None
 
@@ -205,12 +227,12 @@ class Gauges(AV_base):
         haveElement = int(local_element is not None)
         global_have_element, owning_proc = comm.allreduce(haveElement, op=MPI.MAXLOC)
         if global_have_element:
-            log("Gauges on element at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
+            logEvent("Gauges on element at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
                                                                     owning_proc), 3)
         else:
             # gauge isn't on any of the elements, just use nearest node
             global_min_distance, owning_proc = comm.allreduce(nearest_node_distance, op=MPI.MINLOC)
-            log("Off-element gauge location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
+            logEvent("Off-element gauge location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
                                                                  owning_proc), 3)
         if comm_rank != owning_proc:
             nearest_node = None
@@ -254,6 +276,7 @@ class Gauges(AV_base):
             self.globalQuantitiesBuf = None
             self.globalQuantitiesCounts = None
         else:
+            self.fileName = os.path.join(Profiling.logDir, self.fileName)
             self.file = open(self.fileName, 'w')
 
             if self.isLineIntegralGauge:
@@ -271,10 +294,10 @@ class Gauges(AV_base):
                     quantityIDs[gaugeProc] += 1
                     assert gaugeProc >= 0
                     self.globalMeasuredQuantities[field][id] = location, gaugeProc, quantityID
-                    log("Gauge for %s[%d] at %e %e %e is at P[%d][%d]" % (field, id, location[0], location[1],
+                    logEvent("Gauge for %s[%d] at %e %e %e is at P[%d][%d]" % (field, id, location[0], location[1],
                                                                           location[2], gaugeProc, quantityID), 5)
 
-            log("Quantity IDs:\n%s" % str(quantityIDs), 5)
+            logEvent("Quantity IDs:\n%s" % str(quantityIDs), 5)
 
             # determine mapping from global measured quantities to communication buffers
             self.globalQuantitiesMap = np.zeros(numGlobalQuantities, dtype=np.int)
@@ -292,7 +315,7 @@ class Gauges(AV_base):
             # final ids also equal to the counts on each process
             self.globalQuantitiesCounts = quantityIDs
             self.globalQuantitiesBuf = np.zeros(numGlobalQuantities, dtype=np.double)
-            log("Global Quantities Map: \n%s" % str(self.globalQuantitiesMap), 5)
+            logEvent("Global Quantities Map: \n%s" % str(self.globalQuantitiesMap), 5)
 
         self.outputWriterReady = True
 
@@ -314,7 +337,7 @@ class Gauges(AV_base):
         self.isGaugeOwner = comm.rank in gaugeOwners
         gaugeComm = comm.Split(color=self.isGaugeOwner)
 
-        log("Gauge owner: %d" % self.isGaugeOwner, 5)
+        logEvent("Gauge owner: %d" % self.isGaugeOwner, 5)
         if self.isGaugeOwner:
             self.gaugeComm = gaugeComm
             gaugeRank = self.gaugeComm.rank
@@ -322,7 +345,7 @@ class Gauges(AV_base):
             self.gaugeComm = None
             gaugeRank = -1
         self.globalGaugeRanks = comm.allgather(gaugeRank)
-        log("Gauge ranks: \n%s" % str(self.globalGaugeRanks), 5)
+        logEvent("Gauge ranks: \n%s" % str(self.globalGaugeRanks), 5)
 
 
     def addLineGaugePoints(self, line, line_segments):
@@ -353,7 +376,7 @@ class Gauges(AV_base):
             new_points[point] = points[point]
 
         for segment in line_segments:
-            log("Processing segment [ %e %e %e ] to [ %e %e %e ]" % (
+            logEvent("Processing segment [ %e %e %e ] to [ %e %e %e ]" % (
                 segment[0][0], segment[0][1], segment[0][2],
                 segment[1][0], segment[1][1], segment[1][2]), 5)
             startPoint, endPoint = segment
@@ -403,7 +426,7 @@ class Gauges(AV_base):
                 self.globalMeasuredQuantities[field].append((point, owningProc))
                 if nearestNode is not None:
                     point_id = len(self.measuredQuantities[field])
-                    log("Gauge for %s[%d] at %e %e %e is closest to node %d" % (field, point_id, point[0], point[1],
+                    logEvent("Gauge for %s[%d] at %e %e %e is closest to node %d" % (field, point_id, point[0], point[1],
                                                                                 point[2], nearestNode), 3)
                     l_d[field] = point_id
                     self.measuredQuantities[field].append((point, nearestNode))
@@ -431,7 +454,7 @@ class Gauges(AV_base):
             femFun = self.u[field_id]
             for quantity_id, quantity in enumerate(self.measuredQuantities[field]):
                 location, node = quantity
-                log("Gauge for: %s at %e %e %e is on local operator row %d" % (field, location[0], location[1],
+                logEvent("Gauge for: %s at %e %e %e is on local operator row %d" % (field, location[0], location[1],
                                                                       location[2], quantity_id), 3)
                 self.buildQuantityRow(m, femFun, quantity_id, quantity)
             pointGaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
@@ -493,7 +516,7 @@ class Gauges(AV_base):
                     for length_segment in length_segments: print length_segment
                     raise FloatingPointError("Unable to identify next segment while segmenting, are %s in domain?" %
                                              str(endpoints))
-                log("Identified best segment of length %g on %d: %s" % (segment_length, proc_rank, str(segment)), 9)
+                logEvent("Identified best segment of length %g on %d: %s" % (segment_length, proc_rank, str(segment)), 9)
                 selected_segments[proc_rank].append(segment)
                 segment_pos += segment_length
 
@@ -501,11 +524,11 @@ class Gauges(AV_base):
             if err > 1e-8:
                 msg = "Segmented line %s different from original length by ratio %e\n segments: %s" % (
                     str(endpoints), err, str(selected_segments))
-                log(msg, 3)
+                logEvent(msg, 3)
                 if err > 10*eps:
                     raise FloatingPointError(msg)
 
-        log("Selected segments: %s" % str(selected_segments), 9)
+        logEvent("Selected segments: %s" % str(selected_segments), 9)
         segments = comm.scatter(selected_segments)
         return segments
 
@@ -641,10 +664,10 @@ class Gauges(AV_base):
         if self.isPointGauge or self.isLineGauge:
             self.localQuantitiesBuf = np.concatenate([gaugesVec.getArray() for gaugesVec in
                                                       self.pointGaugeVecs]).astype(np.double)
-            log("Sending local array of type %s and shape %s to root on comm %s" % (
+            logEvent("Sending local array of type %s and shape %s to root on comm %s" % (
                 str(self.localQuantitiesBuf.dtype), str(self.localQuantitiesBuf.shape), str(self.gaugeComm)), 9)
             if self.gaugeComm.rank == 0:
-                log("Receiving global array of type %s and shape %s on comm %s" % (
+                logEvent("Receiving global array of type %s and shape %s on comm %s" % (
                 str(self.localQuantitiesBuf.dtype), str(self.globalQuantitiesBuf.shape), str(self.gaugeComm)), 9)
             self.gaugeComm.Gatherv(sendbuf=[self.localQuantitiesBuf, MPI.DOUBLE],
                                    recvbuf=[self.globalQuantitiesBuf, (self.globalQuantitiesCounts, None),
@@ -678,7 +701,7 @@ class Gauges(AV_base):
             return
 
         time = self.get_time()
-        log("Calculate called at time %g" % time)
+        logEvent("Calculate called at time %g" % time)
         # check that gauge is in its active time region
         if self.activeTime is not None and (self.activeTime[0] > time or self.activeTime[1] < time):
             return

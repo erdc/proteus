@@ -26,13 +26,13 @@ install:
 - make hashdist
 - make stack
 - make stack/default.yaml
-- make install | tee install.out | tail -f -s 60.0
+- CFLAGS='-w -fno-var-tracking-assignments' make install
 - export PATH=$PWD/linux2/bin:$PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
 
 script:
-- nosetests -vv --traverse-namespace proteus/tests proteus/tests/ci
+- nosetests -vv --traverse-namespace proteus/tests proteus/tests/ci  proteus/tests/poisson_2d
 
 notifications:
   email:

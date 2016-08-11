@@ -40,6 +40,9 @@ genMesh = True
 L=(1.0,1.0,1.0)
 """Tuple of dimensions for simple box shaped domain"""
 
+x0=(0.0, 0.0, 0.0)
+"""Tuple of coordinates for corner of simple box shaped domain"""
+
 analyticalSolution = {}
 """Dictionary of analytical solutions for each component
 
