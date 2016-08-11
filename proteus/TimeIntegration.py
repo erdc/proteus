@@ -1,10 +1,13 @@
 """
 A class hierarchy of time discretizations
+
+.. inheritance-diagram:: proteus.TimeIntegration
+   :parts: 1
 """
 from LinearAlgebraTools import *
 import sys,math
 import Profiling
-log = Profiling.logEvent
+from .Profiling import logEvent
 from flcbdfWrappers import globalMax
 
 class TI_base:
@@ -388,7 +391,7 @@ class FLCBDF(TI_base):
     def initialize_dt(self,t0,tOut,q):
         self.tLast = t0
         self.dt = min([self.flcbdf[ci].initialize_dt(t0,tOut,q[('m',ci)],q[('mt',ci)]) for ci in self.massComponents])
-        log("Warning!!! FLDBDF initial dt will be different in parallel until we fix estimate_mt!")
+        logEvent("Warning!!! FLDBDF initial dt will be different in parallel until we fix estimate_mt!")
         #mwf hack
         #import Comm
         #comm = Comm.get()
@@ -400,13 +403,13 @@ class FLCBDF(TI_base):
         for ci in range(self.nc): self.flcbdf[('u',ci)].initialize_dt(t0,tOut,self.transport.u[ci].dof,self.Ddof_Dt[ci])
         self.t = self.tLast + self.dt
     def initializeTimeHistory(self,resetFromDOF=False):
-        log("Initializing FLCBDF time history")
+        logEvent("Initializing FLCBDF time history")
         self.initCalls +=1
         for ci in self.massComponents:
             self.flcbdf[ci].initializeTimeHistory(self.transport.q[('m',ci)],self.transport.q[('mt',ci)])
         for ci in range(self.nc): self.flcbdf[('u',ci)].initializeTimeHistory(self.transport.u[ci].dof,self.Ddof_Dt[ci])
     def calculateCoefs(self):
-        log("Calculating alpha_bdf and beta_bdf for FLCBDF")
+        logEvent("Calculating alpha_bdf and beta_bdf for FLCBDF")
         for ci in self.massComponents:
             self.alpha_bdf = self.flcbdf[ci].getCurrentAlpha()
             self.flcbdf[ci].calculate_yprime(self.beta_bdf_dummy,self.beta_bdf_dummy,self.beta_bdf[ci],self.beta_bdf_dummy2)
@@ -434,7 +437,7 @@ class FLCBDF(TI_base):
                     q[('dmt',ci,cj)].flat[:] = q[('dm',ci,cj)].flat
                     q[('dmt',ci,cj)] *= alpha
                     #mwf debug
-                    log("FLCBDF calculateElementCoefficients t= %s dt= %s alpha= %s " % (self.t,self.dt,alpha))
+                    logEvent("FLCBDF calculateElementCoefficients t= %s dt= %s alpha= %s " % (self.t,self.dt,alpha))
                 if q.has_key(('dmt_sge',ci,cj)):
                     #mwf debug
                     #import pdb
@@ -460,18 +463,18 @@ class FLCBDF(TI_base):
         for ci in range(self.nc):
             self.flcbdf[('u',ci)].calculate_yprime(self.transport.u[ci].dof,self.dummy[ci],self.Ddof_Dt[ci],self.dummy[ci])
     def choose_dt(self):
-        log("choosing dt for FLCBDF")
+        logEvent("choosing dt for FLCBDF")
         self.dt = min([self.flcbdf[ci].choose_dt(self.tLast,self.tLast+100.0*self.dt) for ci in self.massComponents])
         for ci in range(self.nc): self.flcbdf[('u',ci)].choose_dt(self.tLast,self.tLast+100.0*self.dt)
         self.t = self.tLast + self.dt
     def set_dt(self,DTSET):
-        log("setting dt for FLCBDF")
+        logEvent("setting dt for FLCBDF")
         self.dt = DTSET
         self.t = self.tLast + self.dt
         for ci in self.massComponents: self.flcbdf[ci].set_dt(DTSET)
         for ci in range(self.nc): self.flcbdf[('u',ci)].set_dt(DTSET)
     def updateTimeHistory(self,resetFromDOF=False):
-        log("updating time history for FLCBDF")
+        logEvent("updating time history for FLCBDF")
         self.tLast = self.t
         for ci in self.massComponents: self.flcbdf[ci].stepTaken(self.m[ci])
         for ci in range(self.nc): self.flcbdf[('u',ci)].stepTaken(self.transport.u[ci].dof)
@@ -488,7 +491,7 @@ class FLCBDF(TI_base):
         """
         pass
     def lastStepErrorOk(self):
-        log("checking error for FLCBDF")
+        logEvent("checking error for FLCBDF")
         OK=True
         for ci in self.massComponents:
             OK = (OK and bool(self.flcbdf[ci].lastStepErrorOk(self.m[ci])))
@@ -548,7 +551,7 @@ class PsiTCtte(BackwardEuler_cfl):
         self.tLast = self.t
         #mwf to check how many times update history called
         if self.updateHistoryJustCalled:
-            log("""WARNING PsiTCtte in updateHistory historyJustCalled is True
+            logEvent("""WARNING PsiTCtte in updateHistory historyJustCalled is True
 dt_history[0]=%g dt_history[1]=%g nsteps=%d """ %(self.dt_history[0],self.dt_history[1],
                                                   self.nsteps))
 
@@ -599,7 +602,7 @@ class PsiTCtte_new(BackwardEuler):
             self.dt_history[1] = self.dt_history[0]
             self.dt_history[0] = self.dt
             self.nsteps+=1
-            log("PsiTC (first 2 steps) choose_dt dt=%f" % self.dt)
+            logEvent("PsiTC (first 2 steps) choose_dt dt=%f" % self.dt)
             return
         dtmax = 0.0
         for ci in self.massComponents:
@@ -617,7 +620,7 @@ class PsiTCtte_new(BackwardEuler):
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
             self.mt_history[1][ci].flat[:]= self.mt_history[0][ci].flat[:]
             self.mt_history[0][ci].flat[:]= self.mt_tmp[ci].flat[:]
-        log("PsiTC choose_dt dt=%f" % self.dt)
+        logEvent("PsiTC choose_dt dt=%f" % self.dt)
     def resetTimeHistory(self,resetFromDOF=False):
         for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
@@ -1371,7 +1374,7 @@ class VBDF(TI_base):
         #pdb.set_trace()
         self.calculateCoefs()
         #mwf debug
-        log("VBDF calculateElementCoefficients t= %s dt= %s alpha= %s " % (self.t,self.dt,self.alpha_bdf))
+        logEvent("VBDF calculateElementCoefficients t= %s dt= %s alpha= %s " % (self.t,self.dt,self.alpha_bdf))
         for ci in self.massComponents:
             self.m_tmp[ci][:] = q[('m',ci)]
             self.mt_tmp[ci][:]= q[('m',ci)]#self.alpha_bdf*q[('m',ci)]
@@ -1393,7 +1396,7 @@ class VBDF(TI_base):
 
         Controller now has to take care of self.t and self.dt
         """
-        log("VBDF initialize_dt tLast= %s t=%s dt=%s t0=%s tOut=%s " % (self.tLast,self.t,self.dt,t0,tOut))
+        logEvent("VBDF initialize_dt tLast= %s t=%s dt=%s t0=%s tOut=%s " % (self.tLast,self.t,self.dt,t0,tOut))
         self.tLast=t0
         self.t = tOut
         self.dt = tOut - t0
@@ -1425,7 +1428,7 @@ class VBDF(TI_base):
         self.computeErrorEstimate()
         return True
     def initializeTimeHistory(self,resetFromDOF=True):
-        log("VBDF initialTimeHistory call %s tLast=%s t=%s dt= %s dt_history[0] = %s " % (self.nUpdatesTimeHistoryCalled,
+        logEvent("VBDF initialTimeHistory call %s tLast=%s t=%s dt= %s dt_history[0] = %s " % (self.nUpdatesTimeHistoryCalled,
                                                                                           self.tLast,self.t,self.dt,self.dt_history[0]),1)
         for n in range(self.max_order-1):
             for ci in self.massComponents:
@@ -1442,7 +1445,7 @@ class VBDF(TI_base):
         #self.computeErrorEstimate()
         self.nUpdatesTimeHistoryCalled  += 1
         #what to do about first call?, getting multiple calls
-        log("VBDF updateTimeHistory call %s tLast=%s t=%s dt= %s dt_history[0] = %s " % (self.nUpdatesTimeHistoryCalled,
+        logEvent("VBDF updateTimeHistory call %s tLast=%s t=%s dt= %s dt_history[0] = %s " % (self.nUpdatesTimeHistoryCalled,
                                                                                                self.tLast,self.t,self.dt,self.dt_history[0]),1)
         self.tLast = self.t
         for n in range(self.max_order-1):
@@ -1504,7 +1507,7 @@ class VBDF(TI_base):
             self.m_pred[ci].flat[:] = self.mt_history[0][ci].flat
             self.m_pred[ci]   *= self.dt
             self.m_pred[ci]   += self.m_history[0][ci]
-        log("VBDF calculatePredictor tLast= %s t= %s dt= %s " % (self.tLast,self.t,self.dt),1)
+        logEvent("VBDF calculatePredictor tLast= %s t= %s dt= %s " % (self.tLast,self.t,self.dt),1)
 
     def calculateCoefs(self):
         if self.needToCalculateBDFCoefs:
@@ -1748,7 +1751,7 @@ class ExplicitRK_base(TI_base):
         if self.lstage < self.nStages:
             self.t = self.substeps[self.lstage]
         if self.lstage < 0 or self.lstage > self.nStages:
-            log("""stage= %d out of allowed bounds [0,%d]""" % (self.lstage,self.nStages))
+            logEvent("""stage= %d out of allowed bounds [0,%d]""" % (self.lstage,self.nStages))
     def calculateElementCoefficients(self,q):
         """
         set m_t as
@@ -1757,12 +1760,12 @@ class ExplicitRK_base(TI_base):
 
         """
         if self.dt <= 1.0e-24:
-            log('WARNING dt= ',self.dt,' too small in updateElementCoefficients quitting ')
+            logEvent('WARNING dt= ',self.dt,' too small in updateElementCoefficients quitting ')
             sys.exit(1)
         if self.usingDTinMass == False:
             return self.calculateElementCoefficientsNoDtInMass(q)
         #mwf debug
-        log("""ExplicitRKbase calcElemenCoefs lstage= %d nStages= %d dt= %s """ % (self.lstage,self.nStages,self.dt))
+        logEvent("""ExplicitRKbase calcElemenCoefs lstage= %d nStages= %d dt= %s """ % (self.lstage,self.nStages,self.dt))
         #import pdb
         #pdb.set_trace()
         for ci in range(self.nc):#loop through components
@@ -1773,7 +1776,7 @@ class ExplicitRK_base(TI_base):
                     q[('mt',ci)].flat[:]-= self.alpha[self.lstage,i]*self.stageValues['m'][ci][i].flat[:]
                 #end i loop through stages
                 #mwf debug
-                log("""ExplicitRKbase calcElemenCoefs lstage= %d nStages= %d max dt diff= %s """ % (self.lstage,self.nStages,max(numpy.absolute(q[('mt',0)].flat))))
+                logEvent("""ExplicitRKbase calcElemenCoefs lstage= %d nStages= %d max dt diff= %s """ % (self.lstage,self.nStages,max(numpy.absolute(q[('mt',0)].flat))))
                 #if max(numpy.absolute(q[('mt',0)].flat)) > 1.0e-6:
                 #    import pdb
                 #    pdb.set_trace()
@@ -1795,7 +1798,7 @@ class ExplicitRK_base(TI_base):
         """
         assert self.dt > 1.0e-24,"dt = %d too small in calculateElementCoefficients" % self.dt
         #mwf debug
-        log("""ExplicitRK calcElemenCoefsNoDt lstage= %d nStages= %d""" % (self.lstage,self.nStages))
+        logEvent("""ExplicitRK calcElemenCoefsNoDt lstage= %d nStages= %d""" % (self.lstage,self.nStages))
         for ci in range(self.nc):#loop through components
             if q.has_key(('m',ci)):
                 self.stageValues['m'][ci][self.lstage+1].flat[:] = q[('m',ci)].flat[:]
@@ -1980,8 +1983,8 @@ class ExplicitRK_base(TI_base):
             #self.substeps.append(t)#always end up at t^{n+1}
             tLast = t
             #mwf debug
-            log('Explicit RK dcoefs= %s substeps = %s ' % (self.dcoefs,self.substeps))
-            log('Explicit RK t= %s tLast=%s self.tLast= %s ' % (t,tLast,self.tLast))
+            logEvent('Explicit RK dcoefs= %s substeps = %s ' % (self.dcoefs,self.substeps))
+            logEvent('Explicit RK t= %s tLast=%s self.tLast= %s ' % (t,tLast,self.tLast))
     def setInitialStageValues(self):
         """
         setup all the stage values if we assume that the initial condition
@@ -2039,7 +2042,7 @@ class ExplicitRK_base(TI_base):
             if 'nStagesTime' in dir(nOptions):
                 self.resetOrder(nOptions.timeOrder,nOptions.nStagesTime)
             else:
-                log("WARNING ExplicitRK.setFromOptions assuming nStagesTime=timeOrder")
+                logEvent("WARNING ExplicitRK.setFromOptions assuming nStagesTime=timeOrder")
                 self.resetOrder(nOptions.timeOrder,nOptions.timeOrder)
 
 
@@ -2248,7 +2251,7 @@ class SSPRKPIintegration(ExplicitRK_base):
                 #        for i in range(self.transport.u[ci].femSpace.dofMap.l2g.shape[1]):
                 #            self.transport.u[ci].dof[self.transport.u[ci].femSpace.dofMap.l2g[eN,i]] = 0.0
                 #    u.flat[:] = self.transport.u[ci].dof.flat[:]
-                #    log("Min_dt_RKcontroller performing scatter forward t= %s " % self.t)
+                #    logEvent("Min_dt_RKcontroller performing scatter forward t= %s " % self.t)
                 #    par_u.scatter_forward_insert()
                 #    self.transport.u[ci].dof.flat[:] = u.flat[:]
         #if
@@ -3607,7 +3610,7 @@ class ForwardIntegrator:
         t = tIn
         failedFlag = False
         if self.dtMeth == NoIntegration:
-            log("""NoIntegration, fint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
+            logEvent("""NoIntegration, fint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
 
             failedFlag=self.mlNL.solveMultilevel(uList=self.mlvTran.uList,
                                                  rList=self.mlvTran.rList,
@@ -3617,7 +3620,7 @@ class ForwardIntegrator:
             self.tLast = tOut
             t = tOut
             self.mlvTran.updateTimeHistory(t)
-            log("""fint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
+            logEvent("""fint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
             self.mlvTran.choose_dt(DTSET=self.dtSET,tOut=tOut)
             #mwf debug
             #print """after solve failedFlag= %s """ % failedFlag
@@ -3628,7 +3631,7 @@ class ForwardIntegrator:
                 self.firstStep=False
             while t < tOut and failedFlag== False:
                 #mwf debug
-                log("""\nfint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
+                logEvent("""\nfint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.dtSET,self.mlvTran.dt))
                 #try not to step past tOut
 #                 if self.stepExact and abs(t+self.mlvTran.dt-tOut) < 1.0e-10 or t+self.mlvTran.dt > tOut+1.0e-10:
 #                     self.mlvTran.resetDT()
@@ -3751,7 +3754,7 @@ class SteadyStateIntegrator(ForwardIntegrator):
         #end dtMeth
         #force number of stages to be 1
         if not (self.dtMeth == NoIntegration or self.dtMeth == PsiTCtte):
-            log("""WARNING SteadyStateIntegrator type= %s must be NoIntegration or
+            logEvent("""WARNING SteadyStateIntegrator type= %s must be NoIntegration or
 PsiTCtte!""" % self.dtMeth)
     def calculateSolution(self,tIn,tOut):
         """
@@ -3875,7 +3878,7 @@ PsiTCtte!""" % self.dtMeth)
         #mwf hack
         if self.ignoreFailure and not converged:
             if failedFlag:
-                log("""SteadyStateIntegrator ignoredFailure t=%s """ % tOut)
+                logEvent("""SteadyStateIntegrator ignoredFailure t=%s """ % tOut)
             #undo any damage. this will get propagated to the other grids and u-list in the projection
             for j,uj in enumerate(self.mlvTran.modelList[-1].u.values()):
                 uj.dof[:] = self.u_dof_save[j][:]
