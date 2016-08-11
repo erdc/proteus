@@ -314,7 +314,7 @@ class NS_base:  # (HasTraits):
             elif isinstance(p.domain,Domain.MeshTetgenDomain):
                 nbase = 1
                 mesh=MeshTools.TetrahedralMesh()
-                log("Reading coarse mesh from tetgen file")
+                logEvent("Reading coarse mesh from tetgen file")
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                              parallelPartitioningType=n.parallelPartitioningType)
@@ -324,9 +324,9 @@ class NS_base:  # (HasTraits):
                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                   parallelPartitioningType=n.parallelPartitioningType)
                 else:
-                    log("Generating coarse global mesh from Tetgen files")
+                    logEvent("Generating coarse global mesh from Tetgen files")
                     mesh.generateFromTetgenFiles(p.domain.polyfile,nbase,parallel = comm.size() > 1)
-                    log("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
+                    logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
@@ -367,10 +367,20 @@ class NS_base:  # (HasTraits):
 
                     logEvent("Done running gmsh; converting to tetgen")
 
-                    gmsh2tetgen_cmd = "gmsh2tetgen {0}".format(p.domain.name+".mesh")
+                    gmsh2tetgen_cmd = "gmsh2tetgen {0} {1:f} {2:d} {3:d} {4:d}".format(
+                        p.domain.name+".mesh",
+                        p.domain.length_scale,
+                        p.domain.permute_dims[0]+1,
+                        p.domain.permute_dims[1]+1,
+                        p.domain.permute_dims[2]+1)
 
                     check_call(gmsh2tetgen_cmd, shell=True)
-
+                    check_call("tetgen -Vfeen %s.ele" % ("mesh",), shell=True)
+                    check_call("mv %s.1.ele %s.ele" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.node %s.node" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.face %s.face" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.neigh %s.neigh" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.edge %s.edge" % ("mesh","mesh"), shell=True)
                     elefile  = "mesh.ele"
                     nodefile = "mesh.node"
                     facefile = "mesh.face"
@@ -410,7 +420,6 @@ class NS_base:  # (HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
-
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
