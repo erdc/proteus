@@ -166,6 +166,11 @@ parser.add_option("-s","--subdomainArchives",
                   dest="subdomainArchives",
                   action="store_true",
                   help="""write xmf files for every processor's subdomain""")
+parser.add_option("-n","--no_global_sync",
+                  default=True,
+                  dest="global_sync",
+                  action="store_false",
+                  help="""don't use a single hdf5 archive""")
 parser.add_option("-H","--hotStart",
                   default=False,
                   dest="hotStart",

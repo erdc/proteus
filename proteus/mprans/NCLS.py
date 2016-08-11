@@ -18,7 +18,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         self.nStepsToDelay = nStepsToDelay
         self.nSteps=0
         if self.lag:
-            log("NCLS.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
+            logEvent("NCLS.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
             self.nStepsToDelay=1
             self.lag=False
     def initializeElementQuadrature(self,mesh,t,cq):
@@ -34,12 +34,12 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
         if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
-            log("NCLS.ShockCapturing: switched to lagged shock capturing")
+            logEvent("NCLS.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
             self.numDiff_last=[]
             for ci in range(self.nc):
                 self.numDiff_last.append(self.numDiff[ci].copy())
-        #log("NCLS: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),),level=7)
+        logEvent("NCLS: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
 
 class NumericalFlux(proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart):
     def __init__(self,vt,getPointwiseBoundaryConditions,
@@ -143,7 +143,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #                                                              self.model.q['dV'],
         #                                                              self.model.q[('u',0)],
         #                                                              self.model.mesh.nElements_owned)
-        #     log("Attach Models NCLS: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
+        #     logEvent("Attach Models NCLS: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
         #     self.totalFluxGlobal=0.0
         #     self.lsGlobalMassArray = [self.m_pre]
         #     self.lsGlobalMassErrorArray = [0.0]
@@ -165,13 +165,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #                                                              self.model.q['dV'],
         #                                                              self.model.q[('m',0)],
         #                                                              self.model.mesh.nElements_owned)
-        #     log("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
+        #     logEvent("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
         #     self.m_last = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                               self.model.mesh.elementDiametersArray,
         #                                                               self.model.q['dV'],
         #                                                               self.model.timeIntegration.m_last[0],
         #                                                               self.model.mesh.nElements_owned)
-        #     log("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
+        #     logEvent("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
         # #cek todo why is this here
         # if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
         #     self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
@@ -187,14 +187,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #                                                               self.model.q['dV'],
         #                                                               self.model.q[('u',0)],
         #                                                               self.model.mesh.nElements_owned)
-        #     log("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)
+        #     logEvent("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)
         #     #need a flux here not a velocity
         #     self.fluxIntegral = Norms.fluxDomainBoundaryIntegralFromVector(self.flowModel.ebqe['dS'],
         #                                                                    self.flowModel.ebqe[('velocity',0)],
         #                                                                    self.flowModel.ebqe['n'],
         #                                                                    self.model.mesh)
-        #     log("Flux integral = %12.5e" % (self.fluxIntegral,),level=2)
-        #     log("Phase  0 mass conservation after NCLS step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+        #     logEvent("Flux integral = %12.5e" % (self.fluxIntegral,),level=2)
+        #     logEvent("Phase  0 mass conservation after NCLS step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
         #     self.lsGlobalMass = self.m_post
         #     self.fluxGlobal = self.fluxIntegral*self.model.timeIntegration.dt
         #     self.totalFluxGlobal += self.fluxGlobal
@@ -497,10 +497,10 @@ class LevelModel(OneLevelTransport):
         #
         del self.internalNodes
         self.internalNodes = None
-        log("Updating local to global mappings",2)
+        logEvent("Updating local to global mappings",2)
         self.updateLocal2Global()
-        log("Building time integration object",2)
-        log(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
+        logEvent("Building time integration object",2)
+        logEvent(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
         #mwf for interpolating subgrid error for gradients etc
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
@@ -509,8 +509,8 @@ class LevelModel(OneLevelTransport):
 
         if options != None:
             self.timeIntegration.setFromOptions(options)
-        log(memory("TimeIntegration","OneLevelTransport"),level=4)
-        log("Calculating numerical quadrature formulas",2)
+        logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
+        logEvent("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
 
         self.setupFieldStrides()
@@ -520,7 +520,7 @@ class LevelModel(OneLevelTransport):
         if comm.size() > 1:
             assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        log(memory("stride+offset","OneLevelTransport"),level=4)
+        logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
             if options == None or options.periodicDirichletConditions == None:
                 self.numericalFlux = numericalFluxType(self,
@@ -548,12 +548,12 @@ class LevelModel(OneLevelTransport):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
-        log(memory("numericalFlux","OneLevelTransport"),level=4)
+        logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
-        log(memory("velocity postprocessor","OneLevelTransport"),level=4)
+        logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         from proteus import Archiver
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
@@ -697,7 +697,7 @@ class LevelModel(OneLevelTransport):
         #print "cfl",self.q[('cfl',0)]
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
-        log("Global residual",level=9,data=r)
+        logEvent("Global residual",level=9,data=r)
         #mwf debug
         #pdb.set_trace()
         #mwf decide if this is reasonable for keeping solver statistics
@@ -773,7 +773,7 @@ class LevelModel(OneLevelTransport):
                             #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
 
 
-        log("Jacobian ",level=10,data=jacobian)
+        logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
