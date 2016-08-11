@@ -1,10 +1,15 @@
-default: marinHexMesh gmsh2tetgen
+default: $(PROTEUS_PREFIX)/bin/gmsh2tetgen
 
 marinHexMesh: marinHexMesh.f 
 	$(FC) -ffree-form marinHexMesh.f -o marinHexMesh
 
-gmsh2tetgen:gmsh2tetgen.f 	
+gmsh2tetgen:gmsh2tetgen.f 
 	$(FC) -ffree-form gmsh2tetgen.f -o gmsh2tetgen
+
+$(PROTEUS_PREFIX)/bin/gmsh2tetgen: gmsh2tetgen
+	@echo "Installing gmsh2tegen in "
+	@echo $(PROTEUS_PREFIX)/bin
+	cp gmsh2tetgen $(PROTEUS_PREFIX)/bin
 
 gmsh2tetgen_withtags:gmsh2tetgen_withtags.f 	
 	$(FC) -ffree-form gmsh2tetgen_withtags.f -o gmsh2tetgen_withtags
