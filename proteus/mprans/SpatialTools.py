@@ -835,7 +835,7 @@ class Tank2D(ShapeRANS):
     domain: proteus.Domain.D_base
         Domain class instance that hold all the geometrical informations and
         boundary conditions of the shape.
-    dim: Optional[array_like]
+    dim: array_like
         Dimensions of the tank (excluding sponge layers).
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
@@ -844,7 +844,7 @@ class Tank2D(ShapeRANS):
     """
     count = 0
 
-    def __init__(self, domain, dim=(0.,0.), coords=None, from_0=True):
+    def __init__(self, domain, dim, coords=None, from_0=True):
         super(Tank2D, self).__init__(domain, nd=2)
         self._nameSelf()
         self._setupBCs()
@@ -908,7 +908,7 @@ class Tank2D(ShapeRANS):
         self.segmentFlags = np.array(segmentFlags)
         self.regions      = np.array(regions)
         self.regionFlags  = np.array(regionFlags)
-
+    
     def _findEdges(self, dim, coords, from_0):
 
         if from_0 and (coords == [x * 0.5 for x in dim]):
@@ -981,7 +981,7 @@ class Tank2D(ShapeRANS):
         return segments, segmentFlags
 
     def _constructRegions(self, vertices, vertexFlags, segments, segmentFlags):
-        regions = [[0.5 * (self.x0 + self.x1), 0.5 * (self.y0 + self.y1)],]
+        regions = [[self.x0 + 0.01 * (self.x1 - self.x0), 0.5 * (self.y0 + self.y1)],]
         ind_region = 1
         regionFlags = [ind_region,]
         self.regionIndice = {'tank': ind_region - 1}
