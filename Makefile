@@ -191,7 +191,7 @@ install: profile $(shell find proteus -type f) $(wildcard *.py) proteus
 	@echo "done installing standard extension modules"
 	@echo "************************"
 	@echo "installing scripts"
-	cd scripts && ${PROTEUS_ENV} make
+	cd scripts && ${PROTEUS_ENV} PROTEUS_PREFIX=${PROTEUS_PREFIX} make
 	@echo "************************"
 	@echo "Installation complete"
 	@echo "************************"
