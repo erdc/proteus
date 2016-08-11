@@ -1392,12 +1392,12 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
                          elementNeighborsOffsets_subdomain, 
                          elementNeighbors_subdomain,
                          PETSC_NULL,//weights_subdomain,
-                         &petscAdjacency);CHKERRQ(ierr);
+                         &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   MatPartitioning petscPartition;
   MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);
   MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
   MatPartitioningSetFromOptions(petscPartition);
-
+  
   //get a petsc index set that has the new submdomain number for each element
   IS elementPartitioningIS_new;
   MatPartitioningApply(petscPartition,&elementPartitioningIS_new); 
@@ -4718,7 +4718,6 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
       if(eN_R_old >= 0)
         elementBoundaryElementsArray_new[ebN*2+1] = elementNumbering_global_old2new[eN_R_old];
 
-	
       elementBoundaryMaterialTypes_new[ebN] = mesh.elementBoundaryMaterialTypes[ebN_old];
     }
   //     //mwf debug check constistency
