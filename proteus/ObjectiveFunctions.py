@@ -2,6 +2,8 @@
 A module of objective functions
 
 .. moduleauthor:: John Chrispell
+.. inheritance-diagram:: proteus.ObjectiveFunctions
+   :parts: 1
 """
 from Optimizers import ObjectiveFunction_base
 #John Chrispell, Summer 07
