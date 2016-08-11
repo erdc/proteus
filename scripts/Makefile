@@ -7,6 +7,7 @@ gmsh2tetgen:gmsh2tetgen.f
 	$(FC) -ffree-form gmsh2tetgen.f -o gmsh2tetgen
 
 $(PROTEUS_PREFIX)/bin/gmsh2tetgen: gmsh2tetgen
+	@echo ${PROTEUS_PREFIX}
 	@echo "Installing gmsh2tegen in "
 	@echo $(PROTEUS_PREFIX)/bin
 	cp gmsh2tetgen $(PROTEUS_PREFIX)/bin
