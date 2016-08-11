@@ -34,7 +34,7 @@ else:
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 #spatial mesh
-lRefinement=2
+lRefinement=1
 #tag simulation name to level of refinement
 #soname="vortexcgp2_bdf2_mc"+`lRefinement`
 pseudo2D=True
@@ -76,9 +76,9 @@ epsFact_vof=1.5
 #
 shockCapturingFactor_vof=0.33
 shockCapturingFactor_ls=0.33
-shockCapturingFactor_rd=0.99
+shockCapturingFactor_rd=0.9
 #use absolute tolerances on al models
-atolRedistance = 1.0e-4
+atolRedistance = 1.0e-3
 atolConservation = 1.0e-6
 atolVolumeOfFluid= 1.0e-4
 atolLevelSet     = 1.0e-4
