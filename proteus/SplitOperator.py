@@ -1,8 +1,10 @@
 """
 A class hierarchy for split operator methods.
+
+.. inheritance-diagram:: proteus.SplitOperator
+   :parts: 1
 """
-import Profiling
-log = Profiling.logEvent
+from .Profiling import logEvent 
 
 class System:
     def __init__(self):
@@ -63,9 +65,9 @@ class SO_base:
         self.dt_system = tOut - self.t_system_last
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,m) for m in self.modelList]
-        log("Initializing time step on system %s to dt = %12.5e" %
+        logEvent("Initializing time step on system %s to dt = %12.5e" %
             (self.system.name,self.dt_system),level=1)
-        log("Initializing step sequence  for system %s to %s" %
+        logEvent("Initializing step sequence  for system %s to %s" %
             (self.system.name,self.stepSequence),level=1)
     def updateTimeHistory(self):
         #update step
@@ -97,7 +99,7 @@ class SO_base:
     # def retrySequence_modelStepFailure(self):
     #     return False#don't try to recover
     def modelStepTaken(self,model,t_stepSequence):
-        log("SO_base modelStepTaken for model= %s t_system_last= %s t_model_last= %s  setting to t_stepSequence= %s " % (model.name,
+        logEvent("SO_base modelStepTaken for model= %s t_system_last= %s t_model_last= %s  setting to t_stepSequence= %s " % (model.name,
                                                                                                                          self.t_system_last,
                                                                                                                          model.stepController.t_model_last,
                                                                                                                          t_stepSequence),level=3)
@@ -167,9 +169,9 @@ class Sequential_FixedStep_Simple(SO_base):
         self.dt_system = tOut - self.t_system_last
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,m) for m in self.modelList]
-        log("Initializing time step on system %s to dt = %12.5e" %
+        logEvent("Initializing time step on system %s to dt = %12.5e" %
             (self.system.name,self.dt_system),level=1)
-        log("Initializing step sequence  for system %s to %s" %
+        logEvent("Initializing step sequence  for system %s to %s" %
             (self.system.name,self.stepSequence),level=1)
     def updateTimeHistory(self):
         #update step
@@ -206,13 +208,13 @@ class Sequential_NonUniformFixedStep(SO_base):
         else:
             if (self.dt_system > 0.0):
                 if(self.t_system_last + self.dt_system >= tExact*(1.0-self.stepExactEps)):
-                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                    logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
-                    log("=========================================================dt system final" + str(self.dt_system),level=5)
+                    logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
                 elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                    logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = (tExact - self.t_system_last)/2.0
-                    log("=========================================================dt system final" + str(self.dt_system),level=5)
+                    logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
@@ -272,13 +274,13 @@ class Sequential_MinModelStep(SO_base):
         else:
             if (self.dt_system > 0.0):
                 if(self.t_system_last + self.dt_system >= tExact*(1.0-self.stepExactEps)):
-                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                    logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
-                    log("=========================================================dt system final" + str(self.dt_system),level=5)
+                    logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
                 elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                    logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = (tExact - self.t_system_last)/2.0
-                    log("=========================================================dt system final" + str(self.dt_system),level=5)
+                    logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
@@ -300,7 +302,7 @@ class Sequential_MinModelStep(SO_base):
         for model in self.modelList:
             model.stepController.dt_model = self.dt_system
             model.stepController.set_dt_allLevels()
-        log("SplitOperator_Min choose_dt_system t_system_last= %s dt_system= %s t_system= %s " % (self.t_system_last,
+        logEvent("SplitOperator_Min choose_dt_system t_system_last= %s dt_system= %s t_system= %s " % (self.t_system_last,
                                                                                                   self.dt_system,
                                                                                                   self.t_system),3)
     def initialize_dt_system(self,t0,tOut):
@@ -314,11 +316,11 @@ class Sequential_MinModelStep(SO_base):
             model.stepController.t_model = self.t_system
             model.stepController.set_dt_allLevels()
             model.stepController.initializeTimeHistory()
-        log("Initializing time step on system %s to dt = %12.5e" %
+        logEvent("Initializing time step on system %s to dt = %12.5e" %
             (self.system.name,
              self.dt_system),
             level=1)
-        log("Initializing step sequence for system %s to %s" %
+        logEvent("Initializing step sequence for system %s to %s" %
             (self.system.name,
              self.stepSequence),
             level=1)
@@ -379,11 +381,11 @@ class Sequential_MinFLCBDFModelStep(SO_base):
             model.stepController.t_model = self.t_system
             model.stepController.set_dt_allLevels()
             model.stepController.initializeTimeHistory()
-        log("Initializing time step on system %s to dt = %12.5e" %
+        logEvent("Initializing time step on system %s to dt = %12.5e" %
             (self.system.name,
              self.dt_system),
             level=1)
-        log("Initializing step sequence for system %s to %s" %
+        logEvent("Initializing step sequence for system %s to %s" %
             (self.system.name,
              self.stepSequence),
             level=1)
@@ -450,22 +452,22 @@ class Sequential_MinAdaptiveModelStep(SO_base):
         if old:
             if (self.dt_system > 0.0 and
                 self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
-                log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                 self.dt_system = tExact - self.t_system_last
-                log("=========================================================dt system final" + str(self.dt_system),level=5)
+                logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             elif (self.dt_system < 0.0 and
                   self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
                 self.dt_system = tExact - self.t_system_last
         else:
             if (self.dt_system > 0.0):
                 if(self.t_system_last + self.dt_system >= tExact*(1.0-self.stepExactEps)):
-                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                    logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
-                    log("=========================================================dt system final" + str(self.dt_system),level=5)
+                    logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
                 elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                    logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = (tExact - self.t_system_last)/2.0
-                    log("=========================================================dt system final" + str(self.dt_system),level=5)
+                    logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
@@ -500,11 +502,11 @@ class Sequential_MinAdaptiveModelStep(SO_base):
             model.stepController.t_model = self.t_system
             model.stepController.set_dt_allLevels()
             model.stepController.initializeTimeHistory()
-        log("Initializing time step on system %s to dt = %12.5e" %
+        logEvent("Initializing time step on system %s to dt = %12.5e" %
             (self.system.name,
              self.dt_system),
             level=1)
-        log("Initializing step sequence for system %s to %s" %
+        logEvent("Initializing step sequence for system %s to %s" %
             (self.system.name,
              self.stepSequence),
             level=1)
@@ -578,22 +580,22 @@ class ISO_fixed_MinAdaptiveModelStep(SO_base):
         if old:
             if (self.dt_system > 0.0 and
                 self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
-                log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                 self.dt_system = tExact - self.t_system_last
-                log("=========================================================dt system final" + str(self.dt_system),level=5)
+                logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             elif (self.dt_system < 0.0 and
                   self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
                 self.dt_system = tExact - self.t_system_last
         else:
             if (self.dt_system > 0.0):
                 if(self.t_system_last + self.dt_system >= tExact*(1.0-self.stepExactEps)):
-                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                    logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
-                    log("=========================================================dt system final" + str(self.dt_system),level=5)
+                    logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
                 elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                    logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = (tExact - self.t_system_last)/2.0
-                    log("=========================================================dt system final" + str(self.dt_system),level=5)
+                    logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
@@ -628,11 +630,11 @@ class ISO_fixed_MinAdaptiveModelStep(SO_base):
             model.stepController.t_model = self.t_system
             model.stepController.set_dt_allLevels()
             model.stepController.initializeTimeHistory()
-        log("Initializing time step on system %s to dt = %12.5e" %
+        logEvent("Initializing time step on system %s to dt = %12.5e" %
             (self.system.name,
              self.dt_system),
             level=1)
-        log("Initializing step sequence for system %s to %s" %
+        logEvent("Initializing step sequence for system %s to %s" %
             (self.system.name,
              self.stepSequence),
             level=1)
@@ -707,22 +709,22 @@ class Sequential_MinAdaptiveModelStep_SS(SO_base):
         if old:
             if (self.dt_system > 0.0 and
                 self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
-                log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                 self.dt_system = tExact - self.t_system_last
-                log("=========================================================dt system final" + str(self.dt_system),level=5)
+                logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             elif (self.dt_system < 0.0 and
                   self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
                 self.dt_system = tExact - self.t_system_last
         else:
             if (self.dt_system > 0.0):
                 if(self.t_system_last + self.dt_system >= tExact*(1.0-self.stepExactEps)):
-                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                    logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
-                    log("=========================================================dt system final" + str(self.dt_system),level=5)
+                    logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
                 elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
+                    logEvent("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = (tExact - self.t_system_last)/2.0
-                    log("=========================================================dt system final" + str(self.dt_system),level=5)
+                    logEvent("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
@@ -762,11 +764,11 @@ class Sequential_MinAdaptiveModelStep_SS(SO_base):
             model.stepController.t_model = self.t_system
             model.stepController.set_dt_allLevels()
             model.stepController.initializeTimeHistory()
-        log("Initializing time step on system %s to dt = %12.5e" %
+        logEvent("Initializing time step on system %s to dt = %12.5e" %
             (self.system.name,
              self.dt_system),
             level=1)
-        log("Initializing step sequence for system %s to %s" %
+        logEvent("Initializing step sequence for system %s to %s" %
             (self.system.name,
              self.stepSequence),
             level=1)
@@ -857,11 +859,11 @@ class SequentialNotInOrder_MinFLCBDFModelStep(Sequential_MinFLCBDFModelStep):
             model.stepController.t_model = self.t_system
             model.stepController.set_dt_allLevels()
             model.stepController.initializeTimeHistory()
-        log("Initializing time step on system %s to dt = %12.5e" %
+        logEvent("Initializing time step on system %s to dt = %12.5e" %
             (self.system.name,
              self.dt_system),
             level=1)
-        log("Initializing step sequence for system %s to %s" %
+        logEvent("Initializing step sequence for system %s to %s" %
             (self.system.name,
              self.stepSequence),
             level=1)
@@ -916,11 +918,11 @@ class SequentialNotInOrder_MinAdaptiveModelStep(Sequential_MinAdaptiveModelStep)
             model.stepController.t_model = self.t_system
             model.stepController.set_dt_allLevels()
             model.stepController.initializeTimeHistory()
-        log("Initializing time step on system %s to dt = %12.5e" %
+        logEvent("Initializing time step on system %s to dt = %12.5e" %
             (self.system.name,
              self.dt_system),
             level=1)
-        log("Initializing step sequence for system %s to %s" %
+        logEvent("Initializing step sequence for system %s to %s" %
             (self.system.name,
              self.stepSequence),
             level=1)

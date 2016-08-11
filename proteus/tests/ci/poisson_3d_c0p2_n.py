@@ -1,7 +1,7 @@
 from proteus import *
 from proteus.default_n import *
 from poisson_3d_p import *
-hex=None
+
 #steady-state so no time integration
 timeIntegration = NoIntegration
 #number of output timesteps
@@ -32,7 +32,7 @@ shockCapturing = None
 multilevelNonlinearSolver  = Newton
 levelNonlinearSolver = Newton
 #linear problem so force 1 iteration allowed
-maxNonlinearIts = 2
+maxNonlinearIts = 1
 maxLineSearches = 1
 fullNewtonFlag = True
 #absolute nonlinear solver residual tolerance
@@ -65,7 +65,7 @@ if parallel:
     parallelPartitioningType = MeshParallelPartitioningTypes.node
     #parallelPartitioningType = MeshParallelPartitioningTypes.element
     #have to have a numerical flux in parallel
-    numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
+    numericalFluxType = ConstantAdvection_Diffusion_SIPG_exterior#Advection_DiagonalUpwind_Diffusion_IIPG_exterior
     #for true residual test
     linearSolverConvergenceTest = 'r-true'
     #to allow multiple models to set different ksp options
@@ -74,8 +74,10 @@ if parallel:
 else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
-    numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
+    numericalFluxType = ConstantAdvection_Diffusion_SIPG_exterior
 
+#linear solver parameters
+linearSmoother = None
 #linear solver relative convergence test
 linTolFac = 0.0
 #linear solver absolute convergence test
