@@ -12,6 +12,8 @@ elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('cop
     from copper import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('lightning'):
     from lightning import *
+elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('excalibur'):
+    from excalibur import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('viutill'):
     from viutill import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('tamucluster'):

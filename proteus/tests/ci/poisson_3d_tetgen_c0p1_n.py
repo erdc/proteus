@@ -41,7 +41,7 @@ tolFac = 0.0
 matrix = SparseMatrix
 
 #convenience flag
-parallel = False
+parallel = True
 
 if parallel:
     multilevelLinearSolver = KSP_petsc4py
