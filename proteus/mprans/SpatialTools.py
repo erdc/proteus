@@ -910,7 +910,7 @@ class Tank2D(ShapeRANS):
         vertexFlags = [bt['y-'], bt['y-'], bt['y+'], bt['y+']]
         segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
         segmentFlags = [bt['y-'], bt['x+'], bt['y+'], bt['x-']]  # y-, x+, y+, x-
-        regions = [[(x0-leftSponge+x0)/2., regions_y]]
+        regions = [[(x0+x1)/2., regions_y]]
         regionFlags = [1]
         self.regionIndice = {'tank': 0}
         ind_region = 1
