@@ -2,6 +2,7 @@
 #include "flcbdfWrappersModule.h"
 #include <algorithm>
 #include "meshio.h"
+
 //extern "C"
 //{
 //#include "metis.h"
@@ -1347,6 +1348,7 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
     elementOffsets_old[sdN+1] = elementOffsets_old[sdN] + 
       int(mesh.nElements_global)/size + 
       (int(mesh.nElements_global)%size > sdN);
+    
   //2. Extract subdomain element adjacency information could read
   //only the required portion from a file
   int nElements_subdomain = (elementOffsets_old[rank+1] - elementOffsets_old[rank]);
@@ -3023,7 +3025,8 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 			 nodeNeighbors_subdomain,
 			 weights_subdomain,
 			 &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
-  const double max_rss_gb(0.75*3.25);//half max mem per  core  on topaz
+  //const double max_rss_gb(0.75*3.25);//half max mem per  core  on topaz
+  const double max_rss_gb(0.75*990.0);//half max mem per  core  on topaz
   ierr = enforceMemoryLimit(rank, max_rss_gb,"Done allocating MPIAdj");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   MatPartitioning petscPartition;
   ierr = MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
@@ -3052,7 +3055,82 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //get the new node numbers for nodes on this subdomain
   IS nodeNumberingIS_subdomain_old2new;
   ISPartitioningToNumbering(nodePartitioningIS_new,&nodeNumberingIS_subdomain_old2new);
+  //
+  //try out of core
+  //
+  /* 
+   * Set up file access property list with parallel I/O access
+   */
+  MPI_Info info  = MPI_INFO_NULL;
+  hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
+  H5Pset_fapl_mpio(plist_id, PROTEUS_COMM_WORLD, info);
   
+  /*
+   * Create a new file collectively and release property list identifier.
+   */
+  const char* H5FILE_NAME("mappings.h5");
+  hid_t file_id = H5Fcreate(H5FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+  H5Pclose(plist_id);
+   
+  
+  /*
+   * Create the dataspace for the dataset.
+   */
+  hsize_t     dimsf[1];
+  dimsf[0] = nNodes_global;
+#define RANK   1
+  hid_t filespace = H5Screate_simple(RANK, dimsf, NULL); 
+  
+  /*
+   * Create the dataset with default properties and close filespace.
+   */
+  hid_t dset_id = H5Dcreate(file_id, "nodeNumbering_old2new", H5T_NATIVE_INT, filespace,
+                      H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  H5Sclose(filespace);
+  
+  /* 
+   * Each process defines dataset in memory and writes it to the hyperslab
+   * in the file.
+   */
+  hsize_t	count[1];	          /* hyperslab selection parameters */
+  hsize_t	offset[1];
+  count[0] = nNodes_subdomain_old;
+  offset[0] = nodeOffsets_old[rank];
+  hid_t memspace = H5Screate_simple(RANK, count, NULL);
+
+  /*
+   * Select hyperslab in the file.
+   */
+  filespace = H5Dget_space(dset_id);
+  H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL, count, NULL);
+
+  /*
+   * Initialize data buffer 
+   */
+  // data = (int *) malloc(sizeof(int)*count[0]*count[1]);
+  // for (i=0; i < count[0]*count[1]; i++) {
+  //   data[i] = mpi_rank + 10;
+  // }
+  const PetscInt* data;
+  ISGetIndices(nodeNumberingIS_subdomain_old2new, &data);
+  
+  /*
+   * Create property list for collective dataset write.
+   */
+  plist_id = H5Pcreate(H5P_DATASET_XFER);
+  H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
+  
+  herr_t status = H5Dwrite(dset_id, H5T_NATIVE_INT, memspace, filespace,
+                    plist_id, data);
+  //free(data);
+  ISRestoreIndices(nodeNumberingIS_subdomain_old2new, &data);
+  /*
+   * Close/release resources.
+   */
+  H5Dclose(dset_id);
+  //
+  //end try out of core
+  //
   //collect new node numbers for whole mesh so that subdomain reordering and renumbering
   //can be done easily
   
@@ -3060,7 +3138,34 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   ISAllGather(nodeNumberingIS_subdomain_old2new,&nodeNumberingIS_global_old2new);
   const PetscInt * nodeNumbering_global_old2new;//needs restore call
   ISGetIndices(nodeNumberingIS_global_old2new,&nodeNumbering_global_old2new);
-  
+  //
+  //test out of core
+  //
+  if (rank == 0)
+    {
+      hid_t       dataset_id;  /* identifiers */
+      herr_t      status;
+      int         dset_data[nNodes_global];
+      
+      /* Open an existing file. */
+      //file_id = H5Fopen("mappings.h5", H5F_ACC_RDONLY, H5P_DEFAULT);
+      
+      /* Open an existing dataset. */
+      dataset_id = H5Dopen2(file_id, "/nodeNumbering_old2new", H5P_DEFAULT);
+      
+      status = H5Dread(dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
+                       dset_data);
+
+      /* Close the dataset. */
+      status = H5Dclose(dataset_id);
+      
+      for (int i=0;i<nNodes_global;i++)
+        assert(nodeNumbering_global_old2new[i] == dset_data[i]);
+      std::cout<<"==================out of core old2new is correct!===================="<<std::endl;
+    }
+  //
+  //end test out of core
+  //
   //reverse mapping for node numbers too
   //cek hack, not needed
   /*
@@ -4202,6 +4307,12 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     newMesh.edgeNumbering_global2original[ig] = edgeNumbering_global_new2old[ig];
   */
   //cleanup
+  /* out of core*/
+  H5Sclose(filespace);
+  H5Sclose(memspace);
+  H5Pclose(plist_id);
+  H5Fclose(file_id);
+  /* out of core */
   PetscLogEventEnd(build_subdomains_cleanup_event,0,0,0,0);
   PetscLogStagePop();
   PetscLogView(PETSC_VIEWER_STDOUT_WORLD);
@@ -4300,6 +4411,7 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
 			 elementNeighbors_subdomain,
 			 PETSC_NULL,//weights_subdomain,
 			 &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
+<<<<<<< HEAD
     MatPartitioning petscPartition;
     MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);
     MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
@@ -4311,6 +4423,20 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
     MatPartitioningDestroy(&petscPartition);
     //MatDestroy(&petscAdjacency);
     //ISView(elementPartitioningIS_new,PETSC_VIEWER_STDOUT_WORLD);
+=======
+  MatPartitioning petscPartition;
+  MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);
+  MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
+  MatPartitioningSetFromOptions(petscPartition);
+  
+  //get a petsc index set that has the new submdomain number for each element
+  IS elementPartitioningIS_new;
+  MatPartitioningApply(petscPartition,&elementPartitioningIS_new); 
+  MatPartitioningDestroy(&petscPartition);
+  //MatDestroy(&petscAdjacency);
+  //ISView(elementPartitioningIS_new,PETSC_VIEWER_STDOUT_WORLD);
+    
+>>>>>>> origin/topaz_partitioning_opt
   //experiment with metis
   //mwf set some defaults and not call if size == 1 since metis crashes
   //cek commenting out for now
@@ -4605,6 +4731,10 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
       elementBoundaryElementsArray_new[ebN*2+0] = elementNumbering_global_old2new[eN_L_old];
       if(eN_R_old >= 0)
         elementBoundaryElementsArray_new[ebN*2+1] = elementNumbering_global_old2new[eN_R_old];
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/topaz_partitioning_opt
 	
       elementBoundaryMaterialTypes_new[ebN] = mesh.elementBoundaryMaterialTypes[ebN_old];
     }
@@ -4736,17 +4866,19 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   ISCreateGeneral(PROTEUS_COMM_WORLD,edges_subdomain_owned.size(),&edgeNumbering_new2old[0],PETSC_COPY_VALUES,&edgeNumberingIS_new2old);
   IS edgeNumberingIS_global_new2old;
   ISAllGather(edgeNumberingIS_new2old,&edgeNumberingIS_global_new2old);
-  int local_size,global_size;
-  ISGetSize(edgeNumberingIS_global_new2old,&global_size);
-  ISGetLocalSize(edgeNumberingIS_global_new2old,&local_size);
-  assert(global_size == mesh.nEdges_global);
   const PetscInt *edgeNumbering_global_new2old;
-  valarray<int> edgeNumbering_old2new_global(mesh.nEdges_global);
-  ISGetIndices(edgeNumberingIS_global_new2old,&edgeNumbering_global_new2old);
-  for (int ig=0;ig<mesh.nEdges_global;ig++)
+  //cek hack not needed
+  /*
+    valarray<int> edgeNumbering_old2new_global(mesh.nEdges_global);
+    ISGetIndices(edgeNumberingIS_global_new2old,&edgeNumbering_global_new2old);
+    for (int ig=0;ig<mesh.nEdges_global;ig++)
     {
-      edgeNumbering_old2new_global[edgeNumbering_global_new2old[ig]] = ig;
+    edgeNumbering_old2new_global[edgeNumbering_global_new2old[ig]] = ig;
     }
+<<<<<<< HEAD
+=======
+    */
+>>>>>>> origin/topaz_partitioning_opt
 
   //create  array with (new edge) --> (new node 0, new node 1)
   //and map from (new node 0, new node 1) --> (new global edge)
@@ -6711,6 +6843,7 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
   
   dims[0] = MESH(cmesh).subdomainp->nElementBoundaries_global;
   elementBoundaryNumbering_subdomain2global = PyArray_FromDimsAndData(1,
+<<<<<<< HEAD
                                                                       dims,
                                                                       PyArray_INT,
                                                                       (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
@@ -6720,6 +6853,18 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
                                                                      PyArray_INT,
                                                                      (char*)MESH(cmesh).elementBoundaryNumbering_global2original);
   
+=======
+								      dims,
+								      PyArray_INT,
+								      (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
+  /*cek hack
+  dims[0] = MESH(cmesh).nElementBoundaries_global;
+  elementBoundaryNumbering_global2original = PyArray_FromDimsAndData(1,
+								     dims,
+								     PyArray_INT,
+								     (char*)MESH(cmesh).elementBoundaryNumbering_global2original);
+  */
+>>>>>>> origin/topaz_partitioning_opt
   dims[0] = size+1;
   edgeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
                                                         dims,
@@ -6728,6 +6873,7 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
   
   dims[0] = MESH(cmesh).subdomainp->nEdges_global;
   edgeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
+<<<<<<< HEAD
                                                            dims,
                                                            PyArray_INT,
                                                            (char*)MESH(cmesh).edgeNumbering_subdomain2global);
@@ -6738,11 +6884,25 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
                                                           (char*)MESH(cmesh).edgeNumbering_global2original);
 
   return Py_BuildValue("OOOOOOOOOOOO",
+=======
+							   dims,
+							   PyArray_INT,
+							   (char*)MESH(cmesh).edgeNumbering_subdomain2global);
+  /*cek hack
+  dims[0] = MESH(cmesh).nEdges_global;
+  edgeNumbering_global2original = PyArray_FromDimsAndData(1,
+							  dims,
+							  PyArray_INT,
+							  (char*)MESH(cmesh).edgeNumbering_global2original);
+  */
+  return Py_BuildValue("OOOOOOOO",
+>>>>>>> origin/topaz_partitioning_opt
                        elementOffsets_subdomain_owned,
                        elementNumbering_subdomain2global,
                        //elementNumbering_global2original,
                        nodeOffsets_subdomain_owned,
                        nodeNumbering_subdomain2global,
+<<<<<<< HEAD
                        nodeNumbering_global2original,
                        elementBoundaryOffsets_subdomain_owned,
                        elementBoundaryNumbering_subdomain2global,
@@ -6750,6 +6910,15 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
                        edgeOffsets_subdomain_owned,
                        edgeNumbering_subdomain2global,
                        edgeNumbering_global2original);
+=======
+                       //nodeNumbering_global2original,
+		       elementBoundaryOffsets_subdomain_owned,
+                       elementBoundaryNumbering_subdomain2global,
+                       //elementBoundaryNumbering_global2original,
+		       edgeOffsets_subdomain_owned,
+                       edgeNumbering_subdomain2global/*,
+						       edgeNumbering_global2original*/);
+>>>>>>> origin/topaz_partitioning_opt
 }
 
 
