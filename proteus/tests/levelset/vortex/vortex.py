@@ -20,7 +20,7 @@ runCFL = 0.3#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 #spatial approximation orders
 cDegree_ls=0 #0 -- CG. -1 -- DG
 cDegree_vof=0
-pDegree_ls=1 #level set 
+pDegree_ls=1 #level set
 pDegree_vof=pDegree_ls #volume of fluid should match ls for now
 useHex=False#True
 #
@@ -34,7 +34,7 @@ else:
 from proteus import MeshTools
 partitioningType = MeshTools.MeshParallelPartitioningTypes.node
 #spatial mesh
-lRefinement=0
+lRefinement=2
 #tag simulation name to level of refinement
 #soname="vortexcgp2_bdf2_mc"+`lRefinement`
 pseudo2D=True
@@ -82,7 +82,7 @@ atolRedistance = 1.0e-4
 atolConservation = 1.0e-6
 atolVolumeOfFluid= 1.0e-4
 atolLevelSet     = 1.0e-4
-#controls 
+#controls
 linearSolverConvergenceTest = 'r-true' #rits is do a set number of iterations, r-true uses true residual, PETSc default is preconditioned residual
 #redist solver
 fmmFlag=0
