@@ -63,7 +63,6 @@ def msh2triangle(fileprefix):
     edges = []
 
     logEvent('msh2triangle: constructing edges')
-    print triangles
     for triangle in triangles[:,1:4]:  # take only vertices index
         for i in range(len(triangle)):
             edge = Edge(edgeNumber=edge_nb, nodes=[triangle[i-1], triangle[i]])
@@ -72,13 +71,13 @@ def msh2triangle(fileprefix):
                 edge_nb += 1
                 edges_dict[edge.nodes] = edge
                 edges += [[edge_nb, edge.nodes[0], edge.nodes[1], 0]]
-    edges = np.array(edges)
     logEvent('msh2triangle: updating edges and nodes flags')
+    edges = np.array(edges)
     for edge in edges_msh:
         edge_nodes = [edge[1], edge[2]]
         edge_nodes.sort()
         edge_nodes = tuple(edge_nodes)
-        edge_class = edges_dict[edge_nodes]
+        edge_class = edges_dict.get(edge_nodes)
         edges[edge_class.N, 3] = edge[3]
         # ! edge nodes are indexed from 1 with gmsh
         if nodes[edge[1]-1][-1] == 0:  # update node flags
@@ -94,8 +93,8 @@ def msh2triangle(fileprefix):
         nodes = np.array(nodes)
         nodes = np.delete(nodes, 3, 1)
         fmt = ['%d', '%f', '%f', '%d']
-    #elif nd == 3:
-    #    fmt = ['%d', '%f', '%f', '%f', '%d']
+    elif nd == 3:
+       fmt = ['%d', '%f', '%f', '%f', '%d']
     np.savetxt(fileprefix+'.node', nodes, fmt=fmt, header=header, comments='')
 
     header = '{0:d} 1'.format(edge_nb)
