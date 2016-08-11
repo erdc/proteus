@@ -32,6 +32,8 @@ if [ -f gmsh.mesh ]; then
   cp mesh.vtk ../$dir.vtk
   echo =============================
   ls -lhatr mesh.*
+  cp mesh.ele mesh_save.ele
+  cp mesh.node mesh_save.node
   tetgen -Vfeen mesh.ele
   echo =============================
   ls -lhatr mesh.*

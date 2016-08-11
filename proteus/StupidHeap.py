@@ -1,5 +1,8 @@
 """
 A stupid implementation of a heap for fast marching methods
+
+.. inheritance-diagram:: proteus.StupidHeap
+   :parts: 1
 """
 class StupidHeap:
     """
