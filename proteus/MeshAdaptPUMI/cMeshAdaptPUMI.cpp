@@ -265,7 +265,11 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
   /// Adapt the mesh
-  ma::Input* in = ma::configure(m, size_scale, size_frame);
+  ma::Input* in;
+  if(adapt_type_config=="anisotropic")
+    in = ma::configure(m, size_scale, size_frame);
+  else
+    in = ma::configure(m, size_iso);
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
   in->shouldRunMidParma = true;
@@ -287,6 +291,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     myfile.close();
   }
 
+  freeField(size_iso); //no longer necessary
   freeField(size_frame);
   freeField(size_scale);
   m->verify();

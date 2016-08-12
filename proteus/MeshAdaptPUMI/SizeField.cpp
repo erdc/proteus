@@ -630,6 +630,11 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   m->end(it); 
 //*/
 
+//Clipped Field
+
+  apf::Field* clipped_vtx = apf::createLagrangeField(m, "iso_clipped",apf::SCALAR,1);
+
+  if(adapt_type_config=="anisotropic"){
 //Get the anisotropic size frame
   apf::Field* phif = m->findField("phi");
   apf::Field* gradphi = apf::recoverGradientByVolume(phif);
@@ -647,10 +652,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //size_frame = getERMSizeFrames(metricf, gradphi,frame_comps);
   size_frame = getERMSizeFrames(grad2Speed,gradSpeed,frame_comps,adapt_type_config);
 //
-
-//Clipped Field
-
-  apf::Field* clipped_vtx = apf::createLagrangeField(m, "iso_clipped",apf::SCALAR,1);
 
 //Set the size scale for vertices
   it = m->begin(0);
@@ -675,10 +676,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       ssa[i].wm = std::fabs(eigenValues[i]);
     }
     std::sort(ssa, ssa + 3);
-/*
-    assert(ssa[2].wm >= ssa[1].wm);
-    assert(ssa[1].wm >= ssa[0].wm);
-*/
+
+    //assert(ssa[2].wm >= ssa[1].wm);
+    //assert(ssa[1].wm >= ssa[0].wm);
+
     double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
 
     if(apf::getScalar(size_iso,v,0) < hmin)
@@ -694,21 +695,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     apf::setVector(size_scale,v,0,scale);
   }
   m->end(it);
-/*
-  SmoothField(size_scale);
-  SmoothField(size_scale);
-  SmoothField(size_scale);
-*/
-
-  if(logging_config=="on"){
-    char namebuffer[20];
-    sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
-    apf::writeVtkFiles(namebuffer, m);
-  }
-  apf::destroyField(size_iso_reg); //will throw error if not destroyed
-  apf::destroyField(clipped_vtx);
   apf::destroyField(grad2phi);
-  //apf::destroyField(phif);
   apf::destroyField(curves);
   apf::destroyField(hess);
   apf::destroyField(metricf);
@@ -718,7 +705,35 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   apf::destroyField(gradSpeed);
   apf::destroyField(grad2Speed);
 
-  freeField(size_iso); //no longer necessary
+}
+  else{ 
+    //it is unclear why size_scale needs to be populated but an error is thrown otherwise
+    it = m->begin(0);
+    apf::Vector3 scale(1.0,1.0,1.0);
+    while ((v = m->iterate(it))) {
+      apf::setVector(size_scale,v,0,scale);
+      double tempScale = apf::getScalar(size_iso,v,0);
+      if(tempScale < hmin)
+        apf::setScalar(clipped_vtx,v,0,-1);
+      else if(tempScale > hmax)
+        apf::setScalar(clipped_vtx,v,0,1);
+      else
+        apf::setScalar(clipped_vtx,v,0,0);
+      clamp(tempScale,hmin,hmax);
+      apf::setScalar(size_iso,v,0,tempScale);
+    }
+    m->end(it);
+  }
+
+  if(logging_config=="on"){
+    char namebuffer[20];
+    sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
+    apf::writeVtkFiles(namebuffer, m);
+  }
+  apf::destroyField(size_iso_reg); //will throw error if not destroyed
+  apf::destroyField(clipped_vtx);
+
+  //freeField(size_iso); //no longer necessary
   return 0;
 }
 
