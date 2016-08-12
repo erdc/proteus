@@ -399,7 +399,7 @@ class BC_RANS(BC_Base):
             return ux_dirichlet
         self.u_dirichlet.uOfXT = get_outlet_ux_dirichlet(0)
         self.v_dirichlet.uOfXT = get_outlet_ux_dirichlet(1)
-        if len(g).uOfXT == 3:
+        if len(g) == 3:
             self.w_dirichlet.uOfXT = get_outlet_ux_dirichlet(2)
         self.p_dirichlet.uOfXT.setLinearBC(a0, a1, vert_axis)
         self.vof_dirichlet.setConstantBC(vof)
