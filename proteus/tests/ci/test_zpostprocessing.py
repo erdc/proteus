@@ -12,8 +12,9 @@ Profiling.verbose=True
 import numpy.testing as npt
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
+import pytest
 
-
+#@pytest.mark.skip(reason="nosetests vs pytest issue")
 def test_bdm_sshaped_region():
     '''
     Tests a post-processed velocity field projected

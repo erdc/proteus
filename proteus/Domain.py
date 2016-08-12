@@ -30,7 +30,7 @@ class D_base:
         # list of boundary conditions
         self.bc = []
         # list of auxiliaryVariables
-        self.auxiliaryVariables = []
+        self.auxiliaryVariables = {}
         # attach a MeshOption class
         self.MeshOptions = MeshOptions(self.nd)
 
@@ -300,6 +300,33 @@ shipout();
         f.close()
     def writeXdmf(self,ar):
         raise UserWarning("Xdmf output not implemented")
+
+class GMSH_3D_Domain(D_base):
+    """
+    A domain described by a gmsh .geo file
+
+    Parameters
+    ----------
+    geofile : str
+              The base filename of the main .geo file
+    he : float
+         The maximum element diameter (this should go way)
+    name : str
+           A name for the domain
+    units : str
+            The units of length
+    """
+    def __init__(self, geofile, he,
+                 name="GMSH_Domain",
+                 units="m",
+                 length_scale=1.0,
+                 permute_dims=[0,1,2]):
+        D_base.__init__(self, 2, name, units)
+        self.geofile=geofile+".geo"
+        self.polyfile=geofile
+        self.he = he
+        self.length_scale=length_scale
+        self.permute_dims=permute_dims
 
 class PlanarStraightLineGraphDomain(D_base):
     """
