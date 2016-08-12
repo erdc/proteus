@@ -26,7 +26,7 @@ install:
 - make hashdist
 - make stack
 - make stack/default.yaml
-- CFLAGS='-w -fno-var-tracking-assignments' make install
+- FC=gfortran CFLAGS='-w -fno-var-tracking-assignments' make install
 - export PATH=$PWD/linux2/bin:$PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
