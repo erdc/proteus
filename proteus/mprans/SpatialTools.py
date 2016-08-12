@@ -86,13 +86,23 @@ class ShapeRANS(Shape):
         if key not in self.auxiliaryVariables:
             if key == 'RigidBody':
                 self.auxiliaryVariables[key] = True
-            if key == 'RelaxZones':
+            elif key == 'RelaxZones':
                 self.auxiliaryVariables[key] = self.zones
-            if str(key).startswith('Gauge_'):
+            elif str(key).startswith('Gauge_'):
                 self.auxiliaryVariables[key] = [gauge]
-        elif str(key).startswith('Gauge_') \
-                and gauge not in self.auxiliaryVariables[key]:
-            self.auxiliaryVariables[key] += [gauge]
+            else:
+                logEvent("auxiliaryVariable key: "
+                         "{key} not recognized.".format(key=str(key)), level=1)
+        elif str(key).startswith('Gauge_'):
+            if gauge not in self.auxiliaryVariables[key]:
+                self.auxiliaryVariables[key] += [gauge]
+            else:
+                logEvent(
+                    "Attempted to put identical "
+                    "gauge at key: {key}".format(key=str(key)), level=1)
+        else:
+            logEvent("Key {key} is already attached.".format(key=str(key)),
+                     level=1)
 
     def attachPointGauges(self, model_key, gauges, activeTime=None,
                           sampleRate=0,
