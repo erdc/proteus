@@ -66,7 +66,7 @@ class ShapeRANS(Shape):
         self.auxiliaryVariables = {}  # list of auxvar attached to shape
         self.It = None  # inertia tensor
 
-    def _attachAuxiliaryVariable(self, key):
+    def _attachAuxiliaryVariable(self, key, gauge=None):
         """
         Attaches an auxiliary variable to the auxiliaryVariables dictionary of
         the shape (used in buildDomain function)
@@ -76,6 +76,8 @@ class ShapeRANS(Shape):
         key: string
             Dictionary key defining the auxiliaryVariable to attach
 
+        gauge: Gauges
+
         Notes
         -----
         This function is called automatically when using other functions to set
@@ -84,8 +86,72 @@ class ShapeRANS(Shape):
         if key not in self.auxiliaryVariables:
             if key == 'RigidBody':
                 self.auxiliaryVariables[key] = True
-            if key == 'RelaxZones':
+            elif key == 'RelaxZones':
                 self.auxiliaryVariables[key] = self.zones
+            elif str(key).startswith('Gauge_'):
+                self.auxiliaryVariables[key] = [gauge]
+            else:
+                logEvent("auxiliaryVariable key: "
+                         "{key} not recognized.".format(key=str(key)), level=1)
+        elif str(key).startswith('Gauge_'):
+            if gauge not in self.auxiliaryVariables[key]:
+                self.auxiliaryVariables[key] += [gauge]
+            else:
+                logEvent(
+                    "Attempted to put identical "
+                    "gauge at key: {key}".format(key=str(key)), level=1)
+        else:
+            logEvent("Key {key} is already attached.".format(key=str(key)),
+                     level=1)
+
+    def attachPointGauges(self, model_key, gauges, activeTime=None,
+                          sampleRate=0,
+                          fileName='point_gauges.csv'):
+        """Attaches Point Gauges (in the Proteus/Gauges.py style) to the shape.
+
+        Parameters
+        ----------
+        model_key: string
+            Label of the model to use as a key for selecting particular gauges.
+        See proteus Gauges.py PointGauges class for the remaining parameters.
+        """
+        new_gauges = Gauges.PointGauges(gauges, activeTime, sampleRate,
+                                        fileName)
+        self._attachAuxiliaryVariable('Gauge_' + model_key,
+                                      gauge=new_gauges)
+
+    def attachLineGauges(self, model_key, gauges, activeTime=None,
+                         sampleRate=0,
+                         fileName='line_gauges.csv'):
+        """Attaches Line Gauges (in the Proteus/Gauges.py style) to the shape.
+
+        Parameters
+        ----------
+        model_key: string
+            Label of the model to use as a key for selecting particular gauges.
+        See proteus Gauges.py LineGauges class for the remaining parameters.
+        """
+        new_gauges = Gauges.LineGauges(gauges, activeTime, sampleRate,
+                                       fileName)
+        self._attachAuxiliaryVariable('Gauge_' + model_key,
+                                      gauge=new_gauges)
+
+    def attachLineIntegralGauges(self, model_key, gauges, activeTime=None,
+                                 sampleRate=0,
+                                 fileName='line_integral_gauges.csv'):
+        """Attaches Line Integral Gauges (in the Proteus/Gauges.py style).
+
+        Parameters
+        ----------
+        model_key: string
+            Label of the model to use as a key for selecting particular gauges.
+        See proteus Gauges.py LineIntegralGauges class for the remaining parameters.
+        """
+        new_gauges = Gauges.LineIntegralGauges(gauges, activeTime,
+                                               sampleRate, fileName)
+        self._attachAuxiliaryVariable('Gauge_' + model_key,
+                                      gauge=new_gauges)
+
 
     def setRigidBody(self, holes=None):
         """
@@ -2121,9 +2187,18 @@ def assembleAuxiliaryVariables(domain):
     -----
     Should be called after assembleGeometry
     """
-    domain.auxiliaryVariables = {'twp': [], 'vof': [], 'ls': [], 'redist': [],
-                                 'ls_consrv': [], 'kappa': [],
-                                 'dissipation': [], 'moveMesh': []}
+
+    domain.auxiliaryVariables = {
+        'dissipation': [],
+        'kappa': [],
+        'ls': [],
+        'ls_consrv': [],
+        'moveMesh': [],
+        'redist': [],
+        'twp': [],
+        'vof': []
+    }
+
     zones_global = {}
     start_region = 0
     start_rflag = 0
@@ -2166,6 +2241,24 @@ def assembleAuxiliaryVariables(domain):
                 key = flag+start_rflag
                 zones_global[key] = zone
         start_flag += len(shape.BC_list)
+        # ----------------------------
+        # GAUGES
+        gauge_dict = {key: shape.auxiliaryVariables.get(key,[])
+                      for key in shape.auxiliaryVariables.keys()
+                      if str(key).startswith('Gauge_')}
+        for key in gauge_dict.keys():
+            key_name = key.split('_', 1)[1] # Cutting off "Gauge_" prefix
+            if key_name not in aux:
+                # It is probably too dangerous to simply put "aux[key_name] = []"
+                # as this system is fragile to typos. Instead, we throw an error.
+                raise ValueError('ERROR: Gauge key ',
+                                 key_name,
+                                 ' is not a recognized model by SpatialTools.',
+                                 ' The known models in our dictionary are ',
+                                 str(aux.keys())
+                                 )
+            else:
+                aux[key_name] += gauge_dict[key]
         if shape.regions is not None:
             start_region += len(shape.regions)
             start_rflag += max(domain.regionFlags[0:start_region])
