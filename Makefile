@@ -10,7 +10,7 @@ SHELL=/usr/bin/env bash
 PROTEUS ?= $(shell python -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
 PROTEUS_INSTALL_CMD = python setup.py install -O2
-PROTEUS_DEVELOP_CMD = pip install -v -e .
+PROTEUS_DEVELOP_CMD = pip --disable-pip-version-check install -v -e .
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
@@ -86,7 +86,8 @@ clean:
 distclean: clean
 	-rm -f stack.done
 	-rm -rf ${PROTEUS_PREFIX}
-	-rm -rf build src/*.pyc proteus/*.so proteus/*.a
+	-rm -rf build proteus/*.pyc proteus/*.so proteus/*.a
+	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
 
 update:
 	@echo "Manually trying to update all repositories"
@@ -189,6 +190,9 @@ install: profile $(shell find proteus -type f) $(wildcard *.py) proteus
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
+	@echo "installing scripts"
+	cd scripts && ${PROTEUS_ENV} PROTEUS_PREFIX=${PROTEUS_PREFIX} make
+	@echo "************************"
 	@echo "Installation complete"
 	@echo "************************"
 	@echo ""
@@ -207,6 +211,9 @@ develop: proteus profile
 	@echo "************************"
 	$(call show_info)
 	${PROTEUS_ENV} CFLAGS="-Wall -Wstrict-prototypes -DDEBUG" ${PROTEUS_DEVELOP_CMD}
+	@echo "************************"
+	@echo "installing scripts"
+	cd scripts && ${PROTEUS_ENV} PROTEUS_PREFIX=${PROTEUS_PREFIX} make
 	@echo "************************"
 	@echo "Development installation complete"
 	@echo "************************"
@@ -254,3 +261,10 @@ doc:
 	@echo "../proteus-website/index.html"
 	@echo "**********************************"
 	-sensible-browser ../proteus-website/index.html &
+
+test:
+	@echo "************************************"
+	@echo "Running test suite"
+	py.test --boxed -v proteus/tests --ignore proteus/tests/POD
+	@echo "Tests complete "
+	@echo "************************************"
