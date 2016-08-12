@@ -593,38 +593,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   }
   apf::destroyMeshElement(element);
   m->end(it);
-/*
-  it = m->begin(0);
-  apf::Adjacent regions;
-  apf::Adjacent edges;
-  while((v=m->iterate(it))){
-    double h_old, h_new;
-    m->getAdjacent(v,nsd,regions);
-    m->getAdjacent(v,1,edges);
-    err_curr= 0;
-    for(int i=0;i<regions.getSize();i++){
-      apf::getVector(err_reg,regions[i],0,err_vect);
-      err_curr += err_vect[0];
-    }
-    err_curr /= regions.getSize();
-
-    h_old = 0;
-    for(int i=0; i<edges.getSize();i++){
-      element = apf::createMeshElement(m,edges[i]);
-      h_old+=apf::measure(element); 
-      apf::destroyMeshElement(element);
-    }
-    h_old /= edges.getSize();
-    h_new = h_old*sqrt(err_dest/err_curr);
-    apf::setScalar(size_iso,v,0,h_new);
-  }
-  m->end(it);
-*/
-//*
   it = m->begin(0);
   while((v=m->iterate(it))){
-    //minToEntity(size_iso_reg, size_iso, v);
-    //volumeAverageToEntity(size_iso_reg, size_iso, v);
     averageToEntity(size_iso_reg, size_iso, v);
   }
   m->end(it); 
@@ -689,9 +659,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     else
       apf::setScalar(clipped_vtx,v,0,0);
 
-    //if(comm_rank==0)std::cout<<"Original Lambdas "<<lambda[0]<<" "<<lambda[1]<<" "<<lambda[2]<<std::endl;
     scaleFormulaERM(phi,hmin,hmax,apf::getScalar(size_iso,v,0),curve,lambda,eps_u,scale,adapt_type_config);
-    //if(comm_rank==0) std::cout<<"Scales "<<scale[0]<<" "<<scale[1]<<" "<<scale[2]<<"Lambdas "<<lambda[0]<<" "<<lambda[1]<<" "<<lambda[2]<<std::endl;
     apf::setVector(size_scale,v,0,scale);
   }
   m->end(it);
