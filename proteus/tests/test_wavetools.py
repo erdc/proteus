@@ -531,7 +531,8 @@ class VerifyRandomWaves(unittest.TestCase):
         etaWrite = np.zeros(len(tlist),)
         for ii in range(len(tlist)):
             etaWrite[ii] = a.eta(x0,tlist[ii])
-        fname = "randomSeries.txt"
+        path =getpath()
+        fname = path+"randomSeries.txt"
         if Tlag < 0.:
             with self.assertRaises(SystemExit) as cm1:
                 a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
@@ -1339,7 +1340,8 @@ class VerifyRandomWavesFast(unittest.TestCase):
             waveDir,
             g,
             cutoff,
-            rec_d,                                                                          {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
+            rec_d,
+            {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
             True,
             series
             )
