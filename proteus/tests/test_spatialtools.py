@@ -9,7 +9,7 @@ import unittest
 import numpy.testing as npt
 import numpy as np
 from nose.tools import eq_
-from proteus import Comm, Profiling
+from proteus import Comm, Profiling, Gauges
 from proteus.Profiling import logEvent as log
 from proteus.Domain import (PiecewiseLinearComplexDomain,
                             PlanarStraightLineGraphDomain)
@@ -90,7 +90,6 @@ def create_tank2D(domain, dim=(0., 0.), coords=None, from_0=True):
 
 def create_tank3D(domain, dim=(0., 0., 0.), coords=None, from_0=True):
     return Tank3D(domain, dim, coords, from_0)
-
 
 class TestShapeDomainBuilding(unittest.TestCase):
 
@@ -222,6 +221,55 @@ class TestShapeDomainBuilding(unittest.TestCase):
 
 
 class TestShapeRANS(unittest.TestCase):
+
+    def test_gauges(self):
+        domain = create_domain2D()
+        tank = create_tank2D(domain)
+        tank.attachPointGauges('kappa',
+                               gauges = ((('k', ),((0.,0.,0.),)),),
+                               activeTime = (0.,1.),
+                               sampleRate = 0.5,
+                               fileName = 'point1.csv')
+        tank.attachLineGauges('kappa',
+                               gauges = ((('k', ),((0.,0.,0.),(0.,0.,1.))),),
+                               activeTime = (0.,2.),
+                               sampleRate = 0.5,
+                               fileName = 'line1.csv')
+        tank.attachLineIntegralGauges('vof',
+                                      gauges=(
+                                      (('vof',), ((0., 0., 0.), (0., 0., 1.))),),
+                                      activeTime=(0., 2.),
+                                      sampleRate=0.5,
+                                      fileName='line_int1.csv')
+        assert tank.auxiliaryVariables.get('Gauge_kappa', None) is not None
+        assert tank.auxiliaryVariables.get('Gauge_vof', None) is not None
+        assert len(tank.auxiliaryVariables['Gauge_kappa']) is 2
+        assert len(tank.auxiliaryVariables['Gauge_vof']) is 1
+        self.assertIsInstance(tank.auxiliaryVariables['Gauge_kappa'][0],
+                              Gauges.Gauges)
+        assert tank.auxiliaryVariables['Gauge_kappa'][0].activeTime == (0.,1.)
+        assert tank.auxiliaryVariables['Gauge_kappa'][1].activeTime == (0.,2.)
+        assert tank.auxiliaryVariables['Gauge_vof'][0].sampleRate == 0.5
+
+        assembleDomainRANS(domain)
+
+        assert domain.auxiliaryVariables.get('kappa', None) is not None
+        assert domain.auxiliaryVariables.get('vof', None) is not None
+        self.assertIsInstance(domain.auxiliaryVariables['vof'][0],
+                              Gauges.Gauges)
+        assert len(domain.auxiliaryVariables['kappa']) is 2
+        assert len(domain.auxiliaryVariables['vof']) is 1
+        assert domain.auxiliaryVariables['kappa'][0].activeTime == (0., 1.)
+        assert domain.auxiliaryVariables['kappa'][1].activeTime == (0., 2.)
+        assert domain.auxiliaryVariables['vof'][0].sampleRate == 0.5
+
+        tank.attachPointGauges('voff',
+                                gauges=((('vof',), ((0., 0., 0.),)),),
+                                activeTime=(0., 1.),
+                                sampleRate=0.5,
+                                fileName='point2.csv')
+        self.assertRaises(ValueError,assembleDomainRANS,domain)
+
 
     def test_rigid_body(self):
         domain = create_domain2D()
