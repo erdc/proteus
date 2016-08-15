@@ -116,6 +116,7 @@ class RectangularDomain(D_base):
                  name="DefaultRectangularDomain",
                  units="m"):
         D_base.__init__(self,len(L),name,units)
+        self.polyfile = None
         self.boundaryTags = {'left':3,
                              'right':5,
                              'front':2,
@@ -134,6 +135,7 @@ class RectangularDomain(D_base):
         """
         Write the RectangularDomain using the poly format.
         """
+        self.polyfile = fileprefix #[temp] see PSLG for better implementation that checks if it already exists
         self.boundaryLegend = self.boundaryTags
         unitesize=4.0/self.L[0]
         f = open(fileprefix+".poly",'w')
