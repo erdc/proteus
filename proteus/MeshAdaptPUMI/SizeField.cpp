@@ -691,6 +691,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       clamp(tempScale,hmin,hmax);
       apf::setScalar(size_iso,v,0,tempScale);
     }
+    apf::synchronize(size_scale);
     m->end(it);
   }
 
