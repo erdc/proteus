@@ -663,6 +663,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     apf::setVector(size_scale,v,0,scale);
   }
   m->end(it);
+  apf::synchronize(size_scale);
   apf::destroyField(grad2phi);
   apf::destroyField(curves);
   apf::destroyField(hess);
