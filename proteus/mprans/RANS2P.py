@@ -1,8 +1,31 @@
+"""
+Optimized  Two-Phase Reynolds Averaged Navier-Stokes
+"""
 import proteus
 from proteus.mprans.cRANS2P import *
 from proteus.mprans.cRANS2P2D import *
 from proteus import Profiling
 class SubgridError(proteus.SubgridError.SGE_base):
+    """
+    Create a SubgridError  object for two-phase incompressible flow
+
+    The VMS subgrid error approximation
+
+    Parameters
+    ----------
+        coefficients  : proteus.TransportCoefficients.TC_base
+            The coefficients object
+        nd            : int
+            Number of space  dimensions
+        lag           : bool
+            Use prior time step to calculate
+        nStepsToDelay : int
+            Lag only after nSteps
+        hFactor       : float
+            scaling factor based on order
+        noPressureStabilization : bool
+            turn off pressure stab
+    """
     def __init__(self,coefficients,nd,lag=False,nStepsToDelay=0,hFactor=1.0,noPressureStabilization=False):
         self.noPressureStabilization=noPressureStabilization
         proteus.SubgridError.SGE_base.__init__(self,coefficients,nd,lag)
@@ -11,10 +34,22 @@ class SubgridError(proteus.SubgridError.SGE_base):
         self.nStepsToDelay = nStepsToDelay
         self.nSteps=0
         if self.lag:
-            log("RANS2P.SubgridError: lagging requested but must lag the first step; switching lagging off and delaying")
+            logEvent("RANS2P.SubgridError: lagging requested but must lag the first step; switching lagging off and delaying")
             self.nStepsToDelay=1
             self.lag=False
     def initializeElementQuadrature(self,mesh,t,cq):
+        """
+        Allocated or set additional arrays for values at element quadrature
+
+        Parameters
+        ----------
+        mesh : proteus.MeshTools.Mesh
+           The mesh for the domain
+        t    : float
+           The current time
+        cq   : dict
+           The dictionary of element quadrature arrrays
+        """
         import copy
         self.cq=cq
         self.v_last = self.cq[('velocity',0)]
@@ -23,7 +58,7 @@ class SubgridError(proteus.SubgridError.SGE_base):
         if self.lag:
             self.v_last[:] = self.cq[('velocity',0)]
         if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
-            log("RANS2P.SubgridError: switched to lagged subgrid error")
+            logEvent("RANS2P.SubgridError: switched to lagged subgrid error")
             self.lag = True
             self.v_last = self.cq[('velocity',0)].copy()
     def calculateSubgridError(self,q):
@@ -49,7 +84,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         self.nStepsToDelay = nStepsToDelay
         self.nSteps=0
         if self.lag:
-            log("RANS2P.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
+            logEvent("RANS2P.ShockCapturing: lagging requested but must lag the first step; switching lagging off and delaying")
             self.nStepsToDelay=1
             self.lag=False
     def initializeElementQuadrature(self,mesh,t,cq):
@@ -65,13 +100,13 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             for ci in range(1,4):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
         if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
-            log("RANS2P.ShockCapturing: switched to lagged shock capturing")
+            logEvent("RANS2P.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
             for ci in range(1,4):
                 self.numDiff_last[ci] = self.numDiff[ci].copy()
-        #log("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
-        #                                                            globalMax(self.numDiff_last[2].max()),
-        #                                                            globalMax(self.numDiff_last[3].max())),level=7)
+        logEvent("RANS2P: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" % (globalMax(self.numDiff_last[1].max()),
+                                                                    globalMax(self.numDiff_last[2].max()),
+                                                                    globalMax(self.numDiff_last[3].max())))
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
@@ -465,13 +500,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
          #
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         #VRANS
-        log("ebqe_global allocations in coefficients")
+        logEvent("ebqe_global allocations in coefficients")
         self.ebqe_porosity = numpy.ones(cebqe[('u',1)].shape,'d')
         self.ebqe_dragAlpha = numpy.ones(cebqe[('u',1)].shape,'d')
         self.ebqe_dragAlpha.fill(self.dragAlpha)
         self.ebqe_dragBeta = numpy.ones(cebqe[('u',1)].shape,'d')
         self.ebqe_dragBeta.fill(self.dragBeta)
-        log("porosity and drag")
+        logEvent("porosity and drag")
         #TODO make loops faster
         if self.setParamsFunc != None:
             self.setParamsFunc(cebqe['x'],self.ebqe_porosity,self.ebqe_dragAlpha,self.ebqe_dragBeta)
@@ -1057,17 +1092,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         #show quadrature
         #
-        log("Dumping quadrature shapes for model %s" % self.name,level=9)
-        log("Element quadrature array (q)", level=9)
-        for (k,v) in self.q.iteritems(): log(str((k,v.shape)),level=9)
-        log("Element boundary quadrature (ebq)",level=9)
-        for (k,v) in self.ebq.iteritems(): log(str((k,v.shape)),level=9)
-        log("Global element boundary quadrature (ebq_global)",level=9)
-        for (k,v) in self.ebq_global.iteritems(): log(str((k,v.shape)),level=9)
-        log("Exterior element boundary quadrature (ebqe)",level=9)
-        for (k,v) in self.ebqe.iteritems(): log(str((k,v.shape)),level=9)
-        log("Interpolation points for nonlinear diffusion potential (phi_ip)",level=9)
-        for (k,v) in self.phi_ip.iteritems(): log(str((k,v.shape)),level=9)
+        logEvent("Dumping quadrature shapes for model %s" % self.name,level=9)
+        logEvent("Element quadrature array (q)", level=9)
+        for (k,v) in self.q.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Element boundary quadrature (ebq)",level=9)
+        for (k,v) in self.ebq.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Global element boundary quadrature (ebq_global)",level=9)
+        for (k,v) in self.ebq_global.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Exterior element boundary quadrature (ebqe)",level=9)
+        for (k,v) in self.ebqe.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Interpolation points for nonlinear diffusion potential (phi_ip)",level=9)
+        for (k,v) in self.phi_ip.iteritems(): logEvent(str((k,v.shape)),level=9)
         #
         # allocate residual and Jacobian storage
         #
@@ -1103,10 +1138,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         del self.internalNodes
         self.internalNodes = None
-        log("Updating local to global mappings",2)
+        logEvent("Updating local to global mappings",2)
         self.updateLocal2Global()
-        log("Building time integration object",2)
-        log(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
+        logEvent("Building time integration object",2)
+        logEvent(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
         #mwf for interpolating subgrid error for gradients etc
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
@@ -1115,8 +1150,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if options != None:
             self.timeIntegration.setFromOptions(options)
-        log(memory("TimeIntegration","OneLevelTransport"),level=4)
-        log("Calculating numerical quadrature formulas",2)
+        logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
+        logEvent("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
 
         self.setupFieldStrides()
@@ -1126,8 +1161,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if comm.size() > 1:
             assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        log("initalizing numerical flux")
-        log(memory("stride+offset","OneLevelTransport"),level=4)
+        logEvent("initalizing numerical flux")
+        logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
             if options == None or options.periodicDirichletConditions == None:
                 self.numericalFlux = numericalFluxType(self,
@@ -1143,7 +1178,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             self.numericalFlux = None
         #set penalty terms
-        log("initializing numerical flux penalty")
+        logEvent("initializing numerical flux penalty")
         self.numericalFlux.penalty_constant = self.coefficients.eb_penalty_constant
         #cek todo move into numerical flux initialization
         if self.ebq_global.has_key('penalty'):
@@ -1157,19 +1192,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
-        log(memory("numericalFlux","OneLevelTransport"),level=4)
+        logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
-        log("setting up post-processing")
+        logEvent("setting up post-processing")
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
-        log(memory("velocity postprocessor","OneLevelTransport"),level=4)
+        logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
-        log("initializing archiver")
+        logEvent("initializing archiver")
         from proteus import Archiver
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.elementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
-        log("flux bc objects")
+        logEvent(memory("XdmfWriters","OneLevelTransport"),level=4)
+        logEvent("flux bc objects")
         for ci,fbcObject  in self.fluxBoundaryConditionsObjectsDict.iteritems():
             self.ebqe[('advectiveFlux_bc_flag',ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc',ci)].shape,'i')
             for t,g in fbcObject.advectiveFluxBoundaryConditionsDict.iteritems():
@@ -1189,13 +1225,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.mesh.nodeVelocityArray==None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
         #cek/ido todo replace python loops in modules with optimized code if possible/necessary
-        log("dirichlet conditions")
+        logEvent("dirichlet conditions")
         self.forceStrongConditions=coefficients.forceStrongDirichlet
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
-        log("final allocations")
+        logEvent("final allocations")
         compKernelFlag = 0
         if self.coefficients.useConstant_he:
             self.elementDiameter = self.mesh.elementDiametersArray.copy()
@@ -1223,7 +1259,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stride.append(self.stride[2])
             self.numericalFlux.isDOFBoundary[3] = self.numericalFlux.isDOFBoundary[2].copy()
             self.numericalFlux.ebqe[('u',3)] = self.numericalFlux.ebqe[('u',2)].copy()
-            log("calling cRANS2P2D_base ctor")
+            logEvent("calling cRANS2P2D_base ctor")
             self.rans2p = cRANS2P2D_base(self.nSpace_global,
                                          self.nQuadraturePoints_element,
                                          self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -1232,7 +1268,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                                          compKernelFlag)
         else:
-            log("calling  cRANS2P_base ctor")
+            logEvent("calling  cRANS2P_base ctor")
             self.rans2p = cRANS2P_base(self.nSpace_global,
                                        self.nQuadraturePoints_element,
                                        self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -1442,6 +1478,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.netForces_p,
             self.coefficients.netForces_v,
             self.coefficients.netMoments)
+	from proteus.flcbdfWrappers import globalSum
+        for i in range(self.coefficients.netForces_p.shape[0]):
+            self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
+            for I in range(3):
+                self.coefficients.netForces_p[i,I]  = globalSum(self.coefficients.netForces_p[i,I])
+                self.coefficients.netForces_v[i,I]  = globalSum(self.coefficients.netForces_v[i,I])
+                self.coefficients.netMoments[i,I] = globalSum(self.coefficients.netMoments[i,I])
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1451,11 +1494,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t) - self.MOVING_DOMAIN*self.mesh.nodeVelocityArray[dofN,cj-1]
 
 
-        #cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
-        #log("Maximum CFL = " + str(cflMax),level=2)
+        cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
+        logEvent("Maximum CFL = " + str(cflMax),level=2)
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
-        log("Global residual",level=9,data=r)
+        logEvent("Global residual",level=9,data=r)
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
     def getJacobian(self,jacobian):
@@ -1666,7 +1709,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         else:
                             self.nzval[i] = 0.0
                             #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
-        log("Jacobian ",level=10,data=jacobian)
+        logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
@@ -1738,7 +1781,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         This function should be called only when the mesh changes.
         """
-        log("initalizing ebqe vectors for post-procesing velocity")
+        logEvent("initalizing ebqe vectors for post-procesing velocity")
         if self.postProcessing:
             self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
                                                                     self.ebqe['x'])
@@ -1754,7 +1797,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #get physical locations of element boundary quadrature points
         #
         #assume all components live on the same mesh
-        log("initalizing basis info")
+        logEvent("initalizing basis info")
         self.u[0].femSpace.elementMaps.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
@@ -1763,7 +1806,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[1].femSpace.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
                                                                     self.ebqe['x'])
-        log("setting flux boundary conditions")
+        logEvent("setting flux boundary conditions")
         if not domainMoved:
             self.fluxBoundaryConditionsObjectsDict = dict([(cj,FluxBoundaryConditions(self.mesh,
                                                                                       self.nElementBoundaryQuadraturePoints_elementBoundary,
@@ -1771,44 +1814,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                                       self.advectiveFluxBoundaryConditionsSetterDict[cj],
                                                                                       self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
                                                            for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
-            log("initializing coefficients ebqe")
+            logEvent("initializing coefficients ebqe")
             self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t,self.ebqe)
-        log("done with ebqe")
+        logEvent("done with ebqe")
     def estimate_mt(self):
         pass
     def calculateSolutionAtQuadrature(self):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
-        from mpi4py import MPI
-        comm = Comm.get().comm.tompi4py()
-	# from proteus.flcbdfWrappers import globalSum
-        # test_netForces_p = self.coefficients.netForces_p.copy()
-        # test_netForces_v = self.coefficients.netForces_v.copy()
-        # test_netMoments = self.coefficients.netMoments.copy()
-        # for i in range(self.coefficients.netForces_p.shape[0]):
-        #     self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
-        #     for I in range(3):
-        #         self.coefficients.netForces_p[i,I]  = globalSum(self.coefficients.netForces_p[i,I])
-        #         self.coefficients.netForces_v[i,I]  = globalSum(self.coefficients.netForces_v[i,I])
-        #         self.coefficients.netMoments[i,I] = globalSum(self.coefficients.netMoments[i,I])
-        # #comm.Allreduce([test_netForces_p.copy(),MPI.DOUBLE],[test_netForces_p,MPI.DOUBLE],MPI.SUM)
-        # #comm.Allreduce([test_netForces_v.copy(),MPI.DOUBLE],[test_netForces_v,MPI.DOUBLE],MPI.SUM)
-        # #comm.Allreduce([test_netMoments.copy(),MPI.DOUBLE],[test_netMoments,MPI.DOUBLE],MPI.SUM)
-        # comm.Allreduce(MPI.IN_PLACE, [test_netForces_p,MPI.DOUBLE], MPI.SUM)
-        # comm.Allreduce(MPI.IN_PLACE, [test_netForces_v,MPI.DOUBLE], MPI.SUM)
-        # comm.Allreduce(MPI.IN_PLACE, [test_netMoments,MPI.DOUBLE], MPI.SUM)
-        # assert((test_netForces_p == self.coefficients.netForces_p).all())
-        # assert((test_netForces_v == self.coefficients.netForces_v).all())
-        # assert((test_netMoments == self.coefficients.netMoments).all())
-        comm.Allreduce(MPI.IN_PLACE,
-                       [self.coefficients.netForces_p,MPI.DOUBLE],
-                       MPI.SUM)
-        comm.Allreduce(MPI.IN_PLACE,
-                       [self.coefficients.netForces_v,MPI.DOUBLE],
-                       MPI.SUM)
-        comm.Allreduce(MPI.IN_PLACE,
-                       [self.coefficients.netMoments,MPI.DOUBLE],
-                       MPI.SUM)
         if self.postProcessing and self.conservativeFlux:
             self.rans2p.calculateVelocityAverage(self.mesh.nExteriorElementBoundaries_global,
                                                  self.mesh.exteriorElementBoundariesArray,
@@ -1832,11 +1845,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  self.ebqe[('velocity',0)],
                                                  self.ebq_global[('velocityAverage',0)])
             if self.movingDomain:
-                log("Element Quadrature",level=3)
+                logEvent("Element Quadrature",level=3)
                 self.calculateElementQuadrature(domainMoved=True)
-                log("Element Boundary Quadrature",level=3)
+                logEvent("Element Boundary Quadrature",level=3)
                 self.calculateElementBoundaryQuadrature(domainMoved=True)
-                log("Global Exterior Element Boundary Quadrature",level=3)
+                logEvent("Global Exterior Element Boundary Quadrature",level=3)
                 self.calculateExteriorElementBoundaryQuadrature(domainMoved=True)
                 for ci in range(len(self.velocityPostProcessor.vpp_algorithms)):
                     for cj in self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian.keys():

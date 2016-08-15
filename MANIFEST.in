@@ -1,5 +1,4 @@
-graft src
-graft include
-graft proteusConfig
-graft test
-global-exclude *.svn *~ #*#
+graft proteus
+graft doc
+graft scripts
+global-exclude .gitignore .gitmodules .hashdist_default .hashstack_default .shippable-profile.yaml .travis.yml .travisprofile.yml Dockerfile MANIFEST.in shippable.yml setupmatlab.py doc/build *.log *.xmf *.h5 *.pyc *.o *.so

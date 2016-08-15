@@ -14,11 +14,19 @@ from proteus import Comm
 comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
+from petsc4py import PETSc
+OptDB = PETSc.Options()
+OptDB.setValue("ksp_type", "cg")
+OptDB.setValue("pc_type", "gamg")
+
 def test_c0p1():
     import poisson_3d_p
+    reload(poisson_3d_p)
     import poisson_3d_c0p1_n
+    reload(poisson_3d_c0p1_n)
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0p1_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "poisson_3d_c0p1"+"pe"+`comm.size()`
     so.sList=[default_s]
@@ -32,13 +40,17 @@ def test_c0p1():
     #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_3d_c0p1')
+    del ns
     assert(True)
 
 def test_c0p2():
     import poisson_3d_p
+    reload(poisson_3d_p)
     import poisson_3d_c0p2_n
+    reload(poisson_3d_c0p2_n)
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0p2_n]
+    reload(default_so)
     so = default_so
     so.name = pList[0].name = "poisson_3d_c0p2"+"pe"+`comm.size()`
     so.sList=[default_s]
@@ -49,11 +61,14 @@ def test_c0p2():
     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_3d_c0p2')
+    del ns
     assert(True)
 
-def check_c0q1(test_hexMesh_3x3=False,use_petsc=False):
+def check_c0q1(test_hexMesh_3x3=False,use_petsc=False,name="_hexMesh_"):
     import poisson_3d_p
+    reload(poisson_3d_p)
     import poisson_3d_c0q1_n
+    reload(poisson_3d_c0q1_n)
     poisson_3d_c0q1_n.hex=True
     if test_hexMesh_3x3 == True:
         poisson_3d_p.meshfile='hexMesh_3x3'
@@ -62,8 +77,9 @@ def check_c0q1(test_hexMesh_3x3=False,use_petsc=False):
         poisson_3d_p.L  = ( 6., 6., 6.)
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0q1_n]
+    reload(default_so)
     so = default_so
-    so.name = pList[0].name = "poisson_3d_c0q1"+"pe"+`comm.size()`
+    so.name = pList[0].name = "poisson_3d_c0q1"+name+"pe"+`comm.size()`
     so.sList=[default_s]
     opts.logLevel=7
     opts.verbose=True
@@ -73,13 +89,14 @@ def check_c0q1(test_hexMesh_3x3=False,use_petsc=False):
         nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_3d_c0q1')
+    del ns
     assert(True)
 
 def test_c0q1():
     """
     Test Hexes with direct solver, regular domain
     """
-    check_c0q1(test_hexMesh_3x3=False,use_petsc=False)
+    check_c0q1(test_hexMesh_3x3=False,use_petsc=True, name="_proteusMesh_")
 
 def test_c0q1_hex_mesh():
     from proteus import MeshTools
@@ -89,29 +106,34 @@ def test_c0q1_hex_mesh():
     mesh_info = MeshTools.readMeshXdmf(xmf_archive_base,heavy_file_base)
     hex_meshfile_base = 'hexmesh_3x3'
     MeshTools.writeHexMesh(mesh_info,hex_meshfile_base,index_base=1)
-    check_c0q1(test_hexMesh_3x3=True,use_petsc=False)
+    check_c0q1(test_hexMesh_3x3=True,use_petsc=True, name="_hexMesh_")
 
-# def test_c0q2():
-#     import poisson_3d_p
-#     import poisson_3d_c0q2_n
-#     pList = [poisson_3d_p]
-#     nList = [poisson_3d_c0q2_n]
-#     so = default_so
-#     so.name = pList[0].name = "poisson_3d_c0q2"+"pe"+`comm.size()`
-#     so.sList=[default_s]
-#     opts.logLevel=7
-#     opts.verbose=True
-#     nList[0].linearSolver=default_n.KSP_petsc4py
-#     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
-#     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
-#     ns.calculateSolution('poisson_3d_c0q2')
-#     assert(True)
+def test_c0q2():
+    import poisson_3d_p
+    reload(poisson_3d_p)
+    import poisson_3d_c0q2_n
+    reload(poisson_3d_c0q2_n)
+    pList = [poisson_3d_p]
+    nList = [poisson_3d_c0q2_n]
+    reload(default_so)
+    so = default_so
+    so.name = pList[0].name = "poisson_3d_c0q2"+"pe"+`comm.size()`
+    so.sList=[default_s]
+    opts.logLevel=7
+    opts.verbose=True
+    nList[0].linearSolver=default_n.KSP_petsc4py
+    nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
+    ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
+    ns.calculateSolution('poisson_3d_c0q2')
+    del ns
+    assert(True)
 
 if __name__ == '__main__':
     test_c0p1()
     test_c0p2()
     test_c0q1()
     test_c0q1_hex_mesh()
+    test_c0q2()
     Profiling.logEvent("Closing Log")
     try:
         Profiling.closeLog()
