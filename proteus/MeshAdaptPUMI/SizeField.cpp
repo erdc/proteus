@@ -546,11 +546,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     h_old = pow(apf::measure(element)*6*sqrt(2),1.0/3.0); //edge of a regular tet
     apf::getVector(err_reg,reg,0,err_vect);
     err_curr = err_vect[0];
-    double err_dest = alpha*err_total/sqrt(numel);//scalingRatio*err_curr;
-    if(alpha==1)
-      h_new = h_old;
-    else
-      h_new = h_old*sqrt(apf::measure(element))/sqrt(volTotal)*target_error/err_curr;//h_old*(err_dest/err_curr);
+    h_new = h_old*sqrt(apf::measure(element))/sqrt(volTotal)*target_error/err_curr;//h_old*(err_dest/err_curr);
     apf::setScalar(size_iso_reg,reg,0,h_new);
     apf::destroyMeshElement(element);
   }
@@ -672,20 +668,24 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
 int MeshAdaptPUMIDrvr::testIsotropicSizeField()
 {
-    size_scale = apf::createLagrangeField(m, "proteus_size",apf::VECTOR,1);
-    size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
+    size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
+    //size_scale = apf::createLagrangeField(m, "proteus_size",apf::VECTOR,1);
+    //size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
     apf::MeshIterator* it = m->begin(0);
     apf::MeshEntity* v;
     while(v = m->iterate(it)){
       double phi = hmin;
       clamp(phi,hmin,hmax);
-      apf::Vector3 scale = (apf::Vector3(1.0,1.0,1.0))*phi;
+      //apf::Vector3 scale = (apf::Vector3(1.0,1.0,1.0))*phi;
+      apf::setScalar(size_iso,v,0,phi);
+/*
       apf::setVector(size_scale, v, 0, scale);
       apf::Matrix3x3 frame(1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0);
       apf::setMatrix(size_frame, v, 0, frame);
+*/
     }
-    for(int i=0; i < 3; i++)
-      SmoothField(size_scale);
+    //for(int i=0; i < 3; i++)
+      //SmoothField(size_scale);
     char namebuffer[20];
     sprintf(namebuffer,"pumi_adapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
