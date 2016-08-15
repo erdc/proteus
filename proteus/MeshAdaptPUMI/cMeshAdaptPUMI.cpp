@@ -236,7 +236,7 @@ int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
 int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 {
   if (size_field_config == "farhad")
-    calculateAnisoSizeField();
+      calculateAnisoSizeField();
   else if (size_field_config == "alvin"){
       removeBCData();
       double t1 = PCU_Time();
@@ -284,14 +284,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   ma::adapt(in);
   double t2 = PCU_Time();
 
-  if(comm_rank==0 && logging_config=="on"){
-    std::ofstream myfile;
-    myfile.open("adapt_timing.txt", std::ios::app);
-    myfile << t2-t1<<std::endl;
-    myfile.close();
-  }
-
-  freeField(size_iso); //no longer necessary
+  freeField(size_iso);
   freeField(size_frame);
   freeField(size_scale);
   m->verify();
@@ -304,6 +297,11 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     std::cout<<std::setprecision(15)<<"Mass Before "<<mass_before<<" After "<<mass_after<<" diff "<<mass_after-mass_before<<std::endl;
     std::cout.flags(saved);
 */
+    std::ofstream myfile;
+    myfile.open("adapt_timing.txt", std::ios::app);
+    myfile << t2-t1<<std::endl;
+    myfile.close();
+
     std::ofstream mymass;
     mymass.open("mass_check.txt", std::ios::app);
     mymass <<std::setprecision(15)<<mass_before<<","<<mass_after<<","<<mass_after-mass_before<<std::endl;
