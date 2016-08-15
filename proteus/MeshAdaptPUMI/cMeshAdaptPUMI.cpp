@@ -222,14 +222,14 @@ int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
 {
   double THRESHOLD = target_error;
   int adaptFlag=0;
-/*
   if(total_error > THRESHOLD){
     adaptFlag = 1;
   }
-*/
+/*
   if(errRate_max > THRESHOLD){
     adaptFlag = 1;
   }
+*/
   return adaptFlag;
 }
 
