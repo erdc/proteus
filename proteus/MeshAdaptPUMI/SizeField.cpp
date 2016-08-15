@@ -504,14 +504,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 {
   double eps_u = 0.002; //distance from the interface
   double tolerance = 0.1;
-  double alpha;
-  if(target_error!=0){
-    alpha = target_error/err_total;
-//    if(alpha>1)
-//      alpha=1.0;
-  }
-  else 
-    alpha = 0.125;//tolerance/rel_err_total; //refinement constant
 
   freeField(size_frame);
   freeField(size_scale);
@@ -523,8 +515,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   apf::MeshIterator* it;
   apf::MeshEntity* v;
   int numel = 0;
-  double numel_new = 0;
-  double numel_new2 = 0;
   int nsd = m->getDimension();
   it = m->begin(nsd);
   apf::Field* size_iso_reg = apf::createField(m, "iso_size",apf::SCALAR,apf::getConstant(nsd));
@@ -534,10 +524,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   numel = m->count(nsd);
   PCU_Add_Ints(&numel, 1);
 
-  //double err_dest = alpha*err_total/sqrt(numel);
-  double scalingRatio = target_error/errRate_max; //target_error here means the desired target Ratio
-  if(comm_rank==0) std::cout<<"Scaling ratio? "<<scalingRatio<<std::endl;
-//if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<err_dest<<" numel "<<numel<<std::endl;
   double err_curr = 0.0;
   apf::Vector3 err_vect;
   //compute the new size field
@@ -545,8 +531,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   apf::MeshEntity* reg;
   it = m->begin(nsd); 
 
+  //Need to move volTotal to be defined only once
   double volTotal=0;
-  double holdWeight=0;
   while(reg=m->iterate(it)){      
     volTotal += apf::measure(m,reg);
   }
@@ -566,32 +552,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     else
       h_new = h_old*sqrt(apf::measure(element))/sqrt(volTotal)*target_error/err_curr;//h_old*(err_dest/err_curr);
     apf::setScalar(size_iso_reg,reg,0,h_new);
-    
-    //Test feature estimate the number of elements
-    holdWeight += h_old*apf::measure(element)/volTotal;
-    if(h_new>hmax){
-      numel_new += pow(h_old/hmax,3.0);
-      numel_new2 += hmax*apf::measure(element)/volTotal;
-    }
-    else if (h_new<hmin){
-      numel_new += pow(h_old/hmin,3.0);
-      numel_new2 += hmin*apf::measure(element)/volTotal;
-    }
-    else{
-      numel_new += pow(h_old/h_new,3.0);
-      numel_new2 += h_new*apf::measure(element)/volTotal;
-    }
-    //std::cout<<"h_old "<<h_old<<" h_new "<<h_new<<std::endl;
+    apf::destroyMeshElement(element);
   }
-  PCU_Add_Doubles(&holdWeight, 1);
-  PCU_Add_Doubles(&numel_new, 1);
-  PCU_Add_Doubles(&numel_new2, 1);
-  if(comm_rank==0){
-    std::cout<<"Total number of new elements? "<<numel_new<<std::endl;
-    std::cout<<"Total number of new elements second try? "<<pow((holdWeight/numel_new2),3)*1.5*numel<<" "<<numel_new2<<" "<<holdWeight<<" "<<numel<<std::endl;
-    std::cout<<"Average number of new elements? "<<(pow((holdWeight/numel_new2),3)*1.5*numel+numel_new)/2.0<<std::endl;
-  }
-  apf::destroyMeshElement(element);
   m->end(it);
   it = m->begin(0);
   while((v=m->iterate(it))){
@@ -700,10 +662,11 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
   }
-  apf::destroyField(size_iso_reg); //will throw error if not destroyed
+  
+  //Destroy locally required fields
+  apf::destroyField(size_iso_reg); 
   apf::destroyField(clipped_vtx);
 
-  //freeField(size_iso); //no longer necessary
   return 0;
 }
 
@@ -713,9 +676,8 @@ int MeshAdaptPUMIDrvr::testIsotropicSizeField()
     size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
     apf::MeshIterator* it = m->begin(0);
     apf::MeshEntity* v;
-    //apf::Field* phif = m->findField("phi");
     while(v = m->iterate(it)){
-      double phi = hmin;//apf::getScalar(phif, v, 0);
+      double phi = hmin;
       clamp(phi,hmin,hmax);
       apf::Vector3 scale = (apf::Vector3(1.0,1.0,1.0))*phi;
       apf::setVector(size_scale, v, 0, scale);
