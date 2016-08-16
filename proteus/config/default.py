@@ -119,6 +119,7 @@ PROTEUS_SCOREC_LIBS = [
     'zoltan',
     'parmetis',
     'metis',
+    'sam',
     'SimPartitionedMesh-mpi',
     'SimMeshing',
     'SimModel',
