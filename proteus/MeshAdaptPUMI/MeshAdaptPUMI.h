@@ -7,7 +7,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*); 
+  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile);
@@ -43,6 +43,7 @@ class MeshAdaptPUMIDrvr{
   double hmax, hmin;
   int numIter;
   int nAdapt; //counter for number of adapt steps
+  int nEstimate; //counter for number of error estimator calls
   int nsd; //number of spatial dimensions
   std::string size_field_config;
   std::string adapt_type_config;
@@ -51,10 +52,9 @@ class MeshAdaptPUMIDrvr{
   //Element Residual Method
   void get_local_error();
   void computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
-  void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux);
+  //void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux);
   void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, double * endflux);
   int getSimmetrixBC();
-  void simmetrixBCreloaded(const char* modelFile);
   void removeBCData();
   char* modelFileName; 
   
@@ -71,6 +71,8 @@ class MeshAdaptPUMIDrvr{
   int num_quadrature; 
   int num_quarature_boundary;
   double total_error;
+  double errRate_max;
+  double rel_err_total;
 
   private: 
   apf::Mesh2* m;
@@ -78,10 +80,12 @@ class MeshAdaptPUMIDrvr{
 
   double rho[2], nu[2];
   double g[3];
+  double delta_t;
   apf::MeshTag* diffFlux;
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* err_reg; //error field from ERM
+  apf::Field* errRate_reg; //error-rate field from ERM
   /* this field stores isotropic size */
   apf::Field* size_iso;
   /* these fields store anisotropic size */
@@ -102,7 +106,13 @@ class MeshAdaptPUMIDrvr{
 
   static void averageToEntity(apf::Field* ef, apf::Field* vf,
       apf::MeshEntity* ent);
+  void volumeAverageToEntity(apf::Field* ef, apf::Field* vf,
+      apf::MeshEntity* ent);
 
+  bool has_gBC;
+  double target_error;
+  int target_element_count;
+  double domainVolume;
 };
 
 
