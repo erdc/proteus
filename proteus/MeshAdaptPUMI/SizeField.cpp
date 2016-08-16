@@ -225,6 +225,19 @@ static void clamp(double& v, double min, double max)
   v = std::max(min, v);
 }
 
+static void clampScalarField(apf::Field* field, double min, double max)
+{
+   apf::Mesh* m = apf::getMesh(field);
+   apf::MeshEntity* v; 
+   apf::MeshIterator* it = m->begin(0);
+   while ((v = m->iterate(it))) {
+      double tempValue = apf::getScalar(field,v,0);
+      clamp(tempValue,min,max);
+      apf::setScalar(field,v,0,tempValue);
+   }
+   m->end(it);
+}
+
 static void scaleFormula(double phi, double hmin, double hmax,
     int adapt_step,
     apf::Vector3 const& curves,
@@ -635,7 +648,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
 }
   else{ 
-    //it is unclear why size_scale needs to be populated but an error is thrown otherwise
+    freeField(size_frame);
+    freeField(size_scale);
     it = m->begin(0);
     while ((v = m->iterate(it))) {
       double tempScale = apf::getScalar(size_iso,v,0);
@@ -650,8 +664,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     }
     apf::synchronize(size_iso);
     m->end(it);
-    if(target_element_count!=0)
+    if(target_element_count!=0){
       sam::scaleIsoSizeField(size_iso, target_element_count);
+      clampScalarField(size_iso,hmin,hmax);
+    }
   }
 
   if(logging_config=="on"){
@@ -670,23 +686,13 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 int MeshAdaptPUMIDrvr::testIsotropicSizeField()
 {
     size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
-    //size_scale = apf::createLagrangeField(m, "proteus_size",apf::VECTOR,1);
-    //size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
     apf::MeshIterator* it = m->begin(0);
     apf::MeshEntity* v;
     while(v = m->iterate(it)){
       double phi = hmin;
       clamp(phi,hmin,hmax);
-      //apf::Vector3 scale = (apf::Vector3(1.0,1.0,1.0))*phi;
       apf::setScalar(size_iso,v,0,phi);
-/*
-      apf::setVector(size_scale, v, 0, scale);
-      apf::Matrix3x3 frame(1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0);
-      apf::setMatrix(size_frame, v, 0, frame);
-*/
     }
-    //for(int i=0; i < 3; i++)
-      //SmoothField(size_scale);
     char namebuffer[20];
     sprintf(namebuffer,"pumi_adapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
