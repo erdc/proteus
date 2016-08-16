@@ -15,9 +15,9 @@ from petsc4py import PETSc
 import os
 print os.getcwd()
 
-testDir='./proteus/MeshAdaptPUMI/test/test_parallelAdapt/2-Procs/'
-Model='Couette.smd'
-Mesh=testDir + 'Couette.smb'
+testDir='./proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/'
+Model=testDir+ 'Couette.smd'
+Mesh=testDir + '2-Procs/Couette.smb'
 
 domain = Domain.PUMIDomain() #initialize the domain
 domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='alvin',maType='isotropic',logType="on")
