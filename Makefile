@@ -258,7 +258,7 @@ check:
 	@echo "************************"
 
 	@echo "SCOREC-Gmsh Flow Test"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/gmshCheck/gmshCheck.py
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_gmshLoadAndAdapt/gmshCheck.py
 	@echo "************************"
 
 
