@@ -112,6 +112,7 @@ class MeshAdaptPUMIDrvr{
   bool has_gBC;
   double target_error;
   int target_element_count;
+  double domainVolume;
 };
 
 
