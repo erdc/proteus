@@ -127,8 +127,7 @@ static apf::Field* extractSpeed(apf::Field* velocity)
 static apf::Matrix3x3 hessianFormula(apf::Matrix3x3 const& g2phi)
 {
   apf::Matrix3x3 g2phit = apf::transpose(g2phi);
-  //return (g2phi + g2phit) / 2;
-  return g2phi;
+  return (g2phi + g2phit) / 2;
 }
 
 static apf::Field* computeHessianField(apf::Field* grad2phi)
@@ -265,13 +264,6 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
                             apf::Vector3 const& curves,
                             double lambda[3], double eps_u, apf::Vector3& scale,std::string adapt_type)
 {
-
-  if(adapt_type=="isotropic"){
-    scale = apf::Vector3(1,1,1) * h_dest;
-    for(int i=0;i<3;i++)
-      clamp(scale[i], hmin, hmax);
-  }
-  else if(adapt_type=="anisotropic") { 
     double epsilon = 7.0* hmin; 
     double lambdamin = 1.0/(hmin*hmin);
     if(lambda[1] < 1e-10){lambda[1]=lambdamin; lambda[2]=lambdamin;}
@@ -290,11 +282,6 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
     else
       scale = apf::Vector3(1,1,1) * h_dest; 
 */
-  }
-  else{
-    std::cerr << "unknown adapt type config " << adapt_type << '\n';
-    abort();
-  }
 } 
 
 
@@ -385,11 +372,6 @@ static apf::Field* getERMSizeFrames(apf::Field* hessians, apf::Field* gradphi,ap
   apf::MeshEntity* v;
   while ((v = m->iterate(it))) {
     apf::Matrix3x3 frame(1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0);
-    if(adapt_type=="isotropic")
-    {
-    }
-    else
-    {
     apf::Vector3 gphi;
     apf::getVector(gradphi, v, 0, gphi);
     apf::Vector3 dir;
@@ -421,7 +403,6 @@ static apf::Field* getERMSizeFrames(apf::Field* hessians, apf::Field* gradphi,ap
     for (int i = 0; i < 3; ++i)
       frame[i] = frame[i].normalize();
     frame = apf::transpose(frame);
-    }
     apf::setMatrix(frames, v, 0, frame);
     apf::setVector(frame_comps[0], v, 0, frame[0]);
     apf::setVector(frame_comps[1], v, 0, frame[1]);
