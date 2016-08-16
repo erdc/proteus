@@ -524,14 +524,18 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   //compute the new size field
   apf::MeshElement* element;
   apf::MeshEntity* reg;
-  it = m->begin(nsd); 
 
-  //Need to move volTotal to be defined only once
-  double volTotal=0;
-  while(reg=m->iterate(it)){      
-    volTotal += apf::measure(m,reg);
+  // Get domain volume
+  // should only need to be computed once unless geometry is complex
+  if(domainVolume==0){  
+    double volTotal = 0.0;
+    it = m->begin(nsd); 
+    while(reg=m->iterate(it)){      
+      volTotal += apf::measure(m,reg);
+    }
+    PCU_Add_Doubles(&volTotal, 1);
+    domainVolume = volTotal;
   }
-  PCU_Add_Doubles(&volTotal, 1);
   it = m->begin(nsd);
   while(reg=m->iterate(it)){
     double h_old;
@@ -541,7 +545,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     h_old = pow(apf::measure(element)*6*sqrt(2),1.0/3.0); //edge of a regular tet
     apf::getVector(err_reg,reg,0,err_vect);
     err_curr = err_vect[0];
-    h_new = h_old*sqrt(apf::measure(element))/sqrt(volTotal)*target_error/err_curr;//h_old*(err_dest/err_curr);
+    h_new = h_old*sqrt(apf::measure(element))/sqrt(domainVolume)*target_error/err_curr;//h_old*(err_dest/err_curr);
     apf::setScalar(size_iso_reg,reg,0,h_new);
     apf::destroyMeshElement(element);
   }
