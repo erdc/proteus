@@ -51,6 +51,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   has_gBC = false;
   target_error = targetError;
   target_element_count = targetElementCount;
+  domainVolume = 0.0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
