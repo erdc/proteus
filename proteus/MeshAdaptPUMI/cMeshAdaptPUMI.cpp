@@ -1,5 +1,6 @@
 #include <gmi_mesh.h>
 #include <gmi_sim.h>
+#include <gmi_null.h>
 #include <ma.h>
 #include <maShape.h>
 #include <apfMDS.h>
@@ -13,7 +14,7 @@
 #include "MeshAdaptPUMI.h"
 
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
-    const char* sfConfig, const char* maType,const char* logType)
+    const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount)
 {
   m = 0;
   PCU_Comm_Init();
@@ -23,6 +24,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   hmin=Hmin; hmax=Hmax;
   numIter=NumIter;
   nAdapt=0;
+  nEstimate=0;
   if(PCU_Comm_Self()==0)
      printf("MeshAdapt: Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
        hmax, hmin, numIter);
@@ -32,21 +34,30 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   size_scale = 0;
   size_frame = 0;
   err_reg = 0;
+  errRate_reg = 0;
   gmi_register_mesh();
   gmi_register_sim();
+  gmi_register_null();
   approximation_order = 2;
   integration_order = 3;//approximation_order * 2;
   total_error = 0.0;
+  errRate_max = 0.0;
+  rel_err_total = 0.0;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
   size_field_config = sfConfig;
   modelFileName = NULL; 
   adapt_type_config = maType;
   logging_config = logType;
+  has_gBC = false;
+  target_error = targetError;
+  target_element_count = targetElementCount;
+  domainVolume = 0.0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
 {
   freeField(err_reg);
+  freeField(errRate_reg);
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);
@@ -54,12 +65,32 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   Sim_unregisterAllKeys();
 }
 
+
+static bool ends_with(std::string const& str, std::string const& ext)
+{
+  return str.size() >= ext.size() &&
+         str.compare(str.size() - ext.size(), ext.size(), ext) == 0;
+}
+
 int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshFile)
 {
-  m = apf::loadMdsMesh(modelFile, meshFile);
-  m->verify();
   comm_size = PCU_Comm_Peers();
   comm_rank = PCU_Comm_Self();
+  if (ends_with(meshFile, ".msh")){
+    m = apf::loadMdsFromGmsh(gmi_load(modelFile), meshFile);
+    std::cout<<"Boundary Condition functionality has not been built in for gmsh yet.\n";
+  }
+  else if (ends_with(modelFile,".smd")){
+    m = apf::loadMdsMesh(modelFile, meshFile);
+    modelFileName=(char *) malloc(sizeof(char) * strlen(modelFile));
+    strcpy(modelFileName,modelFile);
+    getSimmetrixBC();
+  }
+  else{
+    m = apf::loadMdsMesh(modelFile, meshFile);
+  }
+
+  m->verify();
   return 0;
 }
 
@@ -80,10 +111,7 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   if (acase){
      if(comm_rank==0)std::cout<<"Found case, setting the model"<<std::endl;
      AttCase_setModel(acase,model);
-  } else {
-      std::cout<<"Case not found, rename case to geom\n"<<std::endl;
-      exit(1);
-  }
+     has_gBC=true;
   AttCase_associate(acase,NULL);
 
   pGFace gFace;
@@ -182,46 +210,41 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   }//end while
   m->end(fIter);
   AMAN_release( attmngr );
+  } else {
+      if(comm_rank==0)
+        std::cout<<"Case not found, no BCs?\n"<<std::endl;
+      //exit(1);
+  }
+
   if(comm_rank==0)std::cout<<"Finished reading and storing diffusive flux BCs\n"; 
   return 0;
 } 
 
-void MeshAdaptPUMIDrvr::simmetrixBCreloaded(const char* modelFile)
-{ 
-  if(modelFileName == NULL)
-  {
-    modelFileName=(char *) malloc(sizeof(char) * strlen(modelFile));
-    strcpy(modelFileName,modelFile);
-  }
-/*
-  for(int i=0;i<comm_size;i++){
-    if(comm_rank==i)
-      getSimmetrixBC();
-    PCU_Barrier();
-  }
-*/
-  getSimmetrixBC();
-}
-
 int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
 {
-  double THRESHOLD = 0.0;
+  double THRESHOLD = target_error;
   int adaptFlag=0;
   if(total_error > THRESHOLD){
-    removeBCData();
     adaptFlag = 1;
   }
+/*
+  if(errRate_max > THRESHOLD){
+    adaptFlag = 1;
+  }
+*/
   return adaptFlag;
 }
 
 int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 {
   if (size_field_config == "farhad")
-    calculateAnisoSizeField();
+      calculateAnisoSizeField();
   else if (size_field_config == "alvin"){
+      removeBCData();
       double t1 = PCU_Time();
       getERMSizeField(total_error);
       freeField(err_reg); //mAdapt will throw error if not destroyed. what about free?
+      freeField(errRate_reg); //mAdapt will throw error if not destroyed. what about free?
       double t2 = PCU_Time();
     if(comm_rank==0 && logging_config == "on"){
       std::ofstream myfile;
@@ -244,11 +267,16 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
   /// Adapt the mesh
-  ma::Input* in = ma::configure(m, size_scale, size_frame);
+  ma::Input* in;
+  if(adapt_type_config=="anisotropic")
+    in = ma::configure(m, size_scale, size_frame);
+  else
+    in = ma::configure(m, size_iso);
   ma::validateInput(in);
   in->shouldRunPreZoltan = true;
-  in->shouldRunMidZoltan = true;
-  in->shouldRunPostZoltan = true;
+  in->shouldRunMidParma = true;
+  in->shouldRunPostParma = true;
+  in->maximumImbalance = 1.05;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->shouldFixShape = true;
@@ -258,13 +286,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   ma::adapt(in);
   double t2 = PCU_Time();
 
-  if(comm_rank==0 && logging_config=="on"){
-    std::ofstream myfile;
-    myfile.open("adapt_timing.txt", std::ios::app);
-    myfile << t2-t1<<std::endl;
-    myfile.close();
-  }
-
+  freeField(size_iso);
   freeField(size_frame);
   freeField(size_scale);
   m->verify();
@@ -277,13 +299,19 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     std::cout<<std::setprecision(15)<<"Mass Before "<<mass_before<<" After "<<mass_after<<" diff "<<mass_after-mass_before<<std::endl;
     std::cout.flags(saved);
 */
+    std::ofstream myfile;
+    myfile.open("adapt_timing.txt", std::ios::app);
+    myfile << t2-t1<<std::endl;
+    myfile.close();
+
     std::ofstream mymass;
     mymass.open("mass_check.txt", std::ios::app);
     mymass <<std::setprecision(15)<<mass_before<<","<<mass_after<<","<<mass_after-mass_before<<std::endl;
     mymass.close();
   }
   if(size_field_config=="alvin"){
-    simmetrixBCreloaded(modelFileName);
+    if (has_gBC)
+      getSimmetrixBC();
     if(logging_config=="on"){
       char namebuffer[20];
       sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
