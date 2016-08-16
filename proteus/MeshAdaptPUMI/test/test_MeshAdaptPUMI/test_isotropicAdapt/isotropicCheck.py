@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-#from pyadh import *
-#from proteus.iproteus import *
 from ctypes import *
 import numpy
 from proteus import MeshTools
@@ -17,8 +15,7 @@ from petsc4py import PETSc
 import os
 print os.getcwd()
 
-#testDir='./proteus/MeshAdaptPUMI/test/isotropicCheck/'
-testDir='./'
+testDir='./proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/'
 Model=testDir + 'Couette.smd'
 Mesh=testDir + 'Couette.smb'
 
@@ -75,13 +72,4 @@ mesh.convertFromPUMI(domain.PUMIMesh,
                  domain.faceList,
                  parallel = comm.size() > 1,
                  dim = domain.nd)
-mlMesh = MeshTools.MultilevelTetrahedralMesh(
-  0,0,0,skipInit=True,
-  nLayersOfOverlap=0,
-  parallelPartitioningType=MeshTools.MeshParallelPartitioningTypes.element)
-
-mlMesh.generateFromExistingCoarseMesh(
-    mesh,1,
-    nLayersOfOverlap=0,
-    parallelPartitioningType=MeshTools.MeshParallelPartitioningTypes.element)
 
