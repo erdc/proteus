@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 #include <PCU.h>
+#include <samElementCount.h>
 
 static void SmoothField(apf::Field* f);
 
@@ -636,9 +637,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   else{ 
     //it is unclear why size_scale needs to be populated but an error is thrown otherwise
     it = m->begin(0);
-    apf::Vector3 scale(1.0,1.0,1.0);
     while ((v = m->iterate(it))) {
-      apf::setVector(size_scale,v,0,scale);
       double tempScale = apf::getScalar(size_iso,v,0);
       if(tempScale < hmin)
         apf::setScalar(clipped_vtx,v,0,-1);
@@ -649,8 +648,10 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
       clamp(tempScale,hmin,hmax);
       apf::setScalar(size_iso,v,0,tempScale);
     }
-    apf::synchronize(size_scale);
+    apf::synchronize(size_iso);
     m->end(it);
+    if(target_element_count!=0)
+      sam::scaleIsoSizeField(size_iso, target_element_count);
   }
 
   if(logging_config=="on"){
