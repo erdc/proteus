@@ -374,6 +374,65 @@ class NS_base:  # (HasTraits):
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                       parallelPartitioningType=n.parallelPartitioningType)
+            elif isinstance(p.domain,Domain.GMSH_3D_Domain):
+                from subprocess import call
+                import sys
+                if comm.rank() == 0 and (p.genMesh or not (os.path.exists(p.domain.polyfile+".ele") and
+                                                           os.path.exists(p.domain.polyfile+".node") and
+                                                           os.path.exists(p.domain.polyfile+".face"))):
+                    logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
+                    gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s}  -format mesh  -clmax {2:f} -clscale {2:f}".format(p.domain.geofile, p.domain.name+".mesh", p.domain.he)
+
+                    logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
+
+                    check_call(gmsh_cmd, shell=True)
+
+                    logEvent("Done running gmsh; converting to tetgen")
+
+                    gmsh2tetgen_cmd = "gmsh2tetgen {0}".format(p.domain.name+".mesh")
+
+                    check_call(gmsh2tetgen_cmd, shell=True)
+
+                    elefile  = "mesh.ele"
+                    nodefile = "mesh.node"
+                    facefile = "mesh.face"
+                    edgefile = "mesh.edge"
+                    assert os.path.exists(elefile), "no mesh.ele"
+                    tmp = "%s.ele" % p.domain.polyfile
+                    os.rename(elefile,tmp)
+                    assert os.path.exists(tmp), "no .ele"
+                    assert os.path.exists(nodefile), "no mesh.node"
+                    tmp = "%s.node" % p.domain.polyfile
+                    os.rename(nodefile,tmp)
+                    assert os.path.exists(tmp), "no .node"
+                    if os.path.exists(facefile):
+                        tmp = "%s.face" % p.domain.polyfile
+                        os.rename(facefile,tmp)
+                        assert os.path.exists(tmp), "no .face"
+                    if os.path.exists(edgefile):
+                        tmp = "%s.edge" % p.domain.polyfile
+                        os.rename(edgefile,tmp)
+                        assert os.path.exists(tmp), "no .edge"
+                comm.barrier()
+                logEvent("Initializing mesh and MultilevelMesh")
+                nbase = 1
+                mesh=MeshTools.TetrahedralMesh()
+                mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
+                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                             parallelPartitioningType=n.parallelPartitioningType)
+                if opts.generatePartitionedMeshFromFiles:
+                    logEvent("Generating partitioned mesh from Tetgen files")
+                    mlMesh.generatePartitionedMeshFromTetgenFiles(p.domain.polyfile,nbase,mesh,n.nLevels,
+                                                                  nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                  parallelPartitioningType=n.parallelPartitioningType)
+                else:
+                    logEvent("Generating coarse global mesh from Tetgen files")
+                    mesh.generateFromTetgenFiles(p.domain.polyfile,nbase,parallel = comm.size() > 1)
+                    logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
+                    mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=n.parallelPartitioningType)
+
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
@@ -905,7 +964,8 @@ class NS_base:  # (HasTraits):
                 adaptMeshNow = False
                 if (isinstance(p0.domain, Domain.PUMIDomain) and
                     n0.adaptMesh and
-                    self.so.useOneMesh):
+                    self.so.useOneMesh and 
+                    self.nSequenceSteps%n0.adaptMesh_nSteps==0):
                     logEvent("Copying coordinates to PUMI")
                     p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                         self.modelList[0].levelModelList[0].mesh.nodeArray)
@@ -935,9 +995,15 @@ class NS_base:  # (HasTraits):
                     nu = numpy.array([self.pList[0].nu_0,
                                       self.pList[0].nu_1])
                     g = numpy.asarray(self.pList[0].g)
+                    deltaT = self.tn-self.tn_last
                     p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
                     del rho, nu, g
 
+                    #
+                    # Should we put in a hook here for forcing refinements?
+                    # (e.g. set size  field  based on proteus calcualtions?)
+                    # ...
+                    #
                     logEvent("Estimate Error")
                     sfConfig = p0.domain.PUMIMesh.size_field_config()
                     if(sfConfig=="alvin"):
@@ -945,10 +1011,12 @@ class NS_base:  # (HasTraits):
                       if(p0.domain.PUMIMesh.willAdapt()):
                         adaptMeshNow=True
                         logEvent("Need to Adapt")
-                    if(sfConfig=='farhad' and self.nSequenceSteps%n0.adaptMesh_nSteps==0 ):
+                    elif(sfConfig=='farhad' ):
                       adaptMeshNow=True
                       logEvent("Need to Adapt")
-
+                    else:
+                      adaptMeshNow=True
+                      logEvent("Need to Adapt")
 
                 #can only handle PUMIDomain's for now
                 if(adaptMeshNow):
@@ -973,7 +1041,7 @@ class NS_base:  # (HasTraits):
                     #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
                     #    #    diff_flux)
 
-
+                    logEvent("h-adapt mesh by calling AdaptPUMIMesh")
                     p0.domain.PUMIMesh.adaptPUMIMesh()
                     logEvent("Converting PUMI mesh to Proteus")
                     #ibaned: PUMI conversion #2
