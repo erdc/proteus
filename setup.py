@@ -54,7 +54,7 @@ setup(name='proteus',
                                         'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
                                         'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
                                         'proteus/MeshAdaptPUMI/DumpMesh.cpp',
-                                        'proteus/MeshAdaptPUMI/ERM.cpp'],
+                                        'proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp'],
                              define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
                              include_dirs=[numpy.get_include(),'include',
                                            'proteus']+

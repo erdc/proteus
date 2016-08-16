@@ -7,7 +7,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double); 
+  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile);
@@ -111,6 +111,7 @@ class MeshAdaptPUMIDrvr{
 
   bool has_gBC;
   double target_error;
+  int target_element_count;
 };
 
 
