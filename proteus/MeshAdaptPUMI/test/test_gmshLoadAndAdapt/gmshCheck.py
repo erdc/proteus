@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-#from pyadh import *
-#from proteus.iproteus import *
 from ctypes import *
 import numpy
 from proteus import MeshTools
@@ -17,7 +15,7 @@ from petsc4py import PETSc
 import os
 print os.getcwd()
 
-testDir='./proteus/MeshAdaptPUMI/test/gmshCheck/'
+testDir='./proteus/MeshAdaptPUMI/test/test_gmshLoadAndAdapt/'
 Model=testDir + 'Couette.null'
 Mesh=testDir + 'Couette.msh'
 
@@ -72,3 +70,10 @@ if(domain.PUMIMesh.willAdapt()):
   print "Success!"
 
 domain.PUMIMesh.adaptPUMIMesh()
+
+mesh = MeshTools.TetrahedralMesh()
+mesh.convertFromPUMI(domain.PUMIMesh,
+                 domain.faceList,
+                 parallel = comm.size() > 1,
+                 dim = domain.nd)
+
