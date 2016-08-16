@@ -351,7 +351,7 @@ class NS_base:  # (HasTraits):
                                                            os.path.exists(p.domain.polyfile+".node") and
                                                            os.path.exists(p.domain.polyfile+".face"))):
                     logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
-                    gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s}  -format mesh  -clmax {2:f} -clscale {2:f}".format(p.domain.geofile, p.domain.name+".mesh", p.domain.he)
+                    gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s}  -format mesh  -clmax {2:f}".format(p.domain.geofile, p.domain.name+".mesh", 0.5*p.domain.he)
 
                     logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
 
@@ -362,7 +362,7 @@ class NS_base:  # (HasTraits):
                     gmsh2tetgen_cmd = "gmsh2tetgen {0} {1:f} {2:d} {3:d} {4:d}".format(
                         p.domain.name+".mesh",
                         p.domain.length_scale,
-                        p.domain.permute_dims[0]+1,
+                        p.domain.permute_dims[0]+1,#switch to base 1 index...
                         p.domain.permute_dims[1]+1,
                         p.domain.permute_dims[2]+1)
 
