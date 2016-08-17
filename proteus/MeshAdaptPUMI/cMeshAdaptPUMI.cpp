@@ -35,6 +35,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   size_frame = 0;
   err_reg = 0;
   errRho_reg = 0;
+  errRel_reg = 0;
   gmi_register_mesh();
   gmi_register_sim();
   gmi_register_null();
@@ -58,6 +59,7 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
 {
   freeField(err_reg);
   freeField(errRho_reg);
+  freeField(errRel_reg);
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);
@@ -222,7 +224,7 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
 
 int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
 {
-  double THRESHOLD = target_error;
+  double THRESHOLD = 0;//target_error;
   int adaptFlag=0;
   if(total_error > THRESHOLD){
     adaptFlag = 1;
@@ -245,6 +247,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       getERMSizeField(total_error);
       freeField(err_reg); //mAdapt will throw error if not destroyed. what about free?
       freeField(errRho_reg); //mAdapt will throw error if not destroyed. what about free?
+      freeField(errRel_reg); //mAdapt will throw error if not destroyed. what about free?
       double t2 = PCU_Time();
     if(comm_rank==0 && logging_config == "on"){
       std::ofstream myfile;
