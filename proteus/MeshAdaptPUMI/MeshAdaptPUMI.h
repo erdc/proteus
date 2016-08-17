@@ -86,6 +86,7 @@ class MeshAdaptPUMIDrvr{
   apf::Numbering* local[4];
   apf::Field* err_reg; //error field from ERM
   apf::Field* errRho_reg; //error-rate field from ERM
+  apf::Field* errRel_reg; //relative error field from ERM
   /* this field stores isotropic size */
   apf::Field* size_iso;
   /* these fields store anisotropic size */

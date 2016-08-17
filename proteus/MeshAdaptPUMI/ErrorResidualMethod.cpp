@@ -550,8 +550,10 @@ void MeshAdaptPUMIDrvr::get_local_error()
   //Initialize the Error Fields
   freeField(err_reg);
   freeField(errRho_reg);
+  freeField(errRel_reg);
   err_reg = apf::createField(m,"ErrorRegion",apf::VECTOR,apf::getConstant(nsd));
-  errRho_reg = apf::createField(m,"ErrorRate",apf::SCALAR,apf::getConstant(nsd));
+  errRho_reg = apf::createField(m,"ErrorDensity",apf::SCALAR,apf::getConstant(nsd));
+  errRel_reg = apf::createField(m,"RelativeError",apf::SCALAR,apf::getConstant(nsd));
 
   //Start computing element quantities
   int numqpt; //number of quadrature points
@@ -763,6 +765,10 @@ void MeshAdaptPUMIDrvr::get_local_error()
     apf::setScalar(errRho_reg,ent,0,errRho);
     if(errRho>errRho_max)
       errRho_max = errRho;
+
+    double err_rel = err_est/sqrt(u_norm);
+    apf::setScalar(errRel_reg,ent,0,err_rel);
+
     err_est_total = err_est_total+(Acomp); //for tracking the upper bound
     u_norm_total = u_norm_total + u_norm;
    
@@ -784,6 +790,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
     std::cout<<std::setprecision(10)<<std::endl;
     std::cout<<"Error estimate "<<total_error<<std::endl; 
     std::cout<<"Error density maximum "<<errRho_max<<std::endl;
+    std::cout<<"U_norm_total "<<u_norm_total<<std::endl;
   }
 
   if(logging_config=="errorOnly"){ //feature to just look at the error fields without adapting the mesh
