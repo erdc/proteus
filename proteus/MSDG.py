@@ -82,9 +82,17 @@ class OneLevelMSDG(Transport.OneLevelTransport):
         # local penalty coeffcients setup
         if 'alpha_p' in dir(options):
             self.alpha_p = options.alpha_p
+            self.alpha_pNorm = self.alpha_p
+            self.alpha_pTan = self.alpha_p
             logEvent('Setting input local alpha_p = {}'.format(self.alpha_p))
+        elif 'alpha_pNorm' in dir(options) and 'alpha_pTan' in dir(options):
+          self.alpha_pNorm = options.alpha_pNorm
+          self.alpha_pTan = options.alpha_pTan
+          logEvent('Setting input local alpha_pNorm = {}, alpha_pTan = {}'.format(self.alpha_pNorm, self.alpha_pTan))
         else:
             self.alpha_p = 0.9
+            self.alpha_pNorm = self.alpha_p
+            self.alpha_pTan = self.alpha_p
             logEvent('Setting default local alpha_p = {}'.format(self.alpha_p))
         if 'alpha_beta' in dir(options):
             self.alpha_beta = options.alpha_beta
@@ -196,15 +204,22 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                     ci][cj].copy()
                 self.transfer_rhs[(ci, cj)][:] = 0.0
         # add two more extra terms, not general
-        self.transfer_lhs[(1, 2)] = self.elementJacobian[0][0].copy()
-        self.transfer_lhs[(1, 2)][:] = 0.0
-        self.transfer_lhs[(2, 1)] = self.elementJacobian[0][0].copy()
-        self.transfer_lhs[(2, 1)][:] = 0.0
+        for id in range(1, self.nc):
+          for jd in range(1, self.nc):
+            if id != jd:
+              self.transfer_lhs[(id, jd)] = self.elementJacobian[0][0].copy()
+              self.transfer_lhs[(id, jd)][:] = 0.0
+              self.transfer_rhs[(id, jd)] = self.elementJacobian[0][0].copy()
+              self.transfer_rhs[(id, jd)][:] = 0.0
+        # self.transfer_lhs[(1, 2)] = self.elementJacobian[0][0].copy()
+        # self.transfer_lhs[(1, 2)][:] = 0.0
+        # self.transfer_lhs[(2, 1)] = self.elementJacobian[0][0].copy()
+        # self.transfer_lhs[(2, 1)][:] = 0.0
         #
-        self.transfer_rhs[(1, 2)] = self.elementJacobian[0][0].copy()
-        self.transfer_rhs[(1, 2)][:] = 0.0
-        self.transfer_rhs[(2, 1)] = self.elementJacobian[0][0].copy()
-        self.transfer_rhs[(2, 1)][:] = 0.0
+        # self.transfer_rhs[(1, 2)] = self.elementJacobian[0][0].copy()
+        # self.transfer_rhs[(1, 2)][:] = 0.0
+        # self.transfer_rhs[(2, 1)] = self.elementJacobian[0][0].copy()
+        # self.transfer_rhs[(2, 1)][:] = 0.0
         #
         ####
 
@@ -276,6 +291,7 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                             #
                             # til_Ak
                             # eps = 1e-5
+                            til_A_error = 0.0
                             for ia in range(self.nd):
                                 for ja in range(self.nd):
                                     # change the penalty term
@@ -289,13 +305,29 @@ class OneLevelMSDG(Transport.OneLevelTransport):
 
 
 
+                                    # if ia == ja:
+                                    #     self.transfer_lhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm \
+                                    #         * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia +1)][eN, ebN, k, i]
 
-                                    # self.transfer_lhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm \
-                                    #     * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia +1)][eN, ebN, k, i]
+                                    # til_A_error += 1  - self.ebq['n'][eN, ebN, k, ia] * self.ebq[
+                                    #     'n'][eN, ebN, k, ja] * 1  \
+                                    #     - ((ia == ja)
+                                    #     - self.ebq['n'][eN, ebN, k, ia] * self.ebq['n'][eN, ebN, k, ja]) * 1
 
-                                    self.transfer_lhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
+
+                                    # p penalty form
+                                    # self.transfer_lhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
+                                    #     'n'][eN, ebN, k, ja] * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia +1)][eN, ebN, k, i]
+                                    # pNorm part
+                                    self.transfer_lhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_pNorm * h / lambda_norm \
+                                                                                     * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
                                         'n'][eN, ebN, k, ja] * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia +1)][eN, ebN, k, i]
+                                    # pTan part
+                                    self.transfer_lhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_pTan * h / lambda_norm * ((ia == ja)
+                                        - self.ebq['n'][eN, ebN, k, ia] * self.ebq['n'][eN, ebN, k, ja]) * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia +1)][eN, ebN, k, i]
+
                                     #
+                            # print 'til_A_error {}'.format(til_A_error)
                             # explicit til_Ak terms
                             # self.transfer_lhs[(1, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
                             #     'n'][eN, ebN, k, 0] * self.ebq[('v', 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', 1)][eN, ebN, k, i]
@@ -347,12 +379,20 @@ class OneLevelMSDG(Transport.OneLevelTransport):
 
 
 
+                                    # if ia == ja:
+                                    #     self.transfer_rhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm \
+                                    #         * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia + 1)][eN, ebN, k, i]
 
-                                    # self.transfer_rhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm \
-                                    #     * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia + 1)][eN, ebN, k, i]
 
-                                    self.transfer_rhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
+                                    # p penalty term
+                                    # self.transfer_rhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
+                                    #     'n'][eN, ebN, k, ja] * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia + 1)][eN, ebN, k, i]
+                                    # pNorm penalty term
+                                    self.transfer_rhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_pNorm * h / lambda_norm * self.ebq['n'][eN, ebN, k, ia] * self.ebq[
                                         'n'][eN, ebN, k, ja] * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia + 1)][eN, ebN, k, i]
+                                    # pTan penalty term
+                                    self.transfer_rhs[(ia + 1, ja + 1)][eN, i, j] += self.alpha_pTan * h / lambda_norm * (
+                                        (ia == ja) - self.ebq['n'][eN, ebN, k, ia] * self.ebq['n'][eN, ebN, k, ja]) * self.ebq[('v', ja + 1)][eN, ebN, k, j] * self.ebq[('w*dS_f', ia + 1)][eN, ebN, k, i]
                                     #
                             # # explicit expression for bar_Ak
                             # self.transfer_rhs[(1, 1)][eN, i, j] += self.alpha_p * h / lambda_norm * self.ebq['n'][eN, ebN, k, 0] * self.ebq[
