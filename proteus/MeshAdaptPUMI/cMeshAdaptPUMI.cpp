@@ -1,17 +1,26 @@
 #include <gmi_mesh.h>
-#include <gmi_sim.h>
 #include <gmi_null.h>
 #include <ma.h>
 #include <maShape.h>
 #include <apfMDS.h>
 #include <PCU.h>
-#include <SimUtil.h>
-#include <SimModel.h>
 
 #include <iostream>
 #include <fstream>
 
 #include "MeshAdaptPUMI.h"
+
+#ifdef PROTEUS_USE_SIMMETRIX
+  #include <gmi_sim.h>
+  #include <SimUtil.h>
+  #include <SimModel.h>
+  #include <MeshSim.h>
+  #include <SimMeshTools.h>
+  #define FACE 2
+  pAManager SModel_attManager(pModel model);
+#endif
+
+
 
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
     const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount)
@@ -19,8 +28,12 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   m = 0;
   PCU_Comm_Init();
   PCU_Protect();
+
+#ifdef PROTEUS_USE_SIMMETRIX
   Sim_readLicenseFile(0);
   SimModel_start();
+  gmi_register_sim();
+#endif
   hmin=Hmin; hmax=Hmax;
   numIter=NumIter;
   nAdapt=0;
@@ -36,7 +49,6 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   err_reg = 0;
   errRate_reg = 0;
   gmi_register_mesh();
-  gmi_register_sim();
   gmi_register_null();
   approximation_order = 2;
   integration_order = 3;//approximation_order * 2;
@@ -61,8 +73,10 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);
+#ifdef PROTEUS_USE_SIMMETRIX
   SimModel_stop();
   Sim_unregisterAllKeys();
+#endif
 }
 
 
@@ -94,15 +108,13 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
   return 0;
 }
 
-#include <MeshSim.h>
-#include <SimMeshTools.h>
-#define FACE 2
-pAManager SModel_attManager(pModel model);
 /*
 Temporary function used to read in BC from Simmetrix Model
 */
+
 int MeshAdaptPUMIDrvr::getSimmetrixBC()
 {
+#ifdef PROTEUS_USE_SIMMETRIX
   pGModel model = 0;
   model=GM_load(modelFileName,NULL,NULL);
 
@@ -217,6 +229,7 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   }
 
   if(comm_rank==0)std::cout<<"Finished reading and storing diffusive flux BCs\n"; 
+#endif
   return 0;
 } 
 
