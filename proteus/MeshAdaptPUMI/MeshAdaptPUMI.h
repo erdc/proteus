@@ -41,10 +41,11 @@ class MeshAdaptPUMIDrvr{
   apf::Field* getViscosityField(apf::Field* voff);
 
   double hmax, hmin;
-  int numIter;
+  int numIter; //number of iterations for MeshAdapt
   int nAdapt; //counter for number of adapt steps
   int nEstimate; //counter for number of error estimator calls
   int nsd; //number of spatial dimensions
+
   std::string size_field_config;
   std::string adapt_type_config;
   std::string logging_config;
@@ -52,7 +53,6 @@ class MeshAdaptPUMIDrvr{
   //Element Residual Method
   void get_local_error();
   void computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
-  //void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux);
   void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, double * endflux);
   int getSimmetrixBC();
   void removeBCData();
@@ -71,7 +71,7 @@ class MeshAdaptPUMIDrvr{
   int num_quadrature; 
   int num_quarature_boundary;
   double total_error;
-  double errRate_max;
+  double errRho_max;
   double rel_err_total;
 
   private: 
@@ -85,7 +85,7 @@ class MeshAdaptPUMIDrvr{
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* err_reg; //error field from ERM
-  apf::Field* errRate_reg; //error-rate field from ERM
+  apf::Field* errRho_reg; //error-rate field from ERM
   /* this field stores isotropic size */
   apf::Field* size_iso;
   /* these fields store anisotropic size */
