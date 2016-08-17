@@ -72,4 +72,7 @@ __all__ = ["Archiver",
            "deim_utils",
            "WaveTools",
            "Context",
-           "MSDG"]
+           "MSDG"
+           "BoundaryConditions",
+           "SpatialTools"]
+
