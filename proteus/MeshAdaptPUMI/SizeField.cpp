@@ -647,6 +647,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     if(target_element_count!=0){
       sam::scaleIsoSizeField(size_iso, target_element_count);
       clampField(size_iso,hmin,hmax);
+      SmoothField(size_iso);
     }
   }
 
