@@ -226,14 +226,14 @@ int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
 {
   double THRESHOLD = 0;//target_error;
   int adaptFlag=0;
+  int assertFlag;
+
   if(total_error > THRESHOLD){
     adaptFlag = 1;
   }
-/*
-  if(errRho_max > THRESHOLD){
-    adaptFlag = 1;
-  }
-*/
+  assertFlag = adaptFlag;
+  PCU_Add_Ints(&assertFlag,1);
+  assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());
   return adaptFlag;
 }
 
