@@ -20,7 +20,8 @@ if dambreak.useRANS > 0:
                    "dissipation_n"))
 name = "dambreak_p"
 
-systemStepControllerType = Sequential_MinAdaptiveModelStep
+#systemStepControllerType = Sequential_MinAdaptiveModelStep
+systemStepControllerType = Sequential_FixedStep_Simple
 
 needEBQ_GLOBAL = False
 needEBQ = False
