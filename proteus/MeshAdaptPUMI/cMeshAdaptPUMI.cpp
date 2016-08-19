@@ -239,9 +239,9 @@ int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
 
 int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 {
-  if (size_field_config == "farhad")
+  if (size_field_config == "interface")
       calculateAnisoSizeField();
-  else if (size_field_config == "alvin"){
+  else if (size_field_config == "ERM"){
       removeBCData();
       double t1 = PCU_Time();
       getERMSizeField(total_error);
@@ -312,7 +312,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     mymass <<std::setprecision(15)<<mass_before<<","<<mass_after<<","<<mass_after-mass_before<<std::endl;
     mymass.close();
   }
-  if(size_field_config=="alvin"){
+  if(size_field_config=="ERM"){
     if (has_gBC)
       getSimmetrixBC();
     if(logging_config=="on"){
