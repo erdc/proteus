@@ -245,22 +245,21 @@ check:
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/meshLoad/meshLoad.py
 	@echo "************************"
   
-	@echo "SCOREC-Serial Error-Estimator and Adapt Test"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_errorAndSerialAdapt/errorCheck.py
-	@echo "************************"
-
-	@echo "SCOREC-Parallel Error Estimator and Adapt Test"
-	${PROTEUS_ENV} mpirun -np 2 ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_parallelAdapt/parallelAdaptCheck.py
-	@echo "************************"
-
-	@echo "SCOREC Isotropic Uniform Adapt Test"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_isotropicAdapt/isotropicCheck.py
-	@echo "************************"
-
 	@echo "SCOREC-Gmsh Flow Test"
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_gmshLoadAndAdapt/gmshCheck.py
 	@echo "************************"
 
+	@echo "SCOREC-Serial Simmetrix Error-Estimator and Adapt Test"
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_errorAndSerialAdapt/errorCheck.py
+	@echo "************************"
+
+	@echo "SCOREC-Parallel Simmetrix Error Estimator and Adapt Test"
+	${PROTEUS_ENV} mpirun -np 2 ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_parallelAdapt/parallelAdaptCheck.py
+	@echo "************************"
+
+	@echo "SCOREC Simmetrix Isotropic Uniform Adapt Test"
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_isotropicAdapt/isotropicCheck.py
+	@echo "************************"
 
 #doc: install
 doc:
