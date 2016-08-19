@@ -271,7 +271,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     freeNumbering(local[d]);
   /// Adapt the mesh
   ma::Input* in;
-  if(adapt_type_config=="anisotropic")
+  if(adapt_type_config=="anisotropic" || size_field_config== "interface")
     in = ma::configure(m, size_scale, size_frame);
   else
     in = ma::configure(m, size_iso);
