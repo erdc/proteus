@@ -15,7 +15,7 @@ Profiling.logLevel=7
 Refinement = 100 #45min on a single core for spaceOrder=1, useHex=False
 genMesh=True
 useOldPETSc=False
-useSuperlu=True
+useSuperlu=False#True
 spaceOrder = 1
 useHex     = False
 useRBLES   = 0.0
@@ -112,17 +112,17 @@ else:
         adaptMesh_nSteps = 10
         adaptMesh_numIter = 2
         #
-        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=he, numIter=adaptMesh_numIter)
+        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=he, numIter=adaptMesh_numIter,sfConfig="alvin")
         #read the geometry and mesh
         comm = Comm.init()
         model_dir = "%s-Proc" % comm.size()
         case_mesh = "Dambreak_coarse.smb"
         input_mesh = "%s/%s" % (model_dir,case_mesh)
-        domain.PUMIMesh.loadModelAndMesh("Dambreak.smd", input_mesh)
+        domain.PUMIMesh.loadModelAndMesh("Dambreak_coarse.smd", input_mesh)
         domain.PUMIMesh.simmetrixBCreloaded("Dambreak_coarse.smd")
 
 # Time stepping
-T=0.35
+T=0.3
 dt_fixed = 0.01
 dt_init = min(0.01*dt_fixed,0.0001)
 runCFL=0.9
