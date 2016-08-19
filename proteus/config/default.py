@@ -24,7 +24,7 @@ if sys.platform == 'darwin':
     platform_lapack_h = r'<Accelerate/Accelerate.h>'
     platform_extra_compile_args = ['-flax-vector-conversions','-DPETSC_SKIP_COMPLEX']
 elif sys.platform == 'linux2':
-    platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C']
+    platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C', '-DPETSC_SKIP_COMPLEX']
     platform_extra_link_args = ['-Wl,-rpath,' + PROTEUS_LIB_DIR]
     platform_blas_h = r'"proteus_blas.h"'
     platform_lapack_h = r'"proteus_lapack.h"'

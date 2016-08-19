@@ -3932,6 +3932,16 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
           int ebN_subdomain  = elementBoundaryNumbering_global2subdomainMap[ebN_global_new];
           newMesh.subdomainp->elementBoundaryMaterialTypes[ebN_subdomain] = ebmp->second;
         }
+      if (!hasVertexMarkers)
+        for (int ebNE = 0; ebNE < newMesh.subdomainp->nExteriorElementBoundaries_global; ebNE++)
+          {
+            int ebN = newMesh.subdomainp->exteriorElementBoundariesArray[ebNE];
+            for (int nN_local = 0; nN_local < newMesh.subdomainp->nNodes_elementBoundary; nN_local++)
+              {
+                int nN = newMesh.subdomainp->elementBoundaryNodesArray[ebN*newMesh.subdomainp->nNodes_elementBoundary+nN_local];
+                newMesh.subdomainp->nodeMaterialTypes[nN] = newMesh.subdomainp->elementBoundaryMaterialTypes[ebN];
+              }
+          }
     }
 
   PetscLogEventEnd(build_subdomains_renumber_event,0,0,0,0);
