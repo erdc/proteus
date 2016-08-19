@@ -22,7 +22,7 @@ Model=testDir + 'Couette.smd'
 Mesh=testDir + 'Couette.smb'
 
 domain = Domain.PUMIDomain() #initialize the domain
-domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='alvin',maType='isotropic',logType="on")
+domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='ERM',maType='isotropic',logType="on")
 domain.PUMIMesh.loadModelAndMesh(Model, Mesh)
 domain.faceList=[[80],[76],[42],[24],[82],[78]]
 
