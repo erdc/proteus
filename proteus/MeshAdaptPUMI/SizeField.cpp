@@ -52,6 +52,13 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
 //taken from Dan's superconvergent patch recovery code
 void MeshAdaptPUMIDrvr::averageToEntity(apf::Field* ef, apf::Field* vf,
     apf::MeshEntity* ent)
+//Function used to convert a region/element field into a vertex field via averaging.
+//For each vertex, the average value of the adjacent elements is taken
+//Input:
+//  ef is the element field
+//  ent is the target vertex
+//Output:
+//  vf is the vertex field
 {
   apf::Mesh* m = apf::getMesh(ef);
   apf::Adjacent elements;
@@ -64,6 +71,7 @@ void MeshAdaptPUMIDrvr::averageToEntity(apf::Field* ef, apf::Field* vf,
   return;
 }
 
+/*
 void minToEntity(apf::Field* ef, apf::Field* vf,
     apf::MeshEntity* ent)
 {
@@ -80,9 +88,11 @@ void minToEntity(apf::Field* ef, apf::Field* vf,
   apf::setScalar(vf, ent, 0, s);
   return;
 }
+*/
 
 void MeshAdaptPUMIDrvr::volumeAverageToEntity(apf::Field* ef, apf::Field* vf,
     apf::MeshEntity* ent)
+//Serves the same purpose as averageToEntity but considers a volume-weighted average
 {
   apf::Mesh* m = apf::getMesh(ef);
   apf::Adjacent elements;
@@ -109,6 +119,7 @@ if(comm_rank==0){
 
 
 static apf::Field* extractSpeed(apf::Field* velocity)
+//Function used to convert the velocity field into a speed field
 {
   apf::Mesh* m = apf::getMesh(velocity);
   apf::Field* speedF = apf::createLagrangeField(m,"proteus_speed",apf::SCALAR,1);
@@ -125,12 +136,14 @@ static apf::Field* extractSpeed(apf::Field* velocity)
 }
 
 static apf::Matrix3x3 hessianFormula(apf::Matrix3x3 const& g2phi)
+//Function used to output a symmetric hessian
 {
   apf::Matrix3x3 g2phit = apf::transpose(g2phi);
   return (g2phi + g2phit) / 2;
 }
 
 static apf::Field* computeHessianField(apf::Field* grad2phi)
+//Function that writes a hessian field
 {
   apf::Mesh* m = apf::getMesh(grad2phi);
   apf::Field* hessf = createLagrangeField(m,"proteus_hess",apf::MATRIX,1);
@@ -146,7 +159,10 @@ static apf::Field* computeHessianField(apf::Field* grad2phi)
   return hessf;
 }
 
-static apf::Field* computeMetricField(apf::Field* gradphi, apf::Field*grad2phi,apf::Field* size_iso,double eps_u){
+static apf::Field* computeMetricField(apf::Field* gradphi, apf::Field*grad2phi,apf::Field* size_iso,double eps_u)
+//Function used to generate a field of metric tensors at vertices. It is meant to be an umbrella function that can compute Hessians too.
+//Currently needs development. 
+{
   apf::Mesh* m = apf::getMesh(grad2phi);
   apf::Field* metricf = createLagrangeField(m,"proteus_metric",apf::MATRIX,1);
   apf::MeshIterator* it = m->begin(0);
@@ -219,12 +235,14 @@ static apf::Field* getCurves(apf::Field* hessians, apf::Field* gradphi)
 }
 
 static void clamp(double& v, double min, double max)
+//Function used to restrict the mesh size to user specified minimums and maximums
 {
   v = std::min(max, v);
   v = std::max(min, v);
 }
 
 static void clampField(apf::Field* field, double min, double max)
+//Function that loops through a field and clamps the values
 {
    apf::Mesh* m = apf::getMesh(field);
    int numcomps = apf::countComponents(field);
@@ -246,6 +264,7 @@ static void scaleFormula(double phi, double hmin, double hmax,
     int adapt_step,
     apf::Vector3 const& curves,
     apf::Vector3& scale)
+//Function used to set the size scale vector for the interface size field configuration
 {
   double epsilon = 7.0* hmin; 
   if (fabs(phi) < epsilon) {
@@ -268,6 +287,17 @@ static void scaleFormula(double phi, double hmin, double hmax,
 static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest, 
                             apf::Vector3 const& curves,
                             double lambda[3], double eps_u, apf::Vector3& scale)
+//Function used to set the size scale vector for the anisotropic ERM size field configuration
+//Inputs:
+// phi is is the distance to the interface
+// hmin is the minimum mesh size
+// hmax is the maximum mesh size
+// h_dest is the computed new mesh size
+// curves is a vector that denotes the curvature of the interface
+// lambda is the ordered set of eigenvalues from an eigendecomposition of the metric tensor
+// eps_u is a tolerance for the distance away from the interface
+//Output:
+// scale is the mesh size in each direction for a vertex
 {
     double epsilon = 7.0* hmin; 
     double lambdamin = 1.0/(hmin*hmin);
@@ -292,6 +322,7 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
 
 static apf::Field* getSizeScales(apf::Field* phif, apf::Field* curves,
     double hmin, double hmax, int adapt_step)
+//Function that gets size scales in the interface size field configuration
 {
   apf::Mesh* m = apf::getMesh(phif);
   apf::Field* scales;
@@ -321,6 +352,7 @@ struct SortingStruct
 };
 
 static apf::Field* getSizeFrames(apf::Field* hessians, apf::Field* gradphi)
+//Function that gets size frames, or the metric tensor, in the interface size field configuration
 {
   apf::Mesh* m = apf::getMesh(gradphi);
   apf::Field* frames;
@@ -369,6 +401,7 @@ static apf::Field* getSizeFrames(apf::Field* hessians, apf::Field* gradphi)
 }
 
 static apf::Field* getERMSizeFrames(apf::Field* hessians, apf::Field* gradphi,apf::Field* frame_comps[3])
+//Function that gets size frames, or the metric tensor, in the interface size field configuration
 {
   apf::Mesh* m = apf::getMesh(gradphi);
   apf::Field* frames;
@@ -418,6 +451,7 @@ static apf::Field* getERMSizeFrames(apf::Field* hessians, apf::Field* gradphi,ap
 }
 
 int MeshAdaptPUMIDrvr::calculateAnisoSizeField()
+//High level function that obtains the size scales and the size frames for anistropic interface-based adapt
 {
   apf::Field* phif = m->findField("phi");
   assert(phif);
@@ -501,6 +535,7 @@ static void SmoothField(apf::Field* f)
 }
 
 int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
+//High level function that obtains the size scales and the size frames for ERM-based adapt and uses the computed total error
 {
   freeField(size_frame);
   freeField(size_scale);
@@ -666,6 +701,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 }
 
 int MeshAdaptPUMIDrvr::testIsotropicSizeField()
+//Function that tests MeshAdapt by generating an isotropic sizefield based on hmin
 {
     size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
     apf::MeshIterator* it = m->begin(0);
