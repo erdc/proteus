@@ -114,7 +114,7 @@ else:
         adaptMesh = True
         adaptMesh_nSteps = 4
         adaptMesh_numIter = 2
-        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='alvin',maType='isotropic')
+        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='ERM',maType='isotropic')
         #read the geometry and mesh
         domain.PUMIMesh.loadModelAndMesh("Couette.smd", "Couette.smb")
 

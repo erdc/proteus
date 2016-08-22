@@ -112,7 +112,7 @@ else:
         adaptMesh_nSteps = 10
         adaptMesh_numIter = 2
         #
-        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=he, numIter=adaptMesh_numIter,sfConfig="alvin")
+        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=he, numIter=adaptMesh_numIter,sfConfig="ERM")
         #read the geometry and mesh
         comm = Comm.init()
         model_dir = "%s-Proc" % comm.size()
