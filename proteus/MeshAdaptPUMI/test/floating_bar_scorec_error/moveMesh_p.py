@@ -67,19 +67,21 @@ class FloatingObstacle(AuxiliaryVariables.AV_base):
 fo = FloatingObstacle()
 
 def getDBC_hx(x,flag):
-    if flag in [boundaryTags['left'],boundaryTags['right']]:
+    if flag in [boundaryTags['left'],boundaryTags['right'], boundaryTags['top'], boundaryTags['bottom'], boundaryTags['front'], boundaryTags['back']]:
         return lambda x,t: 0.0
     if flag == boundaryTags['obstacle']:
         return lambda x,t: fo.hx(x,t)
 
 def getDBC_hy(x,flag):
-    if flag in [boundaryTags['front'],boundaryTags['back']]:
+    #if flag in [boundaryTags['front'],boundaryTags['back']]:
+    if flag in [boundaryTags['left'],boundaryTags['right'], boundaryTags['top'], boundaryTags['bottom'], boundaryTags['front'], boundaryTags['back']]:
         return lambda x,t: 0.0
     if flag == boundaryTags['obstacle']:
         return lambda x,t: fo.hy(x,t)
 
 def getDBC_hz(x,flag):
-    if flag in [boundaryTags['top'],boundaryTags['bottom']]:
+    #if flag in [boundaryTags['top'],boundaryTags['bottom']]:
+    if flag in [boundaryTags['left'],boundaryTags['right'], boundaryTags['top'], boundaryTags['bottom'], boundaryTags['front'], boundaryTags['back']]:
         return lambda x,t: 0.0
     if flag == boundaryTags['obstacle']:
         return lambda x,t: fo.hz(x,t)
