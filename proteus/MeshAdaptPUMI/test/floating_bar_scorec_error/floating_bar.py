@@ -120,7 +120,7 @@ adaptMesh_nSteps = 1
 adaptMesh_numIter = 3
 
 domain.PUMIMesh = MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.1,hmin=0.05,
-                                              numIter=adaptMesh_numIter,sfConfig="alvin",maType="isotropic")
+                                              numIter=adaptMesh_numIter,sfConfig="ERM",maType="isotropic")
 comm = Comm.init()
 
 #Remember to change bar height: Floating = 0.25, Falling=0.85
@@ -132,10 +132,6 @@ case_model= "Floating_Bar_Falling_coarse.smd"
 input_model= "%s/%s" % (case_dir,case_model)
 input_mesh = "%s/%s/%s" % (case_dir,model_dir,case_mesh)
 domain.PUMIMesh.loadModelAndMesh(input_model, input_mesh)
-#domain.PUMIMesh.loadModelAndMesh("simModel/Floating_Bar.smd",
-#                                 "simModel/Floating_Bar.smb")
-#domain.PUMIMesh.getSimmetrixBC(input_model)
-domain.PUMIMesh.simmetrixBCreloaded(input_model)
 
 restrictFineSolutionToAllMeshes=False
 parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
