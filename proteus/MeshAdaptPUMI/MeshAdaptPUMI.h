@@ -10,45 +10,51 @@ class MeshAdaptPUMIDrvr{
   MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*,double,double); 
   ~MeshAdaptPUMIDrvr();
 
-  int loadModelAndMesh(const char* modelFile, const char* meshFile);
+  int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
 
   //Functions to construct proteus mesh data structures
   int constructFromSerialPUMIMesh(Mesh& mesh);
   int constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh);
- 
   int updateMaterialArrays(Mesh& mesh, int bdryID, int GeomTag);
+  void numberLocally();
+  int localNumber(apf::MeshEntity* e);
+  int dumpMesh(Mesh& mesh);
 
+  //Functions used to transfer information between PUMI and proteus
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
   int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p);
   int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global, double* fluxBC);
   int transferBCsToProteus();
-  int commuSizeField();
+
+  //MeshAdapt functions
   int willAdapt();
   int adaptPUMIMesh();
-
-  void numberLocally();
-  int localNumber(apf::MeshEntity* e);
-  int dumpMesh(Mesh& mesh);
-
   int calculateSizeField();
   int calculateAnisoSizeField();
   int testIsotropicSizeField();
   int getERMSizeField(double err_total);
+
+  //Quality Check Functions
   double getMinimumQuality();
   double getTotalMass();
-  double getMPvalue(double field_val,double val_0, double val_1);
-  apf::Field* getViscosityField(apf::Field* voff);
 
-  double hmax, hmin;
+  //Functions that help facilitate computations
+  double getMPvalue(double field_val,double val_0, double val_1); //get the multiphase value of physical properties
+  apf::Field* getViscosityField(apf::Field* voff); //derive a field of viscosity based on VOF field
+
+
+  //Public Variables
+  double hmax, hmin; //bounds on mesh size
   int numIter; //number of iterations for MeshAdapt
   int nAdapt; //counter for number of adapt steps
   int nEstimate; //counter for number of error estimator calls
   int nsd; //number of spatial dimensions
 
-  std::string size_field_config;
-  std::string adapt_type_config;
-  std::string logging_config;
+  //User Inputs
+  std::string size_field_config; //What type of size field: interface, ERM, isotropic
+  std::string adapt_type_config; //What type of adapt for ERM: isotropic or anisotropic
+  std::string logging_config; // Logging on or off
 
   //Element Residual Method
   void get_local_error();
@@ -85,11 +91,11 @@ class MeshAdaptPUMIDrvr{
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* err_reg; //error field from ERM
-  apf::Field* errRho_reg; //error-rate field from ERM
+  apf::Field* errRho_reg; //error-density field from ERM
   apf::Field* errRel_reg; //relative error field from ERM
   /* this field stores isotropic size */
   apf::Field* size_iso;
-  /* these fields store anisotropic size */
+  /* these fields store anisotropic size and metric tensor */
   apf::Field* size_scale;
   apf::Field* size_frame;
 
@@ -110,10 +116,10 @@ class MeshAdaptPUMIDrvr{
   void volumeAverageToEntity(apf::Field* ef, apf::Field* vf,
       apf::MeshEntity* ent);
 
-  bool has_gBC;
-  double target_error;
-  int target_element_count;
-  double domainVolume;
+  bool has_gBC; //boolean for having global boundary conditions
+  double target_error; //computed from get_local_error()
+  int target_element_count; //How many elements in the mesh are desired?
+  double domainVolume; //Volume of the domain
 };
 
 
