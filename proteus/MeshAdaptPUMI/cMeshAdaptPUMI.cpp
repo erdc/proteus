@@ -11,6 +11,8 @@
 #include "MeshAdaptPUMI.h"
 
 #ifdef PROTEUS_USE_SIMMETRIX
+//PROTEUS_USE_SIMMETRIX is a compiler macro that indicates whether Simmetrix libraries are used
+//This is defined in proteus/config/default.py and is contingent on the existence of a SIM_INCLUDE_DIR path
   #include <gmi_sim.h>
   #include <SimUtil.h>
   #include <SimModel.h>
@@ -21,9 +23,11 @@
 #endif
 
 
-
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
     const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount)
+//MeshAdaptPUMIDrvr is the highest level class that handles the interface between Proteus and the PUMI libraries
+//See MeshAdaptPUMI.h for the list of class variables/functions/objects
+//This is the constructor for the class
 {
   m = 0;
   PCU_Comm_Init();
@@ -52,7 +56,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   gmi_register_mesh();
   gmi_register_null();
   approximation_order = 2;
-  integration_order = 3;//approximation_order * 2;
+  integration_order = 3;
   total_error = 0.0;
   errRho_max = 0.0;
   rel_err_total = 0.0;
@@ -68,7 +72,9 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
+//Destructor for MeshAdaptPUMIDrvr
 {
+
   freeField(err_reg);
   freeField(errRho_reg);
   freeField(errRel_reg);
@@ -89,6 +95,11 @@ static bool ends_with(std::string const& str, std::string const& ext)
 }
 
 int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshFile)
+//Load the mesh and model for SCOREC libraries
+//The default filetypes are .dmg (model) and .smb (mesh), but can support GMSH meshes (.msh) and Simmetrix models (.smd) and meshes (.sms)
+//GMSH models are not used and .null filenames and passed instead.
+//Each of the the GMSH and Simmetrix filetypes can be converted into a SCOREC filetype via tools in scorec and scorec-sim yaml files.
+//Diffusive flux boundary conditions are supported with Simmetrix models and can be passed into the error estimator 
 {
   comm_size = PCU_Comm_Peers();
   comm_rank = PCU_Comm_Self();
@@ -110,12 +121,11 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
   return 0;
 }
 
-/*
-Temporary function used to read in BC from Simmetrix Model
-*/
 
 int MeshAdaptPUMIDrvr::getSimmetrixBC()
 {
+//Function used to read in diffusive flux BC from Simmetrix Model
+
 #ifdef PROTEUS_USE_SIMMETRIX
   pGModel model = 0;
   model=GM_load(modelFileName,NULL,NULL);
@@ -235,9 +245,13 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   return 0;
 } 
 
-int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
+int MeshAdaptPUMIDrvr::willAdapt() 
+//Function used to define whether a mesh needs to be adapted based on the error estimator
+//The return value is a flag indicating whether the mesh will not (0) or will be (1) adapted 
+//The THRESHOLD will be set to the error estimate after the wind-up step, but is currently 0
+//Assertion is set to ensure that all ranks in a parallel execution will enter the adapt stage
 {
-  double THRESHOLD = 0;//target_error;
+  double THRESHOLD = 0;
   int adaptFlag=0;
   int assertFlag;
 
@@ -251,6 +265,14 @@ int MeshAdaptPUMIDrvr::willAdapt() //THRESHOLD needs to be defined
 }
 
 int MeshAdaptPUMIDrvr::adaptPUMIMesh()
+//Function used to trigger adaptation
+//Inputs are the type of size-field that is desired:
+//"interface" refers to explicitly adapting to the current interface position based on the level-set field
+//"ERM" refers to the error-residual method and using error estimates to determine how a mesh should be adapted
+//  Within ERM, there is an isotropic and anisotropic configuration. The anisotropic configuration requires more development.
+//"Isotropic" refers to a uniform refinement based on a global hmin size and is primarily used for testing
+//Predictive load balancers Zoltan and ParMA are used in combination for before, during, and after adapt with a preset tolerance of imbalance
+//The nAdapt counter is iterated to track how many times a mesh is adapted
 {
   if (size_field_config == "interface")
       calculateAnisoSizeField();
@@ -258,9 +280,10 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       removeBCData();
       double t1 = PCU_Time();
       getERMSizeField(total_error);
-      freeField(err_reg); //mAdapt will throw error if not destroyed. what about free?
-      freeField(errRho_reg); //mAdapt will throw error if not destroyed. what about free?
-      freeField(errRel_reg); //mAdapt will throw error if not destroyed. what about free?
+      //MeshAdapt error will be thrown if region fields are not freed
+      freeField(err_reg); 
+      freeField(errRho_reg); 
+      freeField(errRel_reg); 
       double t2 = PCU_Time();
     if(comm_rank==0 && logging_config == "on"){
       std::ofstream myfile;
@@ -268,7 +291,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       myfile << t2-t1<<std::endl;
       myfile.close();
     }
-  
   }  
   else if (size_field_config == "isotropic")
     testIsotropicSizeField();
@@ -276,12 +298,16 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
   }
+
+  // These are relics from an attempt to pass BCs from proteus into the error estimator.
+  // They maybe useful in the future.
   //m->destroyTag(fluxtag[1]); m->destroyTag(fluxtag[2]); m->destroyTag(fluxtag[3]);
   delete [] exteriorGlobaltoLocalElementBoundariesArray;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
 
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
+
   /// Adapt the mesh
   ma::Input* in;
   if(adapt_type_config=="anisotropic" || size_field_config== "interface")
@@ -339,6 +365,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 }
 
 double MeshAdaptPUMIDrvr::getMinimumQuality()
+//Function used to get the worst element quality in the mesh
+//Returns the minimum quality
+//Meant to be used to trigger adaptation, but has not been implemented yet
 {
   ma::SizeField* isf = new ma::IdentitySizeField(m);
   apf::MeshIterator* it = m->begin(m->getDimension());
@@ -352,6 +381,8 @@ double MeshAdaptPUMIDrvr::getMinimumQuality()
 }
 
 double MeshAdaptPUMIDrvr::getTotalMass()
+//Function to track total mass of the domain.
+//Returns total mass across all ranks
 {
   apf::Field* voff = m->findField("vof");
   assert(voff);
@@ -377,5 +408,6 @@ double MeshAdaptPUMIDrvr::getTotalMass()
     apf::destroyMeshElement(elem);
   }
   m->end(it);
+  PCU_Add_Doubles(&mass,1);
   return mass;
 }
