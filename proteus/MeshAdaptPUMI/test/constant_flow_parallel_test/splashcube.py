@@ -117,7 +117,6 @@ else:
         domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='alvin',maType='isotropic')
         #read the geometry and mesh
         domain.PUMIMesh.loadModelAndMesh("Splashcube.smd", "Splashcube.smb")
-        domain.PUMIMesh.getSimmetrixBC("Splashcube.smd")
 
 # Time stepping
 T=0.2
