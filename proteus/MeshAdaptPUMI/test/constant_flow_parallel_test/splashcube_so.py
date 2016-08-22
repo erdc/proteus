@@ -26,3 +26,4 @@ needEBQ_GLOBAL = False
 needEBQ = False
 
 tnList = [0.0,splashcube.dt_init,2.0*splashcube.dt_init]+[i*splashcube.dt_fixed for i in range(1,splashcube.nDTout+1)]
+archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
