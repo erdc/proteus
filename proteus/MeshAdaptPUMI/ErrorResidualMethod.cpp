@@ -11,14 +11,14 @@
 #include <iostream>
 #include <fstream>
 
-//proxy variables used to make it easier to pass these variables from MeshAdaptPUMIDrvr
-int approx_order;
-int int_order;
-int norm_order;
+//Global variables used to make it easier to pass these variables from MeshAdaptPUMIDrvr
+int approx_order; //shape function order
+int int_order; //integration order
 double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
 
 void getProps(double*rho,double*nu)
+//Function used to transfer MeshAdaptPUMIDrvr variables into global variables
 {
   rho_0 = rho[0];
   nu_0 = nu[0];      
@@ -28,15 +28,18 @@ void getProps(double*rho,double*nu)
 }
 
 double MeshAdaptPUMIDrvr::getMPvalue(double field_val,double val_0, double val_1)
+//Function primarily used to get the VOF-weighted average of physical properties at a given point
 {
   return val_0*(1-field_val)+val_1*field_val;
 }
 
-apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face){ //get the normal vector
+apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face)
+//Function used to get the unit vector normal to an element face
+{ 
   apf::Vector3 normal;
   apf::Adjacent verts;
   mesh->getAdjacent(face,0,verts);
-  apf::Vector3 vtxs[verts.getSize()]; //4 points
+  apf::Vector3 vtxs[verts.getSize()];
   for(int i=0;i<verts.getSize();i++){
     mesh->getPoint(verts[i],0,vtxs[i]); 
   } 
@@ -48,11 +51,15 @@ apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face){ //get the no
   return normal.normalize();
 }
 
-double getDotProduct(apf::Vector3 a, apf::Vector3 b){
+double getDotProduct(apf::Vector3 a, apf::Vector3 b)
+//Function used to get the dot product between two vectors
+{
   return (a[0]*b[0] + a[1]*b[1] + a[2]*b[2]);
 }
 
-double getDotProduct(apf::Matrix3x3 a, apf::Matrix3x3 b){
+double getDotProduct(apf::Matrix3x3 a, apf::Matrix3x3 b)
+//Overloaded function used to get the dot product analog between two matrices
+{
   double temp =0;
   for(int i=0;i<3;i++){
     for(int j=0;j<3;j++){
@@ -63,7 +70,10 @@ double getDotProduct(apf::Matrix3x3 a, apf::Matrix3x3 b){
 }
 
 
-bool isInTet(apf::Mesh* mesh, apf::MeshEntity* ent, apf::Vector3 pt){
+bool isInTet(apf::Mesh* mesh, apf::MeshEntity* ent, apf::Vector3 pt)
+//Function used to test if a point pt is inside the tetrahedron ent
+//Returns a boolean: 1 if is in tet, 0 if not
+{
   bool isin=0;
 
   apf::Adjacent verts;
@@ -95,6 +105,7 @@ bool isInTet(apf::Mesh* mesh, apf::MeshEntity* ent, apf::Vector3 pt){
   return isin;
 }
 
+/*
 double a_k(apf::Matrix3x3 u, apf::Matrix3x3 v,double nu){
   //u and v are gradients of a vector
   apf::Matrix3x3 temp_u = u+apf::transpose(u);
@@ -111,8 +122,19 @@ double c_k(apf::Vector3 a, apf::Matrix3x3 b, apf::Vector3 c){
   //b is a gradient of a vector
   return getDotProduct(b*a,c);
 }
+*/
 
 void getLHS(Mat &K,apf::NewArray <apf::DynamicVector> &shdrv,int nsd,double weight, double visc_val,int nshl)
+//Function used to get the LHS of the local error problem. 
+//The LHS is entirely A(\phi,\phi) which can be decomposed into a diagonal contributions and off-diagonal contributions
+//Inputs:
+//  shdrv is the set of shape function derivatives for an element evaluated at a quadrature point
+//  nsd is the number of spatial dimensions
+//  weight is the corresponding weight for a given quadrature point
+//  visc_val is the viscosity at that quadrature point
+//  nshl is the number of local shape functions in an element
+//Outputs:
+//  K is the matrix representing the LHS
 {
       PetscScalar term1[nshl][nshl], term2[nshl][nshl];
       //Calculate LHS Diagonal Block Term
@@ -153,6 +175,24 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
             int nsd,double weight,int nshl,
             double visc_val,double density,apf::Vector3 grad_density,double pressure,
             double g[3])
+//Function used to get the RHS of the local error problem. 
+//The RHS is the weak residual of the N-S equations
+//Inputs:
+//  shpval are the local shape functions evaluated at a quadrature point
+//  shdrv are the local shape function derivatives evaluated at a quadrature point
+//  vel_vect is the velocity vector at a quadrature point
+//  grad_vel is the velocity gradient at a quadrature point
+//  nsd is the number of spatial dimensions
+//  weight is the corresponding weight for a given quadrature point
+//  nshl is the number of local shape functions in an element
+//  visc_val is the viscosity at a quadrature point
+//  density is the density at a quadrature point
+//  grad_density is the density gradient at a quadrature point
+//  pressure is the pressure at a quadrature point
+//  g is the gravity vector
+//Outputs:
+//  F is the vector representing the RHS
+
 {
       int idx[nshl];
       for( int i = 0; i<nsd; i++){
@@ -184,7 +224,19 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
 }
 
 
-void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf){
+void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf)
+//Function used to compute the diffusive flux at interelement boundaries and stores the values as tags at the boundaries
+//Based on the mesh database, each face has a default orientation that is outward normal to a given element.
+//The flux has a different value depending on the element.
+//The value from the default element is stored in the first slot of the tag and the other value is stored in the second slot
+//Special considerations are made for global domain boundaries if boundary conditions exist and for parallel communications
+//Inputs:
+//  m is the mesh
+//  voff is the volume of fluid field
+//  visc is the field of viscosity
+//  pref is the pressure field
+//  velf is the velocity field
+{
   if(comm_rank==0)
     std::cerr<<"Begin computeDiffusiveFlux()"<<std::endl;
   int numbqpt, nshl;
@@ -307,22 +359,6 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
           tempbflux = (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
               -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1);
           bflux = tempbflux*normal;
-/*
-if(comm_rank==0 && localNumber(ent)==eID){
-  std::cout<<"quadrature point "<<l<<" value "<<bqpt<<" weight "<<weight<<" Jdet "<<Jdet<<std::endl;
-  std::cout<<"velocity gradient "<<std::endl;
-  std::cout<<tempgrad_velo<<std::endl;
-  std::cout<<"Viscosity value "<<getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)<<std::endl;
-  std::cout<<"pressure "<<apf::getScalar(temppres,bqptl)<<std::endl;
-  std::cout<<"density "<<getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1)<<std::endl;
-  std::cout<<"tempbflux "<<std::endl;
-  std::cout<< (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
-              -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1)<<std::endl;
-  std::cout<<"normal? "<<normal<<std::endl;
-  std::cout<<"bflux "<<tempbflux*normal<<std::endl;
-
-}
-*/ 
         } //end if boundary
         bflux = bflux*weight*Jdet;
         bflux.toArray(&(tempflux[l*nsd]));
@@ -375,8 +411,14 @@ if(comm_rank==0 && localNumber(ent)==eID){
     std::cerr<<"End computeDiffusiveFlux()"<<std::endl;
 }
 
-void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, double * endflux){
-
+void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, double * endflux)
+//This function reads in the stored tags and computes the boundary flux according to the RHS formulation
+//Inputs:
+//  m is the mesh
+//  ent is an element (tetrahedron)
+//Outputs:
+//  endflux is the boundary flux used in the RHS 
+{
     int nshl;
     apf::NewArray <double> shpval;
     apf::NewArray <double> shpval_temp;
@@ -450,6 +492,7 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, doub
 }
 
 apf::Field* MeshAdaptPUMIDrvr::getViscosityField(apf::Field* voff)
+//Function used to derive a viscosity field from a VOF field
 {
   apf::Field* visc = apf::createLagrangeField(m,"viscosity",apf::SCALAR,1);
   apf::MeshEntity* ent;
@@ -466,6 +509,7 @@ apf::Field* MeshAdaptPUMIDrvr::getViscosityField(apf::Field* voff)
 
 
 void setErrorField(apf::Field* estimate,Vec coef,apf::MeshEntity* ent,int nsd,int nshl)
+//Function used to store the computed coefficients from the local error problem onto a field
 {
     apf::Mesh* m = apf::getMesh(estimate);
     double coef_ez[nshl*nsd];
@@ -490,6 +534,8 @@ void setErrorField(apf::Field* estimate,Vec coef,apf::MeshEntity* ent,int nsd,in
 }
 
 void MeshAdaptPUMIDrvr::removeBCData()
+//Function used to remove the BC tags that were created during the computeDiffusiveFlux() function
+//This is the simple way of avoiding errors from creating the same tags the next time the error estimator is called
 {
   if(comm_rank==0) std::cout<<"Start removing BC tags/data"<<std::endl;
   apf::MeshEntity* ent;   
@@ -522,7 +568,7 @@ void MeshAdaptPUMIDrvr::removeBCData()
 }
 
 void MeshAdaptPUMIDrvr::get_local_error() 
-//This function aims to compute error at each element via an Error Resiudal Method.
+//This function aims to compute error at each element via an Error Residual Method.
 //See Oden, J. Tinsley, Weihan Wu, and Mark Ainsworth. "An a posteriori error estimate for finite element approximations of the Navier-Stokes equations." Computer Methods in Applied Mechanics and Engineering 111.1 (1994): 185-202.
 //Effectively, it projects the weak residual onto a higher order space.
 //Boundary condition considerations are discussed in Ainsworth, Mark, and J. Tinsley Oden. A posteriori error estimation in finite element analysis. Vol. 37. John Wiley & Sons, 2011.
