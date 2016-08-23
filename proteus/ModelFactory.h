@@ -176,19 +176,19 @@ namespace proteus
 						  int nQuadraturePoints_elementBoundaryIn,
 						  int CompKernelFlag)//0=Parametric
     {
-      /*std::cout<<"Constructing model object from template class:"<<std::endl
-	       <<"return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<"
-	       <<nSpaceIn<<","
-	       <<nDOF_mesh_trial_elementIn<<","
-	       <<nDOF_trial_elementIn<<","
-	       <<nDOF_test_elementIn<<">,"
-	       <<nSpaceIn<<","
-	       <<nQuadraturePoints_elementIn<<","
-	       <<nDOF_mesh_trial_elementIn<<","
-	       <<nDOF_trial_elementIn<<","
-	       <<nDOF_test_elementIn<<","
-	       <<nQuadraturePoints_elementBoundaryIn<<">());"
-	       <<std::endl<<std::flush; */
+      std::cout<<"Constructing model object from template class:"<<std::endl
+               <<"return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<"
+               <<nSpaceIn<<","
+               <<nDOF_mesh_trial_elementIn<<","
+               <<nDOF_trial_elementIn<<","
+               <<nDOF_test_elementIn<<">,"
+               <<nSpaceIn<<","
+               <<nQuadraturePoints_elementIn<<","
+               <<nDOF_mesh_trial_elementIn<<","
+               <<nDOF_trial_elementIn<<","
+               <<nDOF_test_elementIn<<","
+               <<nQuadraturePoints_elementBoundaryIn<<">());"
+               <<std::endl<<std::flush;
       if (CompKernelFlag == 0)
 	{
 	  if (nSpaceIn == 2)
@@ -235,6 +235,18 @@ namespace proteus
 		      else
 			abort();
 		    }
+                  else  if(nDOF_mesh_trial_elementIn == 4)
+                    {
+                      if (nQuadraturePoints_elementIn == 4)
+                        {
+                          if (nQuadraturePoints_elementBoundaryIn == 2)
+                            return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,2,4,4,4,4,2>());
+                          else
+                            abort();
+                        }
+                      else
+                        abort();
+                    }
 		  else
 		    abort();
 		}
