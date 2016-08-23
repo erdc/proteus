@@ -382,19 +382,29 @@ class NS_base:  # (HasTraits):
                 if comm.rank() == 0 and (p.genMesh or not (os.path.exists(p.domain.polyfile+".ele") and
                                                            os.path.exists(p.domain.polyfile+".node") and
                                                            os.path.exists(p.domain.polyfile+".face"))):
-                    log("Running gmsh to generate 3D mesh for "+p.name,level=1)
+                    logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
                     gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s}  -format mesh  -clmax {2:f} -clscale {2:f}".format(p.domain.geofile, p.domain.name+".mesh", p.domain.he)
 
-                    log("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
+                    logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
 
                     check_call(gmsh_cmd, shell=True)
 
-                    log("Done running gmsh; converting to tetgen")
+                    logEvent("Done running gmsh; converting to tetgen")
 
-                    gmsh2tetgen_cmd = "gmsh2tetgen {0}".format(p.domain.name+".mesh")
+                    gmsh2tetgen_cmd = "gmsh2tetgen {0} {1:f} {2:d} {3:d} {4:d}".format(
+                        p.domain.name+".mesh",
+                        p.domain.length_scale,
+                        p.domain.permute_dims[0]+1,
+                        p.domain.permute_dims[1]+1,
+                        p.domain.permute_dims[2]+1)
 
                     check_call(gmsh2tetgen_cmd, shell=True)
-
+                    check_call("tetgen -Vfeen %s.ele" % ("mesh",), shell=True)
+                    check_call("mv %s.1.ele %s.ele" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.node %s.node" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.face %s.face" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.neigh %s.neigh" % ("mesh","mesh"), shell=True)
+                    check_call("mv %s.1.edge %s.edge" % ("mesh","mesh"), shell=True)
                     elefile  = "mesh.ele"
                     nodefile = "mesh.node"
                     facefile = "mesh.face"
@@ -416,21 +426,21 @@ class NS_base:  # (HasTraits):
                         os.rename(edgefile,tmp)
                         assert os.path.exists(tmp), "no .edge"
                 comm.barrier()
-                log("Initializing mesh and MultilevelMesh")
+                logEvent("Initializing mesh and MultilevelMesh")
                 nbase = 1
                 mesh=MeshTools.TetrahedralMesh()
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                              parallelPartitioningType=n.parallelPartitioningType)
                 if opts.generatePartitionedMeshFromFiles:
-                    log("Generating partitioned mesh from Tetgen files")
+                    logEvent("Generating partitioned mesh from Tetgen files")
                     mlMesh.generatePartitionedMeshFromTetgenFiles(p.domain.polyfile,nbase,mesh,n.nLevels,
                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                   parallelPartitioningType=n.parallelPartitioningType)
                 else:
-                    log("Generating coarse global mesh from Tetgen files")
+                    logEvent("Generating coarse global mesh from Tetgen files")
                     mesh.generateFromTetgenFiles(p.domain.polyfile,nbase,parallel = comm.size() > 1)
-                    log("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
+                    logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
