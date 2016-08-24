@@ -854,7 +854,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
   apf::destroyField(estimate);
 
   if(comm_rank==0)
-    std::cerr<"It cleared the ERM function.\n";
+    std::cerr<<"It cleared the ERM function.\n";
 }
 
 
