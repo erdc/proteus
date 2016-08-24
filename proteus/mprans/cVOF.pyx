@@ -63,7 +63,8 @@ cdef extern from "VOF.h" namespace "proteus":
                                double* ebqe_bc_flux_u_ext,
                                double* ebqe_phi,double epsFact,
                                double* ebqe_u,
-                               double* ebqe_flux)
+                               double* ebqe_flux,
+			       double* elementResidual_u)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -200,7 +201,8 @@ cdef class cVOF_base:
                          numpy.ndarray ebqe_bc_flux_u_ext,
                          numpy.ndarray ebqe_phi,double epsFact,
                          numpy.ndarray ebqe_u,
-                         numpy.ndarray ebqe_flux):
+                         numpy.ndarray ebqe_flux, 
+			 numpy.ndarray elementResidual_u):
        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -260,7 +262,8 @@ cdef class cVOF_base:
                                        <double*> ebqe_phi.data,
                                        epsFact,
                                        <double*> ebqe_u.data,
-                                       <double*> ebqe_flux.data)
+                                       <double*> ebqe_flux.data,
+				       <double*> elementResidual_u.data)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
