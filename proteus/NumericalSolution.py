@@ -1015,12 +1015,12 @@ class NS_base:  # (HasTraits):
                     #
                     logEvent("Estimate Error")
                     sfConfig = p0.domain.PUMIMesh.size_field_config()
-                    if(sfConfig=="alvin"):
+                    if(sfConfig=="ERM"):
                       p0.domain.PUMIMesh.get_local_error()
                       if(p0.domain.PUMIMesh.willAdapt()):
                         adaptMeshNow=True
                         logEvent("Need to Adapt")
-                    elif(sfConfig=='farhad' ):
+                    elif(sfConfig=='interface' ):
                       adaptMeshNow=True
                       logEvent("Need to Adapt")
                     else:
