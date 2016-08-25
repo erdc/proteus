@@ -2164,7 +2164,7 @@ namespace proteus
 	      double tmpR=dmom_u_acc_u_t + dmom_u_source[0];
 	      calculateSubgridError_tau(hFactor,
 					elementDiameter[eN],
-					tmpR,//dmom_u_acc_u_t,
+					dmom_u_acc_u_t,
 					dmom_u_acc_u,
 					dmom_adv_sge,
 					mom_uu_diff_ten[1],
@@ -3786,7 +3786,7 @@ namespace proteus
 	      double tmpR=dmom_u_acc_u_t + dmom_u_source[0];
 	      calculateSubgridError_tau(hFactor,
 					elementDiameter[eN],
-					tmpR,//dmom_u_acc_u_t,
+					dmom_u_acc_u_t,
 					dmom_u_acc_u,
 					dmom_adv_sge,
 					mom_uu_diff_ten[1],
