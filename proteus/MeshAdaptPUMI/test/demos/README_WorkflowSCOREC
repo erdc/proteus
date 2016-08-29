@@ -1,0 +1,47 @@
+The SCOREC libraries and tools require different inputs than base proteus build. 
+Specifically, the SCOREC libraries require SCOREC meshes and models. 
+Moreover, any parallel implementation would require splitting the mesh prior to initiating proteus.
+The following document aims to detail the various workflows to achieve a working simulation with SCOREC tools.
+SCOREC meshes have a .smb filetype and SCOREC models have a .dmg filetype.
+The conversion utilities listed come from SCOREC/core (open-source) or SCOREC/core-sim (with Simmetrix functionalities).
+
+//*******//
+GMSH
+//*******//
+
+1. Given the .geo files, make a corresponding GMSH mesh as usual: 
+   gmsh name.geo -v 10 -3 
+2. Convert the GMSH msh into a SCOREC mesh: 
+   from_gmsh <input.null> <input.msh> <output.smb>
+3. Derive a SCOREC model from the SCOREC mesh:
+   mkmodel <input.smb> <output.dmg>
+
+Note that, at the moment, the full geometric information is not preserved with the GMSH workflow as the model - hence geometry - is derived from the mesh.
+This means that mesh adaptation will adapt to the geometry described by the initial mesh instead of the true geometric model.
+
+//*******//
+Simmetrix
+//*******//
+
+1. Given the Simmetrix model (.smd), convert it to a SCOREC model:
+   mdlConvert <input.smd> <output.dmg>
+2. Given the Simmetrix mesh (.sms) convert it to a SCOREC mesh:
+   convert <input.smd> <input.sms> <output.smb>
+
+An integer suffix will be appended to the SCOREC mesh name in (2).
+This integer corresponds to the MPI rank that will load the file and is needed in a parallel implementation.
+
+//*******//
+Partitioning the mesh
+//*******//
+
+To partition the resultant SCOREC mesh into some output-directory, we use the split executable:
+
+   mpirun -np <number of processors> split <model.dmg> <mesh.smb> <output-directory/> <number of processors>
+
+The result is a directory with .smb files whose names are integers from 0 to (<number of processors> - 1).
+It is best to prepend the model name for consistency: 
+
+   cd <output-directory>
+   for f in *; do mv $f <model-name>$f; done
+
