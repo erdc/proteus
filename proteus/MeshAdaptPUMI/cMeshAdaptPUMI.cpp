@@ -277,6 +277,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   if (size_field_config == "interface")
       calculateAnisoSizeField();
   else if (size_field_config == "ERM"){
+      assert(err_reg);
       removeBCData();
       double t1 = PCU_Time();
       getERMSizeField(total_error);
@@ -309,6 +310,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     freeNumbering(local[d]);
 
   /// Adapt the mesh
+  assert(size_iso || (size_scale && size_frame));
   ma::Input* in;
   if(adapt_type_config=="anisotropic" || size_field_config== "interface")
     in = ma::configure(m, size_scale, size_frame);
