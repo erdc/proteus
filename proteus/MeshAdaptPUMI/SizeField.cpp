@@ -585,6 +585,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     errRho_curr = apf::getScalar(errRho_reg,reg,0);
     //h_new = h_old*errRho_target/errRho_curr;
     //h_new = h_old*sqrt(apf::measure(element))/sqrt(domainVolume)*target_error/err_curr;
+    if(target_error == 0)
+      target_error = err_total/sqrt(numel);
     h_new = h_old*(target_error/err_curr);
     apf::setScalar(size_iso_reg,reg,0,h_new);
     apf::destroyMeshElement(element);
