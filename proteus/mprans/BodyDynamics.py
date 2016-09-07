@@ -4,6 +4,7 @@ import os
 import numpy as np
 from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
 from proteus.Profiling import logEvent as logEvent
+from collections import OrderedDict
 
 
 
@@ -25,21 +26,49 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         first time step of the simulation.
     """
 
-    def __init__(self, shape, cfl_target=0.9, dt_init=0.001):
+    def __init__(self, shape, cfl_target=0.9, dt_init=0.001, substeps=20):
         self.Shape = shape
+        self.nd = nd = shape.Domain.nd
         # if isinstance(shape, (Rectangle, Cuboid)):
         #     shape._setInertiaTensor()
+        self.substeps = substeps
         self.dt_init = dt_init
         self.cfl_target = 0.9
-        self.last_position = np.array([0., 0., 0.])
         self.rotation_matrix = np.eye(3)
         self.h = np.array([0., 0., 0.])
         self.barycenter = np.zeros(3)
         self.i_start = None  # will be retrieved from setValues() of Domain
         self.i_end = None  # will be retrieved from setValues() of Domain
         self.It = self.Shape.It
+        self.record_dict = OrderedDict()
+        # variables
+        self.position = np.zeros(3)
+        self.last_position = np.array([0., 0., 0.])
+        self.rotation = np.eye(3)
+        self.last_rotation = np.eye(3)
+        self.velocity = np.zeros(3, 'd')
+        self.last_velocity = np.zeros(3, 'd')
+        self.acceleration = np.zeros(3, 'd')
+        self.last_acceleration = np.zeros(3, 'd')
+        self.ang_disp = np.zeros(3, 'd')
+        self.ang_vel = np.zeros(3, 'd')
+        self.last_ang_vel = np.zeros(3, 'd')
+        self.ang_acc = np.zeros(3, 'd')
+        self.last_ang_acc = np.zeros(3, 'd')
+        self.F = np.zeros(3, 'd')
+        self.M = np.zeros(3, 'd')
+        self.last_F = np.zeros(3, 'd')
+        self.last_M = np.zeros(3, 'd')
+        self.ang = 0.
+        self.barycenter = self.Shape.barycenter
+        self.mass = 0.
+        # gravity
+        if nd == 2:
+            self.Fg = self.mass*np.array([0., -9.81, 0.])
+        if nd == 3:
+            self.Fg = self.mass*np.array([0., 0., -9.81])
         if 'RigidBody' not in shape.auxiliaryVariables:
-            shape.auxiliaryVariables['RigidBody'] = self
+            shape._attachAuxiliaryVariable('RigidBody', self)
 
     def attachModel(self, model, ar):
         """
@@ -55,35 +84,148 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         self.nForces = flagMax+1
         return self
 
+    def calculate_init(self):
+        """
+        Function called automatically at the very beginning of the simulation
+        by proteus.
+        """
+        nd = self.nd
+        self.position[:] = self.Shape.barycenter.copy()
+        self.last_position[:] = self.position
+        self.rotation[:nd, :nd] = self.Shape.coords_system
+        self.last_rotation[:nd, :nd] = self.Shape.coords_system
+        self.rotation_euler = getEulerAngles(self.rotation)
+        self.last_rotation_euler = getEulerAngles(self.last_rotation)
+
+    def calculate(self):
+        """
+        Function called automatically at each time step by proteus.
+        """
+        # store previous values
+        self._store_last_values()
+        # for first time step
+        try:
+            self.dt = self.model.levelModelList[-1].dt_last
+        except:
+            self.dt = self.dt_init
+        # get forces and moments
+        self.F[:] = self.getTotalForces()*self.free_x
+        self.M[:] = self.getTotalMoments()*self.free_r
+        # calculate new properties with substepping
+        self.step(self.dt)
+        # record variables in .csv file
+        if self.record_dict:
+            self._recordValues()
+        # print in proteus log file
+        self._logTrace()
+
+    def _store_last_values(self):
+        """
+        Store values of previous time step for displacement calculation
+        """
+        self.last_position[:] = self.position
+        self.last_velocity[:] = self.velocity
+        self.last_acceleration[:] = self.acceleration
+        self.last_rotation[:] = self.rotation
+        self.last_rotation_euler[:] = self.rotation_euler
+        self.last_ang_acc[:] = self.ang_acc
+        self.last_ang_vel[:] = self.ang_vel
+        self.last_F[:] = self.F
+        self.last_M[:] = self.M
 
     def getPressureForces(self):
+        """
+        Gives the pressure forces applied on each segments/facets of the rigid
+        body
+
+        Returns
+        -------
+        F_p: array_like
+            pressure forces (x, y, z) as provided by Proteus
+        """
         i0, i1 = self.i_start, self.i_end
-        return self.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
+        F_p = self.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
+        return F_p
 
     def getShearForces(self):
+        """
+        Gives the shear forces applied on each segments/facets of the rigid
+        body
+
+        Returns
+        -------
+        F_v: array_like
+            shear forces (x, y, z) as provided by Proteus
+        """
         i0, i1 = self.i_start, self.i_end
-        return self.model.levelModelList[-1].coefficients.netForces_v[i0:i1, :]
+        F_v = self.model.levelModelList[-1].coefficients.netForces_v[i0:i1, :]
+        return F_v
 
     def getGravityForce(self):
-        return self.Fg
+        """
+        Returns
+        -------
+        Fg: array_like
+            gravity force
+        """
+        Fg = self.Fg
+        return Fg
 
     def getMoments(self):
+        """
+        Gives the moments applied on each segments/facets of the rigid body
+
+        Returns
+        -------
+        M: array_like
+            moments (x, y, z) as provided by Proteus
+        """
         i0, i1 = self.i_start, self.i_end
-        return self.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
+        M = self.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
+        print '$$$$$$$$$$'
+        print M
+        print '$$$$$$$$$$'
+        print self.model.levelModelList[-1].coefficients.netMoments
+        print '$$$$$$$$$$'
+        return M
 
     def getTotalMoments(self):
+        """
+        Gives the total moments applied the rigid body
+
+        Returns
+        -------
+        M_t: array_like
+            total moments (x, y, z) as provided by Proteus
+        """
         M = self.getMoments()
         M_t = np.sum(M, axis=0)
         return M_t
 
-    def getTotalForce(self):
+    def getTotalForces(self):
+        """
+        Gives the total forces applied the rigid body: shear, pressure and
+        gravity forces
+
+        Returns
+        -------
+        F_t: array_like
+            total forces (x, y, z) as provided by Proteus
+        """
         F_p = self.getPressureForces()
         F_v = self.getShearForces()
-        F_g = self.Fg
+        F_g = self.getGravityForce()
         F_t = np.sum(F_p + F_v, axis=0) + F_g
+        print F_p
         return F_t
 
     def getAcceleration(self):
+        """
+        Returns
+        -------
+        a: array_like
+            acceleration of current time step
+        """
         a = self.F/self.mass
         return a
 
@@ -96,28 +238,34 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         else:
             self.inertia = None
             self.ang_acc = np.array([0., 0., 0.])
+        return self.ang_acc
 
-    def getDisplacement(self,dt):
+    def getDisplacement(self, dt):
+        # reinitialise displacement values
+        self.h[:] = np.zeros(3)
         # acceleration from force
         self.acceleration = self.getAcceleration()
         # substeps for smoother motion between timesteps
-        dt_sub = dt/float(substeps)
-        for i in range(substeps):
+        dt_sub = dt/float(self.substeps)
+        for i in range(self.substeps):
             # displacement
             self.h[:], self.velocity[:] = forward_euler(p0=self.h, v0=self.velocity,
-                                                             a=self.acceleration, dt=dt_sub)
+                                                        a=self.acceleration, dt=dt_sub)
+        return self.h
 
-    def getAngularDisplacement(self):
+    def getAngularDisplacement(self, dt):
+        # reinitialise displacement values
+        self.ang_disp[:] = np.zeros(3)
         # angular acceleration from moment
         self.ang_acc = self.getAngularAcceleration()
-        dt_sub = dt/float(substeps)
-        self.ang_disp = np.array([0.,0.,0.])
-        for i in range(substeps):
+        dt_sub = dt/float(self.substeps)
+        for i in range(self.substeps):
             # rotation
-            self.ang_disp, self.ang_vel[:] = forward_euler(p0=ang_disp, v0=self.ang_vel,
-                                                         a=self.ang_acc, dt=dt_sub)
+            self.ang_disp, self.ang_vel[:] = forward_euler(p0=self.ang_disp, v0=self.ang_vel,
+                                                           a=self.ang_acc, dt=dt_sub)
+        return self.ang_disp
 
-    def step(self, dt, substeps=20):
+    def step(self, dt):
         """
         Step for rigid body calculations in Python
 
@@ -126,15 +274,12 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         dt: float
             time step
         """
-        nd = self.Shape.Domain.nd
-        # reinitialise displacement values
-        ang_disp = 0
-        self.h[:] = np.zeros(3)
+        nd = self.nd
 
         # Translational motion calculation
-        self.getDisplacement(dt)
+        h = self.getDisplacement(dt)
         # Rotational motion calculation
-        self.getAngularDisplacement(dt)
+        ang_disp = self.getAngularDisplacement(dt)
 
         # translate
         self.Shape.translate(self.h[:nd])
@@ -143,96 +288,15 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         if nd == 2 and self.ang_vel[2] < 0:
             self.ang = -self.ang
         if self.ang != 0.:
-            if self.overturning != True:
-                self.Shape.rotate(self.ang, self.ang_vel, self.Shape.barycenter)
-            else:
-                self.Shape.rotate(self.ang, self.ang_vel, self.pivot_friction)
+            self.Shape.rotate(self.ang, self.ang_vel, self.Shape.barycenter)
             self.rotation[:nd, :nd] = self.Shape.coords_system
             self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation),
                                              self.rotation)
+            self.rotation_euler[:] = getEulerAngles(self.rotation)
         else:
             self.rotation_matrix[:] = np.eye(3)
         self.barycenter[:] = self.Shape.barycenter
         self.position[:] = self.Shape.barycenter
-        if self.record_values is True:
-            self.recordValues()
-
-    def recordValues(self):
-        """
-        Records values of rigid body attributes at each time step in a csv file.
-        """
-        comm = Comm.get()
-        if comm.isMaster():
-            t_last = self.model.stepController.t_model_last
-            dt_last = self.model.levelModelList[-1].dt_last
-            values_towrite = []
-            t = t_last-dt_last
-            if t == 0:
-                headers = []
-                if self.record_dict['time'] is True:
-                    headers += ['t']
-                if self.record_dict['pos'] is True:
-                    headers += ['x', 'y', 'z']
-                if self.record_dict['rot'] is True:
-                    headers += ['rx', 'ry', 'rz']
-                if self.record_dict['ang_disp'] is True:
-                    headers += ['ang_dispx', 'ang_dispy', 'ang_dispz']
-                if self.record_dict['F'] is True:
-                    headers += ['Fx', 'Fy', 'Fz']
-                if self.record_dict['M'] is True:
-                    headers += ['Mx', 'My', 'Mz']
-                if self.record_dict['inertia'] is True:
-                    headers += ['inertia']
-                if self.record_dict['vel'] is True:
-                    headers += ['vel_x', 'vel_y', 'vel_z']
-                if self.record_dict['acc'] is True:
-                    headers += ['acc_x', 'acc_y', 'acc_z']
-                if self.record_dict['ang_vel'] is True:
-                    headers += ['ang_velx', 'ang_vely', 'ang_velz']
-                if self.record_dict['ang_acc'] is True:
-                    headers += ['ang_accx', 'ang_accy', 'ang_accz']
-                with open(self.record_file, 'w') as csvfile:
-                    writer = csv.writer(csvfile, delimiter=',')
-                    writer.writerow(headers)
-            if self.record_dict['time'] is True:
-                t = t_last-dt_last
-                values_towrite += [t]
-            if self.record_dict['pos'] is True:
-                x, y, z = self.last_position
-                values_towrite += [x, y, z]
-            if self.record_dict['rot'] is True:
-                rot = self.last_rotation
-                rx = atan2(rot[1, 2], rot[2, 2])
-                ry = -asin(rot[0, 2])
-                rz = atan2(rot[0, 1], rot[0, 0])
-                values_towrite += [rx, ry, rz]
-            if self.record_dict['ang_disp'] is True:
-                ang_dispx, ang_dispy, ang_dispz = self.ang_disp
-                values_towrite += [ang_dispx, ang_dispy, ang_dispz]
-            if self.record_dict['F'] is True:
-                Fx, Fy, Fz = self.F
-                values_towrite += [Fx, Fy, Fz]
-            if self.record_dict['M'] is True:
-                Mx, My, Mz = self.M
-                values_towrite += [Mx, My, Mz]
-            if self.record_dict['inertia'] is True:
-                values_towrite += [self.inertia]
-            if self.record_dict['vel'] is True:
-                vel_x, vel_y, vel_z = self.velocity
-                values_towrite += [vel_x, vel_y, vel_z]
-            if self.record_dict['acc'] is True:
-                acc_x, acc_y, acc_z = self.acceleration
-                values_towrite += [acc_x, acc_y, acc_z]
-            if self.record_dict['ang_vel'] is True:
-                ang_velx, ang_vely, ang_velz = self.ang_vel
-                values_towrite += [ang_velx, ang_vely, ang_velz]
-            if self.record_dict['ang_acc'] is True:
-                ang_accx, ang_accy, ang_accz = self.ang_acc
-                values_towrite += [ang_accx, ang_accy, ang_accz]
-            with open(self.record_file, 'a') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(values_towrite)
-
 
     def setConstraints(self, free_x, free_r):
         """
@@ -258,17 +322,6 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             mass of the body
         """
         self.mass = float(mass)
-
-    def setDensity(self, density):
-        """
-        Set density.
-
-        Parameters
-        ----------
-        density: float
-            Density of the shape
-        """
-        self.density = float(density)
 
     def setInertiaTensor(self, It):
         """
@@ -327,9 +380,9 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         vec = vx, vy, vz = np.array(vec)
         length_vec = np.sqrt(vx**2+vy**2+vz**2)
         vec = vec/length_vec
-        if self.Shape.Domain.nd == 2:
+        if self.nd == 2:
             I = self.It*self.mass
-        elif self.Shape.Domain.nd == 3:
+        elif self.nd == 3:
             # vector relative to original position of shape:
             vec = np.dot(vec, np.linalg.inv(self.coords_system))
             cx, cy, cz = vec
@@ -342,9 +395,9 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             I = np.einsum('ij,ij->', self.mass*self.It, vt)
         return I
 
-    def setRecordValues(self, filename=None, all_values=False, time=True,
-                        pos=False, rot=False, ang_disp=False, F=False, M=False, inertia=False,
-                        vel=False, acc=False, ang_vel=False, ang_acc=False):
+    def setRecordValues(self, filename=None, all_values=False, pos=False,
+                        rot=False, ang_disp=False, F=False, M=False,
+                        inertia=False, vel=False, acc=False, ang_vel=False, ang_acc=False):
         """
         Sets the rigid body attributes that are to be recorded in a csv file
         during the simulation.
@@ -379,203 +432,197 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             Angular velocity of body (default: False. Set to True to record).
         ang_acc: bool
             Angular acceleration of body (default: False. Set to True to record).
+
+        Notes
+        -----
+        To add another value manually, add to dictionary self.record_dict:
+        key: header of the column in .csv
+        value: list of length 2: [variable name, index within variable]
+                                                 (if no index, use None)
+        e.g. self.record_dict['m']['mass', None]
         """
-        self.record_values = True
+        if all_values is True:
+            pos = rot = F = M = acc = vel = ang_acc = ang_vel = True
         if pos is True:
-            x = y = z = True
+            self.record_dict['x'] = ['last_position', 0]
+            self.record_dict['y'] = ['last_position', 1]
+            self.record_dict['z'] = ['last_position', 2]
         if rot is True:
-            rot_x = rot_y = rot_z = True
-        if ang_disp is True:
-            ang_dispx =  ang_dispy = ang_dispz = True
+            self.record_dict['rx'] = ['last_rotation_euler', 0]
+            self.record_dict['ry'] = ['last_rotation_euler', 1]
+            self.record_dict['rz'] = ['last_rotation_euler', 2]
         if F is True:
+            self.record_dict['Fx'] = ['F', 0]
+            self.record_dict['Fy'] = ['F', 1]
+            self.record_dict['Fz'] = ['F', 2]
             Fx = Fy = Fz = True
         if M is True:
-            Mx = My = Mz = True
-        if vel is True:
-            vel_x = vel_y = vel_z = True
+            self.record_dict['Mx'] = ['M', 0]
+            self.record_dict['My'] = ['M', 1]
+            self.record_dict['Mz'] = ['M', 2]
         if acc is True:
-            acc_x = acc_y = acc_z = True
-        if ang_vel is True:
-            ang_velx = ang_vely = ang_velz = True
+            self.record_dict['ax'] = ['acceleration', 0]
+            self.record_dict['ay'] = ['acceleration', 1]
+            self.record_dict['az'] = ['acceleration', 2]
+        if vel is True:
+            self.record_dict['ux'] = ['velocity', 0]
+            self.record_dict['uy'] = ['velocity', 1]
+            self.record_dict['uz'] = ['velocity', 2]
         if ang_acc is True:
-            ang_accx = ang_accy = ang_accz = True
+            self.record_dict['ang_ax'] = ['ang_acc', 0]
+            self.record_dict['ang_ay'] = ['ang_acc', 1]
+            self.record_dict['ang_az'] = ['ang_acc', 2]
+        if ang_vel is True:
+            self.record_dict['ang_ux'] = ['ang_vel', 0]
+            self.record_dict['ang_uy'] = ['ang_vel', 1]
+            self.record_dict['ang_uz'] = ['ang_vel', 2]
+        if inertia is True:
+            self.record_dict['intertia'] = ['inertia', None]
 
-        self.record_dict = {'time':time, 'pos': pos, 'rot':rot, 'ang_disp':ang_disp, 'F':F, 'M':M,
-                            'inertia': inertia, 'vel': vel, 'acc': acc, 'ang_vel': ang_vel, 'ang_acc': ang_acc}
-
-        if all_values is True:
-            for key in self.record_dict:
-                self.record_dict[key] = True
         if filename is None:
             self.record_filename = 'record_' + self.name + '.csv'
         else:
             self.record_filename = filename + '.csv'
+        self.record_file = os.path.join(Profiling.logDir, self.record_filename)
 
-
-
-##################################################
-# Calculation step
-##################################################
-
-    def calculate_init(self):
+    def _recordValues(self):
         """
-        Function called at the very beginning of the simulation by proteus.
+        Records values of rigid body attributes at each time step in a csv file.
         """
-        nd = self.Shape.Domain.nd
-        shape = self.Shape
+        comm = Comm.get()
+        if comm.isMaster():
+            t_last = self.model.stepController.t_model_last
+            dt_last = self.model.levelModelList[-1].dt_last
+            t = t_last-dt_last
+            values_towrite = [t]
+            if t == 0:
+                headers = ['t']
+                for key in self.record_dict:
+                    headers += [key]
+                with open(self.record_file, 'w') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',')
+                    writer.writerow(headers)
+            for key, val in self.record_dict.iteritems():
+                if val[1] is not None:
+                    values_towrite += [getattr(self, val[0])[val[1]]]
+                else:
+                    values_towrite += [getattr(self, val[0])]
+            with open(self.record_file, 'a') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(values_towrite)
 
-        self.position = np.zeros(3)
-        self.position[:] = self.Shape.barycenter.copy()
-        self.last_position[:] = self.position
-        self.velocity = np.zeros(3, 'd')
-        self.last_velocity = np.zeros(3, 'd')
-        self.acceleration = np.zeros(3, 'd')
-        self.last_acceleration = np.zeros(3, 'd')
-
-        self.ang_disp = np.zeros(3, 'd')
-        self.rotation = np.eye(3)
-        self.rotation[:nd, :nd] = shape.coords_system
-        self.last_rotation = np.eye(3)
-        self.last_rotation[:nd, :nd] = shape.coords_system
-        self.ang_vel = np.zeros(3, 'd')
-        self.last_ang_vel = np.zeros(3, 'd')
-        self.ang_acc = np.zeros(3, 'd')
-        self.last_ang_acc = np.zeros(3, 'd')
-        self.F = np.zeros(3, 'd')
-        self.M = np.zeros(3, 'd')
-        self.last_F = np.zeros(3, 'd')
-        self.last_M = np.zeros(3, 'd')
-        self.ang = 0.
-        self.barycenter = self.Shape.barycenter
-
-        if nd == 2:
-            self.Fg = self.mass*np.array([0., -9.81, 0.])
-        if nd == 3:
-            self.Fg = self.mass*np.array([0., 0., -9.81])
-        if self.record_values is True:
-            self.record_file = os.path.join(Profiling.logDir,
-                                            self.record_filename)
-
-
-    def calculate(self):
-        """
-        Function called at each time step by proteus.
-        """
-        # store previous values
-        self.last_position[:] = self.position
-        self.last_velocity[:] = self.velocity
-        self.last_acceleration[:] = self.acceleration
-        self.last_rotation[:] = self.rotation
-        self.last_ang_acc[:] = self.ang_acc
-        self.last_ang_vel[:] = self.ang_vel
-        self.last_F[:] = self.F
-        self.last_M[:] = self.M
-        # for first time step
-        try:
-            dt = self.model.levelModelList[-1].dt_last
-        except:
-            dt = self.dt_init
-        # update forces and moments for current body/shape
-        i0, i1 = self.i_start, self.i_end
-        # get forces
-        F = self.getTotalForce()
-        M = self.getTotalMoments()
-        self.F[:] = F2 = F*self.free_x
-        # get moments
-        self.M[:] = M2 = M*self.free_r
-        # store F and M with DOF constraints to body
-        # calculate new properties
-        self.step(dt)
+    def _logTrace(self):
         # log values
-        t_previous = self.model.stepController.t_model_last-dt
+        t_previous = self.model.stepController.t_model_last-self.dt
         t_current = self.model.stepController.t_model_last
         h = self.h
         last_pos, pos = self.last_position, self.position
         last_vel, vel = self.last_velocity, self.velocity
-        rot = self.rotation
-        rot_x = atan2(rot[1, 2], rot[2, 2])
-        rot_y = -asin(rot[0, 2])
-        rot_z = atan2(rot[0, 1], rot[0, 0])
+        rot = getEulerAngles(self.rotation)
+        rot_x, rot_y, rot_z = rot[0], rot[1], rot[2]
+        F = self.F
+        M = self.M
         logEvent("================================================================")
         logEvent("=================== Rigid Body Calculation =====================")
         logEvent("================================================================")
         logEvent("Name: " + `self.Shape.name`)
         logEvent("================================================================")
-        logEvent("[proteus]     t=%1.5fsec to t=%1.5fsec" % \
+        logEvent("[proteus] t=%1.5fsec to t=%1.5fsec" % \
             (t_previous, t_current))
-        logEvent("[proteus]    dt=%1.5fsec" % (dt))
+        logEvent("[proteus] dt=%1.5fsec" % (self.dt))
         logEvent("[body] ============== Pre-calculation attributes  ==============")
-        logEvent("[proteus]     t=%1.5fsec" % (t_previous))
-        logEvent("[proteus]     F=(% 12.7e, % 12.7e, % 12.7e)" % (F[0], F[1], F[2]))
-        logEvent("[proteus] F*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (F2[0], F2[1], F2[2]))
-        logEvent("[proteus]     M=(% 12.7e, % 12.7e, % 12.7e)" % (M[0], M[1], M[2]))
-        logEvent("[proteus] M*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (M2[0], M2[1], M2[2]))
+        logEvent("[proteus] t=%1.5fsec" % (t_previous))
+        logEvent("[proteus] F=(% 12.7e, % 12.7e, % 12.7e)" % (F[0], F[1], F[2]))
+        logEvent("[proteus] M=(% 12.7e, % 12.7e, % 12.7e)" % (M[0], M[1], M[2]))
         logEvent("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
             (last_pos[0], last_pos[1], last_pos[2]))
-        logEvent("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body]    vel=(% 12.7e, % 12.7e, % 12.7e)" % \
             (last_vel[0], last_vel[1], last_vel[2]))
         logEvent("[body] ===============Post-calculation attributes ==============")
-        logEvent("[body]        t=%1.5fsec" % (t_current))
-        logEvent("[body]        h=(% 12.7e, % 12.7e, % 12.7e)" % (h[0], h[1], h[2]))
-        logEvent("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body]    t=%1.5fsec" % (t_current))
+        logEvent("[body]    h=(% 12.7e, % 12.7e, % 12.7e)" % (h[0], h[1], h[2]))
+        logEvent("[body]    pos=(% 12.7e, % 12.7e, % 12.7e)" % \
             (pos[0], pos[1], pos[2]))
-        logEvent("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body]    vel=(% 12.7e, % 12.7e, % 12.7e)" % \
             (vel[0], vel[1], vel[2]))
-        logEvent("[body]      rot=(% 12.7e, % 12.7e, % 12.7e)" % \
+        logEvent("[body]    rot=(% 12.7e, % 12.7e, % 12.7e)" % \
             (rot_x, rot_y, rot_z))
         logEvent("================================================================")
+        logEvent(`self.rotation_euler`)
+        logEvent(`self.rotation`)
+        logEvent(`self.getTotalMoments()`)
 
-
-##################################################
-
-
-def forward_euler(p0, v0, a, dt):
-    v1 = v0+a*dt
-    p1 = p0+v1*dt
-    return p1, v1
-
-def leapfrog(p0, v0, a, dt):
-    p1 = p0+v0*dt+0.5*a*dt**2
-    v1 = v0+a*dt
-    return p1, v1
-
-
-########################################################################################################################################################################################################
-########################################################################################################################################################################################################
 
 class CaissonBody(RigidBody):
     """
     Sub-class to create a caisson rigid body.
     """
 
-    def __init__(self, shape):
-        super(CaissonBody, self).__init__(shape)
-        self.Shape = shape
+    def __init__(self, shape, substeps):
+        super(CaissonBody, self).__init__(shape, substeps)
+        # friciton module parameter used for switching to dynamic motion cases
+        self.fromDynamic_toStatic = False
+        self.last_fromDynamic_toStatic = False
+        # friction and overturning parameters to be initialised
+        self.pivot_friction = np.zeros(3)
+        self.last_pivot_friction = np.zeros(3)
+        self.Ftan = 0.0
+        self.last_Ftan = 0.0
+        self.Mp = np.zeros(3, 'd')
+        self.last_Mp = np.zeros(3, 'd')
+        self.rp = np.zeros(3, 'd')
+        self.last_rp = np.zeros(3, 'd')
 
+    def calculate_init(self):
+        """
+        Function called at the very beginning of the simulation by proteus.
+        """
+        self.position[:] = self.Shape.barycenter.copy()
+        self.last_position[:] = self.position
+        self.rotation[:nd, :nd] = self.Shape.coords_system
+        self.last_rotation[:nd, :nd] = self.Shape.coords_system
+        self.rotation_euler = getEulerAngles(self.rotation)
+        self.last_rotation_euler = getEulerAngles(self.last_rotation)
+        # Initial position of the 2D caisson vertices
+        self.cV_init = np.array([(self.Shape.vertices[0][0], self.Shape.vertices[0][1]),
+                                 (self.Shape.vertices[1][0], self.Shape.vertices[1][1]),
+                                 (self.Shape.vertices[2][0], self.Shape.vertices[2][1]),
+                                 (self.Shape.vertices[3][0], self.Shape.vertices[3][1])])
+        # Position of the 2D caisson vertices
+        self.cV = self.cV_init
+        # Last position of the 2D caisson vertices
+        self.cV_last = self.cV
+        self.init_barycenter = self.Shape.barycenter
 
-    def getDisplacement(self,dt):
-        # acceleration from force
-        self.acceleration = self.getAcceleration()
-        # substeps for smoother motion between timesteps
-        dt_sub = dt/float(substeps)
-        for i in range(substeps):
-            # displacement
-            self.velocity += self.acceleration*dt_sub
-            self.h += self.velocity*dt_sub
-
+    def _store_last_values(self):
+        # store previous values
+        self.last_position[:] = self.position
+        self.last_velocity[:] = self.velocity
+        self.last_acceleration[:] = self.acceleration
+        self.last_rotation[:] = self.rotation
+        self.last_rotation_euler[:] = self.rotation_euler
+        self.last_ang_acc[:] = self.ang_acc
+        self.last_ang_vel[:] = self.ang_vel
+        self.last_F[:] = self.F
+        self.last_M[:] = self.M
+        # friciton and overturning
+        self.cV_last = self.cV
+        self.last_fromDynamic_toStatic = self.fromDynamic_toStatic
+        self.last_pivot_friction = self.pivot_friction
+        self.last_Mp[:] = self.Mp
+        self.last_rp = self.rp
 
     def getAngularDisplacement(self):
         # angular acceleration from moment
         self.ang_acc = self.getAngularAcceleration()
-        dt_sub = dt/float(substeps)
+        dt_sub = dt/float(self.substeps)
         self.ang_disp = np.array([0.,0.,0.])
-        for i in range(substeps):
+        for i in range(self.substeps):
             # rotation
             self.ang_vel += self.ang_acc*dt_sub
             self.ang_disp += self.ang_acc*dt_sub*dt_sub
 
-
-    def step(self, dt, substeps=20):
+    def step(self, dt):
         """
         Step for rigid body calculations in Python
 
@@ -616,6 +663,7 @@ class CaissonBody(RigidBody):
             self.rotation[:nd, :nd] = self.Shape.coords_system
             self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation),
                                              self.rotation)
+            self.rotation_euler[:] = getEulerAngles(self.rotation)
         else:
             self.rotation_matrix[:] = np.eye(3)
         self.barycenter[:] = self.Shape.barycenter
@@ -626,91 +674,6 @@ class CaissonBody(RigidBody):
         self.cV[1] = self.Shape.vertices[1]
         self.cV[2] = self.Shape.vertices[2]
         self.cV[3] = self.Shape.vertices[3]
-
-        # record values
-        if self.record_values is True:
-            self.recordValues()
-
-    def recordValues(self):
-        """
-        Records values of rigid body attributes at each time step in a csv file.
-        """
-        comm = Comm.get()
-        if comm.isMaster():
-            t_last = self.model.stepController.t_model_last
-            dt_last = self.model.levelModelList[-1].dt_last
-            values_towrite = []
-            t = t_last-dt_last
-            if t == 0:
-                headers = []
-                if self.record_dict['time'] is True:
-                    headers += ['t']
-                if self.record_dict['pos'] is True:
-                    headers += ['x', 'y', 'z']
-                if self.record_dict['caissonVertices'] is True:
-                    headers += ['1', '2', '3', '4']
-                if self.record_dict['rot'] is True:
-                    headers += ['rx', 'ry', 'rz']
-                if self.record_dict['ang_disp'] is True:
-                    headers += ['ang_dispx', 'ang_dispy', 'ang_dispz']
-                if self.record_dict['F'] is True:
-                    headers += ['Fx', 'Fy', 'Fz']
-                if self.record_dict['M'] is True:
-                    headers += ['Mx', 'My', 'Mz']
-                if self.record_dict['inertia'] is True:
-                    headers += ['inertia']
-                if self.record_dict['vel'] is True:
-                    headers += ['vel_x', 'vel_y', 'vel_z']
-                if self.record_dict['acc'] is True:
-                    headers += ['acc_x', 'acc_y', 'acc_z']
-                if self.record_dict['ang_vel'] is True:
-                    headers += ['ang_velx', 'ang_vely', 'ang_velz']
-                if self.record_dict['ang_acc'] is True:
-                    headers += ['ang_accx', 'ang_accy', 'ang_accz']
-                with open(self.record_file, 'w') as csvfile:
-                    writer = csv.writer(csvfile, delimiter=',')
-                    writer.writerow(headers)
-            if self.record_dict['time'] is True:
-                t = t_last-dt_last
-                values_towrite += [t]
-            if self.record_dict['pos'] is True:
-                x, y, z = self.last_position
-                values_towrite += [x, y, z]
-            if self.record_dict['caissonVertices'] is True:
-                cV1, cV2, cV3, cV4 = self.cV_last
-                values_towrite += [cV1, cV2, cV3, cV4]
-            if self.record_dict['rot'] is True:
-                rot = self.last_rotation
-                rx = atan2(rot[1, 2], rot[2, 2])
-                ry = -asin(rot[0, 2])
-                rz = atan2(rot[0, 1], rot[0, 0])
-                values_towrite += [rx, ry, rz]
-            if self.record_dict['ang_disp'] is True:
-                ang_dispx, ang_dispy, ang_dispz = self.ang_disp
-                values_towrite += [ang_dispx, ang_dispy, ang_dispz]
-            if self.record_dict['F'] is True:
-                Fx, Fy, Fz = self.F
-                values_towrite += [Fx, Fy, Fz]
-            if self.record_dict['M'] is True:
-                Mx, My, Mz = self.M
-                values_towrite += [Mx, My, Mz]
-            if self.record_dict['inertia'] is True:
-                values_towrite += [self.inertia]
-            if self.record_dict['vel'] is True:
-                vel_x, vel_y, vel_z = self.velocity
-                values_towrite += [vel_x, vel_y, vel_z]
-            if self.record_dict['acc'] is True:
-                acc_x, acc_y, acc_z = self.acceleration
-                values_towrite += [acc_x, acc_y, acc_z]
-            if self.record_dict['ang_vel'] is True:
-                ang_velx, ang_vely, ang_velz = self.ang_vel
-                values_towrite += [ang_velx, ang_vely, ang_velz]
-            if self.record_dict['ang_acc'] is True:
-                ang_accx, ang_accy, ang_accz = self.ang_acc
-                values_towrite += [ang_accx, ang_accy, ang_accz]
-            with open(self.record_file, 'a') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(values_towrite)
 
     def getInertia(self, vec=(0., 0., 1.), pivot=None):
         """
@@ -766,82 +729,6 @@ class CaissonBody(RigidBody):
             I = np.einsum('ij,ij->', self.mass*self.It, vt)
         return I
 
-    def setRecordValues(self, filename=None, all_values=False, time=True,
-                        pos=False, caissonVertices=None, rot=False, ang_disp=False, F=False, M=False, inertia=False,
-                        vel=False, acc=False, ang_vel=False, ang_acc=False):
-        """
-        Sets the rigid body attributes that are to be recorded in a csv file
-        during the simulation.
-
-        Parameters
-        ----------
-        filename: Optional[string]
-            Name of file, if not set, the file will be named as follows:
-            'record_[shape.name].csv'
-        all_values: bool
-            Set to True to record all values listed below.
-        time: bool
-            Time of recorded row (default: True).
-        pos: bool
-            Position of body (default: False. Set to True to record).
-        caissonVertices: list of points
-            Caisson vertices position (default: False. Set to True to record).
-        rot: bool
-            Rotation of body (default: False. Set to True to record).
-        ang_disp: array
-            Angular displecement calculated during rigid body calculation step.
-            Applied on the body in order to make it rotating.
-        F: bool
-            Forces applied on body (default: False. Set to True to record).
-        M: bool
-            Moments applied on body (default: False. Set to True to record).
-        inertia: bool
-            Inertia of body (default: False. Set to True to record).
-        vel: bool
-            Velocity of body (default: False. Set to True to record).
-        acc: bool
-            Acceleration of body (default: False. Set to True to record).
-        ang_vel: array
-            Angular velocity of body (default: False. Set to True to record).
-        ang_acc: bool
-            Angular acceleration of body (default: False. Set to True to record).
-        """
-        self.record_values = True
-        if pos is True:
-            x = y = z = True
-        if caissonVertices is True:
-            cV1 = cV2 = cV3 = cV4 = True
-        if rot is True:
-            rot_x = rot_y = rot_z = True
-        if ang_disp is True:
-            ang_dispx =  ang_dispy = ang_dispz = True
-        if F is True:
-            Fx = Fy = Fz = True
-        if M is True:
-            Mx = My = Mz = True
-        if vel is True:
-            vel_x = vel_y = vel_z = True
-        if acc is True:
-            acc_x = acc_y = acc_z = True
-        if ang_vel is True:
-            ang_velx = ang_vely = ang_velz = True
-        if ang_acc is True:
-            ang_accx = ang_accy = ang_accz = True
-
-        self.record_dict = {'time':time, 'pos': pos, 'caissonVertices':caissonVertices, 'rot':rot, 'ang_disp':ang_disp, 'F':F, 'M':M,
-                            'inertia': inertia, 'vel': vel, 'acc': acc, 'ang_vel': ang_vel, 'ang_acc': ang_acc}
-
-        if all_values is True:
-            for key in self.record_dict:
-                self.record_dict[key] = True
-        if filename is None:
-            self.record_filename = 'record_' + self.name + '.csv'
-        else:
-            self.record_filename = filename + '.csv'
-
-
-#  Friction, overturning and soil modules
-
     def setFriction(self, friction, m_static, m_dynamic, tolerance, grainSize):
         """
         Sets material properties for sliding and overturning modules
@@ -868,8 +755,6 @@ class CaissonBody(RigidBody):
         self.tolerance = tolerance
         self.grainSize = grainSize
 
-
-
     def setOverturning(self, overturning):
         """
         Sets material properties for sliding and overturning modules
@@ -880,8 +765,6 @@ class CaissonBody(RigidBody):
             If True, overturning module is switched on.
         """
         self.overturning = overturning
-
-
 
     def setSprings(self, springs, Kx, Ky, Krot, C, Crot):
         """
@@ -908,8 +791,6 @@ class CaissonBody(RigidBody):
         self.Krot = Krot
         self.C = C
         self.Crot = Crot
-
-
 
     def soil_force(self, reaction):
         """
@@ -947,8 +828,6 @@ class CaissonBody(RigidBody):
         elif reaction == 'fy':
             return fy
 
-
-
     def soil_moment(self, h):
         """
         Calculate moment reactions offered  by soil foundation (springs model).
@@ -972,7 +851,7 @@ class CaissonBody(RigidBody):
         l_caisson = Lcais * 0.5
         pos_x, pos_y, pos_z = self.last_position
 
-      ### Rotational reaction
+        ### Rotational reaction
         if Krot != 0.0:
             msz = -Krot*self.ang_disp[2]    # spring
         else:
@@ -999,8 +878,6 @@ class CaissonBody(RigidBody):
         mz = msz + mdz
         return mz
 
-
-
     def friction_module(self,dt):
         """
         Calculate sliding motion modelling frictional force.
@@ -1010,8 +887,7 @@ class CaissonBody(RigidBody):
         dt : Time step.
         """
         nd = self.Shape.Domain.nd
-        substeps = 20
-        dt_sub = dt/float(substeps)
+        dt_sub = dt/float(self.substeps)
         # movement_functions for friction test cases
         Fx, Fy, Fz = self.F
         eps = 0.000000000000000001 # to avoid 0/0
@@ -1028,7 +904,6 @@ class CaissonBody(RigidBody):
             gv = g[2]
         acceleration = np.zeros(3)
 
-        #---------------------------------------------------------------
         def static_case(self, sign, Fx, Fv, mass, m):
             """
             Set a static friction.
@@ -1053,12 +928,11 @@ class CaissonBody(RigidBody):
                 self.acceleration[0] = Fh/mass
                 self.acceleration[1] = 0.0
                 self.acceleration[2] = 0.0
-                for i in range(substeps):
+                for i in range(self.substeps):
                     self.velocity += self.acceleration*dt_sub
                     self.h += self.velocity*dt_sub
             self.fromDynamic_toStatic = False
 
-        #---------------------------------------------------------------
         def dynamic_case(self, sign, Fx, Fv, mass, m):
             """
             Set a dynamic friction.
@@ -1078,7 +952,7 @@ class CaissonBody(RigidBody):
             self.acceleration[0] = Fh/mass
             self.acceleration[1] = 0.0
             self.acceleration[2] = 0.0
-            for i in range(substeps):
+            for i in range(self.substeps):
                 self.velocity += self.acceleration*dt_sub
                 self.h += self.velocity*dt_sub
                 # When velocity changes sign, it means that 0-condition is passed
@@ -1108,8 +982,6 @@ class CaissonBody(RigidBody):
             else :
                 dynamic_case(self, sign_dynamic, Fx, Fv, mass, m=0.0)
 
-
-
     def overturning_module(self,dt):
         """
         Calculate overturning motion modelling soil foundation reactions.
@@ -1119,8 +991,7 @@ class CaissonBody(RigidBody):
         dt : Time step.
         """
         nd = self.Shape.Domain.nd
-        substeps = 20
-        dt_sub = dt/float(substeps)
+        dt_sub = dt/float(self.substeps)
 
         #---------------------------------------------------------------
         def calculate_rotation(self, floating, h):
@@ -1168,7 +1039,7 @@ class CaissonBody(RigidBody):
             self.ang_acc = self.Mp[:]/self.inertia
             # rotation
             self.ang_disp = np.array([0., 0., 0.])
-            for i in range(substeps):
+            for i in range(self.substeps):
                 self.ang_vel += self.ang_acc*dt_sub
                 self.ang_disp += self.ang_acc*dt_sub*dt_sub
 
@@ -1213,143 +1084,20 @@ class CaissonBody(RigidBody):
                     calculate_rotation(self, floating=True, h=0)     # ----> caisson up the rubble mound: FLOATING CASE I calculate normally rotation on barycenter!!!
 
 
-# Calculation step
 
-    def calculate_init(self):
-        """
-        Function called at the very beginning of the simulation by proteus.
-        """
-        nd = self.Shape.Domain.nd
-        shape = self.Shape
+def forward_euler(p0, v0, a, dt):
+    v1 = v0+a*dt
+    p1 = p0+v1*dt
+    return p1, v1
 
-        self.position = np.zeros(3)
-        self.position[:] = self.Shape.barycenter.copy()
-        self.last_position[:] = self.position
-        self.velocity = np.zeros(3, 'd')
-        self.last_velocity = np.zeros(3, 'd')
-        self.acceleration = np.zeros(3, 'd')
-        self.last_acceleration = np.zeros(3, 'd')
+# def leapfrog(p0, v0, a, dt):
+#     p1 = p0+v0*dt+0.5*a*dt**2
+#     v1 = v0+a*dt
+#     return p1, v1
 
-        self.ang_disp = np.zeros(3, 'd')
-        self.rotation = np.eye(3)
-        self.rotation[:nd, :nd] = shape.coords_system
-        self.last_rotation = np.eye(3)
-        self.last_rotation[:nd, :nd] = shape.coords_system
-        self.ang_vel = np.zeros(3, 'd')
-        self.last_ang_vel = np.zeros(3, 'd')
-        self.ang_acc = np.zeros(3, 'd')
-        self.last_ang_acc = np.zeros(3, 'd')
-        self.F = np.zeros(3, 'd')
-        self.M = np.zeros(3, 'd')
-        self.last_F = np.zeros(3, 'd')
-        self.last_M = np.zeros(3, 'd')
-        self.ang = 0.
-        self.barycenter = self.Shape.barycenter
-
-        if nd == 2:
-            self.Fg = self.mass*np.array([0., -9.81, 0.])
-        if nd == 3:
-            self.Fg = self.mass*np.array([0., 0., -9.81])
-        if self.record_values is True:
-            self.record_file = os.path.join(Profiling.logDir,
-                                            self.record_filename)
-        # Initial position of the 2D caisson vertices
-        self.cV_init = np.array([(self.Shape.vertices[0][0], self.Shape.vertices[0][1]),
-                                     (self.Shape.vertices[1][0], self.Shape.vertices[1][1]),
-                                     (self.Shape.vertices[2][0], self.Shape.vertices[2][1]),
-                                     (self.Shape.vertices[3][0], self.Shape.vertices[3][1])])
-        # Position of the 2D caisson vertices
-        self.cV = self.cV_init
-        # Last position of the 2D caisson vertices
-        self.cV_last = self.cV
-        # friciton module parameter used for switching to dynamic motion cases
-        self.fromDynamic_toStatic = False
-        self.last_fromDynamic_toStatic = False
-        # friction and overturning parameters to be initialised
-        self.pivot_friction = np.zeros(3)
-        self.last_pivot_friction = np.zeros(3)
-        self.Ftan = 0.0
-        self.last_Ftan = 0.0
-        self.Mp = np.zeros(3, 'd')
-        self.last_Mp = np.zeros(3, 'd')
-        self.rp = np.zeros(3, 'd')
-        self.last_rp = np.zeros(3, 'd')
-        self.init_barycenter = self.Shape.barycenter
-
-
-    def calculate(self):
-        """
-        Function called at each time step by proteus.
-        """
-        # store previous values
-        self.last_position[:] = self.position
-        self.last_velocity[:] = self.velocity
-        self.last_acceleration[:] = self.acceleration
-        self.last_rotation[:] = self.rotation
-        self.last_ang_acc[:] = self.ang_acc
-        self.last_ang_vel[:] = self.ang_vel
-        self.last_F[:] = self.F
-        self.last_M[:] = self.M
-        # friciton and overturning
-        self.cV_last = self.cV
-        self.last_fromDynamic_toStatic = self.fromDynamic_toStatic
-        self.last_pivot_friction = self.pivot_friction
-        self.last_Mp[:] = self.Mp
-        self.last_rp = self.rp
-        # for first time step
-        try:
-            dt = self.model.levelModelList[-1].dt_last
-        except:
-            dt = self.dt_init
-        # update forces and moments for current body/shape
-        i0, i1 = self.i_start, self.i_end
-        # get forces
-        F = self.getTotalForce()
-        M = self.getTotalMoments()
-        self.F[:] = F2 = F*self.free_x
-        # get moments
-        self.M[:] = M2 = M*self.free_r
-        # store F and M with DOF constraints to body
-        # calculate new properties
-        self.step(dt)
-        # log values
-        t_previous = self.model.stepController.t_model_last-dt
-        t_current = self.model.stepController.t_model_last
-        h = self.h
-        last_pos, pos = self.last_position, self.position
-        last_vel, vel = self.last_velocity, self.velocity
-        rot = self.rotation
-        rot_x = atan2(rot[1, 2], rot[2, 2])
-        rot_y = -asin(rot[0, 2])
-        rot_z = atan2(rot[0, 1], rot[0, 0])
-        logEvent("================================================================")
-        logEvent("=================== Rigid Body Calculation =====================")
-        logEvent("================================================================")
-        logEvent("Name: " + `self.Shape.name`)
-        logEvent("================================================================")
-        logEvent("[proteus]     t=%1.5fsec to t=%1.5fsec" % \
-            (t_previous, t_current))
-        logEvent("[proteus]    dt=%1.5fsec" % (dt))
-        logEvent("[body] ============== Pre-calculation attributes  ==============")
-        logEvent("[proteus]     t=%1.5fsec" % (t_previous))
-        logEvent("[proteus]     F=(% 12.7e, % 12.7e, % 12.7e)" % (F[0], F[1], F[2]))
-        logEvent("[proteus] F*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (F2[0], F2[1], F2[2]))
-        logEvent("[proteus]     M=(% 12.7e, % 12.7e, % 12.7e)" % (M[0], M[1], M[2]))
-        logEvent("[proteus] M*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (M2[0], M2[1], M2[2]))
-        logEvent("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
-            (last_pos[0], last_pos[1], last_pos[2]))
-        logEvent("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
-            (last_vel[0], last_vel[1], last_vel[2]))
-        logEvent("[body] ===============Post-calculation attributes ==============")
-        logEvent("[body]        t=%1.5fsec" % (t_current))
-        logEvent("[body]        h=(% 12.7e, % 12.7e, % 12.7e)" % (h[0], h[1], h[2]))
-        logEvent("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
-            (pos[0], pos[1], pos[2]))
-        logEvent("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
-            (vel[0], vel[1], vel[2]))
-        logEvent("[body]      rot=(% 12.7e, % 12.7e, % 12.7e)" % \
-            (rot_x, rot_y, rot_z))
-        logEvent("================================================================")
-
-
-
+def getEulerAngles(coord_system):
+    rot = coord_system
+    rx = atan2(rot[1, 2], rot[2, 2])
+    ry = -asin(rot[0, 2])
+    rz = atan2(rot[0, 1], rot[0, 0])
+    return [rx, ry, rz]
