@@ -64,7 +64,12 @@ cdef extern from "VOF.h" namespace "proteus":
                                double* ebqe_phi,double epsFact,
                                double* ebqe_u,
                                double* ebqe_flux,
-			       double* elementResidual_u)
+			       double cE,
+			       double cMax, 
+			       double cK,
+			       int ENTROPY_VISCOSITY,
+			       int BACKWARD_EULER, 
+			       int SUPG)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -114,7 +119,9 @@ cdef extern from "VOF.h" namespace "proteus":
                                double* ebqe_bc_u_ext,
                                int* isFluxBoundary_u,
                                double* ebqe_bc_flux_u_ext,
-                               int* csrColumnOffsets_eb_u_u)
+                               int* csrColumnOffsets_eb_u_u,
+			       int BACKWARD_EULER, 
+			       int SUPG)
     VOF_base* newVOF(int nSpaceIn,
                        int nQuadraturePoints_elementIn,
                        int nDOF_mesh_trial_elementIn,
@@ -201,8 +208,13 @@ cdef class cVOF_base:
                          numpy.ndarray ebqe_bc_flux_u_ext,
                          numpy.ndarray ebqe_phi,double epsFact,
                          numpy.ndarray ebqe_u,
-                         numpy.ndarray ebqe_flux, 
-			 numpy.ndarray elementResidual_u):
+                         numpy.ndarray ebqe_flux,
+			 double cE,
+			 double cMax, 
+			 double cK,
+			 int ENTROPY_VISCOSITY,
+			 int BACKWARD_EULER, 
+			 int SUPG):
        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -263,7 +275,12 @@ cdef class cVOF_base:
                                        epsFact,
                                        <double*> ebqe_u.data,
                                        <double*> ebqe_flux.data,
-				       <double*> elementResidual_u.data)
+				       cE,
+				       cMax,
+				       cK,
+				       ENTROPY_VISCOSITY,
+				       BACKWARD_EULER, 
+				       SUPG)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -314,7 +331,9 @@ cdef class cVOF_base:
                          numpy.ndarray ebqe_bc_u_ext,
                          numpy.ndarray isFluxBoundary_u,
                          numpy.ndarray ebqe_bc_flux_u_ext,
-                         numpy.ndarray csrColumnOffsets_eb_u_u):
+                         numpy.ndarray csrColumnOffsets_eb_u_u,
+ 			 int BACKWARD_EULER, 
+			 int SUPG):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
@@ -366,4 +385,6 @@ cdef class cVOF_base:
                                        <double*> ebqe_bc_u_ext.data,
                                        <int*> isFluxBoundary_u.data,
                                        <double*> ebqe_bc_flux_u_ext.data,
-                                       <int*> csrColumnOffsets_eb_u_u.data)
+                                       <int*> csrColumnOffsets_eb_u_u.data, 
+				       BACKWARD_EULER,
+				       SUPG)

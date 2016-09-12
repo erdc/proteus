@@ -54,7 +54,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
     from proteus.ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
     from proteus.cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
-    def __init__(self,LS_model=None,V_model=0,RD_model=None,ME_model=1,EikonalSolverFlag=0,checkMass=True,epsFact=0.0,useMetrics=0.0,sc_uref=1.0,sc_beta=1.0,setParamsFunc=None,movingDomain=False):
+    def __init__(self,cE=0.5,cMax=0.1,cK=1.0,SSP33=True,ENTROPY_VISCOSITY=1,BACKWARD_EULER=0,SUPG=0,
+                 LS_model=None,V_model=0,RD_model=None,ME_model=1,EikonalSolverFlag=0,checkMass=True,epsFact=0.0,useMetrics=0.0,sc_uref=1.0,sc_beta=1.0,setParamsFunc=None,movingDomain=False):
         self.useMetrics = useMetrics
         self.variableNames=['vof']
         nc=1
@@ -91,6 +92,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.setParamsFunc   = setParamsFunc
         self.flowCoefficients=None
         self.movingDomain=movingDomain
+        #ENTROPY VISCOSITY and ART COMPRESSION
+        self.cE=cE
+        self.cMax=cMax
+        self.cK=cK
+        self.SSP33=SSP33
+        self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
+        self.BACKWARD_EULER=BACKWARD_EULER
+        self.SUPG=SUPG
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def attachModels(self,modelList):
@@ -520,11 +529,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
         self.tensors_elementBoundaryQuadrature= set()
-        # allocate residual (MQL)
-        self.elementResidual = [numpy.zeros(
-                (self.mesh.nElements_global,
-                 self.nDOF_test_element[ci]),
-                'd')]
 	self.inflowBoundaryBC = {}
 	self.inflowBoundaryBC_values = {}
 	self.inflowFlux = {}
@@ -679,6 +683,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.forceStrongConditions:
               for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                   self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+
         self.vof.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -741,11 +746,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc',0)],
             self.coefficients.ebqe_phi,self.coefficients.epsFact,
             self.ebqe[('u',0)],
-            self.ebqe[('advectiveFlux',0)], 
-            self.elementResidual[0])
-        #print self.elementResidual
-        #print self.shockCapturing.numDiff_last[0],
-        #input("STOP")
+            self.ebqe[('advectiveFlux',0)],
+            #ENTROPY VISCOSITY and ARTIFICIAL COMRPESSION
+            self.coefficients.cE,
+            self.coefficients.cMax,
+            self.coefficients.cK,
+            self.coefficients.ENTROPY_VISCOSITY,
+            self.coefficients.BACKWARD_EULER,
+            self.coefficients.SUPG)
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
@@ -812,7 +820,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u',0)],
             self.ebqe[('advectiveFlux_bc_flag',0)],
             self.ebqe[('advectiveFlux_bc',0)],
-            self.csrColumnOffsets_eb[(0,0)])
+            self.csrColumnOffsets_eb[(0,0)], 
+            self.coefficients.BACKWARD_EULER, 
+            self.coefficients.SUPG)
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
