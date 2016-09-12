@@ -854,8 +854,7 @@ class NS_base:  # (HasTraits):
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
-                                #model.solver.solverList[0].fullNewton = False
-                                if (model.levelModelList[0].coefficients.SSP33):
+                                if (model.levelModelList[0].timeIntegration.use_SSP33):
                                     #get stage 1 solution
                                     uStage1 = numpy.copy(model.uList[0])
                                     ####################

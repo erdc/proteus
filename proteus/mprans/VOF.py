@@ -54,7 +54,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
     from proteus.ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
     from proteus.cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
-    def __init__(self,cE=0.5,cMax=0.1,cK=1.0,SSP33=True,ENTROPY_VISCOSITY=1,BACKWARD_EULER=0,SUPG=0,
+    def __init__(self,cE=0.5,cMax=0.1,cK=1.0,ENTROPY_VISCOSITY=0,BACKWARD_EULER=1,SUPG=1,
                  LS_model=None,V_model=0,RD_model=None,ME_model=1,EikonalSolverFlag=0,checkMass=True,epsFact=0.0,useMetrics=0.0,sc_uref=1.0,sc_beta=1.0,setParamsFunc=None,movingDomain=False):
         self.useMetrics = useMetrics
         self.variableNames=['vof']
@@ -96,7 +96,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cE=cE
         self.cMax=cMax
         self.cK=cK
-        self.SSP33=SSP33
         self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
         self.BACKWARD_EULER=BACKWARD_EULER
         self.SUPG=SUPG
