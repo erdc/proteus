@@ -467,7 +467,6 @@ class Newton(NonlinearSolver):
                 % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
-                self.fullNewton = False
                 self.F.getJacobian(self.J)
                 if self.linearSolver.computeEigenvalues:
                     logEvent("Calculating eigenvalues of J^t J")

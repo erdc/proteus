@@ -46,6 +46,7 @@ class TI_base:
         Set flags that indicate that all terms
         are implicit.
         """
+        self.use_SSP33 = False
         self.tLast = 0.0
         self.dt = 1.0
         self.t  = self.tLast + self.dt
@@ -354,6 +355,19 @@ class BackwardEuler_cfl(BackwardEuler):
         """
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
+
+class SSP33(BackwardEuler_cfl):
+    def __init__(self,transport,runCFL=0.9,integrateInterpolationPoints=False):
+        BackwardEuler.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
+        self.runCFL=runCFL
+        self.dtLast=None
+        self.dtRatioMax = 2.0
+        self.cfl = {}
+        for ci in range(self.nc):
+            if transport.q.has_key(('cfl',ci)):
+                self.cfl[ci] = transport.q[('cfl',ci)]
+        self.isAdaptive=True
+        self.use_SSP33 = True
 
 class FLCBDF(TI_base):
     import flcbdfWrappers
