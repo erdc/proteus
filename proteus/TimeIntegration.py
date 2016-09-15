@@ -46,6 +46,7 @@ class TI_base:
         Set flags that indicate that all terms
         are implicit.
         """
+        self.IMPLICIT = True
         self.use_SSP33 = False
         self.tLast = 0.0
         self.dt = 1.0
@@ -368,6 +369,7 @@ class SSP33(BackwardEuler_cfl):
                 self.cfl[ci] = transport.q[('cfl',ci)]
         self.isAdaptive=True
         self.use_SSP33 = True
+        self.IMPLICIT = False
 
 class FLCBDF(TI_base):
     import flcbdfWrappers

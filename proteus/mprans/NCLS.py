@@ -55,6 +55,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
 
     def __init__(self,
+                 cE=1.0,cMax=0.1,ENTROPY_VISCOSITY=0,SUPG=1,
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
@@ -95,6 +96,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 	self.sc_uref=sc_uref
 	self.sc_beta=sc_beta
         self.waterline_interval = waterline_interval
+        #ENTROPY VISCOSITY 
+        self.cE=cE
+        self.cMax=cMax
+        self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
+        self.SUPG=SUPG
 
     def attachModels(self,modelList):
         #the level set model
@@ -687,7 +693,12 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
-            self.ebqe[('u',0)])
+            self.ebqe[('u',0)],
+            self.coefficients.cE,
+            self.coefficients.cMax, 
+            self.coefficients.ENTROPY_VISCOSITY, 
+            self.timeIntegration.IMPLICIT, 
+            self.coefficients.SUPG)
 
 	if self.forceStrongConditions:#
 	    for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -757,7 +768,9 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
-            self.csrColumnOffsets_eb[(0,0)])
+            self.csrColumnOffsets_eb[(0,0)], 
+            self.timeIntegration.IMPLICIT, 
+            self.coefficients.SUPG)
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:

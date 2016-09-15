@@ -54,7 +54,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
     from proteus.ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
     from proteus.cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
-    def __init__(self,cE=0.5,cMax=0.1,cK=1.0,ENTROPY_VISCOSITY=0,BACKWARD_EULER=1,SUPG=1,
+    def __init__(self,cE=0.5,cMax=0.1,cK=1.0,ENTROPY_VISCOSITY=0,SUPG=1,
                  LS_model=None,V_model=0,RD_model=None,ME_model=1,EikonalSolverFlag=0,checkMass=True,epsFact=0.0,useMetrics=0.0,sc_uref=1.0,sc_beta=1.0,setParamsFunc=None,movingDomain=False):
         self.useMetrics = useMetrics
         self.variableNames=['vof']
@@ -97,7 +97,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cMax=cMax
         self.cK=cK
         self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
-        self.BACKWARD_EULER=BACKWARD_EULER
         self.SUPG=SUPG
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
@@ -751,7 +750,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.cMax,
             self.coefficients.cK,
             self.coefficients.ENTROPY_VISCOSITY,
-            self.coefficients.BACKWARD_EULER,
+            self.timeIntegration.IMPLICIT,
             self.coefficients.SUPG)
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -820,7 +819,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag',0)],
             self.ebqe[('advectiveFlux_bc',0)],
             self.csrColumnOffsets_eb[(0,0)], 
-            self.coefficients.BACKWARD_EULER, 
+            self.timeIntegration.IMPLICIT,
             self.coefficients.SUPG)
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
