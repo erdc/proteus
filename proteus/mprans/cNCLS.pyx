@@ -56,7 +56,12 @@ cdef extern from "NCLS.h" namespace "proteus":
                                int* isDOFBoundary_u,
                                double* ebqe_rd_u_ext,
                                double* ebqe_bc_u_ext,
-                               double* ebqe_u)
+                               double* ebqe_u,
+			       double cE,
+			       double cMax,
+			       int ENTROPY_VISCOSITY,
+			       int IMPLICIT,
+			       int SUPG)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -99,7 +104,9 @@ cdef extern from "NCLS.h" namespace "proteus":
                                int* isDOFBoundary_u,
                                double* ebqe_rd_u_ext,
                                double* ebqe_bc_u_ext,
-                               int* csrColumnOffsets_eb_u_u)
+                               int* csrColumnOffsets_eb_u_u,
+			       int IMPLICIT,	       
+			       int SUPG)
         void calculateWaterline(
 		               int*    wlc,
 	                       double* waterline,    
@@ -232,7 +239,12 @@ cdef class cNCLS_base:
                          numpy.ndarray isDOFBoundary_u,
                          numpy.ndarray ebqe_rd_u_ext,
                          numpy.ndarray ebqe_bc_u_ext,
-                         numpy.ndarray ebqe_u):
+                         numpy.ndarray ebqe_u,
+			 double cE,    
+			 double cMax,
+			 int ENTROPY_VISCOSITY,
+			 int IMPLICIT,
+			 int SUPG):
        self.thisptr.calculateResidual(<double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
                                        <double*>mesh_dof.data,
@@ -285,7 +297,12 @@ cdef class cNCLS_base:
                                        <int*>isDOFBoundary_u.data,
                                        <double*>ebqe_rd_u_ext.data,
                                        <double*>ebqe_bc_u_ext.data,
-                                       <double*>ebqe_u.data)
+                                       <double*>ebqe_u.data,
+				       cE, 
+				       cMax, 
+				       ENTROPY_VISCOSITY, 
+				       IMPLICIT, 
+				       SUPG)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -329,7 +346,9 @@ cdef class cNCLS_base:
                          numpy.ndarray isDOFBoundary_u,
                          numpy.ndarray ebqe_rd_u_ext,
                          numpy.ndarray ebqe_bc_u_ext,
-                         numpy.ndarray csrColumnOffsets_eb_u_u):
+                         numpy.ndarray csrColumnOffsets_eb_u_u,
+			 int IMPLICIT,	 
+			 int SUPG):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian(<double*>mesh_trial_ref.data,
@@ -374,7 +393,9 @@ cdef class cNCLS_base:
                                        <int*>isDOFBoundary_u.data,
                                        <double*>ebqe_rd_u_ext.data,
                                        <double*>ebqe_bc_u_ext.data,
-                                       <int*>csrColumnOffsets_eb_u_u.data)
+                                       <int*>csrColumnOffsets_eb_u_u.data,
+				       IMPLICIT, 
+				       SUPG)
    def calculateWaterline(self,
 		         numpy.ndarray wlc,
 	                 numpy.ndarray waterline, 
