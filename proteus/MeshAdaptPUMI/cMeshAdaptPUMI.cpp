@@ -69,6 +69,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   target_error = targetError;
   target_element_count = targetElementCount;
   domainVolume = 0.0;
+  THRESHOLD = 0.0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -251,11 +252,13 @@ int MeshAdaptPUMIDrvr::willAdapt()
 //The THRESHOLD will be set to the error estimate after the wind-up step, but is currently 0
 //Assertion is set to ensure that all ranks in a parallel execution will enter the adapt stage
 {
-  double THRESHOLD = 0;
+  if(THRESHOLD==0){
+    THRESHOLD = total_error;
+  }
   int adaptFlag=0;
   int assertFlag;
 
-  if(total_error > THRESHOLD){
+  if(total_error >= THRESHOLD){
     adaptFlag = 1;
   }
   assertFlag = adaptFlag;
