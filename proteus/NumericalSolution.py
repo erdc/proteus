@@ -1052,6 +1052,13 @@ class NS_base:  # (HasTraits):
 
                     logEvent("h-adapt mesh by calling AdaptPUMIMesh")
                     p0.domain.PUMIMesh.adaptPUMIMesh()
+
+                    if(sfConfig=="ERM"):
+                      p0.domain.PUMIMesh.get_local_error() 
+                      while(p0.domain.PUMIMesh.willAdapt()):
+                        p0.domain.PUMIMesh.adaptPUMIMesh()
+                        p0.domain.PUMIMesh.get_local_error()
+                    
                     logEvent("Converting PUMI mesh to Proteus")
                     #ibaned: PUMI conversion #2
                     #TODO: this code is nearly identical to
