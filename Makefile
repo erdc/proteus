@@ -265,6 +265,7 @@ doc:
 test:
 	@echo "************************************"
 	@echo "Running test suite"
-	py.test --boxed -v proteus/tests --ignore proteus/tests/POD
+	#py.test --boxed -v proteus/tests --ignore proteus/tests/POD
+	/Users/Guoyin/proteus/darwin/bin/py.test --boxed -v proteus/tests --ignore proteus/tests/POD
 	@echo "Tests complete "
 	@echo "************************************"
