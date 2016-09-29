@@ -928,12 +928,15 @@ def _assembleGeometry(domain, BC_class):
         if shape.segments is not None:
             domain.segments += (segments+start_vertex).tolist()
             domain.segmentFlags += (shape.segmentFlags+start_flag).tolist()
-        if shape.facets is not None:
-            domain.facets += (facets+start_vertex).tolist()
-            domain.facetFlags += (shape.facetFlags+start_flag).tolist()
         if shape.regions is not None:
             domain.regions += (shape.regions).tolist()
             domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
+        if shape.facets is not None:
+            domain.facets += (facets+start_vertex).tolist()
+            if shape.nd == 2:  # facet flags are actually region flags if 2D
+                domain.facetFlags += (shape.regionFlags+start_rflag).tolist()
+            elif shape.nd == 3:
+              domain.facetFlags += (shape.facetFlags+start_flag).tolist()
         if shape.holes is not None:
             domain.holes += (shape.holes).tolist()
     

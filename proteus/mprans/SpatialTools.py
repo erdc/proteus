@@ -1022,6 +1022,7 @@ class Tank2D(ShapeRANS):
         segments, segmentFlags = self._constructSegments(vertices, vertexFlags)
         regions, regionFlags = self._constructRegions(vertices, vertexFlags,
                                                       segments, segmentFlags)
+        facets, facetFlags = self._constructFacets()
 
         self.vertices     = np.array(vertices)
         self.vertexFlags  = np.array(vertexFlags)
@@ -1029,6 +1030,8 @@ class Tank2D(ShapeRANS):
         self.segmentFlags = np.array(segmentFlags)
         self.regions      = np.array(regions)
         self.regionFlags  = np.array(regionFlags)
+        self.facets       = np.array(facets)
+        self.facetFlags   = np.array(facetFlags)
     
     def _findEdges(self, dim, coords, from_0):
 
@@ -1100,6 +1103,19 @@ class Tank2D(ShapeRANS):
             segmentFlags[1] = self.boundaryTags['sponge']
             added_vertices += 2
         return segments, segmentFlags
+
+    def _constructFacets(self):
+        facets = [[[0, 1, 2, 3]]]
+        facetFlags = [1]
+        if self.spongeLayers['x-']:
+            facets += [[[3, 0, 4, 5]]]
+            facetFlags += [2]
+        if self.spongeLayers['x-']:
+            facets += [[[2, 1, 6, 7]]]
+            facetFlags += [3]
+        return facets, facetFlags
+
+
 
     def _constructRegions(self, vertices, vertexFlags, segments, segmentFlags):
         regions = [[self.x0 + 0.01 * (self.x1 - self.x0), 0.5 * (self.y0 + self.y1)],]
