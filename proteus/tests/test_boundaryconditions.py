@@ -6,7 +6,7 @@ Work in progress
 TO ADD TO TESTS:
 setTwoPhaseVelocityInlet()
 setHydrostaticPressureOutlet()
-hydrostaticPressureOutletWithDepth()
+setHydrostaticPressureOutletWithDepth()
 """
 
 

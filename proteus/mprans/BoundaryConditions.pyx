@@ -144,7 +144,7 @@ class BC_RANS(BC_Base):
         self.w_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
 
-    def setAtmosphere(self, orientation=None):
+    def setAtmosphere(self, orientation=None, vof_air=1.):
         """
         Sets atmosphere boundary conditions (water can come out)
         (!) pressure dirichlet set to 0 for this BC
@@ -170,14 +170,14 @@ class BC_RANS(BC_Base):
         elif orientation is not None:
             b_or = orientation
         else:
-            print('Boundary orientation needs to be defined')
+            raise ValueError('Boundary orientation needs to be defined')
         self.reset()
         self.p_dirichlet.setConstantBC(0.)
         self.u_dirichlet.uOfXT = get_ux_dirichlet(0)
         self.v_dirichlet.uOfXT = get_ux_dirichlet(1)
         if len(b_or) > 2:
             self.w_dirichlet.uOfXT = get_ux_dirichlet(2)
-        self.vof_dirichlet.setConstantBC(1.)  # air
+        self.vof_dirichlet.setConstantBC(vof_air)  # air
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
@@ -319,64 +319,70 @@ class BC_RANS(BC_Base):
         self.vof_dirichlet.init_cython = vof_dirichlet_cython
         self.p_advective.init_cython = p_advective_cython
 
-    # # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
-    # def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=None, air=1.,
-    #                              water=0.):
-    #     """
-    #     Imposes a velocity profile lower than the sea level and an open
-    #     boundary for higher than the sealevel.
-    #     :param U: Velocity vector at the global system.
-    #     :param waterLevel: water level at global coordinate system.
-    #     :param vert_axis: index of vertical in position vector, must always be
-    #                     aligned with gravity, by default set to 1].
-    #     :param air: Volume fraction for air (1.0 by default).
-    #     :param water: Volume fraction for water (0.0 by default).
-    #     Below the seawater level, the condition returns the _dirichlet and
-    #     p_advective condition according to the inflow velocity.
-    #     Above the sea water level, the condition returns the gravity as zero,
-    #     and sets _dirichlet condition to zero, only if there is a zero inflow
-    #     velocity component.
-    #     (!) This condition is best used for boundaries and gravity aligned with
-    #         one of the main axes.
-    #     """
-    #     self.reset()
-    #     self.BC_type = 'TwoPhaseVelocityInlet'
+    # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
+    def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=None, air=1.,
+                                 water=0.):
+        """
+        Imposes a velocity profile lower than the sea level and an open
+        boundary for higher than the sealevel.
+        :param U: Velocity vector at the global system.
+        :param waterLevel: water level at global coordinate system.
+        :param vert_axis: index of vertical in position vector, must always be
+                        aligned with gravity, by default set to 1].
+        :param air: Volume fraction for air (1.0 by default).
+        :param water: Volume fraction for water (0.0 by default).
+        Below the seawater level, the condition returns the _dirichlet and
+        p_advective condition according to the inflow velocity.
+        Above the sea water level, the condition returns the gravity as zero,
+        and sets _dirichlet condition to zero, only if there is a zero inflow
+        velocity component.
+        (!) This condition is best used for boundaries and gravity aligned with
+            one of the main axes.
+        """
+        self.reset()
+        self.BC_type = 'TwoPhaseVelocityInlet'
 
-    #     U = np.array(U)
-    #     if vert_axis is None:
-    #         vert_axis = self.Shape.Domain.nd - 1
+        U = np.array(U)
+        if vert_axis is None:
+            vert_axis = self.Shape.Domain.nd - 1
 
-    #     def get_inlet_ux_dirichlet(ux):
-    #         def ux_dirichlet(x, t):
-    #             if x[vert_axis] < waterLevel:
-    #                 return ux
-    #             elif x[vert_axis] >= waterLevel and ux == 0:
-    #                 return 0.
-    #         return ux_dirichlet
+        def get_inlet_ux_dirichlet_cython(i):
+            def get_inlet_ux_dirichlet():
+                def ux_dirichlet(x, t):
+                    if x[vert_axis] < waterLevel:
+                        return U[i]
+                    elif x[vert_axis] >= waterLevel and U[i] == 0:
+                        return 0.
+                return ux_dirichlet
+            return get_inlet_ux_dirichlet
 
-    #     def inlet_vof_dirichlet(x, t):
-    #         if x[vert_axis] < waterLevel:
-    #             return water
-    #         elif x[vert_axis] >= waterLevel:
-    #             return air
+        def inlet_vof_dirichlet_cython():
+            def inlet_vof_dirichlet(x, t):
+                if x[vert_axis] < waterLevel:
+                    return water
+                elif x[vert_axis] >= waterLevel:
+                    return air
+            return inlet_vof_dirichlet
 
-    #     def inlet_p_advective(x, t, u=U):
-    #         b_or = self._b_or[self._b_i]
-    #         u_p = np.sum(U*b_or)
-    #         # This is the normal velocity, based on the inwards boundary
-    #         # orientation -b_or
-    #         u_p = -u_p
-    #         if x[vert_axis] < waterLevel:
-    #             return u_p
-    #         elif x[vert_axis] >= waterLevel:
-    #             return None
+        def inlet_p_advective_cython():
+            def inlet_p_advective(x, t):
+                b_or = self._b_or[self._b_i]
+                u_p = np.sum(U * b_or)
+                # This is the normal velocity, based on the inwards boundary
+                # orientation -b_or
+                u_p = -u_p
+                if x[vert_axis] < waterLevel:
+                    return u_p
+                elif x[vert_axis] >= waterLevel:
+                    return None
+            return inlet_p_advective
 
-    #     self.u_dirichlet = get_inlet_ux_dirichlet(U[0])
-    #     self.v_dirichlet = get_inlet_ux_dirichlet(U[1])
-    #     if len(U) == 3:
-    #             self.w_dirichlet = get_inlet_ux_dirichlet(U[2])
-    #     self.vof_dirichlet = inlet_vof_dirichlet
-    #     self.p_advective = inlet_p_advective
+        self.u_dirichlet.init_cython = get_inlet_ux_dirichlet_cython(0)
+        self.v_dirichlet.init_cython = get_inlet_ux_dirichlet_cython(1)
+        if len(U) == 3:
+                self.w_dirichlet.init_cython = get_inlet_ux_dirichlet_cython(2)
+        self.vof_dirichlet.init_cython = inlet_vof_dirichlet_cython
+        self.p_advective.init_cython = inlet_p_advective_cython
 
     def setHydrostaticPressureOutlet(self, rho, g, refLevel, vof, pRef=0.0,
                                     vert_axis=-1):
@@ -393,16 +399,16 @@ class BC_RANS(BC_Base):
             return ux_dirichlet
         self.u_dirichlet.uOfXT = get_outlet_ux_dirichlet(0)
         self.v_dirichlet.uOfXT = get_outlet_ux_dirichlet(1)
-        if len(g).uOfXT == 3:
+        if len(g) == 3:
             self.w_dirichlet.uOfXT = get_outlet_ux_dirichlet(2)
-        self.p_dirichlet.uOfXT.setLinearBC(a0, a1, vert_axis)
+        self.p_dirichlet.setLinearBC(a0, a1, vert_axis)
         self.vof_dirichlet.setConstantBC(vof)
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
 
     # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
-    def hydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
+    def setHydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
                                           refLevel, pRef=0.0, vert_axis=None,
                                           air=1.0, water=0.0):
         """Imposes a hydrostatic pressure profile and open boundary conditions
@@ -438,8 +444,7 @@ class BC_RANS(BC_Base):
             if x[vert_axis] < seaLevel:
                 return water
 
-        self.setHydrostaticPressureOutlet(rhoUp, g, refLevel, pRef, vert_axis,
-                                      air)
+        self.setHydrostaticPressureOutlet(rhoUp, g, refLevel, pRef, vert_axis)
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
 
@@ -511,7 +516,7 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
         from proteus import Context
         ct = Context.get()
         for key, zone in self.zones.iteritems():
-            print zone
+            #print zone #[temp] a loose print statement - may be useful, but supressed for now
             if zone.zone_type == 'absorption' or zone.zone_type == 'porous':
                 zone.u = zone.v = zone.w = lambda x, t: 0.
             elif zone.zone_type == 'generation':
