@@ -217,6 +217,35 @@ class BC_RANS(BC_Base):
         if len(last_pos) > 2:
             self.hz_dirichlet.uOfXT = get_DBC_h(2)
 
+    def setRigidBodyMoveMesh(self, body):
+        """
+        Sets boundary conditions for moving the mesh with a rigid body
+
+        Parameters
+        ----------
+        last_pos: array_like
+            last position of rigig body
+        h: array_like
+            displacement of the body
+        rot_matrix:
+            rotation matrix describing displament due to rotation between last
+            position and new position (3x3 array)
+
+        (!) if set manually, the input arrays should be updated externally
+            without loosing their memory address
+        """
+        def get_DBC_h(i):
+            def DBC_h(x, t):
+                x_0 = x-body.last_position
+                new_x_0 = np.dot(x_0, body.rotation_matrix)
+                hx = new_x_0-x_0+body.h
+                return hx[i]
+            return DBC_h
+        self.hx_dirichlet.uOfXT = get_DBC_h(0)
+        self.hy_dirichlet.uOfXT = get_DBC_h(1)
+        if body.nd > 2:
+            self.hz_dirichlet.uOfXT = get_DBC_h(2)
+
     def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None,
                                          wind_speed=(0., 0., 0.), vof_air=1.,
                                          vof_water=0.):
