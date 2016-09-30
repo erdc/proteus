@@ -22,6 +22,18 @@ class D_base:
         self.nd = nd
         self.name = name
         self.units = units
+        # make default empty list for parameters
+        self.vertices = []
+        self.vertexFlags = []
+        self.segments = []
+        self.segmentFlags = []
+        self.facets = []  # necessary in 2D for gmsh
+        self.facetFlags = []
+        self.holes = []
+        self.holes_ind = []  # for gmsh: index of hole (2D: facet; 3D: volume)
+        self.regions = []
+        self.regionFlags = []
+        self.volumes = []  # only for gmsh: loop of facets
         # for bounding box
         self.x = []
         self.L = []
@@ -33,7 +45,6 @@ class D_base:
         self.auxiliaryVariables = []
         # needed for gmsh
         self.volumes = []
-        self.holes_ind = []
         self.boundaryTags = {}
         # attach a MeshOption class
         self.MeshOptions = MeshOptions(self.nd)
