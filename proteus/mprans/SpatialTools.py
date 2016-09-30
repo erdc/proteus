@@ -67,7 +67,7 @@ class ShapeRANS(Shape):
         self.auxiliaryVariables = {}  # list of auxvar attached to shape
         self.It = None  # inertia tensor
 
-    def _attachAuxiliaryVariable(self, key):
+    def _attachAuxiliaryVariable(self, key, auxvar=None):
         """
         Attaches an auxiliary variable to the auxiliaryVariables dictionary of
         the shape (used in buildDomain function)
@@ -76,6 +76,8 @@ class ShapeRANS(Shape):
         ----------
         key: string
             Dictionary key defining the auxiliaryVariable to attach
+        auxvar:
+            auxiliaryVariable to associate with key
 
         Notes
         -----
@@ -84,27 +86,11 @@ class ShapeRANS(Shape):
         """
         if key not in self.auxiliaryVariables:
             if key == 'RigidBody':
-                self.auxiliaryVariables[key] = bd.RigidBody(self)
+                self.auxiliaryVariables[key] = auxvar
+                if self.holes is None:
+                    self.holes = np.array([self.barycenter[:self.nd]])
             if key == 'RelaxZones':
                 self.auxiliaryVariables[key] = self.zones
-
-    def setRigidBody(self, holes=None):
-        """
-        Makes the shape a rigid body
-
-        Parameters
-        ----------
-        holes: Optional[array_like]
-            Used to set coordinates of hole inside the rigid body, so it does
-            not get meshed. If not set, the hole coordinates will be the
-            barycenter coordinates.
-        """
-        self._attachAuxiliaryVariable('RigidBody')
-        if holes is None:
-            self.holes = np.array([self.barycenter[:self.nd]])
-        else:
-            self._checkListOfLists(holes)
-            self.holes = np.array(holes)
 
     def setTank(self):
         """
@@ -976,8 +962,7 @@ def assembleAuxiliaryVariables(domain):
             aux['twp'] += [body]
             # fixing mesh on rigid body
             for boundcond in shape.BC_list:
-                boundcond.setMoveMesh(body.last_position, body.h,
-                                      body.rotation_matrix)
+                boundcond.setRigidBodyMoveMesh(body)
             # update the indice for force/moment calculations
             body.i_start = start_flag+1
             body.i_end = start_flag+1+len(shape.BC_list)
