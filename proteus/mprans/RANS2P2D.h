@@ -1025,7 +1025,8 @@ namespace proteus
       cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
       oneByAbsdt =  fabs(dmt);
       tau_v = 1.0/(4.0*viscosity/(h*h) + 2.0*nrm_df/h + oneByAbsdt);
-      tau_p = (4.0*viscosity + 2.0*nrm_df*h + oneByAbsdt*h*h)/pfac;
+      //tau_p = (4.0*viscosity + 2.0*nrm_df*h + oneByAbsdt*h*h)/pfac;
+      tau_p = (4.0*viscosity + 2.0*nrm_df*h)/pfac;
       /* std::cout<<"tau_v "<<tau_v<<" tau_p "<<tau_p<<std::endl; */
     }
 
@@ -1048,7 +1049,8 @@ namespace proteus
          for (int J=0;J<nSpace;J++) 
            v_d_Gv += Ai[I]*G[I*nSpace+J]*Ai[J];
       tau_v = 1.0/sqrt(Ct_sge*A0*A0 + v_d_Gv + Cd_sge*Kij*Kij*G_dd_G + 1.0e-12); 
-      tau_p = 1.0/(pfac*tr_G*tau_v);     
+      //tau_p = 1.0/(pfac*tr_G*tau_v);     
+      tau_p = sqrt(v_d_Gv + Cd_sge*Kij*Kij*G_dd_G)/(pfac*tr_G); 
     }
 
     inline
