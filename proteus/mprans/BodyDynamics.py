@@ -528,6 +528,8 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         logEvent("================================================================")
 
 
+
+
 class CaissonBody(RigidBody):
     """
     Sub-class to create a caisson rigid body.
@@ -646,6 +648,7 @@ class CaissonBody(RigidBody):
             self.rotation[:nd, :nd] = self.Shape.coords_system
             self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation),
                                              self.rotation)
+            self.rotation_euler[:] = getEulerAngles(self.rotation)
         else:
             self.rotation_matrix[:] = np.eye(3)
         self.barycenter[:] = self.Shape.barycenter
@@ -752,7 +755,7 @@ class CaissonBody(RigidBody):
         self.overturning = overturning
 
 
-    def setSprings(self, springs, Kx, Ky, Krot, C, Crot):
+    def setSprings(self, springs, Kx, Ky, Krot, Cx, Cy, Crot):
         """
         Sets a system of uniform springs to model soil's reactions (for moving bodies)
 
@@ -766,8 +769,10 @@ class CaissonBody(RigidBody):
             vertical stiffness
         Krot: float
             rotational stiffness
-        C: float
-            damping parameter
+        Cx: float
+            horizontal damping parameter
+        Cy: float
+            vertical damping parameter
         Crot: float
             rotational damping parameter
         """
@@ -775,8 +780,22 @@ class CaissonBody(RigidBody):
         self.Kx = Kx
         self.Ky = Ky
         self.Krot = Krot
-        self.C = C
+        self.Cx = Cx
+        self.Cy = Cy
         self.Crot = Crot
+
+
+    def setNumericalScheme(self, scheme):
+        """
+        Sets the numerical scheme used to solve motion.
+
+        Parameters
+        ----------
+        scheme: string
+            If Runge_Kutta, runge kutta scheme is applied.
+	    If Central_Difference, central difference scheme is applied.
+	"""
+        self.scheme = scheme
 
 
     def friction_module(self,dt):
@@ -792,7 +811,7 @@ class CaissonBody(RigidBody):
         dt_sub = dt/float(substeps)
         # movement_functions for friction test cases
         Fx, Fy, Fz = self.F
-        eps = 0.000000000000000001 # to avoid 0/0
+        eps = (10**-30) # to avoid 0/0
         mass = self.mass
         sign_static = Fx/(abs(Fx)+eps)
         sign_dynamic = self.last_velocity[0]/(abs(self.last_velocity[0])+eps)
@@ -804,10 +823,10 @@ class CaissonBody(RigidBody):
             g=np.array([0.,0.,-9.81])
             Fv = Fz
             gv = g[2]
-        acceleration = np.zeros(3)
+        self.acceleration = np.zeros(3)
 
         #---------------------------------------------------------------
-        def static_case(self, sign, Fx, Fv, mass, m):
+        def static_case(self, sign, Fx, Fv, mass, m, uplift):
             """
             Set a static friction.
 
@@ -826,17 +845,11 @@ class CaissonBody(RigidBody):
                 self.velocity = np.zeros(3)
                 self.h[:] = np.zeros(3)
             else:
-                Fh = Fx+Ftan
-                self.acceleration[0] = Fh/mass
-                self.acceleration[1] = 0.0
-                self.acceleration[2] = 0.0
-                self.velocity += self.acceleration*dt
-                self.h += self.velocity*dt
-
+                dynamic_case(self, sign_static, Fx, Fv, mass, m=self.m_dynamic, uplift=uplift)
             self.fromDynamic_toStatic = False
 
         #---------------------------------------------------------------
-        def dynamic_case(self, sign, Fx, Fv, mass, m):
+        def dynamic_case(self, sign, Fx, Fv, mass, m, uplift):
             """
             Set a dynamic friction.
 
@@ -849,40 +862,70 @@ class CaissonBody(RigidBody):
             mass : Mass of the rigid body.
             m : dynamic friction factor.
             """
+
+            Kx = self.Kx
+            Ky = self.Ky
+            Cx = self.Cx
+            Cy = self.Cy
+
             Ftan = -sign*m*abs(Fv)
             Fh = Fx+Ftan
-            self.acceleration[0] = Fh/mass
-            self.acceleration[1] = 0.0
-            self.acceleration[2] = 0.0
-            for i in range(substeps):
-                self.velocity += self.acceleration*dt_sub
-                self.h += self.velocity*dt_sub
-                # When velocity changes sign, it means that 0-condition is passed
-                # Loop must start from static case again
-                self.fromDynamic_toStatic = False
-                velCheck=self.velocity[0]
-                last_velCheck=self.last_velocity[0]
-                if (last_velCheck*velCheck) < 0.0:
-                    self.fromDynamic_toStatic = True
-                    break
+	    if uplift == False:
+                Fv = 0.0	
+
+            # initial condition
+            ux0 = self.last_ux                                # x-axis displacement
+            uy0 = self.last_uy                                # y-axis displacement
+            vx0 = self.last_velocity[0]                       # x-axis velocity
+            vy0 = self.last_velocity[1]                       # y-axis velocity
+            ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass               # x-axis acceleration
+            ay0 = (Fv - Cy*vy0 - Ky*uy0) / mass               # y-axis acceleration
+
+	    # solving numerical scheme
+	    if self.scheme == 'Runge_Kutta':
+                for ii in range(substeps):
+                    ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0, dt=dt_sub, substeps=substeps, F=Fh, K=Kx, C=Cx, m=mass, velCheck=True)
+                    uy, vy, ay = runge_kutta(u0=uy0, v0=vy0, a0=ay0, dt=dt_sub, substeps=substeps, F=Fv, K=Ky, C=Cy, m=mass, velCheck=False)
+	    if self.scheme == 'Central_Difference':
+                ux, vx, ax = central_difference(uc=ux0, vc=vx0, ac=ax0, dt=dt_sub, substeps=substeps, F=Fh, K=Kx, C=Cx, m=mass, velCheck=True)
+                uy, vy, ay = central_difference(uc=uy0, vc=vy0, ac=ay0, dt=dt_sub, substeps=substeps, F=Fv, K=Ky, C=Cy, m=mass, velCheck=False)
+
+            # When horizontal velocity changes sign, 0-condition is passed
+            # Loop must start from static case again
+	    self.fromDynamic_toStatic = False
+            if (self.velocity[0]*vx) < 0.0:
+                self.fromDynamic_toStatic = True
+
+            # used for storing values of displacements through timesteps
+            self.ux = ux
+            self.uy = uy
+
+            # final values
+            self.h[0] = self.ux - self.last_ux
+            self.h[1] = self.uy - self.last_uy
+            self.velocity[0] = vx
+            self.velocity[1] = vy
+            self.acceleration[0] = ax
+            self.acceleration[1] = ay
+
 
         #---------------------------------------------------------------
 
         if (Fv*gv)>0:
         #--- Friction module, static case
             if self.last_velocity[0] == 0.0 or self.last_fromDynamic_toStatic ==True:
-                static_case(self, sign_static, Fx, Fv, mass, m=self.m_static)
+                static_case(self, sign_static, Fx, Fv, mass, m=self.m_static, uplift=False)
         #--- Friction module, dynamic case
             else :
-                dynamic_case(self, sign_dynamic, Fx, Fv, mass, m=self.m_dynamic)
+                dynamic_case(self, sign_dynamic, Fx, Fv, mass, m=self.m_dynamic, uplift=False)
 
         if (Fv*gv)<0:
         #--- Floating module, static case
-            if self.last_velocity[0] == 0.0 or self.last_fromDynamic_toStatic ==True:
-                static_case(self, sign_static, Fx, Fv, mass, m=0.0)
+            if self.last_velocity[0] == 0.0  or self.last_fromDynamic_toStatic ==True:
+                static_case(self, sign_static, Fx, Fv, mass, m=0.0, uplift=True)
         #--- Floating module, dynamic case
             else :
-                dynamic_case(self, sign_dynamic, Fx, Fv, mass, m=0.0)
+                dynamic_case(self, sign_dynamic, Fx, Fv, mass, m=0.0, uplift=True)
 
 
     def overturning_module(self,dt):
@@ -930,32 +973,33 @@ class CaissonBody(RigidBody):
             # all these terms can be written in function of the rotation (angDispl)
 
             if floating == True or self.springs==False:
-                Kx = 0.0
-                Ky = 0.0
                 Krot = 0.0
-                C = 0.0
                 Crot = 0.0
             else:
-                Kx = self.Kx
-                Ky = self.Ky
                 Krot = self.Krot
-                C = self.C
                 Crot = self.Crot
 
             self.inertia = self.getInertia(self.Mp, self.pivot_friction)
             assert self.inertia != 0, 'Zero inertia: inertia tensor (It)' \
                                       'was not set correctly!'
-            rot = self.rotation
-            phi0 =  atan2(rot[0, 1], rot[0, 0])    # rotation from position, last timestep
-            # rotation (phi) calculation. Inversion of the moment equilibrium
-            num = Mp[2]*(dt**2) + Crot*dt*phi0 + self.inertia*(phi0+self.last_ang_vel[2]*dt)
-            den = Crot*dt + Krot*(dt**2) + self.inertia
-            phi = float(num/den)
+            inertia = self.inertia
 
-            # velocity and acceleration updated from rotation calculation
-            self.ang_disp[2] = phi-phi0
-            self.ang_vel[2]  = self.ang_disp[2] / dt
-            self.ang_acc[2]  = (self.ang_vel[2] - self.last_ang_vel[2]) / dt
+            # initial condition
+            rz0 =  atan2(self.last_rotation[0, 1], self.last_rotation[0, 0])  # angular displacement
+            vrz0 = self.last_ang_vel[2]                             # angular velocity
+            arz0 = (Mp[2] - Crot*vrz0 - Krot*rz0) / inertia         # angular acceleration
+
+	    # solving numerical scheme
+            if self.scheme == 'Runge_Kutta':
+                rz, vrz, arz = runge_kutta(u0=rz0, v0=vrz0, a0=arz0, dt=dt_sub, substeps=substeps, F=Mp[2], K=Krot, C=Crot, m=inertia, velCheck=False)
+            if self.scheme == 'Central_Difference':
+                rz, vrz, arz = central_difference(uc=rz0, vc=vrz0, ac=arz0, dt=dt_sub, substeps=substeps, F=Mp[2], K=Krot, C=Crot, m=inertia, velCheck=False)
+
+            # final values
+	    self.ang_disp[2] = rz - atan2(self.last_rotation[0, 1], self.last_rotation[0, 0])
+            self.ang_vel[2] = vrz
+            self.ang_acc[2] = arz
+
 
         #---------------------------------------------------------------
 
@@ -996,13 +1040,13 @@ class CaissonBody(RigidBody):
                     calculate_rotation(self, floating=True, h=0)     # ----> caisson up the rubble mound: FLOATING CASE I calculate normally rotation on barycenter!!!
 
 
-
 def forward_euler(p0, v0, a, dt):
     v1 = v0+a*dt
     p1 = p0+v1*dt
     return p1, v1
 
 
+# Need to be tested.
 #def leapfrog(p0, v0, a, dt):
 #    p1 = p0+v0*dt+0.5*a*dt**2
 #    v1 = v0+a*dt
@@ -1015,4 +1059,110 @@ def getEulerAngles(coord_system):
     ry = -asin(rot[0, 2])
     rz = atan2(rot[0, 1], rot[0, 0])
     return [rx, ry, rz]
+
+
+def runge_kutta(u0, v0, a0, dt, substeps, F, K, C, m, velCheck):
+    """
+    Function that applies Runge Kutta's scheme for motion calculation.
+
+    Parameters
+    ----------
+    u0 : translational or rotational displacement.
+    v0 : translational or rotational velocity.
+    a0 : translational or rotational acceleration.
+    dt : Time step.
+    substeps : integer number of substeps.
+    F : translational or rotational loading.
+    K : translational or rotational stiffness.
+    C : translational or rotational damping factor.
+    m : mass (translational calculation) or inertia (rotational calculation).
+    velCheck : check on translational velocity sign (friction module only!).
+    """
+    for ii in range(substeps):
+    # 1 step
+    	u1 = u0
+        v1 = v0
+    	a1 = a0
+    # 2 step
+    	u2 = u1 + v1*dt/2.
+   	v2 = v1 + a1*dt/2.
+    	a2 = (F - C*v2 - K*u2) / m
+    # 3 step
+    	u3 = u1 + v2*dt/2.
+    	v3 = v1 + a2*dt/2.
+    	a3 = (F - C*v3 - K*u3) / m
+    # 4 step
+    	u4 = u1 + v3*dt
+    	v4 = v1 + a3*dt
+    	a4 = (F - C*v4 - K*u4) / m
+    # calculation
+    	u = u0 + (dt/6.)*( v1 + 2.*v2 + 2.*v3 + v4 )
+    	v = v0 + (dt/6.)*( a1 + 2.*a2 + 2.*a3 + a4 )
+    	a = (F - C*v - K*u) / m
+    # velocity check
+        if velCheck == True:
+            # When velocity changes sign, it means that 0-condition is passed
+            # Loop must start from static case again
+            if (v0*v) < 0.0:
+                break
+    # updating values for next substep
+    	u0 = u
+    	v0 = v
+    	a0 = a
+    return u, v, a
+
+
+# Need more tests. In terms of procedures and results Runge Kutta is better.
+#def central_difference(uc, vc, ac, dt, substeps, F, K, C, m, velCheck):
+#    """
+#    Function that applies central difference scheme for motion calculation.
+#
+#    Parameters
+#    ----------
+#    uc : translational or rotational central displacement.
+#    vc : translational or rotational central velocity.
+#    ac : translational or rotational central acceleration.
+#    dt : Time step.
+#    substeps : integer number of substeps.
+#    F : translational or rotational loading.
+#    K : translational or rotational stiffness.
+#    C : translational or rotational damping factor.
+#    m : mass (translational calculation) or inertia (rotational calculation).
+#    velCheck : check on translational velocity sign (friction module only!).
+#    """
+#
+#    substeps = int(substeps)
+#    dt_sub = float(dt/substeps)
+#    v_init = vc
+#
+#    # calculation for timestep -1 (backward)
+#    ub = uc - vc*dt_sub + ac*(dt_sub**2)/2.
+#
+#   # Coefficients
+#    k1 = m/(dt_sub**2) + C/(2.*dt_sub)
+#    a1 = m/(dt_sub**2) - C/(2.*dt_sub)
+#    b1 = K - 2.*m/(dt_sub**2)
+#    u = 0.0
+#
+#    for ii in range(substeps):
+#        # Central calculation based on backward and central values
+#        F1 = F - a1*ub - b1*uc
+#        # Forward calculation
+#        uf = F1 / k1
+#        # Updating velocity and acceleration
+#        v = (uf - ub) / (2.*dt_sub)
+#        a = (uf - 2.*uc - ub) / (dt_sub**2)
+#        u = uc
+#        # velocity check
+#        if velCheck == True:
+#            # When velocity changes sign, it means that 0-condition is passed
+#            # Loop must start from static case again
+#            if (v_init*v) < 0.0:
+#                break
+#        # Updating for next substep
+#        ub = uc
+#        uc = uf
+#    return u, v, a
+
+
 
