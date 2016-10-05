@@ -69,7 +69,9 @@ cdef extern from "VOF.h" namespace "proteus":
 			       double cK,
 			       int ENTROPY_VISCOSITY,
 			       int BACKWARD_EULER, 
-			       int SUPG)
+			       int SUPG,
+			       double uL, 
+			       double uR)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -214,7 +216,9 @@ cdef class cVOF_base:
 			 double cK,
 			 int ENTROPY_VISCOSITY,
 			 int BACKWARD_EULER, 
-			 int SUPG):
+			 int SUPG, 
+			 double uL, 
+			 double uR):
        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -280,7 +284,9 @@ cdef class cVOF_base:
 				       cK,
 				       ENTROPY_VISCOSITY,
 				       BACKWARD_EULER, 
-				       SUPG)
+				       SUPG,
+				       uL, 
+				       uR)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,

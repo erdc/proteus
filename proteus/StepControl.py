@@ -724,8 +724,9 @@ class Min_dt_cfl_controller(Min_dt_controller):
         self.set_dt_allLevels()
         self.substeps = [self.t_model]
         logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
-                                                                   self.dt_model),
-            level=1)
+                                                                        self.dt_model),
+                 level=1)
+        
     def choose_dt_model(self):
         from flcbdfWrappers import globalMax
         self.solverFailures=0

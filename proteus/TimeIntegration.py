@@ -370,7 +370,7 @@ class SSP33(BackwardEuler_cfl):
         self.isAdaptive=True
         self.use_SSP33 = True
         self.IMPLICIT = False
-
+    
 class FLCBDF(TI_base):
     import flcbdfWrappers
     def __init__(self,transport):

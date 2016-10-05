@@ -5,20 +5,20 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-//TEMPORAL PARAMETERS
-//#define ENTROPY_VISCOSITY 1
-//#define SUPG 0
-//#define cMax 0.1
-//#define cE 10.0
-//#define IMPLICIT 0
-
 //ENTROPY FUNCTIONS and SOME FLAGS (MQL)//
-#define entropy_power 2.
-#define ENTROPY(phi) 1./entropy_power*std::pow(phi,entropy_power)
-#define ENTROPY_GRAD(phi,phix) std::pow(phi,entropy_power-1.)*phix
-//#define ENTROPY(phi) std::log(std::abs(phi*(1-phi))+1E-14)
-//#define ENTROPY_GRAD(phi,phix) (1-2*phi)*phix*(phi*(1-phi)>=0 ? 1 : -1)/(std::abs(phi*(1-phi))+1E-14) 
+#define entropy_power 2. // HERE uL and uR are dummy variables
+#define ENTROPY(phi) 1./entropy_power*std::pow(std::abs(phi),entropy_power)
+#define ENTROPY_PRIME(phi) std::pow(std::abs(phi),entropy_power-1.)
+#define ENTROPY_GRAD(phi,phix) std::pow(std::abs(phi),entropy_power-1.)*phix*(phi>=0 ? 1. : -1.)
+/////////////////
+// LOG ENTROPY //
+/////////////////
+#define ENTROPY_LOG(phi,phiL,phiR) std::log(std::abs((phi-phiL)*(phiR-phi))+1E-14)
+#define ENTROPY_LOG_PRIME(phi,phiL,phiR) (phiL+phiR-2*phi)*((phi-phiL)*(phiR-phi)>0 ? 1. : -1.)*((phi-phiL)*(phiR-phi)==0 ? 0. : 1.)/(std::abs((phi-phiL)*(phiR-phi))+1E-14) 
+#define ENTROPY_LOG_GRAD(phi,phix,phiL,phiR) (phiL+phiR-2*phi)*phix*((phi-phiL)*(phiR-phi)>0 ? 1 : -1)*((phi-phiL)*(phiR-phi)==0 ? 0 : 1)/(std::abs((phi-phiL)*(phiR-phi))+1E-14) 
 
+#define tol_sign 0.1
+ 
 namespace proteus
 {
   class NCLS_base
@@ -85,7 +85,12 @@ namespace proteus
 				   double cMax, 
 				   int ENTROPY_VISCOSITY, 
 				   int IMPLICIT, 
-				   int SUPG)=0;
+				   int SUPG,
+				   // PARAMETERS FOR LS-COUPEZ 
+				   int LS_COUPEZ,
+				   // PARAMETERS FOR LOG BASED ENTROPY FUNCION
+				   double uL, 
+				   double uR)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -222,6 +227,20 @@ namespace proteus
 	  H += v[I]*grad_u[I];
 	  dH[I] = v[I];
 	}
+    }
+
+    inline
+    void calculateCFL(const double& elementDiameter,
+		      const double dH[nSpace],
+		      double& cfl)
+    {
+      double h,nrm_v;
+      h = elementDiameter;
+      nrm_v=0.0;
+      for(int I=0;I<nSpace;I++)
+	nrm_v+=dH[I]*dH[I];
+      nrm_v = sqrt(nrm_v);
+      cfl = nrm_v/h;
     }
 
     inline
@@ -366,7 +385,12 @@ namespace proteus
 			   double cMax, 
 			   int ENTROPY_VISCOSITY, 
 			   int IMPLICIT, 
-			   int SUPG)
+			   int SUPG,
+			   // PARAMETERS FOR LS-COUPEZ
+			   int LS_COUPEZ,
+			   // PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+			   double uL, 
+			   double uR)
     {
       // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
       double entropy_max=-1.E10, entropy_min=1.E10, cell_entropy_mean, cell_volume, volume=0, entropy_mean=0;
@@ -378,7 +402,9 @@ namespace proteus
       if (ENTROPY_VISCOSITY==1)
 	{
 	  for(int eN=0;eN<nElements_global;eN++)
-	    {
+	    {      
+	      // FOR LS-COUPEZ
+	      double llambda = 0.1; //elementDiameter[eN]/dt; // h/dt
 	      cell_volume = 0;
 	      cell_entropy_mean = 0;
 	      cell_vel_max = 0;
@@ -407,16 +433,49 @@ namespace proteus
 		  //velocity at tn
 		  vn[0] = velocity[eN_k_nSpace];
 		  vn[1] = velocity[eN_k_nSpace+1];
-		  // compute entropy min and max
-		  entropy_max = std::max(entropy_max,ENTROPY(un));
-		  entropy_min = std::min(entropy_min,ENTROPY(un));
-		  cell_entropy_mean += ENTROPY(un)*dV;
+		  //ADJUST VELOCITY BASED ON LS-COUPEZ
+		  double grad_un_norm = 0;
+		  for (int I=0; I < nSpace; I++)
+		    grad_un_norm += std::pow(grad_un[I],2);
+		  grad_un_norm = std::sqrt(grad_un_norm);
+		  //double sign_un = (un > 0 ? 1. : -1.) * (std::abs(un)==0 ? 0. : 1.);
+		  double sign_un = (un > tol_sign*uR ? 1. : -1.) * (un > -tol_sign*uR ? 0. : 1.);
+		  vn[0] += LS_COUPEZ*llambda*sign_un*grad_un[0]/(grad_un_norm+1E-10);
+		  vn[1] += LS_COUPEZ*llambda*sign_un*grad_un[1]/(grad_un_norm+1E-10);
+		  // compute vel, entropy min, max, mean and volume
+		  if (LS_COUPEZ==1)
+		    {
+		      entropy_max = std::max(entropy_max,ENTROPY_LOG(un,uL,uR));
+		      entropy_min = std::min(entropy_min,ENTROPY_LOG(un,uL,uR));
+		      cell_entropy_mean += ENTROPY_LOG(un,uL,uR)*dV;
+		    }
+		  else
+		    {
+		      entropy_max = std::max(entropy_max,ENTROPY(un));
+		      entropy_min = std::min(entropy_min,ENTROPY(un));
+		      cell_entropy_mean += ENTROPY(un)*dV;
+		    }
 		  cell_volume += dV;
 		  cell_vel_max = std::max(cell_vel_max,std::max(std::abs(vn[0]),std::abs(vn[1])));
-		  cell_entropy_residual 
-		    = std::max(std::abs((ENTROPY(un) - ENTROPY(unm1))/dt
-					+ vn[0]*ENTROPY_GRAD(un,grad_un[0])+vn[1]*ENTROPY_GRAD(un,grad_un[1]))
-			       ,cell_entropy_residual);
+		  // compute entropy residual
+		  if (LS_COUPEZ==1)
+		    cell_entropy_residual 
+		      = std::max(std::abs(
+					  (ENTROPY_LOG(un,uL,uR) - ENTROPY_LOG(unm1,uL,uR))/dt // TIME DERIVATIVE
+					  +vn[0]*ENTROPY_LOG_GRAD(un,grad_un[0],uL,uR) // TRANSPORT TERM
+					  +vn[1]*ENTROPY_LOG_GRAD(un,grad_un[1],uL,uR)
+					  -LS_COUPEZ*llambda*sign_un*ENTROPY_LOG_PRIME(un,uL,uR)*(1-std::pow(un/uR,2)) // FORCE TERM IN LS-COUPEZ
+					  )
+				 ,cell_entropy_residual);
+		  else
+		    cell_entropy_residual 
+		      = std::max(std::abs(
+					  (ENTROPY(un) - ENTROPY(unm1))/dt // TIME DERIVATIVE
+					  +vn[0]*ENTROPY_GRAD(un,grad_un[0]) // TRANSPORT TERM
+					  +vn[1]*ENTROPY_GRAD(un,grad_un[1])
+					  -LS_COUPEZ*llambda*sign_un*ENTROPY_PRIME(un)*(1-std::pow(un/uR,2)) // FORCE TERM IN LS-COUPEZ
+					  )
+				 ,cell_entropy_residual);
 		}
 	      volume += cell_volume;
 	      entropy_mean += cell_entropy_mean;
@@ -442,6 +501,8 @@ namespace proteus
       //eN_k_i is the quadrature point index for a trial function
       for(int eN=0;eN<nElements_global;eN++)
 	{
+	  // FOR LS-COUPEZ
+	  double llambda = 0.1; //elementDiameter[eN]/dt; // h/dt
 	  //declare local storage for element residual and initialize
 	  register double elementResidual_u[nDOF_test_element];
 	  for (int i=0;i<nDOF_test_element;i++)
@@ -456,6 +517,7 @@ namespace proteus
 		eN_k_nSpace = eN_k*nSpace,
 		eN_nDOF_trial_element = eN*nDOF_trial_element;
 	      register double u=0.0, u_old=0.0, u_star=0, grad_u[nSpace], grad_u_old[nSpace], grad_u_star[nSpace],
+		vn[nSpace],
 		m_star=0.0, dm_star=0.0, m=0.0,dm=0.0,
 		H_star=0.0, H=0.0, dH_star[nSpace], dH[nSpace],
 		f_star[nSpace],df_star[nSpace],//for MOVING_DOMAIN
@@ -525,20 +587,34 @@ namespace proteus
 	      //
 	      //calculate pde coefficients at quadrature points
 	      //
-	      evaluateCoefficients(&velocity[eN_k_nSpace],
+	      // ADJUST VELOCITY FOR LS-COUPEZ
+	      double grad_u_star_norm = 0;
+	      for (int I=0; I < nSpace; I++)
+		grad_u_star_norm += std::pow(grad_u_star[I],2);
+	      grad_u_star_norm = std::sqrt(grad_u_star_norm);
+	      //double sign_u_star = (u_star > 0 ? 1. : -1.) * (std::abs(u_star)==0 ? 0. : 1.);
+	      double sign_u_star = (u_star > tol_sign*uR ? 1. : -1.) * (u_star > -tol_sign*uR ? 0. : 1.);
+	      vn[0] = velocity[eN_k_nSpace];
+	      vn[1] = velocity[eN_k_nSpace+1];
+	      vn[0] += LS_COUPEZ*llambda*sign_u_star*grad_u_star[0]/(grad_u_star_norm+1E-10);
+	      vn[1] += LS_COUPEZ*llambda*sign_u_star*grad_u_star[1]/(grad_u_star_norm+1E-10);
+
+	      //evaluateCoefficients(&velocity[eN_k_nSpace],
+	      evaluateCoefficients(vn,
 				   u,
 				   grad_u,
 				   m,
 				   dm,
 				   H,
 				   dH); //we don't need H and dH but we DO need m (to compute m_t)
-	      evaluateCoefficients(&velocity[eN_k_nSpace],
+	      //evaluateCoefficients(&velocity[eN_k_nSpace],
+	      evaluateCoefficients(vn, // computed with adjusted velocity based on LS_COUPEZ
 				   u_star,
 				   grad_u_star,
 				   m_star,
 				   dm_star,
-				   H_star,
-				   dH_star);
+				   H_star, // H_star = velocity*grad(u_star)
+				   dH_star); // dH_star = velocity
 	      //
 	      //moving mesh
 	      //
@@ -606,10 +682,12 @@ namespace proteus
 		  ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u_star,grad_u_star,numDiff0);	      
 		  //ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u_old,numDiff1);
 		  ck.calculateNumericalDiffusion(shockCapturingDiffusion,sc_uref, sc_alpha,G,G_dd_G,pdeResidual_u_star,grad_u_star,numDiff1);
-		  q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
+		  q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0*0;
 		} // ENTROPY_VISCOSITY=0
 	      else 
 		{
+		  // CALCULATE CFL //
+		  calculateCFL(elementDiameter[eN],dH_star,cfl[eN_k]); // TODO: ADJUST SPEED IF MESH IS MOVING
 		  // ** LINEAR DIFFUSION (MQL) ** //
 		  // calculate linear viscosity 
 		  double h=elementDiameter[eN];
@@ -618,7 +696,6 @@ namespace proteus
 		  
 		  // ** ENTROPY VISCOSITY (MQL) ** //
 		  // calculate entropy residual
-		  //double entropy_viscosity = cE*h*h*entropy_residual[eN]/entropy_normalization_factor;
 		  double entropy_viscosity = cE*h*h*entropy_residual[eN]/entropy_normalization_factor;
 		  q_numDiff_u[eN_k] = std::min(linear_viscosity,entropy_viscosity);
 		  //q_numDiff_u[eN_k] = linear_viscosity;
@@ -629,13 +706,15 @@ namespace proteus
 		  //register int eN_k_i=eN_k*nDOF_test_element+i,
 		   // eN_k_i_nSpace = eN_k_i*nSpace;
 		  register int  i_nSpace=i*nSpace;
-
 		  elementResidual_u[i] += 
 		    dt*ck.Mass_weak(m_t,u_test_dV[i]) + 
 		    dt*ck.Hamiltonian_weak(H_star,u_test_dV[i]) + 
 		    dt*MOVING_DOMAIN*ck.Advection_weak(f_star,&u_grad_test_dV[i_nSpace])+
 		    dt*SUPG*ck.SubgridError(subgridError_u_star,Lstar_u[i]) + 
-		    dt*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u_star,&u_grad_test_dV[i_nSpace]);
+		    dt*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u_star,&u_grad_test_dV[i_nSpace])
+		    //-dt*LS_COUPEZ*llambda*sign_u_star*(1-std::sqrt(std::min(std::pow(u_star/uR,2),1.0)))*u_test_dV[i] // FORCE TERM IN LS-COUPEZ
+		    -dt*LS_COUPEZ*llambda*sign_u_star*(1-std::pow(u_star/uR,2))*u_test_dV[i] // FORCE TERM IN LS-COUPEZ
+		    ;
 		}//i
 	      //
 	      //cek/ido todo, get rid of m, since u=m

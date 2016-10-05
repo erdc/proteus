@@ -6,12 +6,12 @@
 #include "ModelFactory.h"
 
 //ENTROPY FUNCTIONS and SOME FLAGS (MQL)//
-//#define entropy_power 1.
-//#define ENTROPY(phi) 1./entropy_power*std::pow(phi,entropy_power)
-//#define ENTROPY_GRAD(phi,phix) std::pow(phi,entropy_power-1.)*phix
+//#define entropy_power 1. // phiL and phiR are dummy variables
+//#define ENTROPY(phi,phiL,phiR) 1./entropy_power*std::pow(phi,entropy_power)
+//#define ENTROPY_GRAD(phi,phix,phiL,phiR) std::pow(phi,entropy_power-1.)*phix
 // LOG ENTROPY FOR LEVEL SET FROM 0 to 1
-#define ENTROPY(phi) std::log(std::abs(phi*(1-phi))+1E-14)
-#define ENTROPY_GRAD(phi,phix) (1-2*phi)*phix*(phi*(1-phi)>=0 ? 1 : -1)/(std::abs(phi*(1-phi))+1E-14) 
+#define ENTROPY(phi,phiL,phiR) std::log(std::abs((phi-phiL)*(phiR-phi))+1E-14)
+#define ENTROPY_GRAD(phi,phix,phiL,phiR) (phiL+phiR-2*phi)*phix*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(std::abs((phi-phiL)*(phiR-phi))+1E-14) 
 
 namespace proteus
 {
@@ -87,7 +87,10 @@ namespace proteus
 				   double cK,
 				   int ENTROPY_VISCOSITY,
 				   int IMPLICIT, 
-				   int SUPG)=0;
+				   int SUPG, 
+				   // PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
+				   double uL, 
+				   double uR)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -177,6 +180,20 @@ namespace proteus
 	f[I] = v[I]*porosity*u;
 	df[I] = v[I]*porosity;
       }
+    }
+
+    inline
+    void calculateCFL(const double& elementDiameter,
+		      const double df[nSpace],
+		      double& cfl)
+    {
+      double h,nrm_v;
+      h = elementDiameter;
+      nrm_v=0.0;
+      for(int I=0;I<nSpace;I++)
+	nrm_v+=df[I]*df[I];
+      nrm_v = sqrt(nrm_v);
+      cfl = nrm_v/h;
     }
 
     inline
@@ -391,7 +408,10 @@ namespace proteus
 			   double cK,
 			   int ENTROPY_VISCOSITY,
 			   int IMPLICIT, 
-			   int SUPG)
+			   int SUPG,
+			   // PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
+			   double uL, 
+			   double uR)
     {
       // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
       double entropy_max=-1.E10, entropy_min=1.E10, cell_entropy_mean, cell_volume, volume=0, entropy_mean=0;
@@ -434,15 +454,15 @@ namespace proteus
 		  vn[0] = velocity[eN_k_nSpace];
 		  vn[1] = velocity[eN_k_nSpace+1];
 		  // compute entropy min and max
-		  entropy_max = std::max(entropy_max,ENTROPY(un));
-		  entropy_min = std::min(entropy_min,ENTROPY(un));
-		  cell_entropy_mean += ENTROPY(un)*dV;
+		  entropy_max = std::max(entropy_max,ENTROPY(un,uL,uR));
+		  entropy_min = std::min(entropy_min,ENTROPY(un,uL,uR));
+		  cell_entropy_mean += ENTROPY(un,uL,uR)*dV;
 		  cell_volume += dV;
 		  cell_vel_max = std::max(cell_vel_max,std::max(std::abs(vn[0]),std::abs(vn[1])));
 		  cell_entropy_residual 
-		    = std::max(std::abs((ENTROPY(un) - ENTROPY(unm1))/dt
-					+ vn[0]*ENTROPY_GRAD(un,grad_un[0])+vn[1]*ENTROPY_GRAD(un,grad_un[1]) 
-					+ ENTROPY(un)*(vn[0]+vn[1])),cell_entropy_residual);
+		    = std::max(std::abs((ENTROPY(un,uL,uR) - ENTROPY(unm1,uL,uR))/dt
+					+ vn[0]*ENTROPY_GRAD(un,grad_un[0],uL,uR)+vn[1]*ENTROPY_GRAD(un,grad_un[1],uL,uR) 
+					+ ENTROPY(un,uL,uR)*(vn[0]+vn[1])),cell_entropy_residual);
 		}
 	      volume += cell_volume;
 	      entropy_mean += cell_entropy_mean;
@@ -630,19 +650,15 @@ namespace proteus
 		} //ENTROPY_VISCOSITY=0
 	      else
 		{
+		  // CALCULATE CFL //
+		  calculateCFL(elementDiameter[eN],df_star,cfl[eN_k]); // TODO: ADJUST SPEED IF MESH IS MOVING
 		  // ** LINEAR DIFFUSION (MQL) ** //
 		  // calculate linear viscosity 
 		  double h=elementDiameter[eN];
 		  double vMax = std::max(std::abs(df_star[0]),std::abs(df_star[1]));
-		  //double linear_viscosity = cMax*h*vMax; // Point based
 		  double linear_viscosity = cMax*h*vel_max[eN]; // Cell based
 		  
 		  // ** ENTROPY VISCOSITY (MQL) ** //
-		  // calculate entropy residual
-		  //double point_entropy_residual 
-		  //= (ENTROPY(u) - ENTROPY(u_old))/dt
-		  //+ df[0]*ENTROPY_GRAD(u,grad_u[0])+df[1]*ENTROPY_GRAD(u,grad_u[1]) + ENTROPY(u)*(df[0]+df[1]);
-		  //double entropy_viscosity = cE*h*h*std::abs(point_entropy_residual)/entropy_normalization_factor;
 		  double entropy_viscosity = cE*h*h*entropy_residual[eN]/entropy_normalization_factor;
 		  q_numDiff_u[eN_k] = std::min(linear_viscosity,entropy_viscosity);
 

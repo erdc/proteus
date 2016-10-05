@@ -1,18 +1,14 @@
 from proteus import *
 from proteus.default_n import *
-from vof_rotation_2d_p import *
-from rotation2D import *
+from vof_vortex_2d_p import *
+from vortex2D import *
 
 multilevelNonlinearSolver  = NLNI
 levelNonlinearSolver = Newton
-fullNewtonFlag = fullNewton
-updateJacobian = False
+fullNewtonFlag = fullNewton_VOF
 
 if timeIntegration_vof == "SSP33":
     timeIntegration = SSP33
-    stepController = Min_dt_controller
-elif timeIntegration_vof == "fe":
-    timeIntegration = ForwardEuler
     stepController = Min_dt_controller
 elif timeIntegration_vof == "be":
     timeIntegration = BackwardEuler_cfl
@@ -48,7 +44,7 @@ if cDegree_vof==0:
             femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
         elif pDegree_vof==2:
             femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
-    subgridError = None #Advection_ASGS(coefficients,nd,lag=False)
+    subgridError = Advection_ASGS(coefficients,nd,lag=False)
     shockCapturing = VOF.ShockCapturing(coefficients,nd,shockCapturingFactor=shockCapturingFactor_vof,lag=lag_shockCapturing_vof)
     if parallel or LevelModelType == VOF.LevelModel:
         numericalFluxType = Advection_DiagonalUpwind_IIPG_exterior
@@ -66,11 +62,15 @@ elif cDegree_vof==-1:
     limiterType =   {0:TimeIntegration.DGlimiterPkMonomial2d}
 
 if useHex:
-    elementQuadrature = CubeGaussQuadrature(nd,rotation_quad_order)
-    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,rotation_quad_order)
+    elementQuadrature = CubeGaussQuadrature(nd,vortex_quad_order)
+    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,vortex_quad_order)
 else:
-    elementQuadrature = SimplexGaussQuadrature(nd,rotation_quad_order)
-    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,rotation_quad_order)
+    elementQuadrature = SimplexGaussQuadrature(nd,vortex_quad_order)
+    elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,vortex_quad_order)
+
+#elementQuadrature = SimplexLobattoQuadrature(nd,1)
+#
+#elementBoundaryQuadrature = SimplexLobattoQuadrature(nd-1,1)
 
 nonlinearSmoother = None#NLGaussSeidel
 
@@ -80,7 +80,7 @@ linTolFac = tolFac
 nl_atol_res = 100*atolVolumeOfFluid
 l_atol_res = atolVolumeOfFluid
 
-maxNonlinearIts = 20
+maxNonlinearIts = 25
 maxLineSearches = 0
 
 matrix = SparseMatrix
