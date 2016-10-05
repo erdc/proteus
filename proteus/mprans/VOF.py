@@ -54,7 +54,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
     from proteus.ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
     from proteus.cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
-    def __init__(self,cE=0.5,cMax=0.1,cK=1.0,ENTROPY_VISCOSITY=0,SUPG=1,
+    def __init__(self,cE=0.5,cMax=0.1,cK=1.0,ENTROPY_VISCOSITY=0,SUPG=1,uL=0.0,uR=1.0,
                  LS_model=None,V_model=0,RD_model=None,ME_model=1,EikonalSolverFlag=0,checkMass=True,epsFact=0.0,useMetrics=0.0,sc_uref=1.0,sc_beta=1.0,setParamsFunc=None,movingDomain=False):
         self.useMetrics = useMetrics
         self.variableNames=['vof']
@@ -98,6 +98,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cK=cK
         self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
         self.SUPG=SUPG
+        #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+        self.uL=uL
+        self.uR=uR
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def attachModels(self,modelList):
@@ -682,6 +685,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
               for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                   self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
+        #print "***************************************"
+        #print "PRINT SOME PARAMETERS FOR VOF"
+        #print "Coefficients (cE, cMax, cK): ", self.coefficients.cE, self.coefficients.cMax, self.coefficients.cK
+        #print "Flags (EV, SUPG): ", self.coefficients.ENTROPY_VISCOSITY, self.coefficients.SUPG
+        #print "Time integration: ", self.timeIntegration.IMPLICIT
+        #print "***************************************"
         self.vof.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -751,7 +760,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.cK,
             self.coefficients.ENTROPY_VISCOSITY,
             self.timeIntegration.IMPLICIT,
-            self.coefficients.SUPG)
+            self.coefficients.SUPG,
+            #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+            self.coefficients.uL, 
+            self.coefficients.uR)
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0

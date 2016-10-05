@@ -55,7 +55,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
 
     def __init__(self,
+                 #PARAMETERS FOR ENTROPY VISCOSITY
                  cE=1.0,cMax=0.1,ENTROPY_VISCOSITY=0,SUPG=1,
+                 #PARAMETER FOR LS-COUPEZ
+                 LS_COUPEZ=0,
+                 #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+                 uL=0.0,uR=1.0,
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
@@ -101,7 +106,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cMax=cMax
         self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
         self.SUPG=SUPG
-
+        #PARAMETERS FOR LS-COUPEZ
+        self.LS_COUPEZ=LS_COUPEZ
+        #PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
+        self.uL=uL
+        self.uR=uR
     def attachModels(self,modelList):
         #the level set model
         self.model = modelList[self.modelIndex]
@@ -638,6 +647,13 @@ class LevelModel(OneLevelTransport):
               for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                   self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
+                  
+        #print "***************************************"
+        #print "PRINT SOME PARAMETERS FOR VOF"
+        #print "Coefficients (cE, cMax): ", self.coefficients.cE, self.coefficients.cMax
+        #print "Flags (EV, SUPG): ", self.coefficients.ENTROPY_VISCOSITY, self.coefficients.SUPG
+        #print "Time integration: ", self.timeIntegration.IMPLICIT
+        #print "***************************************"
         self.ncls.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -694,11 +710,17 @@ class LevelModel(OneLevelTransport):
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
             self.ebqe[('u',0)],
+            #PARAMETERS FOR ENTROPY VISCOSITY METHOD
             self.coefficients.cE,
             self.coefficients.cMax, 
             self.coefficients.ENTROPY_VISCOSITY, 
             self.timeIntegration.IMPLICIT, 
-            self.coefficients.SUPG)
+            self.coefficients.SUPG, 
+            #PARAMETER FOR LS-COUPEZ
+            self.coefficients.LS_COUPEZ,
+            #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+            self.coefficients.uL,
+            self.coefficients.uR)
 
 	if self.forceStrongConditions:#
 	    for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():

@@ -22,15 +22,17 @@ class MyCoefficients(VOF.Coefficients):
         self.model.ebqe[('velocity',0)]=self.ebqe_v
         self.ebqe_phi = numpy.zeros(self.model.ebqe[('u',0)].shape,'d') #NOTE: this is not needed (is for LS)
     def preStep(self,t,firstStep=False):
-        #Solid ROTATION
-        self.q_v[...,0]  = -2.0*math.pi*(self.model.q['x'][...,1]-0.5)
-        self.q_v[...,1]  =  2.0*math.pi*(self.model.q['x'][...,0]-0.5)
-        #NON PERIODIC VORTEX
         pi = math.pi
+        import numpy as np
         x = self.model.q['x'][...,0]
         y = self.model.q['x'][...,1]
-        #self.q_v[...,0] = -2*numpy.sin(pi*x)**2*numpy.sin(pi*y)*numpy.cos(pi*y)
-        #self.q_v[...,1] =  2*numpy.sin(pi*y)**2*numpy.sin(pi*x)*numpy.cos(pi*x)        
+        #ROTATION
+        self.q_v[...,0]  = -2.0*pi*y
+        self.q_v[...,1]  =  2.0*pi*x
+        #PERIODIC VORTEX
+        #T=8
+        #self.q_v[...,0] = -2*np.sin(pi*y)*np.cos(pi*y)*np.sin(pi*x)**2*np.cos(pi*t/T)
+        #self.q_v[...,1] = 2*np.sin(pi*x)*np.cos(pi*x)*np.sin(pi*y)**2*np.cos(pi*t/T)        
         #TRANSLATION
         #self.q_v[...,0]  = 0.0
         #self.q_v[...,1]  = -1.0
@@ -88,8 +90,8 @@ def getDBC(x,flag):
 
 dirichletConditions = {0:getDBC}
 
-#initialConditions  = {0:init_cond(center=[0.0,0.5],radius=0.25)}
-initialConditions  = {0:init_cond(center=[0.5,0.75],radius=0.15)}
+initialConditions  = {0:init_cond(center=[0.0,0.5],radius=0.25)}
+#initialConditions  = {0:init_cond(center=[0.5,0.75],radius=0.15)}
 
 fluxBoundaryConditions = {0:'outFlow'}
 

@@ -96,7 +96,13 @@ class TC_base:
 #                           2:{0:'linear',1:'linear',2:'linear'}}
                  sparseDiffusionTensors = {},
                  useSparseDiffusion = True,
-                 movingDomain=False):
+                 movingDomain=False, 
+                 #PARAMETERS FOR ENTROPY VISCOSITY
+                 cE=1.0, cMax=0.1, ENTROPY_VISCOSITY=0, SUPG=1, 
+                 #PARAMETER FOR LS-COUPEZ
+                 LS_COUPEZ=0,
+                 #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+                 uL=0.0, uR=1.0):
         """
         Set the number of components (equations) of the
         PDE and initialize the dicitionaries describing the form of the
@@ -104,6 +110,16 @@ class TC_base:
         and archiving) and a structure defining the sparsity pattern
         of diffusion tensors may also be provided.
         """
+        #PARAMETERS FOR LS-COUPEZ
+        self.LS_COUPEZ=LS_COUPEZ
+        #PARAMETERS FOR ENTROPY VISCOSITY
+        self.cE = cE
+        self.cMax = cMax
+        self.ENTROPY_VISCOSITY = ENTROPY_VISCOSITY
+        self.SUPG = SUPG
+        #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+        self.uL=0.0
+        self.uR=1.0
         self.nc = nc
         if variableNames == None:
             self.variableNames = ['u'+`i` for i in range(nc)]

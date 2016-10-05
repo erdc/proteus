@@ -61,7 +61,10 @@ cdef extern from "NCLS.h" namespace "proteus":
 			       double cMax,
 			       int ENTROPY_VISCOSITY,
 			       int IMPLICIT,
-			       int SUPG)
+			       int SUPG, 
+			       int LS_COUPEZ,
+			       double uL, 
+			       double uR)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -244,7 +247,10 @@ cdef class cNCLS_base:
 			 double cMax,
 			 int ENTROPY_VISCOSITY,
 			 int IMPLICIT,
-			 int SUPG):
+			 int SUPG,
+			 int LS_COUPEZ,
+			 double uL, 
+			 double uR):
        self.thisptr.calculateResidual(<double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
                                        <double*>mesh_dof.data,
@@ -302,7 +308,10 @@ cdef class cNCLS_base:
 				       cMax, 
 				       ENTROPY_VISCOSITY, 
 				       IMPLICIT, 
-				       SUPG)
+				       SUPG,
+				       LS_COUPEZ,
+				       uL, 
+				       uR)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,

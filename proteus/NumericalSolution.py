@@ -758,6 +758,7 @@ class NS_base:  # (HasTraits):
                 lm.getResidual(lu,lr)
             logEvent("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
+
         self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
         for m in self.modelList:
             logEvent("Auxiliary variable calculations for model %s" % (m.name,))
@@ -788,13 +789,12 @@ class NS_base:  # (HasTraits):
                     for lm in m.levelModelList:
                         for ci in range(lm.coefficients.nc):
                             lm.u[ci].dof_last[:] = lm.u[ci].dof
+
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
             while self.systemStepController.t_system_last < self.tn:
-
                 logEvent("System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
-                                                              self.systemStepController.dt_system),level=3)
-
+                                                                   self.systemStepController.dt_system),level=3)
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
                     logEvent("Split operator iteration %i" % (self.systemStepController.its,),level=3)
@@ -845,10 +845,11 @@ class NS_base:  # (HasTraits):
                                 ###################
                                 logEvent("FIRST hacked STAGE of SSP33",level=3)
                                 #save DOFs from previous time step
-                                if (model.levelModelList[index].timeIntegration is not None and  
-                                    model.levelModelList[index].timeIntegration.use_SSP33): 
-                                    unm1 = numpy.copy(model.levelModelList[index].coefficients.u_old_dof)
-                                    unm1_quad = numpy.copy(model.levelModelList[index].timeIntegration.m_last[0]) #assuming porosity=1
+                                
+                                if (model.levelModelList[0].timeIntegration is not None and  
+                                    model.levelModelList[0].timeIntegration.use_SSP33): 
+                                    unm1 = numpy.copy(model.levelModelList[0].coefficients.u_old_dof)
+                                    unm1_quad = numpy.copy(model.levelModelList[0].timeIntegration.m_last[0]) #assuming porosity=1
                                 #update BETA. timeIntegration.m_last[0] = unm1 at quad points. 
                                 #solve forward euler for current stage
                                 model.stepController.setInitialGuess(model.uList,model.rList)
@@ -856,8 +857,8 @@ class NS_base:  # (HasTraits):
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
-                                if (model.levelModelList[index].timeIntegration is not None and  
-                                    model.levelModelList[index].timeIntegration.use_SSP33):
+                                if (model.levelModelList[0].timeIntegration is not None and  
+                                    model.levelModelList[0].timeIntegration.use_SSP33):
                                 #if (False):
                                     #get stage 1 solution
                                     uStage1 = numpy.copy(model.uList[0])
@@ -868,9 +869,9 @@ class NS_base:  # (HasTraits):
                                     #overwrite initial guess for Newtons Method
                                     #model.uList[0] = numpy.copy(uStage1) #not necessary
                                     #set input for second stage. INPUT: solution from first stage
-                                    model.levelModelList[index].coefficients.u_old_dof = numpy.copy(uStage1)
+                                    model.levelModelList[0].coefficients.u_old_dof = numpy.copy(uStage1)
                                     # to update BETA. timeIntegration.m_last[0] = uStage1 at quad points
-                                    model.levelModelList[index].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[index].q[('m',0)])
+                                    model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[0].q[('m',0)])
                                     #solve forward euler for current stage
                                     model.stepController.setInitialGuess(model.uList,model.rList)
                                     solverFailed = model.solver.solveMultilevel(uList=model.uList,
@@ -888,11 +889,11 @@ class NS_base:  # (HasTraits):
                                     #overwrite initial guess for Newtons Method
                                     #model.uList[0] = numpy.copy(uStage2) #not necessary
                                     #set input for third stage. INPUT: solution from second stage
-                                    model.levelModelList[index].coefficients.u_old_dof = numpy.copy(uStage2)
+                                    model.levelModelList[0].coefficients.u_old_dof = numpy.copy(uStage2)
                                     # to update BETA. timeIntegration.m_last[0] = uStage 2 at quad points
-                                    model.levelModelList[index].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[index].q[('m',0)])
-                                    model.levelModelList[index].timeIntegration.m_last[0] *= 1./4
-                                    model.levelModelList[index].timeIntegration.m_last[0] += 3./4*unm1_quad
+                                    model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[0].q[('m',0)])
+                                    model.levelModelList[0].timeIntegration.m_last[0] *= 1./4
+                                    model.levelModelList[0].timeIntegration.m_last[0] += 3./4*unm1_quad
                                     #solve forward euler for current stage
                                     model.stepController.setInitialGuess(model.uList,model.rList)
                                     solverFailed = model.solver.solveMultilevel(uList=model.uList,
@@ -904,14 +905,14 @@ class NS_base:  # (HasTraits):
                                     uStage3 *= 2./3
                                     uStage3 += 1./3*unm1
                                     # restore solution at previous time step
-                                    model.levelModelList[index].coefficients.u_old_dof = numpy.copy(unm1)
+                                    model.levelModelList[0].coefficients.u_old_dof = numpy.copy(unm1)
                                     # get solution at next time step 
-                                    model.levelModelList[index].u[0].dof = numpy.copy(uStage3)
+                                    model.levelModelList[0].u[0].dof = numpy.copy(uStage3)
                                     # to update BETA. timeIntegration.m_last[0] = unm1 at quad points
-                                    model.levelModelList[index].timeIntegration.m_last[0] = numpy.copy(unm1_quad)
+                                    model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(unm1_quad)
                                     # update residual and q_u, q_m 
-                                    model.levelModelList[index].getResidual(numpy.copy(uStage3),
-                                                                        model.levelModelList[index].globalResidualDummy)
+                                    model.levelModelList[0].getResidual(numpy.copy(uStage3),
+                                                                        model.levelModelList[0].globalResidualDummy)
                                 # FINISHED hacked SSP33 implementation (MQL)
                                 Profiling.memory("solver.solveMultilevel")
                                 if self.opts.wait:
