@@ -528,8 +528,6 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         logEvent("================================================================")
 
 
-
-
 class CaissonBody(RigidBody):
     """
     Sub-class to create a caisson rigid body.
@@ -874,12 +872,12 @@ class CaissonBody(RigidBody):
                 Fv = 0.0	
 
             # initial condition
-            ux0 = self.last_ux                                # x-axis displacement
-            uy0 = self.last_uy                                # y-axis displacement
-            vx0 = self.last_velocity[0]                       # x-axis velocity
-            vy0 = self.last_velocity[1]                       # y-axis velocity
-            ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass               # x-axis acceleration
-            ay0 = (Fv - Cy*vy0 - Ky*uy0) / mass               # y-axis acceleration
+            ux0 = self.last_position[0] - self.init_barycenter[0]      # x-axis displacement
+            uy0 = self.last_position[1] - self.init_barycenter[1]      # y-axis displacement
+            vx0 = self.last_velocity[0]                                # x-axis velocity
+            vy0 = self.last_velocity[1]                                # y-axis velocity
+            ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass                        # x-axis acceleration
+            ay0 = (Fv - Cy*vy0 - Ky*uy0) / mass                        # y-axis acceleration
 
 	    # solving numerical scheme
 	    if self.scheme == 'Runge_Kutta':
@@ -901,8 +899,8 @@ class CaissonBody(RigidBody):
             self.uy = uy
 
             # final values
-            self.h[0] = self.ux - self.last_ux
-            self.h[1] = self.uy - self.last_uy
+            self.h[0] = self.ux - (self.last_position[0] - self.init_barycenter[0])
+            self.h[1] = self.uy - (self.last_position[1] - self.init_barycenter[1])
             self.velocity[0] = vx
             self.velocity[1] = vy
             self.acceleration[0] = ax
