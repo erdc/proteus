@@ -242,6 +242,8 @@ class OneLevelMSDG(Transport.OneLevelTransport):
 
         logEvent('Initializing MSDG local transfer operator T finished')
         logEvent('Setting the extra boundary terms in MSDG local Transfer operator T')
+
+
         # add boundary integral terms
         # self.alpha_p = 0.9
         # self.alpha_beta = 1.0
@@ -255,12 +257,27 @@ class OneLevelMSDG(Transport.OneLevelTransport):
         # self.debugTAss = [np.zeros((18, 18), 'd'), np.zeros((18, 18), 'd')]
         # self.debugTtotal = np.zeros((36,27), 'd')
         # debug ends
+        print("number of elements is {}".format(self.mesh.nElements_global))
+        print("number of edges is {}".format(self.mesh.nElementBoundaries_element))
+        from time import time
+
+
         for eN in range(self.mesh.nElements_global):
             for ebN in range(self.mesh.nElementBoundaries_element):
                 # assumes equal  order across  components
+                start_time = time()
                 for i in range(self.nDOF_test_element[0]):
                     # assumes equal  order across components
                     for j in range(self.nDOF_trial_element[0]):
+
+                        # #######
+                        # here try to omit k iteration
+                        # til_D_k
+                        # self.transfer_lhs[(0, 0)][eN, i, j] += sum([self.alpha_beta * (1.0 / \
+                        #         abs(self.ebq[('dr', 1, 1)][eN, ebN, k])) / h * self.ebq[
+                        #     ('v', 0)][eN, ebN, k, j] * self.ebq[('w*dS_H', 0)][eN, ebN, k, i]])
+                        # ########
+                        # omit k iteration ends
                         for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                             #                             pdb.set_trace()
                             #                             h =1.0
@@ -416,6 +433,9 @@ class OneLevelMSDG(Transport.OneLevelTransport):
             # self.Trhs.append(
             #     np.zeros((3 * self.nDOF_test_element[0], ), 'd'))
 
+            end_time = time()
+            print(" calculate matrix time is {}".format(end_time-start_time))
+            start_time = time()
             for i in range(self.nDOF_test_element[0]):
                 for j in range(self.nDOF_trial_element[0]):
 
@@ -439,7 +459,7 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                     # T
             # pdb.set_trace()
             for i in range(self.nDOF_test_element[0]):
-                for j in range(self.cg_spaces[0].max_nDOF_element):
+                for j in range(self.nDOF_trial_element[0]):
                     for ic in range(self.nc):
                         for jc in range(self.nc):
                             # bar_M
@@ -476,6 +496,9 @@ class OneLevelMSDG(Transport.OneLevelTransport):
             self.T[eN] = np.dot(linalg.inv(self.til_M[eN]), self.bar_M[eN])
             self.Trhs[eN] = np.dot(linalg.inv(self.til_M[eN]),self.rhs_source[eN])
             # import pdb; pdb.set_trace()
+
+            end_time = time()
+            print("reassemble time is {}".format(end_time - start_time))
         #debug use
         # for eN in range(self.mesh.nElements_global):
         #     for i in range(self.nDOF_trial_element[0]): #better to change to test
@@ -555,7 +578,7 @@ class OneLevelMSDG(Transport.OneLevelTransport):
             #
             #INPY = np.zeros((3*self.u[0].femSpace.dim,3*self.u_cg[0].femSpace.dim),'d')
             self.I.setType(PETSc.Mat.Type.SEQAIJ)
-            self.I.setPreallocationNNZ(1)
+            self.I.setPreallocationNNZ(sum(self.nDOF_test_element))
             self.I.setOption(
                 PETSc.Mat.Option.NEW_NONZERO_ALLOCATION_ERR, False)
         else:
@@ -575,7 +598,7 @@ class OneLevelMSDG(Transport.OneLevelTransport):
         self.debugT = np.zeros((self.nc * self.u[0].femSpace.dim, self.nc * self.u_cg[0].femSpace.dim), 'd')
         for eN in range(self.mesh.nElements_global):
             for i in range(self.nDOF_trial_element[0]): #better to change to test
-                for j in range(self.cg_spaces[0].max_nDOF_element):
+                for j in range(self.nDOF_trial_element[0]):
                     #implicit expression of assembly
                     for ic in range(self.nc):
                         for jc in range(self.nc):

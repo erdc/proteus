@@ -907,12 +907,12 @@ class DarcyMSDG:
         self.pc.setType('mg')
         self.pc.setFromOptions()
         L_sizes = self.L.getSizes()
-        assert(L_sizes[0][0] == 3*self.L.pde.u[0].nDOF_global)
+        assert(L_sizes[0][0] == len(self.L.pde.u)*self.L.pde.u[0].nDOF_global)
         #Interpolation from CG to DG
         self.Ishell = p4pyPETSc.Mat().create()
         self.Ishell.setSizes([
             [L_sizes[0][0], L_sizes[0][0]],
-            [3*self.L.pde.u_cg[0].nDOF_global, 3*self.L.pde.u_cg[0].nDOF_global]])
+            [len(self.L.pde.u)*self.L.pde.u_cg[0].nDOF_global, len(self.L.pde.u)*self.L.pde.u_cg[0].nDOF_global]])
         self.Ishell.setType('python')
         self.Icontext, self.I, self.RHS  = self.L.pde.getInterpolation()
         self.Ishell.setPythonContext(self.Icontext)
