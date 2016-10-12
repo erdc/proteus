@@ -10,12 +10,13 @@ generation sources, and validation solutions for numerical wave codes.
 
 
 cimport cython
-from math import pi, tanh, sqrt, exp, log, sin, cos, cosh, sinh
+from libc.math cimport tanh, sqrt, exp, log, sin, cos, cosh, sinh, M_PI #from math import pi, tanh, sqrt, exp, log, sin, cos, cosh, sinh
 import numpy as np
 import cmath as cmath
 from Profiling import logEvent
 import time as tt
 import sys as sys
+cimport numpy as np
 
 __all__ = ['MonochromaticWaves',
            'RandomWaves',
@@ -234,7 +235,7 @@ def normIntegral(f,dom):
 
 
 
-def eta_mode(x, t, kDir, omega, phi, amplitude):
+cdef double eta_mode(double x[3], double t, double kDir[3], double omega, double phi, double amplitude):
     """Calculates the free surface elevation for a single frequency mode
 
     Parameters
@@ -258,11 +259,13 @@ def eta_mode(x, t, kDir, omega, phi, amplitude):
         The free surface elevation at x,t
 
     """
-    phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
-    return amplitude*cos(phase)
+    cdef phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
+    cdef eta = amplitude*cos(phase)
+    return eta
 
 
-def vel_mode(x, t, kDir, kAbs, omega, phi, amplitude, mwl, depth, vDir):
+cdef  np.ndarray[np.float64_t,ndim=1] vel_mode(double x[3], double t, double kDir[3], double kAbs, double omega, double phi, double amplitude, 
+double mwl, double depth, double vDir[3]):
     """Calculates the wave velocity components for a single frequency mode
 
     Parameters
@@ -295,19 +298,24 @@ def vel_mode(x, t, kDir, kAbs, omega, phi, amplitude, mwl, depth, vDir):
         1D Numpy array of the velocity vector at x,t
     """
 
-    phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
-    Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl
-    UH = 0.
-    UV=0.
-    ii=0.
+    cdef double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
+    cdef double Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl
+    cdef double UH = 0.
+    cdef double UV=0.
+    cdef int ii=0
     UH=amplitude*omega*cosh(kAbs*(Z + depth))*cos( phase )/sinh(kAbs*depth)
     UV=amplitude*omega*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth)
-    waveDir = kDir/kAbs
-#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
-    V = np.array([UH*waveDir[0]+UV*vDir[0],
-                  UH*waveDir[1]+UV*vDir[1],
-                  UH*waveDir[2]+UV*vDir[2]])
-    return V
+#Setting wave direction
+    cdef double waveDir[3] 
+    waveDir[0] = kDir[0]/kAbs
+    waveDir[0] = kDir[0]/kAbs
+    waveDir[0] = kDir[0]/kAbs
+#Setting wave velocities
+    cdef double V[3] 
+    V[0] = UH*waveDir[0]+UV*vDir[0]
+    V[1] = UH*waveDir[1]+UV*vDir[1]
+    V[2] = UH*waveDir[2]+UV*vDir[2]
+    return np.array(V)
 
 
 
@@ -367,7 +375,7 @@ def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
             logEvent("Wavetools:py. Provide valid depth definition definition for TMA spectrum")
             logEvent("Wavetools:py. Stopping simulation")
             sys.exit(1)
-        k = dispersion(2*pi*f,depth)
+        k = dispersion(2*M_PI*f,depth)
         tma = np.tanh(k*depth)*np.tanh(k*depth)/(1.+ 2.*k*depth/np.sinh(2.*k*depth))
 
     return tma * bj*(Hs**2)*(1./((Tp**4) *(f**5)))*np.exp(-1.25*(1./(Tp*f)**(4.)))*(gamma**r)
@@ -517,9 +525,9 @@ def costap(l,cutoff=0.1):
     wind = np.ones(l)
     for k in range(l): # (k,np) = (n,N) normally used
         if k < npoints:
-            wind[k] = 0.5*(1.-cos(pi*float(k)/float(npoints)))
+            wind[k] = 0.5*(1.-cos(M_PI*float(k)/float(npoints)))
         if k > l - npoints -1:
-            wind[k] = 0.5*(1.-cos(pi*float(l-k-1)/float(npoints)))
+            wind[k] = 0.5*(1.-cos(M_PI*float(l-k-1)/float(npoints)))
     return wind
 
 def decompose_tseries(time,eta,dt):
@@ -555,7 +563,7 @@ def decompose_tseries(time,eta,dt):
     freq = freq[1:iend]
                               #%retaining only first half of the spectrum
     aa = 2.*abs(fft_x)/nfft                                 #%amplitudes (only the ones related to positive frequencies)
-    ww = 2*pi*freq
+    ww = 2*M_PI*freq
 
 
     pp = np.zeros(len(aa),complex)
@@ -643,19 +651,33 @@ class MonochromaticWaves:
         self.waveHeight = waveHeight
         self.mwl = mwl
         self.depth = depth
-        self.omega = 2.0*pi/period
+        self.omega = 2.0*M_PI/period
+
+
+        self.Ycoeff = Ycoeff
+        self.Bcoeff = Bcoeff
 
 #Calculating / checking wavelength data
         if  self.waveType== "Linear":
             self.k = dispersion(w=self.omega,d=self.depth,g=self.gAbs)
-            self.wavelength = 2.0*pi/self.k
+            self.wavelength = 2.0*M_PI/self.k
         else:
             try:
-                self.k = 2.0*pi/wavelength
+                self.k = 2.0*M_PI/wavelength
                 self.wavelength=wavelength
             except:
                 logEvent("ERROR! Wavetools.py: Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
                 sys.exit(1)
+            try:
+                if (len(self.Ycoeff) == len(self.Bcoeff)):
+                    self.Nf = len(Ycoeff)
+                else:
+                    logEvent("ERROR! Wavetools.py: Ycoeff and Bcoeff must have the same length",level=0)
+                    sys.exit(1)
+            except:
+                logEvent("ERROR! Wavetools.py: Need to define Fenton Fourier coefficients Ycoeff and Bcoeff as numpy arrays (free-surface and velocity) for nonlinear waves",level=0)
+                sys.exit(1)
+           
         self.kDir = self.k * self.waveDir
         self.amplitude = 0.5*self.waveHeight
         self.meanVelocity = np.array(meanVelocity)
@@ -665,16 +687,21 @@ class MonochromaticWaves:
             logEvent("ERROR! Wavetools.py: meanVelocity should be a vector with 3 components. ",level=0)
             sys.exit(1)
 
-        self.Ycoeff = Ycoeff
-        self.Bcoeff = Bcoeff
 
-# Checking for
-        if (Ycoeff==None) or (Bcoeff==None):
-            if self.waveType!= "Linear":
-                logEvent("ERROR! Wavetools.py: Need to define Fenton Fourier coefficients Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
-                sys.exit(1)
-    def eta(self, x, t):
-        """Calculates free surface elevation (MonochromaticWaves class)
+
+
+
+
+
+        if self.waveType == "Linear":
+            self.eta = self.etaLinear
+            self.u = self.uLinear
+        else:
+            self.eta = self.etaFenton
+            self.u = self.uFenton
+
+    def etaLinear(self, x, t):
+        """Calculates free surface elevation (MonochromaticWaves class - Linear waves)
         Parameters
         ----------
         x : numpy.ndarray
@@ -688,19 +715,105 @@ class MonochromaticWaves:
             Free-surface elevation as a float
 
         """
+        cdef np.ndarray x_temp = np.array(x)
+        cdef double* xi =<double *> x_temp.data
+ 
+        cdef np.ndarray kD_temp = self.kDir
+        cdef double* kDir =<double *> kD_temp.data 
 
-        if self.waveType == "Linear":
-            return eta_mode(x,t,self.kDir,self.omega,self.phi0,self.amplitude)
-        elif self.waveType == "Fenton":
-            HH = 0.
-            ii =0.
-            for Y in self.Ycoeff:
-                ii+=1
-                HH+=eta_mode(x,t,ii*self.kDir,ii*self.omega,ii*self.phi0,Y)
-            return HH/self.k
+        cdef double amp = self.amplitude
+        cdef double omega = self.omega
+        cdef double phi0 = self.phi0
 
-    def u(self, x, t):
-        """Calculates wave velocity vector (MonochromaticWaves class).
+
+        return eta_mode(xi,t,kDir,omega,phi0,amp)
+
+    def etaFenton(self, x, t):
+        """Calculates free surface elevation (MonochromaticWaves class - Fenton waves)
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
+        """
+        cdef np.ndarray x_temp = np.array(x)
+        cdef double* xi =<double *> x_temp.data
+ 
+        cdef np.ndarray kD_temp = self.kDir
+        cdef double* kDir =<double *> kD_temp.data 
+
+
+        cdef double amp = self.amplitude
+        cdef double omega = self.omega
+        cdef double phi0 = self.phi0
+        cdef double k = self.k
+
+
+
+        cdef np.ndarray Y_temp = self.Ycoeff
+        cdef double* Y =<double *> Y_temp.data 
+        
+        cdef int N = self.Nf
+
+        cdef int ii =0
+        cdef double HH = 0.
+        cdef double om = 0.
+        cdef double[3] kw = [0.,0.,0.]
+        cdef double phi = 0.
+
+        for nn in range(N):
+            ii+=1
+            om = ii*omega
+            kw = [ii*kDir[0], ii*kDir[1], ii*kDir[2]]
+            phi = ii*phi0
+            HH= eta_mode(xi,t,kw,om,phi,Y[nn])
+        return HH/k
+
+
+    def uLinear(self, x, t):
+        """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
+        """
+        cdef np.ndarray x_temp = np.array(x)
+        cdef double* xi =<double *> x_temp.data
+ 
+        cdef np.ndarray kD_temp = self.kDir
+        cdef double* kDir =<double *> kD_temp.data 
+
+        cdef np.ndarray v_temp = self.vDir
+        cdef double* vDir =<double *> v_temp.data 
+
+
+        cdef double k = self.k
+        cdef double amp = self.amplitude
+        cdef double omega = self.omega
+        cdef double phi0 = self.phi0
+        cdef double mwl = self.mwl
+        cdef double depth = self.depth
+
+        
+        return vel_mode(xi, t, kDir,k,omega,phi0,amp,mwl,depth,vDir)
+
+    def uFenton(self, x, t):
+        """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
         Parameters
         ----------
         x : numpy.ndarray
@@ -715,22 +828,52 @@ class MonochromaticWaves:
 
         """
 
-        if self.waveType == "Linear":
-            return vel_mode(x, t, self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.vDir)
-        elif self.waveType == "Fenton":
-            Ufenton = self.meanVelocity.copy()
-            ii = 0
-            for B in self.Bcoeff:
-                ii+=1
-                wmode = ii*self.omega
-                kmode = ii*self.k
-                kdir = self.waveDir*kmode
-                amp = tanh(kmode*self.depth)*sqrt(self.gAbs/self.k)*B/self.omega
-                Ufenton+= vel_mode(x,t,kdir,kmode,wmode,ii*self.phi0,amp,self.mwl,self.depth,self.vDir)
-            return Ufenton # + self.meanVelocity[comp]
+        cdef np.ndarray x_temp = np.array(x)
+        cdef double* xi =<double *> x_temp.data
+ 
+        cdef np.ndarray kD_temp = self.kDir
+        cdef double* kDir =<double *> kD_temp.data 
+
+        cdef np.ndarray v_temp = self.vDir
+        cdef double* vDir =<double *> v_temp.data 
+
+        cdef double omega = self.omega
+        cdef double phi0 = self.phi0
+        cdef double k = self.k
+        cdef double mwl = self.mwl
+        cdef double depth = self.depth
+        cdef double gAbs = self.gAbs
+        cdef int N = self.Nf
 
 
-class RandomWaves:
+        cdef np.ndarray B_temp = self.Bcoeff
+        cdef double* B =<double *> B_temp.data 
+        
+
+        cdef int ii =0
+        cdef double om = 0.
+        cdef double[3] kw = [0.,0.,0.]
+        cdef double phi = 0.
+        cdef double kmode = 0.
+        cdef double amp = 0
+
+#        cdef np.ndarray U_temp = self.meanVelocity
+#        cdef double* Ufenton =<double *> U_temp.data 
+
+        cdef np.ndarray Ufenton = self.meanVelocity.copy()
+        for nn in range(N):
+            ii+=1
+            om = ii*omega
+            kw = [ii*kDir[0], ii*kDir[1], ii*kDir[2]]
+            kmode = ii*k
+            phi = ii*phi0
+
+            amp = tanh(kmode*depth)*sqrt(gAbs/k)*B[nn]/omega
+            Ufenton+= vel_mode(xi,t,kw,kmode,om,phi,amp,mwl,depth,vDir)
+        return Ufenton 
+
+    
+'''class RandomWaves:
     """
     This class is used for generating plane random waves using linear reconstruction of components from a
     wave spectrum
@@ -805,10 +948,10 @@ class RandomWaves:
         self.fmin = self.fp/self.bandFactor
         self.df = (self.fmax-self.fmin)/float(self.N-1)
         self.fi = np.linspace(self.fmin,self.fmax,self.N)
-        self.omega = 2.*pi*self.fi
+        self.omega = 2.*M_PI*self.fi
         self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
         if phi == None:
-            self.phi = 2.0*pi*np.random.random(self.fi.shape[0])
+            self.phi = 2.0*M_PI*np.random.random(self.fi.shape[0])
             logEvent('ERROR! Wavetools.py: No phase array is given. Assigning random phases. Outputing the phasing of the random waves')
         else:
             try:
@@ -1179,7 +1322,7 @@ class DirectionalWaves(RandomWaves):
 
         # Directional waves propagate usually in a plane -90 to 90 deg with respect to the direction vector, normal to the gavity direction. Rotating the waveDir0 vector around the g vector to produce the directional space
         from SpatialTools import rotation3D
-        self.thetas = np.linspace(-pi/2,pi/2,2*M+1)
+        self.thetas = np.linspace(-M_PI/2,M_PI/2,2*M+1)
         self.dth = (self.thetas[1] - self.thetas[0])
         self.waveDirs = np.zeros((2*M+1,3),)
         self.phiDirs = np.zeros((2*M+1,N),)
@@ -1199,7 +1342,7 @@ class DirectionalWaves(RandomWaves):
 
 # Initialising phasing
         if phi == None:
-            self.phiDirs = 2.0*pi*np.random.rand(self.Mtot,self.fi.shape[0])
+            self.phiDirs = 2.0*M_PI*np.random.rand(self.Mtot,self.fi.shape[0])
         elif np.shape(phi) == (2*M+1,self.fi.shape[0]):
             self.phiDirs = phi
         else:
@@ -2343,3 +2486,4 @@ class RandomNLWavesFast:
         """
         uR = self.TS[0].u(x,t)+ self.TS[1].u(x,t)+self.TS[2].u(x,t)
         return uR
+    '''
