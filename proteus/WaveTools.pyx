@@ -262,7 +262,7 @@ def eta_mode(x, t, kDir, omega, phi, amplitude):
     return amplitude*cos(phase)
 
 
-def vel_mode(x, t, kDir, kAbs, omega, phi, amplitude, mwl, depth, g, vDir):
+def vel_mode(x, t, kDir, kAbs, omega, phi, amplitude, mwl, depth, vDir):
     """Calculates the wave velocity components for a single frequency mode
 
     Parameters
@@ -285,8 +285,6 @@ def vel_mode(x, t, kDir, kAbs, omega, phi, amplitude, mwl, depth, g, vDir):
         Mean water level
     depth : float
         Water depth
-    g : numpy.ndarray
-        Gravitational accelaration (dummy parameter, to be removed)
     vDir : numpy.ndarray
         Unit vector aligned with vertical direction
 
@@ -718,7 +716,7 @@ class MonochromaticWaves:
         """
 
         if self.waveType == "Linear":
-            return vel_mode(x, t, self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,self.vDir)
+            return vel_mode(x, t, self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.vDir)
         elif self.waveType == "Fenton":
             Ufenton = self.meanVelocity.copy()
             ii = 0
@@ -728,7 +726,7 @@ class MonochromaticWaves:
                 kmode = ii*self.k
                 kdir = self.waveDir*kmode
                 amp = tanh(kmode*self.depth)*sqrt(self.gAbs/self.k)*B/self.omega
-                Ufenton+= vel_mode(x,t,kdir,kmode,wmode,ii*self.phi0,amp,self.mwl,self.depth,self.g,self.vDir)
+                Ufenton+= vel_mode(x,t,kdir,kmode,wmode,ii*self.phi0,amp,self.mwl,self.depth,self.vDir)
             return Ufenton # + self.meanVelocity[comp]
 
 
@@ -878,7 +876,7 @@ class RandomWaves:
 
         U=0.
         for ii in range(self.N):
-            U+= vel_mode(x, t, self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
+            U+= vel_mode(x, t, self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.vDir)
         return U
     def writeEtaSeries(self,Tstart,Tend,x0,fname,Vgen= np.array([0.,0,0])):
         """Writes a timeseries of the free-surface elevation
@@ -1076,7 +1074,7 @@ class MultiSpectraRandomWaves(RandomWaves):
 
         U=0.
         for ii in range(self.Nall):
-            U+= vel_mode(x,t,self.kDirM[ii], self.kiM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii],self.mwl,self.depth,self.g,self.vDir)
+            U+= vel_mode(x,t,self.kDirM[ii], self.kiM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii],self.mwl,self.depth,self.vDir)
         return U
 
 
@@ -1276,7 +1274,7 @@ class DirectionalWaves(RandomWaves):
         for jj in range(self.Mtot):
             for ii in range(self.N):
                 kDiri = self.waveDirs[jj]*self.ki[ii]
-                U+= vel_mode(x,t,kDiri, self.ki[ii],self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii],self.mwl,self.depth,self.g,self.vDir)
+                U+= vel_mode(x,t,kDiri, self.ki[ii],self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii],self.mwl,self.depth,self.vDir)
         return U
 
 
@@ -1648,7 +1646,7 @@ class TimeSeries:
         U=0.
         x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
-            U+= vel_mode(x1, t-self.t0, self.kDir[ii],self.ki[ii], self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
+            U+= vel_mode(x1, t-self.t0, self.kDir[ii],self.ki[ii], self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.vDir)
         return U
 
     def findWindow(self,t):
@@ -1728,7 +1726,7 @@ class TimeSeries:
         U=0.
         x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
         for ii in range(0,self.Nf):
-            U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
+            U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.vDir)
         return U
 
 
