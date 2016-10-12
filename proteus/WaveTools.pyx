@@ -259,8 +259,8 @@ cdef double eta_mode(double x[3], double t, double kDir[3], double omega, double
         The free surface elevation at x,t
 
     """
-    cdef phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
-    cdef eta = amplitude*cos(phase)
+    cdef double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
+    cdef double eta = amplitude*cos(phase)
     return eta
 
 
