@@ -263,8 +263,8 @@ cdef double eta_mode(double x[3], double t, double kDir[3], double omega, double
     cdef double eta = amplitude*cos(phase)
     return eta
 
-
-cdef  np.ndarray[np.float64_t,ndim=1] vel_mode(double x[3], double t, double kDir[3], double kAbs, double omega, double phi, double amplitude, 
+@cython.cdivision(True)
+cdef  double* vel_mode(double x[3], double t, double kDir[3], double kAbs, double omega, double phi, double amplitude, 
 double mwl, double depth, double vDir[3]):
     """Calculates the wave velocity components for a single frequency mode
 
@@ -315,7 +315,7 @@ double mwl, double depth, double vDir[3]):
     V[0] = UH*waveDir[0]+UV*vDir[0]
     V[1] = UH*waveDir[1]+UV*vDir[1]
     V[2] = UH*waveDir[2]+UV*vDir[2]
-    return np.array(V)
+    return V
 
 
 
@@ -809,8 +809,12 @@ class MonochromaticWaves:
         cdef double mwl = self.mwl
         cdef double depth = self.depth
 
-        
-        return vel_mode(xi, t, kDir,k,omega,phi0,amp,mwl,depth,vDir)
+        cdef double* Uc = vel_mode(xi, t, kDir,k,omega,phi0,amp,mwl,depth,vDir)
+        cdef np.ndarray U = np.array([0.,0.,0.])
+        U[0]=Uc[0]
+        U[1] = Uc[1]
+        U[2] = Uc[2]
+        return U
 
     def uFenton(self, x, t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
@@ -857,10 +861,10 @@ class MonochromaticWaves:
         cdef double kmode = 0.
         cdef double amp = 0
 
-#        cdef np.ndarray U_temp = self.meanVelocity
-#        cdef double* Ufenton =<double *> U_temp.data 
+        cdef np.ndarray U_temp = self.meanVelocity
+        cdef double* Ufenton =<double* > U_temp.data 
 
-        cdef np.ndarray Ufenton = self.meanVelocity.copy()
+        cdef np.ndarray Uf = self.meanVelocity.copy()
         for nn in range(N):
             ii+=1
             om = ii*omega
@@ -869,8 +873,13 @@ class MonochromaticWaves:
             phi = ii*phi0
 
             amp = tanh(kmode*depth)*sqrt(gAbs/k)*B[nn]/omega
-            Ufenton+= vel_mode(xi,t,kw,kmode,om,phi,amp,mwl,depth,vDir)
-        return Ufenton 
+            Ufenton[0] = Ufenton[0] + vel_mode(xi,t,kw,kmode,om,phi,amp,mwl,depth,vDir)[0]
+            Ufenton[1] = Ufenton[1] + vel_mode(xi,t,kw,kmode,om,phi,amp,mwl,depth,vDir)[1]
+            Ufenton[2] = Ufenton[2] + vel_mode(xi,t,kw,kmode,om,phi,amp,mwl,depth,vDir)[2]
+        Uf[0] = Ufenton[0]
+        Uf[1] = Ufenton[1]
+        Uf[2] = Ufenton[2]
+        return Uf
 
     
 '''class RandomWaves:
