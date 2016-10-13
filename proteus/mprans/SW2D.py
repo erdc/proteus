@@ -590,15 +590,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
                                    compKernelFlag)
         try_supg = False
+        try_entropy_viscosity = False
         if options != None and 'try_supg_stabilization' in dir(options):
             try_supg = options.try_supg_stabilization
             logEvent("setting try_supg_stabilization from options= {0}".format(try_supg),level=1)
+        if options != None and 'try_entropy_viscosity_stabilization' in dir(options):
+            try_entropy_viscosity = options.try_entropy_viscosity_stabilization
+            logEvent("setting try_entropy_viscosity_stabilization from options= {0}".format(try_entropy_viscosity),level=1)
+
         if try_supg:
             self.calculateResidual = self.sw2d.calculateResidual_supg
             self.calculateJacobian = self.sw2d.calculateJacobian_supg
         else:
             self.calculateResidual =  self.sw2d.calculateResidual
             self.calculateJacobian = self.sw2d.calculateJacobian
+        if try_entropy_viscosity:
+            self.calculateResidual = self.sw2d.calculateResidual_entropy_viscosity
+            self.calculateJacobian = self.sw2d.calculateJacobian_entropy_viscosity
 
     def getResidual(self,u,r):
         """
@@ -634,7 +642,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #import pdb
         #pdb.set_trace()
-        
+
         self.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -744,8 +752,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                      r[self.offset[cj]+self.stride[cj]*dofN] = 0
-
-
 
         cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax),level=2)
@@ -985,7 +991,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #                                      self.u[1].femSpace.psi_trace,
         #                                      self.ebqe[('velocity',0)],
         #                                      self.ebq_global[('velocityAverage',0)])
-        OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+        #OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
 
     def getForce(self,cg,forceExtractionFaces,force,moment):
         pass
