@@ -193,7 +193,8 @@ class NS_base:  # (HasTraits):
                                                                     p.domain.L[0],p.domain.L[1],1,
                                                                     refinementLevels=n.nLevels,
                                                                     nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                    parallelPartitioningType=n.parallelPartitioningType)
+                                                                    parallelPartitioningType=n.parallelPartitioningType,
+                                                                    triangleFlag=1)
 
                 elif p.domain.nd == 3:
                     if (n.nnx == n.nny == n.nnz ==None):
