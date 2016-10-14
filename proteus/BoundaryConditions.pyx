@@ -1,3 +1,4 @@
+#cython: profile=True
 """
 Module for creating boundary conditions. Imported in SpatialTools.py
 
