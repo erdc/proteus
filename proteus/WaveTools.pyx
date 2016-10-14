@@ -1,5 +1,6 @@
 #!python
 #cython: embedsignature=True
+#cython: profile=True
 """Tools for working with water waves.
 
 The primary objective of this module is to provide solutions (exact and
@@ -728,6 +729,8 @@ class MonochromaticWaves:
 
         return eta_mode(xi,t,kDir,omega,phi0,amp)
 
+
+    @cython.boundscheck(False)
     def etaFenton(self, x, t):
         """Calculates free surface elevation (MonochromaticWaves class - Fenton waves)
         Parameters
@@ -773,9 +776,8 @@ class MonochromaticWaves:
             om = ii*omega
             kw = [ii*kDir[0], ii*kDir[1], ii*kDir[2]]
             phi = ii*phi0
-            HH= eta_mode(xi,t,kw,om,phi,Y[nn])
+            HH= +eta_mode(xi,t,kw,om,phi,Y[nn])
         return HH/k
-
 
     def uLinear(self, x, t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).

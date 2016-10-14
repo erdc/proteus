@@ -1,3 +1,6 @@
+#!python
+#cython: profile=True
+
 """
 Module for creating boundary conditions. Imported in mprans.SpatialTools.py
 """
