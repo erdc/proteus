@@ -5,7 +5,7 @@ from sw_hump_2d_p import *
 try_entropy_viscosity_stabilization = True
 timeIntegration = BackwardEuler_cfl
 stepController = Min_dt_controller
-runCFL=0.33
+runCFL=0.1
 rtol_u[0] = 1.0e-4
 rtol_u[1] = 1.0e-4
 rtol_u[2] = 1.0e-4
