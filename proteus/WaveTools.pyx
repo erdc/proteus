@@ -1,6 +1,7 @@
 #!python
 #cython: embedsignature=True
 #cython: profile=True
+
 """Tools for working with water waves.
 
 The primary objective of this module is to provide solutions (exact and
@@ -264,8 +265,8 @@ cdef double eta_mode(double x[3], double t, double kDir[3], double omega, double
     cdef double eta = amplitude*cos(phase)
     return eta
 
-@cython.cdivision(True)
-cdef  double* vel_mode(double x[3], double t, double kDir[3], double kAbs, double omega, double phi, double amplitude, 
+
+cdef  np.ndarray[np.float64_t,ndim=1] vel_mode(double x[3], double t, double kDir[3], double kAbs, double omega, double phi, double amplitude, 
 double mwl, double depth, double vDir[3]):
     """Calculates the wave velocity components for a single frequency mode
 
@@ -316,7 +317,7 @@ double mwl, double depth, double vDir[3]):
     V[0] = UH*waveDir[0]+UV*vDir[0]
     V[1] = UH*waveDir[1]+UV*vDir[1]
     V[2] = UH*waveDir[2]+UV*vDir[2]
-    return V
+    return np.array(V)
 
 
 
@@ -581,7 +582,7 @@ def decompose_tseries(time,eta,dt):
 
 
 
-cdef class MonochromaticWaves:
+class MonochromaticWaves:
     """
     This class is used for generating regular waves in both linear and nonlinear regimes
 
@@ -622,22 +623,6 @@ cdef class MonochromaticWaves:
             Type: float
 
     """
-    cdef double* kDir
-    cdef double* Ycoeff
-    cdef double* Bcoeff
-    cdef double* vDir
-    cdef double* meanVelocity
-    cdef double amplitude
-    cdef double omega
-    cdef double phi0
-    cdef double k
-    cdef double mwl
-    cdef double depth
-    cdef double gAbs
-    cdef int Nf
-    
-
-
     def __init__(self,
                  period,
                  waveHeight,
@@ -648,8 +633,7 @@ cdef class MonochromaticWaves:
                  wavelength=None,
                  waveType="Linear",
                  Ycoeff = None,
-                 Bcoeff =None, 
-                 meanVelocity = np.array([0.,0,0.]),
+                 Bcoeff =None, meanVelocity = np.array([0.,0,0.]),
                  phi0 = 0.):
 
         self.knownWaveTypes = ["Linear","Fenton"]
@@ -659,15 +643,11 @@ cdef class MonochromaticWaves:
             sys.exit(1)
         self.g = np.array(g)
         self.waveDir =  setDirVector(np.array(waveDir))
-        vDir = setVertDir(g)
-        for ii in range(len(vDir)):
-            self.vDir[ii]  = vDir[ii]
+        self.vDir = setVertDir(g)
         self.gAbs = sqrt(self.g[0]*self.g[0]+self.g[1]*self.g[1]+self.g[2]*self.g[2])
 
 #Checking if g and waveDir are perpendicular
-        dirCheck(self.waveDir,vDir)
-
-
+        dirCheck(self.waveDir,self.vDir)
         self.phi0=phi0
         self.period = period
         self.waveHeight = waveHeight
@@ -676,6 +656,8 @@ cdef class MonochromaticWaves:
         self.omega = 2.0*M_PI/period
 
 
+        self.Ycoeff = Ycoeff
+        self.Bcoeff = Bcoeff
 
 #Calculating / checking wavelength data
         if  self.waveType== "Linear":
@@ -689,32 +671,19 @@ cdef class MonochromaticWaves:
                 logEvent("ERROR! Wavetools.py: Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
                 sys.exit(1)
             try:
-                if (len(Ycoeff) == len(Bcoeff)):
+                if (len(self.Ycoeff) == len(self.Bcoeff)):
                     self.Nf = len(Ycoeff)
                 else:
                     logEvent("ERROR! Wavetools.py: Ycoeff and Bcoeff must have the same length",level=0)
                     sys.exit(1)
-                for ii in range(self.Nf):
-                    self.Ycoeff[ii] = Ycoeff[ii]
-                    self.Bcoeff[ii] = Bcoeff[ii]
             except:
                 logEvent("ERROR! Wavetools.py: Need to define Fenton Fourier coefficients Ycoeff and Bcoeff as numpy arrays (free-surface and velocity) for nonlinear waves",level=0)
                 sys.exit(1)
            
-
-        self.kDir[0] = self.waveDir[0] * self.k
-        self.kDir[1] = self.waveDir[1] * self.k
-        self.kDir[2] = self.waveDir[2] * self.k
-#        self.kDir = self.k * self.waveDir
+        self.kDir = self.k * self.waveDir
         self.amplitude = 0.5*self.waveHeight
-
-        self.meanVelocity[0] = meanVelocity[0]
-        self.meanVelocity[1] = meanVelocity[1]
-        self.meanVelocity[2] = meanVelocity[2]
+        self.meanVelocity = np.array(meanVelocity)
 #Checking that meanvelocity is a vector
-
-
-
 
         if(len(meanVelocity) != 3):
             logEvent("ERROR! Wavetools.py: meanVelocity should be a vector with 3 components. ",level=0)
@@ -751,16 +720,16 @@ cdef class MonochromaticWaves:
         cdef np.ndarray x_temp = np.array(x)
         cdef double* xi =<double *> x_temp.data
  
-        cdef double ti = t
+        cdef np.ndarray kD_temp = self.kDir
+        cdef double* kDir =<double *> kD_temp.data 
 
-        cdef double eta = eta_mode(xi,ti,self.kDir,self.omega,self.phi0,self.amplitude)
+        cdef double amp = self.amplitude
+        cdef double omega = self.omega
+        cdef double phi0 = self.phi0
 
 
-        return eta
+        return eta_mode(xi,t,kDir,omega,phi0,amp)
 
-
-    @cython.boundscheck(False)
-    @cython.cdivision(True)
     def etaFenton(self, x, t):
         """Calculates free surface elevation (MonochromaticWaves class - Fenton waves)
         Parameters
@@ -778,9 +747,22 @@ cdef class MonochromaticWaves:
         """
         cdef np.ndarray x_temp = np.array(x)
         cdef double* xi =<double *> x_temp.data
-        cdef double ti = t
-
  
+        cdef np.ndarray kD_temp = self.kDir
+        cdef double* kDir =<double *> kD_temp.data 
+
+
+        cdef double amp = self.amplitude
+        cdef double omega = self.omega
+        cdef double phi0 = self.phi0
+        cdef double k = self.k
+
+
+
+        cdef np.ndarray Y_temp = self.Ycoeff
+        cdef double* Y =<double *> Y_temp.data 
+        
+        cdef int N = self.Nf
 
         cdef int ii =0
         cdef double HH = 0.
@@ -788,19 +770,15 @@ cdef class MonochromaticWaves:
         cdef double[3] kw = [0.,0.,0.]
         cdef double phi = 0.
 
-        for nn in range(self.Nf):
+        for nn in range(N):
             ii+=1
-            om = ii*self.omega
-            phi = ii*self.phi0
-            kw[0] = self.kDir[0]*ii
-            kw[1] = self.kDir[1]*ii
-            kw[2] = self.kDir[2]*ii
-            Y = self.Ycoeff[nn]
-            HH= HH + eta_mode(xi,ti,kw,om,phi,Y)
-        return HH/self.k
+            om = ii*omega
+            kw = [ii*kDir[0], ii*kDir[1], ii*kDir[2]]
+            phi = ii*phi0
+            HH= eta_mode(xi,t,kw,om,phi,Y[nn])
+        return HH/k
 
-    @cython.boundscheck(False)
-    @cython.cdivision(True)
+
     def uLinear(self, x, t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
         Parameters
@@ -818,19 +796,24 @@ cdef class MonochromaticWaves:
         """
         cdef np.ndarray x_temp = np.array(x)
         cdef double* xi =<double *> x_temp.data
+ 
+        cdef np.ndarray kD_temp = self.kDir
+        cdef double* kDir =<double *> kD_temp.data 
+
+        cdef np.ndarray v_temp = self.vDir
+        cdef double* vDir =<double *> v_temp.data 
+
+
+        cdef double k = self.k
+        cdef double amp = self.amplitude
+        cdef double omega = self.omega
+        cdef double phi0 = self.phi0
+        cdef double mwl = self.mwl
+        cdef double depth = self.depth
+
         
-        cdef double ti = t
+        return vel_mode(xi, t, kDir,k,omega,phi0,amp,mwl,depth,vDir)
 
-
-        cdef double* Uc = vel_mode(xi, ti, self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.vDir)
-        cdef np.ndarray U = np.array([0.,0.,0.])
-        U[0]=  Uc[0]
-        U[1] = Uc[1]
-        U[2] = Uc[2]
-        return U
-
-    @cython.boundscheck(False)
-    @cython.cdivision(True)
     def uFenton(self, x, t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
         Parameters
@@ -849,8 +832,25 @@ cdef class MonochromaticWaves:
 
         cdef np.ndarray x_temp = np.array(x)
         cdef double* xi =<double *> x_temp.data
-        cdef double ti = t
+ 
+        cdef np.ndarray kD_temp = self.kDir
+        cdef double* kDir =<double *> kD_temp.data 
 
+        cdef np.ndarray v_temp = self.vDir
+        cdef double* vDir =<double *> v_temp.data 
+
+        cdef double omega = self.omega
+        cdef double phi0 = self.phi0
+        cdef double k = self.k
+        cdef double mwl = self.mwl
+        cdef double depth = self.depth
+        cdef double gAbs = self.gAbs
+        cdef int N = self.Nf
+
+
+        cdef np.ndarray B_temp = self.Bcoeff
+        cdef double* B =<double *> B_temp.data 
+        
 
         cdef int ii =0
         cdef double om = 0.
@@ -859,28 +859,20 @@ cdef class MonochromaticWaves:
         cdef double kmode = 0.
         cdef double amp = 0
 
+#        cdef np.ndarray U_temp = self.meanVelocity
+#        cdef double* Ufenton =<double *> U_temp.data 
 
-
-
-        cdef np.ndarray Uf=np.array([0.,0.,0.])
-        cdef double* Ufenton =<double* > Uf.data
-        for nn in range(self.Nf):
+        cdef np.ndarray Ufenton = self.meanVelocity.copy()
+        for nn in range(N):
             ii+=1
-            om = ii*self.omega
-            kw[0] = ii*self.kDir[0]
-            kw[1] = ii*self.kDir[1]
-            kw[2] = ii*self.kDir[2]
-            kmode = ii*self.k
-            phi = ii*self.phi0
-            B = self.Bcoeff[nn]
-            amp = tanh(kmode*self.depth)*sqrt(self.gAbs/self.k)*B/self.omega
-            Ufenton[0] = Ufenton[0] + vel_mode(xi,ti,kw,kmode,om,phi,amp,self.mwl,self.depth,self.vDir)[0]
-            Ufenton[1] = Ufenton[1] + vel_mode(xi,ti,kw,kmode,om,phi,amp,self.mwl,self.depth,self.vDir)[1]
-            Ufenton[2] = Ufenton[2] + vel_mode(xi,ti,kw,kmode,om,phi,amp,self.mwl,self.depth,self.vDir)[2]
-        Uf[0] = Ufenton[0]+self.meanVelocity[0]
-        Uf[1] = Ufenton[1]+self.meanVelocity[1]
-        Uf[2] = Ufenton[2]+self.meanVelocity[2]
-        return Uf
+            om = ii*omega
+            kw = [ii*kDir[0], ii*kDir[1], ii*kDir[2]]
+            kmode = ii*k
+            phi = ii*phi0
+
+            amp = tanh(kmode*depth)*sqrt(gAbs/k)*B[nn]/omega
+            Ufenton+= vel_mode(xi,t,kw,kmode,om,phi,amp,mwl,depth,vDir)
+        return Ufenton 
 
     
 '''class RandomWaves:
