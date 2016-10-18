@@ -458,7 +458,7 @@ class BC_RANS(BC_Base):
 ctypedef np.ndarray (*cfvel) (np.ndarray, double)  # pointer to velocity function
 ctypedef double (*cfeta) (np.ndarray, double)  # pointer to eta function
 ctypedef np.ndarray (*cfvelrel) (RelaxationZone, np.ndarray, double)  # pointer to velocity function of RelaxationZone class
-ctypedef double (*cfphirel) (RelaxationZone, np.ndarray)  # pointer to phi function of RelaxationZone class
+ctypedef double (*cfphirel) (RelaxationZone, double*)  # pointer to phi function of RelaxationZone class
 ctypedef np.float64_t float64_t
 ctypedef np.int64_t int64_t
 
@@ -510,27 +510,36 @@ cdef class RelaxationZone:
     cdef double ecH
     cdef double H
     cdef int nd
+    cdef np.ndarray zero_vel
+    cdef double* center
+    cdef double* orientation
     cdef public:
         object Shape
         str zone_type
-        np.ndarray center
-        np.ndarray orientation
         double dragAlpha
         double dragBeta
         double porosity
         double epsFact_solid
         object waves
+        np.ndarray center0
+        np.ndarray orientation0
 
 
-    def __init__(self, str zone_type, np.ndarray center, np.ndarray orientation,
+    def __cinit__(self, str zone_type, np.ndarray center, np.ndarray orientation,
                  double epsFact_solid, double he=0., double ecH=3., object waves=None, object shape=None,
                  np.ndarray wind_speed=np.array([0.,0.,0.]), double dragAlpha=0.5/1.005e-6,
                  double dragBeta=0., double porosity=1.):
         self.Shape = shape
         self.nd = self.Shape.Domain.nd
         self.zone_type = zone_type
-        self.center = center
-        self.orientation = orientation
+        print 'test1'
+        self.center0 = center
+        self.center = <double*> self.center0.data
+        print center
+        self.orientation0 = orientation
+        print self.center[0], self.center[1], self.center[2]
+        self.orientation = <double*> self.orientation0.data
+        print 'test3'
         self.waves = waves
         self.wind_speed = wind_speed
         self.epsFact_solid = epsFact_solid
@@ -539,8 +548,11 @@ cdef class RelaxationZone:
         self.porosity = porosity
         self.he = he
         self.ecH = ecH
+        self.zero_vel = np.zeros(3)
+
 
     cpdef void calculate_init(self):
+        print self.center[0], self.center[1], self.center[2]
         if self.zone_type == 'generation':
             #self.u = &self.waves.u
             self.mwl = self.waves.mwl
@@ -559,22 +571,32 @@ cdef class RelaxationZone:
         self.he = ct.he
         self.ecH = ct.ecH
 
-    cpdef double calculate_phi(self, np.ndarray[float64_t, ndim=1] x):
-        return self.phi(self, x)
+    cpdef double calculate_phi(self, np.ndarray x):
+        return self.phi(self, <double*> x.data)
 
-    cdef double _cpp_calc_phi(self, np.ndarray[float64_t, ndim=1] x):
-        return np.dot(self.orientation, self.center[:self.nd]-x[:self.nd])
+    cdef double _cpp_calc_phi(self, double* x):
+        cdef double d1, d2, d3
+        cdef double o1, o2, o3
+        cdef double phi
+        d1 = self.center[0]-x[0]
+        d2 = self.center[1]-x[1]
+        d3 = self.center[2]-x[2]
+        o1 = self.orientation[0]
+        o2 = self.orientation[1]
+        o3 = self.orientation[2]
+        phi = o1*d1+o2*d2+o3*d3
+        return phi
 
-    cdef double _cpp_calc_phi_porous(self, np.ndarray[float64_t, ndim=1] x):
+    cdef double _cpp_calc_phi_porous(self, double* x):
         return self.epsFact_solid
 
-    cpdef np.ndarray calculate_vel(self, np.ndarray[float64_t, ndim=1] x, double t):
+    cpdef np.ndarray[float64_t, ndim=1] calculate_vel(self, np.ndarray[float64_t, ndim=1] x, double t):
         return self.uu(self, x, t)
 
-    cdef np.ndarray _cpp_calc_ZeroVel(self, np.ndarray[float64_t, ndim=1] x, double t):
-        return np.zeros(3)
+    cdef np.ndarray[float64_t, ndim=1] _cpp_calc_ZeroVel(self, np.ndarray[float64_t, ndim=1] x, double t):
+        return self.zero_vel
 
-    cdef np.ndarray _cpp_calc_WaveVel(self, np.ndarray[float64_t, ndim=1] x, double t):
+    cdef np.ndarray[float64_t, ndim=1] _cpp_calc_WaveVel(self, np.ndarray[float64_t, ndim=1] x, double t):
         cdef int vert_axis = self.Shape.Domain.nd-1
         cdef double waveHeight = self.waves.mwl+self.waves.eta(x, t)
         cdef double wavePhi = x[vert_axis]-waveHeight
@@ -638,6 +660,7 @@ cdef class RelaxationZoneWaveGenerator:
         cdef int mType, nE, nk
         cdef np.ndarray[float64_t, ndim=3] qx  # x coords of nodes
         cdef np.ndarray[float64_t, ndim=1] x  # coords of a node
+        cdef double[3] x2  # coords of a node
         cdef float64_t t  # time
         cdef int nl = len(self.model.levelModelList)
         cdef np.ndarray[float64_t, ndim=2] q_phi_solid  # phi array of model coefficients
