@@ -656,7 +656,7 @@ class MonochromaticWaves:
                  Ycoeff = None,
                  Bcoeff =None, meanVelocity = np.array([0.,0,0.]),
                  phi0 = 0.):
-
+        self.WG = WaveGen()
         self.knownWaveTypes = ["Linear","Fenton"]
         self.waveType = waveType
         if self.waveType not in self.knownWaveTypes:
@@ -738,18 +738,13 @@ class MonochromaticWaves:
             Free-surface elevation as a float
 
         """
-        cdef np.ndarray x_temp = np.array(x)
-        cdef double* xi =<double *> x_temp.data
+        cdef np.ndarray xi = np.array(x)
  
-        cdef np.ndarray kD_temp = self.kDir
-        cdef double* kDir =<double *> kD_temp.data 
-
-        cdef double amp = self.amplitude
-        cdef double omega = self.omega
-        cdef double phi0 = self.phi0
+        cdef np.ndarray kDir = self.kDir
 
 
-        return eta_mode(xi,t,kDir,omega,phi0,amp)
+
+        return self.WG.eta_mode(xi,t,kDir,self.omega,self.phi0,self.amplitude)
 
     def etaFenton(self, x, t):
         """Calculates free surface elevation (MonochromaticWaves class - Fenton waves)
@@ -815,25 +810,16 @@ class MonochromaticWaves:
             Velocity vector as 1D array
 
         """
-        cdef np.ndarray x_temp = np.array(x)
-        cdef double* xi =<double *> x_temp.data
+        cdef np.ndarray xi = np.array(x)
  
-        cdef np.ndarray kD_temp = self.kDir
-        cdef double* kDir =<double *> kD_temp.data 
+        cdef np.ndarray kDir = self.kDir
 
-        cdef np.ndarray v_temp = self.vDir
-        cdef double* vDir =<double *> v_temp.data 
+        cdef np.ndarray waveDir = self.waveDir
 
-
-        cdef double k = self.k
-        cdef double amp = self.amplitude
-        cdef double omega = self.omega
-        cdef double phi0 = self.phi0
-        cdef double mwl = self.mwl
-        cdef double depth = self.depth
+        cdef np.ndarray vDir = self.vDir
 
         
-        return vel_mode(xi, t, kDir,k,omega,phi0,amp,mwl,depth,vDir)
+        return self.WG.vel_mode(xi, t, kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,waveDir,vDir)
 
     def uFenton(self, x, t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
