@@ -1747,6 +1747,9 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.elementResidual[ci],
                                                                   r);
         if self.use_dij:
+            logEvent("Adding dij form of low order numerical viscosity")
+            if self.use_dij_explicit:
+                logEvent("dij term uses prior solution (explicit numerical viscosity)")
             ci=0
             n=0
             for I in range(self.rowptr.shape[0]-1):
@@ -3040,7 +3043,8 @@ class OneLevelTransport(NonlinearEquation):
             for ci in self.shockCapturing.components:
                 if self.timeIntegration.shockCapturingIsImplicit[ci]:
                     if self.use_bij and self.has_fterm and  self.has_nu_L:
-                        print "adding graph laplacian to element jacobian"
+                        if not self.use_dij:
+                            logEvent("adding graph laplacian to element residual")
                         for eN in range(self.mesh.nElements_global):
                             for j in range(self.nDOF_trial_element[ci]):
                                 for i in range(self.nDOF_test_element[ci]):

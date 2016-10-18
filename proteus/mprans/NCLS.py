@@ -530,6 +530,9 @@ class LevelModel(OneLevelTransport):
 
         self.setupFieldStrides()
 
+        #cek adding empty data member for low order numerical viscosity structures here for now
+        self.cterm_global=None
+        #cek end low order numerical viscosity data
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -614,7 +617,6 @@ class LevelModel(OneLevelTransport):
 	self.waterline_calls  = 0
 	self.waterline_prints = 0
 
-
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
@@ -628,8 +630,93 @@ class LevelModel(OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-        #mwf debug
-        #pdb.set_trace()
+        #
+        #cek add numerical viscosity c array if not yet allocated and initialized
+        #
+        if self.cterm_global is None:
+            #since we only need cterm_global to persist, we can drop the other self.'s
+            self.cterm={}
+            self.cterm_a={}
+            self.cterm_global={}
+            rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+            nnz = nzval.shape[-1]
+            di = self.q[('grad(u)',0)].copy()
+            self.q[('v',0)] = np.zeros((self.mesh.nElements_global,
+                                        self.nQuadraturePoints_element,
+                                        self.nDOF_trial_element[0]),
+                                       'd')
+            self.u[0].femSpace.getBasisValues(self.elementQuadraturePoints,
+                                              self.q[('v',0)])
+            self.q[('J')] = np.zeros((self.mesh.nElements_global,
+                                      self.nQuadraturePoints_element,
+                                      self.nSpace_global,
+                                      self.nSpace_global),
+                                     'd')
+            self.q[('inverse(J)')] = np.zeros((self.mesh.nElements_global,
+                                               self.nQuadraturePoints_element,
+                                               self.nSpace_global,
+                                               self.nSpace_global),
+                                              'd')
+            self.q[('det(J)')] = np.zeros((self.mesh.nElements_global,
+                                           self.nQuadraturePoints_element),
+                                          'd')
+            self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
+                                                             self.q['J'],
+                                                             self.q['inverse(J)'],
+                                                             self.q['det(J)'])
+            self.q[('grad(w)',0)] = np.zeros((self.mesh.nElements_global,
+                                              self.nQuadraturePoints_element,
+                                              self.nDOF_trial_element[0],
+                                              self.nSpace_global),
+                                             'd')
+            self.u[0].femSpace.getBasisGradientValues(self.elementQuadraturePoints,
+                                                      self.q['inverse(J)'],
+                                                      self.q[('grad(w)',0)])
+            self.q[('grad(w)*dV_f',0)] = np.zeros((self.mesh.nElements_global,
+                                                   self.nQuadraturePoints_element,
+                                                   self.nDOF_trial_element[0],
+                                                   self.nSpace_global),
+                                                  'd')
+            self.q['abs(det(J))'] = np.abs(self.q['det(J)'])
+            cfemIntegrals.calculateWeightedShapeGradients(self.elementQuadratureWeights[('u',0)],
+                                                          self.q['abs(det(J))'],
+                                                          self.q[('grad(w)',0)],
+                                                          self.q[('grad(w)*dV_f',0)])
+            for d in range(self.nSpace_global):
+                self.cterm[d] = np.zeros((self.mesh.nElements_global, self.nDOF_trial_element[0], self.nDOF_test_element[0]),'d')
+                self.cterm_a[d] = nzval.copy()
+                self.cterm_global[d] = SparseMat(self.nFreeDOF_global[0],self.nFreeDOF_global[0],nnz,self.cterm_a[d],colind,rowptr)
+                cfemIntegrals.zeroJacobian_CSR(self.nnz, self.cterm_global[d])
+                di[:] = 0.0
+                di[...,d] = 1.0
+                cfemIntegrals.updateAdvectionJacobian_weak_lowmem(di,
+                                                                  self.q[('v',0)],
+                                                                  self.q[('grad(w)*dV_f',0)],
+                                                                  self.cterm[d])
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                          self.l2g[0]['freeLocal'],
+                                                                          self.l2g[0]['nFreeDOF'],
+                                                                          self.l2g[0]['freeLocal'],
+                                                                          self.csrRowIndeces[(0,0)],
+                                                                          self.csrColumnOffsets[(0,0)],
+                                                                          self.cterm[d],
+                                                                          self.cterm_global[d])
+        #
+        #cek end computationa of cterm_global
+        #
+        #cek showing mquezada an example of using cterm_global sparse matrix
+        #calculation y = c*x where x==1
+        direction=0
+        rowptr, colind, c = self.cterm_global[direction].getCSRrepresentation()
+        y = np.zeros((self.nFreeDOF_global[0],),'d')
+        x = np.ones((self.nFreeDOF_global[0],),'d')
+        ij=0
+        for i in range(self.nFreeDOF_global[0]):
+            for offset in range(rowptr[i],rowptr[i+1]):
+                j = colind[offset]
+                y[i] += c[ij]*x[j]
+                ij+=1
+        #
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
