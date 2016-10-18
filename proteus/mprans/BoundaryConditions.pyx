@@ -1,4 +1,3 @@
-#!python
 #cython: profile=True
 
 """
@@ -6,6 +5,7 @@ Module for creating boundary conditions. Imported in mprans.SpatialTools.py
 """
 import sys
 import numpy as np
+cimport numpy as np
 from proteus import AuxiliaryVariables
 from proteus.BoundaryConditions import (BC_Base,
                                         BoundaryCondition,
@@ -14,7 +14,7 @@ from proteus.BoundaryConditions import (BC_Base,
                                         )
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
-
+from proteus import WaveTools as wt
 
 class BC_RANS(BC_Base):
     """
@@ -455,7 +455,18 @@ class BC_RANS(BC_Base):
 
 # for regions
 
-class RelaxationZone:
+ctypedef np.ndarray (*cfvel) (np.ndarray, double)  # pointer to velocity function
+ctypedef double (*cfeta) (np.ndarray, double)  # pointer to eta function
+ctypedef np.ndarray (*cfvelrel) (RelaxationZone, np.ndarray, double)  # pointer to velocity function of RelaxationZone class
+ctypedef double (*cfphirel) (RelaxationZone, double*)  # pointer to phi function of RelaxationZone class
+ctypedef np.float64_t float64_t
+ctypedef np.int64_t int64_t
+
+cdef np.ndarray zeroVel(np.ndarray x, double t):
+    return np.array([0., 0., 0.])
+
+
+cdef class RelaxationZone:
     """
     Holds information about a relaxation zone (wave generation/absorption
     or porous zone)
@@ -482,22 +493,131 @@ class RelaxationZone:
     porosity: Optional[float]
         parameter for porous zone (default: 1.)
     """
-    def __init__(self, zone_type, center, orientation, epsFact_solid,
-                 waves=None, shape=None, wind_speed=(0.,0.,0.),
-                 dragAlpha=0.5/1.005e-6, dragBeta=0., porosity=1.):
+    cdef int vert_axis
+    cdef np.ndarray wind_speed
+    cdef np.ndarray u_calc  # calculated velocity
+    # wave characteristics (if any)
+    cdef cfvel u
+    cdef cfvelrel uu
+    cdef cfphirel phi
+    cdef double mwl
+    cdef cfeta eta
+    cdef double waveHeight
+    cdef double wavePhi
+    cdef double waterSpeed
+    # for smoothing
+    cdef double he
+    cdef double ecH
+    cdef double H
+    cdef int nd
+    cdef np.ndarray zero_vel
+    cdef double* center
+    cdef double* orientation
+    cdef public:
+        object Shape
+        str zone_type
+        double dragAlpha
+        double dragBeta
+        double porosity
+        double epsFact_solid
+        object waves
+        np.ndarray center0
+        np.ndarray orientation0
+
+
+    def __cinit__(self, str zone_type, np.ndarray center, np.ndarray orientation,
+                 double epsFact_solid, double he=0., double ecH=3., object waves=None, object shape=None,
+                 np.ndarray wind_speed=np.array([0.,0.,0.]), double dragAlpha=0.5/1.005e-6,
+                 double dragBeta=0., double porosity=1.):
         self.Shape = shape
+        self.nd = self.Shape.Domain.nd
         self.zone_type = zone_type
-        self.center = center
-        self.orientation = orientation
+        print 'test1'
+        self.center0 = center
+        self.center = <double*> self.center0.data
+        print center
+        self.orientation0 = orientation
+        print self.center[0], self.center[1], self.center[2]
+        self.orientation = <double*> self.orientation0.data
+        print 'test3'
         self.waves = waves
         self.wind_speed = wind_speed
         self.epsFact_solid = epsFact_solid
         self.dragAlpha = dragAlpha
         self.dragBeta = dragBeta
         self.porosity = porosity
+        self.he = he
+        self.ecH = ecH
+        self.zero_vel = np.zeros(3)
 
 
-class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
+    cpdef void calculate_init(self):
+        print self.center[0], self.center[1], self.center[2]
+        if self.zone_type == 'generation':
+            #self.u = &self.waves.u
+            self.mwl = self.waves.mwl
+            #self.eta = &self.waves.eta
+            self.uu = self._cpp_calc_WaveVel
+            self.phi = self._cpp_calc_phi
+        elif self.zone_type == 'absorption':
+            self.u = &zeroVel
+            self.uu = self._cpp_calc_ZeroVel
+            self.phi = self._cpp_calc_phi
+        elif self.zone_type == 'porous':
+            self.uu = self._cpp_calc_ZeroVel
+            self.phi = self._cpp_calc_phi_porous
+        from proteus import Context
+        ct = Context.get()
+        self.he = ct.he
+        self.ecH = ct.ecH
+
+    cpdef double calculate_phi(self, np.ndarray x):
+        return self.phi(self, <double*> x.data)
+
+    cdef double _cpp_calc_phi(self, double* x):
+        cdef double d1, d2, d3
+        cdef double o1, o2, o3
+        cdef double phi
+        d1 = self.center[0]-x[0]
+        d2 = self.center[1]-x[1]
+        d3 = self.center[2]-x[2]
+        o1 = self.orientation[0]
+        o2 = self.orientation[1]
+        o3 = self.orientation[2]
+        phi = o1*d1+o2*d2+o3*d3
+        return phi
+
+    cdef double _cpp_calc_phi_porous(self, double* x):
+        return self.epsFact_solid
+
+    cpdef np.ndarray[float64_t, ndim=1] calculate_vel(self, np.ndarray[float64_t, ndim=1] x, double t):
+        return self.uu(self, x, t)
+
+    cdef np.ndarray[float64_t, ndim=1] _cpp_calc_ZeroVel(self, np.ndarray[float64_t, ndim=1] x, double t):
+        return self.zero_vel
+
+    cdef np.ndarray[float64_t, ndim=1] _cpp_calc_WaveVel(self, np.ndarray[float64_t, ndim=1] x, double t):
+        cdef int vert_axis = self.Shape.Domain.nd-1
+        cdef double waveHeight = self.waves.mwl+self.waves.eta(x, t)
+        cdef double wavePhi = x[vert_axis]-waveHeight
+        cdef np.ndarray waterSpeed
+        cdef np.ndarray x_max
+        cdef double H
+        cdef np.ndarray u
+        if wavePhi <= 0:
+            waterSpeed = self.waves.u(x, t)
+        elif wavePhi > 0 and wavePhi < 0.5*self.ecH*self.he:
+            x_max = np.array([x[0], x[1], x[2]])
+            x_max[vert_axis] = waveHeight
+            waterSpeed = self.waves.u(x_max, t)
+        else:
+            waterSpeed = np.zeros(3)
+        H = smoothedHeaviside(0.5*self.ecH*self.he, wavePhi-0.5*self.ecH*self.he)
+        u = H*self.wind_speed + (1-H)*waterSpeed
+        return u
+
+
+cdef class RelaxationZoneWaveGenerator:
     """
     Prescribe a velocity penalty scaling in a material zone via a
     Darcy-Forchheimer penalty
@@ -510,74 +630,83 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
     nd: int
         number of dimensions of domain
     """
-    def __init__(self, zones, nd):
-        assert isinstance(zones, dict)
+    cdef int nd
+    cdef public:
+        dict zones
+        object model
+        object ar
+
+    def __init__(self, dict zones, int nd):
         self.zones = zones
         self.nd = nd
 
+    def attachModel(self, model, ar):
+        self.model = model
+        self.ar = ar
+        return self
+
+    def attachAuxiliaryVariables(self,avDict):
+        pass
     def calculate_init(self):
-        from proteus import Context
-        ct = Context.get()
         for key, zone in self.zones.iteritems():
-            #print zone #[temp] a loose print statement - may be useful, but supressed for now
-            if zone.zone_type == 'absorption' or zone.zone_type == 'porous':
-                zone.u = zone.v = zone.w = lambda x, t: 0.
-            elif zone.zone_type == 'generation':
-                waves_u = zone.waves.u
-                waves_mwl = zone.waves.mwl
-                waves_eta = zone.waves.eta
-                wind_speed = zone.wind_speed
-                he = ct.he
-                ecH = ct.ecH
-                vert_axis = zone.Shape.Domain.nd-1
-                def get_twp_flowVelocity(i):
-                    def twp_flowVelocity(x, t):
-                        waveHeight = waves_mwl+waves_eta(x, t)
-                        wavePhi = x[vert_axis]-waveHeight
-                        if wavePhi <= 0:
-                            waterSpeed = waves_u(x, t)
-                            H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
-                        elif wavePhi > 0 and wavePhi < 0.5*ecH*he:
-                            x_max = np.copy(x)
-                            x_max[vert_axis] = waveHeight
-                            waterSpeed = waves_u(x_max, t)
-                        else:
-                            waterSpeed = (0., 0., 0.)
-                        H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
-                        return H*wind_speed[i] + (1-H)*waterSpeed[i]
-                    return twp_flowVelocity
-                zone.u = get_twp_flowVelocity(0)
-                zone.v = get_twp_flowVelocity(1)
-                zone.w = get_twp_flowVelocity(2)
-
-
+            zone.calculate_init()
 
     def calculate(self):
+        self.cpp_calculate()
+
+    cdef void cpp_calculate(self):
+        cdef object m
+        cdef RelaxationZone zone
+        cdef int mType, nE, nk
+        cdef np.ndarray[float64_t, ndim=3] qx  # x coords of nodes
+        cdef np.ndarray[float64_t, ndim=1] x  # coords of a node
+        cdef double[3] x2  # coords of a node
+        cdef float64_t t  # time
         cdef int nl = len(self.model.levelModelList)
-        def iterate():
+        cdef np.ndarray[float64_t, ndim=2] q_phi_solid  # phi array of model coefficients
+        cdef float64_t phi  # phi value
+        cdef np.ndarray[float64_t, ndim=3] q_velocity_solid  # velocity array of model coefficients
+        cdef np.ndarray[float64_t, ndim=1] u  # velocity value to impose
+        cdef np.ndarray[int, ndim=1] mTypes
+        for l in range(nl):  # usually only 1
+            # initialisation of variables before costly loop
             m = self.model.levelModelList[l]
-            cdef int nE = m.coefficients.q_phi.shape[0]
-            cdef int nk = m.coefficients.q_phi.shape[1]
+            nE = m.coefficients.q_phi.shape[0]
+            nk = m.coefficients.q_phi.shape[1]
+            t = m.timeIntegration.t
+            qx = m.q['x']
+            q_phi_solid = m.coefficients.q_phi_solid
+            q_velocity_solid = m.coefficients.q_velocity_solid
+            mTypes = m.mesh.elementMaterialTypes
+            # costly loop
             for eN in range(nE):
-                mType = m.mesh.elementMaterialTypes[eN]
+                mType = mTypes[eN]
                 if mType in self.zones:
+                    zone = self.zones[mType]
                     for k in range(nk):
-                        t = m.timeIntegration.t
-                        x = m.q['x'][eN, k]
-                        zone = self.zones[mType]
-                        coeff = m.coefficients
-                        ori = zone.orientation
-                        nd = zone.Shape.Domain.nd
-                        if zone.zone_type == 'porous':
-                            coeff.q_phi_solid[eN, k] = zone.epsFact_solid
-                        else:
-                            coeff.q_phi_solid[eN, k] = np.dot(ori, zone.center[:nd]-x[:nd])
-                        coeff.q_velocity_solid[eN, k, 0] = zone.u(x, t)
-                        coeff.q_velocity_solid[eN, k, 1] = zone.v(x, t)
+                        x = qx[eN, k]
+                        #print qx.__array_interface__['data'] == m.q['x'].__array_interface__['data']
+                        #print x.__array_interface__['data'] == m.q['x'][eN, k].__array_interface__['data']
+                        phi = zone.calculate_phi(x)
+                        q_phi_solid[eN, k] = phi
+                        u = zone.calculate_vel(x, t)
+                        q_velocity_solid[eN, k, 0] = u[0]
+                        q_velocity_solid[eN, k, 1] = u[1]
                         if self.nd > 2:
-                            coeff.q_velocity_solid[eN, k, 2] = zone.w(x, t)
-                m.q['phi_solid'] = m.coefficients.q_phi_solid
-                m.q['velocity_solid'] = m.coefficients.q_velocity_solid
-        for l in range(nl):
-            iterate()
+                            q_velocity_solid[eN, k, 2] = u[2]
+            m.q['phi_solid'] = q_phi_solid
+            m.q['velocity_solid'] = q_velocity_solid
+
+
+a = RelaxationZoneWaveGenerator({}, 2)
+cdef RelaxationZoneWaveGenerator testt(RelaxationZoneWaveGenerator a):
+    cdef RelaxationZoneWaveGenerator b = a
+    print a
+    print b
+    print a == b
+    return b
+def test():
+    b = testt(a)
+    return b
+
 
