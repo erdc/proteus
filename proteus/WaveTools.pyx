@@ -1,4 +1,4 @@
-#!python
+2#!python
 #cython: embedsignature=True
 #cython: profile=True
 
@@ -49,6 +49,27 @@ __all__ = ['MonochromaticWaves',
            'tophat',
            'costap',
            'decompose_tseries']
+
+cdef extern from "WaveTools.h" namespace "proteus":
+    cdef cppclass cppWaveGen:
+        cppWaveGen()
+        double eta_mode(double* x, double t, double* kDir, double omega, double phi, double amplitude)
+        double* vel_mode(double* x, double t, double* kDir, double kAbs, double omega, double phi, double amplitude, double mwl, double depth, double* waveDir, double* vDir)
+
+cdef class WaveGen:
+    cdef cppWaveGen* thisptr
+    def __cinit__(self):
+        self.thisptr = new cppWaveGen()
+    def eta_mode(self,np.ndarray x, t, np.ndarray kDir,  omega,  phi,  amplitude):
+        return self.thisptr.eta_mode(<double*> x.data, t, <double*> kDir.data,  omega,  phi,  amplitude)
+    def vel_mode(self,np.ndarray x, t, np.ndarray kDir, kAbs , omega,  phi,  amplitude, mwl, depth, np.ndarray waveDir, np.ndarray vDir ):
+        U = np.zeros(3,"d")
+        cdef double* cU = self.thisptr.vel_mode(<double*> x.data, t, <double*> kDir.data,kAbs,  omega,
+                                                 phi,  amplitude, mwl, depth, <double*> waveDir.data, <double*> vDir.data)
+        U[0] = cU[0]
+        U[1] = cU[1]
+        U[2] = cU[2]
+        return U
 
 def loadExistingFunction(funcName, validFunctions):
     """Checks if a function name is known function and returns it
