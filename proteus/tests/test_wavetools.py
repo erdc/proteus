@@ -6,7 +6,7 @@ import random
 from math import cos,sin,cosh,sinh,pi,tanh,log
 import sys,os
 import logging
-import pytest
+#import pytest
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
@@ -97,6 +97,8 @@ class TestAuxFunctions(unittest.TestCase):
         amplitude =0.2
         eta = amplitude*cos(kDir[0]*x+kDir[1]*y+kDir[2]*z - omega*t +phi)
         self.assertTrue((eta - eta_mode([x,y,z],t,kDir,omega,phi,amplitude)==0.))# check eta
+
+
     def testVelMode(self): # Checking particle velocities
         from proteus.WaveTools import vel_mode
 
@@ -114,7 +116,7 @@ class TestAuxFunctions(unittest.TestCase):
         t= 0.
         kAbs = 2*pi
         for i in range(4):
-            U_x, U_y, U_z = vel_mode([x,y,z],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir)
+            U_x, U_y, U_z = vel_mode([x,y,z],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir)
             x+= 0.25
             # Checking velocity signs with quadrants
             if i ==0:
@@ -132,7 +134,7 @@ class TestAuxFunctions(unittest.TestCase):
         #Checking that the code does not allow z to be outside (-d,0)
 #Checking vertical coherency
 # U_z = 0 at z = mwl-d
-        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir)[2]==0.)
+        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir)[2]==0.)
 
     def testTophat(self):
         from proteus.WaveTools import tophat
@@ -398,7 +400,7 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
 #========================================= RANDOM WAVES ======================================
 
 
-
+'''
 class CheckRandomWavesFailures(unittest.TestCase):
     def testFailureModes(self):
         from proteus.WaveTools import RandomWaves
@@ -431,7 +433,7 @@ class CheckRandomWavesFailures(unittest.TestCase):
         self.assertTrue(None == None)
 
 class VerifyRandomWaves(unittest.TestCase):
-    @pytest.mark.skip(reason="nosetests vs pytest issue")
+#    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandom(self):
         from proteus.WaveTools import RandomWaves
         import random
@@ -1284,7 +1286,7 @@ class CheckRandomWavesFastFailureModes(unittest.TestCase):
 
 class VerifyRandomWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
-    @pytest.mark.skip(reason="nosetests vs pytest issue")
+#    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandomFast(self):
         from proteus.WaveTools import RandomWaves,TimeSeries,RandomWavesFast
         import random
@@ -1623,7 +1625,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
 
 class VerifyRandomNLWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
-    @pytest.mark.skip(reason="nosetests vs pytest issue")
+#    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandomNLFast(self):
         from proteus.WaveTools import RandomNLWaves,RandomNLWavesFast,TimeSeries
         import random
@@ -1836,6 +1838,7 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
 
 
-
+'''
 if __name__ == '__main__':
     unittest.main(verbosity=2)
+
