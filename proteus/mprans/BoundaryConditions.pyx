@@ -1,4 +1,5 @@
 #cython: profile=True
+cimport cython
 
 """
 Module for creating boundary conditions. Imported in mprans.SpatialTools.py
@@ -455,16 +456,15 @@ class BC_RANS(BC_Base):
 
 # for regions
 
-ctypedef np.ndarray (*cfvel) (np.ndarray, double)  # pointer to velocity function
-ctypedef double (*cfeta) (np.ndarray, double)  # pointer to eta function
-ctypedef np.ndarray (*cfvelrel) (RelaxationZone, np.ndarray, double)  # pointer to velocity function of RelaxationZone class
-ctypedef double (*cfphirel) (RelaxationZone, double*)  # pointer to phi function of RelaxationZone class
+ctypedef double[:] (*cfvel) (double[:], double)  # pointer to velocity function
+ctypedef double (*cfeta) (double[:], double)  # pointer to eta function
+ctypedef double[:] (*cfvelrel) (RelaxationZone, double[:], double)  # pointer to velocity function of RelaxationZone class
+ctypedef double (*cfphirel) (RelaxationZone, double[:])  # pointer to phi function of RelaxationZone class
 ctypedef np.float64_t float64_t
 ctypedef np.int64_t int64_t
 
-cdef np.ndarray zeroVel(np.ndarray x, double t):
+cdef double[:] zeroVel(double[:] x, double t):
     return np.array([0., 0., 0.])
-
 
 cdef class RelaxationZone:
     """
@@ -494,8 +494,8 @@ cdef class RelaxationZone:
         parameter for porous zone (default: 1.)
     """
     cdef int vert_axis
-    cdef np.ndarray wind_speed
-    cdef np.ndarray u_calc  # calculated velocity
+    cdef double[:] wind_speed
+    cdef double[:] u_calc  # calculated velocity
     # wave characteristics (if any)
     cdef cfvel u
     cdef cfvelrel uu
@@ -510,9 +510,7 @@ cdef class RelaxationZone:
     cdef double ecH
     cdef double H
     cdef int nd
-    cdef np.ndarray zero_vel
-    cdef double* center
-    cdef double* orientation
+    cdef double[:] zero_vel
     cdef public:
         object Shape
         str zone_type
@@ -521,8 +519,8 @@ cdef class RelaxationZone:
         double porosity
         double epsFact_solid
         object waves
-        np.ndarray center0
-        np.ndarray orientation0
+        double[:] center
+        double[:] orientation
 
 
     def __cinit__(self, str zone_type, np.ndarray center, np.ndarray orientation,
@@ -533,12 +531,10 @@ cdef class RelaxationZone:
         self.nd = self.Shape.Domain.nd
         self.zone_type = zone_type
         print 'test1'
-        self.center0 = center
-        self.center = <double*> self.center0.data
+        self.center = center
         print center
-        self.orientation0 = orientation
-        print self.center[0], self.center[1], self.center[2]
-        self.orientation = <double*> self.orientation0.data
+        self.orientation = orientation
+        print self.center[0], self.center[1]
         print 'test3'
         self.waves = waves
         self.wind_speed = wind_speed
@@ -549,6 +545,7 @@ cdef class RelaxationZone:
         self.he = he
         self.ecH = ecH
         self.zero_vel = np.zeros(3)
+        self.vert_axis = self.Shape.Domain.nd-1
 
 
     cpdef void calculate_init(self):
@@ -571,10 +568,13 @@ cdef class RelaxationZone:
         self.he = ct.he
         self.ecH = ct.ecH
 
-    cpdef double calculate_phi(self, np.ndarray x):
-        return self.phi(self, <double*> x.data)
+    cdef double calculate_phi(self, double[:] x):
+        return self.phi(self, x)
 
-    cdef double _cpp_calc_phi(self, double* x):
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.initializedcheck(False)
+    cdef double _cpp_calc_phi(self, double[:] x):
         cdef double d1, d2, d3
         cdef double o1, o2, o3
         cdef double phi
@@ -587,33 +587,39 @@ cdef class RelaxationZone:
         phi = o1*d1+o2*d2+o3*d3
         return phi
 
-    cdef double _cpp_calc_phi_porous(self, double* x):
+    cdef double _cpp_calc_phi_porous(self, double[:] x):
         return self.epsFact_solid
 
-    cpdef np.ndarray[float64_t, ndim=1] calculate_vel(self, np.ndarray[float64_t, ndim=1] x, double t):
+    cdef double[:] calculate_vel(self, double[:] x, double t):
         return self.uu(self, x, t)
 
-    cdef np.ndarray[float64_t, ndim=1] _cpp_calc_ZeroVel(self, np.ndarray[float64_t, ndim=1] x, double t):
+    cdef double[:] _cpp_calc_ZeroVel(self, double[:] x, double t):
         return self.zero_vel
 
-    cdef np.ndarray[float64_t, ndim=1] _cpp_calc_WaveVel(self, np.ndarray[float64_t, ndim=1] x, double t):
-        cdef int vert_axis = self.Shape.Domain.nd-1
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.initializedcheck(False)
+    cdef double[:] _cpp_calc_WaveVel(self, double[:] x, double t):
         cdef double waveHeight = self.waves.mwl+self.waves.eta(x, t)
-        cdef double wavePhi = x[vert_axis]-waveHeight
-        cdef np.ndarray waterSpeed
-        cdef np.ndarray x_max
+        cdef double wavePhi = x[self.vert_axis]-waveHeight
+        cdef double[:] waterSpeed
+        cdef double[3] x_max
         cdef double H
-        cdef np.ndarray u
+        cdef double[3] u
         if wavePhi <= 0:
             waterSpeed = self.waves.u(x, t)
         elif wavePhi > 0 and wavePhi < 0.5*self.ecH*self.he:
-            x_max = np.array([x[0], x[1], x[2]])
-            x_max[vert_axis] = waveHeight
+            x_max[0] = x[0]
+            x_max[1] = x[1]
+            x_max[2] = x[2]
+            x_max[self.vert_axis] = waveHeight
             waterSpeed = self.waves.u(x_max, t)
         else:
-            waterSpeed = np.zeros(3)
+            waterSpeed = self.zero_vel
         H = smoothedHeaviside(0.5*self.ecH*self.he, wavePhi-0.5*self.ecH*self.he)
-        u = H*self.wind_speed + (1-H)*waterSpeed
+        u[0] = H*self.wind_speed[0] + (1-H)*waterSpeed[0]
+        u[1] = H*self.wind_speed[1] + (1-H)*waterSpeed[1]
+        u[2] = H*self.wind_speed[2] + (1-H)*waterSpeed[2]
         return u
 
 
@@ -654,20 +660,22 @@ cdef class RelaxationZoneWaveGenerator:
     def calculate(self):
         self.cpp_calculate()
 
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.initializedcheck(False)
     cdef void cpp_calculate(self):
         cdef object m
         cdef RelaxationZone zone
         cdef int mType, nE, nk
-        cdef np.ndarray[float64_t, ndim=3] qx  # x coords of nodes
-        cdef np.ndarray[float64_t, ndim=1] x  # coords of a node
-        cdef double[3] x2  # coords of a node
+        cdef double[:,:,:] qx  # x coords of nodes
+        cdef double[:] x  # coords of a node
         cdef float64_t t  # time
         cdef int nl = len(self.model.levelModelList)
-        cdef np.ndarray[float64_t, ndim=2] q_phi_solid  # phi array of model coefficients
+        cdef double[:,:] q_phi_solid  # phi array of model coefficients
         cdef float64_t phi  # phi value
-        cdef np.ndarray[float64_t, ndim=3] q_velocity_solid  # velocity array of model coefficients
-        cdef np.ndarray[float64_t, ndim=1] u  # velocity value to impose
-        cdef np.ndarray[int, ndim=1] mTypes
+        cdef double[:,:,:] q_velocity_solid  # velocity array of model coefficients
+        cdef double[:] u  # velocity value to impose
+        cdef int[:] mTypes
         for l in range(nl):  # usually only 1
             # initialisation of variables before costly loop
             m = self.model.levelModelList[l]
@@ -696,17 +704,3 @@ cdef class RelaxationZoneWaveGenerator:
                             q_velocity_solid[eN, k, 2] = u[2]
             m.q['phi_solid'] = q_phi_solid
             m.q['velocity_solid'] = q_velocity_solid
-
-
-a = RelaxationZoneWaveGenerator({}, 2)
-cdef RelaxationZoneWaveGenerator testt(RelaxationZoneWaveGenerator a):
-    cdef RelaxationZoneWaveGenerator b = a
-    print a
-    print b
-    print a == b
-    return b
-def test():
-    b = testt(a)
-    return b
-
-
