@@ -35,7 +35,6 @@ namespace proteus
       double* V = waveDir;
       for(int ii=0; ii<nDim ; ii++)
 	  {
-	    waveDir[ii] = waveDir[ii]/kAbs;
 	    V[ii] = UH*waveDir[ii] + UV*vDir[ii] ;
 	  }
       //Setting wave velocities
@@ -46,8 +45,53 @@ namespace proteus
  
 //=======================================================LINEAR - USE above directly================================================================
 
-
+/*
 //---------------------------------------------------------NONLINEAR FENTON-------------------------------------------------------------------------
+
+      inline double etaFenton(double x[nDim], double t, double kDir[nDim], double kAbs, double omega, double phi, double amplitude, int Nf, double Ycoeff[Nf])
+
+
+      {
+
+        int ii =0;
+	double HH = 0.;
+	double om = 0.;
+	double[3] kw = [0.,0.,0.];
+	double phi = 0.;
+
+        for (int nn=0; nn<Nf; nn++)
+	  {
+            ii+=1;
+	    om = ii*omega;
+	    kw = [ii*kDir[0], ii*kDir[1], ii*kDir[2]];
+	    phi = ii*phi0;
+	    HH= eta_mode(xi,t,kw,om,phi,Ycoeff[nf]);
+	  }
+        return HH/k;
+	      }
+	      inline double uFenton(double x[nDim],double t,double kDir[nDim],double kAbs,double omega,double phi,double amplitude,
+				    int Nf, double Bcoeff[Nf], double mwl, double depth, double)
+
+
+
+
+        int ii =0
+        double HH = 0.
+        double om = 0.
+        double[3] kw = [0.,0.,0.]
+        double phi = 0.
+
+        for nn in range(N):
+            ii+=1
+            om = ii*omega
+            kw = [ii*kDir[0], ii*kDir[1], ii*kDir[2]]
+            phi = ii*phi0
+            HH= eta_mode(xi,t,kw,om,phi,Ycoeff[nf])
+        return HH/k
+
+	      
+*/
+
 
  };
 
