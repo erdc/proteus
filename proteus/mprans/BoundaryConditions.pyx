@@ -456,14 +456,14 @@ class BC_RANS(BC_Base):
 
 # for regions
 
-ctypedef double[:] (*cfvel) (double[:], double)  # pointer to velocity function
-ctypedef double (*cfeta) (double[:], double)  # pointer to eta function
-ctypedef double[:] (*cfvelrel) (RelaxationZone, double[:], double)  # pointer to velocity function of RelaxationZone class
-ctypedef double (*cfphirel) (RelaxationZone, double[:])  # pointer to phi function of RelaxationZone class
+ctypedef double[:] (*cfvel) (double[3], double)  # pointer to velocity function
+ctypedef double (*cfeta) (double[3], double)  # pointer to eta function
+ctypedef double[:] (*cfvelrel) (RelaxationZone, double[3], double)  # pointer to velocity function of RelaxationZone class
+ctypedef double (*cfphirel) (RelaxationZone, double[3])  # pointer to phi function of RelaxationZone class
 ctypedef np.float64_t float64_t
 ctypedef np.int64_t int64_t
 
-cdef double[:] zeroVel(double[:] x, double t):
+cdef double[:] zeroVel(double[3] x, double t):
     return np.array([0., 0., 0.])
 
 cdef class RelaxationZone:
@@ -568,13 +568,13 @@ cdef class RelaxationZone:
         self.he = ct.he
         self.ecH = ct.ecH
 
-    cdef double calculate_phi(self, double[:] x):
+    cdef double calculate_phi(self, double[3] x):
         return self.phi(self, x)
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.initializedcheck(False)
-    cdef double _cpp_calc_phi(self, double[:] x):
+    cdef double _cpp_calc_phi(self, double[3] x):
         cdef double d1, d2, d3
         cdef double o1, o2, o3
         cdef double phi
@@ -587,27 +587,33 @@ cdef class RelaxationZone:
         phi = o1*d1+o2*d2+o3*d3
         return phi
 
-    cdef double _cpp_calc_phi_porous(self, double[:] x):
+    cdef double _cpp_calc_phi_porous(self, double[3] x):
         return self.epsFact_solid
 
-    cdef double[:] calculate_vel(self, double[:] x, double t):
+    cdef double[:] calculate_vel(self, double[3] x, double t):
         return self.uu(self, x, t)
 
-    cdef double[:] _cpp_calc_ZeroVel(self, double[:] x, double t):
+    cdef double[:] _cpp_calc_ZeroVel(self, double[3] x, double t):
         return self.zero_vel
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.initializedcheck(False)
-    cdef double[:] _cpp_calc_WaveVel(self, double[:] x, double t):
-        cdef double waveHeight = self.waves.mwl+self.waves.eta(x, t)
+    cdef double[:] _cpp_calc_WaveVel(self, double[3] x, double t):
+        cdef double[3] xx
+        # hack for passing x to python object waves
+        # to change when WaveTools is cimport
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        cdef double waveHeight = self.waves.mwl+self.waves.eta(xx, t)
         cdef double wavePhi = x[self.vert_axis]-waveHeight
         cdef double[:] waterSpeed
         cdef double[3] x_max
         cdef double H
         cdef double[3] u
         if wavePhi <= 0:
-            waterSpeed = self.waves.u(x, t)
+            waterSpeed = self.waves.u(xx, t)
         elif wavePhi > 0 and wavePhi < 0.5*self.ecH*self.he:
             x_max[0] = x[0]
             x_max[1] = x[1]
@@ -637,6 +643,8 @@ cdef class RelaxationZoneWaveGenerator:
         number of dimensions of domain
     """
     cdef int nd
+    cdef RelaxationZone[:] zones_array
+    cdef int max_flag
     cdef public:
         dict zones
         object model
@@ -653,9 +661,18 @@ cdef class RelaxationZoneWaveGenerator:
 
     def attachAuxiliaryVariables(self,avDict):
         pass
+
     def calculate_init(self):
+        cdef int max_key = 0
         for key, zone in self.zones.iteritems():
             zone.calculate_init()
+            if key > max_key:
+                max_key = key
+        self.max_flag = max_key
+        cdef np.ndarray[object, ndim=1] zones = np.empty(max_key+1, dtype=object)
+        for key, zone in self.zones.iteritems():
+            zones[key] = zone
+        self.zones_array = zones
 
     def calculate(self):
         self.cpp_calculate()
@@ -668,7 +685,7 @@ cdef class RelaxationZoneWaveGenerator:
         cdef RelaxationZone zone
         cdef int mType, nE, nk
         cdef double[:,:,:] qx  # x coords of nodes
-        cdef double[:] x  # coords of a node
+        cdef double[3] x  # coords of a node
         cdef float64_t t  # time
         cdef int nl = len(self.model.levelModelList)
         cdef double[:,:] q_phi_solid  # phi array of model coefficients
@@ -689,18 +706,21 @@ cdef class RelaxationZoneWaveGenerator:
             # costly loop
             for eN in range(nE):
                 mType = mTypes[eN]
-                if mType in self.zones:
-                    zone = self.zones[mType]
-                    for k in range(nk):
-                        x = qx[eN, k]
-                        #print qx.__array_interface__['data'] == m.q['x'].__array_interface__['data']
-                        #print x.__array_interface__['data'] == m.q['x'][eN, k].__array_interface__['data']
-                        phi = zone.calculate_phi(x)
-                        q_phi_solid[eN, k] = phi
-                        u = zone.calculate_vel(x, t)
-                        q_velocity_solid[eN, k, 0] = u[0]
-                        q_velocity_solid[eN, k, 1] = u[1]
-                        if self.nd > 2:
-                            q_velocity_solid[eN, k, 2] = u[2]
+                if mType < self.max_flag:
+                    zone = self.zones_array[mType]
+                    if zone is not None:
+                      for k in range(nk):
+                          x[0] = qx[eN, k, 0]
+                          x[1] = qx[eN, k, 1]
+                          x[2] = qx[eN, k, 2]
+                          #print qx.__array_interface__['data'] == m.q['x'].__array_interface__['data']
+                          #print x.__array_interface__['data'] == m.q['x'][eN, k].__array_interface__['data']
+                          phi = zone.calculate_phi(x)
+                          q_phi_solid[eN, k] = phi
+                          u = zone.calculate_vel(x, t)
+                          q_velocity_solid[eN, k, 0] = u[0]
+                          q_velocity_solid[eN, k, 1] = u[1]
+                          if self.nd > 2:
+                              q_velocity_solid[eN, k, 2] = u[2]
             m.q['phi_solid'] = q_phi_solid
             m.q['velocity_solid'] = q_velocity_solid
