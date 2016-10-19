@@ -1,3 +1,4 @@
+import cython
 """
 Module for creating boundary conditions. Imported in SpatialTools.py
 
@@ -6,11 +7,11 @@ Module for creating boundary conditions. Imported in SpatialTools.py
 """
 
 
-class BC_Base(object):
+class BC_Base():
     """
     Generic class regrouping boundary conditions
     """
-    def __init__(self, shape=None, name=None, b_or=None, b_i=None):
+    def __init__(self, shape=None, name=None, b_or=None, b_i=0):
         self.Shape = shape
         self.name = name
         self.BC_type = 'None'
@@ -18,7 +19,7 @@ class BC_Base(object):
         self._b_i = b_i  # indice for this boundary in list of boundaries
 
     @classmethod
-    def newGlobalBC(cls, name, default_value=None):
+    def newGlobalBC(cls, name, default_value):
         """
         Makes a new BoundaryCondition class instance attached to BC_Base.
         This creates a new class attributed that will be added to all BC_Base
@@ -40,7 +41,7 @@ class BC_Base(object):
         context: class, optional
              if set to None, the context will be created from proteus.Context
         """
-        if context is None:
+        if context:
             from proteus import Context
             cls.ct = Context.get()
         else:
@@ -79,4 +80,20 @@ class BoundaryCondition():
         self.uOfXT = lambda x, t: value
 
     def setLinearBC(self, a0, a1, i):
-        self.uOfXT = lambda x, t: a0 + a1*x[i]
+        # self.uOfXT = lambda x, t: a0 + a1*x[i]
+        pass
+
+
+def test():
+    return 0
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.initializedcheck(False)
+def test0(x, t):
+    testt = 4.
+    a = x[1]+x[3]
+    b = x[2]
+    return testt
+
+f = 5
