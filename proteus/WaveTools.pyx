@@ -1,4 +1,4 @@
-2#!python
+#!python
 #cython: embedsignature=True
 #cython: profile=True
 
@@ -258,7 +258,7 @@ def normIntegral(f,dom):
 
 
 
-cdef double eta_mode(double x[3], double t, double kDir[3], double omega, double phi, double amplitude):
+def eta_mode(x, t, kDir, omega, phi, amplitude):
     """Calculates the free surface elevation for a single frequency mode
 
     Parameters
@@ -282,13 +282,10 @@ cdef double eta_mode(double x[3], double t, double kDir[3], double omega, double
         The free surface elevation at x,t
 
     """
-    cdef double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
-    cdef double eta = amplitude*cos(phase)
-    return eta
+    phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
+    return amplitude*cos(phase)
 
-
-cdef  np.ndarray[np.float64_t,ndim=1] vel_mode(double x[3], double t, double kDir[3], double kAbs, double omega, double phi, double amplitude, 
-double mwl, double depth, double vDir[3]):
+def  vel_mode(x,  t, kDir, kAbs,  omega,  phi,  amplitude,  mwl, depth, vDir):
     """Calculates the wave velocity components for a single frequency mode
 
     Parameters
@@ -321,24 +318,19 @@ double mwl, double depth, double vDir[3]):
         1D Numpy array of the velocity vector at x,t
     """
 
-    cdef double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
-    cdef double Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl
-    cdef double UH = 0.
-    cdef double UV=0.
-    cdef int ii=0
+    phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
+    Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl
+    UH = 0.
+    UV=0.
+    ii=0.
     UH=amplitude*omega*cosh(kAbs*(Z + depth))*cos( phase )/sinh(kAbs*depth)
     UV=amplitude*omega*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth)
-#Setting wave direction
-    cdef double waveDir[3] 
-    waveDir[0] = kDir[0]/kAbs
-    waveDir[0] = kDir[0]/kAbs
-    waveDir[0] = kDir[0]/kAbs
-#Setting wave velocities
-    cdef double V[3] 
-    V[0] = UH*waveDir[0]+UV*vDir[0]
-    V[1] = UH*waveDir[1]+UV*vDir[1]
-    V[2] = UH*waveDir[2]+UV*vDir[2]
-    return np.array(V)
+    waveDir = kDir/kAbs
+#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
+    V = np.array([UH*waveDir[0]+UV*vDir[0],
+                  UH*waveDir[1]+UV*vDir[1],
+                  UH*waveDir[2]+UV*vDir[2]])
+    return V
 
 
 
@@ -761,38 +753,13 @@ class MonochromaticWaves:
             Free-surface elevation as a float
 
         """
-        cdef np.ndarray x_temp = np.array(x)
-        cdef double* xi =<double *> x_temp.data
- 
-        cdef np.ndarray kD_temp = self.kDir
-        cdef double* kDir =<double *> kD_temp.data 
 
-
-        cdef double amp = self.amplitude
-        cdef double omega = self.omega
-        cdef double phi0 = self.phi0
-        cdef double k = self.k
-
-
-
-        cdef np.ndarray Y_temp = self.Ycoeff
-        cdef double* Y =<double *> Y_temp.data 
-        
-        cdef int N = self.Nf
-
-        cdef int ii =0
-        cdef double HH = 0.
-        cdef double om = 0.
-        cdef double[3] kw = [0.,0.,0.]
-        cdef double phi = 0.
-
-        for nn in range(N):
+        HH = 0.
+        ii =0.
+        for Y in self.Ycoeff:
             ii+=1
-            om = ii*omega
-            kw = [ii*kDir[0], ii*kDir[1], ii*kDir[2]]
-            phi = ii*phi0
-            HH= eta_mode(xi,t,kw,om,phi,Y[nn])
-        return HH/k
+            HH+=eta_mode(x,t,ii*self.kDir,ii*self.omega,ii*self.phi0,Y)
+        return HH/self.k
 
 
     def uLinear(self, x, t):
@@ -837,50 +804,16 @@ class MonochromaticWaves:
 
         """
 
-        cdef np.ndarray x_temp = np.array(x)
-        cdef double* xi =<double *> x_temp.data
- 
-        cdef np.ndarray kD_temp = self.kDir
-        cdef double* kDir =<double *> kD_temp.data 
-
-        cdef np.ndarray v_temp = self.vDir
-        cdef double* vDir =<double *> v_temp.data 
-
-        cdef double omega = self.omega
-        cdef double phi0 = self.phi0
-        cdef double k = self.k
-        cdef double mwl = self.mwl
-        cdef double depth = self.depth
-        cdef double gAbs = self.gAbs
-        cdef int N = self.Nf
-
-
-        cdef np.ndarray B_temp = self.Bcoeff
-        cdef double* B =<double *> B_temp.data 
-        
-
-        cdef int ii =0
-        cdef double om = 0.
-        cdef double[3] kw = [0.,0.,0.]
-        cdef double phi = 0.
-        cdef double kmode = 0.
-        cdef double amp = 0
-
-#        cdef np.ndarray U_temp = self.meanVelocity
-#        cdef double* Ufenton =<double *> U_temp.data 
-
-        cdef np.ndarray Ufenton = self.meanVelocity.copy()
-        for nn in range(N):
+        Ufenton = self.meanVelocity.copy()
+        ii = 0
+        for B in self.Bcoeff:
             ii+=1
-            om = ii*omega
-            kw = [ii*kDir[0], ii*kDir[1], ii*kDir[2]]
-            kmode = ii*k
-            phi = ii*phi0
-
-            amp = tanh(kmode*depth)*sqrt(gAbs/k)*B[nn]/omega
-            Ufenton+= vel_mode(xi,t,kw,kmode,om,phi,amp,mwl,depth,vDir)
-        return Ufenton 
-
+            wmode = ii*self.omega
+            kmode = ii*self.k
+            kdir = self.waveDir*kmode
+            amp = tanh(kmode*self.depth)*sqrt(self.gAbs/self.k)*B/self.omega
+            Ufenton+= vel_mode(x,t,kdir,kmode,wmode,ii*self.phi0,amp,self.mwl,self.depth,self.vDir)
+        return Ufenton # + self.meanVelocity[comp]
     
 '''class RandomWaves:
     """
