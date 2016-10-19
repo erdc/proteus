@@ -848,6 +848,10 @@ class Tank3D(ShapeRANS):
                 flag = self.regionFlags[ind]
                 epsFact_solid = self.spongeLayers[key]/2.
                 center = np.array(self.coords)
+                zeros_to_append = 3-len(center)
+                if zeros_to_append:
+                    for i in range(zeros_to_append):
+                        center = np.append(center, [0])
                 if key == 'x-':
                     center[0] += -0.5*self.dim[0]-0.5*sl['x-']
                     orientation = np.array([1., 0., 0.])
@@ -915,6 +919,10 @@ class Tank3D(ShapeRANS):
                 flag = self.regionFlags[ind]
                 epsFact_solid = self.spongeLayers[key]/2.
                 center = np.array(self.coords)
+                zeros_to_append = 3-len(center)
+                if zeros_to_append:
+                    for i in range(zeros_to_append):
+                        center = np.append(center, [0])
                 if key == 'x-':
                     center[0] += -0.5*self.dim[0]-sl['x-']/2.
                     orientation = np.aray([1., 0., 0.])
@@ -1179,7 +1187,7 @@ class Tank2D(ShapeRANS):
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
             center = np.array([self.x0 - 0.5 * self.spongeLayers['x-'],
-                      0.5 * (self.y0 + self.y1)])
+                               0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x-']/2.
@@ -1196,7 +1204,7 @@ class Tank2D(ShapeRANS):
                                                  porosity=porosity)
         if x_p is True:
             center = np.array([self.x1 + 0.5 * self.spongeLayers['x+'],
-                      0.5 * (self.y0 + self.y1)])
+                               0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x+']/2.
@@ -1243,7 +1251,7 @@ class Tank2D(ShapeRANS):
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
             center = np.array([self.x0 - 0.5 * self.spongeLayers['x-'],
-                      0.5 * (self.y0 + self.y1)])
+                               0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x-']/2.
@@ -1262,7 +1270,7 @@ class Tank2D(ShapeRANS):
                                                            wind_speed=wind_speed)
         if x_p is True:
             center = np.array([self.x1 + 0.5 * self.spongeLayers['x+'],
-                      0.5 * (self.y0 + self.y1)])
+                               0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x+']/2.
@@ -1855,7 +1863,7 @@ class TankWithObstacles2D(Tank2D):
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
             center = np.array([sponge_x0 - 0.5 * self.spongeLayers['x-'],
-                      sponge_half_height_x0])
+                               sponge_half_height_x0, 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x-']/2.
@@ -1872,7 +1880,7 @@ class TankWithObstacles2D(Tank2D):
                                                  porosity=porosity)
         if x_p is True:
             center = np.array([sponge_x1 + 0.5 * self.spongeLayers['x+'],
-                      sponge_half_height_x1])
+                               sponge_half_height_x1, 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x+']/2.
@@ -1925,7 +1933,7 @@ class TankWithObstacles2D(Tank2D):
         if x_n is True:
 
             center = np.array([sponge_x0 - 0.5 * self.spongeLayers['x-'],
-                      sponge_half_height_x0])
+                               sponge_half_height_x0, 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x-']/2.
@@ -1945,7 +1953,7 @@ class TankWithObstacles2D(Tank2D):
         if x_p is True:
 
             center = np.array([sponge_x1 + 0.5 * self.spongeLayers['x+'],
-                      sponge_half_height_x1])
+                               sponge_half_height_x1, 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x+']/2.
