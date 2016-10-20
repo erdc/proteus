@@ -6,7 +6,6 @@ Module for creating boundary conditions. Imported in SpatialTools.py
    :parts: 1
 """
 
-
 class BC_Base():
     """
     Generic class regrouping boundary conditions
