@@ -7,7 +7,6 @@ Module for creating boundary conditions. Imported in mprans.SpatialTools.py
 import sys
 import numpy as np
 from proteus import AuxiliaryVariables
-from proteus.BoundaryConditions import (BC_Base, BoundaryCondition)
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 from proteus import WaveTools as wt
@@ -16,7 +15,7 @@ class BC_RANS(BC_Base):
     """
     Class regrouping boundary conditions for two-phase flows
     """
-    def __init__(self, shape=None, name=None, b_or=None, b_i=None):
+    def __init__(self, shape=None, name=None, b_or=None, b_i=0.):
         super(BC_RANS, self).__init__(shape, name, b_or, b_i)
         # _dirichlet
         self.p_dirichlet = BoundaryCondition()  # pressure
@@ -44,11 +43,8 @@ class BC_RANS(BC_Base):
         self.hx_dirichlet = BoundaryCondition()
         self.hy_dirichlet = BoundaryCondition()
         self.hz_dirichlet = BoundaryCondition()
-        self.u_stress = BoundaryCondition()
         self.u_stress = 0.
-        self.v_stress = BoundaryCondition()
         self.v_stress = 0.
-        self.w_stress = BoundaryCondition()
         self.w_stress = 0.
 
     def reset(self):
@@ -261,10 +257,7 @@ class BC_RANS(BC_Base):
         if vert_axis is None:
             vert_axis = self.nd-1
         self.waves = __cppClass_WavesCharacteristics(wave, vert_axis)
-        self.vert_axis = vert_axis
         self.wind_speed = wind_speed
-        self.vof_air = vof_air
-        self.vof_water = vof_water
         self.u_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(x, t)
         self.v_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(x, t)
         self.w_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
@@ -604,10 +597,10 @@ class __cppClass_WavesCharacteristics:
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
-        waveHeight = self.waves.WT.mwl+self.waves.WT.eta(xx, t)
+        waveHeight = self.WT.mwl+self.WT.eta(xx, t)
         wavePhi = x[self.vert_axis]-waveHeight
         if wavePhi <= 0:
-            waterSpeed = self.waves.WT.u(xx, t)
+            waterSpeed = self.WT.u(xx, t)
         # elif wavePhi > 0 and wavePhi < 0.5*self.ecH*self.he:
         #     x_max[0] = x[0]
         #     x_max[1] = x[1]
