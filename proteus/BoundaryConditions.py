@@ -55,18 +55,17 @@ class BoundaryCondition():
     Attributes
     ----------
     uOfXT: func or None
-        boundary condition function of x (array_like) and t (float) or None force
+        boundary condition function of x (array_like) and t (float) or None for
         no boundary condition
     """
     def __init__(self):
         self.uOfXT = None
 
     def init_cython(self):
-        """
-        Function to replace call before the first time step
-        Must always return another function of x and t
-        """
         return self.uOfXT
+
+    def resetBC(self):
+        self.uOfXT = None
 
     def setConstantBC(self, value):
         """
@@ -79,21 +78,6 @@ class BoundaryCondition():
         """
         self.uOfXT = lambda x, t: value
 
+
     def setLinearBC(self, a0, a1, i):
-        # self.uOfXT = lambda x, t: a0 + a1*x[i]
-        pass
-
-
-def test():
-    return 0
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.initializedcheck(False)
-def test0(x, t):
-    testt = 4.
-    a = x[1]+x[3]
-    b = x[2]
-    return testt
-
-f = 5
+        self.uOfXT = lambda x, t: a0+a1*x[i]
