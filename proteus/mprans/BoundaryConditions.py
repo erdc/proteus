@@ -45,11 +45,11 @@ class BC_RANS(BC_Base):
         self.hy_dirichlet = BoundaryCondition()
         self.hz_dirichlet = BoundaryCondition()
         self.u_stress = BoundaryCondition()
-        self.u_stress.uOfXT = 0.
+        self.u_stress = 0.
         self.v_stress = BoundaryCondition()
-        self.v_stress.uOfXT = 0.
+        self.v_stress = 0.
         self.w_stress = BoundaryCondition()
-        self.w_stress.uOfXT = 0.
+        self.w_stress = 0.
 
     def reset(self):
         """
@@ -57,97 +57,91 @@ class BC_RANS(BC_Base):
         affecting: moving mesh
         """
         # self.BC_type = 'None'
-        # self.p_dirichlet.uOfXT = None
-        # self.u_dirichlet.uOfXT = None
-        # self.v_dirichlet.uOfXT = None
-        # self.w_dirichlet.uOfXT = None
-        # self.vof_dirichlet.uOfXT = None
-        # self.k_dirichlet.uOfXT = None
-        # self.dissipation_dirichlet.uOfXT = None
-        # self.p_advective.uOfXT = None
-        # self.u_advective.uOfXT = None
-        # self.v_advective.uOfXT = None
-        # self.w_advective.uOfXT = None
-        # self.vof_advective.uOfXT = None
-        # self.k_advective.uOfXT = None
-        # self.dissipation_advective.uOfXT = None
-        # self.u_diffusive.uOfXT = None
-        # self.v_diffusive.uOfXT = None
-        # self.w_diffusive.uOfXT = None
-        # self.k_diffusive.uOfXT = None
-        # self.dissipation_diffusive.uOfXT = None
-        # pass
+        self.p_dirichlet.resetBC()
+        self.u_dirichlet.resetBC()
+        self.v_dirichlet.resetBC()
+        self.w_dirichlet.resetBC()
+        self.vof_dirichlet.resetBC()
+        self.k_dirichlet.resetBC()
+        self.dissipation_dirichlet.resetBC()
+        self.p_advective.resetBC()
+        self.u_advective.resetBC()
+        self.v_advective.resetBC()
+        self.w_advective.resetBC()
+        self.vof_advective.resetBC()
+        self.k_advective.resetBC()
+        self.dissipation_advective.resetBC()
+        self.u_diffusive.resetBC()
+        self.v_diffusive.resetBC()
+        self.w_diffusive.resetBC()
+        self.k_diffusive.resetBC()
+        self.dissipation_diffusive.resetBC()
 
     def setNonMaterial(self):
         """
         Sets non-material boundary conditions (diffusive flux and advective vof
         to 0.).
         """
-        # self.reset()
-        # self.BC_type = 'NonMaterial'
-        # self.vof_advective.setConstantBC(0.)
-        # self.u_diffusive.setConstantBC(0.)
-        # self.v_diffusive.setConstantBC(0.)
-        # self.w_diffusive.setConstantBC(0.)
-        pass
+        self.reset()
+        self.BC_type = 'NonMaterial'
+        self.vof_advective.setConstantBC(0.)
+        self.u_diffusive.setConstantBC(0.)
+        self.v_diffusive.setConstantBC(0.)
+        self.w_diffusive.setConstantBC(0.)
 
     def setTank(self):
-        # b_or = self._b_or[self._b_i]
-        # if b_or[0] == 1 or b_or[0] == -1:
-        #     self.hx_dirichlet.setConstantBC(0.)
-        #     self.u_stress.uOfXT = None
-        # elif b_or[1] == 1 or b_or[1] == -1:
-        #     self.hy_dirichlet.setConstantBC(0.)
-        #     self.v_stress.uOfXT = None
-        # elif len(b_or) > 2 and (b_or[2] == 1 or b_or[2] == -1):
-        #     self.hz_dirichlet.setConstantBC(0.)
-        #     self.w_stress.uOfXT = None
-        pass
+        b_or = self._b_or[self._b_i]
+        if b_or[0] == 1 or b_or[0] == -1:
+            self.hx_dirichlet.setConstantBC(0.)
+            self.u_stress = None
+        elif b_or[1] == 1 or b_or[1] == -1:
+            self.hy_dirichlet.setConstantBC(0.)
+            self.v_stress = None
+        elif len(b_or) > 2 and (b_or[2] == 1 or b_or[2] == -1):
+            self.hz_dirichlet.setConstantBC(0.)
+            self.w_stress = None
 
     def setFixedNodes(self):
         """
         For moving domains: fixes nodes/boundary
         """
-        # self.hx_dirichlet.setConstantBC(0.)
-        # self.hy_dirichlet.setConstantBC(0.)
-        # self.hz_dirichlet.setConstantBC(0.)
-        # self.u_stress.uOfXT = None
-        # self.v_stress.uOfXT = None
-        # self.w_stress.uOfXT = None
-        pass
+        self.hx_dirichlet.setConstantBC(0.)
+        self.hy_dirichlet.setConstantBC(0.)
+        self.hz_dirichlet.setConstantBC(0.)
+        self.u_stress = 0
+        self.v_stress = 0
+        self.w_stress = 0
 
     def setNoSlip(self):
         """
         Sets no slip conditions at the boundary
         """
-        # self.reset()
-        # self.BC_type = 'NoSlip'
-        # self.u_dirichlet.setConstantBC(0.)
-        # self.v_dirichlet.setConstantBC(0.)
-        # self.w_dirichlet.setConstantBC(0.)
-        # self.p_advective.setConstantBC(0.)
-        # self.vof_advective.setConstantBC(0.)
-        # self.k_dirichlet.setConstantBC(0.)
-        # self.dissipation_diffusive.setConstantBC(0.)
-        pass
+        self.reset()
+        self.BC_type = 'NoSlip'
+        self.u_dirichlet.setConstantBC(0.)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
+        self.p_advective.setConstantBC(0.)
+        self.vof_advective.setConstantBC(0.)
+        self.k_dirichlet.setConstantBC(0.)
+        self.dissipation_diffusive.setConstantBC(0.)
 
     def setFreeSlip(self):
         """
         Sets free slip conditions at the boundary
         """
-        # self.reset()
-        # self.BC_type = 'FreeSlip'
-        # self.p_advective.setConstantBC(0.)
-        # self.u_advective.setConstantBC(0.)
-        # self.v_advective.setConstantBC(0.)
-        # self.w_advective.setConstantBC(0.)
-        # self.vof_advective.setConstantBC(0.)
-        # self.k_dirichlet.setConstantBC(0.)
-        # self.u_diffusive.setConstantBC(0.)
-        # self.v_diffusive.setConstantBC(0.)
-        # self.w_diffusive.setConstantBC(0.)
-        # self.dissipation_diffusive.setConstantBC(0.)
-        pass
+        self.reset()
+        self.BC_type = 'FreeSlip'
+        self.p_advective.setConstantBC(0.)
+        self.u_advective.setConstantBC(0.)
+        self.v_advective.setConstantBC(0.)
+        self.w_advective.setConstantBC(0.)
+        self.vof_advective.setConstantBC(0.)
+        self.k_dirichlet.setConstantBC(0.)
+        self.u_diffusive.setConstantBC(0.)
+        self.v_diffusive.setConstantBC(0.)
+        self.w_diffusive.setConstantBC(0.)
+        self.dissipation_diffusive.setConstantBC(0.)
 
     def setAtmosphere(self, orientation=None, vof_air=1.):
         """
@@ -162,33 +156,31 @@ class BC_RANS(BC_Base):
         vof_air: Optional[float]
             VOF value of air (default is 1.)
         """
-        # self.BC_type = 'OpenAir'
+        self.BC_type = 'OpenAir'
+        if orientation is None and self._b_or is not None:
+            orientation = self._b_or[self._b_i]
+        self.reset()
+        self.p_dirichlet.setConstantBC(0.)
+        if self.b_or[0] == 1. or self.b_or[0] == -1.:
+            self.u_dirichlet.setConstantBC(0.)
+        else:
+            self.u_dirichlet.resetBC()
+        if self.b_or[1] == 1. or self.b_or[1] == -1.:
+            self.v_dirichlet.setConstantBC(0.)
+        else:
+            self.v_dirichlet.resetBC()
+        if self.b_or[2] == 1. or self.b_or[2] == -1.:
+            self.w_dirichlet.setConstantBC(0.)
+        else:
+            self.w_dirichlet.resetBC()
+        self.vof_dirichlet.setConstantBC(vof_air)  # air
+        self.u_diffusive.setConstantBC(0.)
+        self.v_diffusive.setConstantBC(0.)
+        self.w_diffusive.setConstantBC(0.)
+        self.k_diffusive.setConstantBC(0.)
+        self.dissipation_diffusive.setConstantBC(0.)
 
-        # def get_ux_dirichlet(i):
-        #     if b_or[i] == 1. or b_or[i] == -1.:
-        #         return None
-        #     else:
-        #         return lambda x, t: 0.
 
-        # if orientation is None and self._b_or[self._b_i] is not None:
-        #     b_or = self._b_or[self._b_i]
-        # elif orientation is not None:
-        #     b_or = orientation
-        # else:
-        #     raise ValueError('Boundary orientation needs to be defined')
-        # self.reset()
-        # self.p_dirichlet.setConstantBC(0.)
-        # self.u_dirichlet.uOfXT = get_ux_dirichlet(0)
-        # self.v_dirichlet.uOfXT = get_ux_dirichlet(1)
-        # if len(b_or) > 2:
-        #     self.w_dirichlet.uOfXT = get_ux_dirichlet(2)
-        # self.vof_dirichlet.setConstantBC(vof_air)  # air
-        # self.u_diffusive.setConstantBC(0.)
-        # self.v_diffusive.setConstantBC(0.)
-        # self.w_diffusive.setConstantBC(0.)
-        # self.k_diffusive.setConstantBC(0.)
-        # self.dissipation_diffusive.setConstantBC(0.)
-        pass
 
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
@@ -207,22 +199,38 @@ class BC_RANS(BC_Base):
         (!) if set manually, the input arrays should be updated externally
             without loosing their memory address
         """
-        # if rot_matrix is None:
-        #     rot_matrix = np.array([[1., 0., 0.],
-        #                            [0., 1., 0.],
-        #                            [0., 0., 1.]])
-        # def get_DBC_h(i):
-        #     def DBC_h(x, t):
-        #         x_0 = x-last_pos
-        #         new_x_0 = np.dot(x_0, rot_matrix)
-        #         hx = new_x_0-x_0+h
-        #         return hx[i]
-        #     return DBC_h
-        # self.hx_dirichlet.uOfXT = get_DBC_h(0)
-        # self.hy_dirichlet.uOfXT = get_DBC_h(1)
-        # if len(last_pos) > 2:
-        #     self.hz_dirichlet.uOfXT = get_DBC_h(2)
-        pass
+        if rot_matrix is None:
+            rot_matrix = np.array([[1., 0., 0.],
+                                   [0., 1., 0.],
+                                   [0., 0., 1.]])
+        self.body_python_rot_matrix = rot_matrix
+        self.body_python_last_pos = last_pos
+        self.body_python_h = h
+        self.hx_dirichlet.uOfXT = lambda x, t: self.__cpp_MoveMesh_hx(x, t)
+        self.hy_dirichlet.uOfXT = lambda x, t: self.__cpp_MoveMesh_hy(x, t)
+        self.hz_dirichlet.uOfXT = lambda x, t: self.__cpp_MoveMesh_hz(x, t)
+
+    def __cpp_MoveMesh_h(self, x, t):
+        x_0 = cython.declare(cython.double[3]) 
+        new_x_0 = cython.declare(cython.double[3]) 
+        hx = cython.declare(cython.double[3]) 
+        x_0[0] = x[0]-self.body_python_last_pos[0]
+        x_0[1] = x[1]-self.body_python_last_pos[1]
+        x_0[2] = x[2]-self.body_python_last_pos[2]
+        new_x_0 = np.dot(x_0, self.rot_matrix)
+        hx[0] = new_x_0[0]-x_0[0]+self.h[0]
+        hx[1] = new_x_0[1]-x_0[1]+self.h[1]
+        hx[2] = new_x_0[2]-x_0[2]+self.h[2]
+        return hx
+
+    def __cpp_MoveMesh_hx(self, x, t):
+        return self.__cpp_MoveMesh_h(x, t)[0]
+
+    def __cpp_MoveMesh_hy(self, x, t):
+        return self.__cpp_MoveMesh_h(x, t)[1]
+
+    def __cpp_MoveMesh_hz(self, x, t):
+        return self.__cpp_MoveMesh_h(x, t)[2]
 
     def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None,
                                          wind_speed=(0., 0., 0.), vof_air=1.,
@@ -249,67 +257,36 @@ class BC_RANS(BC_Base):
         (!) Boundary condition relies on specific variables defined in Context:
             he (mesh element size) and ecH (number of elements for smoothing)
         """
-        # self.reset()
-    #     self.wave = wave
-    #     if vert_axis is None:
-    #         vert_axis = self.nd-1
-    #     self.vert_axis = vert_axis
-    #     self.wind_speed = wind_speed
-    #     self.vof_air = vof_air
-    #     self.vof_water = vof_water
-    #     self.u_dirichlet.init_cython = self.__cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet
-    #     self.v_dirichlet.init_cython = self.__cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet
-    #     self.w_dirichlet.init_cython = self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet
-    #     self.vof_dirichlet.init_cython = self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet
-    #     self.p_advective.init_cython = self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective
+        self.reset()
+        if vert_axis is None:
+            vert_axis = self.nd-1
+        self.waves = __cppClass_WavesCharacteristics(wave, vert_axis)
+        self.vert_axis = vert_axis
+        self.wind_speed = wind_speed
+        self.vof_air = vof_air
+        self.vof_water = vof_water
+        self.u_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(x, t)
+        self.v_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(x, t)
+        self.w_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
+        self.vof_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
+        self.p_advective.uOfXT = lambda x, t: self.waves.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
 
-    # def __cpp_UnsteadyTwoPhaseVelocityInlet_vof(self, x, t):
-    #     level = self.wave.mwl + self.wave.eta(x,t)
-    #     H = smoothedHeaviside(self.ecH*self.he,x[self.vert_axis]-level)
-    #     return H*self.vof_air+(1-H)*self.vof_water
-
-    # def __cpp_UnsteadyTwoPhaseVelocityInlet_velocity_dirichlet(self, x, t):
-    #     waveHeight = self.wave.mwl+self.wave.eta(x, t)
-    #     wavePhi = x[vert_axis]-waveHeight
-    #     if wavePhi <= 0:
-    #         water_speed = self.wave.u(x, t)
-    #     elif wavePhi > 0 and wavePhi < 0.5*self.ecH*self.he:
-    #         x_max = list(x)
-    #         x_max[vert_axis] = waveHeight
-    #         water_speed = wave_u(x_max, t)
-    #     else:
-    #         water_speed = np.array([0., 0., 0.])
-    #         # smoothing only above wave, only on half the VOF smoothing length
-    #     H = smoothedHeaviside(0.5*self.ecH*self.he, wavePhi-0.5*self.ecH*self.he)
-    #     ux = H*self.wind_speed_arr + (1-H)*water_speed
-    #     return ux
-
-    # def __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, x, t):
-    #     return self.__cpp_u_dir_UnsteadyTwoPhaseVelocityInlet(self, x, t)[0]
-    # def __cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(self, x, t):
-    #     return self.__cpp_v_dir_UnsteadyTwoPhaseVelocityInlet(self, x, t)[1]
-    # def __cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(self, x, t):
-    #     return self.__cpp_w_dir_UnsteadyTwoPhaseVelocityInlet(self, x, t)[2]
-
-    # def __cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(self, x, t):
-    #     # This is the normal velocity, based on the outwards boundary
-    #     # orientation b_or
-    #     # needs to be equal to -ux_dirichlet
-    #     b_or = self._b_or[self._b_i]
-    #     waveHeight = self.wave.mwl+self.wave.eta(x, t)
-    #     wavePhi = x[vert_axis]-waveHeight
-    #     if wavePhi <= 0:
-    #         water_speed = self.wave.u(x, t)
-    #     elif wavePhi > 0 and wavePhi < 0.5*self.ecH*self.he:
-    #         x_max = list(x)
-    #         x_max[vert_axis] = waveHeight
-    #         water_speed =self.wave.u(x_max, t)
-    #     else:
-    #         water_speed = np.array([0., 0., 0.])
-    #     H = smoothedHeaviside(0.5*self.ecH*self.he, wavePhi-0.5*self.ecH*self.he)
-    #     U = H*self.wind_speed + (1-H)*water_speed
-    #     u_p = np.sum(U[:nd]*b_or)
-    #     return u_p
+    def __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, x, t):
+        cython.declare(xx=cython.double[3])
+        xx = __x_to_cpp(x)
+        return self.waves.__cpp_calculate_velocity(xx, t)[0]
+    def __cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(self, x, t):
+        cython.declare(xx=cython.double[3])
+        xx = __x_to_cpp(x)
+        return self.waves.__cpp_calculate_velocity(xx, t)[1]
+    def __cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(self, x, t):
+        cython.declare(xx=cython.double[3])
+        xx = __x_to_cpp(x)
+        return self.waves.__cpp_calculate_velocity(xx, t)[2]
+    def __cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(self, x, t):
+        cython.declare(xx=cython.double[3])
+        xx = __x_to_cpp(x)
+        return self.waves.__cpp_calculate_velocity(xx, t)[2]
 
     # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
     def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=None, air=1.,
@@ -485,7 +462,8 @@ class RelaxationZone:
         self.zone_type = zone_type
         self.center = center
         self.orientation = orientation
-        self.waves = waves
+        self.vert_axis = self.Shape.Domain.nd-1
+        self.waves = __cppClass_WavesCharacteristics(waves, self.vert_axis, center, orientation)
         self.wind_speed = wind_speed
         self.epsFact_solid = epsFact_solid
         self.dragAlpha = dragAlpha
@@ -494,7 +472,6 @@ class RelaxationZone:
         self.he = he
         self.ecH = ecH
         self.zero_vel = np.zeros(3)
-        self.vert_axis = self.Shape.Domain.nd-1
 
 
     def calculate_init(self):
@@ -518,18 +495,8 @@ class RelaxationZone:
     def calculate_phi(self, x):
         return self.phi(self, x)
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    @cython.initializedcheck(False)
     def __cpp_calculate_phi(self, x):
-        d1 = self.center[0]-x[0]
-        d2 = self.center[1]-x[1]
-        d3 = self.center[2]-x[2]
-        o1 = self.orientation[0]
-        o2 = self.orientation[1]
-        o3 = self.orientation[2]
-        phi = o1*d1+o2*d2+o3*d3
-        return phi
+        return self.waves.__cpp_calculate_phi(x)
 
     def __cpp_calculate_phi_porous(self, x):
         return self.epsFact_solid
@@ -540,32 +507,8 @@ class RelaxationZone:
     def  __cpp_calculate_vel_zero(self, x, t):
         return self.zero_vel
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    @cython.initializedcheck(False)
     def  __cpp_calculate_vel_wave(self, x, t):
-        # hack for passing x to python object waves
-        # to change when WaveTools is cimport
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
-        waveHeight = self.waves.mwl+self.waves.eta(xx, t)
-        wavePhi = x[self.vert_axis]-waveHeight
-        if wavePhi <= 0:
-            waterSpeed = self.waves.u(xx, t)
-        elif wavePhi > 0 and wavePhi < 0.5*self.ecH*self.he:
-            x_max[0] = x[0]
-            x_max[1] = x[1]
-            x_max[2] = x[2]
-            x_max[self.vert_axis] = waveHeight
-            waterSpeed = self.waves.u(x_max, t)
-        else:
-            waterSpeed = self.zero_vel
-        H = smoothedHeaviside(0.5*self.ecH*self.he, wavePhi-0.5*self.ecH*self.he)
-        u[0] = H*self.wind_speed[0] + (1-H)*waterSpeed[0]
-        u[1] = H*self.wind_speed[1] + (1-H)*waterSpeed[1]
-        u[2] = H*self.wind_speed[2] + (1-H)*waterSpeed[2]
-        return u
+        return self.waves.__cpp_calculate_velocity(x, t)
 
 
 class RelaxationZoneWaveGenerator():
@@ -645,3 +588,73 @@ class RelaxationZoneWaveGenerator():
                               q_velocity_solid[eN, k, 2] = u[2]
             m.q['phi_solid'] = q_phi_solid
             m.q['velocity_solid'] = q_velocity_solid
+
+class __cppClass_WavesCharacteristics:
+    def __init__(self, waves, vert_axis, center=None, orientation=None):
+        self.WT = waves  # wavetools wave
+        self.vert_axis = vert_axis
+        self.zero_vel = np.zeros(3)
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.initializedcheck(False)
+    def  __cpp_calculate_velocity(self, x, t):
+        # hack for passing x to python object waves
+        # to change when WaveTools is cimport
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        waveHeight = self.waves.WT.mwl+self.waves.WT.eta(xx, t)
+        wavePhi = x[self.vert_axis]-waveHeight
+        if wavePhi <= 0:
+            waterSpeed = self.waves.WT.u(xx, t)
+        # elif wavePhi > 0 and wavePhi < 0.5*self.ecH*self.he:
+        #     x_max[0] = x[0]
+        #     x_max[1] = x[1]
+        #     x_max[2] = x[2]
+        #     x_max[self.vert_axis] = waveHeight
+        #     waterSpeed = self.waves.u(x_max, t)
+        else:
+            waterSpeed = self.zero_vel
+        # H = smoothedHeaviside(0.5*self.ecH*self.he, wavePhi-0.5*self.ecH*self.he)
+        # u[0] = H*self.wind_speed[0] + (1-H)*waterSpeed[0]
+        # u[1] = H*self.wind_speed[1] + (1-H)*waterSpeed[1]
+        # u[2] = H*self.wind_speed[2] + (1-H)*waterSpeed[2]
+        return waterSpeed
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.initializedcheck(False)
+    def __cpp_calculate_phi(self, x):
+        """
+        Used for RelaxationZone only
+        """
+        cython.declare(d=cython.double[3], o=cython.double[3])
+        d[0] = self.center[0]-x[0]
+        d[1] = self.center[1]-x[1]
+        d[2] = self.center[2]-x[2]
+        o[0] = self.orientation[0]
+        o[1] = self.orientation[1]
+        o[2] = self.orientation[2]
+        phi = o[0]*d[0]+o[1]*d[1]+o[2]*d[2]
+        return phi
+
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.initializedcheck(False)
+    def __cpp_calculate_pressure(self, x, t):
+        # This is the normal velocity, based on the outwards boundary
+        # orientation b_or
+        # needs to be equal to -ux_dirichlet
+        b_or = self._b_or[self._b_i]
+        ux = self.__cpp_calculate_velocity(x, t)
+        return b_or[0]*ux[0]+b_or[1]*ux[1]+b_or[2]*ux[2]
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.initializedcheck(False)
+def __x_to_cpp(x):
+    xx[0] = x[0]
+    xx[1] = x[1]
+    xx[2] = x[2]
+    return xx

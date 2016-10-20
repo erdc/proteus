@@ -11,10 +11,11 @@ cdef class BC_Base:
     cpdef void newGlobalBC(BC_Base cls, str name, object default_value)
     cpdef void getContext(BC_Base cls, object context=*)
 
-ctypedef double (*BC_uOfXT) (double[3], double)
+ctypedef double (*cpp_uOfXT) (BoundaryCondition, double[:], double)
 cdef class BoundaryCondition:
-    cdef BC_uOfXT uOfXT
-
-
-@cython.locals(testt=double, a=double, b=double)
-cdef double test0(double[:], double)
+    cdef cpp_uOfXT uuOfXT
+    cdef public:
+        object uOfXT
+    cpdef void resetBC(self)
+    # cpdef void setConstantBC(self, double value)
+    # cpdef void setLinearBC(self, double a0, double a1, int i)
