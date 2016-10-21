@@ -1,4 +1,5 @@
 cimport cython
+from libcpp cimport bool
 cimport numpy as np
 from proteus.BoundaryConditions cimport (BC_Base,
                                          BoundaryCondition)
@@ -74,11 +75,11 @@ ctypedef double[:] (*cfvel) (double[3], double)  # pointer to velocity function
 ctypedef double (*cfeta) (double[3], double)  # pointer to eta function
 ctypedef double[:] (*cfvelrel) (RelaxationZone, double[3], double)  # pointer to velocity function of RelaxationZone class
 ctypedef double (*cfphirel) (RelaxationZone, double[3])  # pointer to phi function of RelaxationZone class
+ctypedef double (*cfphiwave) (RelaxationZone, double[3])  # pointer to phi function of RelaxationZone class
 ctypedef np.float64_t float64_t
 ctypedef np.int64_t int64_t
 
 cdef class RelaxationZone:
-    cdef int vert_axis
     cdef double[:] wind_speed
     cdef double[:] u_calc  # calculated velocity
     # wave characteristics (if any)
@@ -89,10 +90,6 @@ cdef class RelaxationZone:
     cdef double waveHeight
     cdef double wavePhi
     cdef double waterSpeed
-    # for smoothing
-    cdef double he
-    cdef double ecH
-    cdef double H
     cdef int nd
     cdef double[:] zero_vel
     cdef __cppClass_WavesCharacteristics waves
@@ -113,10 +110,10 @@ cdef class RelaxationZone:
     cdef double[:] __cpp_calculate_vel_wave(self, double* x, double t)
     cdef double[:] __cpp_calculate_vel_zero(self, double* x, double t)
     cdef double calculate_phi(self, double[3] x)
-    cdef double __cpp_calculate_phi(self, double[3] x)
     @cython.locals(d1=double, d2=double, d3=double, phi=double,
                    o1=double, o2=double, o3=double)
-    cdef double __cpp_calculate_phi_porous(self, double[3] x)
+    cdef double __cpp_calculate_phi_solid(self, double[3] x)
+    cdef double __cpp_calculate_phi_solid_porous(self, double[3] x)
 
 cdef class RelaxationZoneWaveGenerator:
     cdef int nd  # dimension
@@ -147,17 +144,22 @@ cdef class __cppClass_WavesCharacteristics:
     cdef double[:] zero_vel
     cdef double[:] _b_or
     cdef double[:] wind_speed
+    cdef double vof_air
+    cdef double vof_water
+    cdef double smoothing
     cdef public:
         # wave class from WaveTools
         object WT
-    @cython.locals(waveHeight=double, wavePhi=double,
-                   waterSpeed=double_memview1, x_max=double_memview1, H=double,
-                   o1=double, o2=double, o3=double)
+    @cython.locals(phi=double, waterSpeed=double_memview1,
+                   H=double)
     cdef double[:]  __cpp_calculate_velocity(self, double[3] x, double t)
     @cython.locals(_b_or=double_memview1, ux=double_memview1)
     cdef double __cpp_calculate_pressure(self, double[3] x, double t)
     @cython.locals(level=double)
+    cdef double __cpp_calculate_phi(self, double[3] x, double t)
+    @cython.locals(phi=double, H=double)
     cdef double __cpp_calculate_vof(self, double[3] x, double t)
-    cdef double __cpp_calculate_phi(self, double[3] x)
+    @cython.locals(H=double)
+    cdef double __cpp_calculate_smoothing_H(self, double phi)
 
 cdef double* __x_to_cpp(double[:])

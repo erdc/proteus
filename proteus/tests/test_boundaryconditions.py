@@ -26,11 +26,11 @@ Profiling.procID = comm.rank()
 log("Testing BoundaryConditions")
 
 
-def create_BC(folder=None, b_or=None, b_i=0):
+def create_BC(folder=None, b_or=None, b_i=0, nd=2):
     if folder is None:
-        return BC_Base(b_or=b_or, b_i=b_i)
+        return BC_Base(b_or=b_or, b_i=b_i, nd=nd)
     if folder == 'mprans':
-        return BC_RANS(b_or=b_or, b_i=b_i)
+        return BC_RANS(b_or=b_or, b_i=b_i, nd=nd)
 
 def get_random_x(start=0., stop=10.):
     x1 = random.uniform(start, stop)
@@ -282,7 +282,7 @@ class TestBC(unittest.TestCase):
         u_dir, v_dir, w_dir, vof_dir, p_adv = [], [], [], [], []
         u_calc, vof_calc, p_calc = [], [], []
         t_list = get_time_array()
-        smoothing = False
+        smoothing = 0.
         for t in t_list:
             x = np.array(get_random_x())
             u_dir += [BC.u_dirichlet.uOfXT(x, t)]
@@ -296,8 +296,8 @@ class TestBC(unittest.TestCase):
             if wavePhi <= 0:
                 H = 0.
                 wave_u = waves.u(x, t)
-            elif smoothing is True and wavePhi > 0 and wavePhi < 0.5*ct.ecH*ct.he:
-                H = smoothedHeaviside(0.5*ct.ecH*ct.he, wavePhi-0.5*ct.ecH*ct.he)
+            elif smoothing > 0 and 0 < wavePhi < smoothing/2.:
+                H = smoothedHeaviside(0.5*smoothing, wavePhi-0.5*smoothing)
                 x_max = list(x)
                 x_max[1] = waveHeight
                 wave_u = waves.u(x_max, t)
@@ -307,13 +307,12 @@ class TestBC(unittest.TestCase):
             U = H*wind_speed + (1-H)*wave_u
             u_calc += [U]
             p_calc += [np.sum(U*b_or[b_i])]
-            if smoothing is True:
-                Hvof = smoothedHeaviside(ct.ecH*ct.he, wavePhi)
-            else:
-                if wavePhi > 0:
-                    Hvof = 1.
-                else:
-                    Hvof = 0.
+            if wavePhi >= smoothing/2.:
+                Hvof = 1.
+            elif smoothing > 0 and -smoothing/2. < wavePhi < smoothing/2.:
+                Hvof = smoothedHeaviside(smoothing, wavePhi)
+            elif wavePhi <= -smoothing/2.:
+                Hvof = 0.
             vof_calc += [Hvof]
         u_calc = np.array(u_calc)
         vof_calc = np.array(vof_calc)
