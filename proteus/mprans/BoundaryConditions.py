@@ -1,4 +1,8 @@
 #cython: profile=True
+#cython: wraparound=False
+#cython: boundscheck=False
+#cython: initializedcheck=False
+
 import cython
 
 """
@@ -486,7 +490,6 @@ class RelaxationZone:
     def calculate_init(self):
         if self.zone_type == 'generation':
             #self.u = &self.waves.u
-            self.mwl = self.waves.mwl
             #self.eta = &self.waves.eta
             self.uu = self.__cpp_calculate_vel_wave
             self.phi = self.__cpp_calculate_phi_solid
@@ -496,9 +499,6 @@ class RelaxationZone:
         elif self.zone_type == 'porous':
             self.uu = self.__cpp_calculate_vel_zero
             self.phi = self.__cpp_calculate_phi_solid_porous
-        from proteus import Context
-        ct = Context.get()
-        self.smoothing = ct.he*ct.ecH
 
     def calculate_phi(self, x):
         return self.phi(self, x)
@@ -560,23 +560,19 @@ class RelaxationZoneWaveGenerator():
         pass
 
     def calculate_init(self):
-        self.max_key = 0
+        max_key = 0
         for key, zone in self.zones.iteritems():
             zone.calculate_init()
-            if key > self.max_key:
-                self.max_key = key
-        self.max_flag = self.max_key
-        zones = np.empty(self.max_key+1, dtype=object)
+            if key > max_key:
+                max_key = key
+        self.max_flag = max_key
+        self.zones_array = np.empty(self.max_flag+1, dtype=object)
         for key, zone in self.zones.iteritems():
-            zones[key] = zone
-        self.zones_array = zones
+            self.zones_array[key] = zone
 
     def calculate(self):
         self.__cpp_iterate()
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    @cython.initializedcheck(False)
     def __cpp_iterate(self):
         nl = len(self.model.levelModelList)
         for l in range(nl):  # usually only 1
@@ -612,7 +608,7 @@ class RelaxationZoneWaveGenerator():
             m.q['velocity_solid'] = q_velocity_solid
 
 class __cppClass_WavesCharacteristics:
-    def __init__(self, waves, vert_axis, wind_speed=None, b_or=None, smoothing=True, vof_water=0., vof_air = 1.):
+    def __init__(self, waves, vert_axis, wind_speed=None, b_or=None, smoothing=0., vof_water=0., vof_air = 1.):
         self.WT = waves  # wavetools wave
         self.vert_axis = vert_axis
         self.zero_vel = np.zeros(3)
@@ -625,9 +621,6 @@ class __cppClass_WavesCharacteristics:
         else:
             self.wind_speed = wind_speed
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    @cython.initializedcheck(False)
     def  __cpp_calculate_velocity(self, x, t):
         cython.declare(u=cython.double[3])
         cython.declare(xx=cython.double[3])
@@ -644,24 +637,23 @@ class __cppClass_WavesCharacteristics:
             x_max[1] = x[1]
             x_max[2] = x[2]
             x_max[self.vert_axis] = x[self.vert_axis]-phi
-            waterSpeed = self.waves.u(x_max, t)
+            waterSpeed = self.WT.u(x_max, t)
         else:
             waterSpeed = self.zero_vel
         u[0] = H*self.wind_speed[0] + (1-H)*waterSpeed[0]
         u[1] = H*self.wind_speed[1] + (1-H)*waterSpeed[1]
         u[2] = H*self.wind_speed[2] + (1-H)*waterSpeed[2]
+        # print('u: ', u[0], u[1], u[2])
         return u
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    @cython.initializedcheck(False)
     def __cpp_calculate_pressure(self, x, t):
         # This is the normal velocity, based on the outwards boundary
         # orientation b_or
         # needs to be equal to -ux_dirichlet
-        b_or = self._b_or
         ux = self.__cpp_calculate_velocity(x, t)
-        return b_or[0]*ux[0]+b_or[1]*ux[1]+b_or[2]*ux[2]
+        b0, b1, b2 = self._b_or[0], self._b_or[1], self._b_or[2]
+        u0, u1, u2 = ux[0], ux[1], ux[2]
+        return b0*u0+b1*u1+b2*u2
 
     def __cpp_calculate_phi(self, x, t):
         cython.declare(xx=cython.double[3])
@@ -677,11 +669,11 @@ class __cppClass_WavesCharacteristics:
         return H
 
     def __cpp_calculate_smoothing_H(self, phi):
-        if phi >= self.smoothing/2.:
+        if phi >= self.smoothing:
             H = 1.
-        elif self.smoothing > 0 and -self.smoothing/2. < phi < self.smoothing/2.:
+        elif self.smoothing > 0 and -self.smoothing < phi < self.smoothing:
             H = smoothedHeaviside(self.smoothing, phi)
-        elif phi <= -self.smoothing/2.:
+        elif phi <= -self.smoothing:
             H = 0.
         return H
 
