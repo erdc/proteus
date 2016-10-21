@@ -15,8 +15,8 @@ class BC_RANS(BC_Base):
     """
     Class regrouping boundary conditions for two-phase flows
     """
-    def __init__(self, shape=None, name=None, b_or=None, b_i=0.):
-        super(BC_RANS, self).__init__(shape, name, b_or, b_i)
+    def __init__(self, shape=None, name=None, b_or=None, b_i=0., nd=None):
+        super(BC_RANS, self).__init__(shape=shape, name=name, b_or=b_or, b_i=b_i, nd=nd)
         # _dirichlet
         self.p_dirichlet = BoundaryCondition()  # pressure
         self.u_dirichlet = BoundaryCondition()  # velocity u
@@ -160,15 +160,15 @@ class BC_RANS(BC_Base):
             orientation = self._b_or
         self.reset()
         self.p_dirichlet.setConstantBC(0.)
-        if self.b_or[0] == 1. or self.b_or[0] == -1.:
+        if self._b_or[0] == 1. or self._b_or[0] == -1.:
             self.u_dirichlet.setConstantBC(0.)
         else:
             self.u_dirichlet.resetBC()
-        if self.b_or[1] == 1. or self.b_or[1] == -1.:
+        if self._b_or[1] == 1. or self._b_or[1] == -1.:
             self.v_dirichlet.setConstantBC(0.)
         else:
             self.v_dirichlet.resetBC()
-        if self.b_or[2] == 1. or self.b_or[2] == -1.:
+        if self._b_or[2] == 1. or self._b_or[2] == -1.:
             self.w_dirichlet.setConstantBC(0.)
         else:
             self.w_dirichlet.resetBC()
@@ -231,9 +231,8 @@ class BC_RANS(BC_Base):
     def __cpp_MoveMesh_hz(self, x, t):
         return self.__cpp_MoveMesh_h(x, t)[2]
 
-    def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None,
-                                         wind_speed=(0., 0., 0.), vof_air=1.,
-                                         vof_water=0.):
+    def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None, wind_speed=None,
+                                         smoothing=0., vof_air=1., vof_water=0.):
         """
         Imposes a velocity profile on the fluid with input wave and wind
         conditions.
@@ -259,7 +258,9 @@ class BC_RANS(BC_Base):
         self.reset()
         if vert_axis is None:
             vert_axis = self.nd-1
-        self.waves = __cppClass_WavesCharacteristics(wave, vert_axis, b_or=self._b_or, wind_speed=wind_speed)
+        if wind_speed is None:
+            wind_speed = np.zeros(3)
+        self.waves = __cppClass_WavesCharacteristics(waves=wave, vert_axis=vert_axis, b_or=self._b_or, wind_speed=wind_speed, smoothing=smoothing, vof_water=vof_water, vof_air=vof_air)
         self.u_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(x, t)
         self.v_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(x, t)
         self.w_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
@@ -388,8 +389,8 @@ class BC_RANS(BC_Base):
 
     # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
     def setHydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
-                                          refLevel, pRef=0.0, vert_axis=None,
-                                          air=1.0, water=0.0):
+                                              refLevel, pRef=0.0, vert_axis=None,
+                                              air=1.0, water=0.0):
         """Imposes a hydrostatic pressure profile and open boundary conditions
         with a known otuflow depth
        :param rhoUp: Phase density of the upper part.
@@ -462,24 +463,23 @@ class RelaxationZone:
         parameter for porous zone (default: 1.)
     """
 
-    def __cinit__(self, zone_type, center, orientation,
-                 epsFact_solid, he=0., ecH=3., waves=None, shape=None,
-                 wind_speed=np.array([0.,0.,0.]), dragAlpha=0.5/1.005e-6,
-                 dragBeta=0., porosity=1.):
+    def __cinit__(self, zone_type, center, orientation, epsFact_solid,
+                  waves=None, shape=None, wind_speed=np.array([0.,0.,0.]),
+                  dragAlpha=0.5/1.005e-6, dragBeta=0., porosity=1., vert_axis=None, smoothing=0.,
+                  he=0., ecH=3., vof_water=0., vof_air=1.):
         self.Shape = shape
         self.nd = self.Shape.Domain.nd
         self.zone_type = zone_type
         self.center = center
         self.orientation = orientation
-        self.vert_axis = self.Shape.Domain.nd-1
-        self.waves = __cppClass_WavesCharacteristics(waves, self.vert_axis, center, orientation)
-        self.wind_speed = wind_speed
+        if vert_axis is None:
+            vert_axis = self.Shape.Domain.nd-1
+        if waves is not None:
+            self.waves = __cppClass_WavesCharacteristics(waves=waves, wind_speed=wind_speed, vert_axis=vert_axis, smoothing=smoothing, vof_water=vof_water, vof_air=vof_air)
         self.epsFact_solid = epsFact_solid
         self.dragAlpha = dragAlpha
         self.dragBeta = dragBeta
         self.porosity = porosity
-        self.he = he
-        self.ecH = ecH
         self.zero_vel = np.zeros(3)
 
 
@@ -489,25 +489,38 @@ class RelaxationZone:
             self.mwl = self.waves.mwl
             #self.eta = &self.waves.eta
             self.uu = self.__cpp_calculate_vel_wave
-            self.phi = self.__cpp_calculate_phi
+            self.phi = self.__cpp_calculate_phi_solid
         elif self.zone_type == 'absorption':
             self.uu = self.__cpp_calculate_vel_zero
-            self.phi = self.__cpp_calculate_phi
+            self.phi = self.__cpp_calculate_phi_solid
         elif self.zone_type == 'porous':
             self.uu = self.__cpp_calculate_vel_zero
-            self.phi = self.__cpp_calculate_phi_porous
+            self.phi = self.__cpp_calculate_phi_solid_porous
         from proteus import Context
         ct = Context.get()
-        self.he = ct.he
-        self.ecH = ct.ecH
+        self.smoothing = ct.he*ct.ecH
 
     def calculate_phi(self, x):
         return self.phi(self, x)
 
-    def __cpp_calculate_phi(self, x):
-        return self.waves.__cpp_calculate_phi(x)
+    @cython.boundscheck(False)
+    @cython.wraparound(False)
+    @cython.initializedcheck(False)
+    def __cpp_calculate_phi_solid(self, x):
+        """
+        Used for RelaxationZone only
+        """
+        cython.declare(d=cython.double[3], o=cython.double[3])
+        d[0] = self.center[0]-x[0]
+        d[1] = self.center[1]-x[1]
+        d[2] = self.center[2]-x[2]
+        o[0] = self.orientation[0]
+        o[1] = self.orientation[1]
+        o[2] = self.orientation[2]
+        phi = o[0]*d[0]+o[1]*d[1]+o[2]*d[2]
+        return phi
 
-    def __cpp_calculate_phi_porous(self, x):
+    def __cpp_calculate_phi_solid_porous(self, x):
         return self.epsFact_solid
 
     def calculate_vel(self, x, t):
@@ -599,13 +612,14 @@ class RelaxationZoneWaveGenerator():
             m.q['velocity_solid'] = q_velocity_solid
 
 class __cppClass_WavesCharacteristics:
-    def __init__(self, waves, vert_axis, center=None, orientation=None, b_or=None, wind_speed=None):
+    def __init__(self, waves, vert_axis, wind_speed=None, b_or=None, smoothing=True, vof_water=0., vof_air = 1.):
         self.WT = waves  # wavetools wave
         self.vert_axis = vert_axis
         self.zero_vel = np.zeros(3)
-        self.center = center
-        self.orientation = orientation
         self._b_or = b_or
+        self.smoothing = smoothing
+        self.vof_air = vof_air
+        self.vof_water = vof_water
         if wind_speed is None:
             self.wind_speed = self.zero_vel
         else:
@@ -615,49 +629,28 @@ class __cppClass_WavesCharacteristics:
     @cython.wraparound(False)
     @cython.initializedcheck(False)
     def  __cpp_calculate_velocity(self, x, t):
-        cython.declare(xx=cython.double[3])
         cython.declare(u=cython.double[3])
-        # hack for passing x to python object waves
-        # to change when WaveTools is cimport
+        cython.declare(xx=cython.double[3])
+        cython.declare(x_max=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
-        waveHeight = self.WT.mwl+self.WT.eta(xx, t)
-        wavePhi = x[self.vert_axis]-waveHeight
-        if wavePhi <= 0:
-            H = 0.
+        phi = self.__cpp_calculate_phi(x, t)
+        H = self.__cpp_calculate_smoothing_H(phi)
+        if 0 <= H < 0.5:
             waterSpeed = self.WT.u(xx, t)
-        # elif wavePhi > 0 and wavePhi < 0.5*self.ecH*self.he:
-        #     x_max[0] = x[0]
-        #     x_max[1] = x[1]
-        #     x_max[2] = x[2]
-        #     x_max[self.vert_axis] = waveHeight
-        #     waterSpeed = self.waves.u(x_max, t)
+        elif 0.5 < H < 1.:
+            x_max[0] = x[0]
+            x_max[1] = x[1]
+            x_max[2] = x[2]
+            x_max[self.vert_axis] = x[self.vert_axis]-phi
+            waterSpeed = self.waves.u(x_max, t)
         else:
-            H = 1.
             waterSpeed = self.zero_vel
-        # H = smoothedHeaviside(0.5*self.ecH*self.he, wavePhi-0.5*self.ecH*self.he)
         u[0] = H*self.wind_speed[0] + (1-H)*waterSpeed[0]
         u[1] = H*self.wind_speed[1] + (1-H)*waterSpeed[1]
         u[2] = H*self.wind_speed[2] + (1-H)*waterSpeed[2]
         return u
-
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    @cython.initializedcheck(False)
-    def __cpp_calculate_phi(self, x):
-        """
-        Used for RelaxationZone only
-        """
-        cython.declare(d=cython.double[3], o=cython.double[3])
-        d[0] = self.center[0]-x[0]
-        d[1] = self.center[1]-x[1]
-        d[2] = self.center[2]-x[2]
-        o[0] = self.orientation[0]
-        o[1] = self.orientation[1]
-        o[2] = self.orientation[2]
-        phi = o[0]*d[0]+o[1]*d[1]+o[2]*d[2]
-        return phi
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -670,18 +663,28 @@ class __cppClass_WavesCharacteristics:
         ux = self.__cpp_calculate_velocity(x, t)
         return b_or[0]*ux[0]+b_or[1]*ux[1]+b_or[2]*ux[2]
 
-    def __cpp_calculate_vof(self, x, t):
+    def __cpp_calculate_phi(self, x, t):
         cython.declare(xx=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
         level = self.WT.mwl + self.WT.eta(xx,t)
-        # H = smoothedHeaviside(self.ecH*self.he,x[self.vert_axis]-level)
-        if x[self.vert_axis] > level:
-            return 1.
-        if x[self.vert_axis] < level:
-            return 0.
-        # return H*vof_air+(1-H)*vof_water
+        return x[self.vert_axis]-level
+
+    def __cpp_calculate_vof(self, x, t):
+        phi = self.__cpp_calculate_phi(x, t)
+        H = self.__cpp_calculate_smoothing_H(phi)
+        return H
+
+    def __cpp_calculate_smoothing_H(self, phi):
+        if phi >= self.smoothing/2.:
+            H = 1.
+        elif self.smoothing > 0 and -self.smoothing/2. < phi < self.smoothing/2.:
+            H = smoothedHeaviside(self.smoothing, phi)
+        elif phi <= -self.smoothing/2.:
+            H = 0.
+        return H
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
