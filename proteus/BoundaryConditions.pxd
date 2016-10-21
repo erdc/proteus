@@ -1,12 +1,14 @@
 cimport cython
+cimport numpy as np
 import cython
 
 cdef class BC_Base:
+    cdef double[:] _b_or
     cdef public:
+        cdef int nd
         object Shape
         str name
         str BC_type
-        double[:] _b_or
         object ct
     # cpdef void newGlobalBC(BC_Base cls, str name, object default_value)
     # cpdef void getContext(BC_Base cls, object context=*)

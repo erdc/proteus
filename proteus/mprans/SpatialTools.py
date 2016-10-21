@@ -925,7 +925,7 @@ class Tank3D(ShapeRANS):
                         center = np.append(center, [0])
                 if key == 'x-':
                     center[0] += -0.5*self.dim[0]-sl['x-']/2.
-                    orientation = np.aray([1., 0., 0.])
+                    orientation = np.array([1., 0., 0.])
                     self.BC['x-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                                    wind_speed=wind_speed)
                 elif key == 'x+':
@@ -988,10 +988,10 @@ class Tank2D(ShapeRANS):
 
     def _setupBCs(self):
         self.boundaryTags = {'y-': 1, 'x+': 2, 'y+': 3, 'x-': 4, 'sponge': 5}
-        self.b_or = np.array([[0., -1.],
-                              [1., 0.],
-                              [0., 1.],
-                              [-1., 0.]])
+        self.b_or = np.array([[0., -1., 0.],
+                              [1., 0., 0.],
+                              [0., 1., 0.],
+                              [-1., 0., 0.]])
         self.BC = {'y-': self.BC_class(shape=self, name='y-',
                                        b_or=self.b_or, b_i=0),
                    'x+': self.BC_class(shape=self, name='x+',
