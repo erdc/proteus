@@ -45,9 +45,9 @@ cdef class BC_RANS(BC_Base):
         cdef BoundaryCondition hx_dirichlet
         cdef BoundaryCondition hy_dirichlet
         cdef BoundaryCondition hz_dirichlet
-        cdef double u_stress
-        cdef double v_stress
-        cdef double w_stress
+        cdef BoundaryCondition u_stress
+        cdef BoundaryCondition v_stress
+        cdef BoundaryCondition w_stress
         # functions
         # cpdef void reset(self)
         # cpdef void setNonMaterial(self)
@@ -67,6 +67,7 @@ cdef class BC_RANS(BC_Base):
         cdef double __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, double[:] x, double t)
         cdef double __cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(self, double[:] x, double t)
         cdef double __cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(self, double[:] x, double t)
+        cdef double __cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(self, double[:] x, double t)
         cdef double __cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(self, double[:] x, double t)
 
 ctypedef double[:] (*cfvel) (double[3], double)  # pointer to velocity function
@@ -144,16 +145,19 @@ cdef class __cppClass_WavesCharacteristics:
     cdef double[:] orientation  # orientation of zone
     # zero array
     cdef double[:] zero_vel
+    cdef double[:] _b_or
+    cdef double[:] wind_speed
     cdef public:
         # wave class from WaveTools
         object WT
-    @cython.locals(xx=cython.double[3], waveHeight=double, wavePhi=double,
-                   waterSpeed=double_memview1, x_max=double_memview1, H=double, u=double[3],
+    @cython.locals(waveHeight=double, wavePhi=double,
+                   waterSpeed=double_memview1, x_max=double_memview1, H=double,
                    o1=double, o2=double, o3=double)
     cdef double[:]  __cpp_calculate_velocity(self, double[3] x, double t)
     @cython.locals(_b_or=double_memview1, ux=double_memview1)
     cdef double __cpp_calculate_pressure(self, double[3] x, double t)
+    @cython.locals(level=double)
+    cdef double __cpp_calculate_vof(self, double[3] x, double t)
     cdef double __cpp_calculate_phi(self, double[3] x)
 
-@cython.locals(xx=cython.double[3])
 cdef double* __x_to_cpp(double[:])

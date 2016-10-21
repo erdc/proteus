@@ -14,24 +14,24 @@ class BC_Base():
         self.Shape = shape
         self.name = name
         self.BC_type = 'None'
-        self._b_or = b_or  # array of orientation of all boundaries of shape
-        self._b_i = b_i  # indice for this boundary in list of boundaries
+        if b_or is not None:
+            print(b_or)
+            self._b_or = b_or[b_i]  # array of orientation of all boundaries of shape
 
-    @classmethod
-    def newGlobalBC(cls, name, default_value):
-        """
-        Makes a new BoundaryCondition class instance attached to BC_Base.
-        This creates a new class attributed that will be added to all BC_Base
-        class instances.
+    # @staticmethod
+    # def newGlobalBC(name, default_value):
+    #     """
+    #     Makes a new BoundaryCondition class instance attached to BC_Base.
+    #     This creates a new class attributed that will be added to all BC_Base
+    #     class instances.
 
-        Parameters
-        ----------
-        name: string
-        """
-        setattr(cls, name, default_value)
+    #     Parameters
+    #     ----------
+    #     name: string
+    #     """
+    #     setattr(BC_Base, name, default_value)
 
-    @classmethod
-    def getContext(cls, context=None):
+    def getContext(self, context=None):
         """
         Gets context from proteus.Context or
 
@@ -42,9 +42,9 @@ class BC_Base():
         """
         if context:
             from proteus import Context
-            cls.ct = Context.get()
+            self.ct = Context.get()
         else:
-            cls.ct = context
+            self.ct = context
 
 
 class BoundaryCondition():
