@@ -10,12 +10,17 @@ class BC_Base():
     """
     Generic class regrouping boundary conditions
     """
-    def __init__(self, shape=None, name=None, b_or=None, b_i=0):
+    def __init__(self, shape=None, name=None, b_or=None, b_i=0, nd=None):
         self.Shape = shape
         self.name = name
         self.BC_type = 'None'
+        if shape is not None:
+          self.nd = self.Shape.Domain.nd
+        elif nd is not None:
+            self.nd = nd
+        else:
+            assert nd is not None, 'Shape or nd must be passed to BC'
         if b_or is not None:
-            print(b_or)
             self._b_or = b_or[b_i]  # array of orientation of all boundaries of shape
 
     # @staticmethod
