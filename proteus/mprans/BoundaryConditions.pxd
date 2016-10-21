@@ -109,7 +109,7 @@ cdef class RelaxationZone:
                    u=cython.double[3], o1=double, o2=double, o3=double)
     cdef double[:] __cpp_calculate_vel_wave(self, double* x, double t)
     cdef double[:] __cpp_calculate_vel_zero(self, double* x, double t)
-    cdef double calculate_phi(self, double[3] x)
+    cdef double calculate_phi(self, double* x)
     @cython.locals(d1=double, d2=double, d3=double, phi=double,
                    o1=double, o2=double, o3=double)
     cdef double __cpp_calculate_phi_solid(self, double[3] x)
@@ -123,8 +123,8 @@ cdef class RelaxationZoneWaveGenerator:
         dict zones  # zones dictionary
         object model  # model attached to zone
         object ar  #
-    cpdef RelaxationZoneWaveGenerator attachModel(self, dict, int)  # needed
-    cpdef void attachAuxiliaryVariables(self, dict)  # needed
+    # cpdef RelaxationZoneWaveGenerator attachModel(self, dict, int)  # needed
+    # cpdef void attachAuxiliaryVariables(self, dict)  # needed
     @cython.locals(zones=np.ndarray)
     cpdef void calculate_init(self)
     cpdef void calculate(self)
@@ -152,13 +152,14 @@ cdef class __cppClass_WavesCharacteristics:
         object WT
     @cython.locals(phi=double, waterSpeed=double_memview1,
                    H=double)
-    cdef double[:]  __cpp_calculate_velocity(self, double[3] x, double t)
-    @cython.locals(_b_or=double_memview1, ux=double_memview1)
-    cdef double __cpp_calculate_pressure(self, double[3] x, double t)
+    cdef double[:]  __cpp_calculate_velocity(self, double* x, double t)
+    @cython.locals(ux=double_memview1, b0=double, b1=double, b2=double, u0=double,
+                   u1=double, u2=double)
+    cdef double __cpp_calculate_pressure(self, double* x, double t)
     @cython.locals(level=double)
-    cdef double __cpp_calculate_phi(self, double[3] x, double t)
+    cdef double __cpp_calculate_phi(self, double* x, double t)
     @cython.locals(phi=double, H=double)
-    cdef double __cpp_calculate_vof(self, double[3] x, double t)
+    cdef double __cpp_calculate_vof(self, double* x, double t)
     @cython.locals(H=double)
     cdef double __cpp_calculate_smoothing_H(self, double phi)
 
