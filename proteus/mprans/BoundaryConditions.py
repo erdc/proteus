@@ -43,9 +43,12 @@ class BC_RANS(BC_Base):
         self.hx_dirichlet = BoundaryCondition()
         self.hy_dirichlet = BoundaryCondition()
         self.hz_dirichlet = BoundaryCondition()
-        self.u_stress = 0.
-        self.v_stress = 0.
-        self.w_stress = 0.
+        self.u_stress = BoundaryCondition()
+        self.v_stress = BoundaryCondition()
+        self.w_stress = BoundaryCondition()
+        self.u_stress.uOfXT = 0.
+        self.v_stress.uOfXT = 0.
+        self.w_stress.uOfXT = 0.
 
     def reset(self):
         """
@@ -86,16 +89,16 @@ class BC_RANS(BC_Base):
         self.w_diffusive.setConstantBC(0.)
 
     def setTank(self):
-        b_or = self._b_or[self._b_i]
+        b_or = self._b_or
         if b_or[0] == 1 or b_or[0] == -1:
             self.hx_dirichlet.setConstantBC(0.)
-            self.u_stress = None
+            self.u_stress.uOfXT = None
         elif b_or[1] == 1 or b_or[1] == -1:
             self.hy_dirichlet.setConstantBC(0.)
-            self.v_stress = None
+            self.v_stress.uOfXT = None
         elif len(b_or) > 2 and (b_or[2] == 1 or b_or[2] == -1):
             self.hz_dirichlet.setConstantBC(0.)
-            self.w_stress = None
+            self.w_stress.uOfXT = None
 
     def setFixedNodes(self):
         """
@@ -104,9 +107,9 @@ class BC_RANS(BC_Base):
         self.hx_dirichlet.setConstantBC(0.)
         self.hy_dirichlet.setConstantBC(0.)
         self.hz_dirichlet.setConstantBC(0.)
-        self.u_stress = 0
-        self.v_stress = 0
-        self.w_stress = 0
+        self.u_stress.uOfXT = 0
+        self.v_stress.uOfXT = 0
+        self.w_stress.uOfXT = 0
 
     def setNoSlip(self):
         """
@@ -154,7 +157,7 @@ class BC_RANS(BC_Base):
         """
         self.BC_type = 'OpenAir'
         if orientation is None and self._b_or is not None:
-            orientation = self._b_or[self._b_i]
+            orientation = self._b_or
         self.reset()
         self.p_dirichlet.setConstantBC(0.)
         if self.b_or[0] == 1. or self.b_or[0] == -1.:
@@ -213,10 +216,10 @@ class BC_RANS(BC_Base):
         x_0[0] = x[0]-self.body_python_last_pos[0]
         x_0[1] = x[1]-self.body_python_last_pos[1]
         x_0[2] = x[2]-self.body_python_last_pos[2]
-        new_x_0 = np.dot(x_0, self.rot_matrix)
-        hx[0] = new_x_0[0]-x_0[0]+self.h[0]
-        hx[1] = new_x_0[1]-x_0[1]+self.h[1]
-        hx[2] = new_x_0[2]-x_0[2]+self.h[2]
+        new_x_0 = np.dot(x_0, self.body_python_rot_matrix)
+        hx[0] = new_x_0[0]-x_0[0]+self.body_python_h[0]
+        hx[1] = new_x_0[1]-x_0[1]+self.body_python_h[1]
+        hx[2] = new_x_0[2]-x_0[2]+self.body_python_h[2]
         return hx
 
     def __cpp_MoveMesh_hx(self, x, t):
@@ -256,30 +259,43 @@ class BC_RANS(BC_Base):
         self.reset()
         if vert_axis is None:
             vert_axis = self.nd-1
-        self.waves = __cppClass_WavesCharacteristics(wave, vert_axis)
-        self.wind_speed = wind_speed
+        self.waves = __cppClass_WavesCharacteristics(wave, vert_axis, b_or=self._b_or, wind_speed=wind_speed)
         self.u_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(x, t)
         self.v_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(x, t)
         self.w_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
         self.vof_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
-        self.p_advective.uOfXT = lambda x, t: self.waves.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
+        self.p_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
 
     def __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, x, t):
         cython.declare(xx=cython.double[3])
-        xx = __x_to_cpp(x)
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
         return self.waves.__cpp_calculate_velocity(xx, t)[0]
     def __cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(self, x, t):
         cython.declare(xx=cython.double[3])
-        xx = __x_to_cpp(x)
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
         return self.waves.__cpp_calculate_velocity(xx, t)[1]
     def __cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(self, x, t):
         cython.declare(xx=cython.double[3])
-        xx = __x_to_cpp(x)
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
         return self.waves.__cpp_calculate_velocity(xx, t)[2]
     def __cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(self, x, t):
         cython.declare(xx=cython.double[3])
-        xx = __x_to_cpp(x)
-        return self.waves.__cpp_calculate_velocity(xx, t)[2]
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        return self.waves.__cpp_calculate_pressure(xx, t)
+    def __cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(self, x, t):
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        return self.waves.__cpp_calculate_vof(xx, t)
 
     # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
     def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=None, air=1.,
@@ -583,15 +599,24 @@ class RelaxationZoneWaveGenerator():
             m.q['velocity_solid'] = q_velocity_solid
 
 class __cppClass_WavesCharacteristics:
-    def __init__(self, waves, vert_axis, center=None, orientation=None):
+    def __init__(self, waves, vert_axis, center=None, orientation=None, b_or=None, wind_speed=None):
         self.WT = waves  # wavetools wave
         self.vert_axis = vert_axis
         self.zero_vel = np.zeros(3)
+        self.center = center
+        self.orientation = orientation
+        self._b_or = b_or
+        if wind_speed is None:
+            self.wind_speed = self.zero_vel
+        else:
+            self.wind_speed = wind_speed
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
     @cython.initializedcheck(False)
     def  __cpp_calculate_velocity(self, x, t):
+        cython.declare(xx=cython.double[3])
+        cython.declare(u=cython.double[3])
         # hack for passing x to python object waves
         # to change when WaveTools is cimport
         xx[0] = x[0]
@@ -600,6 +625,7 @@ class __cppClass_WavesCharacteristics:
         waveHeight = self.WT.mwl+self.WT.eta(xx, t)
         wavePhi = x[self.vert_axis]-waveHeight
         if wavePhi <= 0:
+            H = 0.
             waterSpeed = self.WT.u(xx, t)
         # elif wavePhi > 0 and wavePhi < 0.5*self.ecH*self.he:
         #     x_max[0] = x[0]
@@ -608,12 +634,13 @@ class __cppClass_WavesCharacteristics:
         #     x_max[self.vert_axis] = waveHeight
         #     waterSpeed = self.waves.u(x_max, t)
         else:
+            H = 1.
             waterSpeed = self.zero_vel
         # H = smoothedHeaviside(0.5*self.ecH*self.he, wavePhi-0.5*self.ecH*self.he)
-        # u[0] = H*self.wind_speed[0] + (1-H)*waterSpeed[0]
-        # u[1] = H*self.wind_speed[1] + (1-H)*waterSpeed[1]
-        # u[2] = H*self.wind_speed[2] + (1-H)*waterSpeed[2]
-        return waterSpeed
+        u[0] = H*self.wind_speed[0] + (1-H)*waterSpeed[0]
+        u[1] = H*self.wind_speed[1] + (1-H)*waterSpeed[1]
+        u[2] = H*self.wind_speed[2] + (1-H)*waterSpeed[2]
+        return u
 
     @cython.boundscheck(False)
     @cython.wraparound(False)
@@ -639,14 +666,28 @@ class __cppClass_WavesCharacteristics:
         # This is the normal velocity, based on the outwards boundary
         # orientation b_or
         # needs to be equal to -ux_dirichlet
-        b_or = self._b_or[self._b_i]
+        b_or = self._b_or
         ux = self.__cpp_calculate_velocity(x, t)
         return b_or[0]*ux[0]+b_or[1]*ux[1]+b_or[2]*ux[2]
+
+    def __cpp_calculate_vof(self, x, t):
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        level = self.WT.mwl + self.WT.eta(xx,t)
+        # H = smoothedHeaviside(self.ecH*self.he,x[self.vert_axis]-level)
+        if x[self.vert_axis] > level:
+            return 1.
+        if x[self.vert_axis] < level:
+            return 0.
+        # return H*vof_air+(1-H)*vof_water
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.initializedcheck(False)
 def __x_to_cpp(x):
+    cython.declare(xx=double[3])
     xx[0] = x[0]
     xx[1] = x[1]
     xx[2] = x[2]

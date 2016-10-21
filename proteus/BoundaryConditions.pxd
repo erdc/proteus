@@ -7,9 +7,9 @@ cdef class BC_Base:
         str name
         str BC_type
         double[:] _b_or
-        int _b_i
-    cpdef void newGlobalBC(BC_Base cls, str name, object default_value)
-    cpdef void getContext(BC_Base cls, object context=*)
+        object ct
+    # cpdef void newGlobalBC(BC_Base cls, str name, object default_value)
+    # cpdef void getContext(BC_Base cls, object context=*)
 
 ctypedef double (*cpp_uOfXT) (BoundaryCondition, double[:], double)
 cdef class BoundaryCondition:
