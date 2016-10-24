@@ -78,7 +78,6 @@ namespace proteus
       {
 
 	int ii =0;
-	double HH = 0.;
 	double om = 0.;
 	double kdir[3] = {0.,0.,0.};
 	double phi = 0.;
