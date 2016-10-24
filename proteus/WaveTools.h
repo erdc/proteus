@@ -45,10 +45,11 @@ namespace proteus
  
 //=======================================================LINEAR - USE above directly================================================================
 
-/*
+
 //---------------------------------------------------------NONLINEAR FENTON-------------------------------------------------------------------------
 
-      inline double etaFenton(double x[nDim], double t, double kDir[nDim], double kAbs, double omega, double phi, double amplitude, int Nf, double Ycoeff[Nf])
+      inline double etaFenton(double x[nDim], double t, double kDir[nDim], double kAbs, double omega, 
+			      double phi0, double amplitude, int Nf, double* Ycoeff)
 
 
       {
@@ -56,43 +57,61 @@ namespace proteus
         int ii =0;
 	double HH = 0.;
 	double om = 0.;
-	double[3] kw = [0.,0.,0.];
+	double kw[3] = {0.,0.,0.};
 	double phi = 0.;
 
         for (int nn=0; nn<Nf; nn++)
 	  {
             ii+=1;
 	    om = ii*omega;
-	    kw = [ii*kDir[0], ii*kDir[1], ii*kDir[2]];
+	    kw = {ii*kDir[0], ii*kDir[1], ii*kDir[2]};
 	    phi = ii*phi0;
-	    HH= eta_mode(xi,t,kw,om,phi,Ycoeff[nf]);
+	    HH= HH + eta_mode(x,t,kw,om,phi,Ycoeff[nn]);
 	  }
-        return HH/k;
+        return HH/kAbs;
+      }
+
+      inline double* uFenton(double x[nDim],double t,double kDir[nDim],double kAbs,double omega,double phi0,double amplitude,
+			    double mwl, double depth, double gAbs, int Nf, double* Bcoeff ,double mV[nDim], double waveDir[nDim], double vDir[nDim] )
+
+
+      {
+
+	int ii =0;
+	double HH = 0.;
+	double om = 0.;
+	double kdir[3] = {0.,0.,0.};
+	double phi = 0.;
+	double kmode = 0.;
+	double amp = 0.;
+	double Ufenton[3] = {0.,0.,0.};
+	double* Uf;
+	  
+        for (int nn=0; nn<Nf; nn++)
+	  {
+	    ii+=1;
+	    om = ii*omega; 
+	    kdir = {ii*kDir[0], ii*kDir[1], ii*kDir[2]};
+	    kmode = ii*kAbs;
+	    phi = ii*phi0;
+            amp = tanh(kmode*depth)*sqrt(gAbs/kAbs)*Bcoeff[nn]/omega;
+	    Uf  =  vel_mode(x, t ,kdir, kmode, om, phi, amp, mwl, depth, waveDir, vDir);
+	    for ( int nn = 0; nn<3; nn++)
+	      {
+		Ufenton[nn] += Uf[nn];
 	      }
-	      inline double uFenton(double x[nDim],double t,double kDir[nDim],double kAbs,double omega,double phi,double amplitude,
-				    int Nf, double Bcoeff[Nf], double mwl, double depth, double)
+
+	  }
+	for ( int nn = 0; nn<3; nn++)
+	  {
+	    Ufenton[nn] = Ufenton[nn]+mV[nn];
+	  }
+        return Ufenton;
+	  
+      }
 
 
-
-
-        int ii =0
-        double HH = 0.
-        double om = 0.
-        double[3] kw = [0.,0.,0.]
-        double phi = 0.
-
-        for nn in range(N):
-            ii+=1
-            om = ii*omega
-            kw = [ii*kDir[0], ii*kDir[1], ii*kDir[2]]
-            phi = ii*phi0
-            HH= eta_mode(xi,t,kw,om,phi,Ycoeff[nf])
-        return HH/k
-
-	      
-*/
-
-
+      
  };
 
 

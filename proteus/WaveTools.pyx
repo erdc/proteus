@@ -55,6 +55,9 @@ cdef extern from "WaveTools.h" namespace "proteus":
         cppWaveGen()
         double eta_mode(double* x, double t, double* kDir, double omega, double phi, double amplitude)
         double* vel_mode(double* x, double t, double* kDir, double kAbs, double omega, double phi, double amplitude, double mwl, double depth, double* waveDir, double* vDir)
+        double etaFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, int Nf, double* Ycoeff)
+        double* uFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, double mwl, double depth,
+                       double gAbs, int Nf, double* Bcoeff, double* mV, double * waveDir, double* vDir)
 
 cdef class WaveGen:
     cdef cppWaveGen* thisptr
@@ -70,6 +73,19 @@ cdef class WaveGen:
         U[1] = cU[1]
         U[2] = cU[2]
         return U
+    def etaFenton(self, np.ndarray x, t, np.ndarray kDir, kAbs,  omega,  phi0,  amplitude, Nf, np.ndarray Ycoeff):
+        return self.thisptr.etaFenton(<double*> x.data, t, <double*> kDir.data, kAbs,  omega,  phi0,  amplitude, Nf, <double*> Ycoeff.data)
+    def uFenton(self, np.ndarray x, t, np.ndarray kDir,  kAbs, omega,  phi0,  amplitude, 
+                mwl,  depth, gAbs,  Nf, np.ndarray Bcoeff, np.ndarray mV, np.ndarray waveDir, np.ndarray vDir):
+        U = np.zeros(3,"d")
+        cdef double* cU = self.thisptr.uFenton(<double*> x.data,  t, <double*> kDir.data,  kAbs,  omega,  phi0,  amplitude, 
+                   mwl,  depth, gAbs,  Nf,< double*> Bcoeff.data, <double*> mV.data, <double *> waveDir.data, <double*> vDir.data)
+
+        U[0] = cU[0]
+        U[1] = cU[1]
+        U[2] = cU[2]
+        return U
+
 
 def loadExistingFunction(funcName, validFunctions):
     """Checks if a function name is known function and returns it
@@ -754,12 +770,12 @@ class MonochromaticWaves:
 
         """
 
-        HH = 0.
-        ii =0.
-        for Y in self.Ycoeff:
-            ii+=1
-            HH+=eta_mode(x,t,ii*self.kDir,ii*self.omega,ii*self.phi0,Y)
-        return HH/self.k
+        cdef np.ndarray xi = np.array(x)
+ 
+        cdef np.ndarray kDir = self.kDir
+        cdef np.ndarray Ycoeff = self.Ycoeff
+
+        return self.WG.etaFenton(xi,t,kDir, self.k, self.omega,self.phi0,self.amplitude, self.Nf, Ycoeff)
 
 
     def uLinear(self, x, t):
@@ -803,17 +819,21 @@ class MonochromaticWaves:
             Velocity vector as 1D array
 
         """
+        cdef np.ndarray xi = np.array(x)
+ 
+        cdef np.ndarray kDir = self.kDir
 
-        Ufenton = self.meanVelocity.copy()
-        ii = 0
-        for B in self.Bcoeff:
-            ii+=1
-            wmode = ii*self.omega
-            kmode = ii*self.k
-            kdir = self.waveDir*kmode
-            amp = tanh(kmode*self.depth)*sqrt(self.gAbs/self.k)*B/self.omega
-            Ufenton+= vel_mode(x,t,kdir,kmode,wmode,ii*self.phi0,amp,self.mwl,self.depth,self.vDir)
-        return Ufenton # + self.meanVelocity[comp]
+        cdef np.ndarray Bcoeff= self.Bcoeff
+        
+        cdef np.ndarray mV = self.meanVelocity
+
+        cdef np.ndarray waveDir = self.waveDir
+
+        cdef np.ndarray vDir = self.vDir
+
+        
+        return self.WG.uFenton(xi, t, kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, Bcoeff, mV,waveDir,vDir)
+
     
 '''class RandomWaves:
     """
