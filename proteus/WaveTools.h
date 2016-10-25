@@ -32,13 +32,12 @@ namespace proteus
       double UH=amplitude*omega*cosh(kAbs*(Z + depth))*cos( phase )/sinh(kAbs*depth);
       double UV=amplitude*omega*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth);
      //Setting wave direction
-      double* V = waveDir;
+      double VV[3] = {0.,0.,0.};
       for(int ii=0; ii<nDim ; ii++)
 	  {
-	    V[ii] = UH*waveDir[ii] + UV*vDir[ii] ;
+	    VV[ii] = UH*waveDir[ii] + UV*vDir[ii] ;
 	  }
-      //Setting wave velocities
-      return V;
+      return VV;
       }
 
 
@@ -72,41 +71,48 @@ namespace proteus
       }
 
       inline double* uFenton(double x[nDim],double t,double kDir[nDim],double kAbs,double omega,double phi0,double amplitude,
-			    double mwl, double depth, double gAbs, int Nf, double* Bcoeff ,double mV[nDim], double waveDir[nDim], double vDir[nDim] )
+			    double mwl, double depth, double gAbs, int Nf, double* Bcoeff ,double* mV, double waveDir[nDim], double vDir[nDim] )
 
 
       {
 
 	int ii =0;
 	double om = 0.;
-	double kdir[3] = {0.,0.,0.};
+	double kdir1[3] = {0.,0.,0.};
 	double phi = 0.;
 	double kmode = 0.;
 	double amp = 0.;
-	double Ufenton[3] = {0.,0.,0.};
-	double* Uf;
-	  
+	double*  Ufenton;
+	double  Uf[3] = {0.,0.,0.};
+
+	
+	
         for (int nn=0; nn<Nf; nn++)
 	  {
-	    ii+=1;
+	    ii=nn+1;
 	    om = ii*omega; 
-	    kdir = {ii*kDir[0], ii*kDir[1], ii*kDir[2]};
 	    kmode = ii*kAbs;
+	    for ( int jj =0; jj<3; jj++)
+	      {
+		kdir1[jj] = ii*kDir[jj];
+	      }
 	    phi = ii*phi0;
             amp = tanh(kmode*depth)*sqrt(gAbs/kAbs)*Bcoeff[nn]/omega;
-	    Uf  =  vel_mode(x, t ,kdir, kmode, om, phi, amp, mwl, depth, waveDir, vDir);
-	    for ( int nn = 0; nn<3; nn++)
-	      {
-		Ufenton[nn] += Uf[nn];
-	      }
+	    Ufenton = vel_mode(x, t ,kdir1, kmode, om, phi, amp, mwl, depth, waveDir, vDir); 
+	    Uf[0] +=   Ufenton[0];
+	    Uf[1] +=  Ufenton[1];
+	    Uf[2] +=  Ufenton[2];
+	      
 
 	  }
-	for ( int nn = 0; nn<3; nn++)
+	
+	for ( int kk = 0; kk<3; kk++)
 	  {
-	    Ufenton[nn] = Ufenton[nn]+mV[nn];
-	  }
-        return Ufenton;
-	  
+	    Uf[kk] = Uf[kk]+mV[kk];
+	    }
+
+
+        return Uf;
       }
 
 
