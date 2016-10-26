@@ -3,7 +3,8 @@ from proteus.default_n import *
 from sw_hump_2d_p import *
 
 try_entropy_viscosity_stabilization = True
-timeIntegration = BackwardEuler_cfl
+timeIntegration = SSP33
+#timeIntegration = BackwardEuler_cfl
 stepController = Min_dt_controller
 runCFL=0.1
 rtol_u[0] = 1.0e-4
