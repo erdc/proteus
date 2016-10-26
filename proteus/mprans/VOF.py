@@ -713,8 +713,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('w',0)] = np.zeros((self.mesh.nElements_global,
                                         self.nQuadraturePoints_element,
                                         self.nDOF_test_element[0]),
-                                       'd') 
+                                       'd')
+            self.q[('w*dV_m',0)] = self.q[('w',0)].copy()
             self.u[0].femSpace.getBasisValues(self.elementQuadraturePoints, self.q[('w',0)])
+            cfemIntegrals.calculateWeightedShape(self.elementQuadratureWeights[('u',0)],
+                                                 self.q['abs(det(J))'],
+                                                 self.q[('w',0)],
+                                                 self.q[('w*dV_m',0)])
             #### GRADIENT OF TEST FUNCTIONS 
             self.q[('grad(w)',0)] = np.zeros((self.mesh.nElements_global,
                                               self.nQuadraturePoints_element,
@@ -758,6 +763,39 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #                                              self.q[('grad(w)',0)],
             #                                              self.q[('grad(w)*dV_f',0)])
             #
+
+            #
+            #lumped mass matrix
+            #
+            #assume a linear mass term
+            dm = np.ones(self.q[('u',0)].shape,'d')
+            elementMassMatrix = np.zeros((self.mesh.nElements_global,
+                                          self.nDOF_test_element[0],
+                                          self.nDOF_trial_element[0]),'d')
+            cfemIntegrals.updateMassJacobian_weak_lowmem(dm,
+                                                         self.q[('w',0)],
+                                                         self.q[('w*dV_m',0)],
+                                                         elementMassMatrix)
+            self.MC_a = nzval.copy()
+            self.MC_global = SparseMat(self.nFreeDOF_global[0],
+                                       self.nFreeDOF_global[0],
+                                       nnz,
+                                       self.MC_a,
+                                       colind,
+                                       rowptr)
+            cfemIntegrals.zeroJacobian_CSR(self.nnz, self.MC_global)
+            cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.csrRowIndeces[(0,0)],
+                                                                      self.csrColumnOffsets[(0,0)],
+                                                                      elementMassMatrix,
+                                                                      self.MC_global)
+            self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
+            for i in range(self.nFreeDOF_global[0]):
+                self.ML[i] = self.MC_a[rowptr[i]:rowptr[i+1]].sum()
+            np.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
             for d in range(self.nSpace_global): #spatial dimensions
                 #C matrices
                 self.cterm[d] = np.zeros((self.mesh.nElements_global,
