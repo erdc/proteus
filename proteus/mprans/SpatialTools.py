@@ -66,7 +66,7 @@ class ShapeRANS(Shape):
         self.auxiliaryVariables = {}  # list of auxvar attached to shape
         self.It = None  # inertia tensor
 
-    def _attachAuxiliaryVariable(self, key):
+    def _attachAuxiliaryVariable(self, key, gauge=None):
         """
         Attaches an auxiliary variable to the auxiliaryVariables dictionary of
         the shape (used in buildDomain function)
@@ -76,6 +76,8 @@ class ShapeRANS(Shape):
         key: string
             Dictionary key defining the auxiliaryVariable to attach
 
+        gauge: Gauges
+
         Notes
         -----
         This function is called automatically when using other functions to set
@@ -84,8 +86,72 @@ class ShapeRANS(Shape):
         if key not in self.auxiliaryVariables:
             if key == 'RigidBody':
                 self.auxiliaryVariables[key] = True
-            if key == 'RelaxZones':
+            elif key == 'RelaxZones':
                 self.auxiliaryVariables[key] = self.zones
+            elif str(key).startswith('Gauge_'):
+                self.auxiliaryVariables[key] = [gauge]
+            else:
+                logEvent("auxiliaryVariable key: "
+                         "{key} not recognized.".format(key=str(key)), level=1)
+        elif str(key).startswith('Gauge_'):
+            if gauge not in self.auxiliaryVariables[key]:
+                self.auxiliaryVariables[key] += [gauge]
+            else:
+                logEvent(
+                    "Attempted to put identical "
+                    "gauge at key: {key}".format(key=str(key)), level=1)
+        else:
+            logEvent("Key {key} is already attached.".format(key=str(key)),
+                     level=1)
+
+    def attachPointGauges(self, model_key, gauges, activeTime=None,
+                          sampleRate=0,
+                          fileName='point_gauges.csv'):
+        """Attaches Point Gauges (in the Proteus/Gauges.py style) to the shape.
+
+        Parameters
+        ----------
+        model_key: string
+            Label of the model to use as a key for selecting particular gauges.
+        See proteus Gauges.py PointGauges class for the remaining parameters.
+        """
+        new_gauges = Gauges.PointGauges(gauges, activeTime, sampleRate,
+                                        fileName)
+        self._attachAuxiliaryVariable('Gauge_' + model_key,
+                                      gauge=new_gauges)
+
+    def attachLineGauges(self, model_key, gauges, activeTime=None,
+                         sampleRate=0,
+                         fileName='line_gauges.csv'):
+        """Attaches Line Gauges (in the Proteus/Gauges.py style) to the shape.
+
+        Parameters
+        ----------
+        model_key: string
+            Label of the model to use as a key for selecting particular gauges.
+        See proteus Gauges.py LineGauges class for the remaining parameters.
+        """
+        new_gauges = Gauges.LineGauges(gauges, activeTime, sampleRate,
+                                       fileName)
+        self._attachAuxiliaryVariable('Gauge_' + model_key,
+                                      gauge=new_gauges)
+
+    def attachLineIntegralGauges(self, model_key, gauges, activeTime=None,
+                                 sampleRate=0,
+                                 fileName='line_integral_gauges.csv'):
+        """Attaches Line Integral Gauges (in the Proteus/Gauges.py style).
+
+        Parameters
+        ----------
+        model_key: string
+            Label of the model to use as a key for selecting particular gauges.
+        See proteus Gauges.py LineIntegralGauges class for the remaining parameters.
+        """
+        new_gauges = Gauges.LineIntegralGauges(gauges, activeTime,
+                                               sampleRate, fileName)
+        self._attachAuxiliaryVariable('Gauge_' + model_key,
+                                      gauge=new_gauges)
+
 
     def setRigidBody(self, holes=None):
         """
@@ -1143,6 +1209,688 @@ class Tank2D(ShapeRANS):
             self.BC['x+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
                                                            wind_speed=wind_speed)
 
+#[temp] no tests yet!
+class TankWithObstacles2D(Tank2D):
+    """
+    Class to create a 2D rectangular tank with obstacles built out of any wall.
+
+    An obstacle is defined by a contiguous list of points which start and end
+    on the walls or corners of the tank.
+
+    This also covers special boundary conditions.  To tag a segment with a
+    unique boundary tag, add the starting vertex (in the counterclockwise
+    format the shape is generated in) of the segment as a value in a dictionary
+    element keyed to the name of the boundary tag.
+
+    (!) Warning: If each of the four corners of the rectangular tank is inside
+    an obstacle or a vertex for an obstacle, then the tank's region is defined
+    in a pseudorandom manner, which may make it unreliable when dealing with
+    holes caused by other shapes.
+    (!) Warning: Obstacle boundary tags are keyed to whichever edge they started
+    from.  If this is undesirable, it may be manually overriden by applying
+    special boundary conditions to affected segments.
+
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    dim: Optional[array_like]
+        Dimensions of the cuboid.
+    obstacles: Optional[array_like]
+        A list of lists of (x,y) coordinates.  Each (x,y) coordinate is a length
+        and height relative to the x-,y- corner of the tank.  Each list of
+        coordinates is an obstacle defined by points connected in the order of
+        their index.  The list of lists gives all such obstacles in a
+        counterclockwise manner of which they should be appended, starting from
+        the (x-,y-) corner.
+    special_boundaries: Optional[mapping]
+        A dictionary of lists of vertices keyed to boundary names. The vertices
+        listed will be given the boundary name they are keyed to, overriding
+        any other designation they would be given.
+        If this is a distinct boundary name, the segment starting from the vertex
+        will be assigned the same boundary tag.
+    full_circle: Optional[bool]
+        A boolean tag to check if the final obstacle ends on the same edge that
+        the first obstacle starts on.  Default is False.
+    coords: Optional[array_like]
+        Coordinates of the centroid of the shape.
+    from_0: Optional[bool]
+        If True (default), the tank extends from the origin to positive x, y, z
+    """
+    def __init__(self, domain, dim=(0., 0.),
+                 obstacles = None, special_boundaries = None,
+                 full_circle = False,
+                 coords=None, from_0=True):
+        if obstacles:
+            self.obstacles = obstacles
+        else:
+            self.obstacles = []
+
+        self.special_boundaries = []
+        self.special_BC_vertices = []
+        self.full_circle = full_circle
+
+        self.spongeLayers = {'x-': None,
+                             'x+': None}
+
+        if special_boundaries:
+            for key in special_boundaries.keys():
+                self.special_boundaries += [key for v in special_boundaries[key]]
+                self.special_BC_vertices += special_boundaries[key]
+
+        self.corners = {'x-y-': False, 'x+y-': False,
+                        'x+y+': False, 'x-y+': False}
+
+        super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
+
+    def _setupBCs(self):
+        super(TankWithObstacles2D, self)._setupBCs()
+        for boundary in self.special_boundaries:
+            if boundary not in self.boundaryTags.keys():
+                self.boundaryTags[boundary] = len(self.boundaryTags) + 1
+                self.BC[boundary] = self.BC_class(shape=self, name=boundary)
+                self.BC_list += [self.BC[boundary]]
+
+    def _resetEdgesFromVertices(self, vertices):
+        """
+        Resets self.x0, self.x1, self.y0, self.y1 based on the actual shape.
+
+        In particular, they will form a bounding box form around the shape -
+        the furthest points in x and y dimensions, both high and low.
+
+        Parameters
+        ----------
+        vertices: array_like
+        """
+        sorted_vertices = sorted(vertices, key=lambda vertex: vertex[1])
+        self.y0 = sorted_vertices[0][1]
+        self.y1 = sorted_vertices[-1][1]
+        sorted_vertices = sorted(vertices, key=lambda vertex: vertex[0])
+        self.x0 = sorted_vertices[0][0]
+        self.x1 = sorted_vertices[-1][0]
+
+    def _findSpongeLayerCorners(self, vertices):
+        """
+        Finds the corners for horizontal (x-, x+) sponge layers.
+
+        Parameters
+        ----------
+        vertices: array_like
+        """
+        self._resetEdgesFromVertices(vertices)
+
+        potential_x_n_corners = [vertex for vertex in vertices
+                                 if np.isclose(vertex[0], self.x0)]
+        potential_x_p_corners = [vertex for vertex in vertices
+                                 if np.isclose(vertex[0], self.x1)]
+
+        potential_x_n_corners.sort(key=lambda vertex: vertex[1])
+        potential_x_p_corners.sort(key=lambda vertex: vertex[1])
+
+        self.x0y0 = potential_x_n_corners[0]
+        self.x0y1 = potential_x_n_corners[-1]
+        self.x1y0 = potential_x_p_corners[0]
+        self.x1y1 = potential_x_p_corners[-1]
+
+    def _constructVertices(self):
+
+        def getClockwiseOrder(first_point):
+            clockwise_ordering = ('x-y-', 'y-', 'x+y-', 'x+',
+                                  'x+y+', 'y+', 'x-y+', 'x-')
+            index = clockwise_ordering.index(first_point)
+            return clockwise_ordering[index:] + clockwise_ordering[:index]
+
+        def findLocation(vertex):
+            """
+            Given an (x,y) coordinate gives a label associated to corner or edge
+            """
+            dim = [self.x1 - self.x0, self.y1 - self.y0]
+            if np.isclose(vertex[0],0) and np.isclose(vertex[1],0):
+                return 'x-y-'
+            elif np.isclose(vertex[0],dim[0]) and np.isclose(vertex[1],dim[1]):
+                return 'x+y+'
+            elif np.isclose(vertex[0],0) and np.isclose(vertex[1],dim[1]):
+                return 'x-y+'
+            elif np.isclose(vertex[0],dim[0]) and np.isclose(vertex[1],0):
+                return 'x+y-'
+            elif np.isclose(vertex[0],0):
+                return 'x-'
+            elif np.isclose(vertex[0],dim[0]):
+                return 'x+'
+            elif np.isclose(vertex[1],0):
+                return 'y-'
+            elif np.isclose(vertex[1],dim[1]):
+                return 'y+'
+            else:
+                raise ValueError("Point " + str(vertex) + " does not seem to"
+                                 "be on a tank wall.")
+
+        def checkClosure(start_point, end_point):
+            if start_point == end_point:
+                return True
+
+        def addCorner(corner_flag):
+            if corner_flag == 'x-y-':
+                corner = [[self.x0, self.y0]]
+            elif corner_flag == 'x+y-':
+                corner = [[self.x1, self.y0]]
+            elif corner_flag == 'x+y+':
+                corner = [[self.x1, self.y1]]
+            elif corner_flag == 'x-y+':
+                corner = [[self.x0, self.y1]]
+            # vertex flags
+            if corner_flag in ['x-y-', 'x+y-']:
+                corner_tag = [self.boundaryTags['y-']]
+            else:
+                corner_tag = [self.boundaryTags['y+']]
+
+            return corner, corner_tag
+
+        def addIntermediateCorners(first, last):
+            """
+            Returns corner vertices (and flags) in between two segments
+            """
+            ordering = getClockwiseOrder(first)
+            corners = [x for x in ordering
+                       if x in self.corners.keys()
+                       and ordering.index(x) < ordering.index(last)
+                       ]
+            corner_vertices = []
+            corner_flags = []
+
+            for corner in corners:
+                self.corners[corner] = True
+                vertex, flag = addCorner(corner)
+                corner_vertices += vertex
+                corner_flags += flag
+
+            return corner_vertices, corner_flags
+
+        def addRemainingCorners(first, last):
+            if first == last:
+                if self.full_circle:
+                    return []
+                else:
+                    return addAllCorners(first)
+            else:
+                return addIntermediateCorners(first, last)
+
+        def addAllCorners(starting_point):
+            """
+            Returns all corners and flags.
+            """
+            corner_vertices = []
+            corner_flags = []
+
+            ordering = getClockwiseOrder(starting_point)
+
+            for potential_corner in ordering:
+                if potential_corner in self.corners.keys():
+                    self.corners[potential_corner] = True
+                    vertex, flag = addCorner(potential_corner)
+                    corner_vertices += vertex
+                    corner_flags += flag
+
+            return corner_vertices, corner_flags
+
+        def addSpongeVertices():
+            sponge_vertices = []
+            sponge_vertexFlags = []
+            if self.spongeLayers['x-']:
+                sponge_vertices += [[v[0] - self.spongeLayers['x-'], v[1]]
+                                    for v in [self.x0y0, self.x0y1]]
+                sponge_vertexFlags += [self.boundaryTags['y-'],
+                                       self.boundaryTags['y+']]
+            if self.spongeLayers['x+']:
+                sponge_vertices += [[v[0] + self.spongeLayers['x+'], v[1]]
+                                    for v in [self.x1y0, self.x1y1]]
+                sponge_vertexFlags += [self.boundaryTags['y-'],
+                                       self.boundaryTags['y+']]
+            return sponge_vertices, sponge_vertexFlags
+
+        #--------------------------------------------------------#
+        vertices = []
+        vertexFlags = []
+        former_end = None
+        first_start = None
+
+        for obstacle in self.obstacles:
+            start = findLocation(obstacle[0])
+            end = findLocation(obstacle[-1])
+
+            if start == end and checkClosure(obstacle[0],obstacle[-1]):
+                raise ValueError("Obstacles must be open (start and end"
+                                 " vertices must be distinct)")
+            if start == former_end and checkClosure(obstacle[0], vertices[-1]):
+                vertices.pop()
+                vertexFlags.pop()
+
+            # ---- In-Between Corner Vertices ---- #
+            if former_end is not None:
+                new_vertices, new_flags = addIntermediateCorners(former_end, start)
+                vertices += new_vertices
+                vertexFlags += new_flags
+
+            # ---- Obstacle ---- #
+            vertices += obstacle
+            vertexFlags += [self.boundaryTags[start]
+                            for i in range(len(obstacle))]
+
+            # ---- Paperwork ---- #
+            former_end = end
+            if first_start is None:
+                first_start = start
+
+        # ---- Remaining Corner Vertices ---- #
+        if first_start is not None:
+            new_vertices, new_flags = addRemainingCorners(former_end,
+                                                          first_start)
+        else:
+            new_vertices, new_flags = addAllCorners('x-')
+
+        vertices += new_vertices
+        vertexFlags += new_flags
+
+        # ---- Check for Special Conditions ---- #
+        for vertex in self.special_BC_vertices:
+            flag_index = vertices.index(vertex)
+            boundary_index = self.special_BC_vertices.index(vertex)
+            boundary_name = self.special_boundaries[boundary_index]
+            vertexFlags[flag_index] = self.boundaryTags[boundary_name]
+
+        # ---- Adjustments for Sponge Zones ---- #
+        self._findSpongeLayerCorners(vertices=vertices)
+
+        # ---- Add Sponge Zone Vertices ---- #
+        new_vertices, new_flags = addSpongeVertices()
+        vertices += new_vertices
+        vertexFlags += new_flags
+
+        return vertices, vertexFlags
+
+    def _constructSegments(self, vertices, vertexFlags):
+        # VertexFlag --> SegmentFlag logic:
+        #
+        # if EITHER are x+  --> segment is x+
+        #                       UNLESS the other is x-  --> y+
+        # if EITHER are x-  --> segment is x-
+        #                       UNLESS the other is x+  --> y-
+        # if it STARTS y-   --> segment is y-
+        #                       UNLESS they are vertical --> x+
+        # if it STARTS y+   --> segment is y+
+        #                       UNLESS they are vertical --> x-
+        # if BOTH are ***   --> segment is ***
+        # (if two different *** are around, it takes the first)
+        segments = []
+        segmentFlags = []
+
+        on_sponge_edge = {'x-': False, 'x+': False}
+        sponge_edges_covered = {'x-': False, 'x+': False}
+
+        def checkSpongeStatus(start_index, end_index):
+            start_vertex = vertices[start_index]
+            if self.spongeLayers['x-']:
+                if not on_sponge_edge['x-']:
+                    if start_vertex in (self.x0y0, self.x0y1):
+                        on_sponge_edge['x-'] = True
+                elif not sponge_edges_covered['x-']:
+                    if start_vertex in (self.x0y0, self.x0y1):
+                        on_sponge_edge['x-'] = False
+                        sponge_edges_covered['x-'] = True
+                    else:
+                        vertexFlags[start_index] = self.boundaryTags['sponge']
+                else:
+                    pass
+
+            if self.spongeLayers['x+']:
+                if not on_sponge_edge['x+']:
+                    if start_vertex in (self.x1y0, self.x1y1):
+                        on_sponge_edge['x+'] = True
+                elif not sponge_edges_covered['x+']:
+                    if start_vertex in (self.x1y0, self.x1y1):
+                        on_sponge_edge['x+'] = False
+                        sponge_edges_covered['x+'] = True
+                    else:
+                        vertexFlags[start_index] = self.boundaryTags['sponge']
+                else:
+                    pass
+
+            end_vertex = vertices[end_index]
+            if on_sponge_edge['x-']:
+                if end_vertex not in (self.x0y0, self.x0y1):
+                    vertexFlags[end_index] = self.boundaryTags['sponge']
+            if on_sponge_edge['x+']:
+                if end_vertex not in (self.x1y0, self.x1y1):
+                    vertexFlags[end_index] = self.boundaryTags['sponge']
+
+
+        def getSegmentFlag(start, end):
+            if ((self.spongeLayers['x-'] and not sponge_edges_covered['x-']) or
+                (self.spongeLayers['x+'] and not sponge_edges_covered['x+'])):
+                checkSpongeStatus(start, end)
+
+            if on_sponge_edge['x-'] or on_sponge_edge['x+']:
+                return [self.boundaryTags['sponge'], ]
+
+            else:
+                if vertexFlags[start] == self.boundaryTags['x+']:
+                    if vertexFlags[end] == self.boundaryTags['x-']:
+                        return [self.boundaryTags['y+'], ]
+                    else:
+                        return [self.boundaryTags['x+'], ]
+
+                elif vertexFlags[start] == self.boundaryTags['x-']:
+                    if vertexFlags[end] == self.boundaryTags['x+']:
+                        return [self.boundaryTags['y-'], ]
+                    else:
+                        return [self.boundaryTags['x-'], ]
+
+                elif vertexFlags[end] == self.boundaryTags['x+']:
+                    if vertexFlags[start] in [self.boundaryTags['y-'],
+                                              self.boundaryTags['y+']]:
+                        return [self.boundaryTags['x+'], ]
+
+                elif vertexFlags[end] == self.boundaryTags['x-']:
+                    if vertexFlags[start] in [self.boundaryTags['y-'],
+                                              self.boundaryTags['y+']]:
+                        return [self.boundaryTags['x-'], ]
+
+                elif vertexFlags[start] == self.boundaryTags['y-']:
+                    if (vertexFlags[end] == self.boundaryTags['y+']
+                        and np.isclose(vertices[start][0], vertices[end][0])
+                        ):
+                        return [self.boundaryTags['x+'], ]
+                    else:
+                        return [self.boundaryTags['y-'], ]
+
+                elif vertexFlags[start] == self.boundaryTags['y+']:
+                    if (vertexFlags[end] == self.boundaryTags['y-']
+                        and np.isclose(vertices[start][0], vertices[end][0])
+                        ):
+                        return [self.boundaryTags['x-'], ]
+                    else:
+                        return [self.boundaryTags['y+'], ]
+
+                else:
+                    return [vertexFlags[start], ]
+
+        # ---- Initial Sponge Logic ---- #
+        sponge_vertex_count = 0
+
+        if self.spongeLayers['x-']:
+            sponge_vertex_count += 2
+        if self.spongeLayers['x+']:
+            sponge_vertex_count += 2
+
+        # ---- Build Main Segments ---- #
+        for i in range(len(vertices) - 1 - sponge_vertex_count):
+            segments += [[i, i + 1], ]
+            segmentFlags += getSegmentFlag(i, i + 1)
+        segments += [[len(vertices) - 1 - sponge_vertex_count, 0], ]
+        segmentFlags += getSegmentFlag(len(vertices) - 1 - sponge_vertex_count,
+                                       0)
+
+        # ---- Build Sponge Segments ---- #
+        if self.spongeLayers['x-']:
+            segments += [[vertices.index(self.x0y0),
+                          len(vertices) - sponge_vertex_count],
+                         [len(vertices) - sponge_vertex_count,
+                          len(vertices) - sponge_vertex_count + 1],
+                         [len(vertices) - sponge_vertex_count + 1,
+                          vertices.index(self.x0y1)]
+                         ]
+            segmentFlags += [self.boundaryTags['y-'],
+                             self.boundaryTags['x-'],
+                             self.boundaryTags['y+']]
+        if self.spongeLayers['x+']:
+            segments += [[vertices.index(self.x1y0), len(vertices) - 2],
+                         [len(vertices) - 2, len(vertices) - 1],
+                         [len(vertices) - 1, vertices.index(self.x1y1)]
+                         ]
+            segmentFlags += [self.boundaryTags['y-'],
+                             self.boundaryTags['x+'],
+                             self.boundaryTags['y+']]
+
+        return segments, segmentFlags
+
+    def _constructRegions(self, vertices, vertexFlags, segments, segmentFlags):
+        if True in self.corners.values():
+            regions = self._getCornerRegion()
+        else:
+            regions = self._getRandomRegion(vertices, segments)
+
+        ind_region = 1
+        regionFlags = [ind_region,]
+        self.regionIndice = {'tank': ind_region - 1}
+
+        sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
+        sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
+        sponge_x0 = self.x0y0[0]
+        sponge_x1 = self.x1y0[0]
+
+        if self.spongeLayers['x-']:
+            regions += [[sponge_x0 - 0.5 * self.spongeLayers['x-'],
+                         sponge_half_height_x0]]
+            ind_region += 1
+            regionFlags += [ind_region]
+            self.regionIndice['x-'] = ind_region - 1
+        if self.spongeLayers['x+']:
+            regions += [[sponge_x1 + 0.5 * self.spongeLayers['x+'],
+                         sponge_half_height_x1]]
+            ind_region += 1
+            regionFlags += [ind_region]
+            self.regionIndice['x+'] = ind_region - 1
+
+        return regions, regionFlags
+
+    def _findExtrema(self, points):
+        """
+        Return the extrema of a series of points in n dimensions in the form:
+        max(x1), max(x2), ... , max(xn), min(x1), ... , min(xn)
+        """
+        points = np.array(points)
+        return np.max(points,0).tolist() + np.min(points,0).tolist()
+
+    def _getCornerRegion(self):
+        eps = np.finfo(float).eps
+        if self.corners['x-y-']:
+            return [[self.x0 + eps, self.y0 + eps], ]
+        elif self.corners['x+y-']:
+            return [[self.x1 - eps, self.y0 + eps], ]
+        elif self.corners['x+y+']:
+            return [[self.x1 - eps, self.y1 - eps], ]
+        elif self.corners['x-y+']:
+            return [[self.x0 + eps, self.y1 - eps], ]
+
+    def _getRandomRegion(self, vertices, segments):
+        x_p, y_p, x_n, y_n = self._findExtrema(vertices)
+        if self.spongeLayers['x-']:
+            x_n += self.spongeLayers['x-']
+        if self.spongeLayers['x+']:
+            x_p -= self.spongeLayers['x+']
+
+        count = 0
+        allowed_tries = 100
+
+        while True:
+            count += 1
+            vertical_line = np.random.uniform(x_n, x_p)
+            if True in [np.isclose(vertical_line, vertex[0]) for vertex in
+                        vertices]:
+                continue
+
+            lowest_intersect = second_intersect = y_p
+
+            for segment in segments:
+                line_x0 = vertices[segment[0]][0]
+                line_y0 = vertices[segment[0]][1]
+                line_x1 = vertices[segment[1]][0]
+                line_y1 = vertices[segment[1]][1]
+                if (line_x0 < vertical_line < line_x1
+                    or line_x0 > vertical_line > line_x1):
+                    # (due to the strict inequality check and
+                    # our selection of vertical_line - x1 > x0 should be sure)
+                    intersection_height = line_y0 + (
+                        (line_y1 - line_y0)
+                        * (vertical_line - line_x0)
+                        / (line_x1 - line_x0)
+                    )
+                    if intersection_height < lowest_intersect:
+                        second_intersect = lowest_intersect
+                        lowest_intersect = intersection_height
+                    elif intersection_height < second_intersect:
+                        second_intersect = intersection_height
+
+            interior_point = 0.5 * (lowest_intersect + second_intersect)
+
+            if lowest_intersect < interior_point < second_intersect:
+                break
+            if count > allowed_tries:
+                ValueError(
+                    "Cannot find a proper interior point of the defined "
+                    "shape after " + str(count) + " tries.")
+
+        return [[vertical_line, interior_point], ]
+
+    def setAbsorptionZones(self, x_n=False, x_p=False, dragAlpha=0.5/1.005e-6,
+                           dragBeta=0., porosity=1.):
+        """
+        Sets regions (x+, x-) to absorption zones
+
+        Parameters
+        ----------
+        allSponge: bool
+            If True, all sponge layers are converted to absorption zones.
+        x_p: bool
+            If True, x+ region is converted to absorption zone.
+        x_n: bool
+            If True, x- region is converted to absorption zone.
+        dragAlpha: Optional[float]
+            Porous module parameter.
+        dragBeta: Optional[float]
+            Porous module parameter.
+        porosity: Optional[float]
+            Porous module parameter.
+        """
+        sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
+        sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
+        sponge_x0 = self.x0y0[0]
+        sponge_x1 = self.x1y0[0]
+
+        waves = None
+        wind_speed = (0., 0., 0.)
+        if x_n or x_p:
+            self._attachAuxiliaryVariable('RelaxZones')
+        if x_n is True:
+            center = [sponge_x0 - 0.5 * self.spongeLayers['x-'],
+                      sponge_half_height_x0]
+            ind = self.regionIndice['x-']
+            flag = self.regionFlags[ind]
+            epsFact_solid = self.spongeLayers['x-']/2.
+            orientation = [1., 0.]
+            self.zones[flag] = bc.RelaxationZone(shape=self,
+                                                 zone_type='absorption',
+                                                 orientation=orientation,
+                                                 center=center,
+                                                 waves=waves,
+                                                 wind_speed=wind_speed,
+                                                 epsFact_solid=epsFact_solid,
+                                                 dragAlpha=dragAlpha,
+                                                 dragBeta=dragBeta,
+                                                 porosity=porosity)
+        if x_p is True:
+            center = [sponge_x1 + 0.5 * self.spongeLayers['x+'],
+                      sponge_half_height_x1]
+            ind = self.regionIndice['x+']
+            flag = self.regionFlags[ind]
+            epsFact_solid = self.spongeLayers['x+']/2.
+            orientation = [-1., 0.]
+            self.zones[flag] = bc.RelaxationZone(shape=self,
+                                                 zone_type='absorption',
+                                                 orientation=orientation,
+                                                 center=center,
+                                                 waves=waves,
+                                                 wind_speed=wind_speed,
+                                                 epsFact_solid=epsFact_solid,
+                                                 dragAlpha=dragAlpha,
+                                                 dragBeta=dragBeta,
+                                                 porosity=porosity)
+
+    def setGenerationZones(self, waves=None, wind_speed=(0., 0., 0.),
+                           x_n=False, x_p=False,  dragAlpha=0.5/1.005e-6,
+                           dragBeta=0., porosity=1.):
+        """
+        Sets regions (x+, x-) to generation zones
+
+        Parameters
+        ----------
+        waves: proteus.WaveTools
+            Class instance of wave generated from proteus.WaveTools.
+        wind_speed: Optional[array_like]
+            Speed of wind in generation zone (default is (0., 0., 0.))
+        allSponge: bool
+            If True, all sponge layers are converted to generation zones.
+        x_p: bool
+            If True, x+ region is converted to generation zone.
+        x_n: bool
+            If True, x- region is converted to generation zone.
+        dragAlpha: Optional[float]
+            Porous module parameter.
+        dragBeta: Optional[float]
+            Porous module parameter.
+        porosity: Optional[float]
+            Porous module parameter.
+        """
+        sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
+        sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
+        sponge_x0 = self.x0y0[0]
+        sponge_x1 = self.x1y0[0]
+
+        waves = waves
+        wind_speed = wind_speed
+        if x_n or x_p:
+            self._attachAuxiliaryVariable('RelaxZones')
+        if x_n is True:
+
+            center = [sponge_x0 - 0.5 * self.spongeLayers['x-'],
+                      sponge_half_height_x0]
+            ind = self.regionIndice['x-']
+            flag = self.regionFlags[ind]
+            epsFact_solid = self.spongeLayers['x-']/2.
+            orientation = [1., 0.]
+            self.zones[flag] = bc.RelaxationZone(shape=self,
+                                                 zone_type='generation',
+                                                 orientation=orientation,
+                                                 center=center,
+                                                 waves=waves,
+                                                 wind_speed=wind_speed,
+                                                 epsFact_solid=epsFact_solid,
+                                                 dragAlpha=dragAlpha,
+                                                 dragBeta=dragBeta,
+                                                 porosity=porosity)
+            self.BC['x-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                           wind_speed=wind_speed)
+        if x_p is True:
+
+            center = [sponge_x1 + 0.5 * self.spongeLayers['x+'],
+                      sponge_half_height_x1]
+            ind = self.regionIndice['x+']
+            flag = self.regionFlags[ind]
+            epsFact_solid = self.spongeLayers['x+']/2.
+            orientation = [-1., 0.]
+            self.zones[flag] = bc.RelaxationZone(shape=self,
+                                                 zone_type='generation',
+                                                 orientation=orientation,
+                                                 center=center,
+                                                 waves=waves,
+                                                 wind_speed=wind_speed,
+                                                 epsFact_solid=epsFact_solid,
+                                                 dragAlpha=dragAlpha,
+                                                 dragBeta=dragBeta,
+                                                 porosity=porosity)
+            self.BC['x+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                           wind_speed=wind_speed)
 
 class RigidBody(AuxiliaryVariables.AV_base):
     """
@@ -1439,9 +2187,18 @@ def assembleAuxiliaryVariables(domain):
     -----
     Should be called after assembleGeometry
     """
-    domain.auxiliaryVariables = {'twp': [], 'vof': [], 'ls': [], 'redist': [],
-                                 'ls_consrv': [], 'kappa': [],
-                                 'dissipation': [], 'moveMesh': []}
+
+    domain.auxiliaryVariables = {
+        'dissipation': [],
+        'kappa': [],
+        'ls': [],
+        'ls_consrv': [],
+        'moveMesh': [],
+        'redist': [],
+        'twp': [],
+        'vof': []
+    }
+
     zones_global = {}
     start_region = 0
     start_rflag = 0
@@ -1484,6 +2241,24 @@ def assembleAuxiliaryVariables(domain):
                 key = flag+start_rflag
                 zones_global[key] = zone
         start_flag += len(shape.BC_list)
+        # ----------------------------
+        # GAUGES
+        gauge_dict = {key: shape.auxiliaryVariables.get(key,[])
+                      for key in shape.auxiliaryVariables.keys()
+                      if str(key).startswith('Gauge_')}
+        for key in gauge_dict.keys():
+            key_name = key.split('_', 1)[1] # Cutting off "Gauge_" prefix
+            if key_name not in aux:
+                # It is probably too dangerous to simply put "aux[key_name] = []"
+                # as this system is fragile to typos. Instead, we throw an error.
+                raise ValueError('ERROR: Gauge key ',
+                                 key_name,
+                                 ' is not a recognized model by SpatialTools.',
+                                 ' The known models in our dictionary are ',
+                                 str(aux.keys())
+                                 )
+            else:
+                aux[key_name] += gauge_dict[key]
         if shape.regions is not None:
             start_region += len(shape.regions)
             start_rflag += max(domain.regionFlags[0:start_region])
