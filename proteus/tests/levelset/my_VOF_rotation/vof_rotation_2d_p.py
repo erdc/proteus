@@ -16,7 +16,9 @@ class MyCoefficients(VOF.Coefficients):
     def attachModels(self,modelList):
         self.model = modelList[self.modelIndex]
 	self.u_old_dof = numpy.copy(self.model.u[0].dof)
-        self.q_v = numpy.zeros((self.model.mesh.nElements_global,self.model.nQuadraturePoints_element,self.model.nSpace_global),'d')    
+        self.velx_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')+1E10
+        self.vely_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')+1E10
+        self.q_v = numpy.zeros((self.model.mesh.nElements_global,self.model.nQuadraturePoints_element,self.model.nSpace_global),'d')+1E10
         self.ebqe_v = numpy.zeros((self.model.mesh.nExteriorElementBoundaries_global,self.model.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.model.q[('velocity',0)]=self.q_v
         self.model.ebqe[('velocity',0)]=self.ebqe_v
@@ -24,6 +26,14 @@ class MyCoefficients(VOF.Coefficients):
     def preStep(self,t,firstStep=False):
         pi = math.pi
         import numpy as np
+                
+        # GET VELOCITY AT DOFs (FOR EDGE BASED METHODS)
+        x_dof = self.model.u[0].femSpace.mesh.nodeArray[:,0]
+        y_dof = self.model.u[0].femSpace.mesh.nodeArray[:,1]
+        self.velx_tn_dof = -2.0*pi*y_dof
+        self.vely_tn_dof = 2.0*pi*x_dof
+
+        # GET VELOCITY AT QUADRATURE POINTS (FOR CELL BASE METHODS)
         x = self.model.q['x'][...,0]
         y = self.model.q['x'][...,1]
         #ROTATION

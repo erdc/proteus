@@ -12,7 +12,7 @@ cK = 1.0
 shockCapturingFactor_vof=0.2
 #Other time parameters
 timeOrder = 1
-runCFL = 0.3#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
+runCFL = 0.1#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 lag_shockCapturing_vof=True
 #if True uses PETSc solvers
 parallel = False
@@ -60,7 +60,7 @@ if unstructured:
 else:
     domain = box
 #end time of simulation
-T = 1
+T = 1.0
 #number of output time steps
 nDTout = 10
 #smoothing factors
