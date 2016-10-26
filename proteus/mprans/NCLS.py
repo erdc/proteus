@@ -633,6 +633,7 @@ class LevelModel(OneLevelTransport):
         #
         #cek add numerical viscosity c array if not yet allocated and initialized
         #
+        
         if self.cterm_global is None:
             #since we only need cterm_global to persist, we can drop the other self.'s
             self.cterm={}
@@ -682,10 +683,17 @@ class LevelModel(OneLevelTransport):
                                                           self.q['abs(det(J))'],
                                                           self.q[('grad(w)',0)],
                                                           self.q[('grad(w)*dV_f',0)])
-            for d in range(self.nSpace_global):
-                self.cterm[d] = np.zeros((self.mesh.nElements_global, self.nDOF_trial_element[0], self.nDOF_test_element[0]),'d')
+            for d in range(self.nSpace_global): #spatial dimensions
+                self.cterm[d] = np.zeros((self.mesh.nElements_global, 
+                                          self.nDOF_trial_element[0], 
+                                          self.nDOF_test_element[0]),'d')
                 self.cterm_a[d] = nzval.copy()
-                self.cterm_global[d] = SparseMat(self.nFreeDOF_global[0],self.nFreeDOF_global[0],nnz,self.cterm_a[d],colind,rowptr)
+                self.cterm_global[d] = SparseMat(self.nFreeDOF_global[0],
+                                                 self.nFreeDOF_global[0],
+                                                 nnz,
+                                                 self.cterm_a[d], 
+                                                 colind,
+                                                 rowptr)
                 cfemIntegrals.zeroJacobian_CSR(self.nnz, self.cterm_global[d])
                 di[:] = 0.0
                 di[...,d] = 1.0
@@ -701,7 +709,7 @@ class LevelModel(OneLevelTransport):
                                                                           self.csrColumnOffsets[(0,0)],
                                                                           self.cterm[d],
                                                                           self.cterm_global[d])
-        #
+                #
         #cek end computationa of cterm_global
         #
         #cek showing mquezada an example of using cterm_global sparse matrix
