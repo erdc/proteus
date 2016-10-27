@@ -6,7 +6,7 @@
 #include "ModelFactory.h"
 
 #define EDGE_VISCOSITY 1
-#define LUMPED_MASS_MATRIX 1 
+#define LUMPED_MASS_MATRIX 0
 //ENTROPY FUNCTIONS and SOME FLAGS (MQL)//
 //#define entropy_power 1. // phiL and phiR are dummy variables
 //#define ENTROPY(phi,phiL,phiR) 1./entropy_power*std::pow(phi,entropy_power)
@@ -56,7 +56,9 @@ namespace proteus
 				   //
 				   int* u_l2g, 
 				   double* elementDiameter,
-				   double* u_dof,double* u_dof_old,
+				   double* u_dof,
+				   double* u_dof_old,
+				   double* u_dof_old_old,
 				   double* velx_tn_dof, 
 				   double* vely_tn_dof, // HACKED TO 2D FOR NOW (MQL)
 				   double* velocity,
@@ -97,8 +99,11 @@ namespace proteus
 				   double uR, 
 				   // PARAMETERS FOR EDGE VISCOSITY 
 				   int numDOFs,
-				   int* csrRowIndeces,
-				   int* csrColumnOffsets,
+				   int NNZ,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops,
+				   int* csrRowIndeces_CellLoops,
+				   int* csrColumnOffsets_CellLoops,
 				   double* Cx, 
 				   double* Cy,
 				   double* CTx,
@@ -388,7 +393,9 @@ namespace proteus
 			   //
 			   int* u_l2g, 
 			   double* elementDiameter,
-			   double* u_dof,double* u_dof_old,
+			   double* u_dof,
+			   double* u_dof_old,
+			   double* u_dof_old_old,
 			   double* velx_tn_dof, 
 			   double* vely_tn_dof, // HACKED TO 2D FOR NOW (MQL)
 			   double* velocity,
@@ -428,8 +435,11 @@ namespace proteus
 			   double uR,
 			   // PARAMETERS FOR EDGE VISCOSITY 
 			   int numDOFs,
-			   int* csrRowIndeces,
-			   int* csrColumnOffsets,
+			   int NNZ,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops,
+			   int* csrRowIndeces_CellLoops,
+			   int* csrColumnOffsets_CellLoops,
 			   double* Cx, 
 			   double* Cy, 
 			   double* CTx,
@@ -438,44 +448,30 @@ namespace proteus
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
       if (EDGE_VISCOSITY==1)
 	{
-	  // ** LOOP IN DOFs FOR EDGE BASED TERMS ** //
-	  int ij=0;
-	  for (int i=0; i<numDOFs; i++)
-	    {
-	      double vxi = velx_tn_dof[i];
-	      double vyi = vely_tn_dof[i]; // velocity at time tn for the ith DOF
-	      double solni = u_dof_old[i]; // solution at time tn for the ith DOF
-	      
-	      double ith_flux_term = 0;
-	      double ith_dissipative_term = 0;
-	      
-	      for (int offset=csrRowIndeces[i]; offset<csrRowIndeces[i+1]; offset++)
-		{
-		  int j = csrColumnOffsets[offset];
-		  double vxj = velx_tn_dof[j];
-		  double vyj = vely_tn_dof[j]; // velocity at time tn for the jth DOF
-		  double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
-		  
-		  ith_flux_term += solnj*(vxj*Cx[ij] + vyj*Cy[ij]);
-		  if (i != j) //NOTE: if no matrices are computed then there is no need to check for i!=j (see formula for ith_dissipative_term)
-		    {
-		      double dLij = -std::max(std::abs(vxi*Cx[ij] + vyi*Cy[ij]),std::abs(vxj*CTx[ij] + vyj*CTy[ij]));
-		      //double dLii -= dLij;
-		      ith_dissipative_term += dLij*(solnj-solni);
-		    }
-		  //update ij
-		  ij+=1;
-		}
-	      // update residual 
-	      globalResidual[i] = dt*(ith_flux_term + ith_dissipative_term);
-	    }
+	  register double EntViscMatrix[NNZ];
+	  for (int ij=0; ij<NNZ; ij++)
+	    EntViscMatrix[ij]=0.;
+	  // Variable for entropy residual matrix
+	  double entropy_max=-1.E10, entropy_min=1.E10, cell_entropy_mean, cell_volume, volume=0, entropy_mean=0;
+	  double entropy_normalization_factor=1.0;
+	  double entropy_residual;
+	  //////////////////////////////////////////////
 	  // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
+	  //////////////////////////////////////////////
 	  for(int eN=0;eN<nElements_global;eN++)
 	    {
-	      //declare local storage for element residual and initialize
-	      register double elementResidual_u[nDOF_test_element];
+	      //declare local storage for local contributions and initialize
+	      register double elementResidual_u[nDOF_test_element], elementEntViscMatrix[nDOF_test_element][nDOF_trial_element];
 	      for (int i=0;i<nDOF_test_element;i++)
-		elementResidual_u[i]=0.0;
+		{
+		  elementResidual_u[i]=0.0;
+		  for (int j=0;j<nDOF_trial_element;j++)
+		    elementEntViscMatrix[i][j]=0.0;
+		}
+	      //restart cell based quantities 
+	      cell_volume = 0;
+	      cell_entropy_mean = 0;
+	      entropy_residual = 0;	      
 	      //loop over quadrature points and compute integrands
 	      for  (int k=0;k<nQuadraturePoints_element;k++)
 		{
@@ -483,30 +479,33 @@ namespace proteus
 		  register int eN_k = eN*nQuadraturePoints_element+k,
 		    eN_k_nSpace = eN_k*nSpace,
 		    eN_nDOF_trial_element = eN*nDOF_trial_element;
-		  register double u=0.0, m=0.0, dm=0.0, f[nSpace], df[nSpace], m_t=0.0,dm_t=0.0,
-		    jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		  register double 
+		    //for mass matrix contributions
+		    u=0.0, m=0.0, dm=0.0, f[nSpace], df[nSpace], m_t=0.0,dm_t=0.0, 
 		    u_test_dV[nDOF_trial_element], 
+		    //for entropy viscosity
+		    un=0.0, unm1=0.0, grad_un[nSpace], vn[nSpace], 
+		    u_grad_trial[nDOF_trial_element*nSpace], 
+		    //for general use
+		    jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
 		    dV,x,y,z,
 		    //VRANS
 		    porosity;
 		  //get the physical integration weight
-		  ck.calculateMapping_element(eN,
-					      k,
-					      mesh_dof,
-					      mesh_l2g,
-					      mesh_trial_ref,
-					      mesh_grad_trial_ref,
-					      jac,
-					      jacDet,
-					      jacInv,
-					      x,y,z);
+		  ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
 		  dV = fabs(jacDet)*dV_ref[k];
-		  //get the solution
+		  //get the solution (of Newton's solver)
 		  ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
-		  //precalculate test function products with integration weights
+		  //get the solution at quad point at tn and tnm1 for entropy viscosity
+		  ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+		  ck.valFromDOF(u_dof_old_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],unm1);
+		  //get the solution gradients at tn for entropy viscosity
+		  ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		  ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
+		  //precalculate test function products with integration weights for mass matrix terms
 		  for (int j=0;j<nDOF_trial_element;j++)
 		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
-		  //evaluate coefficients to compute time derivative
+		  //evaluate coefficients to compute time derivative (for term with mass matrix)
 		  porosity = q_porosity[eN_k];
 		  evaluateCoefficients(&velocity[eN_k_nSpace],
 				       u,
@@ -529,33 +528,97 @@ namespace proteus
 			 dm_t);
 		  // CALCULATE CFL //
 		  calculateCFL(elementDiameter[eN],df,cfl[eN_k]); // TODO: ADJUST SPEED IF MESH IS MOVING
+		  // CALCULATE ENTROPY RESIDUAL AT QUAD POINT //
+		  //velocity at tn for entropy viscosity
+		  vn[0] = velocity[eN_k_nSpace];
+		  vn[1] = velocity[eN_k_nSpace+1];
+		  entropy_residual = (ENTROPY(un,uL,uR) - ENTROPY(unm1,uL,uR))/dt
+		    + vn[0]*ENTROPY_GRAD(un,grad_un[0],uL,uR)+vn[1]*ENTROPY_GRAD(un,grad_un[1],uL,uR) + ENTROPY(un,uL,uR)*(vn[0]+vn[1]);
+		  // compute entropy min and max, entropy mean and cell volume
+		  entropy_max = std::max(entropy_max,ENTROPY(un,uL,uR));
+		  entropy_min = std::min(entropy_min,ENTROPY(un,uL,uR));
+		  cell_entropy_mean += ENTROPY(un,uL,uR)*dV;
+		  cell_volume += dV;
+
+		  //////////////
+		  // ith-LOOP //
+		  //////////////
 		  for(int i=0;i<nDOF_test_element;i++) 
 		    { 
-		      //register int eN_k_i=eN_k*nDOF_test_element+i,
-		      //eN_k_i_nSpace = eN_k_i*nSpace,
-		      register int i_nSpace=i*nSpace;
 		      if (LUMPED_MASS_MATRIX==1)
 			elementResidual_u[i] += u_test_dV[i]; // LUMPING
 		      else 
 			elementResidual_u[i] += dt*ck.Mass_weak(m_t,u_test_dV[i]);
 
+		      //////////////
+		      // jth-LOOP //
+		      //////////////
+		      for(int j=0;j<nDOF_trial_element;j++)
+			elementEntViscMatrix[i][j] += entropy_residual*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]; // int(R(E)*wi*wj)
 		    }//i
 		  //save solution for other models 
 		  q_u[eN_k] = u;
 		  q_m[eN_k] = m;
 		}
-	      //load cell based element into global residual
+	      volume += cell_volume;
+	      entropy_mean += cell_entropy_mean;
+	      /////////////////
+	      // DISTRIBUTE // load cell based element into global residual
+	      ////////////////
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
-		  register int eN_i=eN*nDOF_test_element+i;
-		  register int gi = offset_u+stride_u*u_l2g[eN_i];
+		  int eN_i=eN*nDOF_test_element+i;
+		  int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
 		  if (LUMPED_MASS_MATRIX==1)
 		    globalResidual[gi] += elementResidual_u[i]*(u_dof[gi]-u_dof_old[gi]); //LUMPING
 		  else
 		    globalResidual[gi] += elementResidual_u[i];
-
+		  for (int j=0;j<nDOF_trial_element;j++)
+		    {
+		      int eN_i_j = eN_i*nDOF_trial_element+j;
+		      EntViscMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]] += elementEntViscMatrix[i][j];
+		    }//j
 		}//i
 	    }//elements
+	  entropy_mean /= volume;
+	  entropy_normalization_factor = std::max(std::abs(entropy_max-entropy_mean),std::abs(entropy_min-entropy_mean));
+	  //std::cout << "***************** ENTROPY NORMALIZATION FACTOR ...: " << entropy_normalization_factor << std::endl;
+	  /////////////////////////////////////////////
+	  // ** LOOP IN DOFs FOR EDGE BASED TERMS ** //
+	  /////////////////////////////////////////////
+	  int ij=0;
+	  for (int i=0; i<numDOFs; i++)
+	    {
+	      double vxi = velx_tn_dof[i];
+	      double vyi = vely_tn_dof[i]; // velocity at time tn for the ith DOF
+	      double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+	      
+	      double ith_flux_term = 0;
+	      double ith_dissipative_term = 0;
+	      
+	      for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+		{
+		  int j = csrColumnOffsets_DofLoops[offset];
+		  double vxj = velx_tn_dof[j];
+		  double vyj = vely_tn_dof[j]; // velocity at time tn for the jth DOF
+		  double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+		  
+		  ith_flux_term += solnj*(vxj*Cx[ij] + vyj*Cy[ij]);
+		  if (i != j) //NOTE: if no matrices are computed then there is no need to check for i!=j (see formula for ith_dissipative_term)
+		    {
+		      // low-order dissipative operator
+		      double dLij = -std::max(std::abs(vxi*Cx[ij] + vyi*Cy[ij]),std::abs(vxj*CTx[ij] + vyj*CTy[ij]));		      
+		      //double dLii -= dLij;
+		      // high-order dissipative operator 
+		      double dEij = -std::min(std::abs(dLij),cE*std::abs(EntViscMatrix[ij])/entropy_normalization_factor);
+		      ith_dissipative_term += dEij*(solnj-solni);
+		    }
+		  //update ij
+		  ij+=1;
+		}
+	      // update residual 
+	      globalResidual[i] += dt*(ith_flux_term + ith_dissipative_term);
+	    }
 	  ////////////////////////////////
 	}
       else // CELL BASED VISCOSITY/METHODS
@@ -1483,7 +1546,6 @@ namespace proteus
 		  for (int j=0;j<nDOF_trial_element;j++)
 		    {
 		      register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
-
 		      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i];
 		    }//j
 		}//i
