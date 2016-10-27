@@ -609,9 +609,14 @@ namespace proteus
 		      // low-order dissipative operator
 		      double dLij = -std::max(std::abs(vxi*Cx[ij] + vyi*Cy[ij]),std::abs(vxj*CTx[ij] + vyj*CTy[ij]));		      
 		      //double dLii -= dLij;
-		      // high-order dissipative operator 
+		      // high-order (entropy viscosity) dissipative operator 
 		      double dEij = -std::min(std::abs(dLij),cE*std::abs(EntViscMatrix[ij])/entropy_normalization_factor);
-		      ith_dissipative_term += dEij*(solnj-solni);
+		      // artificial compression
+		      double solij = 0.5*(solni+solnj);
+		      double Compij = cK*std::max(solij*(1.0-solij),0.0)/(std::abs(solni-solnj)+1E-14);
+		      //double Compij = cK*std::max(1-solij*solij,0.0)/(std::abs(solni-solnj)+1E-14);
+		      double dCij = dEij*std::max(1.0-Compij,0.0);
+		      ith_dissipative_term += dCij*(solnj-solni);
 		    }
 		  //update ij
 		  ij+=1;
