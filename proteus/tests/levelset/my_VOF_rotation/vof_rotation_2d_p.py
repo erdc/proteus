@@ -15,7 +15,8 @@ LevelModelType = VOF.LevelModel
 class MyCoefficients(VOF.Coefficients):
     def attachModels(self,modelList):
         self.model = modelList[self.modelIndex]
-	self.u_old_dof = numpy.copy(self.model.u[0].dof)
+	self.u_dof_old = numpy.copy(self.model.u[0].dof)
+	self.u_dof_old_old = numpy.copy(self.model.u[0].dof)
         self.velx_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')+1E10
         self.vely_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')+1E10
         self.q_v = numpy.zeros((self.model.mesh.nElements_global,self.model.nQuadraturePoints_element,self.model.nSpace_global),'d')+1E10
@@ -24,9 +25,14 @@ class MyCoefficients(VOF.Coefficients):
         self.model.ebqe[('velocity',0)]=self.ebqe_v
         self.ebqe_phi = numpy.zeros(self.model.ebqe[('u',0)].shape,'d') #NOTE: this is not needed (is for LS)
     def preStep(self,t,firstStep=False):
+        # SAVE OLD SOLUTIONS
+        self.u_dof_old_old = numpy.copy(self.u_dof_old)
+        self.u_dof_old = numpy.copy(self.model.u[0].dof)
+
+        # COMPUTE VELOCITY
         pi = math.pi
-        import numpy as np
-                
+        import numpy as np 
+
         # GET VELOCITY AT DOFs (FOR EDGE BASED METHODS)
         x_dof = self.model.u[0].femSpace.mesh.nodeArray[:,0]
         y_dof = self.model.u[0].femSpace.mesh.nodeArray[:,1]
@@ -48,8 +54,7 @@ class MyCoefficients(VOF.Coefficients):
         #self.q_v[...,1]  = -1.0
         copyInstructions = {}
         return copyInstructions
-    def postStep(self,t,firstStep=False):
-       	self.u_old_dof = numpy.copy(self.model.u[0].dof)
+    def postStep(self,t,firstStep=False):       	
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):

@@ -106,9 +106,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def attachModels(self,modelList):
         #self
         self.model = modelList[self.modelIndex]
-
-	#self.u_old_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
-	self.u_old_dof = numpy.copy(self.model.u[0].dof)
+	self.u_dof_old = numpy.copy(self.model.u[0].dof)
+	self.u_dof_old_old = numpy.copy(self.model.u[0].dof)
         #Velocities for edge viscosity (MQL)
         self.velx_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
         self.vely_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
@@ -223,6 +222,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
     def preStep(self,t,firstStep=False):
+	self.u_dof_old_old = numpy.copy(self.u_dof_old)
+	self.u_dof_old = numpy.copy(self.model.u[0].dof)
         if self.checkMass:
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV_last'],
                                                     self.model.q[('m',0)],
@@ -235,7 +236,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-	self.u_old_dof = numpy.copy(self.model.u[0].dof)
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.checkMass:
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
@@ -854,7 +854,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
         rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
-
+        
         #
         #cek end computationa of cterm_global
         #
@@ -934,7 +934,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.u[0].dof,
-            self.coefficients.u_old_dof,
+            self.coefficients.u_dof_old,
+            self.coefficients.u_dof_old_old,
             self.coefficients.velx_tn_dof, 
             self.coefficients.vely_tn_dof, # HACKED TO 2D FOR NOW (MQL)
             self.coefficients.q_v,
@@ -974,9 +975,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.uL, 
             self.coefficients.uR,
             #PARAMETERS FOR EDGE VISCOSITY
-            len(rowptr)-1,
-            rowptr, #Row indices for Sparsity Pattern 
-            colind, #Column indices for Sparsity Pattern
+            len(rowptr)-1, #num of DOFs
+            len(Cx), #num of non-zero entries in the sparsity pattern           
+            rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
+            colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
+            self.csrRowIndeces[(0,0)], #row indices (convenient for element loops)
+            self.csrColumnOffsets[(0,0)], #column indices (convenient for element loops)
             Cx, #Cij Matrix
             Cy,
             CTx,

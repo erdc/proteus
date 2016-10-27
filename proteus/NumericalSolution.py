@@ -837,7 +837,7 @@ class NS_base:  # (HasTraits):
                                 # model.levelModelList[0] is the OneLevelModel based on VOF.py
                                 # model.levelModelList[0].q[('u',0)] is the solution at quad points (or 'm')
                                 # model.levelModelList[0].u[0].dof are the DOFs of the solution at new time
-                                # model.levelModelList[0].coefficients.u_old_dof are the old DOFs
+                                # model.levelModelList[0].coefficients.u_dof_old are the old DOFs
                                 # model.levelModelList[0].timeIntegration.alpha_bdf = 1/dt
                                 # model.levelModelList[0].timeIntegration.beta_bdf[0] = -1/dt*unm1 (at quad points)
                                 # model.levelModelList[0].timeIntegration.m_last[0] = unm1 (used to update beta within getResidual in VOF.py)
@@ -849,7 +849,7 @@ class NS_base:  # (HasTraits):
 
                                 if (model.levelModelList[0].timeIntegration is not None and  
                                     model.levelModelList[0].timeIntegration.use_SSP33): 
-                                    unm1 = numpy.copy(model.levelModelList[0].coefficients.u_old_dof)
+                                    unm1 = numpy.copy(model.levelModelList[0].coefficients.u_dof_old)
                                     unm1_quad = numpy.copy(model.levelModelList[0].timeIntegration.m_last[0]) #assuming porosity=1
                                 #update BETA. timeIntegration.m_last[0] = unm1 at quad points. 
                                 #solve forward euler for current stage
@@ -859,7 +859,7 @@ class NS_base:  # (HasTraits):
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
                                 #if (model.levelModelList[0].timeIntegration is not None and  
-                                 #   model.levelModelList[0].timeIntegration.use_SSP33):
+                                #    model.levelModelList[0].timeIntegration.use_SSP33):
                                 if (False): #NOTE: I USE FORWARD EULER WHILE DEVELOPING SPATIAL DISCRETIZATIONS
                                     #get stage 1 solution
                                     uStage1 = numpy.copy(model.uList[0])
@@ -870,7 +870,7 @@ class NS_base:  # (HasTraits):
                                     #overwrite initial guess for Newtons Method
                                     #model.uList[0] = numpy.copy(uStage1) #not necessary
                                     #set input for second stage. INPUT: solution from first stage
-                                    model.levelModelList[0].coefficients.u_old_dof = numpy.copy(uStage1)
+                                    model.levelModelList[0].coefficients.u_dof_old = numpy.copy(uStage1)
                                     # to update BETA. timeIntegration.m_last[0] = uStage1 at quad points
                                     model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[0].q[('m',0)])
                                     #solve forward euler for current stage
@@ -890,7 +890,7 @@ class NS_base:  # (HasTraits):
                                     #overwrite initial guess for Newtons Method
                                     #model.uList[0] = numpy.copy(uStage2) #not necessary
                                     #set input for third stage. INPUT: solution from second stage
-                                    model.levelModelList[0].coefficients.u_old_dof = numpy.copy(uStage2)
+                                    model.levelModelList[0].coefficients.u_dof_old = numpy.copy(uStage2)
                                     # to update BETA. timeIntegration.m_last[0] = uStage 2 at quad points
                                     model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[0].q[('m',0)])
                                     model.levelModelList[0].timeIntegration.m_last[0] *= 1./4
@@ -906,7 +906,7 @@ class NS_base:  # (HasTraits):
                                     uStage3 *= 2./3
                                     uStage3 += 1./3*unm1
                                     # restore solution at previous time step
-                                    model.levelModelList[0].coefficients.u_old_dof = numpy.copy(unm1)
+                                    model.levelModelList[0].coefficients.u_dof_old = numpy.copy(unm1)
                                     # get solution at next time step 
                                     model.levelModelList[0].u[0].dof = numpy.copy(uStage3)
                                     # to update BETA. timeIntegration.m_last[0] = unm1 at quad points
