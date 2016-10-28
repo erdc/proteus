@@ -19,6 +19,7 @@ class MyCoefficients(VOF.Coefficients):
 	self.u_dof_old_old = numpy.copy(self.model.u[0].dof)
         self.velx_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')+1E10
         self.vely_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')+1E10
+        self.flux_plus_dLij_times_soln = numpy.zeros(self.model.u[0].dof.shape,'d')
         self.q_v = numpy.zeros((self.model.mesh.nElements_global,self.model.nQuadraturePoints_element,self.model.nSpace_global),'d')+1E10
         self.ebqe_v = numpy.zeros((self.model.mesh.nExteriorElementBoundaries_global,self.model.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.model.q[('velocity',0)]=self.q_v
@@ -54,7 +55,8 @@ class MyCoefficients(VOF.Coefficients):
         #self.q_v[...,1]  = -1.0
         copyInstructions = {}
         return copyInstructions
-    def postStep(self,t,firstStep=False):       	
+    def postStep(self,t,firstStep=False):
+        self.model.FCTStep(t)
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):

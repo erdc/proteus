@@ -111,6 +111,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #Velocities for edge viscosity (MQL)
         self.velx_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
         self.vely_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
+        #operators to contruct low order solution 
+	self.flux_plus_dLij_times_soln = numpy.copy(self.model.u[0].dof)
         #redistanced level set
         if self.RD_modelIndex is not None:
             self.rdModel = modelList[self.RD_modelIndex]
@@ -583,8 +585,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.setupFieldStrides()
 
         #cek adding empty data member for low order numerical viscosity structures here for now
+        self.ML=None #lumped mass matrix
+        self.MC_global=None #consistent mass matrix
         self.cterm_global=None
         self.cterm_transpose_global=None
+        # dL_global and dC_global are not the full matrices but just the CSR arrays containing the non zero entries
+        self.dL_minus_dC=None
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -665,6 +671,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray==None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
+    def FCTStep(self,t):
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+        self.vof.FCTStep(self.timeIntegration.dt, 
+                         self.nnz, #number of non zero entries 
+                         len(rowptr)-1, #number of DOFs
+                         self.ML, #Lumped mass matrix
+                         self.coefficients.u_dof_old, #soln
+                         self.u[0].dof, #solH
+                         self.coefficients.flux_plus_dLij_times_soln, 
+                         rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
+                         colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
+                         MassMatrix, 
+                         self.dL_minus_dC)
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
@@ -738,32 +757,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                           self.q['abs(det(J))'],
                                                           self.q[('grad(w)',0)],
                                                           self.q[('grad(w)*dV_f',0)])
-            #### TRIAL FUNCTIONS
-            #self.q[('w',0)] = np.zeros((self.mesh.nElements_global,
-            #                            self.nQuadraturePoints_element,
-            #                            self.nDOF_trial_element[0]),
-            #                           'd') 
-            #self.u[0].femSpace.getBasisValues(self.elementQuadraturePoints, self.q[('w',0)])
-            # GRADIENT OF TRIAL FUNCTIONS
-            #self.q[('grad(w)',0)] = np.zeros((self.mesh.nElements_global,
-            #                                  self.nQuadraturePoints_element,
-            #                                  self.nDOF_trial_element[0],
-            #                                  self.nSpace_global),
-            #                                 'd')
-            #self.u[0].femSpace.getBasisGradientValues(self.elementQuadraturePoints,
-            #                                          self.q['inverse(J)'],
-            #                                          self.q[('grad(w)',0)])
-            #self.q[('grad(w)*dV_f',0)] = np.zeros((self.mesh.nElements_global,
-            #                                       self.nQuadraturePoints_element,
-            #                                       self.nDOF_trial_element[0],
-            #                                       self.nSpace_global),
-            #                                      'd')
-            #cfemIntegrals.calculateWeightedShapeGradients(self.elementQuadratureWeights[('u',0)],
-            #                                              self.q['abs(det(J))'],
-            #                                              self.q[('grad(w)',0)],
-            #                                              self.q[('grad(w)*dV_f',0)])
-            #
-
             #
             #lumped mass matrix
             #
@@ -854,7 +847,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
         rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
-        
+        # This is dummy. I just care about the csr structure of the sparse matrix
+        #rowptr, colind, self.dL_minus_dC = self.cterm_global[0].getCSRrepresentation() 
+        self.dL_minus_dC = np.zeros(Cx.shape,'d')
         #
         #cek end computationa of cterm_global
         #
@@ -984,7 +979,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             Cx, #Cij Matrix
             Cy,
             CTx,
-            CTy) #NOTE: for now I assume the problem is in 2D!!!! (MQL). TODO: make it general 
+            CTy, #NOTE: for now I assume the problem is in 2D!!!! (MQL). TODO: make it general 
+            # FLUX CORRECTED TRANSPORT
+            self.coefficients.flux_plus_dLij_times_soln, 
+            self.dL_minus_dC)
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0

@@ -8,12 +8,12 @@
 #define EDGE_VISCOSITY 1
 #define LUMPED_MASS_MATRIX 0
 //ENTROPY FUNCTIONS and SOME FLAGS (MQL)//
-//#define entropy_power 1. // phiL and phiR are dummy variables
-//#define ENTROPY(phi,phiL,phiR) 1./entropy_power*std::pow(phi,entropy_power)
-//#define ENTROPY_GRAD(phi,phix,phiL,phiR) std::pow(phi,entropy_power-1.)*phix
+#define entropy_power 2. // phiL and phiR are dummy variables
+#define ENTROPY(phi,phiL,phiR) 1./entropy_power*std::pow(phi,entropy_power)
+#define ENTROPY_GRAD(phi,phix,phiL,phiR) std::pow(phi,entropy_power-1.)*phix
 // LOG ENTROPY FOR LEVEL SET FROM 0 to 1
-#define ENTROPY(phi,phiL,phiR) std::log(std::abs((phi-phiL)*(phiR-phi))+1E-14)
-#define ENTROPY_GRAD(phi,phix,phiL,phiR) (phiL+phiR-2*phi)*phix*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(std::abs((phi-phiL)*(phiR-phi))+1E-14) 
+//#define ENTROPY(phi,phiL,phiR) std::log(std::abs((phi-phiL)*(phiR-phi))+1E-14)
+//#define ENTROPY_GRAD(phi,phix,phiL,phiR) (phiL+phiR-2*phi)*phix*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(std::abs((phi-phiL)*(phiR-phi))+1E-14) 
 
 namespace proteus
 {
@@ -22,6 +22,18 @@ namespace proteus
     //The base class defining the interface
   public:
     virtual ~VOF_base(){}
+    virtual void FCTStep(double dt, 
+			 int NNZ, //number on non-zero entries on sparsity pattern
+			 int numDOFs, //number of DOFs
+			 double* lumped_mass_matrix, //lumped mass matrix (as vector)
+			 double* soln, //DOFs of solution at time tn
+			 double* solH, //DOFs of high order solution at tnp1
+			 double* flux_plus_dLij_times_soln, //operators to construct low order solution
+			 int* csrRowIndeces_DofLoops, //csr row indeces 
+			 int* csrColumnOffsets_DofLoops, //csr column offsets 
+			 double* MassMatrix, //mass matrix
+			 double* dL_minus_dC //low minus high order dissipative matrices
+			 )=0;
     virtual void calculateResidual(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -107,7 +119,9 @@ namespace proteus
 				   double* Cx, 
 				   double* Cy,
 				   double* CTx,
-				   double* CTy)=0;
+				   double* CTy, 
+				   double* flux_plus_dLij_times_soln, 
+				   double* dL_minus_dC)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -359,6 +373,95 @@ namespace proteus
 	}
     }
 
+    void FCTStep(double dt, 
+		 int NNZ, //number on non-zero entries on sparsity pattern
+		 int numDOFs, //number of DOFs
+		 double* lumped_mass_matrix, //lumped mass matrix (as vector)
+		 double* soln, //DOFs of solution at time tn
+		 double* solH, //DOFs of high order solution at tnp1
+		 double* flux_plus_dLij_times_soln, //operators to construct low order solution
+		 int* csrRowIndeces_DofLoops, //csr row indeces 
+		 int* csrColumnOffsets_DofLoops, //csr column offsets 
+		 double* MassMatrix, //mass matrix
+		 double* dL_minus_dC //low minus high order dissipative matrices
+		 )
+    {
+      register double Rpos[numDOFs], Rneg[numDOFs];
+      register double FluxCorrectionMatrix[NNZ];
+      register double solL[numDOFs];
+      //////////////////
+      // LOOP in DOFs //
+      //////////////////
+      int ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  //read some vectors 
+	  double solHi = solH[i];
+	  double solni = soln[i];
+	  double mi = lumped_mass_matrix[i];
+	  // compute low order solution
+	  // mi*(uLi-uni) + dt*sum_j[(Tij+dLij)*unj] = 0
+	  solL[i] = solni-dt/mi*flux_plus_dLij_times_soln[i];
+
+	  double mini=1E10, maxi=-1E10;
+	  double Pposi=0, Pnegi=0;
+	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      ////////////////////////
+	      // COMPUTE THE BOUNDS //
+	      ////////////////////////
+	      mini = std::min(mini,soln[j]);
+	      maxi = std::max(maxi,soln[j]);
+
+	      // i-th row of flux correction matrix 
+	      FluxCorrectionMatrix[ij] = (((i==j) ? 1 : 0)*mi - MassMatrix[ij])*(solH[j]-soln[j] - (solHi-solni)) + dt*dL_minus_dC[ij]*(soln[j]-solni);
+
+	      ///////////////////////
+	      // COMPUTE P VECTORS //
+	      ///////////////////////
+	      Pposi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] > 0) ? 1. : 0.);
+	      Pnegi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] < 0) ? 1. : 0.);
+
+	      //update ij 
+	      ij+=1;
+	    }
+	  ///////////////////////
+	  // COMPUTE Q VECTORS //
+	  ///////////////////////
+	  double Qposi = mi*(maxi-solL[i]);
+	  double Qnegi = mi*(mini-solL[i]);
+
+	  ///////////////////////
+	  // COMPUTE R VECTORS //
+	  ///////////////////////
+	  Rpos[i] = ((Pposi==0) ? 1. : std::min(1.0,Qposi/Pposi));
+	  Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
+	} // i DOFs
+      
+      //////////////////////
+      // COMPUTE LIMITERS // 
+      //////////////////////
+      ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  double ith_Limiter_times_FluxCorrectionMatrix = 0.;
+	  double Rposi = Rpos[i], Rnegi = Rneg[i];
+	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      ith_Limiter_times_FluxCorrectionMatrix += 
+		((FluxCorrectionMatrix[ij]>0) ? std::min(Rposi,Rneg[j]) : std::min(Rnegi,Rpos[j])) * FluxCorrectionMatrix[ij];
+	      //update ij
+	      ij+=1;
+	    }
+	  //solH[i] = solL[i];
+	  solH[i] = solL[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
+	}
+    }
+
     void calculateResidual(//element
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
@@ -443,7 +546,10 @@ namespace proteus
 			   double* Cx, 
 			   double* Cy, 
 			   double* CTx,
-			   double* CTy)
+			   double* CTy, 
+			   // FOR FCT
+			   double* flux_plus_dLij_times_soln, 
+			   double* dL_minus_dC)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
       if (EDGE_VISCOSITY==1)
@@ -595,6 +701,7 @@ namespace proteus
 	      
 	      double ith_flux_term = 0;
 	      double ith_dissipative_term = 0;
+	      double ith_low_order_dissipative_term = 0;
 	      
 	      for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 		{
@@ -603,26 +710,36 @@ namespace proteus
 		  double vyj = vely_tn_dof[j]; // velocity at time tn for the jth DOF
 		  double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
 		  
+		  double dLij=0., dCij=0.;
 		  ith_flux_term += solnj*(vxj*Cx[ij] + vyj*Cy[ij]);
 		  if (i != j) //NOTE: if no matrices are computed then there is no need to check for i!=j (see formula for ith_dissipative_term)
 		    {
 		      // low-order dissipative operator
-		      double dLij = -std::max(std::abs(vxi*Cx[ij] + vyi*Cy[ij]),std::abs(vxj*CTx[ij] + vyj*CTy[ij]));		      
-		      //double dLii -= dLij;
+		      dLij = -std::max(std::abs(vxi*Cx[ij] + vyi*Cy[ij]),std::abs(vxj*CTx[ij] + vyj*CTy[ij]));		      
 		      // high-order (entropy viscosity) dissipative operator 
 		      double dEij = -std::min(std::abs(dLij),cE*std::abs(EntViscMatrix[ij])/entropy_normalization_factor);
 		      // artificial compression
 		      double solij = 0.5*(solni+solnj);
 		      double Compij = cK*std::max(solij*(1.0-solij),0.0)/(std::abs(solni-solnj)+1E-14);
-		      //double Compij = cK*std::max(1-solij*solij,0.0)/(std::abs(solni-solnj)+1E-14);
-		      double dCij = dEij*std::max(1.0-Compij,0.0);
+		      dCij = dEij*std::max(1.0-Compij,0.0);
+		      //dissipative terms
 		      ith_dissipative_term += dCij*(solnj-solni);
+		      ith_low_order_dissipative_term += dLij*(solnj-solni);
+		      //dLij - dCij. This matrix is needed during FCT step
+		      dL_minus_dC[ij] = dLij - dCij;
+		    }
+		  else //i==j
+		    {
+		      // NOTE: this is incorrect. Indeed, dLii = -sum(dLij) for all i!=j and similarly for dCii. 
+		      // However, it is irrelevant since during the FCT step we do (dL-dC)*(solnj-solni)
+		      dL_minus_dC[ij]=0;
 		    }
 		  //update ij
 		  ij+=1;
 		}
 	      // update residual 
 	      globalResidual[i] += dt*(ith_flux_term + ith_dissipative_term);
+	      flux_plus_dLij_times_soln[i] = ith_flux_term + ith_low_order_dissipative_term;
 	    }
 	  ////////////////////////////////
 	}
