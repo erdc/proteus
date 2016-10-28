@@ -6,6 +6,17 @@ from proteus.Transport import OneLevelTransport
 
 cdef extern from "VOF.h" namespace "proteus":
     cdef cppclass VOF_base:
+        void FCTStep(double dt, 
+	             int NNZ,
+		     int numDOFs,
+		     double* lumped_mass_matrix, 
+		     double* soln, 
+		     double* solH, 
+		     double* flux_plus_dLij_times_soln, 
+		     int* csrRowIndeces_DofLoops, 
+		     int* csrColumnOffsets_DofLoops, 
+		     double* MassMatrix, 
+		     double* dL_minus_dC) 
         void calculateResidual(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -86,7 +97,9 @@ cdef extern from "VOF.h" namespace "proteus":
                                double* Cx, 
 			       double* Cy,
 			       double* CTx, 
-			       double* CTy)
+			       double* CTy, 
+			       double* flux_plus_dLij_times_soln,
+			       double* dL_minus_dC)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -166,6 +179,29 @@ cdef class cVOF_base:
                              CompKernelFlag)
    def __dealloc__(self):
        del self.thisptr
+   def FCTStep(self, 
+               double dt, 
+	       int NNZ,
+	       int numDOFs,
+	       numpy.ndarray lumped_mass_matrix, 
+	       numpy.ndarray soln, 
+	       numpy.ndarray solH, 
+	       numpy.ndarray flux_plus_dLij_times_soln, 
+	       numpy.ndarray csrRowIndeces_DofLoops, 
+	       numpy.ndarray csrColumnOffsets_DofLoops, 
+	       numpy.ndarray MassMatrix, 
+	       numpy.ndarray dL_minus_dC):
+       self.thisptr.FCTStep(dt, 
+       			    NNZ,
+	                    numDOFs,
+			    <double*> lumped_mass_matrix.data, 
+			    <double*> soln.data, 
+			    <double*> solH.data,
+			    <double*> flux_plus_dLij_times_soln.data,
+			    <int*> csrRowIndeces_DofLoops.data,
+			    <int*> csrColumnOffsets_DofLoops.data,
+			    <double*> MassMatrix.data,
+			    <double*> dL_minus_dC.data)
    def calculateResidual(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -246,7 +282,9 @@ cdef class cVOF_base:
 			 numpy.ndarray Cx, 
 			 numpy.ndarray Cy,
 			 numpy.ndarray CTx, 
-			 numpy.ndarray CTy):
+			 numpy.ndarray CTy, 
+			 numpy.ndarray flux_plus_dLij_times_soln,
+			 numpy.ndarray dL_minus_dC):	
        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -327,7 +365,9 @@ cdef class cVOF_base:
                                        <double*> Cx.data, 
 				       <double*> Cy.data,
 				       <double*> CTx.data, 		       
-				       <double*> CTy.data)
+				       <double*> CTy.data, 
+				       <double*> flux_plus_dLij_times_soln.data,
+				       <double*> dL_minus_dC.data)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
