@@ -2740,7 +2740,7 @@ void buildLocalBDM2projectionMatrices(int degree,
   // ToDo - Think of some clever asserts to replace these with.
   //  assert(nSimplex == nDOFs_trial_element);
   //  assert(nSimplex == nDOFs_test_element);
-
+  
   int interiorPspace = nDOFs_trial_interior_element;
   int boundaryPspace = degree+1; 
   int edgeFlags[9] = {1,2,4,0,2,5,0,1,3}; 
@@ -3102,14 +3102,16 @@ void buildBDM2rhs(int nElements_global,
   assert(BDMprojectionMatPivots_element);
   nVDOFs_element2 = nVDOFs_element*nVDOFs_element;
 
-  
   for (eN = 0; eN < nElements_global; eN++)
     {
+      printf("eN = %d\n",eN);
       // Boundary Integrals
       for (ebN = 0; ebN < nElementBoundaries_element; ebN++)
   	{
+	  printf("ebN = %d\n",ebN);
   	  for (s = 0; s < edge_dof; s++)
   	    {
+	      printf("s = %d\n",s);
   	      irow = ebN*boundaryPspace + s;
 	      kp = edgeFlags[ebN*boundaryPspace+s];
   	      btmp = 0.0;
@@ -3118,21 +3120,21 @@ void buildBDM2rhs(int nElements_global,
   		{
   		  for (J = 0; J < nSpace; J++) {
 
-		      /* if (eN==1 && ebN==0) { */
-		      /* 	printf("ebq_n=%.2f,ebq_velocity=%.2f,w_dS_f=%.2f\n", */
-		      /* 	       ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+ */
-		      /* 		     ebN*nQuadraturePoints_elementBoundary*nSpace+ */
-		      /* 		     ibq*nSpace+ */
-		      /* 		     J], */
-		      /* 	       ebq_velocity[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+ */
-		      /* 			    ebN*nQuadraturePoints_elementBoundary*nSpace+ */
-		      /* 			    ibq*nSpace+ */
-		      /* 			    J], */
-		      /* 	       w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+ */
-		      /* 		      ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+ */
-		      /* 		      ibq*nDOFs_test_element+ */
-		      /* 		      kp]); */
-		      /* } */
+		    /* /\*if (eN==0 && ebN==1)*\/ { */
+		    /*   	printf("ebq_n=%.2f,ebq_velocity=%.2f,w_dS_f=%.4f\n", */
+		    /*   	       ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+ */
+		    /*   		     ebN*nQuadraturePoints_elementBoundary*nSpace+ */
+		    /*   		     ibq*nSpace+ */
+		    /*   		     J], */
+		    /*   	       ebq_velocity[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+ */
+		    /*   			    ebN*nQuadraturePoints_elementBoundary*nSpace+ */
+		    /*   			    ibq*nSpace+ */
+		    /*   			    J], */
+		    /*   	       w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+ */
+		    /*   		      ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+ */
+		    /*   		      ibq*nDOFs_test_element+ */
+		    /*   		      kp]); */
+		    /*   } */
 
   		      btmp +=
   			ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
@@ -3165,6 +3167,10 @@ void buildBDM2rhs(int nElements_global,
 	  for (ibq=0; ibq < nQuadraturePoints_elementInterior; ibq++){
 	  // Iterate over quadrature points
 
+	    //	    printf("",q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
+	    //			 ibq*nSpace + 
+	    //			 0]);
+	    
 	      pvalx = q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
 				 ibq*nSpace + 
 				 0]

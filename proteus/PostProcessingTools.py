@@ -673,8 +673,9 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                 logEvent("pwl post-processing for finite element space"+str(self.vt.u[ci].femSpace))
                 #need to set up w and w*dS_f and weights to build residuals for linears out of R_{e,i}
                 if self.testSpace == None:
-                    self.testSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
-                assert isinstance(self.testSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis)
+                    self.testSpace = FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
+ #                   self.testSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
+ #               assert isinstance(self.testSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis)
                 self.alpha[ci] = numpy.zeros((self.testSpace.referenceFiniteElement.localFunctionSpace.dim,
                                           self.vt.u[ci].femSpace.referenceFiniteElement.localFunctionSpace.dim),'d')
                 for j,w in enumerate(self.testSpace.referenceFiniteElement.localFunctionSpace.basis):
@@ -714,7 +715,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                 self.elementResidual[ci] = self.vt.elementResidual[ci]
             #solution space not P^1
             self.updateConservationJacobian[ci] = True
-
             #RT0 specific information
             self.nDOFs_element[ci] = self.vt.nSpace_global+1
             self.q[('velocity_dofs',ci)] = numpy.zeros((self.vt.mesh.nElements_global,
@@ -1385,7 +1385,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
     WIP - this class is intended to implement BDM2 elements in proteus
 
     """
-    from cpostprocessing import buildLocalBDM2projectionMatrices,factorLocalBDM2projectionMatrices  #NEED TO CHANGE THESE TO BDM2 AS YOU PROGRESS
+    from cpostprocessing import buildLocalBDM2projectionMatrices,factorLocalBDM2projectionMatrices 
     from cpostprocessing import solveLocalBDM2projection,getElementBDM2velocityValuesLagrangeRep,buildBDM2rhs
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VPP_PWL_RT0.__init__(self,vectorTransport=vectorTransport,vtComponents=vtComponents)
@@ -1426,6 +1426,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
 
     def setInteriorVelocityValues(self,ci):
         #self.q[('velocity',ci)].fill(0.0)
+        import pdb
+        pdb.set_trace()
         if self.vt.q.has_key(('a',ci,ci)):
             assert self.vt.q.has_key(('grad(phi)',ci))
             updateCoef = 0.0 #overwrite first time
@@ -1684,9 +1686,12 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
 #        assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
 #        self.getAverageFlux(ci)
-        for ci in self.vtComponents:
-            self.setInteriorVelocityValues(ci)
 
+# *** Not sure what this does ***?
+#        for ci in self.vtComponents:
+#            self.setInteriorVelocityValues(ci)
+
+        
         self.buildBDM2rhs(self.BDMprojectionMat_element,
                           self.BDMprojectionMatPivots_element,
                           self.ebq[('w*dS_u',self.BDMcomponent)],
@@ -1711,6 +1716,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.vt.q[('w',ci)],
                                                                 self.q[('velocity_dofs',ci)],
                                                                 self.vt.q[('velocity',ci)])
+
     def evaluateElementVelocityField(self,x,ci):
         """
         evaluate velocity field assuming velocity_dofs already calculated

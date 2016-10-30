@@ -285,6 +285,8 @@ if len(args) == 1:#arg should be an sso file or an so module
     if args[0][-3:] == '.py':
         log("Loading so module = "+args[0])
         so = __import__(args[0][:-3])
+        import pdb
+        pdb.set_trace()
         if so.name == None:
             so.name = args[0][:-3]
         for (pModule,nModule) in so.pnList:
