@@ -11,10 +11,59 @@ import numpy
 import triangleWrappers
 import TriangleUtils
 import TriangleFileUtils
+import MeshTools
+
+def genMeshWithTetgen(polyfile,
+                      baseFlags="Yp",
+                      nbase = 1):
+    """
+    Generate a tetrahedral mesh from a polyfile.
+
+    Arguments
+    ---------
+    polyfile : str
+        Filename with appropriate data for tengen.
+    baseFlags : str
+        Standard Tetgen options for generation
+    nbase : int
+
+    Returns
+    -------
+    mesh : :class:`proteus.MeshTools.TetrahedralMesh`
+        Simplex mesh
+    """
+    from subprocess import check_call
+    tetcmd = "tetgen - %s %s.poly" % (baseFlags, polyfile)
+    check_call(tetcmd,shell=True)
+    elefile = "%s.1.ele" % polyfile
+    nodefile = "%s.1.node" % polyfile
+    facefile = "%s.1.face" % polyfile
+    edgefile = "%s.1.edge" % polyfile
+    assert os.path.exists(elefile), "no 1.ele"
+    tmp = "%s.ele" % polyfile
+    os.rename(elefile,tmp)
+    assert os.path.exists(tmp), "no .ele"
+    assert os.path.exists(nodefile), "no 1.node"
+    tmp = "%s.node" % polyfile
+    os.rename(nodefile,tmp)
+    assert os.path.exists(tmp), "no .node"
+    if os.path.exists(facefile):
+        tmp = "%s.face" % polyfile
+        os.rename(facefile,tmp)
+        assert os.path.exists(tmp), "no .face"
+    if os.path.exists(edgefile):
+        tmp = "%s.edge" % polyfile
+        os.rename(edgefile,tmp)
+        assert os.path.exists(tmp), "no .edge"
+    mesh=MeshTools.TetrahedralMesh()
+    mesh.generateFromTetgenFiles(polyfile,
+                                 base=nbase)
+    return mesh
+
 
 
 class TriangleBaseMesh:
-    """ This is basically a wrapper for the triangulateio interface
+    """ This is basically a wrapper for the triangulation interface
     that should be able to create a triangle mesh in different ways
 
        from .ele and .node files
@@ -29,7 +78,7 @@ class TriangleBaseMesh:
 
     def __init__(self,baseFlags="zen",nbase=0,verbose=0):
         """
-        initialize the triangulateio object,
+        initialize the triangulation object,
         keep track of what numbering scheme it uses,
         create a base set of flags for triangulate (e.g., z if using base 0)
 

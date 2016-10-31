@@ -3742,15 +3742,33 @@ class MultilevelHexahedralMesh(MultilevelMesh):
 
 def buildReferenceSimplex(nd=2):
     """
-    This function creates and returns a Proteus mesh object for the reference 
-    simplex.  This function can helpful for test development.
+    Create and return a Proteus mesh object for the reference 
+    element.
+
+    Parameters
+    ----------
+    nd : int
+        Dimension of reference element
+
+    Returns
+    -------
+    mesh : :class:`proteus.MeshTools.TriangularMesh`
+        Simplex mesh
     """
     from proteus import Domain
     from proteus import TriangleTools
-    if nd == 2:
-        unit_simplex_domain_2d = Domain.unitSimplex(2)
-        polyfile = "reference_triangle"
-        unit_simplex_domain_2d.writePoly(polyfile)
+
+    assert(nd in [1,2,3])
+
+    if nd==1:
+        pass # Note sure what needs to go here?!
+    
+    unit_simplex_domain = Domain.unitSimplex(nd)
+    polyfile = "reference_element"
+    unit_simplex_domain.writePoly(polyfile)
+
+    
+    if nd==2:
         tmesh = TriangleTools.TriangleBaseMesh(baseFlags="Yp",
                                                nbase=1,
                                                verbose=False)
@@ -3759,9 +3777,11 @@ def buildReferenceSimplex(nd=2):
         mesh.partitionMesh()
         mesh.globalMesh = mesh
         return mesh
-    if nd == 3:
-        pass
-
+    if nd==3:
+        mesh = TriangleTools.genMeshWithTetgen(polyfile,
+                                               "Yp",
+                                               nbase = 1)
+        return mesh
 
 class TriangularMesh(Mesh):
     """A mesh of triangles
