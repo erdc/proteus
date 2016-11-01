@@ -846,7 +846,7 @@ class NS_base:  # (HasTraits):
                                 ###################
                                 logEvent("FIRST hacked STAGE of SSP33",level=3)
                                 #save DOFs from previous time step
-
+                                
                                 if (model.levelModelList[0].timeIntegration is not None and  
                                     model.levelModelList[0].timeIntegration.use_SSP33): 
                                     unm1 = numpy.copy(model.levelModelList[0].coefficients.u_dof_old)
@@ -859,7 +859,7 @@ class NS_base:  # (HasTraits):
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
                                 if (model.levelModelList[0].timeIntegration is not None and  
-                                    model.levelModelList[0].timeIntegration.use_SSP33):
+                                   model.levelModelList[0].timeIntegration.use_SSP33):
                                 #if (False): #NOTE: I USE FORWARD EULER WHILE DEVELOPING SPATIAL DISCRETIZATIONS
                                     #get stage 1 solution
                                     uStage1 = numpy.copy(model.uList[0])

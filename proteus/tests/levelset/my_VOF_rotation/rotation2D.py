@@ -8,7 +8,7 @@ ENTROPY_VISCOSITY=1
 SUPG=0
 cE = 10.0
 cMax = 0.1
-cK = 10.0
+cK = 1.0
 shockCapturingFactor_vof=0.2
 #Other time parameters
 timeOrder = 1

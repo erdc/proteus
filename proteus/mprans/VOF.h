@@ -5,12 +5,13 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+#define USE_SECOND_ORDER_dLij 1
 #define EDGE_VISCOSITY 1
 #define LUMPED_MASS_MATRIX 0
 //ENTROPY FUNCTIONS and SOME FLAGS (MQL)//
 #define entropy_power 2. // phiL and phiR are dummy variables
-#define ENTROPY(phi,phiL,phiR) 1./entropy_power*std::pow(phi,entropy_power)
-#define ENTROPY_GRAD(phi,phix,phiL,phiR) std::pow(phi,entropy_power-1.)*phix
+#define ENTROPY(phi,phiL,phiR) 1./entropy_power*std::pow(std::abs(phi),entropy_power)
+#define ENTROPY_GRAD(phi,phix,phiL,phiR) std::pow(std::abs(phi),entropy_power-1.)*(phi>=0 ? 1 : -1)*phix
 // LOG ENTROPY FOR LEVEL SET FROM 0 to 1
 //#define ENTROPY(phi,phiL,phiR) std::log(std::abs((phi-phiL)*(phiR-phi))+1E-14)
 //#define ENTROPY_GRAD(phi,phix,phiL,phiR) (phiL+phiR-2*phi)*phix*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(std::abs((phi-phiL)*(phiR-phi))+1E-14) 
@@ -689,6 +690,33 @@ namespace proteus
 	  entropy_mean /= volume;
 	  entropy_normalization_factor = std::max(std::abs(entropy_max-entropy_mean),std::abs(entropy_min-entropy_mean));
 	  //std::cout << "***************** ENTROPY NORMALIZATION FACTOR ...: " << entropy_normalization_factor << std::endl;
+
+	  //////////////////////////////////
+	  // COMPUTE SMOOTHNESS INDICATOR //
+	  //////////////////////////////////
+	  register double psi[numDOFs];
+	  for (int i=0; i<numDOFs; i++)
+	    {
+	      if (USE_SECOND_ORDER_dLij==0)
+		{
+		  double alphai, alphai_numerator=0, alphai_denominator=0; // smoothness indicator
+		  int num_columns = csrRowIndeces_DofLoops[i+1]-csrRowIndeces_DofLoops[i];
+		  double betaij = 1./(num_columns-1); // weight within smoothness indicator
+		  double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+		  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+		    {
+		      int j = csrColumnOffsets_DofLoops[offset];
+		      double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+		      alphai_numerator += betaij*(solnj-solni);
+		      alphai_denominator += betaij*std::abs(solnj-solni);
+		    }
+		  alphai = std::abs(alphai_numerator)/(alphai_denominator+1E-14);
+		  psi[i] = std::pow(alphai,1); //NOTE: they use alpha^2 in the paper
+		}
+	      else
+		psi[i] = 1.0;
+	    }
+	  
 	  /////////////////////////////////////////////
 	  // ** LOOP IN DOFs FOR EDGE BASED TERMS ** //
 	  /////////////////////////////////////////////
@@ -702,20 +730,23 @@ namespace proteus
 	      double ith_flux_term = 0;
 	      double ith_dissipative_term = 0;
 	      double ith_low_order_dissipative_term = 0;
-	      
+
+	      // loop over the sparsity pattern of the i-th DOF
 	      for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 		{
 		  int j = csrColumnOffsets_DofLoops[offset];
 		  double vxj = velx_tn_dof[j];
 		  double vyj = vely_tn_dof[j]; // velocity at time tn for the jth DOF
 		  double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
-		  
+
 		  double dLij=0., dCij=0.;
 		  ith_flux_term += solnj*(vxj*Cx[ij] + vyj*Cy[ij]);
 		  if (i != j) //NOTE: if no matrices are computed then there is no need to check for i!=j (see formula for ith_dissipative_term)
 		    {
 		      // low-order dissipative operator
-		      dLij = -std::max(std::abs(vxi*Cx[ij] + vyi*Cy[ij]),std::abs(vxj*CTx[ij] + vyj*CTy[ij]));		      
+		      dLij = -std::max(std::abs(vxi*Cx[ij] + vyi*Cy[ij]),std::abs(vxj*CTx[ij] + vyj*CTy[ij]));
+		      // weight low-order dissipative matrix to make it higher order
+		      dLij *= std::max(psi[i],psi[j]);
 		      // high-order (entropy viscosity) dissipative operator 
 		      double dEij = -std::min(std::abs(dLij),cE*std::abs(EntViscMatrix[ij])/entropy_normalization_factor);
 		      // artificial compression
@@ -739,6 +770,7 @@ namespace proteus
 		}
 	      // update residual 
 	      globalResidual[i] += dt*(ith_flux_term + ith_dissipative_term);
+	      //globalResidual[i] += dt*(ith_flux_term + ith_low_order_dissipative_term);
 	      flux_plus_dLij_times_soln[i] = ith_flux_term + ith_low_order_dissipative_term;
 	    }
 	  ////////////////////////////////
