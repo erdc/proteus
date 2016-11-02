@@ -281,28 +281,34 @@ class VelocityPostProcessingAlgorithmBase:
             self.velocityWriter.writeVectorFunctionXdmf_LowestOrderMixed(archive,velocity,tCount,init=initialPhase,name="velocity_vpp"+"_%s" % ci)
 
     def getElementwiseFlux(self,ci):
-        """ Calculate the elementwise flux given the boundary velocities
+        """ 
+        Calculates elementwise fluxes given the boundary velocities.
+        
+        Arguments
+        ---------
+        ci : int
+            The component number
         
         Notes
         -----
-        This function is a WIP and has not been extensively tested.
-        Also, it does not account for the effect of source terms.
+        This function has not been extensively tested and it does not account for the 
+        source terms.
         """
-
         num_elements        = self.vt.mesh.nElements_global
         num_edges           = self.vt.mesh.nElementBoundaries_element
         num_edge_qdpts      = self.ebq[('velocity',ci)][0][0].shape[0]
         self.element_flux   = numpy.zeros(shape = (num_elements,1))
-
+        
         for element in range(num_elements):
             for edge in range(num_edges):
                 edge_values = self.ebq[('velocity',ci)][element][edge]
                 norm_values = self.ebq['n'][element][edge]
                 int_weights = self.ebq[('dS_u',0)][element][edge]
                 for k in range(num_edge_qdpts):
-                    self.element_flux[element] += ( 
-                                              edge_values[k][0] * norm_values[k][0] * int_weights[k] +
-                                              edge_values[k][1] * norm_values[k][1] * int_weights[k] )
+                    for t in range(len(edge_values[k])):
+                        self.element_flux[element] +=  (edge_values[k][t] *
+                                                        norm_values[k][t] *
+                                                        int_weights[k])
 
 
 class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
