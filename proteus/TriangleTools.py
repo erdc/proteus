@@ -12,9 +12,8 @@ import triangleWrappers
 import TriangleUtils
 import TriangleFileUtils
 
-
 class TriangleBaseMesh:
-    """ This is basically a wrapper for the triangulateio interface
+    """ This is basically a wrapper for the triangulation interface
     that should be able to create a triangle mesh in different ways
 
        from .ele and .node files
@@ -29,7 +28,7 @@ class TriangleBaseMesh:
 
     def __init__(self,baseFlags="zen",nbase=0,verbose=0):
         """
-        initialize the triangulateio object,
+        initialize the triangulation object,
         keep track of what numbering scheme it uses,
         create a base set of flags for triangulate (e.g., z if using base 0)
 
