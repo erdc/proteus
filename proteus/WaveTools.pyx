@@ -51,40 +51,11 @@ __all__ = ['MonochromaticWaves',
            'decompose_tseries']
 
 cdef extern from "WaveTools.h" namespace "proteus":
-    cdef cppclass cppWaveGen:
-        cppWaveGen()
-        double eta_mode(double* x, double t, double* kDir, double omega, double phi, double amplitude)
-        double* vel_mode(double* x, double t, double* kDir, double kAbs, double omega, double phi, double amplitude, double mwl, double depth, double* waveDir, double* vDir)
-        double etaFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, int Nf, double* Ycoeff)
-        double* uFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, double mwl, double depth,
-                       double gAbs, int Nf, double* Bcoeff, double* mV, double * waveDir, double* vDir)
+    cdef double __cpp_eta_mode(double* x, double t, double* kDir, double omega, double phi, double amplitude)
+    cdef double* __cpp_vel_mode(double* x, double t, double* kDir, double kAbs, double omega, double phi, double amplitude, double mwl, double depth, double* waveDir, double* vDir)
+    cdef double __cpp_etaFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, int Nf, double* Ycoeff)
+    cdef double* __cpp_uFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, double mwl, double depth,double gAbs, int Nf, double* Bcoeff, double* mV, double * waveDir, double* vDir)
 
-cdef class WaveGen:
-    cdef cppWaveGen* thisptr
-    def __cinit__(self):
-        self.thisptr = new cppWaveGen()
-    def eta_mode(self,np.ndarray x, t, np.ndarray kDir,  omega,  phi,  amplitude):
-        return self.thisptr.eta_mode(<double*> x.data, t, <double*> kDir.data,  omega,  phi,  amplitude)
-    def vel_mode(self,np.ndarray x, t, np.ndarray kDir, kAbs , omega,  phi,  amplitude, mwl, depth, np.ndarray waveDir, np.ndarray vDir ):
-        U = np.zeros(3,"d")
-        cdef double* cU = self.thisptr.vel_mode(<double*> x.data, t, <double*> kDir.data,kAbs,  omega,
-                                                 phi,  amplitude, mwl, depth, <double*> waveDir.data, <double*> vDir.data)
-        U[0] = cU[0]
-        U[1] = cU[1]
-        U[2] = cU[2]
-        return U
-    def etaFenton(self, np.ndarray x, t, np.ndarray kDir, kAbs,  omega,  phi0,  amplitude, Nf, np.ndarray Ycoeff):
-        return self.thisptr.etaFenton(<double*> x.data, t, <double*> kDir.data, kAbs,  omega,  phi0,  amplitude, Nf, <double*> Ycoeff.data)
-    def uFenton(self, np.ndarray x, t, np.ndarray kDir,  kAbs, omega,  phi0,  amplitude, 
-                mwl,  depth, gAbs,  Nf, np.ndarray Bcoeff, np.ndarray mV, np.ndarray waveDir, np.ndarray vDir):
-        U = np.zeros(3,"d")
-        cdef double* cU = self.thisptr.uFenton(<double*> x.data,  t, <double*> kDir.data,  kAbs,  omega,  phi0,  amplitude, 
-                   mwl,  depth, gAbs,  Nf,< double*> Bcoeff.data, <double*> mV.data, <double *> waveDir.data, <double*> vDir.data)
-
-        U[0] = cU[0]
-        U[1] = cU[1]
-        U[2] = cU[2]
-        return U
 
 
 def loadExistingFunction(funcName, validFunctions):
@@ -608,10 +579,36 @@ def decompose_tseries(time,eta,dt):
     return results
 
 
+ctypedef double (*cfeta) (double* , double )  # pointer to eta function
+ctypedef double* (*cfvel) (double* , double )  # pointer to velocity function
 
 
 
-class MonochromaticWaves:
+cdef class  MonochromaticWaves:
+    cdef np.ndarray g
+    cdef np.ndarray waveDir
+    cdef np.ndarray vDir
+    cdef double gAbs
+    cdef double phi
+    cdef double mwl
+    cdef double depth
+    cdef double omega
+    cdef double k
+    cdef int Nf
+    cdef np.ndarray Ycoeff
+    cdef np.ndarray Bcoeff
+    cdef np.ndarray kDir
+    cdef double amp
+    cdef np.ndarray mV    
+    cdef double* kDir_
+    cdef double* Ycoeff_
+    cdef double* Bcoeff_
+    cdef double* waveDir_
+    cdef double* vDir_
+    cdef double* mV_    
+    cdef public:
+        double wavelength
+
     """
     This class is used for generating regular waves in both linear and nonlinear regimes
 
@@ -651,8 +648,8 @@ class MonochromaticWaves:
             Description: Regular wave phase (0 by default)
             Type: float
 
-    """
-    def __init__(self,
+            """
+    def __cinit__(self,
                  period,
                  waveHeight,
                  mwl,
@@ -664,7 +661,6 @@ class MonochromaticWaves:
                  Ycoeff = None,
                  Bcoeff =None, meanVelocity = np.array([0.,0,0.]),
                  phi0 = 0.):
-        self.WG = WaveGen()
         self.knownWaveTypes = ["Linear","Fenton"]
         self.waveType = waveType
         if self.waveType not in self.knownWaveTypes:
@@ -718,20 +714,27 @@ class MonochromaticWaves:
             logEvent("ERROR! Wavetools.py: meanVelocity should be a vector with 3 components. ",level=0)
             sys.exit(1)
 
+# C++ declarations
+
+        self.kDir_ = <double *> self.kDir.data
+        self.Ycoeff_ = <double *> self.Ycoeff.data
+        self.waveDir_ = <double *> self.waveDir.data
+        self.vDir_ = <double *> self.vDir.data
+        self.Bcoeff_ = <double *> self.Ycoeff.data
+        self.mV_ = <double *> self.mV.data
 
 
 
 
-
-
+        """
         if self.waveType == "Linear":
             self.eta = self.etaLinear
             self.u = self.uLinear
         else:
             self.eta = self.etaFenton
             self.u = self.uFenton
-
-    def etaLinear(self, x, t):
+            """
+    cdef public double etaLinear(self, double* x, double t):
         """Calculates free surface elevation (MonochromaticWaves class - Linear waves)
         Parameters
         ----------
@@ -746,15 +749,11 @@ class MonochromaticWaves:
             Free-surface elevation as a float
 
         """
-        cdef np.ndarray xi = np.array(x)
+    
  
-        cdef np.ndarray kDir = self.kDir
+        return __cpp_eta_mode(x ,t, self.kDir_,self.omega,self.phi0,self.amplitude)
 
-
-
-        return self.WG.eta_mode(xi,t,kDir,self.omega,self.phi0,self.amplitude)
-
-    def etaFenton(self, x, t):
+    cdef public double  etaFenton(self, double* x, double t):
         """Calculates free surface elevation (MonochromaticWaves class - Fenton waves)
         Parameters
         ----------
@@ -770,15 +769,10 @@ class MonochromaticWaves:
 
         """
 
-        cdef np.ndarray xi = np.array(x)
- 
-        cdef np.ndarray kDir = self.kDir
-        cdef np.ndarray Ycoeff = self.Ycoeff
-
-        return self.WG.etaFenton(xi,t,kDir, self.k, self.omega,self.phi0,self.amplitude, self.Nf, Ycoeff)
+        return __cpp_etaFenton(x,t,self.kDir_, self.k, self.omega,self.phi0,self.amplitude, self.Nf, self.Ycoeff_)
 
 
-    def uLinear(self, x, t):
+    cdef public double* uLinear(self, double* x, double t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
         Parameters
         ----------
@@ -793,18 +787,11 @@ class MonochromaticWaves:
             Velocity vector as 1D array
 
         """
-        cdef np.ndarray xi = np.array(x)
- 
-        cdef np.ndarray kDir = self.kDir
-
-        cdef np.ndarray waveDir = self.waveDir
-
-        cdef np.ndarray vDir = self.vDir
 
         
-        return self.WG.vel_mode(xi, t, kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,waveDir,vDir)
+        return __cpp_vel_mode(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_)
 
-    def uFenton(self, x, t):
+    cdef public double* uFenton(self, double* x, double t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
         Parameters
         ----------
@@ -819,20 +806,8 @@ class MonochromaticWaves:
             Velocity vector as 1D array
 
         """
-        cdef np.ndarray xi = np.array(x)
- 
-        cdef np.ndarray kDir = self.kDir
-
-        cdef np.ndarray Bcoeff= self.Bcoeff
         
-        cdef np.ndarray mV = self.meanVelocity
-
-        cdef np.ndarray waveDir = self.waveDir
-
-        cdef np.ndarray vDir = self.vDir
-
-        
-        return self.WG.uFenton(xi, t, kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, Bcoeff, mV,waveDir,vDir)
+        return __cpp_uFenton(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_)
 
     
 '''class RandomWaves:
