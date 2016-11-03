@@ -579,8 +579,8 @@ def decompose_tseries(time,eta,dt):
     return results
 
 
-ctypedef double (*cfeta) (double* , double )  # pointer to eta function
-ctypedef double* (*cfvel) (double* , double )  # pointer to velocity function
+ctypedef double (*cfeta) (MonochromaticWaves, double* , double )  # pointer to eta function
+ctypedef double* (*cfvel) (MonochromaticWaves, double* , double )  # pointer to velocity function
 
 
 
@@ -594,11 +594,12 @@ cdef class  MonochromaticWaves:
     cdef double depth
     cdef double omega
     cdef double k
+    cdef double phi0
     cdef int Nf
     cdef np.ndarray Ycoeff
     cdef np.ndarray Bcoeff
     cdef np.ndarray kDir
-    cdef double amp
+    cdef double amplitude
     cdef np.ndarray mV    
     cdef double* kDir_
     cdef double* Ycoeff_
@@ -608,7 +609,8 @@ cdef class  MonochromaticWaves:
     cdef double* mV_    
     cdef public:
         double wavelength
-
+    cdef cfeta eta
+    cdef cfvel u
     """
     This class is used for generating regular waves in both linear and nonlinear regimes
 
@@ -661,10 +663,11 @@ cdef class  MonochromaticWaves:
                  Ycoeff = None,
                  Bcoeff =None, meanVelocity = np.array([0.,0,0.]),
                  phi0 = 0.):
-        self.knownWaveTypes = ["Linear","Fenton"]
-        self.waveType = waveType
-        if self.waveType not in self.knownWaveTypes:
-            logEvent("Wrong wavetype given: Valid wavetypes are %s" %(self.knownWaveTypes), level=0)
+        
+
+        knownWaveTypes = ["Linear","Fenton"]
+        if waveType not in knownWaveTypes:
+            logEvent("Wrong wavetype given: Valid wavetypes are %s" %(knownWaveTypes), level=0)
             sys.exit(1)
         self.g = np.array(g)
         self.waveDir =  setDirVector(np.array(waveDir))
@@ -674,8 +677,6 @@ cdef class  MonochromaticWaves:
 #Checking if g and waveDir are perpendicular
         dirCheck(self.waveDir,self.vDir)
         self.phi0=phi0
-        self.period = period
-        self.waveHeight = waveHeight
         self.mwl = mwl
         self.depth = depth
         self.omega = 2.0*M_PI/period
@@ -685,7 +686,7 @@ cdef class  MonochromaticWaves:
         self.Bcoeff = Bcoeff
 
 #Calculating / checking wavelength data
-        if  self.waveType== "Linear":
+        if  waveType== "Linear":
             self.k = dispersion(w=self.omega,d=self.depth,g=self.gAbs)
             self.wavelength = 2.0*M_PI/self.k
         else:
@@ -706,8 +707,8 @@ cdef class  MonochromaticWaves:
                 sys.exit(1)
            
         self.kDir = self.k * self.waveDir
-        self.amplitude = 0.5*self.waveHeight
-        self.meanVelocity = np.array(meanVelocity)
+        self.amplitude = 0.5*waveHeight
+        self.mV = np.array(meanVelocity)
 #Checking that meanvelocity is a vector
 
         if(len(meanVelocity) != 3):
@@ -726,15 +727,15 @@ cdef class  MonochromaticWaves:
 
 
 
-        """
-        if self.waveType == "Linear":
+        
+        if waveType == "Linear":
             self.eta = self.etaLinear
             self.u = self.uLinear
         else:
             self.eta = self.etaFenton
             self.u = self.uFenton
-            """
-    cdef public double etaLinear(self, double* x, double t):
+
+    cdef double etaLinear(self, double* x, double t):
         """Calculates free surface elevation (MonochromaticWaves class - Linear waves)
         Parameters
         ----------
@@ -753,7 +754,7 @@ cdef class  MonochromaticWaves:
  
         return __cpp_eta_mode(x ,t, self.kDir_,self.omega,self.phi0,self.amplitude)
 
-    cdef public double  etaFenton(self, double* x, double t):
+    cdef double etaFenton(self, double* x, double t):
         """Calculates free surface elevation (MonochromaticWaves class - Fenton waves)
         Parameters
         ----------
@@ -772,7 +773,7 @@ cdef class  MonochromaticWaves:
         return __cpp_etaFenton(x,t,self.kDir_, self.k, self.omega,self.phi0,self.amplitude, self.Nf, self.Ycoeff_)
 
 
-    cdef public double* uLinear(self, double* x, double t):
+    cdef double* uLinear(self, double* x, double t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
         Parameters
         ----------
@@ -791,7 +792,7 @@ cdef class  MonochromaticWaves:
         
         return __cpp_vel_mode(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_)
 
-    cdef public double* uFenton(self, double* x, double t):
+    cdef double* uFenton(self, double* x, double t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
         Parameters
         ----------
