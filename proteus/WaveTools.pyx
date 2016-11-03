@@ -609,8 +609,8 @@ cdef class  MonochromaticWaves:
     cdef double* mV_    
     cdef public:
         double wavelength
-    cdef cfeta eta
-    cdef cfvel u
+    cdef public cfeta eta
+    cdef public cfvel u
     """
     This class is used for generating regular waves in both linear and nonlinear regimes
 
