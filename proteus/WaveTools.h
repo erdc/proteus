@@ -6,14 +6,9 @@
 namespace proteus
 {
  const int nDim(3);
- class cppWaveGen 
- {
- public:
- cppWaveGen()
-   {}
   
 
-   inline double eta_mode(double x[nDim], double t, double kDir[nDim], double omega, double phi, double amplitude)
+ inline double __cpp_eta_mode(double x[nDim], double t, double kDir[nDim], double omega, double phi, double amplitude)
   {
 
     double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
@@ -23,7 +18,7 @@ namespace proteus
   }
 
 
-      inline double* vel_mode(double x[nDim], double t, double kDir[nDim], 
+ inline double* __cpp_vel_mode(double x[nDim], double t, double kDir[nDim], 
 			   double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double waveDir[nDim], double vDir[nDim])
    {
 
@@ -47,7 +42,7 @@ namespace proteus
 
 //---------------------------------------------------------NONLINEAR FENTON-------------------------------------------------------------------------
 
-      inline double etaFenton(double x[nDim], double t, double kDir[nDim], double kAbs, double omega, 
+ inline double __cpp_etaFenton(double x[nDim], double t, double kDir[nDim], double kAbs, double omega, 
 			      double phi0, double amplitude, int Nf, double* Ycoeff)
 
 
@@ -65,12 +60,12 @@ namespace proteus
 	    om = ii*omega;
 	    kw = {ii*kDir[0], ii*kDir[1], ii*kDir[2]};
 	    phi = ii*phi0;
-	    HH= HH + eta_mode(x,t,kw,om,phi,Ycoeff[nn]);
+	    HH= HH + __cpp_eta_mode(x,t,kw,om,phi,Ycoeff[nn]);
 	  }
         return HH/kAbs;
       }
 
-      inline double* uFenton(double x[nDim],double t,double kDir[nDim],double kAbs,double omega,double phi0,double amplitude,
+ inline double* __cpp_uFenton(double x[nDim],double t,double kDir[nDim],double kAbs,double omega,double phi0,double amplitude,
 			    double mwl, double depth, double gAbs, int Nf, double* Bcoeff ,double* mV, double waveDir[nDim], double vDir[nDim] )
 
 
@@ -98,7 +93,7 @@ namespace proteus
 	      }
 	    phi = ii*phi0;
             amp = tanh(kmode*depth)*sqrt(gAbs/kAbs)*Bcoeff[nn]/omega;
-	    Ufenton = vel_mode(x, t ,kdir1, kmode, om, phi, amp, mwl, depth, waveDir, vDir); 
+	    Ufenton = __cpp_vel_mode(x, t ,kdir1, kmode, om, phi, amp, mwl, depth, waveDir, vDir); 
 	    Uf[0] +=   Ufenton[0];
 	    Uf[1] +=  Ufenton[1];
 	    Uf[2] +=  Ufenton[2];
@@ -113,7 +108,7 @@ namespace proteus
 
 
         return Uf;
-      }
+      
 
 
       
