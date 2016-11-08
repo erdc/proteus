@@ -189,41 +189,29 @@ class Gauges(AV_base):
         """
 
         # search elements that contain the nearest node
-        foundElements=[]
-        nearestNodes=[]
-        nearestNodeDistances=[]
-        (distances, nodes) = self.nodes_kdtree.query(location,3)
-        for  node, distance in zip(nodes, distances):
+        patchBoundaryNodes=set()
+        checkedElements=[]
+        for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+            eN = femSpace.mesh.nodeElementsArray[eOffset]
+            checkedElements.append(eN)
+            patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
+            # evaluate the inverse map for element eN
+            xi = femSpace.elementMaps.getInverseValue(eN, location)
+            # query whether xi lies within the reference element
+            if femSpace.elementMaps.referenceElement.onElement(xi):
+                return eN
+        for node in patchBoundaryNodes:
             for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
                 eN = femSpace.mesh.nodeElementsArray[eOffset]
-                # evaluate the inverse map for element eN
-                xi = femSpace.elementMaps.getInverseValue(eN, location)
-                # query whether xi lies within the reference element
-                if femSpace.elementMaps.referenceElement.onElement(xi):
-                    foundElements.append(eN)
-                    nearestNodes.append(node)
-                    nearestNodeDistances.append(distance)
-        if len(foundElements) > 0:
-            if len(foundElements) > 1:
-                eN = foundElements[0]
-                coord_sum = 100.0
-                for e,n,d in zip(foundElements, nearestNodes, nearestNodeDistances):
-                    xi = femSpace.elementMaps.getInverseValue(e, location)
-                    if sum(xi) < coord_sum:
-                        eN=e
-                        N=n
-                        D=d
-                        coord_sum = sum(xi)
-                if  nodeCheck:
-                    assert(nodeCheck == N)
-                return eN,N,D
-            else:
-                if nodeCheck:
-                    assert(nodeCheck == nearestNodes[0])
-                return foundElements[0], nearestNodes[0], nearestNodeDistances[0]
-        else:
-            return None
-
+                if eN not in checkedElements:
+                    checkedElements.append(eN)
+                    # evaluate the inverse map for element eN
+                    xi = femSpace.elementMaps.getInverseValue(eN, location)
+                    # query whether xi lies within the reference element
+                    if femSpace.elementMaps.referenceElement.onElement(xi):
+                        return eN
+        # no elements found
+        return None
 
     def findNearestNode(self, femSpace, location):
         """Given a gauge location, attempts to locate the most suitable process for monitoring information about
