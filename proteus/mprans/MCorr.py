@@ -56,7 +56,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.epsDiffusion = self.epsFactDiffusion*mesh.h
     def attachModels(self,modelList):
         import copy
-        log("Attaching models in LevelSetConservation")
+        logEvent("Attaching models in LevelSetConservation")
         #level set
         self.lsModel = modelList[self.levelSetModelIndex]
         self.q_u_ls  = modelList[self.levelSetModelIndex].q[('u',0)]
@@ -92,7 +92,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 #                                                         self.massCorrModel.mesh.nElements_owned)
                 #self.vofGlobalMass = 0.0
                 #self.lsGlobalMass = self.massCorrModel.calculateMass(self.lsModel.q[('u',0)])
-                #log("Attach Models MCorr: mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+                #logEvent("Attach Models MCorr: mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                 #                                                                                self.massCorrModel.q[('r',0)],
                 #                                                                                self.massCorrModel.mesh.nElements_owned),),level=2)
                 self.fluxGlobal = 0.0
@@ -103,10 +103,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.lsGlobalMassErrorArray = []#self.lsGlobalMass - self.lsGlobalMassArray[0]]# + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral]
                 self.fluxArray = []#0.0]#self.vofModel.coefficients.fluxIntegral]
                 self.timeArray = []#self.vofModel.timeIntegration.t]
-                #log("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
-                #log("Attach Models MCorr: Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
-                #log("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
-                #log("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                #logEvent("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
+                #logEvent("Attach Models MCorr: Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
+                #logEvent("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                #logEvent("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
     def initializeElementQuadrature(self,t,cq):
         if self.sd and cq.has_key(('a',0,0)):
             cq[('a',0,0)].fill(self.epsDiffusion)
@@ -118,15 +118,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             cebqe[('a',0,0)].fill(self.epsDiffusion)
     def preStep(self,t,firstStep=False):
         if self.checkMass:
-            log("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                  self.vofModel.q[('m',0)],
                                                                                                  self.massCorrModel.mesh.nElements_owned),),level=2)
-            log("Phase 0 mass (primitive) before mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
+            logEvent("Phase 0 mass (primitive) before mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
                                                                                                                  self.massCorrModel.elementDiameter,
                                                                                                                  self.vofModel.q['dV'],
                                                                                                                  self.lsModel.q[('m',0)],
                                                                                                                  self.massCorrModel.mesh.nElements_owned),),level=2)
-            log("Phase 0 mass (consistent) before mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m',0)]),),level=2)
+            logEvent("Phase 0 mass (consistent) before mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m',0)]),),level=2)
         copyInstructions = {'clear_uList':True}
         return copyInstructions
     def postStep(self,t,firstStep=False):
@@ -142,15 +142,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
             #####print "********************max VOF************************",max(self.vofModel.q[('u',0)].flat[:])
         if self.checkMass:
-            log("Phase 0 mass after mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass after mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                 self.vofModel.q[('m',0)],
                                                                                                 self.massCorrModel.mesh.nElements_owned),),level=2)
-            log("Phase 0 mass (primitive) after mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
+            logEvent("Phase 0 mass (primitive) after mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
                                                                                                                 self.massCorrModel.elementDiameter,
                                                                                                                 self.vofModel.q['dV'],
                                                                                                                 self.lsModel.q[('m',0)],
                                                                                                                 self.massCorrModel.mesh.nElements_owned),),level=2)
-            log("Phase 0 mass (consistent) after mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m',0)]),),level=2)
+            logEvent("Phase 0 mass (consistent) after mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m',0)]),),level=2)
         copyInstructions = {}
         #get the waterline on the obstacle if option set in NCLS (boundary==7)
 	self.lsModel.computeWaterline(t)
@@ -193,10 +193,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if (self.checkMass and c[('u',0)].shape == self.q_u_ls.shape):
             self.m_tmp[:] = H_vof
             self.m_tmp += self.massCorrModel.q[('r',0)]
-            log("mass correction during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("mass correction during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                      self.massCorrModel.q[('r',0)],
                                                                                      self.massCorrModel.mesh.nElements_owned),),level=2)
-            log("Phase 0 mass during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                  self.m_tmp,
                                                                                   self.massCorrModel.mesh.nElements_owned),),level=2)
 
@@ -432,7 +432,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
         self.tensors_elementBoundaryQuadrature= set()
-        log(memory("element and element boundary Jacobians","OneLevelTransport"),level=4)
+        logEvent(memory("element and element boundary Jacobians","OneLevelTransport"),level=4)
 	self.inflowBoundaryBC = {}
 	self.inflowBoundaryBC_values = {}
 	self.inflowFlux = {}
@@ -458,10 +458,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         del self.internalNodes
         self.internalNodes = None
-        log("Updating local to global mappings",2)
+        logEvent("Updating local to global mappings",2)
         self.updateLocal2Global()
-        log("Building time integration object",2)
-        log(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
+        logEvent("Building time integration object",2)
+        logEvent(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
         #mwf for interpolating subgrid error for gradients etc
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
@@ -470,8 +470,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if options != None:
             self.timeIntegration.setFromOptions(options)
-        log(memory("TimeIntegration","OneLevelTransport"),level=4)
-        log("Calculating numerical quadrature formulas",2)
+        logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
+        logEvent("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
         self.setupFieldStrides()
 
@@ -480,7 +480,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if comm.size() > 1:
             assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        log(memory("stride+offset","OneLevelTransport"),level=4)
+        logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
             if options == None or options.periodicDirichletConditions == None:
                 self.numericalFlux = numericalFluxType(self,
@@ -508,12 +508,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
-        log(memory("numericalFlux","OneLevelTransport"),level=4)
+        logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
-        log(memory("velocity postprocessor","OneLevelTransport"),level=4)
+        logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         from proteus import Archiver
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
@@ -599,9 +599,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
-        log("Global residual",level=9,data=r)
-        self.coefficients.massConservationError == fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
-        log("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
+        logEvent("Global residual",level=9,data=r)
+        self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
+        logEvent("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy == None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
@@ -642,7 +642,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_porosity,
             self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
             jacobian)
-        log("Jacobian ",level=10,data=jacobian)
+        logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
@@ -843,7 +843,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         J=0.0
         (R,J) = self.globalConstantRJ(u,r,U)
         its=0
-        log("   Mass Conservation Residual 0 ",level=3,data=R)
+        logEvent("   Mass Conservation Residual 0 ",level=3,data=R)
         RNORM_OLD=fabs(R)
         while ((fabs(R) > self.atol and its < self.maxIts) or its<1):
             U -= R/(J+1.0e-8)
@@ -854,7 +854,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 U += (0.5)**lsits * (R/(J+1.0e-8))
                 (R,J) = self.globalConstantRJ(u,r,U)
             its+=1
-            log("   Mass Conservation Residual "+`its`+" ",level=3,data=R)
+            logEvent("   Mass Conservation Residual "+`its`+" ",level=3,data=R)
         self.u[0].dof.flat[:] = U
     def calculateElementQuadrature(self):
         """
