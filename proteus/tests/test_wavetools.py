@@ -97,8 +97,6 @@ class TestAuxFunctions(unittest.TestCase):
         amplitude =0.2
         eta = amplitude*cos(kDir[0]*x+kDir[1]*y+kDir[2]*z - omega*t +phi)
         self.assertTrue((eta - eta_mode([x,y,z],t,kDir,omega,phi,amplitude)==0.))# check eta
-
-
     def testVelMode(self): # Checking particle velocities
         from proteus.WaveTools import vel_mode
 
@@ -388,19 +386,17 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
             uxRef += normDir[0]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
             uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
             uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
-
-#            uxRef+=  normDir[0]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
-#*jj*BC[ii]*normDir[0]*cosh(jj*kw*(z0+depth))*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - jj*omega * t +phi0)*tanh(jj*kw*depth)/sinh(jj*kw*depth)
         self.assertTrue(round(eta,8) == round(etaRef,8) )
+        print ux,uxRef
         self.assertTrue(round(ux,8) == round(uxRef,8))
         self.assertTrue(round(uy,8) == round(uyRef,8))
         self.assertTrue(round(uz,8) == round(uzRef,8))
 
-
+        '''
 #========================================= RANDOM WAVES ======================================
 
 
-'''
+
 class CheckRandomWavesFailures(unittest.TestCase):
     def testFailureModes(self):
         from proteus.WaveTools import RandomWaves
@@ -1837,8 +1833,8 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         self.assertTrue( round(aRF.eta(x,t) == aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t),8) )
         self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
 
+        '''
 
-'''
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 
