@@ -4,6 +4,7 @@
 #include <iostream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
+#include "SedClosure.h"
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
 const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
@@ -819,7 +820,7 @@ namespace proteus
 					   double dmom_v_source[nSpace],
 					   double dmom_w_source[nSpace])
     {
-      double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
+      double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
@@ -1120,9 +1121,9 @@ namespace proteus
       flux_umom = 0.0;
       flux_vmom = 0.0;
       flux_wmom = 0.0;
-      flowSpeedNormal=porosity*(n[0]*velocity_star[0] +
-                                n[1]*velocity_star[1] +
-                                n[2]*velocity_star[2]);
+      flowSpeedNormal=vos*(n[0]*velocity_star[0] +
+			   n[1]*velocity_star[1] +
+			   n[2]*velocity_star[2]);
       velocity[0] = u;
       velocity[1] = v;
       velocity[2] = w;
@@ -1272,9 +1273,9 @@ namespace proteus
       dflux_wmom_du = 0.0;
       dflux_wmom_dv = 0.0;
       dflux_wmom_dw = 0.0;
-      flowSpeedNormal=porosity*(n[0]*velocity_star[0] +
-                                n[1]*velocity_star[1] +
-                                n[2]*velocity_star[2]);
+      flowSpeedNormal=vos*(n[0]*velocity_star[0] +
+			   n[1]*velocity_star[1] +
+			   n[2]*velocity_star[2]);
       if (isDOFBoundary_u != 1)
 	{
 	  dflux_mass_du += n[0]*df_mass_du[0];
@@ -1696,7 +1697,7 @@ namespace proteus
 		p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
 		dV,x,y,z,xt,yt,zt,
 		//
-		porosity,
+		vos, porosity,
 		//meanGrainSize,
 		mass_source,
 		dmom_u_source[nSpace],
@@ -3352,7 +3353,7 @@ namespace proteus
 		p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
 		x,y,z,xt,yt,zt,
 		//VRANS
-		vos,
+		vos, porosity, 
 		//meanGrainSize,
 		dmom_u_source[nSpace],
 		dmom_v_source[nSpace],
@@ -4250,7 +4251,7 @@ namespace proteus
 				   &ebqe_normal_phi_ext[ebNE_kb_nSpace],
 				   ebqe_kappa_phi_ext[ebNE_kb],
 				   //VRANS
-				   ebqe_vos_ext[ebNE_kb],
+				   vos_ext,
 				   //
 				   bc_p_ext,
 				   grad_p_ext,
@@ -4322,7 +4323,7 @@ namespace proteus
 					  useVF,
 					  ebqe_vf_ext[ebNE_kb],
 					  ebqe_phi_ext[ebNE_kb],
-					  ebqe_vos_ext[ebNE_kb],
+					  vos_ext,
 					  c_mu, //mwf hack
 					  ebqe_turb_var_0[ebNE_kb],
 					  ebqe_turb_var_1[ebNE_kb],
@@ -4351,7 +4352,7 @@ namespace proteus
 					  useVF,
 					  ebqe_vf_ext[ebNE_kb],
 					  ebqe_phi_ext[ebNE_kb],
-					  ebqe_vos_ext[ebNE_kb],
+					  vos_ext,
 					  c_mu, //mwf hack
 					  ebqe_turb_var_0[ebNE_kb],
 					  ebqe_turb_var_1[ebNE_kb],

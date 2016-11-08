@@ -64,8 +64,9 @@ class TestHsu(unittest.TestCase):
         if(drag2 != 0):
             drag /=drag2
             drag2/=drag2
-        self.assertTrue(round(drag,10) == round(drag2,10))
-
+        #if you use npt.assert_almost_equal you get more info on failure...
+        #self.assertTrue(round(drag,10) == round(drag2,10))
+        npt.assert_almost_equal(drag,drag2)
     def testGradularDrag3(self):
         gl=GlobalVariables()
         import random
@@ -83,7 +84,8 @@ class TestHsu(unittest.TestCase):
         if(drag2 != 0):
             drag /=drag2
             drag2/=drag2
-        self.assertTrue(round(drag,10) == round(drag2,10))
+        #self.assertTrue(round(drag,10) == round(drag2,10))
+        npt.assert_almost_equal(drag, drag2)
     def testGradularDrag4(self):
         gl=GlobalVariables()
         import random
@@ -105,7 +107,8 @@ class TestHsu(unittest.TestCase):
         if(drag2 != 0):
             drag /=drag2
             drag2/=drag2
-        self.assertTrue(round(drag,10) == round(drag2,10))
+        #self.assertTrue(round(drag,10) == round(drag2,10))
+        npt.assert_almost_equal(drag, drag2)
     def testgs0(self):
         gl=GlobalVariables()
         f = 8
