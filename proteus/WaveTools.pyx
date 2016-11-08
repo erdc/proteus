@@ -52,9 +52,9 @@ __all__ = ['MonochromaticWaves',
 
 cdef extern from "WaveTools.h" namespace "proteus":
     cdef double __cpp_eta_mode(double* x, double t, double* kDir, double omega, double phi, double amplitude)
-    cdef double* __cpp_vel_mode(double* x, double t, double* kDir, double kAbs, double omega, double phi, double amplitude, double mwl, double depth, double* waveDir, double* vDir)
+    cdef double[3] __cpp_vel_mode(double* x, double t, double* kDir, double kAbs, double omega, double phi, double amplitude, double mwl, double depth, double* waveDir, double* vDir)
     cdef double __cpp_etaFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, int Nf, double* Ycoeff)
-    cdef double* __cpp_uFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, double mwl, double depth,double gAbs, int Nf, double* Bcoeff, double* mV, double * waveDir, double* vDir)
+    cdef double* __cpp_uFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, double mwl, double depth,double gAbs, int Nf, double* Bcoeff, double* mV, double* waveDir, double* vDir)
 
 
 
@@ -578,9 +578,12 @@ def decompose_tseries(time,eta,dt):
     results.append(setup)
     return results
 
+# pointer to eta function
+ctypedef double (*cfeta) (MonochromaticWaves, double* , double )  
 
-ctypedef double (*cfeta) (MonochromaticWaves, double* , double )  # pointer to eta function
-ctypedef double* (*cfvel) (MonochromaticWaves, double* , double )  # pointer to velocity function
+# pointer to velocity function
+ctypedef double* (*cfvel) (MonochromaticWaves, double* , double )
+
 
 
 
@@ -609,8 +612,9 @@ cdef class  MonochromaticWaves:
     cdef double* mV_    
     cdef public:
         double wavelength
-    cdef cfeta eta
-    cdef cfvel u
+    cdef  cfeta _cpp_eta
+    cdef  cfvel _cpp_u
+    cdef object waveType
     """
     This class is used for generating regular waves in both linear and nonlinear regimes
 
@@ -666,6 +670,7 @@ cdef class  MonochromaticWaves:
         
 
         knownWaveTypes = ["Linear","Fenton"]
+        self.waveType = waveType
         if waveType not in knownWaveTypes:
             logEvent("Wrong wavetype given: Valid wavetypes are %s" %(knownWaveTypes), level=0)
             sys.exit(1)
@@ -721,7 +726,7 @@ cdef class  MonochromaticWaves:
         self.Ycoeff_ = <double *> self.Ycoeff.data
         self.waveDir_ = <double *> self.waveDir.data
         self.vDir_ = <double *> self.vDir.data
-        self.Bcoeff_ = <double *> self.Ycoeff.data
+        self.Bcoeff_ = <double *> self.Bcoeff.data
         self.mV_ = <double *> self.mV.data
 
 
@@ -729,11 +734,13 @@ cdef class  MonochromaticWaves:
 
         
         if waveType == "Linear":
-            self.eta = self.etaLinear
-            self.u = self.uLinear
+            self._cpp_eta = self.etaLinear
+            self._cpp_u = self.uLinear
         else:
-            self.eta = self.etaFenton
-            self.u = self.uFenton
+            self._cpp_eta = self.etaFenton
+            self._cpp_u = self.uFenton
+        
+        
 
     cdef double etaLinear(self, double* x, double t):
         """Calculates free surface elevation (MonochromaticWaves class - Linear waves)
@@ -809,6 +816,28 @@ cdef class  MonochromaticWaves:
         """
         
         return __cpp_uFenton(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_)
+
+    def eta(self,x,t):
+        cdef np.ndarray x_temp = np.array(x)  
+        cdef double* xi =  <double*> x_temp.data  
+        if self.waveType =="Linear":
+            return self.etaLinear(xi,t)
+        else:
+            return self.etaFenton(xi,t)
+
+    def u(self,x,t):
+        cdef np.ndarray x_temp = np.array(x)  
+        cdef double* xi = <double*> x_temp.data  
+        cdef np.ndarray U = np.zeros(3,"d")
+        cdef double* cppUL
+        cdef double* cppUF
+
+        if self.waveType =="Linear":
+            cppUL = self.uLinear(xi,t)            
+            return np.array([cppUL[0],cppUL[1],cppUL[2]])
+        else:
+            cppUF = self.uFenton(xi,t)            
+            return np.array([cppUF[0],cppUF[1],cppUF[2]])
 
     
 '''class RandomWaves:
