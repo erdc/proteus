@@ -18,8 +18,7 @@ namespace proteus
   }
 
 
- inline double* __cpp_vel_mode(double x[nDim], double t, double kDir[nDim], 
-			   double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double waveDir[nDim], double vDir[nDim])
+ inline double* __cpp_vel_mode(double x[nDim], double t, double kDir[nDim],double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double waveDir[nDim], double vDir[nDim])
    {
 
      double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
@@ -27,12 +26,14 @@ namespace proteus
       double UH=amplitude*omega*cosh(kAbs*(Z + depth))*cos( phase )/sinh(kAbs*depth);
       double UV=amplitude*omega*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth);
      //Setting wave direction
-      double VV[3] = {0.,0.,0.};
+      double* VV;
+      VV = new double[nDim];
       for(int ii=0; ii<nDim ; ii++)
 	  {
-	    VV[ii] = UH*waveDir[ii] + UV*vDir[ii] ;
+	    VV[ii] = UH*waveDir[ii] + UV*vDir[ii];
 	  }
       return VV;
+      delete [] VV;
       }
 
 
@@ -56,7 +57,7 @@ namespace proteus
 
         for (int nn=0; nn<Nf; nn++)
 	  {
-            ii+=1;
+            ii= nn + 1;
 	    om = ii*omega;
 	    kw = {ii*kDir[0], ii*kDir[1], ii*kDir[2]};
 	    phi = ii*phi0;
@@ -73,31 +74,30 @@ namespace proteus
 
 	int ii =0;
 	double om = 0.;
-	double kdir1[3] = {0.,0.,0.};
+	double kw[3] = {0.,0.,0.};
 	double phi = 0.;
 	double kmode = 0.;
 	double amp = 0.;
-	double*  Ufenton;
-	double  Uf[3] = {0.,0.,0.};
+	double* Ufenton;
+	double* Uf;
+	Uf = new double[nDim];
+
 
 	
 	
-        for (int nn=0; nn<Nf; nn++)
+        for ( int nn=0; nn<Nf; nn++)
 	  {
 	    ii=nn+1;
 	    om = ii*omega; 
 	    kmode = ii*kAbs;
-	    for ( int jj =0; jj<3; jj++)
-	      {
-		kdir1[jj] = ii*kDir[jj];
-	      }
+	    kw = {ii*kDir[0], ii*kDir[1], ii*kDir[2]};
 	    phi = ii*phi0;
             amp = tanh(kmode*depth)*sqrt(gAbs/kAbs)*Bcoeff[nn]/omega;
-	    Ufenton = __cpp_vel_mode(x, t ,kdir1, kmode, om, phi, amp, mwl, depth, waveDir, vDir); 
-	    Uf[0] +=   Ufenton[0];
-	    Uf[1] +=  Ufenton[1];
-	    Uf[2] +=  Ufenton[2];
-	      
+	    Ufenton = __cpp_vel_mode(x, t ,kw, kmode, om, phi, amp, mwl, depth, waveDir, vDir); 
+	    Uf[0] = Uf[0]+ *(Ufenton);//[0];
+	    Uf[1] = Uf[1]+ *(Ufenton+1);//[1];
+	    Uf[2] = Uf[2]+ *(Ufenton+2);//[2];
+	    delete [] Ufenton;
 
 	  }
 	
@@ -105,7 +105,6 @@ namespace proteus
 	  {
 	    Uf[kk] = Uf[kk]+mV[kk];
 	    }
-
 
         return Uf;
       
