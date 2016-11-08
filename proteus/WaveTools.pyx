@@ -593,7 +593,6 @@ cdef class  MonochromaticWaves:
     cdef np.ndarray vDir
     cdef double gAbs
     cdef double phi
-    cdef double mwl
     cdef double depth
     cdef double omega
     cdef double k
@@ -612,6 +611,7 @@ cdef class  MonochromaticWaves:
     cdef double* mV_    
     cdef public:
         double wavelength
+        double mwl
     cdef  cfeta _cpp_eta
     cdef  cfvel _cpp_u
     cdef object waveType
