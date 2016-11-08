@@ -248,7 +248,6 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double C_b,
                                # VRANS start
                                double * eps_solid,
-                               double * phi_solid,
                                double * q_velocity_solid,
                                double * q_vos,
                                double * q_dvos_dt,

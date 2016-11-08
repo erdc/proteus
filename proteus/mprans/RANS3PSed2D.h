@@ -400,7 +400,7 @@ namespace proteus
     cppHsuSedStress<2> closure;
     const int nDOF_test_X_trial_element;
     CompKernelType ck;
-    cppRANS3PF2D():
+    cppRANS3PSed2D():
       closure(150.0,
               0.0,
               0.0102,
@@ -1118,8 +1118,8 @@ namespace proteus
       flux_umom = 0.0;
       flux_vmom = 0.0;
       /* flux_wmom = 0.0; */
-      flowSpeedNormal=porosity*(n[0]*velocity_star[0] +
-                                n[1]*velocity_star[1]);
+      flowSpeedNormal=vos*(n[0]*velocity_star[0] +
+			   n[1]*velocity_star[1]);
       velocity[0] = u;
       velocity[1] = v;
       /* velocity[2] = w; */
@@ -1266,8 +1266,8 @@ namespace proteus
       dflux_wmom_du = 0.0;
       dflux_wmom_dv = 0.0;
       /* dflux_wmom_dw = 0.0; */
-      flowSpeedNormal=porosity*(n[0]*velocity_star[0] +
-                                n[1]*velocity_star[1]);
+      flowSpeedNormal=vos*(n[0]*velocity_star[0] +
+			   n[1]*velocity_star[1]);
       if (isDOFBoundary_u != 1)
 	{
 	  dflux_mass_du += n[0]*df_mass_du[0];
@@ -1700,7 +1700,7 @@ namespace proteus
 		p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
 		dV,x,y,z,xt,yt,zt,
 		//
-		vos,
+		vos, porosity,
 		//meanGrainSize,
 		mass_source,
 		dmom_u_source[nSpace],
@@ -3355,7 +3355,7 @@ namespace proteus
 		p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
 		x,y,z,xt,yt,zt,
 		//VRANS
-		vos,
+		vos, porosity,
 		//meanGrainSize,
 		dmom_u_source[nSpace],
 		dmom_v_source[nSpace],

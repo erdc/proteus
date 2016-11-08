@@ -174,15 +174,16 @@ class Gauges(AV_base):
     def getLocalNearestNode(self, location):
         # determine local nearest node distance
         nearest_node_distance_kdtree, nearest_node_kdtree = self.nodes_kdtree.query(location)
-        node_distances = norm(self.vertices - location, axis=1)
-        nearest_node = np.argmin(node_distances)
-        nearest_node_distance = node_distances[nearest_node]
+        #node_distances = norm(self.vertices - location, axis=1)
+        #nearest_node = np.argmin(node_distances)
+        #nearest_node_distance = node_distances[nearest_node]
         comm = Comm.get().comm.tompi4py()
-        assert (nearest_node == nearest_node_kdtree), `nearest_node` + `nearest_node_kdtree`
-        assert (nearest_node_distance == nearest_node_distance_kdtree), `nearest_node_distance` == `nearest_node_distance_kdtree`
-        return comm.rank, nearest_node, nearest_node_distance
+        #assert (nearest_node == nearest_node_kdtree), `nearest_node` + `nearest_node_kdtree`
+        #assert (nearest_node_distance == nearest_node_distance_kdtree), `nearest_node_distance` == `nearest_node_distance_kdtree`
+        #return comm.rank, nearest_node, nearest_node_distance
+        return comm.rank, nearest_node_kdtree, nearest_node_distance_kdtree
 
-    def getLocalElement(self, femSpace, location, nodeCheck=None):
+    def getLocalElement(self, femSpace, location, node):
         """Given a location and its nearest node, determine if it is on a local element.
 
         Returns None if location is not on any elements owned by this process
@@ -221,8 +222,8 @@ class Gauges(AV_base):
         node and nearest element.
         """
         comm = Comm.get().comm.tompi4py()
-        #comm_rank, nearest_node, nearest_node_distance = self.getLocalNearestNode(location)
-        local_element, nearest_node, nearest_node_distance = self.getLocalElement(femSpace, location)#, nearest_node)
+        comm_rank, nearest_node, nearest_node_distance = self.getLocalNearestNode(location)
+        local_element = self.getLocalElement(femSpace, location, nearest_node)
 
         # determine global nearest node
         haveElement = int(local_element is not None)
@@ -249,7 +250,7 @@ class Gauges(AV_base):
 
         # search elements that contain the nearest node
         # use nearest node if the location is not found on any elements
-        localElement, nearestNode, nearestNodeDistance = self.getLocalElement(femFun.femSpace, location, node)
+        localElement = self.getLocalElement(femFun.femSpace, location, node)
         if localElement is not None:
             for i, psi in enumerate(femFun.femSpace.referenceFiniteElement.localFunctionSpace.basis):
                 # assign quantity weights here
