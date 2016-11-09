@@ -69,6 +69,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   target_error = targetError;
   target_element_count = targetElementCount;
   domainVolume = 0.0;
+  THRESHOLD = 0.0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -251,13 +252,27 @@ int MeshAdaptPUMIDrvr::willAdapt()
 //The THRESHOLD will be set to the error estimate after the wind-up step, but is currently 0
 //Assertion is set to ensure that all ranks in a parallel execution will enter the adapt stage
 {
-  double THRESHOLD = 0;
+  if(THRESHOLD==0){
+    THRESHOLD = total_error;
+  }
   int adaptFlag=0;
   int assertFlag;
 
-  if(total_error > THRESHOLD){
+  if(total_error >= THRESHOLD){
     adaptFlag = 1;
   }
+/*
+  else{
+    apf::MeshEntity* reg;
+    apf::MeshIterator* iter= m->begin(nsd);
+    while(reg = m->iterate(iter)){
+      if(apf::getScalar(err_reg,reg,0)>target_error)
+        adaptFlag=1;
+    }
+    m->end(iter);
+  }
+*/
+
   assertFlag = adaptFlag;
   PCU_Add_Ints(&assertFlag,1);
   assert(assertFlag ==0 || assertFlag == PCU_Proc_Peers());

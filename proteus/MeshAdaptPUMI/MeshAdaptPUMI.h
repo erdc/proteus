@@ -120,6 +120,7 @@ class MeshAdaptPUMIDrvr{
   double target_error; //computed from get_local_error()
   int target_element_count; //How many elements in the mesh are desired?
   double domainVolume; //Volume of the domain
+  double THRESHOLD; //threshold of error before adapt
 };
 
 
