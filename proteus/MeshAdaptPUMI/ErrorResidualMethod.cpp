@@ -833,10 +833,10 @@ void MeshAdaptPUMIDrvr::get_local_error()
   rel_err_total = total_error/u_norm_total;
 
   if(comm_rank==0){
-    std::cout<<std::setprecision(10)<<std::endl;
-    std::cout<<"Error estimate "<<total_error<<std::endl; 
-    std::cout<<"Error density maximum "<<errRho_max<<std::endl;
-    std::cout<<"U_norm_total "<<u_norm_total<<std::endl;
+    std::cerr<<std::setprecision(10)<<std::endl;
+    std::cerr<<"Error estimate "<<total_error<<std::endl; 
+    std::cerr<<"Error density maximum "<<errRho_max<<std::endl;
+    std::cerr<<"U_norm_total "<<u_norm_total<<std::endl;
   }
 
   if(logging_config=="errorOnly"){ //feature to just look at the error fields without adapting the mesh
