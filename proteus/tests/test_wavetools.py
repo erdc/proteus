@@ -270,30 +270,34 @@ class CheckMonochromaticWavesFailures(unittest.TestCase):
         from proteus.WaveTools import MonochromaticWaves
 #Failure 1: Give non existent waveType
         with self.assertRaises(SystemExit) as cm1:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([1,0,0]),wavelength=None,waveType="Error",Ycoeff = None, Bcoeff =None, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([1,0,0]),wavelength=None,waveType="Error",Ycoeff = np.array([1.]), Bcoeff = np.array([1.]),Nf = 1, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)
         self.assertEqual(cm1.exception.code, 1)
 #Failure 2: Give gravity direction not vertical to wave direction
         with self.assertRaises(SystemExit) as cm2:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,0,-9.81]),wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,0,-9.81]),wavelength=None,waveType="Linear",Ycoeff = np.array([1.]), Bcoeff = np.array([1.]),Nf = 1, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)
         self.assertEqual(cm2.exception.code, 1)
 # Failure 3: Give Fenton type without wavelength
         with self.assertRaises(SystemExit) as cm3:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([1,0,0]),wavelength=None,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([1,0,0]),wavelength=None,waveType="Fenton",Ycoeff = np.array([1.]), Bcoeff = np.array([1.]),Nf = 1, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)
         self.assertEqual(cm3.exception.code, 1)
 # Failure 4: Give Fenton type without YCoeff
         with self.assertRaises(SystemExit) as cm4:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = None, Bcoeff =np.array([1.,1,1.]), meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([0.]), Bcoeff = np.array([1.]), Nf = 1, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)
         self.assertEqual(cm4.exception.code, 1)
 # Failure 5: Give Fenton type without BCoeff
         with self.assertRaises(SystemExit) as cm5:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1.,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =None, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1.,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.]), Bcoeff =np.array([0.]),Nf = 1, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)
         self.assertEqual(cm5.exception.code, 1)
   # Failure 6: Give meanVelocity a vector value but not with 3 components
         with self.assertRaises(SystemExit) as cm6:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity =np.array([0.,0.,0.,0.]) ,phi0 = 0.)
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), Nf = 3, meanVelocity =np.array([0.,0.,0.,0.]) ,phi0 = 0.)
         self.assertEqual(cm6.exception.code, 1)
   # Success!: Give all parameters in correct form!
-        a = MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)
+        with self.assertRaises(SystemExit) as cm7:
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1.,1.]), Bcoeff =np.array([1.,1.,1.]), meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)
+        self.assertEqual(cm7.exception.code, 1)
+  # Success!: Give all parameters in correct form!
+        a = MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1.,1.]), Bcoeff =np.array([1.,1.,1.]), Nf = 3, meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)
         self.assertTrue(None == None)
 
 class VerifyMonoChromaticLinearWaves(unittest.TestCase):
@@ -311,7 +315,7 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         dir2 = 2*random.random() - 1
         waveDir = np.array([dir1,dir2, 0])
         phi0 = random.random()*2.*pi
-        a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = np.array([0.,0,0.]),phi0 = phi0)
+        a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = np.array([0.]), Bcoeff  = np.array([0.]), meanVelocity = np.array([0.,0,0.]),phi0 = phi0)
         x = random.random()*200. - 100.
         y = random.random()*200. - 100.
         z = mwl - depth + random.random()*( depth)
@@ -353,11 +357,11 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         waveDir = np.array([dir1,dir2, 0])
         phi0 = random.random()*2.*pi
         wl = 10.
-        YC =  np.array([5.,4.,3.,2.,1.])
-        BC =  np.array([1.,2.,3.,4.,5.])
+        YC =  np.array([5.,4.,3.,2.])
+        BC =  np.array([1.,2.,3.,4.])
         mv =  np.array([6.,7.,8.])
 # Set-up of Y and B coeffs does not correspond to physical properties
-        a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=wl,waveType="Fenton",Ycoeff = YC, Bcoeff = BC, meanVelocity = mv,phi0 = phi0)
+        a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=wl,waveType="Fenton",Ycoeff = YC, Bcoeff = BC, Nf = len(YC), meanVelocity = mv,phi0 = phi0)
         x = random.random()*200. - 100.
         y = random.random()*200. - 100.
         z =  mwl - depth + random.random()*( depth)
@@ -379,7 +383,7 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         uxRef= mv[0]
         uyRef= mv[1]
         uzRef= mv[2]
-
+        
         for ii in range(len(YC)):
             jj+=1
             etaRef+=YC[ii]*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t + jj*phi0)/kw
@@ -387,7 +391,6 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
             uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
             uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
         self.assertTrue(round(eta,8) == round(etaRef,8) )
-        print ux,uxRef
         self.assertTrue(round(ux,8) == round(uxRef,8))
         self.assertTrue(round(uy,8) == round(uyRef,8))
         self.assertTrue(round(uz,8) == round(uzRef,8))
