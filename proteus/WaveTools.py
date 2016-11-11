@@ -621,9 +621,9 @@ class  MonochromaticWaves:
                  waveDir,
                  wavelength=None,
                  waveType="Linear",
-                 Ycoeff = np.ndarray([0.]),
-                 Bcoeff =np.ndarray([0.]), 
-                 Nf = 1,
+                 Ycoeff = np.zeros(1000,),
+                 Bcoeff =np.zeros(1000,), 
+                 Nf = 1000,
                  meanVelocity = np.array([0.,0,0.]),
                  phi0 = 0.):
         
@@ -672,6 +672,9 @@ class  MonochromaticWaves:
         if(len(meanVelocity) != 3):
             logEvent("ERROR! Wavetools.py: meanVelocity should be a vector with 3 components. ",level=0)
             sys.exit(1)
+        if(self.Nf > 1000):
+            logEvent("ERROR! Wavetools.py: You are not really using more than 1000 Fourier modes for a regular wave, right? ",level=0)
+            sys.exit(1)
 
 # C++ declarations
 
@@ -687,21 +690,21 @@ class  MonochromaticWaves:
 
 
 
-
-        for ij in range(Nf):
-            self.Ycoeff_c[ij] = self.Ycoeff[ij]
-            self.Bcoeff_c[ij] = self.Bcoeff[ij]
-        self.Ycoeff_ =  self.Ycoeff_c
-        self.Bcoeff_ =  self.Bcoeff_c
-
-        
-
-
-
-
+        if self.waveType == "Fenton":
+            for ij in range(Nf):
+                self.Ycoeff_c[ij] = self.Ycoeff[ij]
+                self.Bcoeff_c[ij] = self.Bcoeff[ij]
+            self.Ycoeff_ =  self.Ycoeff_c
+            self.Bcoeff_ =  self.Bcoeff_c
 
         
-        if waveType == "Linear":
+
+
+
+
+
+        
+        if self.waveType == "Linear":
             self._cpp_eta = self.etaLinear
             self._cpp_u = self.uLinear
         else:
