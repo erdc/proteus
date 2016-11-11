@@ -1,6 +1,3 @@
-#!python
-#cython: embedsignature=True
-#cython: profile=True
 
 """Tools for working with water waves.
 
@@ -10,15 +7,12 @@ components of water waves. These can be used as boundary conditions, wave
 generation sources, and validation solutions for numerical wave codes.
 """
 
-
-cimport cython
-from libc.math cimport tanh, sqrt, exp, log, sin, cos, cosh, sinh, M_PI #from math import pi, tanh, sqrt, exp, log, sin, cos, cosh, sinh
+import cython
 import numpy as np
 import cmath as cmath
 from Profiling import logEvent
 import time as tt
 import sys as sys
-cimport numpy as np
 
 __all__ = ['MonochromaticWaves',
            'RandomWaves',
@@ -50,11 +44,6 @@ __all__ = ['MonochromaticWaves',
            'costap',
            'decompose_tseries']
 
-cdef extern from "WaveTools.h" namespace "proteus":
-    cdef double __cpp_eta_mode(double* x, double t, double* kDir, double omega, double phi, double amplitude)
-    cdef double[3] __cpp_vel_mode(double* x, double t, double* kDir, double kAbs, double omega, double phi, double amplitude, double mwl, double depth, double* waveDir, double* vDir)
-    cdef double __cpp_etaFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, int Nf, double* Ycoeff)
-    cdef double* __cpp_uFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, double mwl, double depth,double gAbs, int Nf, double* Bcoeff, double* mV, double* waveDir, double* vDir)
 
 
 
@@ -578,43 +567,11 @@ def decompose_tseries(time,eta,dt):
     results.append(setup)
     return results
 
-# pointer to eta function
-ctypedef double (*cfeta) (MonochromaticWaves, double* , double )  
-
-# pointer to velocity function
-ctypedef double* (*cfvel) (MonochromaticWaves, double* , double )
 
 
 
 
-cdef class  MonochromaticWaves:
-    cdef np.ndarray g
-    cdef np.ndarray waveDir
-    cdef np.ndarray vDir
-    cdef double gAbs
-    cdef double phi
-    cdef double depth
-    cdef double omega
-    cdef double k
-    cdef double phi0
-    cdef int Nf
-    cdef np.ndarray Ycoeff
-    cdef np.ndarray Bcoeff
-    cdef np.ndarray kDir
-    cdef double amplitude
-    cdef np.ndarray mV    
-    cdef double* kDir_
-    cdef double* Ycoeff_
-    cdef double* Bcoeff_
-    cdef double* waveDir_
-    cdef double* vDir_
-    cdef double* mV_    
-    cdef public:
-        double wavelength
-        double mwl
-    cdef  cfeta _cpp_eta
-    cdef  cfvel _cpp_u
-    cdef object waveType
+class  MonochromaticWaves:
     """
     This class is used for generating regular waves in both linear and nonlinear regimes
 
@@ -655,7 +612,7 @@ cdef class  MonochromaticWaves:
             Type: float
 
             """
-    def __cinit__(self,
+    def __init__(self,
                  period,
                  waveHeight,
                  mwl,
@@ -664,8 +621,10 @@ cdef class  MonochromaticWaves:
                  waveDir,
                  wavelength=None,
                  waveType="Linear",
-                 Ycoeff = None,
-                 Bcoeff =None, meanVelocity = np.array([0.,0,0.]),
+                 Ycoeff = np.ndarray([0.]),
+                 Bcoeff =np.ndarray([0.]), 
+                 Nf = 1,
+                 meanVelocity = np.array([0.,0,0.]),
                  phi0 = 0.):
         
 
@@ -686,7 +645,7 @@ cdef class  MonochromaticWaves:
         self.depth = depth
         self.omega = 2.0*M_PI/period
 
-
+        self.Nf = Nf
         self.Ycoeff = Ycoeff
         self.Bcoeff = Bcoeff
 
@@ -701,14 +660,8 @@ cdef class  MonochromaticWaves:
             except:
                 logEvent("ERROR! Wavetools.py: Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
                 sys.exit(1)
-            try:
-                if (len(self.Ycoeff) == len(self.Bcoeff)):
-                    self.Nf = len(Ycoeff)
-                else:
-                    logEvent("ERROR! Wavetools.py: Ycoeff and Bcoeff must have the same length",level=0)
-                    sys.exit(1)
-            except:
-                logEvent("ERROR! Wavetools.py: Need to define Fenton Fourier coefficients Ycoeff and Bcoeff as numpy arrays (free-surface and velocity) for nonlinear waves",level=0)
+            if ( (len(self.Ycoeff)!=self.Nf) or (len(self.Bcoeff)!=self.Nf) or (Ycoeff[0]==0.) or (Bcoeff[0]==0.) ):
+                logEvent("ERROR! Wavetools.py: Ycoeff and Bcoeff must have the same length and equal to Nf and the 1st order harmonic must not be zero",level=0)
                 sys.exit(1)
            
         self.kDir = self.k * self.waveDir
@@ -722,12 +675,27 @@ cdef class  MonochromaticWaves:
 
 # C++ declarations
 
-        self.kDir_ = <double *> self.kDir.data
-        self.Ycoeff_ = <double *> self.Ycoeff.data
-        self.waveDir_ = <double *> self.waveDir.data
-        self.vDir_ = <double *> self.vDir.data
-        self.Bcoeff_ = <double *> self.Bcoeff.data
-        self.mV_ = <double *> self.mV.data
+        for ij in range(3):
+            self.kDir_c[ij] = self.kDir[ij]
+            self.waveDir_c[ij] = self.waveDir[ij]
+            self.vDir_c[ij] = self.vDir[ij]
+            self.mV_c[ij] = self.mV[ij]
+        self.kDir_ =  self.kDir_c
+        self.waveDir_ =  self.waveDir_c
+        self.vDir_ =  self.vDir_c
+        self.mV_ =  self.mV_c
+
+
+
+
+        for ij in range(Nf):
+            self.Ycoeff_c[ij] = self.Ycoeff[ij]
+            self.Bcoeff_c[ij] = self.Bcoeff[ij]
+        self.Ycoeff_ =  self.Ycoeff_c
+        self.Bcoeff_ =  self.Bcoeff_c
+
+        
+
 
 
 
@@ -739,10 +707,9 @@ cdef class  MonochromaticWaves:
         else:
             self._cpp_eta = self.etaFenton
             self._cpp_u = self.uFenton
-        
-        
 
-    cdef double etaLinear(self, double* x, double t):
+
+    def  etaLinear(self,  x,  t):
         """Calculates free surface elevation (MonochromaticWaves class - Linear waves)
         Parameters
         ----------
@@ -761,7 +728,7 @@ cdef class  MonochromaticWaves:
  
         return __cpp_eta_mode(x ,t, self.kDir_,self.omega,self.phi0,self.amplitude)
 
-    cdef double etaFenton(self, double* x, double t):
+    def etaFenton(self,  x,  t):
         """Calculates free surface elevation (MonochromaticWaves class - Fenton waves)
         Parameters
         ----------
@@ -780,7 +747,7 @@ cdef class  MonochromaticWaves:
         return __cpp_etaFenton(x,t,self.kDir_, self.k, self.omega,self.phi0,self.amplitude, self.Nf, self.Ycoeff_)
 
 
-    cdef double* uLinear(self, double* x, double t):
+    def  uLinear(self,  x,  t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
         Parameters
         ----------
@@ -799,7 +766,7 @@ cdef class  MonochromaticWaves:
         
         return __cpp_vel_mode(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_)
 
-    cdef double* uFenton(self, double* x, double t):
+    def  uFenton(self,  x,  t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
         Parameters
         ----------
@@ -818,26 +785,33 @@ cdef class  MonochromaticWaves:
         return __cpp_uFenton(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_)
 
     def eta(self,x,t):
-        cdef np.ndarray x_temp = np.array(x)  
-        cdef double* xi =  <double*> x_temp.data  
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
         if self.waveType =="Linear":
-            return self.etaLinear(xi,t)
+            return self.etaLinear(xx,t)
         else:
-            return self.etaFenton(xi,t)
+            return self.etaFenton(xx,t)
 
     def u(self,x,t):
-        cdef np.ndarray x_temp = np.array(x)  
-        cdef double* xi = <double*> x_temp.data  
-        cdef np.ndarray U = np.zeros(3,"d")
-        cdef double* cppUL
-        cdef double* cppUF
-
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        U = np.zeros(3,)
         if self.waveType =="Linear":
-            cppUL = self.uLinear(xi,t)            
-            return np.array([cppUL[0],cppUL[1],cppUL[2]])
+            cppUL = self.uLinear(xx,t)            
+            U[0] = cppUL[0]
+            U[1] = cppUL[1]
+            U[2] = cppUL[2]
+
         else:
-            cppUF = self.uFenton(xi,t)            
-            return np.array([cppUF[0],cppUF[1],cppUF[2]])
+            cppUF = self.uFenton(xx,t)            
+            U[0] = cppUF[0]
+            U[1] = cppUF[1]
+            U[2] = cppUF[2]
+        return U
 
     
 '''class RandomWaves:
