@@ -9,7 +9,7 @@ generation sources, and validation solutions for numerical wave codes.
 
 import cython
 import numpy as np
-import cmath as cmath
+import cmath as cmat
 from Profiling import logEvent
 import time as tt
 import sys as sys
@@ -559,7 +559,7 @@ def decompose_tseries(time,eta,dt):
 
     pp = np.zeros(len(aa),complex)
     for k in range(len(aa)):
-        pp[k]=cmath.phase(fft_x[k])                       #% Calculating phases phases
+        pp[k]=cmat.phase(fft_x[k])                       #% Calculating phases phases
     pp = np.real(pp)                                         # Append results to list
     results.append(ww)
     results.append(aa)
