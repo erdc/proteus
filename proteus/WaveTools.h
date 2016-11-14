@@ -59,7 +59,9 @@ namespace proteus
 	  {
             ii= nn + 1;
 	    om = ii*omega;
-	    kw = {ii*kDir[0], ii*kDir[1], ii*kDir[2]};
+	    kw[0] = ii*kDir[0];
+	    kw[1] = ii*kDir[1];
+	    kw[2] = ii*kDir[2];
 	    phi = ii*phi0;
 	    HH= HH + __cpp_eta_mode(x,t,kw,om,phi,Ycoeff[nn]);
 	  }
@@ -74,13 +76,17 @@ namespace proteus
 
 	int ii =0;
 	double om = 0.;
-	double kw[3] = {0.,0.,0.};
+	double kw[nDim] = {0.,0.,0.};
 	double phi = 0.;
 	double kmode = 0.;
 	double amp = 0.;
 	double* Ufenton;
 	double* Uf;
 	Uf = new double[nDim];
+	Uf[0] = 0.;
+	Uf[1] = 0.;
+	Uf[2] = 0.;
+
 
 
 	
@@ -90,14 +96,15 @@ namespace proteus
 	    ii=nn+1;
 	    om = ii*omega; 
 	    kmode = ii*kAbs;
-	    kw = {ii*kDir[0], ii*kDir[1], ii*kDir[2]};
+	    kw[0] = ii*kDir[0];
+	    kw[1] = ii*kDir[1];
+	    kw[2] = ii*kDir[2];
 	    phi = ii*phi0;
             amp = tanh(kmode*depth)*sqrt(gAbs/kAbs)*Bcoeff[nn]/omega;
 	    Ufenton = __cpp_vel_mode(x, t ,kw, kmode, om, phi, amp, mwl, depth, waveDir, vDir); 
 	    Uf[0] = Uf[0]+ *(Ufenton);//[0];
 	    Uf[1] = Uf[1]+ *(Ufenton+1);//[1];
 	    Uf[2] = Uf[2]+ *(Ufenton+2);//[2];
-	    delete [] Ufenton;
 
 	  }
 	
@@ -107,7 +114,9 @@ namespace proteus
 	    }
 
         return Uf;
-      
+
+	delete [] Ufenton;      
+	delete [] Uf;
 
 
       
