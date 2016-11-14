@@ -294,7 +294,7 @@ class CheckMonochromaticWavesFailures(unittest.TestCase):
         self.assertEqual(cm6.exception.code, 1)
   # Failure 7: Not giving the correct Nf
         with self.assertRaises(SystemExit) as cm7:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.zeros(1001)array([1.,1.,1.]), Bcoeff =np.array([1.,1.,1.]), meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1.,1.]), Bcoeff =np.array([1.,1.,1.]), meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)
         self.assertEqual(cm7.exception.code, 1)
   # Success!: Give all parameters in correct form!
         a = MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1.,1.]), Bcoeff =np.array([1.,1.,1.]), Nf = 3, meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)
