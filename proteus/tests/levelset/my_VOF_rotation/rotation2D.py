@@ -6,9 +6,9 @@ fullNewton=False
 #ENTROPY VISCOSITY and ART COMPRESSION PARAMETERS
 ENTROPY_VISCOSITY=1
 SUPG=0
-cE = 10.0
+cE = 1.0
 cMax = 0.1
-cK = 1.0
+cK = 0.25
 shockCapturingFactor_vof=0.2
 #Other time parameters
 timeOrder = 1

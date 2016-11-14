@@ -5,13 +5,18 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define USE_SECOND_ORDER_dLij 1
 #define EDGE_VISCOSITY 1
+#define USE_EDGE_BASED_EV 1 // if not then dissipative matrix is based purely on smoothness indicator of the solution
+#define POWER_SMOOTHNESS_INDICATOR 2
 #define LUMPED_MASS_MATRIX 0
-//ENTROPY FUNCTIONS and SOME FLAGS (MQL)//
+/////////////////////
+//ENTROPY FUNCTION //
+/////////////////////
+// Power entropy //
 #define entropy_power 2. // phiL and phiR are dummy variables
 #define ENTROPY(phi,phiL,phiR) 1./entropy_power*std::pow(std::abs(phi),entropy_power)
 #define ENTROPY_GRAD(phi,phix,phiL,phiR) std::pow(std::abs(phi),entropy_power-1.)*(phi>=0 ? 1 : -1)*phix
+// Log entropy //
 // LOG ENTROPY FOR LEVEL SET FROM 0 to 1
 //#define ENTROPY(phi,phiL,phiR) std::log(std::abs((phi-phiL)*(phiR-phi))+1E-14)
 //#define ENTROPY_GRAD(phi,phix,phiL,phiR) (phiL+phiR-2*phi)*phix*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(std::abs((phi-phiL)*(phiR-phi))+1E-14) 
@@ -555,30 +560,26 @@ namespace proteus
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
       if (EDGE_VISCOSITY==1)
 	{
-	  register double EntViscMatrix[NNZ];
-	  for (int ij=0; ij<NNZ; ij++)
-	    EntViscMatrix[ij]=0.;
-	  // Variable for entropy residual matrix
-	  double entropy_max=-1.E10, entropy_min=1.E10, cell_entropy_mean, cell_volume, volume=0, entropy_mean=0;
-	  double entropy_normalization_factor=1.0;
-	  double entropy_residual;
+	  // Allocate and init to zero the Entropy residual vector
+	  register double EntResVector[numDOFs], entropy_residual;
+	  if (USE_EDGE_BASED_EV==1)
+	    for (int i=0; i<numDOFs; i++)
+	      EntResVector[i]=0.;	    
+	  
 	  //////////////////////////////////////////////
 	  // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
 	  //////////////////////////////////////////////
 	  for(int eN=0;eN<nElements_global;eN++)
 	    {
 	      //declare local storage for local contributions and initialize
-	      register double elementResidual_u[nDOF_test_element], elementEntViscMatrix[nDOF_test_element][nDOF_trial_element];
+	      register double elementResidual_u[nDOF_test_element], elementEntResVector[nDOF_test_element];
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
 		  elementResidual_u[i]=0.0;
-		  for (int j=0;j<nDOF_trial_element;j++)
-		    elementEntViscMatrix[i][j]=0.0;
+		  elementEntResVector[i]=0.0;
 		}
 	      //restart cell based quantities 
-	      cell_volume = 0;
-	      cell_entropy_mean = 0;
-	      entropy_residual = 0;	      
+	      entropy_residual = 0;
 	      //loop over quadrature points and compute integrands
 	      for  (int k=0;k<nQuadraturePoints_element;k++)
 		{
@@ -601,14 +602,17 @@ namespace proteus
 		  //get the physical integration weight
 		  ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
 		  dV = fabs(jacDet)*dV_ref[k];
-		  //get the solution (of Newton's solver)
+		  //get the solution (of Newton's solver). To compute time derivative term
 		  ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
 		  //get the solution at quad point at tn and tnm1 for entropy viscosity
-		  ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
-		  ck.valFromDOF(u_dof_old_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],unm1);
-		  //get the solution gradients at tn for entropy viscosity
-		  ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
-		  ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
+		  if (USE_EDGE_BASED_EV==1)
+		    {
+		      ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+		      ck.valFromDOF(u_dof_old_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],unm1);
+		      //get the solution gradients at tn for entropy viscosity
+		      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
+		      ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
+		    }
 		  //precalculate test function products with integration weights for mass matrix terms
 		  for (int j=0;j<nDOF_trial_element;j++)
 		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
@@ -625,7 +629,7 @@ namespace proteus
 				       df);
 		  //calculate time derivative at quadrature points
 		  if (q_dV_last[eN_k] <= -100)
-		  q_dV_last[eN_k] = dV;
+		    q_dV_last[eN_k] = dV;
 		  q_dV[eN_k] = dV;
 		  ck.bdf(alphaBDF,
 			 q_m_betaBDF[eN_k]*q_dV_last[eN_k]/dV,//ensure prior mass integral is correct for  m_t with BDF1
@@ -635,40 +639,38 @@ namespace proteus
 			 dm_t);
 		  // CALCULATE CFL //
 		  calculateCFL(elementDiameter[eN],df,cfl[eN_k]); // TODO: ADJUST SPEED IF MESH IS MOVING
+		  
 		  // CALCULATE ENTROPY RESIDUAL AT QUAD POINT //
 		  //velocity at tn for entropy viscosity
-		  vn[0] = velocity[eN_k_nSpace];
-		  vn[1] = velocity[eN_k_nSpace+1];
-		  entropy_residual = (ENTROPY(un,uL,uR) - ENTROPY(unm1,uL,uR))/dt
-		    + vn[0]*ENTROPY_GRAD(un,grad_un[0],uL,uR)+vn[1]*ENTROPY_GRAD(un,grad_un[1],uL,uR) + ENTROPY(un,uL,uR)*(vn[0]+vn[1]);
-		  // compute entropy min and max, entropy mean and cell volume
-		  entropy_max = std::max(entropy_max,ENTROPY(un,uL,uR));
-		  entropy_min = std::min(entropy_min,ENTROPY(un,uL,uR));
-		  cell_entropy_mean += ENTROPY(un,uL,uR)*dV;
-		  cell_volume += dV;
+		  if (USE_EDGE_BASED_EV==1)
+		    {
+		      vn[0] = velocity[eN_k_nSpace];
+		      vn[1] = velocity[eN_k_nSpace+1];
+		      entropy_residual = 
+			(ENTROPY(un,uL,uR) - ENTROPY(unm1,uL,uR))/dt // time derivative
+			+ vn[0]*ENTROPY_GRAD(un,grad_un[0],uL,uR)+vn[1]*ENTROPY_GRAD(un,grad_un[1],uL,uR) // velocity * grad(entropy)
+			+ ENTROPY(un,uL,uR)*(vn[0]+vn[1]); // For non div free velocities
+		    }
 
 		  //////////////
 		  // ith-LOOP //
 		  //////////////
 		  for(int i=0;i<nDOF_test_element;i++) 
 		    { 
+		      // MASS MATRIX TERM //
 		      if (LUMPED_MASS_MATRIX==1)
-			elementResidual_u[i] += u_test_dV[i]; // LUMPING
+			elementResidual_u[i] += u_test_dV[i]; // LUMPING. We multiply times the DOFs during distribution
 		      else 
 			elementResidual_u[i] += dt*ck.Mass_weak(m_t,u_test_dV[i]);
 
-		      //////////////
-		      // jth-LOOP //
-		      //////////////
-		      for(int j=0;j<nDOF_trial_element;j++)
-			elementEntViscMatrix[i][j] += entropy_residual*u_trial_ref[k*nDOF_trial_element+j]*u_test_dV[i]; // int(R(E)*wi*wj)
+		      // VECTOR OF ENTROPY RESIDUAL //
+		      if (USE_EDGE_BASED_EV==1)
+			elementEntResVector[i] += entropy_residual*u_test_dV[i];
 		    }//i
 		  //save solution for other models 
 		  q_u[eN_k] = u;
 		  q_m[eN_k] = m;
 		}
-	      volume += cell_volume;
-	      entropy_mean += cell_entropy_mean;
 	      /////////////////
 	      // DISTRIBUTE // load cell based element into global residual
 	      ////////////////
@@ -676,47 +678,45 @@ namespace proteus
 		{ 
 		  int eN_i=eN*nDOF_test_element+i;
 		  int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		  // distribute global residual for (lumped) mass matrix 
 		  if (LUMPED_MASS_MATRIX==1)
 		    globalResidual[gi] += elementResidual_u[i]*(u_dof[gi]-u_dof_old[gi]); //LUMPING
 		  else
 		    globalResidual[gi] += elementResidual_u[i];
-		  for (int j=0;j<nDOF_trial_element;j++)
-		    {
-		      int eN_i_j = eN_i*nDOF_trial_element+j;
-		      EntViscMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_CellLoops[eN_i_j]] += elementEntViscMatrix[i][j];
-		    }//j
+		  // distribute EntResVector 
+		  if (USE_EDGE_BASED_EV==1)
+		    EntResVector[gi] += elementEntResVector[i];
 		}//i
 	    }//elements
-	  entropy_mean /= volume;
-	  entropy_normalization_factor = std::max(std::abs(entropy_max-entropy_mean),std::abs(entropy_min-entropy_mean));
-	  //std::cout << "***************** ENTROPY NORMALIZATION FACTOR ...: " << entropy_normalization_factor << std::endl;
 
 	  //////////////////////////////////
-	  // COMPUTE SMOOTHNESS INDICATOR //
+	  // COMPUTE SMOOTHNESS INDICATOR // and // COMPUTE LOCAL MAX OF ENT RESIDUALS //
 	  //////////////////////////////////
-	  register double psi[numDOFs];
+	  // Smoothness indicator is based on the solution. psi_i = psi_i(alpha_i); alpha_i = |sum(betaij*(uj-ui))|/sum(betaij*|uj-ui|)
+	  // MaxEntResi = max_{j\in Si} (|EntRes_j|)
+	  register double MaxEntResVector[numDOFs], psi[numDOFs];
 	  for (int i=0; i<numDOFs; i++)
 	    {
-	      if (USE_SECOND_ORDER_dLij==0)
-		{
-		  double alphai, alphai_numerator=0, alphai_denominator=0; // smoothness indicator
-		  int num_columns = csrRowIndeces_DofLoops[i+1]-csrRowIndeces_DofLoops[i];
-		  double betaij = 1./(num_columns-1); // weight within smoothness indicator
-		  double solni = u_dof_old[i]; // solution at time tn for the ith DOF
-		  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
-		    {
-		      int j = csrColumnOffsets_DofLoops[offset];
-		      double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
-		      alphai_numerator += betaij*(solnj-solni);
-		      alphai_denominator += betaij*std::abs(solnj-solni);
-		    }
-		  alphai = std::abs(alphai_numerator)/(alphai_denominator+1E-14);
-		  psi[i] = std::pow(alphai,1); //NOTE: they use alpha^2 in the paper
+	      double MaxEntResi=0;
+	      double alphai, alphai_numerator=0, alphai_denominator=0; // smoothness indicator of solution
+	      int num_columns = csrRowIndeces_DofLoops[i+1]-csrRowIndeces_DofLoops[i];
+	      double betaij = 1./(num_columns-1); // weight within smoothness indicator
+	      double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+	      for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+		{ //loop in j (sparsity pattern)
+		  int j = csrColumnOffsets_DofLoops[offset];
+		  if (USE_EDGE_BASED_EV==1)
+		    MaxEntResi = std::max(MaxEntResi,std::abs(EntResVector[j]));
+		  double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+		  alphai_numerator += betaij*(solnj-solni);
+		  alphai_denominator += betaij*std::abs(solnj-solni);
 		}
-	      else
-		psi[i] = 1.0;
+	      if (USE_EDGE_BASED_EV==1)
+		MaxEntResVector[i] = MaxEntResi + 1E-14; // tolerance is used to avoid division by zero
+	      alphai = std::abs(alphai_numerator)/(alphai_denominator+1E-14);
+	      psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
 	    }
-	  
+
 	  /////////////////////////////////////////////
 	  // ** LOOP IN DOFs FOR EDGE BASED TERMS ** //
 	  /////////////////////////////////////////////
@@ -741,14 +741,23 @@ namespace proteus
 
 		  double dLij=0., dCij=0.;
 		  ith_flux_term += solnj*(vxj*Cx[ij] + vyj*Cy[ij]);
-		  if (i != j) //NOTE: if no matrices are computed then there is no need to check for i!=j (see formula for ith_dissipative_term)
+
+		  if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
 		    {
-		      // low-order dissipative operator
+		      // first-order dissipative operator
 		      dLij = -std::max(std::abs(vxi*Cx[ij] + vyi*Cy[ij]),std::abs(vxj*CTx[ij] + vyj*CTy[ij]));
 		      // weight low-order dissipative matrix to make it higher order
 		      dLij *= std::max(psi[i],psi[j]);
+
 		      // high-order (entropy viscosity) dissipative operator 
-		      double dEij = -std::min(std::abs(dLij),cE*std::abs(EntViscMatrix[ij])/entropy_normalization_factor);
+		      double dEij = dLij;
+		      if (USE_EDGE_BASED_EV==1)
+			{
+			  double alphai = std::abs(EntResVector[i])/MaxEntResVector[i];
+			  double alphaj = std::abs(EntResVector[j])/MaxEntResVector[j];
+			  dEij *= std::max(alphai,alphaj);
+			}
+    
 		      // artificial compression
 		      double solij = 0.5*(solni+solnj);
 		      double Compij = cK*std::max(solij*(1.0-solij),0.0)/(std::abs(solni-solnj)+1E-14);
@@ -757,11 +766,11 @@ namespace proteus
 		      ith_dissipative_term += dCij*(solnj-solni);
 		      ith_low_order_dissipative_term += dLij*(solnj-solni);
 		      //dLij - dCij. This matrix is needed during FCT step
-		      dL_minus_dC[ij] = dLij - dCij;
+		      dL_minus_dC[ij] = dLij - dCij;		      
 		    }
 		  else //i==j
 		    {
-		      // NOTE: this is incorrect. Indeed, dLii = -sum(dLij) for all i!=j and similarly for dCii. 
+		      // NOTE: this is incorrect. Indeed, dLii = -sum_{j!=i}(dLij) and similarly for dCii. 
 		      // However, it is irrelevant since during the FCT step we do (dL-dC)*(solnj-solni)
 		      dL_minus_dC[ij]=0;
 		    }
