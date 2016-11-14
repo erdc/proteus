@@ -94,7 +94,12 @@ class init_cond:
         #if (slit==1):
         #    dBubble = -1
         return smoothedHeaviside(epsFactHeaviside*he,dBubble)#Heaviside(dBubble)
-    #end
+
+        # SMOOTH 
+        #sm = 0.25
+        #dist2 = dx**2 + dy**2
+        #return 0.5*(1-tanh(dist2/sm**2-1))
+
     def uOfXT(self,X,t):
         return self.uOfX(X)
     #end
