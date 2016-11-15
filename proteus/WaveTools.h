@@ -6,6 +6,50 @@
 namespace proteus
 {
  const int nDim(3);
+ const double PI_ = M_PI;
+ const double Pi2_ = (2.*PI_);
+ const double 	Pi2inv_ = (1./Pi2_);
+ const double 	Pihalf_ = (0.5*PI_);
+ const double 	Pihalfinv_ = (1./Pihalf_);
+ const double 	Pi03_ = (0.3*PI_);
+ const double 	Pi07_ =  (0.7*PI_);
+ const double 	Pi17_ =  (1.7*PI_);
+
+
+ inline double fastcosh(double k, double Z ,double d, bool cosh)
+ {
+
+   if (k*(-Z) > PI_)
+     {
+       return 0.;
+     }
+   else
+     {
+       double Kd = k * (Z+d);
+       double Kd2 = Kd *  Kd *0.5;
+       double Kd3 = Kd2 * Kd * 3.3333333333E-01;
+       double Kd4 = Kd3 * Kd* 2.5000000000E-01;
+       double Kd5 = Kd4 * Kd *2.0000000000E-01;
+       double Kd6 = Kd5 * Kd*1.6666666667E-01;
+       double Kd7 = Kd6 * Kd*1.4285714286E-01;
+       double  Kd8 = Kd7 * Kd*1.2500000000E-01; 
+       double Kd9 = Kd8 * Kd*1.1111111111E-01;
+       double  Kd10 =Kd9 * Kd*0.1;
+       double hype = 0.;
+       if(cosh)
+	 {
+	   hype = 1. + Kd2  + Kd4  + Kd6   + Kd8   + Kd10;
+	 }
+       else
+	 {
+	   hype =      Kd   + Kd3  + Kd5   + Kd7   + Kd9;
+	 }
+       
+       return hype;
+ }
+
+
+
   
 
  inline double __cpp_eta_mode(double x[nDim], double t, double kDir[nDim], double omega, double phi, double amplitude)
@@ -22,9 +66,14 @@ namespace proteus
    {
 
      double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
-      double Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
-      double UH=amplitude*omega*cosh(kAbs*(Z + depth))*cos( phase )/sinh(kAbs*depth);
-      double UV=amplitude*omega*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth);
+      double Zd =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
+      
+
+      double cosh = fastcosh(kAbs, Z, depth, true); 
+      double sinh = fastcosh(kAbs, Z, depth, false); 
+
+      double UH=amplitude*omega*fastcosh*cos( phase )/sinh(kAbs*depth);
+      double UV=amplitude*omega*fastsinh*sin( phase )/sinh(kAbs*depth);
      //Setting wave direction
       double* VV;
       VV = new double[nDim];
