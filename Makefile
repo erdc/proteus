@@ -265,6 +265,6 @@ doc:
 test:
 	@echo "************************************"
 	@echo "Running test suite"
-	py.test --boxed -v proteus/tests --ignore proteus/tests/POD
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests --ignore proteus/tests/POD
 	@echo "Tests complete "
 	@echo "************************************"
