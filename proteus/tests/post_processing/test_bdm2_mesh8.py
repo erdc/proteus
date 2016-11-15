@@ -40,7 +40,8 @@ class TestBDM2Mesh8():
 
     def teardown_method(self,method):
         filenames = ['poisson_bdm1_test.h5', 'poisson_bdm1_test.xmf','reference_triangle.ele',
-                     'reference_triangle.node', 'reference_triangle.poly','proteus.log']
+                     'reference_triangle.node', 'reference_triangle.poly','proteus.log',
+                     'blockDomain.poly']
         for file in filenames:
             if os.path.exists(file):
                 try:
@@ -57,9 +58,7 @@ class TestBDM2Mesh8():
         self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values.copy()
         self.bdm2_obj.q[('velocity',0)] = bdm_values.copy()
 
-        self.bdm2_obj.evaluateLocalVelocityRepresentation(0)
-        import pdb
-        pdb.set_trace()
+        self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
         assert np.allclose(self.bdm2_obj.q[('velocity',0)],bdm_values)
  
 

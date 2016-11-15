@@ -611,8 +611,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                                       self.nodeStarElementsArray,
                                                                       self.nodeStarElementNeighborsArray)
 
-
-        #
         self.nDOFs_element = {}
         self.updateConservationJacobian = {}
         for ci in self.vtComponents:
@@ -678,10 +676,10 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                 self.solutionTestSpaceIsNotPWL[ci] = True
                 logEvent("pwl post-processing for finite element space"+str(self.vt.u[ci].femSpace))
                 #need to set up w and w*dS_f and weights to build residuals for linears out of R_{e,i}
+                #Point1
                 if self.testSpace == None:
-                    self.testSpace = FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
- #                   self.testSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
- #               assert isinstance(self.testSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis)
+                    self.testSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
+                assert isinstance(self.testSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis)
                 self.alpha[ci] = numpy.zeros((self.testSpace.referenceFiniteElement.localFunctionSpace.dim,
                                           self.vt.u[ci].femSpace.referenceFiniteElement.localFunctionSpace.dim),'d')
                 for j,w in enumerate(self.testSpace.referenceFiniteElement.localFunctionSpace.basis):
@@ -725,7 +723,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
             self.nDOFs_element[ci] = self.vt.nSpace_global+1
             self.q[('velocity_dofs',ci)] = numpy.zeros((self.vt.mesh.nElements_global,
                                                         self.nDOFs_element[ci]),'d')
-
             if self.q.has_key(('velocity_l2g',self.vtComponents[0])):
                 self.q[('velocity_l2g',ci)]  = self.q[('velocity_l2g',self.vtComponents[0])]
             else:
@@ -785,7 +782,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         """
         if correctFlux == True:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
-
         cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
                                                          self.vt.mesh.exteriorElementBoundariesArray,
                                                          self.vt.mesh.elementBoundaryElementsArray,
@@ -1190,8 +1186,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                          self.ebq_global[('velocity',ci)],
                                                          self.ebq[('velocity',ci)])   # i'm not crazy about the nodeStarFactors term here...should it be dofStarFactors?
          #set boundary flux
-        import pdb
-  #       pdb.set_trace()
 
         updateCoef = 0.0 #overwrite first
         cfemIntegrals.loadBoundaryFluxIntoGlobalElementBoundaryVelocity(self.vt.mesh.exteriorElementBoundariesArray,
@@ -1420,26 +1414,22 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                            self.nDOFs_element[self.BDMcomponent]),
                                                           'i')
 
-
         self.interiorTestSpace = None
         self.setInteriorTestSpace(self.degree)        
-
         self.getInteriorTestGradients()
         self.getInteriorDivFreeElement()
-
         self.computeBDM2projectionMatrices()
         
 
     def setInteriorVelocityValues(self,ci):
-        #self.q[('velocity',ci)].fill(0.0)
-        import pdb
-        pdb.set_trace()
+        """ This function sets the interior velocity values based on the solution to the vt-problem. """
         if self.vt.q.has_key(('a',ci,ci)):
             assert self.vt.q.has_key(('grad(phi)',ci))
             updateCoef = 0.0 #overwrite first time
             if self.vt.sd:
                 cpostprocessing.updateDiffusiveVelocityPointEval_sd(updateCoef,
-                                                                    self.vt.coefficients.sdInfo[(ci,ci)][0],self.vt.coefficients.sdInfo[(ci,ci)][1],
+                                                                    self.vt.coefficients.sdInfo[(ci,ci)][0],
+                                                                    self.vt.coefficients.sdInfo[(ci,ci)][1],
                                                                     self.vt.q[('a',ci,ci)],
                                                                     self.vt.q[('grad(phi)',ci)],
                                                                     self.q[('velocity',ci)])
@@ -1653,8 +1643,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
     def getAverageFlux(self,ci):
         '''Helper function to cacluate the average flux along the mesh boundaries. '''
         # Step 1 : calculate the normal component of all velocities
-        import pdb
-#        pdb.set_trace()
 
         num_elements = self.vt.mesh.nElements_global
         num_edges = self.vt.mesh.nElementBoundaries_global
@@ -1684,19 +1672,24 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         if self.BDMcomponent != None:
             self.computeBDM2projectionMatrices()
 
-    def evaluateLocalVelocityRepresentation(self,ci):
+    def evaluateLocalVelocityRepresentation(self,ci,velocity_field_set=False):
         """
-        project to BDM velocity from element boundary fluxes
+        This function projects the solution of the vt transport problem into the
+        BDM2 space.
+
+        Parameters
+        ----------
+        ci : int
+            The solution component being projected.
+        velocity_field_set: boolean
+            Set to true when the quadrature values for the velocity function are 
+            already defined (this is typically used for testing).
         """
-#        ARB -- need to add an assert here
-#        assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
+        assert self.nDOFs_element[ci] == 2*self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
-#        self.getAverageFlux(ci)
-
-# *** Not sure what this does ***?
-#        for ci in self.vtComponents:
-#            self.setInteriorVelocityValues(ci)
-
+        if self.degree >= 2 and velocity_field_set==False:
+            for ci in self.vtComponents:
+                self.setInteriorVelocityValues(ci)
         
         self.buildBDM2rhs(self.BDMprojectionMat_element,
                           self.BDMprojectionMatPivots_element,
@@ -1733,8 +1726,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         assert len(x.shape) == 3, "wrong shape for x= %s " % x.shape
         nE = x.shape[0]; nq = x.shape[1]; nd = self.vt.nSpace_global
         vx = numpy.zeros((nE,nq,nd),'d')
-        #have to evaluate shape functions at new points. This is painful
-        #uci     = self.vt.u[ci]
         xiArray = numpy.zeros(x.shape,'d')
         vArray  = numpy.zeros((nE,nq,self.testSpace.max_nDOF_element),'d')
         invJ    = numpy.zeros((nE,nq,self.vt.q['inverse(J)'].shape[2],self.vt.q['inverse(J)'].shape[3]),

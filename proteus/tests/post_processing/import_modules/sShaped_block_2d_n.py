@@ -33,7 +33,7 @@ else:
 if conservativeFluxSchemeFlag=='pwl-bdm':
     conservativeFlux = {0:'pwl-bdm'}
 elif conservativeFluxSchemeFlag=='pwl-bdm2':
-    conservativeFlux = {0:'pwl-bdm2'}   # NOTE *** this is a WIP ***
+    conservativeFlux = {0:'pwl-bdm2'}
 elif conservativeFluxSchemeFlag=='pwc':
     conservativeFlux = {0:'pwc'}
 elif conservativeFluxSchemeFlag=='p1-nc':
