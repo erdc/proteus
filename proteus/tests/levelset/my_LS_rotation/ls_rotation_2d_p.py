@@ -73,7 +73,11 @@ class UnitSquareRotation(TransportCoefficients.TC_base):
         self.SUPG=SUPG
     def attachModels(self,modelList):
         self.model = modelList[0]
-	self.u_old_dof = numpy.copy(self.model.u[0].dof)
+	self.u_dof_old = numpy.copy(self.model.u[0].dof)
+	self.u_dof_old_old = numpy.copy(self.model.u[0].dof)
+        self.velx_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')+1E10
+        self.vely_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')+1E10
+        self.flux_plus_dLij_times_soln = numpy.zeros(self.model.u[0].dof.shape,'d')
         self.q_v = numpy.zeros(self.model.q[('dH',0,0)].shape,'d')
         self.ebqe_v = numpy.zeros(self.model.ebqe[('dH',0,0)].shape,'d')
         self.unitSquareRotationLevelSetEvaluate(self.model.timeIntegration.tLast,
@@ -90,7 +94,20 @@ class UnitSquareRotation(TransportCoefficients.TC_base):
         else:
             self.rdModel = self.model
     def preStep(self,t,firstStep=False):
+        #SAVE OLD SOLUTIONS
+        self.u_dof_old_old = numpy.copy(self.u_dof_old)
+        self.u_dof_old = numpy.copy(self.model.u[0].dof)
+        
+        # COMPUTE VELOCITY
         pi = math.pi
+
+        # GET VELOCITY AT DOFs (FOR EDGE BASED METHODS)
+        x_dof = self.model.u[0].femSpace.mesh.nodeArray[:,0]
+        y_dof = self.model.u[0].femSpace.mesh.nodeArray[:,1]
+        self.velx_tn_dof = -2.0*pi*(y_dof-0.5)
+        self.vely_tn_dof = 2.0*pi*(x_dof-0.5)
+
+        # GET VELOCITY AT QUADRATURE POINTS (FOR CELL BASE METHODS)
         x = self.model.q['x'][...,0]
         y = self.model.q['x'][...,1]
         self.q_v[...,0]  = -2.0*pi*(y-0.5)
@@ -98,7 +115,7 @@ class UnitSquareRotation(TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-       	self.u_old_dof = numpy.copy(self.model.u[0].dof)
+        self.model.FCTStep(t)
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):

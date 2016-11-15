@@ -848,7 +848,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         # This is dummy. I just care about the csr structure of the sparse matrix
-        #rowptr, colind, self.dL_minus_dC = self.cterm_global[0].getCSRrepresentation() 
         self.dL_minus_dC = np.zeros(Cx.shape,'d')
         #
         #cek end computationa of cterm_global
