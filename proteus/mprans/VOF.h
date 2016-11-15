@@ -13,13 +13,13 @@
 //ENTROPY FUNCTION //
 /////////////////////
 // Power entropy //
-#define entropy_power 2. // phiL and phiR are dummy variables
-#define ENTROPY(phi,phiL,phiR) 1./entropy_power*std::pow(std::abs(phi),entropy_power)
-#define ENTROPY_GRAD(phi,phix,phiL,phiR) std::pow(std::abs(phi),entropy_power-1.)*(phi>=0 ? 1 : -1)*phix
+//#define entropy_power 2. // phiL and phiR are dummy variables
+//#define ENTROPY(phi,phiL,phiR) 1./entropy_power*std::pow(std::abs(phi),entropy_power)
+//#define ENTROPY_GRAD(phi,phix,phiL,phiR) std::pow(std::abs(phi),entropy_power-1.)*(phi>=0 ? 1 : -1)*phix
 // Log entropy //
 // LOG ENTROPY FOR LEVEL SET FROM 0 to 1
-//#define ENTROPY(phi,phiL,phiR) std::log(std::abs((phi-phiL)*(phiR-phi))+1E-14)
-//#define ENTROPY_GRAD(phi,phix,phiL,phiR) (phiL+phiR-2*phi)*phix*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(std::abs((phi-phiL)*(phiR-phi))+1E-14) 
+#define ENTROPY(phi,phiL,phiR) std::log(std::abs((phi-phiL)*(phiR-phi))+1E-14)
+#define ENTROPY_GRAD(phi,phix,phiL,phiR) (phiL+phiR-2*phi)*phix*((phi-phiL)*(phiR-phi)>=0 ? 1 : -1)/(std::abs((phi-phiL)*(phiR-phi))+1E-14) 
 
 namespace proteus
 {
@@ -126,6 +126,7 @@ namespace proteus
 				   double* Cy,
 				   double* CTx,
 				   double* CTy, 
+				   // FOR FCT
 				   double* flux_plus_dLij_times_soln, 
 				   double* dL_minus_dC)=0;
     virtual void calculateJacobian(//element

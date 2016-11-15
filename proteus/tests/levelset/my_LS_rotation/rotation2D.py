@@ -3,7 +3,7 @@ from proteus import Domain
 #TIME INTEGRATION
 timeIntegration_ls = "SSP33" #vbdf,be,flcbdf,rk
 #timeIntegration_ls = "be" #vbdf,be,flcbdf,rk
-runCFL = 0.3#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
+runCFL = 0.1#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 timeOrder = 1
 fullNewton = False
 #ENTROPY VISCOSITY
@@ -61,7 +61,7 @@ if unstructured:
 else:
     domain = box
 #end time of simulation, full problem is T=8.0
-T = 1.0#8.0#
+T=1.0#8.0#
 #number of output time steps
 nDTout = 10
 #smoothing factors
