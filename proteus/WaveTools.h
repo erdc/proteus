@@ -19,12 +19,6 @@ namespace proteus
  inline double fastcosh(double k, double Z ,double d, bool cosh)
  {
 
-   if (k*(-Z) > PI_)
-     {
-       return 0.;
-     }
-   else
-     {
        double Kd = k * (Z+d);
        double Kd2 = Kd *  Kd *0.5;
        double Kd3 = Kd2 * Kd * 3.3333333333E-01;
@@ -46,6 +40,7 @@ namespace proteus
 	 }
        
        return hype;
+     
  }
 
 
@@ -62,18 +57,18 @@ namespace proteus
   }
 
 
- inline double* __cpp_vel_mode(double x[nDim], double t, double kDir[nDim],double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double waveDir[nDim], double vDir[nDim])
+ inline double* __cpp_vel_mode(double x[nDim], double t, double kDir[nDim],double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double waveDir[nDim], double vDir[nDim], double sinhkd)
    {
 
      double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
-      double Zd =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
+      double Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
       
 
-      double cosh = fastcosh(kAbs, Z, depth, true); 
-      double sinh = fastcosh(kAbs, Z, depth, false); 
+      double fcosh = fastcosh(kAbs, Z, depth, true); 
+      double fsinh = fastcosh(kAbs, Z, depth, false); 
 
-      double UH=amplitude*omega*fastcosh*cos( phase )/sinh(kAbs*depth);
-      double UV=amplitude*omega*fastsinh*sin( phase )/sinh(kAbs*depth);
+      double UH=amplitude*omega*fcosh*cos( phase )/sinhkd;//sinh(kAbs*depth);
+      double UV=amplitude*omega*fsinh*sin( phase )/sinhkd;//sinh(kAbs*depth);
      //Setting wave direction
       double* VV;
       VV = new double[nDim];
@@ -118,7 +113,7 @@ namespace proteus
       }
 
  inline double* __cpp_uFenton(double x[nDim],double t,double kDir[nDim],double kAbs,double omega,double phi0,double amplitude,
-			    double mwl, double depth, double gAbs, int Nf, double* Bcoeff ,double* mV, double waveDir[nDim], double vDir[nDim] )
+			      double mwl, double depth, double gAbs, int Nf, double* Bcoeff ,double* mV, double waveDir[nDim], double vDir[nDim], double* sinhF , double* tanhF)
 
 
       {
@@ -136,7 +131,7 @@ namespace proteus
 	Uf[1] = 0.;
 	Uf[2] = 0.;
 
-
+	double sqrtAbs(sqrt(gAbs/kAbs));
 
 	
 	
@@ -149,8 +144,8 @@ namespace proteus
 	    kw[1] = ii*kDir[1];
 	    kw[2] = ii*kDir[2];
 	    phi = ii*phi0;
-            amp = tanh(kmode*depth)*sqrt(gAbs/kAbs)*Bcoeff[nn]/omega;
-	    Ufenton = __cpp_vel_mode(x, t ,kw, kmode, om, phi, amp, mwl, depth, waveDir, vDir); 
+            amp = tanhF[nn]*sqrtAbs*Bcoeff[nn]/omega;
+	    Ufenton = __cpp_vel_mode(x, t ,kw, kmode, om, phi, amp, mwl, depth, waveDir, vDir, sinhF[nn]); 
 	    Uf[0] = Uf[0]+ *(Ufenton);//[0];
 	    Uf[1] = Uf[1]+ *(Ufenton+1);//[1];
 	    Uf[2] = Uf[2]+ *(Ufenton+2);//[2];
