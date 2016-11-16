@@ -9,6 +9,7 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
+import pytest
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -34,6 +35,7 @@ def test_c0p1(genMesh=True):
     ns.calculateSolution('poisson_3d_c0p1')
     assert(True)
 
+@pytest.mark.skip(reason="runs out of memory on small machines")
 def test_c0p2(genMesh=True):
     import poisson_3d_tetgen_p
     import poisson_3d_tetgen_c0p2_n
