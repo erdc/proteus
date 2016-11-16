@@ -324,6 +324,7 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         ux, uy, uz = a.u([x, y, z], t)
 
         omega = 2.*pi/period
+        Uo = waveHeight*omega / 2.
 # dispersion and setDirVector are tested above
         from proteus.WaveTools import dispersion,setDirVector
         kw = dispersion(omega,depth,gAbs)
@@ -335,11 +336,17 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         uxRef = normDir[0]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
         uyRef = normDir[1]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
         uzRef = amp*omega*sinh(kw*(z0+depth))*sin(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
+        
+        err_x = abs(ux/uxRef - 1.)
+        err_y = abs(uy/uyRef - 1.)
+        err_z = abs(uz/uzRef - 1.)
 
+        print err_x, err_y, err_z
         self.assertTrue(round(eta,8) == round(etaRef,8) )
-        self.assertTrue(round(ux,8) == round(uxRef,8) )
-        self.assertTrue(round(uy,8) == round(uyRef,8) )
-        self.assertTrue(round(uz,8) == round(uzRef,8) )
+        self.assertTrue(round(err_x,2) == 0. )
+        self.assertTrue(round(err_y,2) == 0. )
+        self.assertTrue(round(err_y,2) == 0. )
+
 class VerifyMonoChromaticFentonWaves(unittest.TestCase):
 #Fenton methodology equations at http://johndfenton.com/Papers/Fenton88-The-numerical-solution-of-steady-water-wave-problems.pdf
 #http://johndfenton.com/Steady-waves/Fourier.html
@@ -390,10 +397,15 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
             uxRef += normDir[0]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
             uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
             uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
+        err_x = abs(ux/uxRef - 1.)
+        err_y = abs(uy/uyRef - 1.)
+        err_z = abs(uz/uzRef - 1.)
+
+        print err_x, err_y, err_z
         self.assertTrue(round(eta,8) == round(etaRef,8) )
-        self.assertTrue(round(ux,8) == round(uxRef,8))
-        self.assertTrue(round(uy,8) == round(uyRef,8))
-        self.assertTrue(round(uz,8) == round(uzRef,8))
+        self.assertTrue(round(err_x,2) == 0. )
+        self.assertTrue(round(err_y,2) == 0. )
+        self.assertTrue(round(err_y,2) == 0. )
 
         '''
 #========================================= RANDOM WAVES ======================================
