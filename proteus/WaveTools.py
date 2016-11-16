@@ -627,7 +627,7 @@ class  MonochromaticWaves:
                  meanVelocity = np.array([0.,0,0.]),
                  phi0 = 0.):
         
-
+        
         knownWaveTypes = ["Linear","Fenton"]
         self.waveType = waveType
         if waveType not in knownWaveTypes:
@@ -648,7 +648,8 @@ class  MonochromaticWaves:
         self.Nf = Nf
         self.Ycoeff = Ycoeff
         self.Bcoeff = Bcoeff
-
+        self.sinhF = np.zeros(Nf,"d")
+        self.tanhF = np.zeros(Nf,"d")
 #Calculating / checking wavelength data
         if  waveType== "Linear":
             self.k = dispersion(w=self.omega,d=self.depth,g=self.gAbs)
@@ -657,6 +658,10 @@ class  MonochromaticWaves:
             try:
                 self.k = 2.0*M_PI/wavelength
                 self.wavelength=wavelength
+                for ii in range(len(self.sinhF)):
+                    kk = (ii+1)*self.k
+                    self.sinhF[ii] = float(np.sinh(kk*self.depth) )
+                    self.tanhF[ii] = float(np.tanh(kk*self.depth) )
             except:
                 logEvent("ERROR! Wavetools.py: Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
                 sys.exit(1)
@@ -677,7 +682,8 @@ class  MonochromaticWaves:
             sys.exit(1)
 
 # C++ declarations
-
+        
+        self.sinhL =float(np.sinh(self.k*self.depth))
         for ij in range(3):
             self.kDir_c[ij] = self.kDir[ij]
             self.waveDir_c[ij] = self.waveDir[ij]
@@ -688,15 +694,19 @@ class  MonochromaticWaves:
         self.vDir_ =  self.vDir_c
         self.mV_ =  self.mV_c
 
+        
 
 
         if self.waveType == "Fenton":
             for ij in range(Nf):
                 self.Ycoeff_c[ij] = self.Ycoeff[ij]
                 self.Bcoeff_c[ij] = self.Bcoeff[ij]
+                self.sinh_c[ij] = self.sinhF[ij]
+                self.tanh_c[ij] = self.tanhF[ij]
             self.Ycoeff_ =  self.Ycoeff_c
             self.Bcoeff_ =  self.Bcoeff_c
-
+            self.sinhF_ = self.sinh_c
+            self.tanhF_ = self.tanh_c
         
 
 
@@ -767,7 +777,7 @@ class  MonochromaticWaves:
         """
 
         
-        return __cpp_vel_mode(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_)
+        return __cpp_vel_mode(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.sinhL)
 
     def  uFenton(self,  x,  t):
         """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
@@ -785,7 +795,7 @@ class  MonochromaticWaves:
 
         """
         
-        return __cpp_uFenton(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_)
+        return __cpp_uFenton(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_, self.sinhF_, self.tanhF_)
 
     def eta(self,x,t):
         cython.declare(xx=cython.double[3])
