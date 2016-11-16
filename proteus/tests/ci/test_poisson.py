@@ -9,6 +9,7 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
+import pytest
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -108,6 +109,7 @@ def test_c0q1_hex_mesh():
     MeshTools.writeHexMesh(mesh_info,hex_meshfile_base,index_base=1)
     check_c0q1(test_hexMesh_3x3=True,use_petsc=True, name="_hexMesh_")
 
+@pytest.mark.skip(reason="runs out of memory on small machines")
 def test_c0q2():
     import poisson_3d_p
     reload(poisson_3d_p)
