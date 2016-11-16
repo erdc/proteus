@@ -43,6 +43,40 @@ namespace proteus
      
  }
 
+ inline double fastcos(double phi)
+ {
+// Setting the phase between 0 and 2pi
+   double phiphi = phi - Pi2_ * int(phi * Pi2inv_);
+   if(phiphi<0.){phiphi += Pi2_;}
+
+   int signcos = 1;
+   //Setting the 1.7pi -> 2p branch to -Pi/4 to 0
+   if(phiphi > Pi17_){ phiphi = phiphi - Pi2_; }
+   //The angle phi must be between -0.3Pi to 0.7Pi for the polynomials
+   if(phiphi > Pi07_ ){  phiphi = phiphi - PI_; signcos = -1;}
+
+
+
+
+	  //Calculating approximation. Accuracy <0.4%
+   
+   double phi2 = phiphi * phiphi *0.5;
+   double phi4 = phi2*phi2*0.16666666666666666667;
+   double fastc =  1. - phi2 + phi4;
+   double fastcos = signcos*fastc;
+
+	  //Choosing the right Quadrant
+   if(phiphi >= Pi03_){
+     
+     double phi1 = phiphi - Pihalf_;	  
+     double phi3 = phi1 * phi1 *phi1 * 0.166666666666667;
+     double fastc1 = - phi1 + phi3;
+
+     fastcos = signcos*fastc1;}
+
+   return fastcos;
+     
+ }
 
 
   
@@ -66,9 +100,11 @@ namespace proteus
 
       double fcosh = fastcosh(kAbs, Z, depth, true); 
       double fsinh = fastcosh(kAbs, Z, depth, false); 
+      double fcos = fastcos(phase);
+      double fsin = fastcos(Pihalf_ - phase);
 
-      double UH=amplitude*omega*fcosh*cos( phase )/sinhkd;//sinh(kAbs*depth);
-      double UV=amplitude*omega*fsinh*sin( phase )/sinhkd;//sinh(kAbs*depth);
+      double UH=amplitude*omega*fcosh*fcos/sinhkd;//sinh(kAbs*depth);
+      double UV=amplitude*omega*fsinh*fsin/sinhkd;//sinh(kAbs*depth);
      //Setting wave direction
       double* VV;
       VV = new double[nDim];
