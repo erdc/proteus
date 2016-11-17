@@ -70,26 +70,27 @@ cdef class  MonochromaticWaves:
     cdef double etaFenton(self, double* x, double t)
     cdef double* uLinear(self, double* x, double t)
     cdef double* uFenton(self, double* x, double t)
-'''
+
 cdef class RandomWaves:
     cdef np.ndarray g
     cdef np.ndarray waveDir
     cdef np.ndarray vDir
     cdef double gAbs
-    cdef double phi
+    cdef double Hs
+    cdef double Tp
+    cdef double fp
+    cdef double bandFactor
+    cdef object phi
     cdef double depth
-    cdef double omega
-    cdef double k
-    cdef double phi0
-    cdef double sinhL
-    cdef int Nf
-    cdef np.ndarray Ycoeff
-    cdef np.ndarray Bcoeff
+    cdef double df
+    cdef np.ndarray omega
+    cdef np.ndarray fi
+    cdef np.ndarray ki
+    cdef int N
     cdef np.ndarray kDir
     cdef np.ndarray sinhF
     cdef np.ndarray tanhF
-    cdef double amplitude
-    cdef np.ndarray mV    
+    cdef np.ndarray ai
     cdef double* kDir_
     cdef double* waveDir_
     cdef double* vDir_
@@ -107,13 +108,9 @@ cdef class RandomWaves:
     cdef double[1000] sinh_c
     cdef double[1000] tanh_c
     cdef public:
-        double wavelength
         double mwl
     cdef  cfeta _cpp_eta
     cdef  cfvel _cpp_u
     cdef object waveType
-    cdef double etaLinear(self, double* x, double t)
-    cdef double etaFenton(self, double* x, double t)
-    cdef double* uLinear(self, double* x, double t)
-    cdef double* uFenton(self, double* x, double t)
-'''
+
+
