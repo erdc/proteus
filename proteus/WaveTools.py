@@ -873,7 +873,7 @@ class RandomWaves:
             Type: numpy array
 
     """
-    def __init__(self,
+    def __cinit__(self,
                  Tp,
                  Hs,
                  mwl,#m significant wave height
@@ -889,7 +889,8 @@ class RandomWaves:
         validSpectra = [JONSWAP,PM_mod]
         spec_fun =loadExistingFunction(spectName, validSpectra)
         self.g = np.array(g)
-        self.waveDir =  setDirVector(np.array(waveDir))
+        waveDir =  setDirVector(np.array(waveDir))
+        self.waveDir = waveDir
         self.vDir = setVertDir(g)
         dirCheck(self.waveDir,self.vDir)
         self.gAbs = sqrt(self.g[0]*self.g[0]+self.g[1]*self.g[1]+self.g[2]*self.g[2])
@@ -900,15 +901,15 @@ class RandomWaves:
         self.bandFactor = bandFactor
         self.N = N
         self.mwl = mwl
-        self.fmax = self.bandFactor*self.fp
-        self.fmin = self.fp/self.bandFactor
-        self.df = (self.fmax-self.fmin)/float(self.N-1)
-        self.fi = np.linspace(self.fmin,self.fmax,self.N)
+        fmax = self.bandFactor*self.fp
+        fmin = self.fp/self.bandFactor
+        self.df = (fmax-fmin)/float(self.N-1)
+        self.fi = np.linspace(fmin,fmax,self.N)
         self.omega = 2.*M_PI*self.fi
         self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
         if phi == None:
             self.phi = 2.0*M_PI*np.random.random(self.fi.shape[0])
-            logEvent('ERROR! Wavetools.py: No phase array is given. Assigning random phases. Outputing the phasing of the random waves')
+            logEvent('INFO Wavetools.py: No phase array is given. Assigning random phases. Outputing the phasing of the random waves')
         else:
             try:
                 self.phi = np.array(phi)
@@ -921,18 +922,18 @@ class RandomWaves:
                 sys.exit(1)
 
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
-        self.fim = reduceToIntervals(self.fi,self.df)
+        fim = reduceToIntervals(self.fi,self.df)
         if (spectral_params == None):
-            self.Si_Jm = spec_fun(self.fim,self.fp,self.Hs)
+            Si_Jm = spec_fun(fim,self.fp,self.Hs)
         else:
             try:
-                self.Si_Jm = spec_fun(self.fim,self.fp,self.Hs,**spectral_params)
+                Si_Jm = spec_fun(fim,self.fp,self.Hs,**spectral_params)
             except:
                 logEvent('ERROR! Wavetools.py: Additional spectral parameters are not valid for the %s spectrum' %spectName)
                 sys.exit(1)
 
 
-        self.ai = np.sqrt(2.*returnRectangles(self.Si_Jm,self.fim))
+        self.ai = np.sqrt(2.*returnRectangles(Si_Jm,fim))
         self.kDir = np.zeros((len(self.ki),3),)
         for ii in range(3):
              self.kDir[:,ii] = self.ki[:] * self.waveDir[ii]
