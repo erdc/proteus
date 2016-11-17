@@ -85,7 +85,7 @@ namespace proteus
   {
 
     double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
-    double eta = amplitude*cos(phase);
+    double eta = amplitude*fastcos(phase);
     return eta;
 
   }

@@ -658,16 +658,18 @@ class  MonochromaticWaves:
             try:
                 self.k = 2.0*M_PI/wavelength
                 self.wavelength=wavelength
-                for ii in range(len(self.sinhF)):
-                    kk = (ii+1)*self.k
-                    self.sinhF[ii] = float(np.sinh(kk*self.depth) )
-                    self.tanhF[ii] = float(np.tanh(kk*self.depth) )
             except:
                 logEvent("ERROR! Wavetools.py: Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
                 sys.exit(1)
             if ( (len(self.Ycoeff)!=self.Nf) or (len(self.Bcoeff)!=self.Nf) or (Ycoeff[0]==0.) or (Bcoeff[0]==0.) ):
                 logEvent("ERROR! Wavetools.py: Ycoeff and Bcoeff must have the same length and equal to Nf and the 1st order harmonic must not be zero",level=0)
                 sys.exit(1)
+            else:
+                for ii in range(len(self.sinhF)):
+                    kk = (ii+1)*self.k
+                    self.sinhF[ii] = float(np.sinh(kk*self.depth) )
+                    self.tanhF[ii] = float(np.tanh(kk*self.depth) )
+
            
         self.kDir = self.k * self.waveDir
         self.amplitude = 0.5*waveHeight
@@ -827,7 +829,7 @@ class  MonochromaticWaves:
         return U
 
     
-'''class RandomWaves:
+class RandomWaves:
     """
     This class is used for generating plane random waves using linear reconstruction of components from a
     wave spectrum
@@ -1022,7 +1024,7 @@ class  MonochromaticWaves:
         return series
 
 
-
+'''
 class MultiSpectraRandomWaves(RandomWaves):
     """This class is used for generating random waves
     by combining multiple spectra with different distributions and directions
