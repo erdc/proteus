@@ -337,12 +337,12 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         uyRef = normDir[1]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
         uzRef = amp*omega*sinh(kw*(z0+depth))*sin(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
         
+        err = abs(eta/etaRef - 1.)
         err_x = abs(ux/uxRef - 1.)
         err_y = abs(uy/uyRef - 1.)
         err_z = abs(uz/uzRef - 1.)
 
-        print err_x, err_y, err_z
-        self.assertTrue(round(eta,8) == round(etaRef,8) )
+        self.assertTrue(round(err,2) == 0. )
         self.assertTrue(round(err_x,2) == 0. )
         self.assertTrue(round(err_y,2) == 0. )
         self.assertTrue(round(err_y,2) == 0. )
@@ -401,13 +401,17 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         err_y = abs(uy/uyRef - 1.)
         err_z = abs(uz/uzRef - 1.)
 
-        print err_x, err_y, err_z
-        self.assertTrue(round(eta,8) == round(etaRef,8) )
+        err = abs(eta/etaRef - 1.)
+        err_x = abs(ux/uxRef - 1.)
+        err_y = abs(uy/uyRef - 1.)
+        err_z = abs(uz/uzRef - 1.)
+
+        self.assertTrue(round(err,2) == 0. )
         self.assertTrue(round(err_x,2) == 0. )
         self.assertTrue(round(err_y,2) == 0. )
         self.assertTrue(round(err_y,2) == 0. )
 
-        '''
+        
 #========================================= RANDOM WAVES ======================================
 
 
@@ -580,6 +584,7 @@ class VerifyRandomWaves(unittest.TestCase):
         CB = plt.colorbar(CS, shrink=0.8, extend='both')
         plt.savefig("Contour.png")
 """
+'''
 class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
     def testFailureModes(self):
 
