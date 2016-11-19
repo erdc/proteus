@@ -52,10 +52,10 @@ def get_flags(package):
         lib_dir = PROTEUS_LIB_DIR
     return include_dir, lib_dir
 
-PROTEUS_EXTRA_LINK_ARGS=['-lblas'] + platform_extra_link_args
+PROTEUS_EXTRA_LINK_ARGS=['-lopenblas'] + platform_extra_link_args
 
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
-PROTEUS_EXTRA_FC_LINK_ARGS=['-lblas']
+PROTEUS_EXTRA_FC_LINK_ARGS=['-lopenblas']
 
 
 PROTEUS_SUPERLU_INCLUDE_DIR, PROTEUS_SUPERLU_LIB_DIR = get_flags('superlu')
@@ -68,7 +68,7 @@ if platform_blas_h:
 else:
     PROTEUS_BLAS_H = r'"cblas.h"'
 PROTEUS_BLAS_LIB_DIR = '.'
-PROTEUS_BLAS_LIB   = 'blas'
+PROTEUS_BLAS_LIB   = 'openblas'
 
 PROTEUS_LAPACK_INCLUDE_DIR = '.'
 if platform_lapack_h:
@@ -76,7 +76,7 @@ if platform_lapack_h:
 else:
     PROTEUS_LAPACK_H   = r'"clapack.h"'
 PROTEUS_LAPACK_LIB_DIR = '.'
-PROTEUS_LAPACK_LIB = 'lapack'
+PROTEUS_LAPACK_LIB = 'openblas'
 if platform_lapack_integer:
     PROTEUS_LAPACK_INTEGER = platform_lapack_integer
 else:
