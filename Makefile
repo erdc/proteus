@@ -102,6 +102,11 @@ update:
 	@echo "Type: git checkout -b branch_name to save changes" 
 	@echo "+======================================================================================================+"
 
+default_stack: stack
+	cd stack; git fetch origin; git checkout -q ${HASHSTACK_DEFAULT_VERSION}
+	@echo "Stack repository updated to latest versions"
+	HASHSTACK_VERSION=${HASHSTACK_DEFAULT_VERSION}
+
 hashdist: 
 	@echo "No hashdist found.  Cloning hashdist from GitHub"
 	git clone https://github.com/hashdist/hashdist.git 
