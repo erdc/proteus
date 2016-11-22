@@ -104,7 +104,7 @@ update:
 
 default_stack: stack
 	cd stack; git fetch origin; git checkout -q ${HASHSTACK_DEFAULT_VERSION}
-	@echo "Stack repository updated to latest versions"
+	@echo "Stack repository updated to .hashstack_default"
 	HASHSTACK_VERSION=${HASHSTACK_DEFAULT_VERSION}
 
 hashdist: 
