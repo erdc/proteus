@@ -1,6 +1,5 @@
 dist: trusty
-sudo: false
-group: beta
+sudo: required
 
 language: python
 
@@ -13,8 +12,9 @@ python:
 addons:
   apt:
     packages:
-    - gfortran-4.8
+    - gfortran
     - cmake
+    - swig
 
 before_install:
 - wget https://dl.dropboxusercontent.com/u/26353144/hashdist_trusty.tgz
