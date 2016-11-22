@@ -13,9 +13,8 @@ python:
 addons:
   apt:
     packages:
-    - gfortran
+    - gfortran-4.8
     - cmake
-    - swig
 
 before_install:
 - wget https://dl.dropboxusercontent.com/u/26353144/hashdist_trusty.tgz
