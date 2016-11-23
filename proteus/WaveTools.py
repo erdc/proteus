@@ -724,65 +724,26 @@ class  MonochromaticWaves:
             self._cpp_u = self.uFenton
 
 
-    def  etaLinear(self,  x,  t):
-        """Calculates free surface elevation (MonochromaticWaves class - Linear waves)
-        Parameters
-        ----------
-        x : numpy.ndarray
-            Position vector
-        t : float
-            Time variable
-
-        Returns
-        --------
-        float
-            Free-surface elevation as a float
-
-        """
-    
+    def  etaLinear(self,  x,  t):    
  
         return __cpp_eta_mode(x ,t, self.kDir_,self.omega,self.phi0,self.amplitude)
 
     def etaFenton(self,  x,  t):
-        """Calculates free surface elevation (MonochromaticWaves class - Fenton waves)
-        Parameters
-        ----------
-        x : numpy.ndarray
-            Position vector
-        t : float
-            Time variable
-
-        Returns
-        --------
-        float
-            Free-surface elevation as a float
-
-        """
 
         return __cpp_etaFenton(x,t,self.kDir_, self.k, self.omega,self.phi0,self.amplitude, self.Nf, self.Ycoeff_)
 
 
     def  uLinear(self,  x,  t):
-        """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
-        Parameters
-        ----------
-        x : numpy.ndarray
-            Position vector
-        t : float
-            Time variable
-
-        Returns
-        --------
-        numpy.ndarray
-            Velocity vector as 1D array
-
-        """
 
         
         return __cpp_vel_mode(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.sinhL)
 
     def  uFenton(self,  x,  t):
-        """Calculates wave velocity vector (MonochromaticWaves class - Linear waves).
+        
+        return __cpp_uFenton(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_, self.sinhF_, self.tanhF_)
+
+    def eta(self,x,t):
+        """Calculates free surface elevation (MonochromaticWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -792,14 +753,10 @@ class  MonochromaticWaves:
 
         Returns
         --------
-        numpy.ndarray
-            Velocity vector as 1D array
+        float
+            Free-surface elevation as a float
 
         """
-        
-        return __cpp_uFenton(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_, self.sinhF_, self.tanhF_)
-
-    def eta(self,x,t):
         cython.declare(xx=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
@@ -810,6 +767,20 @@ class  MonochromaticWaves:
             return self.etaFenton(xx,t)
 
     def u(self,x,t):
+        """Calculates wave velocity vector (MonochromaticWaves class).
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
+        """
         cython.declare(xx=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
@@ -932,11 +903,48 @@ class RandomWaves:
                 logEvent('ERROR! Wavetools.py: Additional spectral parameters are not valid for the %s spectrum' %spectName)
                 sys.exit(1)
 
+        self.sinhF = np.zeros(N,"d")
+        for ii in range(self.N):
+            self.sinhF[ii] = float(np.sinh(self.ki[ii]*self.depth) )
 
+ 
         self.ai = np.sqrt(2.*returnRectangles(Si_Jm,fim))
         self.kDir = np.zeros((len(self.ki),3),)
         for ii in range(3):
              self.kDir[:,ii] = self.ki[:] * self.waveDir[ii]
+        if(self.N > 100000):
+            logEvent("ERROR! Wavetools.py: Maximum number of frequencies for Random Waves is 100000 ",level=0)
+
+    #C++ declarations
+        for ij in range(3):
+            self.waveDir_c[ij] = self.waveDir[ij]
+            self.vDir_c[ij] = self.vDir[ij]
+        self.waveDir_ =  self.waveDir_c
+        self.vDir_ =  self.vDir_c
+
+
+        for ij in range(self.N):
+            for kk in range(3):
+                self.kDir_c[3*ij+kk] = self.kDir[ij,kk]
+            self.omega_c[ij] = self.omega[ij]
+            self.ki_c[ij]  =self.ki[ij]
+            self.sinh_c[ij] = self.sinhF[ij]
+            self.ai_c[ij] = self.ai[ij]
+            self.phi_c[ij] = self.phi[ij]
+
+        self.kDir_ = self.kDir_c
+        self.omega_ = self.omega_c
+        self.ki_  =self.ki_c
+        self.ai_ = self.ai_c
+        self.sinh_ = self.sinh_c
+        self.phi_ = self.phi_c
+
+
+
+    def _cpp_eta(self,  x,  t):
+
+        return __cpp_etaRandom(x,t,self.kDir_, self.omega_,self.phi_,self.ai_, self.N)
+
     def eta(self, x, t):
         """Calculates free surface elevation (RandomWaves class)
         Parameters
@@ -952,11 +960,15 @@ class RandomWaves:
             Free-surface elevation as a float
 
         """
-        Eta=0.
-        for ii in range(self.N):
-            Eta+= eta_mode(x, t,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
-        return Eta
-#        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        return self._cpp_eta(xx,t)
+
+    def _cpp_u(self,  x,  t):
+
+        return __cpp_uRandom(x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.N, self.waveDir_, self.vDir_, self.sinh_)
 
     def u(self, x, t):
         """Calculates wave velocity vector (RandomWaves class)
@@ -974,9 +986,16 @@ class RandomWaves:
 
         """
 
-        U=0.
-        for ii in range(self.N):
-            U+= vel_mode(x, t, self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.vDir)
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        U = np.zeros(3,)
+        cppUL = self._cpp_u(xx,t)            
+        U[0] = cppUL[0]
+        U[1] = cppUL[1]
+        U[2] = cppUL[2]
+
         return U
     def writeEtaSeries(self,Tstart,Tend,x0,fname,Vgen= np.array([0.,0,0])):
         """Writes a timeseries of the free-surface elevation

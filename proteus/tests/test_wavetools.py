@@ -397,9 +397,6 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
             uxRef += normDir[0]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
             uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
             uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
-        err_x = abs(ux/uxRef - 1.)
-        err_y = abs(uy/uyRef - 1.)
-        err_z = abs(uz/uzRef - 1.)
 
         err = abs(eta/etaRef - 1.)
         err_x = abs(ux/uxRef - 1.)
@@ -440,11 +437,15 @@ class CheckRandomWavesFailures(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm5:
             RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", spectral_params= {"random1": 3.3, "random2":True,"random3" : 10.}, phi = np.zeros(1,)  )
         self.assertEqual(cm5.exception.code, 1)
+#Failure 6: Give too many frequencies
+        with self.assertRaises(SystemExit) as cm6:
+            RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100001,2.,"JONSWAP", spectral_params= {"random1": 3.3, "random2":True,"random3" : 10.}  )
+        self.assertEqual(cm5.exception.code, 1)
 
   # Success!: Give all parameters in correct form!
-        RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params=None )
-        RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.} )
-        RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.}, phi = np.zeros(100, float) )
+        RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params=None )
+        RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.} )
+        RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.}, phi = np.zeros(100, float) )
         self.assertTrue(None == None)
 
 class VerifyRandomWaves(unittest.TestCase):
@@ -529,11 +530,15 @@ class VerifyRandomWaves(unittest.TestCase):
             uyRef += normDir[1]*ai[ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
             uzRef +=  ai[ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
 
+        err = abs(eta/etaRef - 1.)
+        err_x = abs(ux/uxRef - 1.)
+        err_y = abs(uy/uyRef - 1.)
+        err_z = abs(uz/uzRef - 1.)
 
-        self.assertTrue(round(eta,8) == round(etaRef,8) )
-        self.assertTrue(round(ux,8) == round(uxRef,8))
-        self.assertTrue(round(uy,8) == round(uyRef,8))
-        self.assertTrue(round(uz,8) == round(uzRef,8))
+        self.assertTrue(round(err,2) == 0. )
+        self.assertTrue(round(err_x,2) == 0. )
+        self.assertTrue(round(err_y,2) == 0. )
+        self.assertTrue(round(err_y,2) == 0. )
 
         # Asserting write function from Random waves
         x0 = np.array([0,0,0])

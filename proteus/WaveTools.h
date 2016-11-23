@@ -203,5 +203,70 @@ namespace proteus
  };
 
 
+ 
+
+
+//---------------------------------------------------------PLANE RANDOM-------------------------------------------------------------------------
+
+ inline double __cpp_etaRandom(double x[nDim], double t, double* kDir, double* omega, double* phi, double* amplitude, int N)
+
+
+      {
+
+	double HH = 0.;
+	double kw[nDim] = {0.,0.,0.};
+	int ii =0;
+
+        for (int nn=0; nn<N; nn++)
+	  {
+	    ii = 3*nn;
+	    kw[0] = kDir[ii];
+	    kw[1] = kDir[ii+1];
+	    kw[2] = kDir[ii+2];
+	    HH= HH + __cpp_eta_mode(x,t,kw,omega[nn],phi[nn],amplitude[nn]);
+	  }
+        return HH;
+      }
+
+ inline double* __cpp_uRandom(double x[nDim],double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double waveDir[nDim], double vDir[nDim], double* sinhF )
+
+
+      {
+
+	double kw[nDim] = {0.,0.,0.};
+	double* Ufenton;
+	double* Uf;
+	Uf = new double[nDim];
+	Uf[0] = 0.;
+	Uf[1] = 0.;
+	Uf[2] = 0.;
+
+
+	int ii =0;
+
+        for (int nn=0; nn<N; nn++)
+	  {
+	    ii = 3*nn;
+	    kw[0] = kDir[ii];
+	    kw[1] = kDir[ii+1];
+	    kw[2] = kDir[ii+2];
+	    Ufenton = __cpp_vel_mode(x, t ,kw, kAbs[nn], omega[nn], phi[nn], amplitude[nn], mwl, depth, waveDir, vDir, sinhF[nn]); 
+	    Uf[0] = Uf[0]+ *(Ufenton);//[0];
+	    Uf[1] = Uf[1]+ *(Ufenton+1);//[1];
+	    Uf[2] = Uf[2]+ *(Ufenton+2);//[2];
+
+	  }
+	
+        return Uf;
+
+	delete [] Ufenton;      
+	delete [] Uf;
+
+
+      
+ };
+
+
+
 }
 #endif
