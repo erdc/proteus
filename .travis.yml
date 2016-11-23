@@ -1,5 +1,6 @@
 dist: trusty
-sudo: required
+sudo: false
+group: beta
 
 language: python
 
@@ -12,9 +13,7 @@ python:
 addons:
   apt:
     packages:
-    - gfortran
     - cmake
-    - swig
 
 before_install:
 - wget https://dl.dropboxusercontent.com/u/26353144/hashdist_trusty.tgz
@@ -27,6 +26,7 @@ install:
 - make stack/default.yaml
 - FC=gfortran CFLAGS='-w -fno-var-tracking-assignments' make install
 - export PATH=$PWD/linux2/bin:$PATH
+- export LD_LIBRARY_PATH=$PWD/linux2/lib:$PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
 
