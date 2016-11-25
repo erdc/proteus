@@ -98,8 +98,6 @@ namespace proteus
       double Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
        double* VV;
       VV = new double[nDim];
-            if (Z < -2*PI_/kAbs)
-	      {VV[0] = 0.; VV[1]=0.; VV[2]=0.;}
 
       double fcosh = fastcosh(kAbs, Z, depth, true); 
       double fsinh = fastcosh(kAbs, Z, depth, false); 
