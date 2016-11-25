@@ -398,15 +398,16 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
             uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
             uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
 
+        Uo = waveHeight * omega
+
         err = abs(eta/etaRef - 1.)
         err_x = abs(ux/uxRef - 1.)
         err_y = abs(uy/uyRef - 1.)
         err_z = abs(uz/uzRef - 1.)
-
-        self.assertTrue(round(err,2) == 0. )
-        self.assertTrue(round(err_x,2) == 0. )
-        self.assertTrue(round(err_y,2) == 0. )
-        self.assertTrue(round(err_y,2) == 0. )
+        self.assertTrue((err <= 0.01) or ((eta/Hs)<1e-3 and (etaRef/Hs)<1e-3) )
+        self.assertTrue((err_x <= 0.01) or ((ux/Uo)<1e-3 and (uxRef/Uo)<1e-3) )
+        self.assertTrue((err_y <= 0.01) or ((uy/Uo)<1e-3 and (uyRef/Uo)<1e-3) )
+        self.assertTrue((err_z <= 0.01) or ((uz/Uo)<1e-3 and (uzRef/Uo)<1e-3) )
 
         
 #========================================= RANDOM WAVES ======================================
@@ -482,7 +483,7 @@ class VerifyRandomWaves(unittest.TestCase):
                    )
         x = random.random()*200. - 100.
         y = random.random()*200. - 100.
-        z =  mwl - depth + random.random()*( depth)
+        z = 4.4# mwl - depth + random.random()*( depth)
         t =  random.random()*200. - 100.
         # Just loading functions
         eta = a.eta([x, y, z], t)
@@ -513,6 +514,7 @@ class VerifyRandomWaves(unittest.TestCase):
         fi = np.linspace(fmin,fmax,N)
         df = (fmax-fmin)/(N -1 )
         ki = dispersion(2*pi*fi,depth)
+        kp = dispersion(2*pi / Tp,depth)
         z0 = z - mwl
         normDir = setDirVector(waveDir)
         fim = reduceToIntervals(fi,df)
@@ -530,15 +532,26 @@ class VerifyRandomWaves(unittest.TestCase):
             uyRef += normDir[1]*ai[ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
             uzRef +=  ai[ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
 
-        err = abs(eta/etaRef - 1.)
-        err_x = abs(ux/uxRef - 1.)
-        err_y = abs(uy/uyRef - 1.)
-        err_z = abs(uz/uzRef - 1.)
 
-        self.assertTrue(round(err,2) == 0. )
-        self.assertTrue(round(err_x,2) == 0. )
-        self.assertTrue(round(err_y,2) == 0. )
-        self.assertTrue(round(err_y,2) == 0. )
+
+        err = abs(eta/etaRef - 1.)
+        err_x =abs(ux/uxRef - 1.)
+        err_y =abs(uy/uyRef - 1.)
+        err_z =abs(uz/uzRef - 1.)
+
+
+        Uo = Hs * 2.*pi*tanh(kp*depth)/Tp
+        Uoz = Hs * 2.*pi/Tp
+
+        print " "
+        print x,y,z
+        print etaRef,uxRef/Uo, uyRef/Uo, uzRef/Uo
+        print eta, ux/Uo, uy/Uo, uz/Uoz
+        print err, err_x, err_y, err_z
+        self.assertTrue((err <= 0.1) or ( abs(eta/Hs)<1e-1  ))
+        self.assertTrue((err_x <= 0.1) or (abs(ux/Uo)<1e-1 ))
+        self.assertTrue((err_y <= 0.1) or (abs(uy/Uo)<1e-1  ))
+        self.assertTrue((err_z <= 0.1) or (abs(uz/Uoz)<1e-1 ))
 
         # Asserting write function from Random waves
         x0 = np.array([0,0,0])

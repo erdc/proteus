@@ -1044,7 +1044,7 @@ class RandomWaves:
         return series
 
 
-'''
+
 class MultiSpectraRandomWaves(RandomWaves):
     """This class is used for generating random waves
     by combining multiple spectra with different distributions and directions
@@ -1197,7 +1197,7 @@ class MultiSpectraRandomWaves(RandomWaves):
         return U
 
 
-
+'''
 class DirectionalWaves(RandomWaves):
     """
     This class is used for generating directional random waves using linear reconstruction of components from a
