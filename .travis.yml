@@ -17,7 +17,20 @@ addons:
     - g++-4.8
     - gcc-4.8
     - gfortran-4.8
+    - gfortran-4.8-multilib
+    - gfortran-4.8-doc
+    - libgfortran3
+    - libgfortran3-dbg
+    - libxau6
+    - libxdmcp6
+    - libx11-6
+    - libc6
+    - libgcc-6-dev
+    - libxcb1
+    - libquadmath0
+    - libquadmath0-dbg
     - dpkg
+
 before_install:
 - dpkg --list
 - wget https://dl.dropboxusercontent.com/u/26353144/hashdist_trusty.tgz
