@@ -42,6 +42,7 @@ install:
 - make stack
 - make stack/default.yaml
 - FC=gfortran-4.8 CFLAGS='-w -fno-var-tracking-assignments' make install
+- ldd ./linux2/lib/libpetsc.so
 - export PATH=$PWD/linux2/bin:$PATH
 - export LD_LIBRARY_PATH=$PWD/linux2/lib:$PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
