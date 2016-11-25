@@ -96,7 +96,10 @@ namespace proteus
 
      double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
       double Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
-      
+       double* VV;
+      VV = new double[nDim];
+            if (Z < -2*PI_/kAbs)
+	      {VV[0] = 0.; VV[1]=0.; VV[2]=0.;}
 
       double fcosh = fastcosh(kAbs, Z, depth, true); 
       double fsinh = fastcosh(kAbs, Z, depth, false); 
@@ -106,8 +109,6 @@ namespace proteus
       double UH=amplitude*omega*fcosh*fcos/sinhkd;//sinh(kAbs*depth);
       double UV=amplitude*omega*fsinh*fsin/sinhkd;//sinh(kAbs*depth);
      //Setting wave direction
-      double* VV;
-      VV = new double[nDim];
       for(int ii=0; ii<nDim ; ii++)
 	  {
 	    VV[ii] = UH*waveDir[ii] + UV*vDir[ii];
