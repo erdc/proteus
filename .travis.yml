@@ -1,6 +1,5 @@
 dist: trusty
-sudo: false
-group: beta
+sudo: required
 
 language: python
 
@@ -16,6 +15,7 @@ addons:
     - cmake
     - g++-4.8
     - gcc-4.8
+    - gfortran
     - gfortran-4.8
     - gfortran-4.8-multilib
     - gfortran-4.8-doc
