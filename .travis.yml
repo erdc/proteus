@@ -15,7 +15,6 @@ addons:
     - gfortran
 
 before_install:
-- dpkg --list
 - wget https://dl.dropboxusercontent.com/u/26353144/hashdist_trusty.tgz
 - tar xzf hashdist_trusty.tgz 
 - mv .hashdist $HOME
@@ -24,10 +23,8 @@ install:
 - make hashdist
 - make stack
 - make stack/default.yaml
-- FC=gfortran-4.8 CFLAGS='-w -fno-var-tracking-assignments' make install
-- ldd ./linux2/lib/libpetsc.so
+- FC=gfortran make install
 - export PATH=$PWD/linux2/bin:$PATH
-- export LD_LIBRARY_PATH=$PWD/linux2/lib:$PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
 
