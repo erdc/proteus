@@ -12,23 +12,7 @@ python:
 addons:
   apt:
     packages:
-    - cmake
-    - g++-4.8
-    - gcc-4.8
     - gfortran
-    - gfortran-4.8
-    - gfortran-4.8-multilib
-    - gfortran-4.8-doc
-    - libgfortran3
-    - libgfortran3-dbg
-    - libxau6
-    - libxdmcp6
-    - libx11-6
-    - libc6
-    - libxcb1
-    - libquadmath0
-    - libquadmath0-dbg
-    - dpkg
 
 before_install:
 - dpkg --list
