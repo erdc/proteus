@@ -818,7 +818,7 @@ def _assembleGeometry(domain, BC_class):
     domain.regions = []
     domain.regionFlags = []
     # BC at flag 0
-    domain.bc = [BC_class()]
+    domain.bc = [BC_class(nd=domain.nd)]
     # domain.bc[0].setNonMaterial()
     # barycenter at flag 0
     domain.barycenters = np.array([[0., 0., 0.]])
