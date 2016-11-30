@@ -9,7 +9,7 @@ import unittest
 import numpy.testing as npt
 import numpy as np
 from nose.tools import eq_
-from proteus import Comm, Profiling
+from proteus import Comm, Profiling, Gauges
 from proteus.Profiling import logEvent as log
 from proteus.Domain import (PiecewiseLinearComplexDomain,
                             PlanarStraightLineGraphDomain)
@@ -90,7 +90,6 @@ def create_tank2D(domain, dim=(0., 0.), coords=None, from_0=True):
 
 def create_tank3D(domain, dim=(0., 0., 0.), coords=None, from_0=True):
     return Tank3D(domain, dim, coords, from_0)
-
 
 class TestShapeDomainBuilding(unittest.TestCase):
 
@@ -223,6 +222,55 @@ class TestShapeDomainBuilding(unittest.TestCase):
 
 class TestShapeRANS(unittest.TestCase):
 
+    def test_gauges(self):
+        domain = create_domain2D()
+        tank = create_tank2D(domain)
+        tank.attachPointGauges('kappa',
+                               gauges = ((('k', ),((0.,0.,0.),)),),
+                               activeTime = (0.,1.),
+                               sampleRate = 0.5,
+                               fileName = 'point1.csv')
+        tank.attachLineGauges('kappa',
+                               gauges = ((('k', ),((0.,0.,0.),(0.,0.,1.))),),
+                               activeTime = (0.,2.),
+                               sampleRate = 0.5,
+                               fileName = 'line1.csv')
+        tank.attachLineIntegralGauges('vof',
+                                      gauges=(
+                                      (('vof',), ((0., 0., 0.), (0., 0., 1.))),),
+                                      activeTime=(0., 2.),
+                                      sampleRate=0.5,
+                                      fileName='line_int1.csv')
+        assert tank.auxiliaryVariables.get('Gauge_kappa', None) is not None
+        assert tank.auxiliaryVariables.get('Gauge_vof', None) is not None
+        assert len(tank.auxiliaryVariables['Gauge_kappa']) is 2
+        assert len(tank.auxiliaryVariables['Gauge_vof']) is 1
+        self.assertIsInstance(tank.auxiliaryVariables['Gauge_kappa'][0],
+                              Gauges.Gauges)
+        assert tank.auxiliaryVariables['Gauge_kappa'][0].activeTime == (0.,1.)
+        assert tank.auxiliaryVariables['Gauge_kappa'][1].activeTime == (0.,2.)
+        assert tank.auxiliaryVariables['Gauge_vof'][0].sampleRate == 0.5
+
+        assembleDomainRANS(domain)
+
+        assert domain.auxiliaryVariables.get('kappa', None) is not None
+        assert domain.auxiliaryVariables.get('vof', None) is not None
+        self.assertIsInstance(domain.auxiliaryVariables['vof'][0],
+                              Gauges.Gauges)
+        assert len(domain.auxiliaryVariables['kappa']) is 2
+        assert len(domain.auxiliaryVariables['vof']) is 1
+        assert domain.auxiliaryVariables['kappa'][0].activeTime == (0., 1.)
+        assert domain.auxiliaryVariables['kappa'][1].activeTime == (0., 2.)
+        assert domain.auxiliaryVariables['vof'][0].sampleRate == 0.5
+
+        tank.attachPointGauges('voff',
+                                gauges=((('vof',), ((0., 0., 0.),)),),
+                                activeTime=(0., 1.),
+                                sampleRate=0.5,
+                                fileName='point2.csv')
+        self.assertRaises(ValueError,assembleDomainRANS,domain)
+
+
     def test_rigid_body(self):
         domain = create_domain2D()
         rectangle = create_rectangle(domain, dim=[2., 2.], coords=[1., 1.],
@@ -231,7 +279,7 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(rectangle.holes.tolist(), [[1., 1.]])
         npt.assert_equal(rectangle.auxiliaryVariables['RigidBody'], True)
         assembleDomainRANS(domain)
-        isRigidBody = isinstance(domain.auxiliaryVariables[0], RigidBody)
+        isRigidBody = isinstance(domain.auxiliaryVariables['twp'][0], RigidBody)
         npt.assert_equal(isRigidBody, True)
 
     def test_set_constraints(self):
@@ -270,30 +318,38 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(custom.auxiliaryVariables['RelaxZones'], custom.zones)
         zone = custom.zones[flag]
         npt.assert_equal(zone.zone_type, 'absorption')
-        npt.assert_equal(zone.center, center)
-        npt.assert_equal(zone.orientation, orientation)
+        npt.assert_equal(zone.center[0], center[0])
+        npt.assert_equal(zone.center[1], center[1])
+        npt.assert_equal(zone.center[2], center[2])
+        npt.assert_equal(zone.orientation[0], orientation[0])
+        npt.assert_equal(zone.orientation[1], orientation[1])
+        npt.assert_equal(zone.orientation[2], orientation[2])
         npt.assert_equal(zone.dragAlpha, dragAlpha)
         npt.assert_equal(zone.dragBeta, dragBeta)
         npt.assert_equal(zone.porosity, porosity)
         npt.assert_equal(zone.Shape, custom)
         # for tanks in 2D
         tank = create_tank2D(domain, dim=[4., 4.])
-        tank.setSponge(left=1.5, right=2.)
-        npt.assert_equal(tank.spongeLayers['left'], 1.5)
-        npt.assert_equal(tank.spongeLayers['right'], 2.)
-        tank.setAbsorptionZones(left=True, right=True)
-        leftzone = tank.zones[tank.regionFlags[tank.regionIndice['leftSponge']]]
-        rightzone = tank.zones[tank.regionFlags[tank.regionIndice['rightSponge']]]
+        tank.setSponge(x_n=1.5, x_p=2.)
+        npt.assert_equal(tank.spongeLayers['x-'], 1.5)
+        npt.assert_equal(tank.spongeLayers['x+'], 2.)
+        tank.setAbsorptionZones(x_n=True, x_p=True)
+        leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
+        rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         npt.assert_equal(leftzone.zone_type, 'absorption')
-        npt.assert_equal(leftzone.center, [0.75, 2.])
-        npt.assert_equal(leftzone.orientation, [1., 0.])
+        npt.assert_equal(leftzone.center[0], -0.75)
+        npt.assert_equal(leftzone.center[1], 2.)
+        npt.assert_equal(leftzone.orientation[0], 1.)
+        npt.assert_equal(leftzone.orientation[1], 0.)
         npt.assert_equal(leftzone.dragAlpha, dragAlpha)
         npt.assert_equal(leftzone.dragBeta, dragBeta)
         npt.assert_equal(leftzone.porosity, porosity)
         npt.assert_equal(leftzone.Shape, tank)
         npt.assert_equal(rightzone.zone_type, 'absorption')
-        npt.assert_equal(rightzone.center, [3., 2.])
-        npt.assert_equal(rightzone.orientation, [-1., 0.])
+        npt.assert_equal(rightzone.center[0], 5.)
+        npt.assert_equal(rightzone.center[1], 2.)
+        npt.assert_equal(rightzone.orientation[0], -1.)
+        npt.assert_equal(rightzone.orientation[1], 0.)
         npt.assert_equal(rightzone.dragAlpha, dragAlpha)
         npt.assert_equal(rightzone.dragBeta, dragBeta)
         npt.assert_equal(rightzone.porosity, porosity)
@@ -301,40 +357,56 @@ class TestShapeRANS(unittest.TestCase):
         # for tanks in 3D
         domain = create_domain3D()
         tank = create_tank3D(domain, dim=[4., 4., 4.])
-        tank.setSponge(left=1.5, right=2., front=3., back=0.2)
-        npt.assert_equal(tank.spongeLayers['left'], 1.5)
-        npt.assert_equal(tank.spongeLayers['right'], 2.)
-        npt.assert_equal(tank.spongeLayers['front'], 3)
-        npt.assert_equal(tank.spongeLayers['back'], 0.2)
-        tank.setAbsorptionZones(left=True, right=True, front=True, back=True)
-        leftzone = tank.zones[tank.regionFlags[tank.regionIndice['left']]]
-        rightzone = tank.zones[tank.regionFlags[tank.regionIndice['right']]]
-        frontzone = tank.zones[tank.regionFlags[tank.regionIndice['front']]]
-        backzone = tank.zones[tank.regionFlags[tank.regionIndice['back']]]
+        tank.setSponge(x_n=1.5, x_p=2., y_n=3., y_p=0.2)
+        npt.assert_equal(tank.spongeLayers['x-'], 1.5)
+        npt.assert_equal(tank.spongeLayers['x+'], 2.)
+        npt.assert_equal(tank.spongeLayers['y-'], 3)
+        npt.assert_equal(tank.spongeLayers['y+'], 0.2)
+        tank.setAbsorptionZones(x_n=True, x_p=True, y_n=True, y_p=True)
+        leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
+        rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
+        frontzone = tank.zones[tank.regionFlags[tank.regionIndice['y-']]]
+        backzone = tank.zones[tank.regionFlags[tank.regionIndice['y+']]]
         npt.assert_equal(leftzone.zone_type, 'absorption')
-        npt.assert_equal(leftzone.center, [2., 0.75, 2.])
-        npt.assert_equal(leftzone.orientation, [0., 1., 0.])
+        npt.assert_equal(leftzone.center[0], -0.75)
+        npt.assert_equal(leftzone.center[1], 2.)
+        npt.assert_equal(leftzone.center[2], 2.)
+        npt.assert_equal(leftzone.orientation[0], 1.)
+        npt.assert_equal(leftzone.orientation[1], 0.)
+        npt.assert_equal(leftzone.orientation[2], 0.)
         npt.assert_equal(leftzone.dragAlpha, dragAlpha)
         npt.assert_equal(leftzone.dragBeta, dragBeta)
         npt.assert_equal(leftzone.porosity, porosity)
         npt.assert_equal(leftzone.Shape, tank)
         npt.assert_equal(rightzone.zone_type, 'absorption')
-        npt.assert_equal(rightzone.center, [2., 3., 2.])
-        npt.assert_equal(rightzone.orientation, [0., -1., 0.])
+        npt.assert_equal(rightzone.center[0], 5.)
+        npt.assert_equal(rightzone.center[1], 2.)
+        npt.assert_equal(rightzone.center[2], 2.)
+        npt.assert_equal(rightzone.orientation[0], -1.)
+        npt.assert_equal(rightzone.orientation[1], 0.)
+        npt.assert_equal(rightzone.orientation[2], 0.)
         npt.assert_equal(rightzone.dragAlpha, dragAlpha)
         npt.assert_equal(rightzone.dragBeta, dragBeta)
         npt.assert_equal(rightzone.porosity, porosity)
         npt.assert_equal(rightzone.Shape, tank)
         npt.assert_equal(frontzone.zone_type, 'absorption')
-        npt.assert_equal(frontzone.center, [2.5, 2., 2.])
-        npt.assert_equal(frontzone.orientation, [1., 0., 0.])
+        npt.assert_equal(frontzone.center[0], 2.)
+        npt.assert_equal(frontzone.center[1], -1.5)
+        npt.assert_equal(frontzone.center[2], 2.)
+        npt.assert_equal(frontzone.orientation[0], 0.)
+        npt.assert_equal(frontzone.orientation[1], 1.)
+        npt.assert_equal(frontzone.orientation[2], 0.)
         npt.assert_equal(frontzone.dragAlpha, dragAlpha)
         npt.assert_equal(frontzone.dragBeta, dragBeta)
         npt.assert_equal(frontzone.porosity, porosity)
         npt.assert_equal(frontzone.Shape, tank)
         npt.assert_equal(backzone.zone_type, 'absorption')
-        npt.assert_equal(np.around(backzone.center, 8), [0.1, 2., 2.])
-        npt.assert_equal(backzone.orientation, [-1., 0., 0.])
+        npt.assert_equal(backzone.center[0], 2.)
+        npt.assert_equal(backzone.center[1], 4.1)
+        npt.assert_equal(backzone.center[2], 2.)
+        npt.assert_equal(backzone.orientation[0], 0.)
+        npt.assert_equal(backzone.orientation[1], -1.)
+        npt.assert_equal(backzone.orientation[2], 0.)
         npt.assert_equal(backzone.dragAlpha, dragAlpha)
         npt.assert_equal(backzone.dragBeta, dragBeta)
         npt.assert_equal(backzone.porosity, porosity)
@@ -362,30 +434,38 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(custom.auxiliaryVariables['RelaxZones'], custom.zones)
         zone = custom.zones[flag]
         npt.assert_equal(zone.zone_type, 'generation')
-        npt.assert_equal(zone.center, center)
-        npt.assert_equal(zone.orientation, orientation)
+        npt.assert_equal(zone.center[0], center[0])
+        npt.assert_equal(zone.center[1], center[1])
+        npt.assert_equal(zone.center[2], center[2])
+        npt.assert_equal(zone.orientation[0], orientation[0])
+        npt.assert_equal(zone.orientation[1], orientation[1])
+        npt.assert_equal(zone.orientation[2], orientation[2])
         npt.assert_equal(zone.dragAlpha, dragAlpha)
         npt.assert_equal(zone.dragBeta, dragBeta)
         npt.assert_equal(zone.porosity, porosity)
         npt.assert_equal(zone.Shape, custom)
         # for tanks in 2D
         tank = create_tank2D(domain, dim=[4., 4.])
-        tank.setSponge(left=1.5, right=2.)
-        npt.assert_equal(tank.spongeLayers['left'], 1.5)
-        npt.assert_equal(tank.spongeLayers['right'], 2.)
-        tank.setGenerationZones(waves=waves, left=True, right=True)
-        leftzone = tank.zones[tank.regionFlags[tank.regionIndice['leftSponge']]]
-        rightzone = tank.zones[tank.regionFlags[tank.regionIndice['rightSponge']]]
+        tank.setSponge(x_n=1.5, x_p=2.)
+        npt.assert_equal(tank.spongeLayers['x-'], 1.5)
+        npt.assert_equal(tank.spongeLayers['x+'], 2.)
+        tank.setGenerationZones(waves=waves, x_n=True, x_p=True)
+        leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
+        rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         npt.assert_equal(leftzone.zone_type, 'generation')
-        npt.assert_equal(leftzone.center, [0.75, 2.])
-        npt.assert_equal(leftzone.orientation, [1., 0.])
+        npt.assert_equal(leftzone.center[0], -0.75)
+        npt.assert_equal(leftzone.center[1], 2.)
+        npt.assert_equal(leftzone.orientation[0], 1.)
+        npt.assert_equal(leftzone.orientation[1], 0.)
         npt.assert_equal(leftzone.dragAlpha, dragAlpha)
         npt.assert_equal(leftzone.dragBeta, dragBeta)
         npt.assert_equal(leftzone.porosity, porosity)
         npt.assert_equal(leftzone.Shape, tank)
         npt.assert_equal(rightzone.zone_type, 'generation')
-        npt.assert_equal(rightzone.center, [3., 2.])
-        npt.assert_equal(rightzone.orientation, [-1., 0.])
+        npt.assert_equal(rightzone.center[0], 5.)
+        npt.assert_equal(rightzone.center[1], 2.)
+        npt.assert_equal(rightzone.orientation[0], -1.)
+        npt.assert_equal(rightzone.orientation[1], 0.)
         npt.assert_equal(rightzone.dragAlpha, dragAlpha)
         npt.assert_equal(rightzone.dragBeta, dragBeta)
         npt.assert_equal(rightzone.porosity, porosity)
@@ -393,40 +473,56 @@ class TestShapeRANS(unittest.TestCase):
         # for tanks in 3D
         domain = create_domain3D()
         tank = create_tank3D(domain, dim=[4., 4., 4.])
-        tank.setSponge(left=1.5, right=2., front=3., back=0.2)
-        npt.assert_equal(tank.spongeLayers['left'], 1.5)
-        npt.assert_equal(tank.spongeLayers['right'], 2.)
-        npt.assert_equal(tank.spongeLayers['front'], 3)
-        npt.assert_equal(tank.spongeLayers['back'], 0.2)
-        tank.setGenerationZones(waves=waves, left=True, right=True, front=True, back=True)
-        leftzone = tank.zones[tank.regionFlags[tank.regionIndice['left']]]
-        rightzone = tank.zones[tank.regionFlags[tank.regionIndice['right']]]
-        frontzone = tank.zones[tank.regionFlags[tank.regionIndice['front']]]
-        backzone = tank.zones[tank.regionFlags[tank.regionIndice['back']]]
+        tank.setSponge(x_n=1.5, x_p=2., y_n=3., y_p=0.2)
+        npt.assert_equal(tank.spongeLayers['x-'], 1.5)
+        npt.assert_equal(tank.spongeLayers['x+'], 2.)
+        npt.assert_equal(tank.spongeLayers['y-'], 3)
+        npt.assert_equal(tank.spongeLayers['y+'], 0.2)
+        tank.setGenerationZones(waves=waves, x_n=True, x_p=True, y_n=True, y_p=True)
+        leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
+        rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
+        frontzone = tank.zones[tank.regionFlags[tank.regionIndice['y-']]]
+        backzone = tank.zones[tank.regionFlags[tank.regionIndice['y+']]]
         npt.assert_equal(leftzone.zone_type, 'generation')
-        npt.assert_equal(leftzone.center, [2., 0.75, 2.])
-        npt.assert_equal(leftzone.orientation, [0., 1., 0.])
+        npt.assert_equal(leftzone.center[0], -0.75)
+        npt.assert_equal(leftzone.center[1], 2.)
+        npt.assert_equal(leftzone.center[2], 2.)
+        npt.assert_equal(leftzone.orientation[0], 1.)
+        npt.assert_equal(leftzone.orientation[1], 0.)
+        npt.assert_equal(leftzone.orientation[2], 0.)
         npt.assert_equal(leftzone.dragAlpha, dragAlpha)
         npt.assert_equal(leftzone.dragBeta, dragBeta)
         npt.assert_equal(leftzone.porosity, porosity)
         npt.assert_equal(leftzone.Shape, tank)
         npt.assert_equal(rightzone.zone_type, 'generation')
-        npt.assert_equal(rightzone.center, [2., 3., 2.])
-        npt.assert_equal(rightzone.orientation, [0., -1., 0.])
+        npt.assert_equal(rightzone.center[0], 5.)
+        npt.assert_equal(rightzone.center[1], 2.)
+        npt.assert_equal(rightzone.center[2], 2.)
+        npt.assert_equal(rightzone.orientation[0], -1.)
+        npt.assert_equal(rightzone.orientation[1], 0.)
+        npt.assert_equal(rightzone.orientation[2], 0.)
         npt.assert_equal(rightzone.dragAlpha, dragAlpha)
         npt.assert_equal(rightzone.dragBeta, dragBeta)
         npt.assert_equal(rightzone.porosity, porosity)
         npt.assert_equal(rightzone.Shape, tank)
         npt.assert_equal(frontzone.zone_type, 'generation')
-        npt.assert_equal(frontzone.center, [2.5, 2., 2.])
-        npt.assert_equal(frontzone.orientation, [1., 0., 0.])
+        npt.assert_equal(frontzone.center[0], 2.)
+        npt.assert_equal(frontzone.center[1], -1.5)
+        npt.assert_equal(frontzone.center[2], 2.)
+        npt.assert_equal(frontzone.orientation[0], 0.)
+        npt.assert_equal(frontzone.orientation[1], 1.)
+        npt.assert_equal(frontzone.orientation[2], 0.)
         npt.assert_equal(frontzone.dragAlpha, dragAlpha)
         npt.assert_equal(frontzone.dragBeta, dragBeta)
         npt.assert_equal(frontzone.porosity, porosity)
         npt.assert_equal(frontzone.Shape, tank)
         npt.assert_equal(backzone.zone_type, 'generation')
-        npt.assert_equal(np.around(backzone.center, 8), [0.1, 2., 2.])
-        npt.assert_equal(backzone.orientation, [-1., 0., 0.])
+        npt.assert_equal(backzone.center[0], 2.)
+        npt.assert_equal(backzone.center[1], 4.1)
+        npt.assert_equal(backzone.center[2], 2.)
+        npt.assert_equal(backzone.orientation[0], 0.)
+        npt.assert_equal(backzone.orientation[1], -1.)
+        npt.assert_equal(backzone.orientation[2], 0.)
         npt.assert_equal(backzone.dragAlpha, dragAlpha)
         npt.assert_equal(backzone.dragBeta, dragBeta)
         npt.assert_equal(backzone.porosity, porosity)

@@ -10,7 +10,7 @@ import FemTools
 #for timing
 import sys,os,copy,timeit
 import Profiling
-log = Profiling.logEvent
+from .Profiling import logEvent
 TESTVPPTIMES = False
 
 #######################################################################
@@ -1552,7 +1552,7 @@ class SSPRKNewton(NonlinearSolvers.Newton):
                                                                         self.atol_r,
                                                                         self.rtol_r)
                 if ls_its > 0:
-                    log("Linesearches = %i" % ls_its,level=3)
+                    logEvent("Linesearches = %i" % ls_its,level=3)
         else:
             if self.linearSolver.computeEigenvalues:
                 if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:

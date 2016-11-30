@@ -26,13 +26,13 @@ install:
 - make hashdist
 - make stack
 - make stack/default.yaml
-- CFLAGS='-w -fno-var-tracking-assignments' make install
+- FC=gfortran CFLAGS='-w -fno-var-tracking-assignments' make install
 - export PATH=$PWD/linux2/bin:$PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
 
 script:
-- nosetests -vv --traverse-namespace proteus/tests proteus/tests/ci
+- py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-1.1.0-py2.7-linux-x86_64.egg/proteus/tests
 
 notifications:
   email:
