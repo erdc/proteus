@@ -3559,11 +3559,9 @@ class OneLevelTransport(NonlinearEquation):
                 if self.coefficients.advection.has_key(ci):
                     self.ebqe[('advectiveFlux',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                     for cj in self.coefficients.advection[ci].keys():
-                        #
                         self.ebqe[('dadvectiveFlux_left',ci,cj)][t[0],t[1]] = 0.0
             for ck,diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.iteritems():
                 for t,g in diffusiveFluxBoundaryConditionsDict.iteritems():
-                    #
                     self.ebqe[('diffusiveFlux',ck,ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
         for ci,sbcObject  in self.stressFluxBoundaryConditionsObjectsDict.iteritems():
             for t,g in sbcObject.stressFluxBoundaryConditionsDict.iteritems():
@@ -3855,7 +3853,6 @@ class OneLevelTransport(NonlinearEquation):
 #                 self.ebq['xt'][:]=0.0
         #now map the physical points back to the reference element
         #assume all components live  on same mesh
-
         self.u[0].femSpace.elementMaps.getInverseValuesTrace(self.ebq['inverse(J)'],self.ebq['x'],self.ebq['hat(x)'])
         self.u[0].femSpace.elementMaps.getPermutations(self.ebq['hat(x)'])
         #

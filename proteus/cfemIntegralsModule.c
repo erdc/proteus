@@ -6900,7 +6900,7 @@ static PyMethodDef cfemIntegralsMethods[] = {
     cfemIntegralsCalculateWeightedShapeTrace,
     METH_VARARGS, 
     "The quadrature weighted shape  functions"},
-  { "calculateWeightedShapeTrace", 
+  { "calculateWeightedPiolaShapeTrace", 
     cfemIntegralsCalculateWeightedPiolaShapeTrace,
     METH_VARARGS, 
     "The quadrature weighted shape functions for Piola mapping"},
