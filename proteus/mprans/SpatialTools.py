@@ -370,12 +370,12 @@ class ShapeRANS(Shape):
         """
         self._attachAuxiliaryVariable('RelaxZones')
         waves = None
-        wind_speed = (0., 0., 0.)
+        wind_speed = np.array([0., 0., 0.])
         if isinstance(flags, int):
             flags = [flags]
             epsFact_solid = [epsFact_solid]
-            center = [center]
-            orientation = [orientation]
+            center = np.array([center])
+            orientation = np.array([orientation])
             dragAlpha = [dragAlpha]
             dragBeta = [dragBeta]
             porosity = [porosity]
@@ -397,7 +397,7 @@ class ShapeRANS(Shape):
     def setGenerationZones(self, flags, epsFact_solid, center, orientation,
                            waves, wind_speed=(0., 0., 0.),
                            dragAlpha=0.5/1.005e-6, dragBeta=0.,
-                           porosity=1.):
+                           porosity=1., smoothing=0.):
         """
         Sets a region (given the local flag) to a generation zone
 
@@ -426,13 +426,14 @@ class ShapeRANS(Shape):
         if isinstance(flags, int):
             flags = [flags]
             epsFact_solid = [epsFact_solid]
-            center = [center]
-            orientation = [orientation]
+            center = np.array([center])
+            orientation = np.array([orientation])
             waves = [waves]
-            wind_speed = [wind_speed]
+            wind_speed = np.array([wind_speed])
             dragAlpha = [dragAlpha]
             dragBeta = [dragBeta]
             porosity = [porosity]
+            smoothing = [smoothing]
         for i, flag in enumerate(flags):
             self._checkNd(center[i])
             self._checkNd(orientation[i])
@@ -446,7 +447,8 @@ class ShapeRANS(Shape):
                                                  epsFact_solid=epsFact_solid[i],
                                                  dragAlpha=dragAlpha[i],
                                                  dragBeta=dragBeta[i],
-                                                 porosity=porosity[i])
+                                                 porosity=porosity[i],
+                                                 smoothing=smoothing[i])
 
     def setPorousZones(self, flags, dragAlpha=0.5/1.005e-6, dragBeta=0.,
                        porosity=1.):
@@ -647,10 +649,11 @@ class Tank3D(ShapeRANS):
         segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
         segmentFlags = [bt['z-'], bt['z-'], bt['z-'], bt['z-']]
         facets = [[[0, 1, 2, 3]]]
+        volumes = [[[0]]]
         facetFlags = [bt['z-']]
         regions = [[(x0+x1)/2., (y0+y1)/2., (z0+z1)/2.]]
         regionFlags = [1]
-        self.regionIndice = {0: 'tank'}
+        self.regionIndice = {'tank': 0}
         v_i = 4  # index of next vector to add
         r_i = 1  # index of next region to add
         nb_sponge = 0  # number of sponge layers defined
@@ -700,6 +703,7 @@ class Tank3D(ShapeRANS):
             vertexFlags += [bt['z-'], bt['z-']]
             segmentFlags += [bt['z-'], bt['z-'], bt['z-']]
             facetFlags += [bt['z-']]
+            volumes += [[[len(facetFlags)-1]]]
         # ---------------------------------------------
         # Then add the rest of the vectors (top) by symmetry
         # ---------------------------------------------
@@ -717,29 +721,81 @@ class Tank3D(ShapeRANS):
         segments += segments_top.tolist()
         facets_top = np.array(facets)
         facets_top += v_i
+        for vol in volumes:
+            vol[0] += [vol[0][0]+len(facetFlags)/2]
         facets += facets_top.tolist()
         # getting sides
         for s in segments_bottom:  # for vertical facets
             facets += [[[s[0], s[1], s[1]+v_i, s[0]+v_i]]]
             if vertices[s[0]][0] == vertices[s[1]][0] == x0:
+                if y_n > 0 and (vertices[s[0]][1] == y0-y_n or vertices[s[1]][1] == y0-y_n):
+                    volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
+                elif y_p > 0 and (vertices[s[0]][1] == y1+y_p or vertices[s[1]][1] == y1+y_p):
+                    volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
+                else:
+                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
+                if x_n > 0:
+                    volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
+                    facetFlags += [bt['sponge']]
+                else:
+                    facetFlags += [bt['x-']]
+            elif vertices[s[0]][0] == vertices[s[1]][0] == x0-x_n and x_n > 0:
+                volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
                 facetFlags += [bt['x-']]
             elif vertices[s[0]][0] == vertices[s[1]][0] == x1:
+                if y_n > 0 and (vertices[s[0]][1] == y0-y_n or vertices[s[1]][1] == y0-y_n):
+                    volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
+                elif y_p > 0 and (vertices[s[0]][1] == y1+y_p or vertices[s[1]][1] == y1+y_p):
+                    volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
+                else:
+                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
+                if x_p > 0:
+                    volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
+                    facetFlags += [bt['sponge']]
+                else:
+                    facetFlags += [bt['x+']]
+            elif vertices[s[0]][0] == vertices[s[1]][0] == x1+x_p and x_p > 0:
+                volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
                 facetFlags += [bt['x+']]
-            elif vertices[s[0]][1] == vertices[s[1]][1] == y0:
+            if vertices[s[0]][1] == vertices[s[1]][1] == y0:
+                if x_n > 0 and (vertices[s[0]][0] == x0-x_n or vertices[s[1]][0] == x0-x_n):
+                    volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
+                elif x_p > 0 and (vertices[s[0]][0] == x1+x_p or vertices[s[1]][0] == x1+x_p):
+                    volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
+                else:
+                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
+                if y_n > 0:
+                    volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
+                    facetFlags += [bt['sponge']]
+                else:
+                    facetFlags += [bt['y-']]
+            elif vertices[s[0]][1] == vertices[s[1]][1] == y0-y_n and y_n > 0:
+                volumes[self.regionIndice['y-']][0] += [len(facetFlags)]
                 facetFlags += [bt['y-']]
             elif vertices[s[0]][1] == vertices[s[1]][1] == y1:
-                facetFlags += [bt['y+']]
-            else:
-                facetFlags += [bt['sponge']]
-        for i in range(v_i):  # for vertical segments
+                if x_n > 0 and (vertices[s[0]][0] == x0-x_n or vertices[s[1]][0] == x0-x_n):
+                    volumes[self.regionIndice['x-']][0] += [len(facetFlags)]
+                elif x_p > 0 and (vertices[s[0]][0] == x1+x_p or vertices[s[1]][0] == x1+x_p):
+                    volumes[self.regionIndice['x+']][0] += [len(facetFlags)]
+                else:
+                    volumes[self.regionIndice['tank']][0] += [len(facetFlags)]
+                if y_p > 0:
+                    volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
+                    facetFlags += [bt['sponge']]
+                else:
+                    facetFlags += [bt['y+']]
+            elif vertices[s[0]][1] == vertices[s[1]][1] == y1+y_p and y_p > 0:
+                volumes[self.regionIndice['y+']][0] += [len(facetFlags)]
+        # vertical segments
+        for i in range(v_i):
             segments += [[i, i+v_i]]
-            if vertices[i][0] == vertices[i+v_i][0] == x0:
+            if vertices[i][0] == vertices[i+v_i][0] == x0-x_n:
                 segmentFlags += [bt['x-']]
-            elif vertices[i][0] == vertices[i+v_i][0] == x1:
+            elif vertices[i][0] == vertices[i+v_i][0] == x1+x_p:
                 segmentFlags += [bt['x+']]
-            elif vertices[i][1] == vertices[i+v_i][1] == y0:
+            elif vertices[i][1] == vertices[i+v_i][1] == y0-x_n:
                 segmentFlags += [bt['y-']]
-            elif vertices[i][1] == vertices[i+v_i][1] == y1:
+            elif vertices[i][1] == vertices[i+v_i][1] == y1+x_p:
                 segmentFlags += [bt['y+']]
             else:
                 segmentFlags += [bt['sponge']]
@@ -752,6 +808,7 @@ class Tank3D(ShapeRANS):
         self.facetFlags = np.array(facetFlags)
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
+        self.volumes = np.array(volumes)
 
 
     def setAbsorptionZones(self, allSponge=False, y_n=False, y_p=False,
@@ -784,7 +841,7 @@ class Tank3D(ShapeRANS):
             for key in self.abs_zones:
                 self.abs_zones[key] = True
         waves = None
-        wind_speed = (0., 0., 0.)
+        wind_speed = np.array([0., 0., 0.])
         sl = self.spongeLayers
         for key, value in self.abs_zones.iteritems():
             if value is True:
@@ -792,19 +849,23 @@ class Tank3D(ShapeRANS):
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
                 epsFact_solid = self.spongeLayers[key]/2.
-                center = list(self.coords)
+                center = np.array(self.coords)
+                zeros_to_append = 3-len(center)
+                if zeros_to_append:
+                    for i in range(zeros_to_append):
+                        center = np.append(center, [0])
                 if key == 'x-':
                     center[0] += -0.5*self.dim[0]-0.5*sl['x-']
-                    orientation = [1., 0., 0.]
+                    orientation = np.array([1., 0., 0.])
                 elif key == 'x+':
                     center[0] += +0.5*self.dim[0]+0.5*sl['x+']
-                    orientation = [-1., 0., 0.]
+                    orientation = np.array([-1., 0., 0.])
                 elif key == 'y-':
                     center[1] += -0.5*self.dim[1]-0.5*sl['y-']
-                    orientation = [0., 1., 0.]
+                    orientation = np.array([0., 1., 0.])
                 elif key == 'y+':
                     center[1] += +0.5*self.dim[1]+0.5*sl['y+']
-                    orientation = [0., -1., 0.]
+                    orientation = np.array([0., -1., 0.])
                 self.zones[flag] = bc.RelaxationZone(shape=self,
                                                      zone_type='absorption',
                                                      orientation=orientation,
@@ -819,7 +880,7 @@ class Tank3D(ShapeRANS):
     def setGenerationZones(self, waves=None, wind_speed=(0. ,0., 0.),
                            allSponge=False, y_n=False, y_p=False, x_n=False,
                            x_p=False, dragAlpha=0.5/1.005e-6, dragBeta=0.,
-                           porosity=1.):
+                           porosity=1., smoothing=0.):
         """
         Sets regions (x+, x-, y+, y-) to generation zones
 
@@ -851,7 +912,7 @@ class Tank3D(ShapeRANS):
             for key in self.abs_zones:
                 self.abs_zones[key] = True
         waves = waves
-        wind_speed = wind_speed
+        wind_speed = np.array(wind_speed)
         sl = self.spongeLayers
         for key, value in self.abs_zones.iteritems():
             if value is True:
@@ -859,27 +920,35 @@ class Tank3D(ShapeRANS):
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
                 epsFact_solid = self.spongeLayers[key]/2.
-                center = list(self.coords)
+                center = np.array(self.coords)
+                zeros_to_append = 3-len(center)
+                if zeros_to_append:
+                    for i in range(zeros_to_append):
+                        center = np.append(center, [0])
                 if key == 'x-':
                     center[0] += -0.5*self.dim[0]-sl['x-']/2.
-                    orientation = [1., 0., 0.]
+                    orientation = np.array([1., 0., 0.])
                     self.BC['x-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
-                                                                   wind_speed=wind_speed)
+                                                                   wind_speed=wind_speed,
+                                                                   smoothing=smoothing)
                 elif key == 'x+':
                     center[0] += +0.5*self.dim[0]+sl['x+']/2.
-                    orientation = [-1., 0., 0.]
+                    orientation = np.array([-1., 0., 0.])
                     self.BC['x+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
-                                                                   wind_speed=wind_speed)
+                                                                   wind_speed=wind_speed,
+                                                                   smoothing=smoothing)
                 elif key == 'y-':
                     center[1] += -0.5*self.dim[1]-sl['y-']/2.
-                    orientation = [0., 1., 0.]
+                    orientation = np.array([0., 1., 0.])
                     self.BC['y-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
-                                                                   wind_speed=wind_speed)
+                                                                   wind_speed=wind_speed,
+                                                                   smoothing=smoothing)
                 elif key == 'y+':
                     center[1] += +0.5*self.dim[1]+sl['y+']/2.
-                    orientation = [0., -1., 0.]
+                    orientation = np.array([0., -1., 0.])
                     self.BC['y+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
-                                                                   wind_speed=wind_speed)
+                                                                   wind_speed=wind_speed,
+                                                                   smoothing=smoothing)
                 self.zones[flag] = bc.RelaxationZone(shape=self,
                                                      zone_type='generation',
                                                      orientation=orientation,
@@ -889,7 +958,8 @@ class Tank3D(ShapeRANS):
                                                      epsFact_solid=epsFact_solid,
                                                      dragAlpha=dragAlpha,
                                                      dragBeta=dragBeta,
-                                                     porosity=porosity)
+                                                     porosity=porosity,
+                                                     smoothing=smoothing)
 
 
 class Tank2D(ShapeRANS):
@@ -925,10 +995,10 @@ class Tank2D(ShapeRANS):
 
     def _setupBCs(self):
         self.boundaryTags = {'y-': 1, 'x+': 2, 'y+': 3, 'x-': 4, 'sponge': 5}
-        self.b_or = np.array([[0., -1.],
-                              [1., 0.],
-                              [0., 1.],
-                              [-1., 0.]])
+        self.b_or = np.array([[0., -1., 0.],
+                              [1., 0., 0.],
+                              [0., 1., 0.],
+                              [-1., 0., 0.]])
         self.BC = {'y-': self.BC_class(shape=self, name='y-',
                                        b_or=self.b_or, b_i=0),
                    'x+': self.BC_class(shape=self, name='x+',
@@ -967,6 +1037,7 @@ class Tank2D(ShapeRANS):
         segments, segmentFlags = self._constructSegments(vertices, vertexFlags)
         regions, regionFlags = self._constructRegions(vertices, vertexFlags,
                                                       segments, segmentFlags)
+        facets, facetFlags = self._constructFacets()
 
         self.vertices     = np.array(vertices)
         self.vertexFlags  = np.array(vertexFlags)
@@ -974,7 +1045,9 @@ class Tank2D(ShapeRANS):
         self.segmentFlags = np.array(segmentFlags)
         self.regions      = np.array(regions)
         self.regionFlags  = np.array(regionFlags)
-    
+        self.facets       = np.array(facets)
+        self.facetFlags   = np.array(facetFlags)
+
     def _findEdges(self, dim, coords, from_0):
 
         if from_0 and (coords == [x * 0.5 for x in dim]):
@@ -1046,6 +1119,19 @@ class Tank2D(ShapeRANS):
             added_vertices += 2
         return segments, segmentFlags
 
+    def _constructFacets(self):
+        facets = [[[0, 1, 2, 3]]]
+        facetFlags = [1]
+        if self.spongeLayers['x-']:
+            facets += [[[3, 0, 4, 5]]]
+            facetFlags += [2]
+        if self.spongeLayers['x-']:
+            facets += [[[2, 1, 6, 7]]]
+            facetFlags += [3]
+        return facets, facetFlags
+
+
+
     def _constructRegions(self, vertices, vertexFlags, segments, segmentFlags):
         regions = [[self.x0 + 0.01 * (self.x1 - self.x0), 0.5 * (self.y0 + self.y1)],]
         ind_region = 1
@@ -1103,16 +1189,16 @@ class Tank2D(ShapeRANS):
             Porous module parameter.
         """
         waves = None
-        wind_speed = (0., 0., 0.)
+        wind_speed = np.array([0., 0., 0.])
         if x_n or x_p:
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
-            center = [self.x0 - 0.5 * self.spongeLayers['x-'],
-                      0.5 * (self.y0 + self.y1)]
+            center = np.array([self.x0 - 0.5 * self.spongeLayers['x-'],
+                               0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x-']/2.
-            orientation = [1., 0.]
+            orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
                                                  orientation=orientation,
@@ -1124,12 +1210,12 @@ class Tank2D(ShapeRANS):
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
         if x_p is True:
-            center = [self.x1 + 0.5 * self.spongeLayers['x+'],
-                      0.5 * (self.y0 + self.y1)]
+            center = np.array([self.x1 + 0.5 * self.spongeLayers['x+'],
+                               0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x+']/2.
-            orientation = [-1., 0.]
+            orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
                                                  orientation=orientation,
@@ -1143,7 +1229,7 @@ class Tank2D(ShapeRANS):
 
     def setGenerationZones(self, waves=None, wind_speed=(0., 0., 0.),
                            x_n=False, x_p=False,  dragAlpha=0.5/1.005e-6,
-                           dragBeta=0., porosity=1.):
+                           dragBeta=0., porosity=1., smoothing=0.):
         """
         Sets regions (x+, x-) to generation zones
 
@@ -1167,16 +1253,16 @@ class Tank2D(ShapeRANS):
             Porous module parameter.
         """
         waves = waves
-        wind_speed = wind_speed
+        wind_speed = np.array(wind_speed)
         if x_n or x_p:
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
-            center = [self.x0 - 0.5 * self.spongeLayers['x-'],
-                      0.5 * (self.y0 + self.y1)]
+            center = np.array([self.x0 - 0.5 * self.spongeLayers['x-'],
+                               0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x-']/2.
-            orientation = [1., 0.]
+            orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
                                                  orientation=orientation,
@@ -1186,16 +1272,18 @@ class Tank2D(ShapeRANS):
                                                  epsFact_solid=epsFact_solid,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
-                                                 porosity=porosity)
+                                                 porosity=porosity,
+                                                 smoothing=smoothing)
             self.BC['x-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
-                                                           wind_speed=wind_speed)
+                                                           wind_speed=wind_speed,
+                                                           smoothing=smoothing)
         if x_p is True:
-            center = [self.x1 + 0.5 * self.spongeLayers['x+'],
-                      0.5 * (self.y0 + self.y1)]
+            center = np.array([self.x1 + 0.5 * self.spongeLayers['x+'],
+                               0.5 * (self.y0 + self.y1), 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x+']/2.
-            orientation = [-1., 0.]
+            orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
                                                  orientation=orientation,
@@ -1205,9 +1293,11 @@ class Tank2D(ShapeRANS):
                                                  epsFact_solid=epsFact_solid,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
-                                                 porosity=porosity)
+                                                 porosity=porosity,
+                                                 smoothing=smoothing)
             self.BC['x+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
-                                                           wind_speed=wind_speed)
+                                                           wind_speed=wind_speed,
+                                                           smoothing=smoothing)
 
 #[temp] no tests yet!
 class TankWithObstacles2D(Tank2D):
@@ -1779,16 +1869,16 @@ class TankWithObstacles2D(Tank2D):
         sponge_x1 = self.x1y0[0]
 
         waves = None
-        wind_speed = (0., 0., 0.)
+        wind_speed = np.array([0., 0., 0.])
         if x_n or x_p:
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
-            center = [sponge_x0 - 0.5 * self.spongeLayers['x-'],
-                      sponge_half_height_x0]
+            center = np.array([sponge_x0 - 0.5 * self.spongeLayers['x-'],
+                               sponge_half_height_x0, 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x-']/2.
-            orientation = [1., 0.]
+            orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
                                                  orientation=orientation,
@@ -1800,12 +1890,12 @@ class TankWithObstacles2D(Tank2D):
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
         if x_p is True:
-            center = [sponge_x1 + 0.5 * self.spongeLayers['x+'],
-                      sponge_half_height_x1]
+            center = np.array([sponge_x1 + 0.5 * self.spongeLayers['x+'],
+                               sponge_half_height_x1, 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x+']/2.
-            orientation = [-1., 0.]
+            orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='absorption',
                                                  orientation=orientation,
@@ -1819,7 +1909,7 @@ class TankWithObstacles2D(Tank2D):
 
     def setGenerationZones(self, waves=None, wind_speed=(0., 0., 0.),
                            x_n=False, x_p=False,  dragAlpha=0.5/1.005e-6,
-                           dragBeta=0., porosity=1.):
+                           dragBeta=0., porosity=1., smoothing=0.):
         """
         Sets regions (x+, x-) to generation zones
 
@@ -1848,17 +1938,17 @@ class TankWithObstacles2D(Tank2D):
         sponge_x1 = self.x1y0[0]
 
         waves = waves
-        wind_speed = wind_speed
+        wind_speed = np.array(wind_speed)
         if x_n or x_p:
             self._attachAuxiliaryVariable('RelaxZones')
         if x_n is True:
 
-            center = [sponge_x0 - 0.5 * self.spongeLayers['x-'],
-                      sponge_half_height_x0]
+            center = np.array([sponge_x0 - 0.5 * self.spongeLayers['x-'],
+                               sponge_half_height_x0, 0.])
             ind = self.regionIndice['x-']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x-']/2.
-            orientation = [1., 0.]
+            orientation = np.array([1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
                                                  orientation=orientation,
@@ -1868,17 +1958,19 @@ class TankWithObstacles2D(Tank2D):
                                                  epsFact_solid=epsFact_solid,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
-                                                 porosity=porosity)
+                                                 porosity=porosity,
+                                                 smoothing=smoothing)
             self.BC['x-'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
-                                                           wind_speed=wind_speed)
+                                                           wind_speed=wind_speed,
+                                                           smoothing=smoothing)
         if x_p is True:
 
-            center = [sponge_x1 + 0.5 * self.spongeLayers['x+'],
-                      sponge_half_height_x1]
+            center = np.array([sponge_x1 + 0.5 * self.spongeLayers['x+'],
+                               sponge_half_height_x1, 0.])
             ind = self.regionIndice['x+']
             flag = self.regionFlags[ind]
             epsFact_solid = self.spongeLayers['x+']/2.
-            orientation = [-1., 0.]
+            orientation = np.array([-1., 0.])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
                                                  orientation=orientation,
@@ -1888,9 +1980,11 @@ class TankWithObstacles2D(Tank2D):
                                                  epsFact_solid=epsFact_solid,
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
-                                                 porosity=porosity)
+                                                 porosity=porosity,
+                                                 smoothing=smoothing)
             self.BC['x+'].setUnsteadyTwoPhaseVelocityInlet(wave=waves,
-                                                           wind_speed=wind_speed)
+                                                           wind_speed=wind_speed,
+                                                           smoothing=smoothing)
 
 class RigidBody(AuxiliaryVariables.AV_base):
     """
