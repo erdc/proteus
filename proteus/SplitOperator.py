@@ -506,7 +506,10 @@ class Sequential_MinAdaptiveModelStep(SO_base):
             model.stepController.setSubsteps([self.t_system])
 
     def choose_dt_system(self):
-        self.dt_system = min([model.stepController.dt_model for model  in self.controllerList])
+        if self.dt_system_fixed is not None:
+            self.dt_system = min([model.stepController.dt_model for model  in self.controllerList]+[self.dt_system_fixed])
+        else:
+            self.dt_system = min([model.stepController.dt_model for model  in self.controllerList])
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,model) for model in self.modelList]
         for model in self.modelList:
