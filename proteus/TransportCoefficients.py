@@ -12,6 +12,7 @@ from warnings import warn
 import numpy
 import Norms
 from Profiling import logEvent
+from warnings import warn
 
 ## \file TransportCoefficients.py
 #
