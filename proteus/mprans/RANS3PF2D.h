@@ -7,7 +7,6 @@
 #include "SedClosure.h"
 
 #define ENTROPY_VISCOSITY 1
-#define SUPG 0
 #define cMax 0.5
 #define cE 1.0
 
@@ -2229,6 +2228,7 @@ namespace proteus
 		  double linear_viscosity = cMax*hK*vel_max[eN];
 		  double entropy_viscosity = cE*hK*hK*entropy_residual[eN]/(vel_max_in_omega*mom_max_in_omega+1E-10);
 		  q_numDiff_u[eN_k] = std::min(linear_viscosity,entropy_viscosity);
+		  //q_numDiff_u[eN_k] = linear_viscosity;
 		  q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
 		  q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
 		}
@@ -2275,8 +2275,8 @@ namespace proteus
 		    /* ck.Diffusion_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
 		    ck.Reaction_weak(mom_u_source,vel_test_dV[i]) + 
 		    ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) + 
-		    SUPG*ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
-		    SUPG*ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
+		    (ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
+		    (ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); 
 		 
 		  elementResidual_v[i] += ck.Mass_weak(dmom_v_acc_v*mom_v_acc_t,vel_test_dV[i]) + 
@@ -2286,8 +2286,8 @@ namespace proteus
 		    /* ck.Diffusion_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
 		    ck.Reaction_weak(mom_v_source,vel_test_dV[i]) + 
 		    ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) + 
-		    SUPG*ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
-		    SUPG*ck.SubgridError(subgridError_v,Lstar_v_v[i]) + 
+		    (ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
+		    (ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridError(subgridError_v,Lstar_v_v[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]); 
 
 		  /* elementResidual_w[i] +=  ck.Mass_weak(dmom_w_acc_w*mom_w_acc_t,vel_test_dV[i]) + */
@@ -3963,15 +3963,15 @@ namespace proteus
 			//VRANS
 			ck.ReactionJacobian_weak(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
 			//
-			SUPG*ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
-			SUPG*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) + 
+			(ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
+			(ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) + 
 			ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
 		      elementJacobian_u_v[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 			ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
 			ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
 			//
-			SUPG*ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]);
+			(ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]);
 		      /* elementJacobian_u_w[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +  */
 		      /* 	ck.SimpleDiffusionJacobian_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +  */
 		      /* 	//VRANS */
@@ -3986,7 +3986,7 @@ namespace proteus
 			//VRANS
 			ck.ReactionJacobian_weak(dmom_v_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
 			//
-			SUPG*ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
+		        (ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
 		      elementJacobian_v_v[i][j] += ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
                         ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
 			ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
@@ -3994,8 +3994,8 @@ namespace proteus
 			//VRANS
 			ck.ReactionJacobian_weak(dmom_v_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
 			//
-			SUPG*ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
-			SUPG*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) + 
+			(ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
+			(ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) + 
 			ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
 		      /* elementJacobian_v_w[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +   */
 		      /*   ck.SimpleDiffusionJacobian_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +  */
