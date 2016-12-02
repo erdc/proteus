@@ -602,10 +602,9 @@ class VerifyRandomWaves(unittest.TestCase):
         CB = plt.colorbar(CS, shrink=0.8, extend='both')
         plt.savefig("Contour.png")
 """
-'''
+
 class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
     def testFailureModes(self):
-
 
         from proteus.WaveTools import MultiSpectraRandomWaves
 #Failure 1: Give parameters as float rather than list
@@ -638,7 +637,7 @@ class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
             [bandFactor,bandFactor],         #accelerationof gravity
             [spectName, spectName],
             spectral_params =[  {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth} ],
-            phi = [phi,phi]# random words will result in error and return the available spectra
+            phi = [phi,phi]
         )
         self.assertEqual(cm1.exception.code, 1 )
 
@@ -655,7 +654,7 @@ class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
             [bandFactor,bandFactor],         #accelerationof gravity
             [spectName, spectName],
             spectral_params =[  {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth} ],
-            phi = [phi,phi]# random words will result in error and return the available spectra
+            phi = [phi,phi]
     )
 
         self.assertEqual(cm2.exception.code, 1 )
@@ -673,10 +672,12 @@ class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
             [bandFactor,bandFactor],         #accelerationof gravity
             [spectName, spectName],
             spectral_params =[  {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth} ],
-            phi = [phi,phi]# random words will result in error and return the available spectra
+            phi = [phi,phi]
     )
 
         self.assertTrue(None == None)
+
+
 
 class VerifyMultiSpectraRandomWaves(unittest.TestCase):
     def testMultiSpectraDoubleExact(self):
@@ -734,7 +735,7 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
     )
         eta2 = aa.eta([x, y, z], t)
         ux2, uy2, uz2 = aa.u([x, y, z], t)
-
+        print 2.*eta, eta2
         self.assertTrue(round(2.*eta,8) == round(eta2,8))
         self.assertTrue(round(2.*ux,8) == round(ux2,8))
         self.assertTrue(round(2.*uy,8) == round(uy2,8))
@@ -762,7 +763,7 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
         self.assertTrue(round(5.*uy,8) == round(uy2,8))
         self.assertTrue(round(5.*uz,8) == round(uz2,8))
 
-
+'''
 class CheckDirectionalWaveFailures(unittest.TestCase):
     def testFailureModes(self):
         from proteus.WaveTools import DirectionalWaves
