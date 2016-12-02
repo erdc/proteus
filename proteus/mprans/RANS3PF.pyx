@@ -203,7 +203,10 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_rho,
                                double * ebqe_rho,
                                double * q_nu,
-                               double * ebqe_nu)
+                               double * ebqe_nu,
+                               double cE,
+                               double cMax,
+                               int ENTROPY_VISCOSITY)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -368,7 +371,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                int * csrColumnOffsets_eb_w_u,
                                int * csrColumnOffsets_eb_w_v,
                                int * csrColumnOffsets_eb_w_w,
-                               int * elementFlags)
+                               int * elementFlags,
+                               int ENTROPY_VISCOSITY)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -632,7 +636,11 @@ cdef class RANS3PF:
                           numpy.ndarray q_rho,
                           numpy.ndarray ebqe_rho,
                           numpy.ndarray q_nu,
-                          numpy.ndarray ebqe_nu):
+                          numpy.ndarray ebqe_nu, 
+			  # ENTROPY VISCOSITY 
+                          double cE, 
+                          double cMax, 
+                          int ENTROPY_VISCOSITY):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -798,7 +806,11 @@ cdef class RANS3PF:
                                         < double * > q_rho.data,
                                         < double * > ebqe_rho.data,
                                         < double * > q_nu.data,
-                                        < double * > ebqe_nu.data)
+                                        < double * > ebqe_nu.data, 
+                                        # ENTROPY_VISCOSITY
+                                        cE,
+                                        cMax,
+                                        ENTROPY_VISCOSITY)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -964,7 +976,9 @@ cdef class RANS3PF:
                           numpy.ndarray csrColumnOffsets_eb_w_u,
                           numpy.ndarray csrColumnOffsets_eb_w_v,
                           numpy.ndarray csrColumnOffsets_eb_w_w,
-                          numpy.ndarray elementFlags):
+                          numpy.ndarray elementFlags, 
+			  # ENTROPY_VISCOSITY 
+                          int ENTROPY_VISCOSITY):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian( < double*> mesh_trial_ref.data,
@@ -1130,7 +1144,9 @@ cdef class RANS3PF:
                                         < int * > csrColumnOffsets_eb_w_u.data,
                                         < int * > csrColumnOffsets_eb_w_v.data,
                                         < int * > csrColumnOffsets_eb_w_w.data,
-                                        < int * > elementFlags.data)
+                                        < int * > elementFlags.data, 
+                                        # ENTROPY_VISCOSITY
+                                        ENTROPY_VISCOSITY)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
@@ -1346,7 +1362,11 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * q_rho,
                                double * ebqe_rho,
                                double * q_nu,
-                               double * ebqe_nu)
+                               double * ebqe_nu, 
+                               # ENTROPY VISCOSITY
+                               double cE, 
+                               double cMax,
+                               int ENTROPY_VISCOSITY)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1511,7 +1531,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                int * csrColumnOffsets_eb_w_u,
                                int * csrColumnOffsets_eb_w_v,
                                int * csrColumnOffsets_eb_w_w,
-                               int * elementFlags)
+                               int * elementFlags, 
+                               # ENTROPY_VISCOSITY 
+                               int ENTROPY_VISCOSITY)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -1775,7 +1797,11 @@ cdef class RANS3PF2D:
                           numpy.ndarray q_rho,
                           numpy.ndarray ebqe_rho,
                           numpy.ndarray q_nu,
-                          numpy.ndarray ebqe_nu):
+                          numpy.ndarray ebqe_nu,
+                          # ENTROPY_VISCOSITY
+                          double cE,
+                          double cMax,
+                          int ENTROPY_VISCOSITY):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1941,7 +1967,11 @@ cdef class RANS3PF2D:
                                         < double * > q_rho.data,
                                         < double * > ebqe_rho.data,
                                         < double * > q_nu.data,
-                                        < double * > ebqe_nu.data)
+                                        < double * > ebqe_nu.data, 
+                                        # ENTROPY_VISCOSITY
+                                        cE,
+                                        cMax,
+                                        ENTROPY_VISCOSITY)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -2107,7 +2137,9 @@ cdef class RANS3PF2D:
                           numpy.ndarray csrColumnOffsets_eb_w_u,
                           numpy.ndarray csrColumnOffsets_eb_w_v,
                           numpy.ndarray csrColumnOffsets_eb_w_w,
-                          numpy.ndarray elementFlags):
+                          numpy.ndarray elementFlags,  
+                          # ENTROPY_VISCOSITY
+                          int ENTROPY_VISCOSITY):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian( < double*> mesh_trial_ref.data,
@@ -2273,7 +2305,9 @@ cdef class RANS3PF2D:
                                         < int * > csrColumnOffsets_eb_w_u.data,
                                         < int * > csrColumnOffsets_eb_w_v.data,
                                         < int * > csrColumnOffsets_eb_w_w.data,
-                                        < int * > elementFlags.data)
+                                        < int * > elementFlags.data,
+                                        # ENTROPY_VISCOSITY
+                                        ENTROPY_VISCOSITY)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
@@ -2437,6 +2471,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import calculateWaveFunction3d_ref
 
     def __init__(self,
+                 cE=1.0, 
+                 cMax=0.5,
+                 ENTROPY_VISCOSITY=0,	
                  epsFact=1.5,
                  sigma=72.8,
                  rho_0=998.2, nu_0=1.004e-6,
@@ -2502,6 +2539,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  mContact=2.0,
                  nContact=5.0,
                  angFriction=pi/6.0):
+        #ENTROPY VISCOSITY
+        self.cE=cE
+        self.cMax=cMax
+        self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
         self.aDarcy=aDarcy
         self.betaForch=betaForch
         self.grain=grain
@@ -4314,7 +4355,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_rho,
             self.coefficients.ebqe_rho,
             self.coefficients.q_nu,
-            self.coefficients.ebqe_nu)
+            self.coefficients.ebqe_nu,
+            #PARAMETERS FOR ENTROPY VISCOSITY
+            self.coefficients.cE,
+            self.coefficients.cMax,
+            self.coefficients.ENTROPY_VISCOSITY)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
@@ -4565,7 +4610,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 0)],
             self.csrColumnOffsets_eb[(2, 1)],
             self.csrColumnOffsets_eb[(2, 2)],
-            self.mesh.elementMaterialTypes)
+            self.mesh.elementMaterialTypes,
+            # ENTROPY_VISCOSITY 
+            self.coefficients.ENTROPY_VISCOSITY)
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(

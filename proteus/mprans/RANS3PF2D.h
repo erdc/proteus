@@ -6,10 +6,6 @@
 #include "ModelFactory.h"
 #include "SedClosure.h"
 
-#define ENTROPY_VISCOSITY 1
-#define cMax 0.5
-#define cE 1.0
-
 namespace proteus
 {
   class cppRANS3PF2D_base
@@ -213,7 +209,11 @@ namespace proteus
                                    double* q_rho,
                                    double* ebqe_rho,
                                    double* q_nu,
-                                   double* ebqe_nu)=0;
+                                   double* ebqe_nu, 
+				   // ENTROPY_VISCOSITY
+				   double cE, 
+				   double cMax, 
+				   int ENTROPY_VISCOSITY)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -379,7 +379,9 @@ namespace proteus
 				   int* csrColumnOffsets_eb_w_u,
 				   int* csrColumnOffsets_eb_w_v,
 				   int* csrColumnOffsets_eb_w_w,				   
-				   int* elementFlags)=0;
+				   int* elementFlags, 
+				   // ENTROPY_VISCOSITY 
+				   int ENTROPY_VISCOSITY)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
     					  int* exteriorElementBoundariesArray,
     					  int nInteriorElementBoundaries_global,
@@ -1627,7 +1629,11 @@ namespace proteus
                            double* q_rho,
                            double* ebqe_rho,
                            double* q_nu,
-                           double* ebqe_nu)
+                           double* ebqe_nu, 
+			   // ENTROPY_VISCOSITY
+			   double cE, 
+			   double cMax, 
+			   int ENTROPY_VISCOSITY)
     {
       double dt = 1./alphaBDF;
       double cell_vel_max, cell_entropy_residual_max, cell_mom_max, vel_max_in_omega=0.0, mom_max_in_omega=0.0;
@@ -3354,7 +3360,9 @@ namespace proteus
 			   int* csrColumnOffsets_eb_w_u,
 			   int* csrColumnOffsets_eb_w_v,
 			   int* csrColumnOffsets_eb_w_w,
-			   int* elementFlags)
+			   int* elementFlags, 
+			   // ENTROPY_VISCOSITY 
+			   int ENTROPY_VISCOSITY)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
