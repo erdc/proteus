@@ -2,6 +2,7 @@ from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
 import unittest
+import pytest
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
@@ -47,7 +48,8 @@ class TestHsu(unittest.TestCase):
             drag /=drag2
             drag2/=drag2
         self.assertTrue(drag == drag2)
-    def testGradunarDrag2(self):
+    @pytest.mark.skip(reason="in development")
+    def testGranularDrag2(self):
         gl=GlobalVariables()
         import random
         rhoFluid = 1. + random.random()
@@ -67,7 +69,8 @@ class TestHsu(unittest.TestCase):
         #if you use npt.assert_almost_equal you get more info on failure...
         #self.assertTrue(round(drag,10) == round(drag2,10))
         npt.assert_almost_equal(drag,drag2)
-    def testGradularDrag3(self):
+    @pytest.mark.skip(reason="in development")
+    def testGranularDrag3(self):
         gl=GlobalVariables()
         import random
         rhoFluid = 1. + random.random()
@@ -86,7 +89,8 @@ class TestHsu(unittest.TestCase):
             drag2/=drag2
         #self.assertTrue(round(drag,10) == round(drag2,10))
         npt.assert_almost_equal(drag, drag2)
-    def testGradularDrag4(self):
+    @pytest.mark.skip(reason="in development")
+    def testGranularDrag4(self):
         gl=GlobalVariables()
         import random
         rhoFluid = 1. + random.random()
