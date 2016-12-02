@@ -6,6 +6,11 @@
 #include "ModelFactory.h"
 #include "SedClosure.h"
 
+#define ENTROPY_VISCOSITY 1
+#define SUPG 0
+#define cMax 0.5
+#define cE 1.0
+
 namespace proteus
 {
   class cppRANS3PF2D_base
@@ -69,6 +74,7 @@ namespace proteus
 				   double useRBLES,
 			           double useMetrics, 
 				   double alphaBDF,
+				   double time_step,
 				   double epsFact_rho,
 				   double epsFact_mu, 
 				   double sigma,
@@ -100,6 +106,12 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
+				   double* u_dof_old, 
+				   double* v_dof_old, 
+				   double* w_dof_old,
+				   double* u_dof_old_old, 
+				   double* v_dof_old_old, 
+				   double* w_dof_old_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -1493,6 +1505,7 @@ namespace proteus
 			   double useRBLES,
 			   double useMetrics, 
 			   double alphaBDF,
+			   double time_step, 
 			   double epsFact_rho,
 			   double epsFact_mu, 
 			   double sigma,
@@ -1526,6 +1539,12 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
+			   double* u_dof_old, 
+			   double* v_dof_old, 
+			   double* w_dof_old,
+			   double* u_dof_old_old, 
+			   double* v_dof_old_old, 
+			   double* w_dof_old_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -1611,6 +1630,84 @@ namespace proteus
                            double* q_nu,
                            double* ebqe_nu)
     {
+      double dt = 1./alphaBDF;
+      double cell_vel_max, cell_entropy_residual_max, cell_mom_max, vel_max_in_omega=0.0, mom_max_in_omega=0.0;
+      register double vel_max[nElements_global], entropy_residual[nElements_global];
+      
+      // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  cell_vel_max = 0.;
+	  cell_entropy_residual_max = 0.;
+	  cell_mom_max = 0.;
+	  // loop over quadrature points 
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      register int eN_nDOF_trial_element = eN*nDOF_trial_element, eN_k = eN*nQuadraturePoints_element+k, eN_k_nSpace = eN_k*nSpace;
+	      register double un=0.0, vn=0.0, unm1=0.0, vnm1=0.0, grad_un[nSpace], grad_vn[nSpace], grad_pn[nSpace];
+	      register double p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace];
+	      register double jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace], x,y,z,dV;
+
+	      //get jacobian, etc for mapping reference element
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,
+					  x,y,z);
+	      // calculate integration weight
+	      dV = fabs(jacDet)*dV_ref[k];
+	      // get the trial function gradients
+	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
+	      // get u_old, u_old_old, ... at quadrature points
+	      ck.valFromDOF(u_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],un);
+	      ck.valFromDOF(v_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],vn);
+	      ck.valFromDOF(u_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],unm1);
+	      ck.valFromDOF(v_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],vnm1);
+	      // get grad_un, ... at quadrature points
+	      ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_un);
+	      ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_vn);
+	      // get grad_pn at quadrature point. This is given (at quad points) from a different model
+              for (int I=0;I<nSpace;I++)
+                grad_pn[I] = q_grad_p[eN_k_nSpace + I];	      
+	      ////////////////////////
+	      // COMPUTE RHO AND NU //
+	      ////////////////////////
+	      // compute rho 
+	      double eps_rho = epsFact_rho*elementDiameter[eN];
+	      double H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
+	      double rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
+	      // compute nu      
+	      double eps_mu = epsFact_rho*elementDiameter[eN];
+	      double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
+	      double nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+	      /////////////////////////////
+	      // COMPUTE MAX OF VELOCITY //
+	      /////////////////////////////
+	      cell_vel_max = std::max(cell_vel_max,std::max(std::abs(un), std::abs(vn)));
+	      /////////////////////////////
+	      // COMPUTE MAX OF MOMENTUM //
+	      /////////////////////////////
+	      cell_mom_max = std::max(cell_mom_max,std::max(std::abs(rho*un), std::abs(rho*vn)));
+	      /////////////////////////////
+	      // COMPUTE RESIDUAL OF PDE //
+	      /////////////////////////////
+	      // compute residual. NOTE: viscous part is missing
+	      double Res_in_x = (un-unm1)/dt + (un*grad_un[0]+vn*grad_un[1]) + grad_pn[0]/rho - g[0];
+	      double Res_in_y = (vn-vnm1)/dt + (un*grad_vn[0]+vn*grad_vn[1]) + grad_pn[1]/rho - g[1];
+	      // compute entropy_residual = Res(u).u
+	      double entropy_residual_at_quad = Res_in_x*un + Res_in_y*vn;
+	      cell_entropy_residual_max = std::max(cell_entropy_residual_max, std::abs(entropy_residual_at_quad));
+	    }
+	  vel_max[eN] = cell_vel_max;
+	  entropy_residual[eN] = cell_entropy_residual_max;
+	  vel_max_in_omega = std::max(vel_max_in_omega,cell_vel_max);
+	  mom_max_in_omega = std::max(mom_max_in_omega,cell_mom_max);
+	}
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -2126,10 +2223,22 @@ namespace proteus
 		}
 
 	      norm_Rv = sqrt(pdeResidual_u*pdeResidual_u + pdeResidual_v*pdeResidual_v);// + pdeResidual_w*pdeResidual_w);
-	      q_numDiff_u[eN_k] = C_dc*norm_Rv*(useMetrics/sqrt(G_dd_G+1.0e-12)  + 
-	                                        (1.0-useMetrics)*hFactor*hFactor*elementDiameter[eN]*elementDiameter[eN]);
-	      q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
-	      q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+	      if (ENTROPY_VISCOSITY==1)
+		{
+		  double hK=elementDiameter[eN];
+		  double linear_viscosity = cMax*hK*vel_max[eN];
+		  double entropy_viscosity = cE*hK*hK*entropy_residual[eN]/(vel_max_in_omega*mom_max_in_omega+1E-10);
+		  q_numDiff_u[eN_k] = std::min(linear_viscosity,entropy_viscosity);
+		  q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
+		  q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+		}
+	      else
+		{
+		  q_numDiff_u[eN_k] = C_dc*norm_Rv*(useMetrics/sqrt(G_dd_G+1.0e-12)  + 
+						    (1.0-useMetrics)*hFactor*hFactor*elementDiameter[eN]*elementDiameter[eN]);
+		  q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
+		  q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+		}
 	      // 
 	      //update element residual 
 	      //
@@ -2166,8 +2275,8 @@ namespace proteus
 		    /* ck.Diffusion_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
 		    ck.Reaction_weak(mom_u_source,vel_test_dV[i]) + 
 		    ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) + 
-		    ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
-		    ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
+		    SUPG*ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
+		    SUPG*ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); 
 		 
 		  elementResidual_v[i] += ck.Mass_weak(dmom_v_acc_v*mom_v_acc_t,vel_test_dV[i]) + 
@@ -2177,8 +2286,8 @@ namespace proteus
 		    /* ck.Diffusion_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
 		    ck.Reaction_weak(mom_v_source,vel_test_dV[i]) + 
 		    ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) + 
-		    ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
-		    ck.SubgridError(subgridError_v,Lstar_v_v[i]) + 
+		    SUPG*ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
+		    SUPG*ck.SubgridError(subgridError_v,Lstar_v_v[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]); 
 
 		  /* elementResidual_w[i] +=  ck.Mass_weak(dmom_w_acc_w*mom_w_acc_t,vel_test_dV[i]) + */
@@ -3854,15 +3963,15 @@ namespace proteus
 			//VRANS
 			ck.ReactionJacobian_weak(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
 			//
-			ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
-			ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) + 
+			SUPG*ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
+			SUPG*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) + 
 			ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
 		      elementJacobian_u_v[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 			ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
 			ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
 			//
-			ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]);
+			SUPG*ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]);
 		      /* elementJacobian_u_w[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +  */
 		      /* 	ck.SimpleDiffusionJacobian_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +  */
 		      /* 	//VRANS */
@@ -3877,7 +3986,7 @@ namespace proteus
 			//VRANS
 			ck.ReactionJacobian_weak(dmom_v_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
 			//
-			ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
+			SUPG*ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
 		      elementJacobian_v_v[i][j] += ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
                         ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
 			ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
@@ -3885,8 +3994,8 @@ namespace proteus
 			//VRANS
 			ck.ReactionJacobian_weak(dmom_v_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
 			//
-			ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
-			ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) + 
+			SUPG*ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
+			SUPG*ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) + 
 			ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
 		      /* elementJacobian_v_w[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +   */
 		      /*   ck.SimpleDiffusionJacobian_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +  */
