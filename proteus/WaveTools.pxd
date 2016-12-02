@@ -101,15 +101,50 @@ cdef class RandomWaves:
     cdef double* ki_
     cdef double[3] waveDir_c
     cdef double[3] vDir_c
-    cdef double[300000] kDir_c
-    cdef double[100000] omega_c
-    cdef double[100000] ki_c
-    cdef double[100000] ai_c
-    cdef double[100000] sinh_c
-    cdef double[100000] phi_c
+    cdef double[30000] kDir_c
+    cdef double[10000] omega_c
+    cdef double[10000] ki_c
+    cdef double[10000] ai_c
+    cdef double[10000] sinh_c
+    cdef double[10000] phi_c
     cdef public:
         double mwl
     cdef double _cpp_eta(self, double* x, double t)
     cdef double* _cpp_u(self, double* x, double t)
 
+
+
+cdef class MultiSpectraRandomWaves:
+    cdef int Nall
+    cdef int N
+    cdef np.ndarray g
+    cdef np.ndarray vDir
+    cdef np.ndarray waveDir
+    cdef np.ndarray omegaM
+    cdef np.ndarray phiM
+    cdef np.ndarray kiM
+    cdef np.ndarray kDirM
+    cdef np.ndarray sinhFM
+    cdef np.ndarray aiM
+    cdef double * vDir_
+    cdef double* omegaM_
+    cdef double* phiM_
+    cdef double* kiM_
+    cdef double* kDirM_
+    cdef double* sinhM_
+    cdef double* waveDirM_
+    cdef double* aiM_
+    cdef double[3] vDir_c
+    cdef double[300000] kDir_cM
+    cdef double[300000] waveDir_cM
+    cdef double[100000] omega_cM
+    cdef double[100000] ki_cM
+    cdef double[100000] ai_cM
+    cdef double[100000] sinh_cM
+    cdef double[100000] phi_cM
+    cdef public:
+        double mwl
+        double depth
+    cdef double _cpp_eta(self, double* x, double t)
+    cdef double* _cpp_u(self, double* x, double t)
 
