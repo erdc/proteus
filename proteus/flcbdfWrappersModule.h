@@ -29,6 +29,7 @@ namespace Daetk
 #endif
 #include "mpi.h"
 #include "hdf5.h"
+      }
 #ifdef PETSC_INCLUDE_AS_C
 #define PETSC_RESTRICT __restrict__
 #define PETSC_C_RESTRICT __restrict__
@@ -66,7 +67,7 @@ namespace Daetk
 #endif
 /*mwf debug*/
 /*#include "parmetis.h" cek hack on lonestar*/
-      }
+	  //}
     }
   }
 }
