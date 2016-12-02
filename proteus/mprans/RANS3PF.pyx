@@ -63,6 +63,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double useRBLES,
                                double useMetrics,
                                double alphaBDF,
+			       double time_step,
                                double epsFact_rho,
                                double epsFact_mu,
                                double sigma,
@@ -94,6 +95,12 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * u_dof,
                                double * v_dof,
                                double * w_dof,
+                               double * u_dof_old,
+                               double * v_dof_old,
+                               double * w_dof_old,
+                               double * u_dof_old_old,
+                               double * v_dof_old_old,
+                               double * w_dof_old_old,
                                double * g,
                                double useVF,
                                double * vf,
@@ -502,6 +509,7 @@ cdef class RANS3PF:
                           double useRBLES,
                           double useMetrics,
                           double alphaBDF,
+			  double time_step,
                           double epsFact_rho,
                           double epsFact_mu,
                           double sigma,
@@ -535,6 +543,12 @@ cdef class RANS3PF:
                           numpy.ndarray u_dof,
                           numpy.ndarray v_dof,
                           numpy.ndarray w_dof,
+                          numpy.ndarray u_dof_old,
+                          numpy.ndarray v_dof_old,
+                          numpy.ndarray w_dof_old,
+                          numpy.ndarray u_dof_old_old,
+                          numpy.ndarray v_dof_old_old,
+                          numpy.ndarray w_dof_old_old,
                           numpy.ndarray g,
                           double useVF,
                           numpy.ndarray vf,
@@ -661,6 +675,7 @@ cdef class RANS3PF:
                                        useRBLES,
                                        useMetrics,
                                        alphaBDF,
+				       time_step,
                                        epsFact_rho,
                                        epsFact_mu,
                                        sigma,
@@ -694,6 +709,12 @@ cdef class RANS3PF:
                                         < double * > u_dof.data,
                                         < double * > v_dof.data,
                                         < double * > w_dof.data,
+                                        < double * > u_dof_old.data,
+                                        < double * > v_dof_old.data,
+                                        < double * > w_dof_old.data,
+                                        < double * > u_dof_old_old.data,
+                                        < double * > v_dof_old_old.data,
+                                        < double * > w_dof_old_old.data,
                                         < double * > g.data,
                                         useVF,
                                         < double * > vf.data,
@@ -1201,6 +1222,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double useRBLES,
                                double useMetrics,
                                double alphaBDF,
+			       double time_step,
                                double epsFact_rho,
                                double epsFact_mu,
                                double sigma,
@@ -1234,6 +1256,12 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * u_dof,
                                double * v_dof,
                                double * w_dof,
+                               double * u_dof_old,
+                               double * v_dof_old,
+                               double * w_dof_old,
+                               double * u_dof_old_old,
+                               double * v_dof_old_old,
+                               double * w_dof_old_old,
                                double * g,
                                double useVF,
                                double * vf,
@@ -1624,6 +1652,7 @@ cdef class RANS3PF2D:
                           double useRBLES,
                           double useMetrics,
                           double alphaBDF,
+			  double time_step,
                           double epsFact_rho,
                           double epsFact_mu,
                           double sigma,
@@ -1657,6 +1686,12 @@ cdef class RANS3PF2D:
                           numpy.ndarray u_dof,
                           numpy.ndarray v_dof,
                           numpy.ndarray w_dof,
+                          numpy.ndarray u_dof_old,
+                          numpy.ndarray v_dof_old,
+                          numpy.ndarray w_dof_old,
+                          numpy.ndarray u_dof_old_old,
+                          numpy.ndarray v_dof_old_old,
+                          numpy.ndarray w_dof_old_old,
                           numpy.ndarray g,
                           double useVF,
                           numpy.ndarray vf,
@@ -1783,6 +1818,7 @@ cdef class RANS3PF2D:
                                        useRBLES,
                                        useMetrics,
                                        alphaBDF,
+				       time_step,
                                        epsFact_rho,
                                        epsFact_mu,
                                        sigma,
@@ -1816,6 +1852,12 @@ cdef class RANS3PF2D:
                                         < double * > u_dof.data,
                                         < double * > v_dof.data,
                                         < double * > w_dof.data,
+                                        < double * > u_dof_old.data,
+                                        < double * > v_dof_old.data,
+                                        < double * > w_dof_old.data,
+                                        < double * > u_dof_old_old.data,
+                                        < double * > v_dof_old_old.data,
+                                        < double * > w_dof_old_old.data,
                                         < double * > g.data,
                                         useVF,
                                         < double * > vf.data,
@@ -2641,6 +2683,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def attachModels(self, modelList):
         # level set
         self.model = modelList[self.ME_model]
+        # Old dofs; i.e., dofs at time t=tn
+        self.u_dof_old = numpy.copy(self.model.u[0].dof)
+        self.v_dof_old = numpy.copy(self.model.u[1].dof)
+        self.w_dof_old = numpy.copy(self.model.u[2].dof)
+        # Old old dofs; i.e., dofs at time t=tnm1
+        self.u_dof_old_old = numpy.copy(self.model.u[0].dof)
+        self.v_dof_old_old = numpy.copy(self.model.u[1].dof)
+        self.w_dof_old_old = numpy.copy(self.model.u[2].dof)
         self.model.q['phi_solid'] = self.q_phi_solid
         self.q_rho  = self.model.q[('u',0)].copy()
         self.ebqe_rho  = self.model.ebqe[('u',0)].copy()
@@ -3106,6 +3156,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
+        self.u_dof_old_old = numpy.copy(self.u_dof_old)
+        self.v_dof_old_old = numpy.copy(self.v_dof_old)
+        self.w_dof_old_old = numpy.copy(self.w_dof_old)
+        self.u_dof_old = numpy.copy(self.model.u[0].dof)
+        self.v_dof_old = numpy.copy(self.model.u[1].dof)
+        self.w_dof_old = numpy.copy(self.model.u[2].dof)
         self.model.dt_last = self.model.timeIntegration.dt
         pass
         # if self.comm.isMaster():
@@ -4118,6 +4174,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.useRBLES,
             self.coefficients.useMetrics,
             self.timeIntegration.alpha_bdf,
+	    self.timeIntegration.dt,
             self.coefficients.epsFact_density,
             self.coefficients.epsFact,
             self.coefficients.sigma,
@@ -4149,6 +4206,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].dof,
             self.u[1].dof,
             self.u[2].dof,
+	    self.coefficients.u_dof_old, 
+	    self.coefficients.v_dof_old, 
+	    self.coefficients.w_dof_old, 
+	    self.coefficients.u_dof_old_old,
+	    self.coefficients.v_dof_old_old,
+	    self.coefficients.w_dof_old_old,
             self.coefficients.g,
             self.coefficients.useVF,
             self.coefficients.q_vf,
