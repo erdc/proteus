@@ -912,8 +912,8 @@ class RandomWaves:
         self.kDir = np.zeros((len(self.ki),3),)
         for ii in range(3):
              self.kDir[:,ii] = self.ki[:] * self.waveDir[ii]
-        if(self.N > 100000):
-            logEvent("ERROR! Wavetools.py: Maximum number of frequencies for Random Waves is 100000 ",level=0)
+        if(self.N > 10000):
+            logEvent("ERROR! Wavetools.py: Maximum number of frequencies for Random Waves is 10000 ",level=0)
 
     #C++ declarations
         for ij in range(3):
@@ -1045,10 +1045,9 @@ class RandomWaves:
 
 
 
-class MultiSpectraRandomWaves(RandomWaves):
+class MultiSpectraRandomWaves:
     """This class is used for generating random waves
     by combining multiple spectra with different distributions and directions
-
     Parameters
     ----------
     param : Nspectra
@@ -1087,9 +1086,8 @@ class MultiSpectraRandomWaves(RandomWaves):
     param : phi
             Description: List of component phases
             Type: list
-
     """
-    def __init__(self,
+    def __cinit__(self,
                  Nspectra,
                  Tp, # np array with
                  Hs,
@@ -1117,15 +1115,23 @@ class MultiSpectraRandomWaves(RandomWaves):
             sys.exit(1)
         # Initialize numpy arrays for complete reconstruction
         self.Nall = 0
+        self.mwl = mwl
+        self.depth = depth
+        self.g = np.array(g)
+        self.vDir = setVertDir(g)
+
+
         for nn in N:
             self.Nall+=nn
 
 
-        self.omegaM = np.zeros(self.Nall,float)
-        self.kiM = np.zeros(self.Nall,float)
-        self.aiM = np.zeros(self.Nall,float)
-        self.kDirM = np.zeros((self.Nall,3),float)
-        self.phiM= np.zeros(self.Nall,float)
+        self.sinhFM = np.zeros(self.Nall,"d")
+        self.omegaM = np.zeros(self.Nall,"d")
+        self.kiM = np.zeros(self.Nall,"d")
+        self.aiM = np.zeros(self.Nall,"d")
+        self.kDirM = np.zeros((self.Nall,3),"d")
+        self.phiM= np.zeros(self.Nall,"d")
+        self.waveDir = np.zeros((self.Nall,3),"d")
 
 
         NN = 0
@@ -1133,28 +1139,55 @@ class MultiSpectraRandomWaves(RandomWaves):
             logEvent("ERROR! Wavetools.py: Reading spectra No %s" %kk)
             NN1 = NN
             NN +=N[kk]
-            RandomWaves.__init__(self,
-                                 Tp[kk], # np array with
-                                 Hs[kk],
-                                 mwl,#m significant wave height
-                                 depth,           #m depth
-                                 waveDir[kk],
-                                 g,      #peak  frequency
-                                 N[kk],
-                                 bandFactor[kk],         #accelerationof gravity
-                                 spectName[kk],# random words will result in error and return the available spectra
-                                 spectral_params[kk], #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
-                                 phi[kk]
-                             )
-            self.omegaM[NN1:NN] = self.omega
-            self.kiM[NN1:NN] = self.ki
-            self.aiM[NN1:NN] = self.ai
-            self.kDirM[NN1:NN,:] =self.kDir[:,:]
-            self.phiM[NN1:NN] = self.phi
+            RW = RandomWaves(
+                Tp[kk], # np array with
+                Hs[kk],
+                mwl,#m significant wave height
+                depth,           #m depth
+                waveDir[kk],
+                g,      #peak  frequency
+                N[kk],
+                bandFactor[kk],         #accelerationof gravity
+                spectName[kk],# random words will result in error and return the available spectra
+                spectral_params[kk], #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
+                phi[kk]
+                )
+            self.sinhFM[NN1:NN] = RW.sinhF
+            self.omegaM[NN1:NN] = RW.omega
+            self.kiM[NN1:NN] = RW.ki
+            self.aiM[NN1:NN] = RW.ai
+            self.kDirM[NN1:NN,:] =RW.kDir[:,:]
+            self.phiM[NN1:NN] = RW.phi
+        for ij in range(3):
+            self.vDir_c[ij] = self.vDir[ij]
+        self.vDir_ =  self.vDir_c
 
+
+        for ij in range(self.Nall):
+            for kk in range(3):
+                self.kDir_cM[3*ij+kk] = self.kDirM[ij,kk]
+                self.waveDir_cM[3*ij+kk] = self.kDirM[ij,kk] / self.kiM[ij]
+            self.omega_cM[ij] = self.omegaM[ij]
+            self.ki_cM[ij]  =self.kiM[ij]
+            self.sinh_cM[ij] = self.sinhFM[ij]
+            self.ai_cM[ij] = self.aiM[ij]
+            self.phi_cM[ij] = self.phiM[ij]
+
+        self.kDirM_ = self.kDir_cM
+        self.omegaM_ = self.omega_cM
+        self.kiM_  =self.ki_cM
+        self.aiM_ = self.ai_cM
+        self.sinhM_ = self.sinh_cM
+        self.phiM_ = self.phi_cM
+        self.waveDirM_ =  self.waveDir_cM
+
+
+    def _cpp_eta(self,  x,  t):
+
+        return __cpp_etaRandom(x,t,self.kDirM_, self.omegaM_,self.phiM_,self.aiM_, self.Nall)
 
     def eta(self, x, t):
-        """Calculates free surface elevation(MultiSpectraRandomWaves class)
+        """Calculates free surface elevation (RandomWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1168,15 +1201,18 @@ class MultiSpectraRandomWaves(RandomWaves):
             Free-surface elevation as a float
 
         """
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        return self._cpp_eta(xx,t)
 
-        Eta=0.
-        for ii in range(self.Nall):
-            Eta+= eta_mode(x, t, self.kDirM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii])
-        return Eta
-#        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
+    def _cpp_u(self,  x,  t):
+
+        return __cpp_uRandom(x,t,self.kDirM_, self.kiM_, self.omegaM_,self.phiM_,self.aiM_,self.mwl,self.depth, self.Nall, self.waveDirM_, self.vDir_, self.sinhM_)
 
     def u(self, x, t):
-        """Calculates wave velocity vector (MultiSpectraRandomWaves class)
+        """Calculates wave velocity vector (RandomWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1191,11 +1227,17 @@ class MultiSpectraRandomWaves(RandomWaves):
 
         """
 
-        U=0.
-        for ii in range(self.Nall):
-            U+= vel_mode(x,t,self.kDirM[ii], self.kiM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii],self.mwl,self.depth,self.vDir)
-        return U
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        U = np.zeros(3,)
+        cppUL = self._cpp_u(xx,t)            
+        U[0] = cppUL[0]
+        U[1] = cppUL[1]
+        U[2] = cppUL[2]
 
+        return U
 
 '''
 class DirectionalWaves(RandomWaves):
