@@ -45,6 +45,7 @@ namespace proteus
                                    double* ebqe_grad_p,
 				   double* vel_trial_ref,
 				   double* vel_grad_trial_ref,
+				   double* vel_hess_trial_ref,
 				   double* vel_test_ref,
 				   double* vel_grad_test_ref,
 				   double* mesh_trial_trace_ref,
@@ -222,6 +223,7 @@ namespace proteus
                                    double* ebqe_grad_p,
 				   double* vel_trial_ref,
 				   double* vel_grad_trial_ref,
+				   double* vel_hess_trial_ref,
 				   double* vel_test_ref,
 				   double* vel_grad_test_ref,
 				   //element boundary
@@ -404,7 +406,8 @@ namespace proteus
   {
   public:
     cppHsuSedStress<2> closure;
-    const int nDOF_test_X_trial_element;
+    const int nDOF_test_X_trial_element,
+      nSpace2=4;
     CompKernelType ck;
     cppRANS3PF2D():
       closure(150.0,
@@ -1467,6 +1470,7 @@ namespace proteus
                            double* ebqe_grad_p,
 			   double* vel_trial_ref,
 			   double* vel_grad_trial_ref,
+			   double* vel_hess_trial_ref,
 			   double* vel_test_ref,
 			   double* vel_grad_test_ref,
 			   //element boundary
@@ -1652,6 +1656,7 @@ namespace proteus
 		eN_nDOF_trial_element = eN*nDOF_trial_element;
 	      register double p=0.0,u=0.0,v=0.0,w=0.0,
 		grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
+		hess_u[nSpace2],hess_v[nSpace2],
 		mom_u_acc=0.0,
 		dmom_u_acc_u=0.0,
 		mom_v_acc=0.0,
@@ -1724,6 +1729,7 @@ namespace proteus
 		jacDet,
 		jacInv[nSpace*nSpace],
 		p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],
+		vel_hess_trial[nDOF_trial_element*nSpace2],
 		p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
 		p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
 		dV,x,y,z,xt,yt,zt,
@@ -1773,6 +1779,7 @@ namespace proteus
 	      //get the trial function gradients
 	      /* ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial); */
 	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
+	      ck.hessTrialFromRef(&vel_hess_trial_ref[k*nDOF_trial_element*nSpace2],jacInv,vel_hess_trial);
 	      //get the solution
 	      /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
               p = q_p[eN_k];
@@ -1785,6 +1792,8 @@ namespace proteus
                 grad_p[I] = q_grad_p[eN_k_nSpace + I];
 	      ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
 	      ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
+	      ck.hessFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_u);
+	      ck.hessFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_v);
 	      /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w); */
 	      //precalculate test function products with integration weights
 	      for (int j=0;j<nDOF_trial_element;j++)
@@ -3098,6 +3107,7 @@ namespace proteus
                            double* ebqe_grad_p,
 			   double* vel_trial_ref,
 			   double* vel_grad_trial_ref,
+			   double* vel_hess_trial_ref,
 			   double* vel_test_ref,
 			   double* vel_grad_test_ref,
 			   //element boundary
@@ -3299,6 +3309,7 @@ namespace proteus
 	      //declare local storage
 	      register double p=0.0,u=0.0,v=0.0,w=0.0,
 		grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
+		hess_u[nSpace2],hess_v[nSpace2],
 		mom_u_acc=0.0,
 		dmom_u_acc_u=0.0,
 		mom_v_acc=0.0,
@@ -3384,6 +3395,7 @@ namespace proteus
 		jacDet,
 		jacInv[nSpace*nSpace],
 		p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],
+		vel_hess_trial[nDOF_trial_element*nSpace2],
 		dV,
 		p_test_dV[nDOF_test_element],vel_test_dV[nDOF_test_element],
 		p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
@@ -3433,6 +3445,7 @@ namespace proteus
 	      //get the trial function gradients
 	      /* ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial); */
 	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
+	      ck.hessTrialFromRef(&vel_hess_trial_ref[k*nDOF_trial_element*nSpace2],jacInv,vel_hess_trial);
 	      //get the solution 	
 	      /* ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p); */
               p = q_p[eN_k];
@@ -3445,6 +3458,8 @@ namespace proteus
                 grad_p[I] = q_grad_p[eN_k_nSpace+I];
 	      ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
 	      ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
+	      ck.hessFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_u);
+	      ck.hessFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_v);
 	      /* ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w); */
 	      //precalculate test function products with integration weights
 	      for (int j=0;j<nDOF_trial_element;j++)
