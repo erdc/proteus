@@ -663,8 +663,17 @@ class NS_base:  # (HasTraits):
         for index,m in self.modelSpinUp.iteritems():
             spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
+            logEvent("Attaching models to model "+p.name)
+            m.attachModels(self.modelList)
             if index not in self.modelSpinUp:
                 spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
+        for m in self.modelList:
+            for lm,lu,lr in zip(m.levelModelList,
+                                m.uList,
+                                m.rList):
+                #calculate the coefficients, any explicit-in-time
+                #terms will be wrong
+                lm.getResidual(lu,lr)
         for p,n,m,simOutput in spinup:
             logEvent("Attaching models to model "+p.name)
             m.attachModels(self.modelList)

@@ -6,7 +6,7 @@ import random
 from math import cos,sin,cosh,sinh,pi,tanh,log
 import sys,os
 import logging
-#import pytest
+import pytest
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
@@ -450,7 +450,7 @@ class CheckRandomWavesFailures(unittest.TestCase):
         self.assertTrue(None == None)
 
 class VerifyRandomWaves(unittest.TestCase):
-#    @pytest.mark.skip(reason="nosetests vs pytest issue")
+    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandom(self):
         from proteus.WaveTools import RandomWaves
         import random

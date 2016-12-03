@@ -37,6 +37,8 @@ def init():
                 if i+1 < narg and  argv[i+1][0] is not '-':
                     value = argv[i+1]
                     OptDB.setValue(name,value)
+        if not OptDB.hasName("options_left"):
+            OptDB.setValue("options_left",False)
     new_comm = Comm()
     if not comm:
         comm = new_comm
