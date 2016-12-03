@@ -560,13 +560,13 @@ CKSP_useTrueResidualConvergence(CKSP *self, PyObject *args, PyObject *kwds)
   if (!self->tres_ctx.residual)
     VecDuplicate(PARVEC_PETSCVEC(par_v),&self->tres_ctx.residual);
 
-  PetscOptionsGetReal(PETSC_NULL,"-ksp_atol",&atol,&found);
+  PetscOptionsGetReal(PETSC_NULL,PETSC_NULL,"-ksp_atol",&atol,&found);
   if (found) self->tres_ctx.atol  = atol;
-  PetscOptionsGetReal(PETSC_NULL,"-ksp_rtol",&rtol,&found);
+  PetscOptionsGetReal(PETSC_NULL,PETSC_NULL,"-ksp_rtol",&rtol,&found);
   if (found) self->tres_ctx.rtol  = rtol;
-  PetscOptionsGetReal(PETSC_NULL,"-ksp_divtol",&divtol,&found);
+  PetscOptionsGetReal(PETSC_NULL,PETSC_NULL,"-ksp_divtol",&divtol,&found);
   if (found) self->tres_ctx.divtol  = divtol;
-  PetscOptionsGetInt(PETSC_NULL,"-ksp_max_it",&max_it,&found);
+  PetscOptionsGetInt(PETSC_NULL,PETSC_NULL,"-ksp_max_it",&max_it,&found);
   if (found) self->tres_ctx.max_it= max_it;
 
   KSPSetConvergenceTest(self->ksp,converged_true_residual,(void *)&self->tres_ctx,PETSC_NULL);
