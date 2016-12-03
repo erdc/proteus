@@ -13,13 +13,17 @@ class System:
 defaultSystem = System()
 
 class SO_base:
-    """
-    Base class for operating splitting methods for systems.
+    """Base class for operating splitting methods for systems.
 
     The base class implements sequential splitting with a fixed time
-    step based on the list of time intervals.
+    step based on the input parameter `default_so.dt_system`. If
+    `default_so.stepExactSystem` is True then the time step will be
+    reduced when needed to match the output times in
+    `default_so.tnList`, otherwise the output will be the first time
+    step after each step in `tnList`.
 
-    Here each model take the same fixed time step
+    Here each model takes the same fixed time step
+
     """
     def __init__(self,modelList,system=defaultSystem,stepExact=True):
         self.system=system
@@ -149,10 +153,8 @@ Sequential_FixedStep = SO_base
 
 class Sequential_FixedStep_Simple(SO_base):
     """
-    Base class for operating splitting methods for systems.
-
-    The base class implements sequential splitting with a fixed time
-    step based on the list of time intervals.
+    Implements sequential splitting with a fixed time
+    step based on the list of time intervals (tnList).
 
     Here each model take the same fixed time step
     """
