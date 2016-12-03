@@ -159,7 +159,10 @@ class Sequential_FixedStep_Simple(SO_base):
     Here each model take the same fixed time step
     """
     def __init__(self,modelList,system=defaultSystem,stepExact=True):
+        stepExact=True
         SO_base.__init__(self,modelList,system,stepExact)
+        for m in modelList:
+            m.stepController.stepExact=True
     def converged(self):
         #no iteration
         if self.its > 0:
@@ -167,15 +170,6 @@ class Sequential_FixedStep_Simple(SO_base):
             return True
         else:
             return False
-    def stepExact_system(self,tExact):
-        self.dt_system = tExact - self.t_system_last
-        self.t_system = self.t_system_last + self.dt_system
-        self.stepSequence=[(self.t_system,m) for m in self.modelList]
-        for model in self.modelList:
-            model.stepController.dt_model = self.dt_system
-            model.stepController.set_dt_allLevels()
-            model.stepController.t_model = self.t_system
-            model.stepController.setSubsteps([self.t_system])
     def choose_dt_system(self):
         #fixed step
         self.t_system = self.t_system_last+self.dt_system
@@ -209,7 +203,12 @@ class Sequential_FixedStep_Simple(SO_base):
         return False#don't try to recover
     def retrySequence_modelStepFailure(self):
         return False#don't try to recover
-
+    def setFromOptions(self,soOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        SO_base.setFromOptions(self,soOptions)
+        self.stepExact=True
 
 class Sequential_NonUniformFixedStep(SO_base):
     """
