@@ -70,6 +70,12 @@ F77=ftn
 F90=ftn
 endif 
 
+ifeq ($(PROTEUS_ARCH), topaz)
+FC=gfortran
+F77=gfortran
+F90=gfortran
+endif 
+
 ifdef VERBOSE
 HIT_FLAGS += -v
 endif
