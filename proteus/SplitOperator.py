@@ -13,13 +13,17 @@ class System:
 defaultSystem = System()
 
 class SO_base:
-    """
-    Base class for operating splitting methods for systems.
+    """Base class for operating splitting methods for systems.
 
     The base class implements sequential splitting with a fixed time
-    step based on the list of time intervals.
+    step based on the input parameter `default_so.dt_system`. If
+    `default_so.stepExactSystem` is True then the time step will be
+    reduced when needed to match the output times in
+    `default_so.tnList`, otherwise the output will be the first time
+    step after each step in `tnList`.
 
-    Here each model take the same fixed time step
+    Here each model takes the same fixed time step
+
     """
     def __init__(self,modelList,system=defaultSystem,stepExact=True):
         self.system=system
@@ -149,15 +153,16 @@ Sequential_FixedStep = SO_base
 
 class Sequential_FixedStep_Simple(SO_base):
     """
-    Base class for operating splitting methods for systems.
-
-    The base class implements sequential splitting with a fixed time
-    step based on the list of time intervals.
+    Implements sequential splitting with a fixed time
+    step based on the list of time intervals (tnList).
 
     Here each model take the same fixed time step
     """
     def __init__(self,modelList,system=defaultSystem,stepExact=True):
+        stepExact=True
         SO_base.__init__(self,modelList,system,stepExact)
+        for m in modelList:
+            m.stepController.stepExact=True
     def converged(self):
         #no iteration
         if self.its > 0:
@@ -165,15 +170,6 @@ class Sequential_FixedStep_Simple(SO_base):
             return True
         else:
             return False
-    def stepExact_system(self,tExact):
-        self.dt_system = tExact - self.t_system_last
-        self.t_system = self.t_system_last + self.dt_system
-        self.stepSequence=[(self.t_system,m) for m in self.modelList]
-        for model in self.modelList:
-            model.stepController.dt_model = self.dt_system
-            model.stepController.set_dt_allLevels()
-            model.stepController.t_model = self.t_system
-            model.stepController.setSubsteps([self.t_system])
     def choose_dt_system(self):
         #fixed step
         self.t_system = self.t_system_last+self.dt_system
@@ -207,7 +203,12 @@ class Sequential_FixedStep_Simple(SO_base):
         return False#don't try to recover
     def retrySequence_modelStepFailure(self):
         return False#don't try to recover
-
+    def setFromOptions(self,soOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        SO_base.setFromOptions(self,soOptions)
+        self.stepExact=True
 
 class Sequential_NonUniformFixedStep(SO_base):
     """
@@ -506,7 +507,10 @@ class Sequential_MinAdaptiveModelStep(SO_base):
             model.stepController.setSubsteps([self.t_system])
 
     def choose_dt_system(self):
-        self.dt_system = min([model.stepController.dt_model for model  in self.controllerList])
+        if self.dt_system_fixed is not None:
+            self.dt_system = min([model.stepController.dt_model for model  in self.controllerList]+[self.dt_system_fixed])
+        else:
+            self.dt_system = min([model.stepController.dt_model for model  in self.controllerList])
         self.t_system = self.t_system_last + self.dt_system
         self.stepSequence=[(self.t_system,model) for model in self.modelList]
         for model in self.modelList:
