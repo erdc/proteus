@@ -174,13 +174,7 @@ class Gauges(AV_base):
     def getLocalNearestNode(self, location):
         # determine local nearest node distance
         nearest_node_distance_kdtree, nearest_node_kdtree = self.nodes_kdtree.query(location)
-        #node_distances = norm(self.vertices - location, axis=1)
-        #nearest_node = np.argmin(node_distances)
-        #nearest_node_distance = node_distances[nearest_node]
         comm = Comm.get().comm.tompi4py()
-        #assert (nearest_node == nearest_node_kdtree), `nearest_node` + `nearest_node_kdtree`
-        #assert (nearest_node_distance == nearest_node_distance_kdtree), `nearest_node_distance` == `nearest_node_distance_kdtree`
-        #return comm.rank, nearest_node, nearest_node_distance
         return comm.rank, nearest_node_kdtree, nearest_node_distance_kdtree
 
     def getLocalElement(self, femSpace, location, node):
