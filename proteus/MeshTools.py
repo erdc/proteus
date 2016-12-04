@@ -3767,7 +3767,6 @@ def buildReferenceSimplex(nd=2):
     polyfile = "reference_element"
     unit_simplex_domain.writePoly(polyfile)
 
-    
     if nd==2:
         tmesh = TriangleTools.TriangleBaseMesh(baseFlags="Yp",
                                                nbase=1,
@@ -6098,7 +6097,7 @@ def runTetgen(polyfile,
     tetcmd = "tetgen - %s %s.poly" % (baseFlags, polyfile)
     
     check_call(tetcmd,shell=True)
-
+    
     logEvent("Done running tetgen")
     elefile = "%s.1.ele" % polyfile
     nodefile = "%s.1.node" % polyfile
@@ -6144,8 +6143,7 @@ def genMeshWithTetgen(polyfile,
    assert os.path.exists(elefile), "no .ele file"
    assert os.path.exists(nodefile), "no  .node file"
    assert os.path.exists(facefile), "no .face file"
-   assert os.path.exists(edgefile), "no .edge file"
-   mesh=MeshTools.TetrahedralMesh()
+   mesh=TetrahedralMesh()
    mesh.generateFromTetgenFiles(polyfile,
                                 base=nbase)
    return mesh
