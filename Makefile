@@ -191,7 +191,7 @@ install: profile $(shell find proteus -type f) $(wildcard *.py) proteus
 	@echo "done installing standard extension modules"
 	@echo "************************"
 	@echo "installing scripts"
-	#cd scripts && ${PROTEUS_ENV} PROTEUS_PREFIX=${PROTEUS_PREFIX} make
+	cd scripts && ${PROTEUS_ENV} PROTEUS_PREFIX=${PROTEUS_PREFIX} make
 	@echo "************************"
 	@echo "Installation complete"
 	@echo "************************"
@@ -256,6 +256,7 @@ check:
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_gmshLoadAndAdapt/gmshCheck.py
 	@echo "************************"
 
+check_simmetrix:
 	@echo "SCOREC-Serial Simmetrix Error-Estimator and Adapt Test"
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_errorAndSerialAdapt/errorCheck.py
 	@echo "************************"
@@ -267,6 +268,7 @@ check:
 	@echo "SCOREC Simmetrix Isotropic Uniform Adapt Test"
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_isotropicAdapt/isotropicCheck.py
 	@echo "************************"
+
 
 #doc: install
 doc:
