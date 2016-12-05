@@ -16,7 +16,7 @@ from proteus import default_n as n
 
 from proteus.Gauges import PointGauges, LineGauges, LineIntegralGauges
 
-from proteus.tests.util import setup_profiling, silent_rm
+from proteus.test_utils.util import setup_profiling, silent_rm
 from nose.tools import eq_
 
 def build1DMesh(p, nnx):
