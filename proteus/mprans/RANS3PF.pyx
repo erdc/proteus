@@ -1805,7 +1805,6 @@ cdef class RANS3PF2D:
                           double cE,
                           double cMax,
                           int ENTROPY_VISCOSITY):
-                          numpy.ndarray ebqe_nu):
         self.thisptr.calculateResidual(< double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
