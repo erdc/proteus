@@ -77,14 +77,14 @@ cdef class MeshAdaptPUMI:
         nu = np.ascontiguousarray(nu)
         g = np.ascontiguousarray(g)
         return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0])
-    def transferBCtagsToProteus(self, np.ndarray[int,ndim=2,mode="c"] tagArray, int idx, np.ndarray[int,ndim=1,mode="c"] ebN, np.ndarray[int, ndim=2, mode="c"] eN_global, np.ndarray[np.double_t,ndim=2,mode="c"] fluxBC):
-        tagArray = np.ascontiguousarray(tagArray)
-        ebN = np.ascontiguousarray(ebN)
-        eN_global = np.ascontiguousarray(eN_global)
-        fluxBC = np.ascontiguousarray(fluxBC)
-        return self.thisptr.transferBCtagsToProteus(&tagArray[0,0],idx,&ebN[0],&eN_global[0,0],&fluxBC[0,0])
-    def transferBCsToProteus(self):
-        return self.thisptr.transferBCsToProteus()
+    #def transferBCtagsToProteus(self, np.ndarray[int,ndim=2,mode="c"] tagArray, int idx, np.ndarray[int,ndim=1,mode="c"] ebN, np.ndarray[int, ndim=2, mode="c"] eN_global, np.ndarray[np.double_t,ndim=2,mode="c"] fluxBC):
+    #    tagArray = np.ascontiguousarray(tagArray)
+    #    ebN = np.ascontiguousarray(ebN)
+    #    eN_global = np.ascontiguousarray(eN_global)
+    #    fluxBC = np.ascontiguousarray(fluxBC)
+    #    return self.thisptr.transferBCtagsToProteus(&tagArray[0,0],idx,&ebN[0],&eN_global[0,0],&fluxBC[0,0])
+    #def transferBCsToProteus(self):
+    #    return self.thisptr.transferBCsToProteus()
     def adaptPUMIMesh(self):
         return self.thisptr.adaptPUMIMesh()
     def dumpMesh(self, cmesh):
