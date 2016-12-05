@@ -46,6 +46,8 @@ class TI_base:
         Set flags that indicate that all terms
         are implicit.
         """
+        self.IMPLICIT = True
+        self.use_SSP33 = False
         self.tLast = 0.0
         self.dt = 1.0
         self.t  = self.tLast + self.dt
@@ -355,6 +357,20 @@ class BackwardEuler_cfl(BackwardEuler):
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
 
+class SSP33(BackwardEuler_cfl):
+    def __init__(self,transport,runCFL=0.9,integrateInterpolationPoints=False):
+        BackwardEuler.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
+        self.runCFL=runCFL
+        self.dtLast=None
+        self.dtRatioMax = 2.0
+        self.cfl = {}
+        for ci in range(self.nc):
+            if transport.q.has_key(('cfl',ci)):
+                self.cfl[ci] = transport.q[('cfl',ci)]
+        self.isAdaptive=True
+        self.use_SSP33 = True
+        self.IMPLICIT = False
+    
 class FLCBDF(TI_base):
     import flcbdfWrappers
     def __init__(self,transport):
@@ -1900,6 +1916,7 @@ class ExplicitRK_base(TI_base):
     def initialize_dt(self,t0,tOut,q):
         self.tLast = t0
         self.choose_dt()
+        self.t = t0+self.dt
     def choose_dt(self):
         """
         Modify self.dt
@@ -2037,6 +2054,7 @@ class ExplicitRK_base(TI_base):
         """
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
+            self.isAdaptive=True
             #need to think of a name for temporal order
         if 'timeOrder' in dir(nOptions):
             if 'nStagesTime' in dir(nOptions):
@@ -2075,7 +2093,7 @@ class LinearSSPRKintegration(ExplicitRK_base):
     def __init__(self,transport,order=1,runCFL=0.1,usingSSPRKNewton=False):
         ExplicitRK_base.__init__(self,transport,timeOrder=order,nStages=order,runCFL=runCFL,
                                  usingDTinMass = not usingSSPRKNewton)
-
+        self.isAdaptive=True
 
     def setCoefficients(self):
         """
