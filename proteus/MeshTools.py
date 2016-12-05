@@ -663,29 +663,21 @@ class Mesh:
             #mwf for now always gives 1 layer of overlap
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         else:
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionElementsFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElementsFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         #
         logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.buildFromCNoArrays(self.cmesh)

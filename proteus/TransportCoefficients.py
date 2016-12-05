@@ -8,6 +8,7 @@ this module define common PDE's.
    :parts: 1
 """
 from math import *
+from warnings import warn
 import numpy
 import Norms
 from Profiling import logEvent
