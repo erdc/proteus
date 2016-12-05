@@ -38,5 +38,8 @@ __all__ = ["RANS2PV2",
            "RANS2P_IB",
            "cRANS2P_IB",
            "beamFEM",
+           "Pres",
+           "PresInit",
+           "PresInc",
            "BoundaryConditions",
            "SpatialTools"]
