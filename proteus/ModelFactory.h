@@ -240,6 +240,13 @@ namespace proteus
 		      	  else
 		      	    abort();
 		      	}
+		      else if (nQuadraturePoints_elementIn == 4)
+		      	{
+		      	  if (nQuadraturePoints_elementBoundaryIn == 3)
+		      	    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,4,3,3,3,3>());
+		      	  else
+		      	    abort();
+		      	}
 		      else
 			abort();
 		    }
