@@ -84,9 +84,6 @@ cdef class RandomWaves:
     cdef object phi
     cdef double depth
     cdef double df
-    cdef np.ndarray omega
-    cdef np.ndarray fi
-    cdef np.ndarray ki
     cdef int N
     cdef np.ndarray kDir
     cdef np.ndarray sinhF
@@ -109,6 +106,11 @@ cdef class RandomWaves:
     cdef double[10000] phi_c
     cdef public:
         double mwl
+        np.ndarray fi
+        np.ndarray fim
+        np.ndarray Si_Jm
+        np.ndarray ki
+        np.ndarray omega
     cdef double _cpp_eta(self, double* x, double t)
     cdef double* _cpp_u(self, double* x, double t)
 
@@ -135,13 +137,13 @@ cdef class MultiSpectraRandomWaves:
     cdef double* waveDirM_
     cdef double* aiM_
     cdef double[3] vDir_c
-    cdef double[300000] kDir_cM
-    cdef double[300000] waveDir_cM
-    cdef double[100000] omega_cM
-    cdef double[100000] ki_cM
-    cdef double[100000] ai_cM
-    cdef double[100000] sinh_cM
-    cdef double[100000] phi_cM
+    cdef double[30000] kDir_cM
+    cdef double[30000] waveDir_cM
+    cdef double[10000] omega_cM
+    cdef double[10000] ki_cM
+    cdef double[10000] ai_cM
+    cdef double[10000] sinh_cM
+    cdef double[10000] phi_cM
     cdef public:
         double mwl
         double depth

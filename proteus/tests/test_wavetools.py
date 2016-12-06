@@ -441,7 +441,7 @@ class CheckRandomWavesFailures(unittest.TestCase):
 #Failure 6: Give too many frequencies
         with self.assertRaises(SystemExit) as cm6:
             RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100001,2.,"JONSWAP", spectral_params= {"random1": 3.3, "random2":True,"random3" : 10.}  )
-        self.assertEqual(cm5.exception.code, 1)
+        self.assertEqual(cm6.exception.code, 1)
 
   # Success!: Give all parameters in correct form!
         RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params=None )
@@ -658,6 +658,22 @@ class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
     )
 
         self.assertEqual(cm2.exception.code, 1 )
+#Failure 6: Give too many frequencies
+        with self.assertRaises(SystemExit) as cm3:
+            MultiSpectraRandomWaves(
+            2,
+            [Tp,Tp],
+            [Hs,Hs],
+            mwl,#m significant wave height
+            depth ,           #m depth
+            [waveDir,waveDir],
+            g,      #peak  frequency
+            np.array([5000,5001]),
+            [bandFactor,bandFactor],         #accelerationof gravity
+            [spectName, spectName],
+            spectral_params =[  {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth} ],
+            phi = [phi,phi])
+        self.assertEqual(cm3.exception.code, 1)
 
         # Success!: Give all parameters in correct form!
         MultiSpectraRandomWaves(
@@ -763,7 +779,7 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
         self.assertTrue(round(5.*uy,8) == round(uy2,8))
         self.assertTrue(round(5.*uz,8) == round(uz2,8))
 
-'''
+
 class CheckDirectionalWaveFailures(unittest.TestCase):
     def testFailureModes(self):
         from proteus.WaveTools import DirectionalWaves
@@ -920,7 +936,7 @@ class VerifyDirectionals(unittest.TestCase):
         CB.set_label("$\eta$ (m)",size = 20)
         plt.savefig("Contour.png")
 """
-
+'''
 
 
 
