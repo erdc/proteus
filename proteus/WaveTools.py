@@ -894,11 +894,12 @@ class RandomWaves:
 
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim = reduceToIntervals(self.fi,self.df)
+        self.fim = fim
         if (spectral_params == None):
-            Si_Jm = spec_fun(fim,self.fp,self.Hs)
+            self.Si_Jm = spec_fun(fim,self.fp,self.Hs)
         else:
             try:
-                Si_Jm = spec_fun(fim,self.fp,self.Hs,**spectral_params)
+                self.Si_Jm = spec_fun(fim,self.fp,self.Hs,**spectral_params)
             except:
                 logEvent('ERROR! Wavetools.py: Additional spectral parameters are not valid for the %s spectrum' %spectName)
                 sys.exit(1)
@@ -908,7 +909,7 @@ class RandomWaves:
             self.sinhF[ii] = float(np.sinh(self.ki[ii]*self.depth) )
 
  
-        self.ai = np.sqrt(2.*returnRectangles(Si_Jm,fim))
+        self.ai = np.sqrt(2.*returnRectangles(self.Si_Jm,fim))
         self.kDir = np.zeros((len(self.ki),3),)
         for ii in range(3):
              self.kDir[:,ii] = self.ki[:] * self.waveDir[ii]
@@ -1123,6 +1124,8 @@ class MultiSpectraRandomWaves:
 
         for nn in N:
             self.Nall+=nn
+        if(self.Nall > 10000):
+            logEvent("ERROR! Wavetools.py: Maximum (number of frequencies) x (No of spectra) for MultispectraRandomWaves is 100000 ",level=0)
 
 
         self.sinhFM = np.zeros(self.Nall,"d")
@@ -1239,8 +1242,8 @@ class MultiSpectraRandomWaves:
 
         return U
 
-'''
-class DirectionalWaves(RandomWaves):
+
+class DirectionalWaves:
     """
     This class is used for generating directional random waves using linear reconstruction of components from a
     wave spectrum
@@ -1315,14 +1318,13 @@ class DirectionalWaves(RandomWaves):
                  ):
         validSpread = [cos2s,mitsuyasu]
         spread_fun =  loadExistingFunction(spreadName, validSpread)
-        self.M = M
         self.Mtot = 2*M+1
         self.waveDir0 = setDirVector(waveDir0)
         self.vDir = setVertDir(g)
 
 
  # Loading Random waves to get the frequency array the wavelegnths and the frequency spectrum
-        RandomWaves.__init__(self,
+        RW = RandomWaves(
                              Tp, # np array with
                              Hs,
                              mwl,#m significant wave height
@@ -1340,8 +1342,8 @@ class DirectionalWaves(RandomWaves):
 
         # Directional waves propagate usually in a plane -90 to 90 deg with respect to the direction vector, normal to the gavity direction. Rotating the waveDir0 vector around the g vector to produce the directional space
         from SpatialTools import rotation3D
-        self.thetas = np.linspace(-M_PI/2,M_PI/2,2*M+1)
-        self.dth = (self.thetas[1] - self.thetas[0])
+        thetas = np.linspace(-M_PI/2,M_PI/2,2*M+1)
+        dth = (thetas[1] - thetas[0])
         self.waveDirs = np.zeros((2*M+1,3),)
         self.phiDirs = np.zeros((2*M+1,N),)
         self.aiDirs = np.zeros((2*M+1,N),)
@@ -1353,15 +1355,15 @@ class DirectionalWaves(RandomWaves):
 
 # initialising wave directions
         for rr in directions:
-            theta = self.thetas[rr]
+            theta = thetas[rr]
             self.waveDirs[rr,:] = rotation3D(temp_array,theta,self.vDir)[0,:]
             self.waveDirs[rr,:]=setDirVector( self.waveDirs[rr,:])
 
 
 # Initialising phasing
         if phi == None:
-            self.phiDirs = 2.0*M_PI*np.random.rand(self.Mtot,self.fi.shape[0])
-        elif np.shape(phi) == (2*M+1,self.fi.shape[0]):
+            self.phiDirs = 2.0*M_PI*np.random.rand(self.Mtot,RW.fi.shape[0])
+        elif np.shape(phi) == (2*M+1,RW.fi.shape[0]):
             self.phiDirs = phi
         else:
             logEvent("ERROR! Wavetools.py: phi in DirectionalWaves class must be given either as None or as a list with 2*M + 1 numpy arrays with length N")
@@ -1374,25 +1376,30 @@ class DirectionalWaves(RandomWaves):
 
 
 
-        self.theta_m = reduceToIntervals(self.thetas,self.dth)
+        theta_m = reduceToIntervals(thetas,dth)
         if (spread_params == None):
-            self.Si_Sp = spread_fun(self.theta_m,self.fim)
+            Si_Sp = spread_fun(theta_m,RW.fim)
         else:
             try:
-                self.Si_Sp = spread_fun(self.theta_m,self.fim, **spread_params)
+                Si_Sp = spread_fun(theta_m,RW.fim, **spread_params)
             except:
                 logEvent('ERROR! Wavetools.py: Additional spread parameters are not valid for the %s spectrum' %spectName)
                 sys.exit(1)
 
         # Setting amplitudes
         #Normalising the spreading function
-        freq = range(0,self.N)
+        freq = range(0,N)
     # Normalising integral over all frequencies
         for ii in freq:
-            self.Si_Sp[:,ii] = normIntegral(self.Si_Sp[:,ii],self.theta_m)
-            self.Si_Sp[:,ii]*= self.Si_Jm[ii]
+            Si_Sp[:,ii] = normIntegral(Si_Sp[:,ii],theta_m)
+            Si_Sp[:,ii]*= RW.Si_Jm[ii]
     # Creating amplitudes spectrum
-        self.aiDirs[:] = np.sqrt(2.*returnRectangles3D(self.Si_Sp,self.theta_m,self.fim))
+        self.aiDirs[:] = np.sqrt(2.*returnRectangles3D(Si_Sp,theta_m,RW.fim))
+        self.N = N
+        self.ki = RW.ki
+        self.omega = RW.omega
+        self.mwl = mwl
+        self.depth = depth
     def eta(self, x, t):
         """Calculates free surface elevation (DirectionalWaves class)
         Parameters
@@ -1414,7 +1421,7 @@ class DirectionalWaves(RandomWaves):
                 kDiri = self.waveDirs[jj]*self.ki[ii]
                 Eta+= eta_mode(x,t,kDiri,self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii])
         return Eta
-#        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
+
 
     def u(self, x, t):
         """Calculates wave velocity vector (Directional class).
@@ -1444,7 +1451,7 @@ class DirectionalWaves(RandomWaves):
 
 
 
-
+'''
 class TimeSeries:
     """This class is used for generating waves from an arbirtrary free-surface elevation time series
 
