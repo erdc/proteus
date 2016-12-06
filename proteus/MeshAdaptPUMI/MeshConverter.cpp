@@ -66,12 +66,13 @@ int MeshAdaptPUMIDrvr::constructFromSerialPUMIMesh(Mesh& mesh)
       apf::fail("dimension is not 2 or 3\n");
       break;
   }
-
+#ifdef MESH_INFO
   std::cerr << "*******Proteus Mesh Stats*********\n";
   std::cerr << "Number of elements " << mesh.nElements_global << "\n";
   std::cerr << "Number of nodes " << mesh.nNodes_global << "\n";
   std::cerr << "Number of boundaries " << mesh.nElementBoundaries_global << "\n";
   std::cerr << "Number of edges " << mesh.nEdges_global << "\n";
+#endif
   
   numberLocally();
   constructNodes(mesh);

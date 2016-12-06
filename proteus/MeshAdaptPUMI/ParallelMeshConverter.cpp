@@ -59,6 +59,7 @@ int MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   mesh.subdomainp->nNodes_elementBoundary = 3; //hardcode: for tets, looks like number of nodes of a face
   mesh.subdomainp->nElementBoundaries_element = 4; //hardcode: for tets, looks like number of faces/element
   
+#ifdef MESH_INFO
   for (int i = 0; i < PCU_Comm_Peers(); ++i) {
     if (i == PCU_Comm_Self()) {
       std::cerr << "*******Local Proteus Mesh Stats*********\n";
@@ -79,6 +80,7 @@ int MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
     std::cerr << ": Number of edges " << mesh.nEdges_global << "\n";
     std::cerr << "*****************************************\n";
   }
+#endif
 
   constructGlobalNumbering(mesh);
   numberLocally();
