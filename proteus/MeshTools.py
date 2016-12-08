@@ -571,7 +571,7 @@ class Mesh:
         self.arGrid=None
         self.nLayersOfOverlap = None
         self.parallelPartitioningType = MeshParallelPartitioningTypes.element
-    def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
+    def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         import flcbdfWrappers
@@ -646,7 +646,7 @@ class Mesh:
         # #cmeshTools.deleteMeshDataStructures(self.cmesh)
         # logEvent(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
-    def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
+    def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         import flcbdfWrappers
@@ -3556,7 +3556,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         MultilevelMesh.__init__(self)
@@ -3592,7 +3592,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                     logEvent(self.meshList[-1].meshInfo())
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
@@ -3661,7 +3661,7 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         MultilevelMesh.__init__(self)
@@ -3698,7 +3698,7 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                     logEvent(self.meshList[-1].meshInfo())
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
@@ -4578,7 +4578,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0):
         import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC = True
@@ -4617,7 +4617,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
     #
     #mwf what's the best way to build from an existing mesh
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
@@ -4687,7 +4687,7 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0):
         import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC = False   # Implementing with C will take a bit more work. Disabling for now.
@@ -4785,9 +4785,9 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         logEvent("InterpolatedBathymetryMesh: Converting to Proteus Mesh")
         self.coarseMesh=tmesh.convertToProteusMesh(verbose=1)
         MultilevelTriangularMesh.__init__(self,0,0,0,skipInit=True,nLayersOfOverlap=0,
-                                          parallelPartitioningType=MeshParallelPartitioningTypes.element)
+                                          parallelPartitioningType=MeshParallelPartitioningTypes.node)
         self.generateFromExistingCoarseMesh(self.coarseMesh,1,
-                                            parallelPartitioningType=MeshParallelPartitioningTypes.element)
+                                            parallelPartitioningType=MeshParallelPartitioningTypes.node)
         self.computeGeometricInfo()
         print self.meshList[-1].volume
         #allocate some arrays based on the bathymetry data
@@ -5366,7 +5366,7 @@ class MultilevelEdgeMesh(MultilevelMesh):
                  Lx=1.0, Ly=1.0, Lz=1.0,
                  refinementLevels=1,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC=True
@@ -5722,7 +5722,7 @@ class MultilevelNURBSMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         MultilevelMesh.__init__(self)
@@ -5745,7 +5745,7 @@ class MultilevelNURBSMesh(MultilevelMesh):
                 self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
 
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
