@@ -984,8 +984,6 @@ class RandomWaves:
         self.tanh_ = self.tanh_c
         self.phi_ = self.phi_c
 
-
-
     def _cpp_eta(self,  x,  t):
 
         return __cpp_etaRandom(x,t,self.kDir_, self.omega_,self.phi_,self.ai_, self.N)
@@ -1539,7 +1537,7 @@ class DirectionalWaves:
 
 
 
-'''
+
 class TimeSeries:
     """This class is used for generating waves from an arbirtrary free-surface elevation time series
 
@@ -1607,15 +1605,13 @@ class TimeSeries:
 
         # Setting the depth
         self.depth = depth
-        self.rec_direct = rec_direct
         # Number of wave components
         self.N = N
-        self.Nwaves = None
+        self.tanhF = np.zeros(N,"d")
+        Nwaves = None
         # Position of timeSeriesFile
         if(len(timeSeriesPosition)==3):
-            self.x0 = timeSeriesPosition[0]
-            self.y0 = timeSeriesPosition[1]
-            self.z0 = timeSeriesPosition[2]
+            self.x0 = timeSeriesPosition
         else:
             logEvent("ERROR! Wavetools.py: Location vector for timeSeries must have three-components",level=0)
             sys.exit(1)
@@ -1636,8 +1632,7 @@ class TimeSeries:
         #Reading time series
 
 
-        self.arrayData = arrayData
-        if(self.arrayData):
+        if(arrayData):
             tdata = seriesArray
         else:
             filetype = timeSeriesFile[-4:]
@@ -1675,16 +1670,16 @@ class TimeSeries:
         if(doInterp):
             logEvent("ERROR! WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
             self.time = np.linspace(time_temp[0],time_temp[-1],len(time_temp))
-            self.eta = np.interp(self.time,time_temp,tdata[:,1])
+            self.etaS = np.interp(self.time,time_temp,tdata[:,1])
         else:
             self.time = time_temp
-            self.eta = tdata[:,1]
+            self.etaS = tdata[:,1]
 
         self.t0  = self.time[0]
         # Remove mean level from raw data
-        self.eta -= np.mean(self.eta)
+        self.etaS -= np.mean(self.etaS)
         # Filter out first 2.5 % and last 2.5% to make the signal periodic
-        self.eta *= costap(len(self.time),cutoff=cutoffTotal)
+        self.etaS *= costap(len(self.time),cutoff=cutoffTotal)
         # clear tdata from memory
         del tdata
         # Calculate time lenght
@@ -1692,26 +1687,43 @@ class TimeSeries:
         # Matrix initialisation
         self.windows_handover = []
         self.windows_rec = []
-
     # Direct decomposition of the time series for using at reconstruct_direct
-        if (self.rec_direct):
+        if (rec_direct):
             Nf = self.N
-            self.nfft=len(self.time)
-            logEvent("ERROR! WaveTools.py: performing a direct series decomposition")
-            self.decomp = decompose_tseries(self.time,self.eta,self.dt)
-            self.ai = self.decomp[1]
+            nfft=len(self.time)
+            logEvent("INFO: WaveTools.py: performing a direct series decomposition")
+            decomp = decompose_tseries(self.time,self.etaS,self.dt)
+            self.ai = decomp[1]
             ipeak = np.where(self.ai == max(self.ai))[0][0]
             imax = min(ipeak + Nf/2,len(self.ai))
             imin = max(0,ipeak - Nf/2)
             self.ai = self.ai[imin:imax]
-            self.omega = self.decomp[0][imin:imax]
-            self.phi = - self.decomp[2][imin:imax]
+            self.omega = decomp[0][imin:imax]
+            self.phi = - decomp[2][imin:imax]
             self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
             self.Nf = imax - imin
-            self.setup = self.decomp[3]
+            self.setup = decomp[3]
             self.kDir = np.zeros((len(self.ki),3),"d")
             for ii in range(len(self.ki)):
                 self.kDir[ii,:] = self.ki[ii]*self.waveDir[:]
+
+            for ij in range(self.Nf):
+                self.omega_c[ij] = self.omega[ij]
+                self.ki_c[ij]  =self.ki[ij]
+                self.tanh_c[ij] = np.tanh(self.ki[ij]*self.depth)
+                self.ai_c[ij] = self.ai[ij]
+                self.phi_c[ij] = self.phi[ij]
+                for kk in range(3):
+                    self.kDir_c[3*ij+kk] = self.kDir[ij,kk]
+            self.kDir_ = self.kDir_c
+            self.omega_ = self.omega_c
+            self.ki_  =self.ki_c
+            self.ai_ = self.ai_c
+            self.tanh_ = self.tanh_c
+            self.phi_ = self.phi_c
+
+
+
 
 
                 # Spectral windowing
@@ -1732,7 +1744,7 @@ class TimeSeries:
                 sys.exit(1)
 
             try:
-                self.windowName = window_params["Window"]
+                windowName = window_params["Window"]
             except:
                 logEvent("ERROR! WaveTools.py: Dictionary key 'Window' (window function type) not found in window_params dictionary")
                 sys.exit(1)
@@ -1744,7 +1756,7 @@ class TimeSeries:
 
 
             validWindows = [costap, tophat]
-            wind_filt =  loadExistingFunction(self.windowName, validWindows)
+            wind_filt =  loadExistingFunction(windowName, validWindows)
             logEvent("ERROR! WaveTools.py: performing series decomposition with spectral windows")
             # Portion of overlap, compared to window time
             try:
@@ -1772,10 +1784,10 @@ class TimeSeries:
             self.Nwindows = int( (self.tlength -   self.Twindow ) / (self.Twindow - self.Toverlap) ) + 1             #Getting the actual number of windows  (N-1) * (Twindow - Toverlap) + Twindow = total time
             self.Twindow = self.tlength/(1. + (1. - self.overlap)*(self.Nwindows-1))            # Correct Twindow and Toverlap for duration and integer number of windows
             self.Toverlap = self.overlap*self.Twindow
-            logEvent("ERROR! Wavetools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow / self.Tm) )
+            logEvent("INFO: Wavetools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow / self.Tm) )
             diff = (self.Nwindows-1.)*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
-            logEvent("ERROR! Wavetools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
-            logEvent("ERROR! Wavetools.py: Using %s windows for reconstruction with %s sec duration and %s per cent overlap" %(self.Nwindows, self.Twindow,100*self.overlap ))
+            logEvent("INFO: Wavetools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
+            logEvent("INFO: Wavetools.py: Using %s windows for reconstruction with %s sec duration and %s per cent overlap" %(self.Nwindows, self.Twindow,100*self.overlap ))
 # Setting where each window starts and ends
             for jj in range(self.Nwindows):
                 span = np.zeros(2,"d")
@@ -1795,15 +1807,15 @@ class TimeSeries:
                 span[1] = ispan2
 # Storing time series in windows and handover times
                 self.windows_handover.append( self.time[ispan2] - self.handover*self.Twindow )
-                self.windows_rec.append(np.array(zip(self.time[ispan1:ispan2],self.eta[ispan1:ispan2])))
+                self.windows_rec.append(np.array(zip(self.time[ispan1:ispan2],self.etaS[ispan1:ispan2])))
 # Decomposing windows to frequency domain
             self.decompose_window = []
 #            style = "k-"
 #            ii = 0
 
             for wind in self.windows_rec:
-                self.nfft=len(wind[:,0])
-                wind[:,1] *=wind_filt(self.nfft,cutoff = self.cutoff)
+                nfft=len(wind[:,0])
+                wind[:,1] *=wind_filt(nfft,cutoff = self.cutoff)
                 decomp = decompose_tseries(wind[:,0],wind[:,1],self.dt)
                 self.N = min(self.N, len(decomp[0]))
                 Nftemp = self.N
@@ -1837,7 +1849,22 @@ class TimeSeries:
                 self.decompose_window.append(decomp)
 
 
-        if(self.rec_direct):
+        #c++ declarations
+
+                for ii in range(len(self.windows_handover)):
+                    self.whand_c[ii] = self.windows_handover[ii]
+                self.whand_ = self.whand_c
+                
+
+
+        for ii in range(3):
+            self.x0_c[ii] = self.x0[ii]
+            self.waveDir_c[ii] = self.waveDir[ii]
+            self.vDir_c[ii] = self.vDir[ii]
+        self.x0_ = self.x0_c
+        self.waveDir_ = self.waveDir_c
+        self.vDir_ = self.vDir_c
+        if(rec_direct):
             self.eta = self.etaDirect
             self.u = self.uDirect
         else:
@@ -1861,6 +1888,11 @@ class TimeSeries:
         return {"TWindow":self.Twindow,"TOverlap":self.Toverlap,"Tlag":self.Tlag}
 
 
+    def _cpp_etaDirect(self,x,t):
+        return __cpp_etaDirect(x,self.x0_,t,self.kDir_,self.omega_,self.phi_,self.ai_,self.Nf)
+    def _cpp_uDirect(self,x,t):
+        return __cpp_uDirect(x,self.x0_,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,self.waveDir_, self.vDir_, self.tanh_)
+
     def etaDirect(self, x, t):
 
         """Calculates free surface elevation(Timeseries class-direct method
@@ -1877,12 +1909,11 @@ class TimeSeries:
             Free-surface elevation as a float
 
         """
-        Eta=0.
-        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
-
-        for ii in range(0,self.Nf):
-            Eta+= eta_mode(x1,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
-        return Eta
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        return self._cpp_etaDirect(xx,t)
 
     def uDirect(self, x, t):
         """Calculates wave velocity vector (Timeseries class-direct method)
@@ -1899,12 +1930,18 @@ class TimeSeries:
             Velocity vector as 1D array
 
         """
-        U=0.
-        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
-        for ii in range(0,self.Nf):
-            U+= vel_mode(x1, t-self.t0, self.kDir[ii],self.ki[ii], self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.vDir)
-        return U
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        U = np.zeros(3,)
+        cppUL = self._cpp_uDirect(xx,t)            
+        U[0] = cppUL[0]
+        U[1] = cppUL[1]
+        U[2] = cppUL[2]
 
+        return U
+ 
     def findWindow(self,t):
         """Returns the current spectral window in TimeSeries class."
 
@@ -1920,14 +1957,14 @@ class TimeSeries:
             Index of window as an integer
 
         """
-        term = 1. - self.handover
-        if t-self.time[0] >= term*self.Twindow:
-            Nw = min(int((t-self.time[0] - term*self.Twindow)/(self.Twindow - 2. * self.handover * self.Twindow)) + 1, self.Nwindows-1)
-            if t-self.time[0] < self.windows_handover[Nw-1] - self.time[0]:
-                Nw-=1
-        else:
-            Nw = 0
-        return Nw
+#        term = 1. - self.handover
+#        if t-self.time[0] >= term*self.Twindow:
+#            Nw = min(int((t-self.time[0] - term*self.Twindow)/(self.Twindow - 2. * self.handover * self.Twindow)) + 1, self.Nwindows-1)
+#            if t-self.time[0] < self.windows_handover[Nw-1] - self.time[0]:
+#                Nw-=1
+#        else:
+#            Nw = 0
+        return __cpp_findWindow(t,self.handover, self.t0,self.Twindow,self.Nwindows, self.whand_) #Nw
 
     def etaWindow(self, x, t):
         """Calculates free surface elevation(Timeseries class-window method
@@ -1951,7 +1988,7 @@ class TimeSeries:
         kDir = self.decompose_window[Nw][4]
         t0 = self.windows_rec[Nw][0,0]
         Eta=0.
-        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
+        x1 =  np.array(x)-self.x0
 
         for ii in range(0,self.Nf):
             Eta+= eta_mode(x1, t-t0, kDir[ii], omega[ii], phi[ii], ai[ii])
@@ -1986,7 +2023,7 @@ class TimeSeries:
         return U
 
 
-
+'''
 class RandomWavesFast(RandomWaves):
     """
     This class is used for generating plane random waves in an optimised manner
