@@ -22,6 +22,8 @@ __all__ = ['MonochromaticWaves',
            'RandomWavesFast',
            'RandomNLWaves',
            'RandomNLWavesFast',
+           'fastcos',
+           'fastcosh',
            'loadExistingFunction',
            'setVertDir',
            'loadExistingFunction',
@@ -45,7 +47,45 @@ __all__ = ['MonochromaticWaves',
            'decompose_tseries']
 
 
+def fastcos_test(phase):
+    """Fast cosine function with Taylor approximation - TO BE USED FOR TESTING"
+    Parameters
+    ----------
+    phase : double
+            Phase  
 
+    Returns
+    --------
+    cos(phi)
+
+    """
+    return fastcos(phase)
+def fastcosh_test(k,Z):
+    """Fast hyperbolic cosine function with Taylor approximation - TO BE USED FOR TESTING"
+    Parameters
+    ----------
+    phase : double
+            Phase  
+
+    Returns
+    --------
+    cos(phi)
+
+    """
+    return fastcosh(k,Z,True)
+def fastsinh_test(k,Z):
+    """Fast hyperbolic sine function with Taylor approximation - TO BE USED FOR TESTING"
+    Parameters
+    ----------
+    phase : double
+            Phase  
+
+    Returns
+    --------
+    cos(phi)
+
+    """
+    return fastcosh(k,Z,False)
 
 def loadExistingFunction(funcName, validFunctions):
     """Checks if a function name is known function and returns it
@@ -648,7 +688,6 @@ class  MonochromaticWaves:
         self.Nf = Nf
         self.Ycoeff = Ycoeff
         self.Bcoeff = Bcoeff
-        self.sinhF = np.zeros(Nf,"d")
         self.tanhF = np.zeros(Nf,"d")
 #Calculating / checking wavelength data
         if  waveType== "Linear":
@@ -665,9 +704,8 @@ class  MonochromaticWaves:
                 logEvent("ERROR! Wavetools.py: Ycoeff and Bcoeff must have the same length and equal to Nf and the 1st order harmonic must not be zero",level=0)
                 sys.exit(1)
             else:
-                for ii in range(len(self.sinhF)):
+                for ii in range(len(self.tanhF)):
                     kk = (ii+1)*self.k
-                    self.sinhF[ii] = float(np.sinh(kk*self.depth) )
                     self.tanhF[ii] = float(np.tanh(kk*self.depth) )
 
            
@@ -685,7 +723,7 @@ class  MonochromaticWaves:
 
 # C++ declarations
         
-        self.sinhL =float(np.sinh(self.k*self.depth))
+        self.tanhL =float(np.tanh(self.k*self.depth))
         for ij in range(3):
             self.kDir_c[ij] = self.kDir[ij]
             self.waveDir_c[ij] = self.waveDir[ij]
@@ -703,11 +741,9 @@ class  MonochromaticWaves:
             for ij in range(Nf):
                 self.Ycoeff_c[ij] = self.Ycoeff[ij]
                 self.Bcoeff_c[ij] = self.Bcoeff[ij]
-                self.sinh_c[ij] = self.sinhF[ij]
                 self.tanh_c[ij] = self.tanhF[ij]
             self.Ycoeff_ =  self.Ycoeff_c
             self.Bcoeff_ =  self.Bcoeff_c
-            self.sinhF_ = self.sinh_c
             self.tanhF_ = self.tanh_c
         
 
@@ -736,11 +772,11 @@ class  MonochromaticWaves:
     def  uLinear(self,  x,  t):
 
         
-        return __cpp_vel_mode(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.sinhL)
+        return __cpp_vel_mode(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.tanhL)
 
     def  uFenton(self,  x,  t):
         
-        return __cpp_uFenton(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_, self.sinhF_, self.tanhF_)
+        return __cpp_uFenton(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_, self.tanhF_)
 
     def eta(self,x,t):
         """Calculates free surface elevation (MonochromaticWaves class)
@@ -904,9 +940,9 @@ class RandomWaves:
                 logEvent('ERROR! Wavetools.py: Additional spectral parameters are not valid for the %s spectrum' %spectName)
                 sys.exit(1)
 
-        self.sinhF = np.zeros(N,"d")
+        self.tanhF = np.zeros(N,"d")
         for ii in range(self.N):
-            self.sinhF[ii] = float(np.sinh(self.ki[ii]*self.depth) )
+            self.tanhF[ii] = float(np.tanh(self.ki[ii]*self.depth) )
 
  
         self.ai = np.sqrt(2.*returnRectangles(self.Si_Jm,fim))
@@ -929,7 +965,7 @@ class RandomWaves:
                 self.kDir_c[3*ij+kk] = self.kDir[ij,kk]
             self.omega_c[ij] = self.omega[ij]
             self.ki_c[ij]  =self.ki[ij]
-            self.sinh_c[ij] = self.sinhF[ij]
+            self.tanh_c[ij] = self.tanhF[ij]
             self.ai_c[ij] = self.ai[ij]
             self.phi_c[ij] = self.phi[ij]
 
@@ -937,7 +973,7 @@ class RandomWaves:
         self.omega_ = self.omega_c
         self.ki_  =self.ki_c
         self.ai_ = self.ai_c
-        self.sinh_ = self.sinh_c
+        self.tanh_ = self.tanh_c
         self.phi_ = self.phi_c
 
 
@@ -969,7 +1005,7 @@ class RandomWaves:
 
     def _cpp_u(self,  x,  t):
 
-        return __cpp_uRandom(x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.N, self.waveDir_, self.vDir_, self.sinh_)
+        return __cpp_uRandom(x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.N, self.waveDir_, self.vDir_, self.tanh_)
 
     def u(self, x, t):
         """Calculates wave velocity vector (RandomWaves class)
@@ -1125,10 +1161,10 @@ class MultiSpectraRandomWaves:
         for nn in N:
             self.Nall+=nn
         if(self.Nall > 10000):
-            logEvent("ERROR! Wavetools.py: Maximum (number of frequencies) x (No of spectra) for MultispectraRandomWaves is 100000 ",level=0)
+            logEvent("ERROR! Wavetools.py: Maximum (number of frequencies) x (No of spectra) for MultispectraRandomWaves is 10000 ",level=0)
 
 
-        self.sinhFM = np.zeros(self.Nall,"d")
+        self.tanhFM = np.zeros(self.Nall,"d")
         self.omegaM = np.zeros(self.Nall,"d")
         self.kiM = np.zeros(self.Nall,"d")
         self.aiM = np.zeros(self.Nall,"d")
@@ -1155,7 +1191,7 @@ class MultiSpectraRandomWaves:
                 spectral_params[kk], #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                 phi[kk]
                 )
-            self.sinhFM[NN1:NN] = RW.sinhF
+            self.tanhFM[NN1:NN] = RW.tanhF
             self.omegaM[NN1:NN] = RW.omega
             self.kiM[NN1:NN] = RW.ki
             self.aiM[NN1:NN] = RW.ai
@@ -1172,7 +1208,7 @@ class MultiSpectraRandomWaves:
                 self.waveDir_cM[3*ij+kk] = self.kDirM[ij,kk] / self.kiM[ij]
             self.omega_cM[ij] = self.omegaM[ij]
             self.ki_cM[ij]  =self.kiM[ij]
-            self.sinh_cM[ij] = self.sinhFM[ij]
+            self.tanh_cM[ij] = self.tanhFM[ij]
             self.ai_cM[ij] = self.aiM[ij]
             self.phi_cM[ij] = self.phiM[ij]
 
@@ -1180,7 +1216,7 @@ class MultiSpectraRandomWaves:
         self.omegaM_ = self.omega_cM
         self.kiM_  =self.ki_cM
         self.aiM_ = self.ai_cM
-        self.sinhM_ = self.sinh_cM
+        self.tanhM_ = self.tanh_cM
         self.phiM_ = self.phi_cM
         self.waveDirM_ =  self.waveDir_cM
 
@@ -1212,7 +1248,7 @@ class MultiSpectraRandomWaves:
 
     def _cpp_u(self,  x,  t):
 
-        return __cpp_uRandom(x,t,self.kDirM_, self.kiM_, self.omegaM_,self.phiM_,self.aiM_,self.mwl,self.depth, self.Nall, self.waveDirM_, self.vDir_, self.sinhM_)
+        return __cpp_uDir(x,t,self.kDirM_, self.kiM_, self.omegaM_,self.phiM_,self.aiM_,self.mwl,self.depth, self.Nall, self.waveDirM_, self.vDir_, self.tanhM_)
 
     def u(self, x, t):
         """Calculates wave velocity vector (RandomWaves class)
@@ -1299,7 +1335,7 @@ class DirectionalWaves:
             Type: boolean
 
     """
-    def __init__(self,
+    def __cinit__(self,
                  M,  #half bin of frequencies
                  Tp, # np array with
                  Hs, #
@@ -1319,8 +1355,13 @@ class DirectionalWaves:
         validSpread = [cos2s,mitsuyasu]
         spread_fun =  loadExistingFunction(spreadName, validSpread)
         self.Mtot = 2*M+1
+        self.N = N
+        self.Nall = self.Mtot*self.N
         self.waveDir0 = setDirVector(waveDir0)
         self.vDir = setVertDir(g)
+        if(self.Nall > 100000):
+            logEvent("ERROR! Wavetools.py: Maximum (number of frequencies) x (No of spectra) for DirectionalWaves is 100000 ",level=0)
+
 
 
  # Loading Random waves to get the frequency array the wavelegnths and the frequency spectrum
@@ -1395,13 +1436,44 @@ class DirectionalWaves:
             Si_Sp[:,ii]*= RW.Si_Jm[ii]
     # Creating amplitudes spectrum
         self.aiDirs[:] = np.sqrt(2.*returnRectangles3D(Si_Sp,theta_m,RW.fim))
-        self.N = N
-        self.ki = RW.ki
-        self.omega = RW.omega
         self.mwl = mwl
         self.depth = depth
+        self.kDirs = np.zeros((self.N, self.Mtot, 3),"d")
+        for nn in range(self.N):
+            for mm in range(self.Mtot):
+                self.kDirs[nn,mm,:] = RW.ki[nn]*self.waveDirs[mm,:]
+
+        for ij in range(3):
+            self.vDir_c[ij] = self.vDir[ij]
+        self.vDir_ =  self.vDir_c
+
+        
+        for nn in range(self.N):
+            for mm in range(self.Mtot):
+                ij = nn * self.Mtot + mm
+                self.ai_c[ij] = self.aiDirs[mm,nn]                
+                self.phi_c[ij] = self.phiDirs[mm,nn]
+                self.omega_c[ij] = RW.omega[nn]
+                self.ki_c[ij]  =RW.ki[nn]
+                self.tanh_c[ij] = RW.tanhF[nn]
+                for kk in range(3):
+                    self.kDir_c[3*ij+kk] = self.kDirs[nn,mm,kk]
+                    self.waveDir_c[3*ij+kk] = self.waveDirs[mm,kk] 
+
+        self.kDir_ = self.kDir_c
+        self.omega_ = self.omega_c
+        self.ki_  =self.ki_c
+        self.ai_ = self.ai_c
+        self.tanh_ = self.tanh_c
+        self.phi_ = self.phi_c
+        self.waveDir_ =  self.waveDir_c
+        
+    def _cpp_eta(self,  x,  t):
+
+        return __cpp_etaRandom(x,t,self.kDir_, self.omega_,self.phi_,self.ai_, self.Nall)
+
     def eta(self, x, t):
-        """Calculates free surface elevation (DirectionalWaves class)
+        """Calculates free surface elevation (RandomWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1415,16 +1487,18 @@ class DirectionalWaves:
             Free-surface elevation as a float
 
         """
-        Eta=0.
-        for jj in range(self.Mtot):
-            for ii in range(self.N):
-                kDiri = self.waveDirs[jj]*self.ki[ii]
-                Eta+= eta_mode(x,t,kDiri,self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii])
-        return Eta
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        return self._cpp_eta(xx,t)
 
+    def _cpp_u(self,  x,  t):
+
+        return __cpp_uDir(x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.Nall, self.waveDir_, self.vDir_, self.tanh_)
 
     def u(self, x, t):
-        """Calculates wave velocity vector (Directional class).
+        """Calculates wave velocity vector (RandomWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1438,13 +1512,19 @@ class DirectionalWaves:
             Velocity vector as 1D array
 
         """
-        U=0.
-        for jj in range(self.Mtot):
-            for ii in range(self.N):
-                kDiri = self.waveDirs[jj]*self.ki[ii]
-                U+= vel_mode(x,t,kDiri, self.ki[ii],self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii],self.mwl,self.depth,self.vDir)
-        return U
 
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        U = np.zeros(3,)
+        cppUL = self._cpp_u(xx,t)            
+        U[0] = cppUL[0]
+        U[1] = cppUL[1]
+        U[2] = cppUL[2]
+
+        return U
+       
 
 
 

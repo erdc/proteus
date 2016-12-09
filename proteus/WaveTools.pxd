@@ -5,24 +5,25 @@
 cimport cython
 from libc.math cimport tanh, sqrt, exp, log, sin, cos, cosh, sinh, M_PI #from math import pi, tanh, sqrt, exp, log, sin, cos, cosh, sinh
 cimport numpy as np
-
+from libcpp cimport bool
 
 cdef extern from "WaveTools.h" namespace "proteus":
     cdef const int nDim
+    cdef double fastcosh(double k, double Z,  bool cosh)
+    cdef double fastcos(double phase)
     cdef double __cpp_eta_mode(double* x, double t, double* kDir, double omega, double phi, double amplitude)
-    cdef double* __cpp_vel_mode(double* x, double t, double* kDir, double kAbs, double omega, double phi, double amplitude, double mwl, double depth, double* waveDir, double* vDir, double sinhL)
+    cdef double* __cpp_vel_mode(double* x, double t, double* kDir, double kAbs, double omega, double phi, double amplitude, double mwl, double depth, double* waveDir, double* vDir, double tanhkd)
     cdef double __cpp_etaFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, int Nf, double* Ycoeff)
-    cdef double* __cpp_uFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, double mwl, double depth,double gAbs, int Nf, double* Bcoeff, double* mV, double* waveDir, double* vDir, double* sinhF, double* tanhF)
+    cdef double* __cpp_uFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, double mwl, double depth,double gAbs, int Nf, double* Bcoeff, double* mV, double* waveDir, double* vDir, double* tanhF)
     cdef double __cpp_etaRandom(double* x, double t, double* kDir, double* omega, double* phi, double* amplitude, int N)
-    cdef double* __cpp_uRandom(double* x,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* sinhF )
+    cdef double* __cpp_uRandom(double* x,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd )
+    cdef double* __cpp_uDir(double* x,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd )
 
 # pointer to eta function
 ctypedef double (*cfeta) (MonochromaticWaves, double* , double )  
 
 # pointer to velocity function
 ctypedef double* (*cfvel) (MonochromaticWaves, double* , double )
-
-ctypedef double[:] double_memview1
 
 
 
@@ -36,12 +37,11 @@ cdef class  MonochromaticWaves:
     cdef double omega
     cdef double k
     cdef double phi0
-    cdef double sinhL
+    cdef double tanhL
     cdef int Nf
     cdef np.ndarray Ycoeff
     cdef np.ndarray Bcoeff
     cdef np.ndarray kDir
-    cdef np.ndarray sinhF
     cdef np.ndarray tanhF
     cdef double amplitude
     cdef np.ndarray mV    
@@ -51,7 +51,6 @@ cdef class  MonochromaticWaves:
     cdef double* mV_    
     cdef double* Ycoeff_
     cdef double* Bcoeff_
-    cdef double* sinhF_
     cdef double* tanhF_
     cdef double[3] kDir_c
     cdef double[3] waveDir_c
@@ -59,7 +58,6 @@ cdef class  MonochromaticWaves:
     cdef double[3] mV_c    
     cdef double[1000] Ycoeff_c
     cdef double[1000] Bcoeff_c
-    cdef double[1000] sinh_c
     cdef double[1000] tanh_c
     cdef public:
         double wavelength
@@ -86,11 +84,10 @@ cdef class RandomWaves:
     cdef double df
     cdef int N
     cdef np.ndarray kDir
-    cdef np.ndarray sinhF
     cdef np.ndarray ai
     cdef double* waveDir_
     cdef double* vDir_
-    cdef double* sinh_
+    cdef double* tanh_
     cdef double* ai_
     cdef double* phi_
     cdef double* omega_
@@ -102,7 +99,7 @@ cdef class RandomWaves:
     cdef double[10000] omega_c
     cdef double[10000] ki_c
     cdef double[10000] ai_c
-    cdef double[10000] sinh_c
+    cdef double[10000] tanh_c
     cdef double[10000] phi_c
     cdef public:
         double mwl
@@ -111,6 +108,7 @@ cdef class RandomWaves:
         np.ndarray Si_Jm
         np.ndarray ki
         np.ndarray omega
+        np.ndarray tanhF
     cdef double _cpp_eta(self, double* x, double t)
     cdef double* _cpp_u(self, double* x, double t)
 
@@ -126,14 +124,14 @@ cdef class MultiSpectraRandomWaves:
     cdef np.ndarray phiM
     cdef np.ndarray kiM
     cdef np.ndarray kDirM
-    cdef np.ndarray sinhFM
+    cdef np.ndarray tanhFM
     cdef np.ndarray aiM
     cdef double * vDir_
     cdef double* omegaM_
     cdef double* phiM_
     cdef double* kiM_
     cdef double* kDirM_
-    cdef double* sinhM_
+    cdef double* tanhM_
     cdef double* waveDirM_
     cdef double* aiM_
     cdef double[3] vDir_c
@@ -142,7 +140,7 @@ cdef class MultiSpectraRandomWaves:
     cdef double[10000] omega_cM
     cdef double[10000] ki_cM
     cdef double[10000] ai_cM
-    cdef double[10000] sinh_cM
+    cdef double[10000] tanh_cM
     cdef double[10000] phi_cM
     cdef public:
         double mwl
@@ -150,3 +148,38 @@ cdef class MultiSpectraRandomWaves:
     cdef double _cpp_eta(self, double* x, double t)
     cdef double* _cpp_u(self, double* x, double t)
 
+cdef class DirectionalWaves:
+    cdef int Nall
+    cdef int Mtot
+    cdef int N
+    cdef np.ndarray vDir
+    cdef np.ndarray omega
+    cdef np.ndarray tanh
+    cdef np.ndarray waveDir0
+    cdef np.ndarray waveDirs
+    cdef np.ndarray phiDirs
+    cdef np.ndarray aiDirs
+    cdef np.ndarray ki
+    cdef np.ndarray kDirs
+    cdef np.ndarray tanhF
+    cdef double * vDir_
+    cdef double* omega_
+    cdef double* phi_
+    cdef double* ki_
+    cdef double* kDir_
+    cdef double* tanh_
+    cdef double* waveDir_
+    cdef double* ai_
+    cdef double[3] vDir_c
+    cdef double[300000] kDir_c
+    cdef double[300000] waveDir_c
+    cdef double[100000] omega_c
+    cdef double[100000] ki_c
+    cdef double[100000] ai_c
+    cdef double[100000] tanh_c
+    cdef double[100000] phi_c
+    cdef public:
+        double mwl
+        double depth
+    cdef double _cpp_eta(self, double* x, double t)
+    cdef double* _cpp_u(self, double* x, double t)
