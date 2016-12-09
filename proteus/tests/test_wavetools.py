@@ -1018,7 +1018,6 @@ class VerifyDirectionals(unittest.TestCase):
         CB.set_label("$\eta$ (m)",size = 20)
         plt.savefig("Contour.png")
 """
-'''
 
 
 
@@ -1393,7 +1392,7 @@ class VerifyTimeSeries(unittest.TestCase):
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
         self.assertTrue(err<1e-2 )
 
-
+'''
 class CheckRandomWavesFastFailureModes(unittest.TestCase):
     def testRandomWavesFastFailure(self):
         from proteus.WaveTools import RandomWavesFast
