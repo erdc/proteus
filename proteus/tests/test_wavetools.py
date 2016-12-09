@@ -8,6 +8,9 @@ import sys,os
 import logging
 #import pytest
 
+import cython
+
+
 comm = Comm.init()
 Profiling.procID = comm.rank()
 def getpath():
@@ -21,6 +24,54 @@ def getpath():
 
 Profiling.logEvent("Testing WaveTools")
 class TestAuxFunctions(unittest.TestCase):
+    def testFastCos(self):
+        from proteus.WaveTools import fastcos_test
+        RMS = 0.
+        MaxErr = 0.
+        for ii in range(1,1001):
+            phase = 2*pi/float(ii)
+            RMS += (cos(phase) - fastcos_test(phase))**2
+            MaxErr = max(MaxErr, abs(cos(phase) - fastcos_test(phase)))
+        RMS /=1000.
+        RMS = np.sqrt(RMS)
+        self.assertTrue(RMS<1e-04)
+        self.assertTrue(MaxErr<1e-3)
+    def testFastCosh(self):
+        from proteus.WaveTools import fastcosh_test
+        RMS = 0.
+        maxErr = 0.
+        ll = 5.
+        k = 2*pi/ll
+        d = 5.
+        mwl = 0.
+        for ii in range(0,1001):
+            Z  = -float(ii)/1000.*d
+            err = (cosh(k*Z) - fastcosh_test(k,Z))/cosh(k*Z)
+            RMS += err**2
+            maxErr = max(maxErr, abs(err))
+        RMS /=1000.
+        RMS = np.sqrt(RMS)
+        self.assertTrue(RMS<3e-02)
+        self.assertTrue(maxErr<4e-2)
+    def testFastSinh(self):
+        from proteus.WaveTools import fastsinh_test
+        RMS = 0.
+        maxErr = 0.
+        ll = 5.
+        k = 2*pi/ll
+        d = 5.
+        mwl = 0.
+        for ii in range(0,1001):
+            Z  = -float(ii)/1000.*d
+            err = (sinh(k*Z) - fastsinh_test(k,Z))/(cosh(k*Z))
+            RMS += err**2
+            maxErr = max(maxErr, abs(err))
+        RMS /=1000.
+        RMS = np.sqrt(RMS)
+        self.assertTrue(RMS<3e-2)
+        self.assertTrue(maxErr<8e-2)
+
+
     def testVDir(self):
         from proteus.WaveTools import setVertDir
         self.assertTrue(np.array_equal(setVertDir(np.array([0,-9.81,0])), np.array([0,1,0])))
@@ -305,8 +356,8 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         from proteus.WaveTools import MonochromaticWaves
         import random
 # Wave direction, random in x,y plane
-        period = 1
-        waveHeight = 0.15
+        period = 2.
+        waveHeight = 1.
         mwl = 4.5
         depth = 0.9
         g = np.array([0,0,-9.81])
@@ -337,15 +388,20 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         uyRef = normDir[1]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
         uzRef = amp*omega*sinh(kw*(z0+depth))*sin(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
         
+
         err = abs(eta/etaRef - 1.)
         err_x = abs(ux/uxRef - 1.)
         err_y = abs(uy/uyRef - 1.)
         err_z = abs(uz/uzRef - 1.)
+        Uo = waveHeight * omega * tanh(kw*depth)
+        Uoz = waveHeight * omega
 
-        self.assertTrue(round(err,2) == 0. )
-        self.assertTrue(round(err_x,2) == 0. )
-        self.assertTrue(round(err_y,2) == 0. )
-        self.assertTrue(round(err_y,2) == 0. )
+        print ux,uy,uz
+        print uxRef,uyRef,uzRef
+        self.assertTrue((err <= 0.01) or ( abs(eta/Hs)<1e-2  ))
+        self.assertTrue((err_x <= 0.01) or (abs(ux/Uo)<1e-2 ))
+        self.assertTrue((err_y <= 0.01) or (abs(uy/Uo)<1e-2  ))
+        self.assertTrue((err_z <= 0.01) or (abs(uz/Uoz)<1e-2 ))
 
 class VerifyMonoChromaticFentonWaves(unittest.TestCase):
 #Fenton methodology equations at http://johndfenton.com/Papers/Fenton88-The-numerical-solution-of-steady-water-wave-problems.pdf
@@ -398,16 +454,19 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
             uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
             uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
 
-        Uo = waveHeight * omega
 
         err = abs(eta/etaRef - 1.)
         err_x = abs(ux/uxRef - 1.)
         err_y = abs(uy/uyRef - 1.)
         err_z = abs(uz/uzRef - 1.)
-        self.assertTrue((err <= 0.01) or ((eta/Hs)<1e-3 and (etaRef/Hs)<1e-3) )
-        self.assertTrue((err_x <= 0.01) or ((ux/Uo)<1e-3 and (uxRef/Uo)<1e-3) )
-        self.assertTrue((err_y <= 0.01) or ((uy/Uo)<1e-3 and (uyRef/Uo)<1e-3) )
-        self.assertTrue((err_z <= 0.01) or ((uz/Uo)<1e-3 and (uzRef/Uo)<1e-3) )
+        Uo = waveHeight * omega * tanh(kw*depth)
+        Uoz = waveHeight * omega
+
+
+        self.assertTrue((err <= 0.01) or ( abs(eta/Hs)<1e-2  ))
+        self.assertTrue((err_x <= 0.01) or (abs(ux/Uo)<1e-2 ))
+        self.assertTrue((err_y <= 0.01) or (abs(uy/Uo)<1e-2  ))
+        self.assertTrue((err_z <= 0.01) or (abs(uz/Uoz)<1e-2 ))
 
         
 #========================================= RANDOM WAVES ======================================
@@ -543,15 +602,11 @@ class VerifyRandomWaves(unittest.TestCase):
         Uo = Hs * 2.*pi*tanh(kp*depth)/Tp
         Uoz = Hs * 2.*pi/Tp
 
-        print " "
-        print x,y,z
-        print etaRef,uxRef/Uo, uyRef/Uo, uzRef/Uo
-        print eta, ux/Uo, uy/Uo, uz/Uoz
-        print err, err_x, err_y, err_z
-        self.assertTrue((err <= 0.1) or ( abs(eta/Hs)<1e-1  ))
-        self.assertTrue((err_x <= 0.1) or (abs(ux/Uo)<1e-1 ))
-        self.assertTrue((err_y <= 0.1) or (abs(uy/Uo)<1e-1  ))
-        self.assertTrue((err_z <= 0.1) or (abs(uz/Uoz)<1e-1 ))
+
+        self.assertTrue((err <= 0.01) or ( abs(eta/Hs)<1e-2  ))
+        self.assertTrue((err_x <= 0.01) or (abs(ux/Uo)<1e-2 ))
+        self.assertTrue((err_y <= 0.01) or (abs(uy/Uo)<1e-2  ))
+        self.assertTrue((err_z <= 0.01) or (abs(uz/Uoz)<1e-2 ))
 
         # Asserting write function from Random waves
         x0 = np.array([0,0,0])
@@ -707,6 +762,7 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
         dir1 = 2*random.random() - 1
         dir2 = 2*random.random() - 1
         waveDir = np.array([dir1,dir2, 0])
+        waveDir2 = np.array([2.*dir1,dir2, 0])
         N = 100
         phi = np.random.rand(N)
         gamma = 1.2
@@ -731,8 +787,23 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
             spectral_params =  {"gamma": gamma, "TMA": TMA,"depth": depth},
             phi = phi
     )
+        a2= RandomWaves(
+            Tp,
+            Hs,
+            mwl,#m significant wave height
+            depth ,           #m depth
+            waveDir2,
+            g,      #peak  frequency
+            N,
+            bandFactor,         #accelerationof gravity
+            spectName,
+            spectral_params =  {"gamma": gamma, "TMA": TMA,"depth": depth},
+            phi = phi
+    )
         eta = a.eta([x, y, z], t)
         ux, uy, uz = a.u([x, y, z], t)
+        etaa = a2.eta([x, y, z], t)
+        uxa, uya, uza = a2.u([x, y, z], t)
 
 #Doubling the spectral properties
         aa= MultiSpectraRandomWaves(
@@ -741,7 +812,7 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
             [Hs,Hs],
             mwl,#m significant wave height
             depth ,           #m depth
-            [waveDir,waveDir],
+            [waveDir,waveDir2],
             g,      #peak  frequency
             np.array([N,N]),
             [bandFactor,bandFactor],         #accelerationof gravity
@@ -751,11 +822,11 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
     )
         eta2 = aa.eta([x, y, z], t)
         ux2, uy2, uz2 = aa.u([x, y, z], t)
-        print 2.*eta, eta2
-        self.assertTrue(round(2.*eta,8) == round(eta2,8))
-        self.assertTrue(round(2.*ux,8) == round(ux2,8))
-        self.assertTrue(round(2.*uy,8) == round(uy2,8))
-        self.assertTrue(round(2.*uz,8) == round(uz2,8))
+#        print 2.*eta, eta2
+        self.assertTrue(round(etaa + eta,8) == round(eta2,8))
+        self.assertTrue(round(uxa + ux,8) == round(ux2,8))
+        self.assertTrue(round(uya + uy,8) == round(uy2,8))
+        self.assertTrue(round(uza + uz,8) == round(uz2,8))
 # Testing with 5 spectra
         aa= MultiSpectraRandomWaves(
             5,
@@ -783,18 +854,18 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
 class CheckDirectionalWaveFailures(unittest.TestCase):
     def testFailureModes(self):
         from proteus.WaveTools import DirectionalWaves
-        DirectionalWaves(200,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"s":10}, phi = None, phiSymm = False  )
+        DirectionalWaves(20,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),10,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"s":10}, phi = None, phiSymm = False  )
        # Putting a silly name
         with self.assertRaises(SystemExit) as cm1:
-            DirectionalWaves(200,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", "aaaargh", spectral_params= None, spread_params = {"s":10}, phi = None, phiSymm = False  )
+            DirectionalWaves(20,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),10,2.,"JONSWAP", "aaaargh", spectral_params= None, spread_params = {"s":10}, phi = None, phiSymm = False  )
         self.assertEqual(cm1.exception.code, 1 )
        # Putting incorrect phi
         with self.assertRaises(SystemExit) as cm2:
-            DirectionalWaves(200,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"s":10}, phi = np.zeros(15,), phiSymm = False  )
+            DirectionalWaves(20,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),10,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"s":10}, phi = np.zeros(15,), phiSymm = False  )
         self.assertEqual(cm2.exception.code, 1 )
         #putting non existent parameters
         with self.assertRaises(SystemExit) as cm3:
-            DirectionalWaves(200,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"blah":10}, phi = None, phiSymm = False  )
+            DirectionalWaves(20,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),10,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"blah":10}, phi = None, phiSymm = False  )
         self.assertEqual(cm3.exception.code, 1 )
 
 
@@ -864,6 +935,7 @@ class VerifyDirectionals(unittest.TestCase):
         dth = pi/(2*M)
         df = (fmax-fmin)/(N - 1 )
         ki = dispersion(2*pi*fi,depth)
+        kp = dispersion(2*pi/Tp,depth)
         waveDirs = np.zeros((2*M+1,3),)
         for jj in range(2*M+1):
             waveDirs[jj,:] = np.array([cos(thetas[jj]),sin(thetas[jj]),0])
@@ -891,10 +963,23 @@ class VerifyDirectionals(unittest.TestCase):
                 uxRef += normDir[0]*ai[jj,ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) *cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
                 uyRef += normDir[1]*ai[jj,ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
                 uzRef +=  ai[jj,ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
-        self.assertTrue(round(eta,8) == round(etaRef,8) )
-        self.assertTrue(round(ux,8) == round(uxRef,8)   )
-        self.assertTrue(round(uy,8) == round(uyRef,8)   )
-        self.assertTrue(round(uz,8) == round(uzRef,8)   )
+        print eta,etaRef
+        print ux,uxRef
+
+        err = abs(eta/etaRef - 1.)
+        err_x =abs(ux/uxRef - 1.)
+        err_y =abs(uy/uyRef - 1.)
+        err_z =abs(uz/uzRef - 1.)
+
+
+        Uo = Hs * 2.*pi*tanh(kp*depth)/Tp
+        Uoz = Hs * 2.*pi/Tp
+
+
+        self.assertTrue((err <= 0.01) or ( abs(eta/Hs)<1e-2  ))
+        self.assertTrue((err_x <= 0.01) or (abs(ux/Uo)<1e-2 ))
+        self.assertTrue((err_y <= 0.01) or (abs(uy/Uo)<1e-2  ))
+        self.assertTrue((err_z <= 0.01) or (abs(uz/Uoz)<1e-2 ))
 
 
 
