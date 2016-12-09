@@ -209,7 +209,7 @@ namespace proteus
 
 
       
- };
+ }
 
 
  
@@ -273,7 +273,8 @@ namespace proteus
 
 
       
- };
+ }
+//---------------------------------------------------------Directional RANDOM / Velocity-------------------------------------------------------------------------
 
  inline double* __cpp_uDir(double x[nDim],double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double vDir[nDim], double* tanhF )
 
@@ -314,10 +315,58 @@ namespace proteus
 	delete [] Uf;
 
 
-      
- };
+      }    
+ 
+//---------------------------------------------------------Time series/ Velocity-------------------------------------------------------------------------
+
+ inline int __cpp_findWindow(double t, double handover, double t0, double Twindow, int Nwindows, double* windows_handover)
+ {
+  double term = 1. - handover;
+  int Nw = 0;
+    if (t-t0 >= term*Twindow)
+    {
+      Nw = std::min(int((t-t0 - term*Twindow)/(Twindow - 2. * handover * Twindow)) + 1, Nwindows-1);
+      if (t-t0 < windows_handover[Nw-1] - t0)
+	{
+	  Nw =Nw - 1;
+	}
+    }
+    return Nw;
+ }
+
+
+inline double __cpp_etaDirect(double x[nDim], double x0[nDim], double t, double* kDir, double* omega, double* phi, double* amplitude, int N)
+
+
+      {
+	x[0] = x[0] - x0[0];
+	x[1] = x[1] - x0[1];
+	x[2] = x[2] - x0[2];
+
+	return __cpp_etaRandom(x,  t,  kDir,  omega,  phi,  amplitude,  N); 
+      }
+   
+ inline double* __cpp_uDirect(double* x, double* x0, double t, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd )
 
 
 
-}
+ {
+	x[0] = x[0] - x0[0];
+	x[1] = x[1] - x0[1];
+	x[2] = x[2] - x0[2];
+
+	return __cpp_uRandom(x, t,  kDir,  kAbs,  omega,  phi,  amplitude,  mwl,  depth,  N,  waveDir,  vDir,  tanhKd );
+
+	  }
+
+
+
+
+
+
+
+
+};      
+       
+
 #endif

@@ -18,7 +18,9 @@ cdef extern from "WaveTools.h" namespace "proteus":
     cdef double __cpp_etaRandom(double* x, double t, double* kDir, double* omega, double* phi, double* amplitude, int N)
     cdef double* __cpp_uRandom(double* x,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd )
     cdef double* __cpp_uDir(double* x,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd )
-
+    cdef int __cpp_findWindow(double t, double handover, double t0, double Twindow, int Nwindows, double* windows_handover)
+    cdef double __cpp_etaDirect(double* x, double* x0, double t, double* kDir, double* omega, double* phi, double* amplitude, int N)
+    cdef double* __cpp_uDirect(double* x,double* x0,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd )
 # pointer to eta function
 ctypedef double (*cfeta) (MonochromaticWaves, double* , double )  
 
@@ -183,3 +185,73 @@ cdef class DirectionalWaves:
         double depth
     cdef double _cpp_eta(self, double* x, double t)
     cdef double* _cpp_u(self, double* x, double t)
+
+cdef class  TimeSeries:
+    cdef np.ndarray g
+    cdef np.ndarray waveDir
+    cdef np.ndarray vDir
+    cdef double gAbs
+    cdef double depth
+    cdef int N
+    cdef np.ndarray x0
+    cdef np.ndarray kDir
+    cdef np.ndarray tanhF
+    cdef np.ndarray time
+    cdef np.ndarray etaS
+    cdef np.ndarray ai
+    cdef np.ndarray omega
+    cdef np.ndarray phi
+    cdef np.ndarray ki
+    cdef int Nf
+    cdef int Nwaves
+    cdef double Tm
+    cdef double overlap
+    cdef double cutoff
+    cdef double setup
+    cdef double handover
+    cdef double Twindow
+    cdef double Tlag
+    cdef double Toverlap
+    cdef int Nwindows
+    cdef list windows_handover
+    cdef list windows_rec
+    cdef list decompose_window
+    cdef double dt
+    cdef double t0
+    cdef double tlength
+    cdef np.ndarray mV    
+    cdef double* kDir_
+    cdef double* waveDir_
+    cdef double* vDir_
+    cdef double* tanh_
+    cdef double* whand_
+    cdef double* ai_
+    cdef double* omega_
+    cdef double* phi_
+    cdef double* ki_
+    cdef double[3] x0_
+    cdef double[3000000] kDir_c
+    cdef double[1000000] ki_c
+    cdef double[1000000] ai_c
+    cdef double[1000000] omega_c
+    cdef double[1000000] phi_c
+    cdef double[1000000] tanh_c
+    cdef double[3] waveDir_c
+    cdef double[3] vDir_c
+    cdef double[3] x0_c
+    cdef double[1000000] whand_c
+    cdef public:
+        double wavelength
+        double mwl
+        object eta
+        object u
+    cdef double _cpp_etaDirect(self, double* x, double t) 
+    cdef double* _cpp_uDirect(self, double* x, double t) 
+
+#   cdef  cfeta _cpp_eta
+ #   cdef  cfvel _cpp_u
+ #   cdef object waveType
+ 
+ #   cdef double etaFenton(self, double* x, double t)
+ #   cdef double* uLinear(self, double* x, double t)
+ #   cdef double* uFenton(self, double* x, double t)
