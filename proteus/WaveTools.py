@@ -47,7 +47,7 @@ __all__ = ['MonochromaticWaves',
            'decompose_tseries']
 
 
-def fastcos_test(phase):
+def fastcos_test(phase,sinus=False):
     """Fast cosine function with Taylor approximation - TO BE USED FOR TESTING"
     Parameters
     ----------
@@ -59,6 +59,8 @@ def fastcos_test(phase):
     cos(phi)
 
     """
+    if(sinus):
+        phase = np.pi/2. - phase
     return fastcos(phase)
 def fastcosh_test(k,Z):
     """Fast hyperbolic cosine function with Taylor approximation - TO BE USED FOR TESTING"
@@ -86,6 +88,12 @@ def fastsinh_test(k,Z):
 
     """
     return fastcosh(k,Z,False)
+
+def coshkzd_test(k,Z,d):
+    return fastcosh_test(k,Z) / np.tanh(k*d) + fastsinh_test(k,Z)
+
+def sinhkzd_test(k,Z,d):
+    return fastcosh_test(k,Z) + fastsinh_test(k,Z) / np.tanh(k*d)
 
 def loadExistingFunction(funcName, validFunctions):
     """Checks if a function name is known function and returns it
@@ -1448,9 +1456,9 @@ class DirectionalWaves:
         self.vDir_ =  self.vDir_c
 
         
-        for nn in range(self.N):
-            for mm in range(self.Mtot):
-                ij = nn * self.Mtot + mm
+        for mm in range(self.Mtot):
+            for nn in range(self.N):
+                ij = mm * self.N + nn
                 self.ai_c[ij] = self.aiDirs[mm,nn]                
                 self.phi_c[ij] = self.phiDirs[mm,nn]
                 self.omega_c[ij] = RW.omega[nn]
