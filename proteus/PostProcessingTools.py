@@ -15,6 +15,7 @@ import cpostprocessing
 from .Profiling import logEvent
 import Norms
 import Archiver
+from warnings import warn
 
 def VelocityPostProcessingChooser(transport):
     """
@@ -288,7 +289,6 @@ class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
             try:
                 self.elementBarycenters = self.vt.mesh.elementBarycentersArray
             except:
-                from warnings import warn
                 warn("Element Barcyenters should be in mesh, this code will not work with moving mesh")
                 self.elementBarycenters = numpy.zeros((self.vt.mesh.nElements_global,3),
                                                     'd')
@@ -2900,7 +2900,6 @@ class VelocityPostProcessor_Original:
                     try:
                         self.elementBarycenters = self.vt.mesh.elementBarycentersArray
                     except:
-                        from warnings import warn
                         warn("Element Barcyenters should be in mesh, this code will not work with moving mesh")
                         self.elementBarycenters = numpy.zeros((self.vt.mesh.nElements_global,3),
                                                             'd')
