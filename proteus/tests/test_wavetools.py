@@ -354,6 +354,10 @@ class CheckMonochromaticWavesFailures(unittest.TestCase):
 class VerifyMonoChromaticLinearWaves(unittest.TestCase):
     def testLinear(self):
         from proteus.WaveTools import MonochromaticWaves
+        from proteus.WaveTools import fastcos_test as fcos
+        from proteus.WaveTools import coshkzd_test as fcosh
+        from proteus.WaveTools import sinhkzd_test as fsinh
+        
         import random
 # Wave direction, random in x,y plane
         period = 2.
@@ -382,26 +386,22 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         normDir = setDirVector(waveDir)
         amp = 0.5 * waveHeight
 # Flow equation from Wikipedia, Airy wave theory https://en.wikipedia.org/wiki/Airy_wave_theoryhttps://en.wikipedia.org/wiki/Airy_wave_theory
-        etaRef = amp*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
+        etaRef = amp*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
         z0 = z - mwl
-        uxRef = normDir[0]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
-        uyRef = normDir[1]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
-        uzRef = amp*omega*sinh(kw*(z0+depth))*sin(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
+        
+        uxRef = normDir[0]*amp*omega*fcosh(kw,z0,depth)*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
+        uyRef = normDir[1]*amp*omega*fcosh(kw,z0,depth)*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
+        uzRef = amp*omega*fsinh(kw,z0,depth)*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0,True)
         
 
         err = abs(eta/etaRef - 1.)
         err_x = abs(ux/uxRef - 1.)
         err_y = abs(uy/uyRef - 1.)
         err_z = abs(uz/uzRef - 1.)
-        Uo = waveHeight * omega * tanh(kw*depth)
-        Uoz = waveHeight * omega
-
-        print ux,uy,uz
-        print uxRef,uyRef,uzRef
-        self.assertTrue((err <= 0.01) or ( abs(eta/Hs)<1e-2  ))
-        self.assertTrue((err_x <= 0.01) or (abs(ux/Uo)<1e-2 ))
-        self.assertTrue((err_y <= 0.01) or (abs(uy/Uo)<1e-2  ))
-        self.assertTrue((err_z <= 0.01) or (abs(uz/Uoz)<1e-2 ))
+        self.assertTrue((err <= 1e-8))
+        self.assertTrue((err_x <= 1e-8))
+        self.assertTrue((err_y <= 1e-8))
+        self.assertTrue((err_z <= 1e-8))
 
 class VerifyMonoChromaticFentonWaves(unittest.TestCase):
 #Fenton methodology equations at http://johndfenton.com/Papers/Fenton88-The-numerical-solution-of-steady-water-wave-problems.pdf
@@ -420,9 +420,9 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         waveDir = np.array([dir1,dir2, 0])
         phi0 = random.random()*2.*pi
         wl = 10.
-        YC =  np.array([5.,4.,3.,2.])
-        BC =  np.array([1.,2.,3.,4.])
-        mv =  np.array([6.,7.,8.])
+        YC =  np.array([.05,.001,.0001,.0001])
+        BC =  np.array([.05,.001,.001,.001])
+        mv =  np.array([1.,1.,1.])
 # Set-up of Y and B coeffs does not correspond to physical properties
         a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=wl,waveType="Fenton",Ycoeff = YC, Bcoeff = BC, Nf = len(YC), meanVelocity = mv,phi0 = phi0)
         x = random.random()*200. - 100.
@@ -513,8 +513,11 @@ class VerifyRandomWaves(unittest.TestCase):
     def testRandom(self):
         from proteus.WaveTools import RandomWaves
         import random
+        from proteus.WaveTools import fastcos_test as fcos
+        from proteus.WaveTools import coshkzd_test as fcosh
+        from proteus.WaveTools import sinhkzd_test as fsinh
         # Assinging a random value at a field and getting the expected output
-        Tp = 1.
+        Tp = 2.
         Hs = 0.15
         mwl = 4.5
         depth = 0.9
@@ -586,12 +589,10 @@ class VerifyRandomWaves(unittest.TestCase):
         uzRef = 0.
 
         for ii in range(N):
-            etaRef+=ai[ii]*cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])
-            uxRef += normDir[0]*ai[ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) *cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
-            uyRef += normDir[1]*ai[ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
-            uzRef +=  ai[ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
-
-
+            etaRef+=ai[ii]*fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])
+            uxRef += normDir[0]*ai[ii]*omega[ii] *fcosh(ki[ii],z0,depth) *fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])
+            uyRef += normDir[1]*ai[ii]*omega[ii] *fcosh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])
+            uzRef +=  ai[ii]*omega[ii] *fsinh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii],True)
 
         err = abs(eta/etaRef - 1.)
         err_x =abs(ux/uxRef - 1.)
@@ -599,14 +600,13 @@ class VerifyRandomWaves(unittest.TestCase):
         err_z =abs(uz/uzRef - 1.)
 
 
-        Uo = Hs * 2.*pi*tanh(kp*depth)/Tp
-        Uoz = Hs * 2.*pi/Tp
+        self.assertTrue(err <= 1e-8)
+        self.assertTrue(err_x <= 1e-8)
+        self.assertTrue(err_y <= 1e-8)
+        self.assertTrue(err_z <= 1e-8)
 
 
-        self.assertTrue((err <= 0.01) or ( abs(eta/Hs)<1e-2  ))
-        self.assertTrue((err_x <= 0.01) or (abs(ux/Uo)<1e-2 ))
-        self.assertTrue((err_y <= 0.01) or (abs(uy/Uo)<1e-2  ))
-        self.assertTrue((err_z <= 0.01) or (abs(uz/Uoz)<1e-2 ))
+
 
         # Asserting write function from Random waves
         x0 = np.array([0,0,0])
@@ -872,10 +872,13 @@ class CheckDirectionalWaveFailures(unittest.TestCase):
 
 class VerifyDirectionals(unittest.TestCase):
     def testDirectional(self):
+        from proteus.WaveTools import fastcos_test as fcos
+        from proteus.WaveTools import coshkzd_test as fcosh
+        from proteus.WaveTools import sinhkzd_test as fsinh
         from proteus.WaveTools import DirectionalWaves
         import random
         # Assinging a random value at a field and getting the expected output
-        Tp = 1.
+        Tp = 2.
         Hs = 0.15
         mwl = 4.5
         depth = 0.9
@@ -887,7 +890,7 @@ class VerifyDirectionals(unittest.TestCase):
         dir2 = sin(theta0)
 
         waveDir = np.array([dir1,dir2, 0])
-        N = 5
+        N = 10
         M = 10
         phi =  2.0*pi*np.random.rand(2*M+1,N)
         gamma = 1.2
@@ -959,12 +962,10 @@ class VerifyDirectionals(unittest.TestCase):
         for ii in range(N):
             for jj in range(2*M+1):
                 normDir = waveDirs[jj,:]
-                etaRef+=ai[jj,ii]*cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])
-                uxRef += normDir[0]*ai[jj,ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) *cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
-                uyRef += normDir[1]*ai[jj,ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
-                uzRef +=  ai[jj,ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
-        print eta,etaRef
-        print ux,uxRef
+                etaRef+=ai[jj,ii]*fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])
+                uxRef += normDir[0]*ai[jj,ii]*omega[ii] *fcosh(ki[ii],z0,depth) *fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])
+                uyRef += normDir[1]*ai[jj,ii]*omega[ii] *fcosh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])
+                uzRef +=  ai[jj,ii]*omega[ii] *fsinh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii],True)
 
         err = abs(eta/etaRef - 1.)
         err_x =abs(ux/uxRef - 1.)
@@ -972,14 +973,10 @@ class VerifyDirectionals(unittest.TestCase):
         err_z =abs(uz/uzRef - 1.)
 
 
-        Uo = Hs * 2.*pi*tanh(kp*depth)/Tp
-        Uoz = Hs * 2.*pi/Tp
-
-
-        self.assertTrue((err <= 0.01) or ( abs(eta/Hs)<1e-2  ))
-        self.assertTrue((err_x <= 0.01) or (abs(ux/Uo)<1e-2 ))
-        self.assertTrue((err_y <= 0.01) or (abs(uy/Uo)<1e-2  ))
-        self.assertTrue((err_z <= 0.01) or (abs(uz/Uoz)<1e-2 ))
+        self.assertTrue(err <= 1e-8)
+        self.assertTrue(err_x <= 1e-8)
+        self.assertTrue(err_y <= 1e-8)
+        self.assertTrue(err_z <= 1e-8)
 
 
 
