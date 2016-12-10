@@ -111,8 +111,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #Velocities for edge viscosity (MQL)
         self.velx_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
         self.vely_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
-        #operators to contruct low order solution 
-	self.flux_plus_dLij_times_soln = numpy.copy(self.model.u[0].dof)
         #redistanced level set
         if self.RD_modelIndex is not None:
             self.rdModel = modelList[self.RD_modelIndex]
@@ -590,6 +588,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.cterm_global=None
         self.cterm_transpose_global=None
         # dL_global and dC_global are not the full matrices but just the CSR arrays containing the non zero entries
+        self.flux_plus_dLij_times_soln=None
         self.dL_minus_dC=None
         comm = Comm.get()
         self.comm=comm
@@ -679,7 +678,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                          self.ML, #Lumped mass matrix
                          self.coefficients.u_dof_old, #soln
                          self.u[0].dof, #solH
-                         self.coefficients.flux_plus_dLij_times_soln, 
+                         self.flux_plus_dLij_times_soln, 
                          rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
                          colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
                          MassMatrix, 
@@ -849,6 +848,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         # This is dummy. I just care about the csr structure of the sparse matrix
         self.dL_minus_dC = np.zeros(Cx.shape,'d')
+        self.flux_plus_dLij_times_soln = numpy.zeros(self.u[0].dof.shape,'d')
         #
         #cek end computationa of cterm_global
         #
@@ -980,8 +980,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             CTx,
             CTy, #NOTE: for now I assume the problem is in 2D!!!! (MQL). TODO: make it general 
             # FLUX CORRECTED TRANSPORT
-            self.coefficients.flux_plus_dLij_times_soln, 
+            self.flux_plus_dLij_times_soln, 
             self.dL_minus_dC)
+
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 r[dofN] = 0
