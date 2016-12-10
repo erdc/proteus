@@ -125,8 +125,8 @@ namespace proteus
 				   double* Cx, 
 				   double* Cy,
 				   double* CTx,
-				   double* CTy, 
-				   // FOR FCT
+				   double* CTy,
+ 				   // FOR FCT
 				   double* flux_plus_dLij_times_soln, 
 				   double* dL_minus_dC)=0;
     virtual void calculateJacobian(//element
@@ -1243,7 +1243,7 @@ namespace proteus
 		  for (int i=0;i<nDOF_test_element;i++)
 		    {
 		      //int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
-		      elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]);
+		      elementResidual_u[i] += dt*ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]);
 		    }//i
 		}//kb
 	      //
@@ -1698,7 +1698,7 @@ namespace proteus
 		  //register int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
 		  register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
 	      
-		  fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+		  fluxJacobian_u_u[j]=dt*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
 		}//j
 	      //
 	      //update the global Jacobian from the flux Jacobian

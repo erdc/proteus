@@ -1640,21 +1640,21 @@ namespace proteus
 			   int ENTROPY_VISCOSITY)
     {
       double dt = 1./alphaBDF;
-      double cell_vel_max, cell_entropy_residual_max, cell_mom_max, vel_max_in_omega=0.0, mom_max_in_omega=0.0;
-      register double vel_max[nElements_global], entropy_residual[nElements_global];
+      double cell_vel_max, cell_vel2_max, cell_entropy_residual_max, vel_max_in_omega=0.0, vel2_max_in_omega=0.0;
+      register double vel_max[nElements_global], vel2_max[nElements_global], entropy_residual[nElements_global];
       
-      // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
+      // ** COMPUTE QUANTITIES PER CELL FOR ENTROPY VISCOSIY (MQL) ** //
       for(int eN=0;eN<nElements_global;eN++)
 	{
 	  cell_vel_max = 0.;
+	  cell_vel2_max = 0.;
 	  cell_entropy_residual_max = 0.;
-	  cell_mom_max = 0.;
 	  // loop over quadrature points 
 	  for  (int k=0;k<nQuadraturePoints_element;k++)
 	    {
 	      register int eN_nDOF_trial_element = eN*nDOF_trial_element, eN_k = eN*nQuadraturePoints_element+k, eN_k_nSpace = eN_k*nSpace;
-	      register double un=0.0, vn=0.0, unm1=0.0, vnm1=0.0, grad_un[nSpace], grad_vn[nSpace], grad_pn[nSpace];
-	      register double p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace];
+	      register double un=0.0, vn=0.0, unm1=0.0, vnm1=0.0, grad_un[nSpace], grad_vn[nSpace], grad_pn[nSpace], hess_un[nSpace2],hess_vn[nSpace2];
+	      register double p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],vel_hess_trial[nDOF_trial_element*nSpace2];
 	      register double jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace], x,y,z,dV;
 
 	      //get jacobian, etc for mapping reference element
@@ -1670,8 +1670,9 @@ namespace proteus
 					  x,y,z);
 	      // calculate integration weight
 	      dV = fabs(jacDet)*dV_ref[k];
-	      // get the trial function gradients
+	      // get the trial function gradient and hessian 
 	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
+	      ck.hessTrialFromRef(&vel_hess_trial_ref[k*nDOF_trial_element*nSpace2],jacInv,vel_hess_trial);
 	      // get u_old, u_old_old, ... at quadrature points
 	      ck.valFromDOF(u_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],un);
 	      ck.valFromDOF(v_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],vn);
@@ -1680,6 +1681,9 @@ namespace proteus
 	      // get grad_un, ... at quadrature points
 	      ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_un);
 	      ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_vn);
+	      // get hessian(un) ... at quadrature points
+	      ck.hessFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_un);
+	      ck.hessFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_hess_trial,hess_vn);
 	      // get grad_pn at quadrature point. This is given (at quad points) from a different model
               for (int I=0;I<nSpace;I++)
                 grad_pn[I] = q_grad_p[eN_k_nSpace + I];	      
@@ -1698,24 +1702,26 @@ namespace proteus
 	      // COMPUTE MAX OF VELOCITY //
 	      /////////////////////////////
 	      cell_vel_max = std::max(cell_vel_max,std::max(std::abs(un), std::abs(vn)));
-	      /////////////////////////////
-	      // COMPUTE MAX OF MOMENTUM //
-	      /////////////////////////////
-	      cell_mom_max = std::max(cell_mom_max,std::max(std::abs(rho*un), std::abs(rho*vn)));
+	      cell_vel2_max = std::max(cell_vel2_max,un*un+vn*vn);
 	      /////////////////////////////
 	      // COMPUTE RESIDUAL OF PDE //
 	      /////////////////////////////
 	      // compute residual. NOTE: viscous part is missing
-	      double Res_in_x = (un-unm1)/dt + (un*grad_un[0]+vn*grad_un[1]) + grad_pn[0]/rho - g[0];
-	      double Res_in_y = (vn-vnm1)/dt + (un*grad_vn[0]+vn*grad_vn[1]) + grad_pn[1]/rho - g[1];
+	      double Res_in_x = (un-unm1)/dt + (un*grad_un[0]+vn*grad_un[1]) + grad_pn[0]/rho - g[0] 
+		- nu*(hess_un[0] + hess_un[3]) //  un_xx + un_yy 
+		- nu*(hess_un[0] + hess_vn[2]); // un_xx + vn_yx
+	      double Res_in_y = (vn-vnm1)/dt + (un*grad_vn[0]+vn*grad_vn[1]) + grad_pn[1]/rho - g[1] 
+		- nu*(hess_vn[0] + hess_vn[3])  // vn_xx + vn_yy
+		- nu*(hess_un[1] + hess_vn[3]); // un_xy + vn_yy
 	      // compute entropy_residual = Res(u).u
 	      double entropy_residual_at_quad = Res_in_x*un + Res_in_y*vn;
 	      cell_entropy_residual_max = std::max(cell_entropy_residual_max, std::abs(entropy_residual_at_quad));
 	    }
 	  vel_max[eN] = cell_vel_max;
+	  vel2_max[eN] = cell_vel2_max;
 	  entropy_residual[eN] = cell_entropy_residual_max;
 	  vel_max_in_omega = std::max(vel_max_in_omega,cell_vel_max);
-	  mom_max_in_omega = std::max(mom_max_in_omega,cell_mom_max);
+	  vel2_max_in_omega = std::max(vel2_max_in_omega,cell_vel2_max);
 	}
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -2241,7 +2247,9 @@ namespace proteus
 		{
 		  double hK=elementDiameter[eN];
 		  double linear_viscosity = cMax*hK*vel_max[eN];
-		  double entropy_viscosity = cE*hK*hK*entropy_residual[eN]/(vel_max_in_omega*mom_max_in_omega+1E-10);
+		  //double entropy_viscosity = cE*hK*hK*entropy_residual[eN]/(vel_max_in_omega*mom_max_in_omega+1E-10);
+		  double entropy_viscosity = cE*hK*hK*entropy_residual[eN]/(vel2_max[eN]+1E-10);
+
 		  q_numDiff_u[eN_k] = std::min(linear_viscosity,entropy_viscosity);
 		  //q_numDiff_u[eN_k] = linear_viscosity;
 		  q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
