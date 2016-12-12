@@ -1851,9 +1851,40 @@ class TimeSeries:
 
         #c++ declarations
 
-                for ii in range(len(self.windows_handover)):
-                    self.whand_c[ii] = self.windows_handover[ii]
-                self.whand_ = self.whand_c
+            for ii in range(len(self.windows_handover)):
+                self.whand_c[ii] = self.windows_handover[ii]
+                self.T0[ii] = self.windows_rec[ii][0,0]
+            self.whand_ = self.whand_c
+            self.T0_ = self.T0
+            for ii in range(self.Nwindows):
+                for jj in range(self.N):
+                    ij = ii*self.N + jj
+                    if(jj <len(self.decompose_window[ii][0])):
+                        self.omega_c[ij] = self.decompose_window[ii][0][jj]
+                        self.ki_c[ij]  = self.decompose_window[ii][5][jj]
+                        self.tanh_c[ij] = np.tanh(self.ki_c[ij]*self.depth)
+                        self.ai_c[ij] = self.decompose_window[ii][1][jj]
+                        self.phi_c[ij] =self.decompose_window[ii][2][jj]
+                        for kk in range(3):
+                            self.kDir_c[3*ij+kk] = self.decompose_window[ii][4][jj,kk]
+                    else:
+                        self.omega_c[ij] =1.
+                        self.ki_c[ij]  = 1. 
+                        self.tanh_c[ij] = 1.
+                        self.ai_c[ij] = 0.
+                        self.phi_c[ij] =0.
+                        for kk in range(3):
+                            self.kDir_c[3*ij+kk] = 1.
+                        
+            self.kDir_ = self.kDir_c
+            self.omega_ = self.omega_c
+            self.ki_  =self.ki_c
+            self.ai_ = self.ai_c
+            self.tanh_ = self.tanh_c
+            self.phi_ = self.phi_c
+
+
+            self.Nall = self.Nf*self.Nwindows
                 
 
 
@@ -1957,14 +1988,15 @@ class TimeSeries:
             Index of window as an integer
 
         """
-#        term = 1. - self.handover
-#        if t-self.time[0] >= term*self.Twindow:
-#            Nw = min(int((t-self.time[0] - term*self.Twindow)/(self.Twindow - 2. * self.handover * self.Twindow)) + 1, self.Nwindows-1)
-#            if t-self.time[0] < self.windows_handover[Nw-1] - self.time[0]:
-#                Nw-=1
-#        else:
-#            Nw = 0
         return __cpp_findWindow(t,self.handover, self.t0,self.Twindow,self.Nwindows, self.whand_) #Nw
+
+    def _cpp_etaWindow(self,x,t):
+        Nw = __cpp_findWindow(t,self.handover, self.t0,self.Twindow,self.Nwindows, self.whand_) #Nw
+        
+        return __cpp_etaWindow(x,self.x0_,t,self.T0_,self.kDir_,self.omega_,self.phi_,self.ai_,self.Nf,Nw)
+    def _cpp_uWindow(self,x,t):
+        Nw = __cpp_findWindow(t,self.handover, self.t0,self.Twindow,self.Nwindows, self.whand_) #Nw
+        return __cpp_uWindow(x,self.x0_,t,self.T0_,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,Nw,self.waveDir_, self.vDir_, self.tanh_)
 
     def etaWindow(self, x, t):
         """Calculates free surface elevation(Timeseries class-window method
@@ -1974,25 +2006,18 @@ class TimeSeries:
             Position vector
         t : float
             Time variable
-
+<
         Returns
         --------
         float
             Free-surface elevation as a float
 
         """
-        Nw = self.findWindow(t)
-        ai =  self.decompose_window[Nw][1]
-        omega = self.decompose_window[Nw][0]
-        phi = self.decompose_window[Nw][2]
-        kDir = self.decompose_window[Nw][4]
-        t0 = self.windows_rec[Nw][0,0]
-        Eta=0.
-        x1 =  np.array(x)-self.x0
-
-        for ii in range(0,self.Nf):
-            Eta+= eta_mode(x1, t-t0, kDir[ii], omega[ii], phi[ii], ai[ii])
-        return Eta
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        return self._cpp_etaWindow(xx,t)
 
     def uWindow(self, x, t):
         """Calculates wave velocity vector (Timeseries class-window method)
