@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <valarray>
 namespace proteus
 {
  const int nDim(3);
@@ -338,13 +339,18 @@ namespace proteus
 inline double __cpp_etaDirect(double x[nDim], double x0[nDim], double t, double* kDir, double* omega, double* phi, double* amplitude, int N)
 
 
-      {
-	x[0] = x[0] - x0[0];
-	x[1] = x[1] - x0[1];
-	x[2] = x[2] - x0[2];
+{ 
+  x[0] = x[0] - x0[0];
+  x[1] = x[1] - x0[1];
+  x[2] = x[2] - x0[2];
 
-	return __cpp_etaRandom(x,  t,  kDir,  omega,  phi,  amplitude,  N); 
-      }
+  return __cpp_etaRandom(x,  t,  kDir,  omega,  phi,  amplitude,  N); 
+}
+
+
+
+
+
    
  inline double* __cpp_uDirect(double* x, double* x0, double t, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd )
 
@@ -357,11 +363,79 @@ inline double __cpp_etaDirect(double x[nDim], double x0[nDim], double t, double*
 
 	return __cpp_uRandom(x, t,  kDir,  kAbs,  omega,  phi,  amplitude,  mwl,  depth,  N,  waveDir,  vDir,  tanhKd );
 
+ }
+
+
+ inline double __cpp_etaWindow(double x[nDim], double x0[nDim], double t, double* t0, double* kDir, double* omega, double* phi, double* amplitude, int N, int Nw)
+
+
+{ 
+  int Is = Nw*N;
+  x[0] = x[0] - x0[0];
+  x[1] = x[1] - x0[1];
+  x[2] = x[2] - x0[2];
+  t = t-t0[Nw];
+  double HH = 0.;
+  double kw[nDim] = {0.,0.,0.};
+  int ii =0;
+
+  for (int nn=Is; nn<Is+N; nn++)
+	  {
+	    ii = 3*nn;
+	    kw[0] = kDir[ii];
+	    kw[1] = kDir[ii+1];
+	    kw[2] = kDir[ii+2];
+	    HH= HH + __cpp_eta_mode(x,t,kw,omega[nn],phi[nn],amplitude[nn]);
 	  }
+  return HH;
+
+
+}
 
 
 
+ inline double* __cpp_uWindow(double* x, double* x0, double t, double* t0, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N,int Nw, double* waveDir, double* vDir, double* tanhF )
 
+
+ {
+  int Is = Nw*N;
+  x[0] = x[0] - x0[0];
+  x[1] = x[1] - x0[1];
+  x[2] = x[2] - x0[2];
+  t = t-t0[Nw];
+
+  double kw[nDim] = {0.,0.,0.};
+  double* Ufenton;
+  double* Uf;
+  Uf = new double[nDim];
+  Uf[0] = 0.;
+  Uf[1] = 0.;
+  Uf[2] = 0.;
+
+
+  int ii =0;
+
+  for (int nn=Is; nn<Is+N; nn++)
+    {
+      ii = 3*nn;
+      kw[0] = kDir[ii];
+      kw[1] = kDir[ii+1];
+      kw[2] = kDir[ii+2];
+      Ufenton = __cpp_vel_mode(x, t ,kw, kAbs[nn], omega[nn], phi[nn], amplitude[nn], mwl, depth, waveDir, vDir, tanhF[nn]); 
+      Uf[0] = Uf[0]+ *(Ufenton);//[0];
+      Uf[1] = Uf[1]+ *(Ufenton+1);//[1];
+      Uf[2] = Uf[2]+ *(Ufenton+2);//[2];
+
+    }
+	
+        return Uf;
+
+	delete [] Ufenton;      
+	delete [] Uf;
+
+
+      
+ }
 
 
 
