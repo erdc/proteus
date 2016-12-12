@@ -1898,9 +1898,13 @@ class TimeSeries:
         if(rec_direct):
             self.eta = self.etaDirect
             self.u = self.uDirect
+            self._cpp_eta = self._cpp_etaDirect
+            self._cpp_u = self._cpp_uDirect
         else:
             self.eta =  self.etaWindow
             self.u = self.uWindow
+            self._cpp_eta = self._cpp_etaWindow
+            self._cpp_u = self._cpp_uWindow
 
 #                if style == "k-":
 #                    style = "kx"
