@@ -21,6 +21,9 @@ cdef extern from "WaveTools.h" namespace "proteus":
     cdef int __cpp_findWindow(double t, double handover, double t0, double Twindow, int Nwindows, double* windows_handover)
     cdef double __cpp_etaDirect(double* x, double* x0, double t, double* kDir, double* omega, double* phi, double* amplitude, int N)
     cdef double* __cpp_uDirect(double* x,double* x0,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd )
+    cdef double __cpp_etaWindow(double* x, double* x0, double t, double* t0, double* kDir, double* omega, double* phi, double* amplitude, int N, int Nw)
+    cdef  double* __cpp_uWindow(double* x, double* x0, double t, double* T0, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N,int Nw, double* waveDir, double* vDir, double* tanhKd )
+
 # pointer to eta function
 ctypedef double (*cfeta) (MonochromaticWaves, double* , double )  
 
@@ -193,6 +196,7 @@ cdef class  TimeSeries:
     cdef double gAbs
     cdef double depth
     cdef int N
+    cdef int Nall
     cdef np.ndarray x0
     cdef np.ndarray kDir
     cdef np.ndarray tanhF
@@ -229,6 +233,7 @@ cdef class  TimeSeries:
     cdef double* omega_
     cdef double* phi_
     cdef double* ki_
+    cdef double* T0_
     cdef double[3] x0_
     cdef double[3000000] kDir_c
     cdef double[1000000] ki_c
@@ -240,13 +245,16 @@ cdef class  TimeSeries:
     cdef double[3] vDir_c
     cdef double[3] x0_c
     cdef double[1000000] whand_c
+    cdef double[1000000] T0
     cdef public:
         double wavelength
         double mwl
         object eta
         object u
     cdef double _cpp_etaDirect(self, double* x, double t) 
+    cdef double _cpp_etaWindow(self, double* x, double t) 
     cdef double* _cpp_uDirect(self, double* x, double t) 
+    cdef double* _cpp_uWindow(self, double* x, double t) 
 
 #   cdef  cfeta _cpp_eta
  #   cdef  cfvel _cpp_u
