@@ -1392,7 +1392,7 @@ class VerifyTimeSeries(unittest.TestCase):
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
         self.assertTrue(err<1e-2 )
 
-'''
+
 class CheckRandomWavesFastFailureModes(unittest.TestCase):
     def testRandomWavesFastFailure(self):
         from proteus.WaveTools import RandomWavesFast
@@ -1415,6 +1415,25 @@ class CheckRandomWavesFastFailureModes(unittest.TestCase):
                               )
         self.assertEqual(cm1.exception.code, 1 )
 
+        with self.assertRaises(SystemExit) as cm2:
+            aRF = RandomWavesFast(0,
+                         5,
+                         np.array([0.,0.,0.]),
+                         2.,
+                         0.1,
+                         0.,
+                         1.,
+                         np.array([1.,0.,0.]),
+                         np.array([0.,9.81,0.]),
+                         100,
+                         2.,
+                         "JONSWAP",
+                         None,
+                         None,
+                         Nfreq = 32
+                              )
+        self.assertEqual(cm2.exception.code, 1 )
+
 
 class VerifyRandomWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
@@ -1423,7 +1442,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
         from proteus.WaveTools import RandomWaves,TimeSeries,RandomWavesFast
         import random
         path =getpath()
-        fname = path+"randomSeries.txt"
+        fname = path+"randomFastSeries.txt"
         # Assinging a random value at a field and getting the expected output
         Tp = 1.
         Hs = 0.15
@@ -1442,13 +1461,9 @@ class VerifyRandomWavesFast(unittest.TestCase):
         Lgen = 1.5 * waveDir
         x0 =  np.array([2.,0.,-0.2 ])
         Tstart = 0.
-
-        Tend = 5*Tp + round(random.random())*145*Tp
-        if Tend < 15.*Tp:
-            rec_d =True
-        else:
-            rec_d= False
-#        print Tend
+        Nwaves = 15
+        duration = 3.*Nwaves*Tp + random.random()*145*Tp
+        Tend = Tstart + duration
         aR= RandomWaves(Tp,
                      Hs,
                      mwl,
@@ -1463,7 +1478,12 @@ class VerifyRandomWavesFast(unittest.TestCase):
                    )
 
         series = aR.writeEtaSeries(Tstart,Tend,x0,fname, 4.*Lgen)
-        cutoff = 0.2*Tp/(series[-1,0]-series[0,0])
+        duration-=series[0,0]
+        cutoff = max(0.2*Tp/duration , 0.1*Nwaves*Tp / duration)
+        rec_d =False
+
+
+
         aT= TimeSeries(
             fname,
             0,
@@ -1475,10 +1495,12 @@ class VerifyRandomWavesFast(unittest.TestCase):
             g,
             cutoff,
             rec_d,
-            {"Nwaves":15, "Tm":Tp/1.1, "Window":"costap"},
+            {"Nwaves":Nwaves, "Tm":Tp/1.1, "Window":"costap","Overlap":0.7, "Cutoff":0.1},
             True,
             series
             )
+
+
         aRF = RandomWavesFast(Tstart,
                          Tend,
                          x0,
@@ -1495,33 +1517,53 @@ class VerifyRandomWavesFast(unittest.TestCase):
                          phi,
                          Lgen,
                          Nfreq=Nf,
-                         Nwaves = 15)
+                         Nwaves = 15,
+                              checkAcc = True)
+
         x = x0 + Lgen * random.random()
-        t = series[0,0]+2.*Tp + random.random()*(series[-1,0]-2*Tp-series[-1,0])
+
+        
+        eta0 = np.zeros(len(series),)
+        eta1 =  np.zeros(len(series),)
+        eta2 =  np.zeros(len(series),)
+
+        t = series[0,0] + 2.*duration*cutoff +random.random()*duration*(1.-4.*cutoff)
+
+        #print "\n"
+        #print aRF.printOut()
+        """
+        print "Number of windows = ",Nwindows
+        print "Start time = ",series[0,0]
+        print "End time = ",series[-1,0]
+        print "Cutoff = ",cutoff
+        """
+        print "\n Max error in fast approximation=%s%%" %round(100*aRF.er1,3)
+
+        
         self.assertTrue(round(abs(aRF.eta(x,t)/aT.eta(x,t)),8) == 1.)
         self.assertTrue(round(abs(aRF.u(x,t)[0]/aT.u(x,t)[0]),8) == 1.)
         self.assertTrue(round(abs(aRF.u(x,t)[1]/aT.u(x,t)[1]),8) == 1.)
         self.assertTrue(round(abs(aRF.u(x,t)[2]/aT.u(x,t)[2]),8) == 1.)
 
-
-"""
-        eta0 = np.zeros(len(series),)
-        eta1 = eta0.copy()
-        eta2 = eta0.copy()
+        """
         for ii in range(len(series)):
-            t = series[ii,0]
-            eta0[ii] = aR.eta(x,t)
-            eta1[ii] = aT.eta(x,t)
-            eta2[ii] = aRF.eta(x,t)
+            tt = series[ii,0]
+            eta0[ii] = aR.eta(x,tt)
+            eta1[ii] = aT.eta(x,tt)
+            eta2[ii] = aRF.eta(x,tt)
         import pylab as plt
         plt.plot(series[:,0],series[:,1],"ko")
         plt.plot(series[:,0],eta0,"k-")
-        plt.plot(series[:,0],eta1,"k--")
-        plt.plot(series[:,0],eta2,"k:")
-        plt.xlim(50,65)
+#        plt.plot(series[:,0],eta1,"b--")
+        plt.plot(series[:,0],eta2,"r-.")
+        
+        plt.xlim(t-5.,t+5)
         plt.grid()
         plt.savefig("t.pdf")
-"""
+        """
+
+
+'''
 class CheckFailureRandomNLWaves(unittest.TestCase):
     def testFailures(self):
         waveDir = np.array([0.,0.,1.])
