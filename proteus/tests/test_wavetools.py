@@ -1359,7 +1359,7 @@ class VerifyTimeSeries(unittest.TestCase):
         norm = max(etaRef)
         err = (etaInt - etaTest)**2
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
-#        print err
+        from matplotlib import pyplot as plt
         self.assertTrue(err<1e-2 )
 
 # Testing class while getting a timeseries from an array
