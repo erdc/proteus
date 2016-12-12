@@ -189,6 +189,13 @@ cdef class DirectionalWaves:
     cdef double _cpp_eta(self, double* x, double t)
     cdef double* _cpp_u(self, double* x, double t)
 
+
+# pointer to eta function
+ctypedef double (*cfeta2) (TimeSeries, double* , double )  
+
+# pointer to velocity function
+ctypedef double* (*cfvel2) (TimeSeries, double* , double )
+
 cdef class  TimeSeries:
     cdef np.ndarray g
     cdef np.ndarray waveDir
@@ -251,15 +258,9 @@ cdef class  TimeSeries:
         double mwl
         object eta
         object u
+    cdef  cfeta2 _cpp_eta
+    cdef  cfvel2 _cpp_u
     cdef double _cpp_etaDirect(self, double* x, double t) 
     cdef double _cpp_etaWindow(self, double* x, double t) 
     cdef double* _cpp_uDirect(self, double* x, double t) 
     cdef double* _cpp_uWindow(self, double* x, double t) 
-
-#   cdef  cfeta _cpp_eta
- #   cdef  cfvel _cpp_u
- #   cdef object waveType
- 
- #   cdef double etaFenton(self, double* x, double t)
- #   cdef double* uLinear(self, double* x, double t)
- #   cdef double* uFenton(self, double* x, double t)
