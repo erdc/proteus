@@ -1084,6 +1084,7 @@ class RandomWaves:
         series = np.zeros((len(time),2),)
         series[:,0] = time
         series[:,1] = etaR
+
         return series
 
 
@@ -1603,6 +1604,7 @@ class TimeSeries:
                  Lgen = np.array([0.,0.,0])
                  ):
 
+        self.rec_direct = rec_direct
         # Setting the depth
         self.depth = depth
         # Number of wave components
@@ -1687,8 +1689,11 @@ class TimeSeries:
         # Matrix initialisation
         self.windows_handover = []
         self.windows_rec = []
+        self.Twindow = 10.
+
+        
     # Direct decomposition of the time series for using at reconstruct_direct
-        if (rec_direct):
+        if (self.rec_direct):
             Nf = self.N
             nfft=len(self.time)
             logEvent("INFO: WaveTools.py: performing a direct series decomposition")
@@ -1895,7 +1900,7 @@ class TimeSeries:
         self.x0_ = self.x0_c
         self.waveDir_ = self.waveDir_c
         self.vDir_ = self.vDir_c
-        if(rec_direct):
+        if(self.rec_direct):
             self.eta = self.etaDirect
             self.u = self.uDirect
             self._cpp_eta = self._cpp_etaDirect
@@ -1906,21 +1911,8 @@ class TimeSeries:
             self._cpp_eta = self._cpp_etaWindow
             self._cpp_u = self._cpp_uWindow
 
-#                if style == "k-":
-#                    style = "kx"
-#                else:
-#                    style ="k-"
-#                plt.plot(wind[:,0],wind[:,1],style)
-#                plt.plot(self.time,self.eta,"bo",markersize=2)
-#                plt.plot([self.windows_handover[ii],self.windows_handover[ii]] , [-1000,1000],"b--")
-#                ii+=1
-#            plt.ylim(-1,2)
-#            plt.grid()
-#            plt.savefig("rec.pdf")
-#            self.Twindow = self.Npw*self.dt
-#            self.Noverlap = int(self.Npw *0.25)
     def windOut(self):
-        return {"TWindow":self.Twindow,"TOverlap":self.Toverlap,"Tlag":self.Tlag}
+        return {"TWindow":self.Twindow,"TOverlap":self.Toverlap,"Tlag":self.Tlag, "rec_direct":self.rec_direct}
 
 
     def _cpp_etaDirect(self,x,t):
@@ -2023,6 +2015,7 @@ class TimeSeries:
         xx[2] = x[2]
         return self._cpp_etaWindow(xx,t)
 
+
     def uWindow(self, x, t):
         """Calculates wave velocity vector (Timeseries class-window method)
         Parameters
@@ -2038,22 +2031,21 @@ class TimeSeries:
             Velocity vector as 1D array
 
         """
-        Nw = self.findWindow(t)
-        ai =  self.decompose_window[Nw][1]
-        omega = self.decompose_window[Nw][0]
-        phi = self.decompose_window[Nw][2]
-        kDir = self.decompose_window[Nw][4]
-        ki = self.decompose_window[Nw][5]
-        t0 = self.windows_rec[Nw][0,0]
-        U=0.
-        x1 =  np.array(x)-np.array([self.x0, self.y0, self.z0])
-        for ii in range(0,self.Nf):
-            U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.vDir)
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        U = np.zeros(3,)
+        cppUL = self._cpp_uWindow(xx,t)            
+        U[0] = cppUL[0]
+        U[1] = cppUL[1]
+        U[2] = cppUL[2]
+
         return U
 
 
-'''
-class RandomWavesFast(RandomWaves):
+
+class RandomWavesFast:
     """
     This class is used for generating plane random waves in an optimised manner
     using linear reconstruction of components from a wave spectrum
@@ -2129,7 +2121,7 @@ class RandomWavesFast(RandomWaves):
                  Nfreq = 32,
                  checkAcc = True
                  ):
-            RandomWaves.__init__(self,
+        RW  =         RandomWaves(
                                  Tp, # np array with
                                  Hs,
                                  mwl,#m significant wave height
@@ -2142,63 +2134,78 @@ class RandomWavesFast(RandomWaves):
                                  spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                                  phi
                              )
-            fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
-            series = self.writeEtaSeries(Tstart,Tend,x0,fname,4.*Lgen)
-            cutoff = 0.2*self.Tp/(series[-1,0]-series[0,0])
-            Tm = self.Tp/1.1
+        self.Hs = Hs
+        self.Tp = Tp
+        self.depth = depth
+        self.mwl = mwl
+        cutoff_win = 0.1
+        overl = 0.7
+        fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
+        self.series = RW.writeEtaSeries(Tstart,Tend,x0,fname,4.*Lgen)
+        self.cutoff = max(0.2*self.Tp , cutoff_win*Nwaves*Tp)
+        duration = (self.series[-1,0]-self.series[0,0])
+        self.cutoff  = self.cutoff / duration
+        Tm = self.Tp/1.1
 
             #Checking if there are enough windows
-            Nwaves_tot = round((series[-1,0]-series[0,0])/Tm)
-            Nwaves = min(Nwaves,Nwaves_tot)
-            Nwind = int(Nwaves_tot/Nwaves)
-            if Nwind < 3:
-                rec_d = True
-            else:
-                rec_d = False
+        Nwaves_tot = round((self.series[-1,0]-self.series[0,0])/Tm)
+        Nwaves = min(Nwaves,Nwaves_tot)
+        self.Nwind = int(Nwaves_tot/Nwaves)
+        self.rec_d = False
+        if self.Nwind < 3:
+            logEvent("ERROR!: WaveTools.py: Found too few windows in RandomWavesFast. Consider increasing Tend (this is independent from the duration of the simulation)")
 
 
 
-            TS = TimeSeries(
+
+
+        TS = TimeSeries(
                  fname, # e.g.= "Timeseries.txt",
                  0,
                  x0,
                  self.depth ,
                  Nfreq ,          #number of frequency bins
                  self.mwl ,        #mean water level
-                 self.waveDir,
-                 self.g,
-                 cutoffTotal = cutoff,
-                 rec_direct = rec_d,
-                 window_params = {"Nwaves":Nwaves ,"Tm":Tm,"Window":"costap","Overlap":0.7,"Cutoff":0.1},
+                 waveDir,
+                 g,
+                 cutoffTotal = self.cutoff,
+                 rec_direct = self.rec_d,
+                 window_params = {"Nwaves":Nwaves ,"Tm":Tm,"Window":"costap","Overlap":overl,"Cutoff":cutoff_win},
                  arrayData = True,
-                 seriesArray = series,
+                 seriesArray = self.series,
                  Lgen = Lgen
                  )
 
             #Checking accuracy of the approximation
-            if(checkAcc):
-                cut = 2.*self.Tp
-                ts = series[0,0]+cut
-                te = series[-1,0]-cut
-                i1 = np.where(series[:,0]>ts)[0][0]
-                i2 = np.where(series[:,0]<te)[0][-1]
-                errors = np.zeros(len(series),)
-                for ii in range(i1,i2):
-                    errors[ii] = abs(series[ii,1]-TS.eta(x0,series[ii,0]) )
 
-                er1 = max(errors[:])/self.Hs
-                if er1 > 0.01:
-                    logEvent("ERROR!: WaveTools.py: Found large errors (>1%) during window reconstruction at RandomWavesFast. Please a) Increase Nfreq, b) Decrease waves per window. You can set checkAcc = False if you want to proceed with these errors")
-                    sys.exit(1)
+        cut = 2.* self.cutoff * duration
+        ts = self.series[0,0]+cut
+        te = self.series[-1,0]-cut
+        i1 = np.where(self.series[:,0]>ts)[0][0]
+        i2 = np.where(self.series[:,0]<te)[0][-1]
+        errors = np.zeros(len(self.series),)
+        for ii in range(i1,i2):
+            errors[ii] = abs(self.series[ii,1]-TS.eta(x0,self.series[ii,0]) )
+        self.er1 = max(errors[:])/self.Hs
+        if self.er1 > 0.01 and checkAcc:
+                logEvent("ERROR!: WaveTools.py: Found large errors (>1%) during window reconstruction at RandomWavesFast. Please a) Increase Nfreq, b) Decrease waves per window. You can set checkAcc = False if you want to proceed with these errors")
+                sys.exit(1)
 
-            self.eta = TS.eta
-            self.u = TS.u
-            self.windOut = TS.windOut
+        self.eta = TS.eta
+        self.u = TS.u
+        self.windOut = TS.windOut
+
+    def printOut(self):
+        print "Number of windows=",self.Nwind
+        print "Direct reconstruction? ",self.rec_d
+        print "Start Time =", self.series[0,0]
+        print "End time= ",self.series[-1,0]
+        print "Cutoff=", self.cutoff
+        print "Er1 =", self.er1
 
 
 
-
-
+'''
 class RandomNLWaves(RandomWaves):
     """
     This class is contains functions for calculating random waves with 2nd order corrections

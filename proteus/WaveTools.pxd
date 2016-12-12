@@ -80,6 +80,7 @@ cdef class RandomWaves:
     cdef np.ndarray waveDir
     cdef np.ndarray vDir
     cdef double gAbs
+    cdef double Tlag
     cdef double Hs
     cdef double Tp
     cdef double fp
@@ -197,6 +198,7 @@ ctypedef double (*cfeta2) (TimeSeries, double* , double )
 ctypedef double* (*cfvel2) (TimeSeries, double* , double )
 
 cdef class  TimeSeries:
+    cdef bool rec_direct
     cdef np.ndarray g
     cdef np.ndarray waveDir
     cdef np.ndarray vDir
