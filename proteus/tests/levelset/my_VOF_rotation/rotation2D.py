@@ -18,7 +18,7 @@ lag_shockCapturing_vof=True
 parallel = False
 linearSmoother = None
 #compute mass balance statistics or not
-checkMass=False
+checkMass=True
 #number of space dimensions
 nd=2
 #time integration, not relevant if using BDF with cfl timestepping

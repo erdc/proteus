@@ -53,10 +53,24 @@ class MyCoefficients(VOF.Coefficients):
         #TRANSLATION
         #self.q_v[...,0]  = 0.0
         #self.q_v[...,1]  = -1.0
+
+        # CHECK MASS
+        if self.checkMass:
+            self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV_last'],
+                                                    self.model.q[('m',0)],
+                                                    self.model.mesh.nElements_owned)
+            logEvent("Phase  0 mass before VOF step = %12.5e" % (self.m_pre,),level=2)
+
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
         self.model.FCTStep(t)
+        if self.checkMass:
+            self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
+                                                     self.model.q[('m',0)],
+                                                     self.model.mesh.nElements_owned)
+            logEvent("Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
+
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):
