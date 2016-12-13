@@ -95,3 +95,5 @@ else:
     levelLinearSolver = LU
 
 conservativeFlux = {}
+
+auxiliaryVariables = [MassOverRegion()]
