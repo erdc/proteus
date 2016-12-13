@@ -555,16 +555,12 @@ class Mesh:
         self.nEdges_owned=self.nEdges_global
         self.elementOffsets_subdomain_owned=[0,self.nElements_global]
         self.elementNumbering_subdomain2global=np.arange(self.nElements_global,dtype='i')
-        self.elementNumbering_global2original=np.arange(self.nElements_global,dtype='i')
         self.nodeOffsets_subdomain_owned=[0,self.nNodes_global]
         self.nodeNumbering_subdomain2global=np.arange(self.nNodes_global,dtype='i')
-        self.nodeNumbering_global2original=np.arange(self.nNodes_global,dtype='i')
         self.elementBoundaryOffsets_subdomain_owned=[0,self.nElementBoundaries_global]
         self.elementBoundaryNumbering_subdomain2global=np.arange(self.nElementBoundaries_global,dtype='i')
-        self.elementBoundaryNumbering_global2original=np.arange(self.nElementBoundaries_global,dtype='i')
         self.edgeOffsets_subdomain_owned=[0,self.nEdges_global]
         self.edgeNumbering_subdomain2global=np.arange(self.nEdges_global,dtype='i')
-        self.edgeNumbering_global2original=np.arange(self.nEdges_global,dtype='i')
         self.subdomainMesh=self
         self.globalMesh = None
         self.arGridCollection=None
@@ -588,29 +584,21 @@ class Mesh:
             #mwf for now always gives 1 layer of overlap
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionNodes(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodes(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         else:
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionElements(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElements(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         #
         logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
