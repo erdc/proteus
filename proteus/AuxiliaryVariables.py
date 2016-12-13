@@ -9,6 +9,7 @@ import Viewers
 import Archiver
 from xml.etree.ElementTree import *
 
+import Profiling
 from Profiling import logEvent
 
 try:
