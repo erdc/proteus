@@ -22,6 +22,17 @@ from proteus.ShockCapturing import ShockCapturing_base
 
 cdef extern from "mprans/VOF3P.h" namespace "proteus":
     cdef cppclass cppVOF3P_base:
+        void FCTStep(double dt, 
+	             int NNZ,
+		     int numDOFs,
+		     double* lumped_mass_matrix, 
+		     double* soln, 
+		     double* solH, 
+		     double* flux_plus_dLij_times_soln, 
+		     int* csrRowIndeces_DofLoops, 
+		     int* csrColumnOffsets_DofLoops, 
+		     double* MassMatrix, 
+		     double* dL_minus_dC) 
         void calculateResidual(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -86,10 +97,13 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * ebqe_flux,
                                int EDGE_VISCOSITY,
                                int ENTROPY_VISCOSITY, 
-                               int DIV_FREE_FIX, 
                                int numDOFs,                              
+                               int NNZ,
                                int* csrRowIndeces_DofLoops,
                                int* csrColumnOffsets_DofLoops,
+                               int* csrRowIndeces_CellLoops,
+                               int* csrColumnOffsets_CellLoops,
+                               int * csrColumnOffsets_eb_CellLoops,
                                double * Cx,
                                double * Cy,
                                double * Cz,
@@ -182,6 +196,29 @@ cdef class VOF3P:
                                 CompKernelFlag)
     def __dealloc__(self):
         del self.thisptr
+    def FCTStep(self, 
+                double dt, 
+                int NNZ,
+                int numDOFs,
+                numpy.ndarray lumped_mass_matrix, 
+                numpy.ndarray soln, 
+                numpy.ndarray solH, 
+                numpy.ndarray flux_plus_dLij_times_soln, 
+                numpy.ndarray csrRowIndeces_DofLoops, 
+                numpy.ndarray csrColumnOffsets_DofLoops, 
+                numpy.ndarray MassMatrix, 
+                numpy.ndarray dL_minus_dC):
+        self.thisptr.FCTStep(dt, 
+                             NNZ,
+                             numDOFs,
+                             <double*> lumped_mass_matrix.data, 
+                             <double*> soln.data, 
+                             <double*> solH.data,
+                             <double*> flux_plus_dLij_times_soln.data,
+                             <int*> csrRowIndeces_DofLoops.data,
+                             <int*> csrColumnOffsets_DofLoops.data,
+                             <double*> MassMatrix.data,
+                             <double*> dL_minus_dC.data)
     def calculateResidual(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -247,10 +284,13 @@ cdef class VOF3P:
                           numpy.ndarray ebqe_flux, 
                           int EDGE_VISCOSITY, 
                           int ENTROPY_VISCOSITY, 
-                          int DIV_FREE_FIX, 
                           int numDOFs,
+                          int NNZ,
                           numpy.ndarray csrRowIndeces_DofLoops,
                           numpy.ndarray csrColumnOffsets_DofLoops,
+                          numpy.ndarray csrRowIndeces_CellLoops,
+                          numpy.ndarray csrColumnOffsets_CellLoops,
+                          numpy.ndarray csrColumnOffsets_eb_CellLoops,
                           numpy.ndarray Cx,
                           numpy.ndarray Cy,
                           numpy.ndarray Cz,
@@ -331,10 +371,13 @@ cdef class VOF3P:
                                        <double*> ebqe_flux.data,
                                        EDGE_VISCOSITY,
                                        ENTROPY_VISCOSITY, 
-                                       DIV_FREE_FIX, 
                                        numDOFs,
+                                       NNZ,
 				       <int*> csrRowIndeces_DofLoops.data,
 				       <int*> csrColumnOffsets_DofLoops.data,
+				       <int*> csrRowIndeces_CellLoops.data,
+				       <int*> csrColumnOffsets_CellLoops.data,
+                                       <int*> csrColumnOffsets_eb_CellLoops.data,
                                        <double*> Cx.data,
                                        <double*> Cy.data,
                                        <double*> Cz.data,
@@ -531,11 +574,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(
             self,
             EDGE_VISCOSITY=0,
-            ENTROPY_VISCOSITY=1,
-            DIV_FREE_FIX=1,
+            ENTROPY_VISCOSITY=0,
+            FCT=0,
+            # FOR LOG BASED ENTROPY FUNCTION
             uL=0.0, 
             uR=1.0,
+            # FOR ARTIFICIAL COMPRESSION
             cK=0.25,
+            # FOR IMPOSING DIRICHLET BCs STRONGLY
+            forceStrongConditions=0,
+            # FOR ELEMENT BASED ENTROPY VISCOSITY
             cMax=1.0,
             cE=1.0,
             LS_model=None,
@@ -594,10 +642,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # EDGE BASED (AND ENTROPY) VISCOSITY 
         self.EDGE_VISCOSITY=EDGE_VISCOSITY
         self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
-        self.DIV_FREE_FIX=DIV_FREE_FIX
+        self.FCT=FCT
         self.uL=uL
         self.uR=uR
         self.cK=cK
+        self.forceStrongConditions=forceStrongConditions
         self.cMax=cMax
         self.cE=cE
 
@@ -775,6 +824,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self, t, firstStep=False):
+        if (self.FCT==1):
+            self.model.FCTStep()
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.checkMass:
             self.m_post = Norms.scalarDomainIntegral(
@@ -1301,7 +1352,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.nElementBoundaryQuadraturePoints_elementBoundary,
             compKernelFlag)
 
-        self.forceStrongConditions = True #TMP
+        self.forceStrongConditions = self.coefficients.forceStrongConditions
         if self.forceStrongConditions:
             self.dirichletConditionsForceDOF = DOFBoundaryConditions(
                 self.u[0].femSpace,
@@ -1317,6 +1368,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.mesh.nodeArray.shape, 'd')
     # mwf these are getting called by redistancing classes,
 
+    def FCTStep(self):
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+        self.vof.FCTStep(self.timeIntegration.dt, 
+                         self.nnz, #number of non zero entries 
+                         len(rowptr)-1, #number of DOFs
+                         self.ML, #Lumped mass matrix
+                         self.coefficients.u_dof_old, #soln
+                         self.u[0].dof, #solH
+                         self.flux_plus_dLij_times_soln, 
+                         rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
+                         colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
+                         MassMatrix, 
+                         self.dL_minus_dC)
     def calculateCoefficients(self):
         pass
 
@@ -1533,7 +1597,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                if self.coefficients.vely_tn_dof[dofN] < 0: #HACKED FOR THIS PROBLEM (MQL)
+                if self.coefficients.vely_tn_dof[dofN] < 0: #HACKED FOR THIS PROBLEM (MQL) TMP
                     self.u[0].dof[dofN] = g(
                         self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
                         self.timeIntegration.t)
@@ -1613,10 +1677,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # PARAMETERS FOR EDGE_VISCOSITY
             self.coefficients.EDGE_VISCOSITY,
             self.coefficients.ENTROPY_VISCOSITY, 
-            self.coefficients.DIV_FREE_FIX, 
             len(rowptr)-1, #num of DOFs
+            self.nnz,
             rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
             colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
+            self.csrRowIndeces[(0,0)], #row indices (convenient for element loops) 
+            self.csrColumnOffsets[(0,0)], #column indices (convenient for element loops)
+            self.csrColumnOffsets_eb[(0, 0)], #indices for boundary terms
             Cx, 
             Cy, 
             Cz, 
