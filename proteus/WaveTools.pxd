@@ -23,6 +23,9 @@ cdef extern from "WaveTools.h" namespace "proteus":
     cdef double* __cpp_uDirect(double* x,double* x0,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd )
     cdef double __cpp_etaWindow(double* x, double* x0, double t, double* t0, double* kDir, double* omega, double* phi, double* amplitude, int N, int Nw)
     cdef  double* __cpp_uWindow(double* x, double* x0, double t, double* T0, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N,int Nw, double* waveDir, double* vDir, double* tanhKd )
+    cdef double __cpp_eta2nd(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd)
+    cdef double __cpp_eta_short(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs)
+    cdef double __cpp_eta_long(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs)
 
 # pointer to eta function
 ctypedef double (*cfeta) (MonochromaticWaves, double* , double )  
@@ -33,23 +36,9 @@ ctypedef double* (*cfvel) (MonochromaticWaves, double* , double )
 
 
 cdef class  MonochromaticWaves:
-    cdef np.ndarray g
-    cdef np.ndarray waveDir
-    cdef np.ndarray vDir
-    cdef double gAbs
-    cdef double phi
-    cdef double depth
-    cdef double omega
-    cdef double k
-    cdef double phi0
-    cdef double tanhL
+    cdef np.ndarray g,waveDir,vDir,Ycoeff,Bcoeff,kDir,tanhF,mV
+    cdef double gAbs,phi,depth,omega,k,phi0,tanhL,amplitude
     cdef int Nf
-    cdef np.ndarray Ycoeff
-    cdef np.ndarray Bcoeff
-    cdef np.ndarray kDir
-    cdef np.ndarray tanhF
-    cdef double amplitude
-    cdef np.ndarray mV    
     cdef double* kDir_
     cdef double* waveDir_
     cdef double* vDir_
@@ -76,21 +65,7 @@ cdef class  MonochromaticWaves:
     cdef double* uFenton(self, double* x, double t)
 
 cdef class RandomWaves:
-    cdef np.ndarray g
-    cdef np.ndarray waveDir
-    cdef np.ndarray vDir
-    cdef double gAbs
-    cdef double Tlag
-    cdef double Hs
-    cdef double Tp
-    cdef double fp
-    cdef double bandFactor
-    cdef object phi
-    cdef double depth
-    cdef double df
-    cdef int N
-    cdef np.ndarray kDir
-    cdef np.ndarray ai
+
     cdef double* waveDir_
     cdef double* vDir_
     cdef double* tanh_
@@ -108,30 +83,18 @@ cdef class RandomWaves:
     cdef double[10000] tanh_c
     cdef double[10000] phi_c
     cdef public:
-        double mwl
-        np.ndarray fi
-        np.ndarray fim
-        np.ndarray Si_Jm
-        np.ndarray ki
-        np.ndarray omega
-        np.ndarray tanhF
+        double mwl,depth,gAbs,Tlag,Hs,Tp,fp,bandFactor,df
+        int N
+        np.ndarray fi,fim,Si_Jm,ki,omega,tanhF,g,waveDir,vDir,kDir,ai
+        cdef object phi
     cdef double _cpp_eta(self, double* x, double t)
     cdef double* _cpp_u(self, double* x, double t)
 
 
 
 cdef class MultiSpectraRandomWaves:
-    cdef int Nall
-    cdef int N
-    cdef np.ndarray g
-    cdef np.ndarray vDir
-    cdef np.ndarray waveDir
-    cdef np.ndarray omegaM
-    cdef np.ndarray phiM
-    cdef np.ndarray kiM
-    cdef np.ndarray kDirM
-    cdef np.ndarray tanhFM
-    cdef np.ndarray aiM
+    cdef int Nall,N
+    cdef np.ndarray g,vDir,waveDir,omegaM,phiM,kiM,kDirM,tanhFM,aiM
     cdef double * vDir_
     cdef double* omegaM_
     cdef double* phiM_
@@ -149,25 +112,13 @@ cdef class MultiSpectraRandomWaves:
     cdef double[10000] tanh_cM
     cdef double[10000] phi_cM
     cdef public:
-        double mwl
-        double depth
+        double mwl,depth
     cdef double _cpp_eta(self, double* x, double t)
     cdef double* _cpp_u(self, double* x, double t)
 
 cdef class DirectionalWaves:
-    cdef int Nall
-    cdef int Mtot
-    cdef int N
-    cdef np.ndarray vDir
-    cdef np.ndarray omega
-    cdef np.ndarray tanh
-    cdef np.ndarray waveDir0
-    cdef np.ndarray waveDirs
-    cdef np.ndarray phiDirs
-    cdef np.ndarray aiDirs
-    cdef np.ndarray ki
-    cdef np.ndarray kDirs
-    cdef np.ndarray tanhF
+    cdef int Nall,Mtot,N
+    cdef np.ndarray vDir,omega,tanh,waveDir0,waveDirs,phiDirs,aiDirs,ki,kDirs,tanhF
     cdef double * vDir_
     cdef double* omega_
     cdef double* phi_
@@ -185,8 +136,7 @@ cdef class DirectionalWaves:
     cdef double[100000] tanh_c
     cdef double[100000] phi_c
     cdef public:
-        double mwl
-        double depth
+        double mwl,depth
     cdef double _cpp_eta(self, double* x, double t)
     cdef double* _cpp_u(self, double* x, double t)
 
@@ -199,40 +149,10 @@ ctypedef double* (*cfvel2) (TimeSeries, double* , double )
 
 cdef class  TimeSeries:
     cdef bool rec_direct
-    cdef np.ndarray g
-    cdef np.ndarray waveDir
-    cdef np.ndarray vDir
-    cdef double gAbs
-    cdef double depth
-    cdef int N
-    cdef int Nall
-    cdef np.ndarray x0
-    cdef np.ndarray kDir
-    cdef np.ndarray tanhF
-    cdef np.ndarray time
-    cdef np.ndarray etaS
-    cdef np.ndarray ai
-    cdef np.ndarray omega
-    cdef np.ndarray phi
-    cdef np.ndarray ki
-    cdef int Nf
-    cdef int Nwaves
-    cdef double Tm
-    cdef double overlap
-    cdef double cutoff
-    cdef double setup
-    cdef double handover
-    cdef double Twindow
-    cdef double Tlag
-    cdef double Toverlap
-    cdef int Nwindows
-    cdef list windows_handover
-    cdef list windows_rec
-    cdef list decompose_window
-    cdef double dt
-    cdef double t0
-    cdef double tlength
-    cdef np.ndarray mV    
+    cdef np.ndarray g,waveDir,vDir,x0,kDir,tanhF,time,etaS,ai,omega,phi,ki
+    cdef double gAbs,depth,Tm,overlap,cutoff,setup,handover,Twindow,Tlag,Toverlap,dt,t0,tlength
+    cdef int N,Nall,Nf,Nwaves,Nwindows
+    cdef list windows_handover,windows_rec,decompose_window
     cdef double* kDir_
     cdef double* waveDir_
     cdef double* vDir_
@@ -256,13 +176,38 @@ cdef class  TimeSeries:
     cdef double[1000000] whand_c
     cdef double[1000000] T0
     cdef public:
-        double wavelength
-        double mwl
-        object eta
-        object u
-    cdef  cfeta2 _cpp_eta
-    cdef  cfvel2 _cpp_u
+        double wavelength,mwl
+        object eta,u
+    cdef cfeta2 _cpp_eta
+    cdef cfvel2 _cpp_u
     cdef double _cpp_etaDirect(self, double* x, double t) 
     cdef double _cpp_etaWindow(self, double* x, double t) 
     cdef double* _cpp_uDirect(self, double* x, double t) 
     cdef double* _cpp_uWindow(self, double* x, double t) 
+
+cdef class RandomNLWaves:
+    cdef np.ndarray omega,ki,kDir,phi,tanhKd,sinhKd,waveDir,ai
+    cdef int N
+    cdef double depth,gAbs
+    cdef double* tanhKd_
+    cdef double* sinhKd_
+    cdef double* ai_
+    cdef double* phi_
+    cdef double* omega_
+    cdef double* kDir_
+    cdef double* ki_
+    cdef double[30000] kDir_c
+    cdef double[10000] omega_c
+    cdef double[10000] ki_c
+    cdef double[10000] ai_c
+    cdef double[10000] tanh_c
+    cdef double[10000] sinh_c
+    cdef double[10000] phi_c
+    cdef double _cpp_eta_2ndOrder(self,double* x, double t)
+    cdef double _cpp_eta_short(self,double* x, double t)
+    cdef double _cpp_eta_long(self,double* x, double t)
+    cdef public:
+        object eta
+        object u
+        object eta_linear
+        
