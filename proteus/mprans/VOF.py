@@ -54,7 +54,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
     from proteus.ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
     from proteus.cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
-    def __init__(self,cE=0.5,cMax=0.1,cK=1.0,ENTROPY_VISCOSITY=0,SUPG=1,uL=0.0,uR=1.0,
+    def __init__(self,
+                 FCT=0,cE=0.5,cMax=0.1,cK=1.0,ENTROPY_VISCOSITY=0,SUPG=1,uL=0.0,uR=1.0,
                  LS_model=None,V_model=0,RD_model=None,ME_model=1,EikonalSolverFlag=0,checkMass=True,epsFact=0.0,useMetrics=0.0,sc_uref=1.0,sc_beta=1.0,setParamsFunc=None,movingDomain=False):
         self.useMetrics = useMetrics
         self.variableNames=['vof']
@@ -92,6 +93,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.setParamsFunc   = setParamsFunc
         self.flowCoefficients=None
         self.movingDomain=movingDomain
+        # FCT
+        self.FCT=FCT
         #ENTROPY VISCOSITY and ART COMPRESSION
         self.cE=cE
         self.cMax=cMax
@@ -236,6 +239,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
+        if (self.FCT==1):
+            self.model.FCTStep()
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.checkMass:
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
@@ -670,7 +675,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=0.0
         if self.mesh.nodeVelocityArray==None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
-    def FCTStep(self,t):
+    def FCTStep(self):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         self.vof.FCTStep(self.timeIntegration.dt, 
                          self.nnz, #number of non zero entries 

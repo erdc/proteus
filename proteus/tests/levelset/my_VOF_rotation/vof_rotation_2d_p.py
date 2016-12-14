@@ -56,7 +56,7 @@ class MyCoefficients(VOF.Coefficients):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-        self.model.FCTStep(t)
+        self.model.FCTStep()
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):
