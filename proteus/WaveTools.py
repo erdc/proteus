@@ -2205,8 +2205,8 @@ class RandomWavesFast:
 
 
 
-'''
-class RandomNLWaves(RandomWaves):
+
+class RandomNLWaves:
     """
     This class is contains functions for calculating random waves with 2nd order corrections
 
@@ -2269,13 +2269,48 @@ class RandomNLWaves(RandomWaves):
                  spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  phi=None                 #array of component phases
                  ):
-        RandomWaves.__init__(self,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
+        RW = RandomWaves(Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
 
-
-        self.eta_linear = self.eta
+        self.gAbs = RW.gAbs
+        self.eta_linear = RW.eta
         self.eta = self.wtError
         self.u = self.wtError
+        self.omega = RW.omega
+        self.ai = RW.ai
+        self.ki = RW.ki
+        self.kDir = RW.kDir
+        self.phi = RW.phi
+        self.N = N
+        self.depth = depth
+        self.tanhKd = np.zeros(self.N,"d")
+        self.sinhKd = np.zeros(self.N,"d")
+        for ii in range(self.N):
+            self.tanhKd[ii] = np.tanh(self.ki[ii]*self.depth)
+            self.sinhKd[ii] = np.sinh(self.ki[ii]*self.depth)
+        self.waveDir = RW.waveDir
 
+        for ij in range(self.N):
+            for kk in range(3):
+                self.kDir_c[3*ij+kk] = self.kDir[ij,kk]
+            self.omega_c[ij] = self.omega[ij]
+            self.ki_c[ij]  =self.ki[ij]
+            self.tanh_c[ij] = self.tanhKd[ij]
+            self.sinh_c[ij] = self.sinhKd[ij]
+            self.ai_c[ij] = self.ai[ij]
+            self.phi_c[ij] = self.phi[ij]
+
+        self.kDir_ = self.kDir_c
+        self.omega_ = self.omega_c
+        self.ki_  =self.ki_c
+        self.ai_ = self.ai_c
+        self.tanhKd_ = self.tanh_c
+        self.sinhKd_ = self.sinh_c
+        self.phi_ = self.phi_c
+
+        #c++ declarations
+
+    def _cpp_eta_2ndOrder(self,x,t):
+        return __cpp_eta2nd(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_)
     def eta_2ndOrder(self,x,t):
         """Calculates the free surface elevation for 2nd-order terms
 
@@ -2295,15 +2330,24 @@ class RandomNLWaves(RandomWaves):
 
         """
 
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        return self._cpp_eta_2ndOrder(xx,t)
+        '''
         Eta2nd = 0.
         for i in range(0,self.N):
-            ai_2nd = (self.ai[i]**2*self.ki[i]*(2+3/sinh(self.ki[i]*self.depth)**2))/(4*tanh(self.ki[i]*self.depth))
+            ai_2nd = (self.ai_[i]**2*self.ki_[i]*(2+3/self.sinhKd[ii]**2))/(4*tanhKd[i](self.ki[i]*self.depth))
             wwi_2ndOrder = eta_mode(x,t,2*self.kDir[i],2*self.omega[i],2*self.phi[i],ai_2nd)
             Eta2nd += wwi_2ndOrder
         return Eta2nd
+        '''
 
+    def _cpp_eta_short(self,x,t):
+        return __cpp_eta_short(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs)
 
-
+    
     #higher harmonics
     def eta_short(self,x,t):
         """Calculates the free surface elevation for higher-order terms
@@ -2323,18 +2367,27 @@ class RandomNLWaves(RandomWaves):
             Free-surface elevation as a float
 
         """
-
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        return self._cpp_eta_short(xx,t)
+        '''
         Etashort = 0.
         for i in range(0,self.N-1):
             for j in range(i+1,self.N):
                 Dp = (self.omega[i]+self.omega[j])**2 - self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth)
-                Bp = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) - ((self.omega[i]*self.omega[j])/(2*self.gAbs)) *(1-1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth))) *(((self.omega[i]+self.omega[j])**2 + self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth))/Dp) + ((self.omega[i]+self.omega[j])/(2*self.gAbs*Dp))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) + (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))
+                Bp = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) 
+                Bp = Bp-((self.omega[i]*self.omega[j])/(2*self.gAbs))*(1-1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth)))*(((self.omega[i]+self.omega[j])**2 + self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth))/Dp)
+                Bp=Bp+ ((self.omega[i]+self.omega[j])/(2*self.gAbs*Dp))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) + (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))
                 ai_short = self.ai[i]*self.ai[j]*Bp
                 wwi_short = eta_mode(x,t,self.kDir[i]+self.kDir[j],self.omega[i]+self.omega[j],self.phi[i]+self.phi[j],ai_short)
                 Etashort += wwi_short
         return Etashort
+        '''
 
-
+    def _cpp_eta_long(self,x,t):
+        return __cpp_eta_long(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs)
 
     #lower harmonics
     def eta_long(self,x,t):
@@ -2355,8 +2408,14 @@ class RandomNLWaves(RandomWaves):
             Free-surface elevation as a float
 
         """
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        return self._cpp_eta_long(xx,t)
 
 
+        '''
         Etalong = 0.
         for i in range(0,self.N-1):
             for j in range(i+1,self.N):
@@ -2366,7 +2425,7 @@ class RandomNLWaves(RandomWaves):
                 wwi_long = eta_mode(x,t,self.kDir[i]-self.kDir[j],self.omega[i]-self.omega[j],self.phi[i]-self.phi[j],ai_long)
                 Etalong += wwi_long
         return Etalong
-
+        '''
 
     #set-up calculation
     def eta_setUp(self,x,t):
@@ -2416,9 +2475,13 @@ class RandomNLWaves(RandomWaves):
             Free-surface elevation as a float
 
         """
-        Etaoverall =  self.eta_linear(x,t) + self.eta_2ndOrder(x,t) + self.eta_short(x,t) + self.eta_long(x,t)
+        cython.declare(xx=cython.double[3])
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        Etaoverall =  self.eta_linear(x,t) + self._cpp_eta_2ndOrder(xx,t) + self._cpp_eta_short(xx,t) + self._cpp_eta_long(xx,t)
         if setUp:
-            Etaoverall -= self.eta_setUp(x,t)
+            Etaoverall -= self.eta_setUp(xx,t)
         return Etaoverall
 
 
@@ -2515,7 +2578,7 @@ class RandomNLWaves(RandomWaves):
         sys.exit(1)
 
 
-
+'''
 class RandomNLWavesFast:
     """
     This class is used for generating plane random waves with 2ns order correction in an optimised manner

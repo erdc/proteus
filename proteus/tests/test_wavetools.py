@@ -1563,7 +1563,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
         """
 
 
-'''
+
 class CheckFailureRandomNLWaves(unittest.TestCase):
     def testFailures(self):
         waveDir = np.array([0.,0.,1.])
@@ -1648,6 +1648,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
             spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
             phi = aR.phi               #array of component phases
             )
+        from proteus.WaveTools import fastcos_test as fcos
 
         x = random.random()*200. - 100.
         y = random.random()*200. - 100.
@@ -1664,8 +1665,8 @@ class VerifyRandomNLWaves(unittest.TestCase):
             ai = 0.25 * aR.ai[ii]**2 * aR.ki[ii] / tanh(kh) * (2. + 3./(sinh(kh)**2))
             etaT += eta_mode(xi,t,2.*aR.kDir[ii],2.*aR.omega[ii],2.*aR.phi[ii],ai)
         # 2nd order testing
-
-        self.assertTrue(round(etaT,8) == round(aNL.eta_2ndOrder(xi,t),8))
+#        print etaT,aNL.eta_2ndOrder(xi,t)
+        self.assertTrue(round(etaT/aNL.eta_2ndOrder(xi,t),2)==1 or abs(etaT)<0.01*ai)
 
         ww = aR.omega
         ki = aR.ki
@@ -1693,7 +1694,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
                 ai = aR.ai[ii]*aR.ai[jj]*Bp
                 etaT += eta_mode(xi,t,aR.kDir[ii] + aR.kDir[jj],w1p2,aR.phi[ii] + aR.phi[jj],ai)
 #        print etaT,aNL.eta_short(xi,t)
-        self.assertTrue(round(etaT,8) == round(aNL.eta_short(xi,t),8))
+        self.assertTrue(round(etaT/aNL.eta_short(xi,t),2)==1 or abs(etaT)<0.01*ai)
 # Testing lower harmonics
         etaT = 0.
         N = aR.N
@@ -1716,8 +1717,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
 
                 ai = aR.ai[ii]*aR.ai[jj]*Bp
                 etaT += eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai)
-
-        self.assertTrue(round(etaT,8) == round(aNL.eta_long(xi,t),8))
+        self.assertTrue(round(etaT/aNL.eta_long(xi,t),2)==1 or abs(etaT)<0.01*ai)
 
 # Testing setup
         etaT = 0.
@@ -1796,7 +1796,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_setUp(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_setUp(xi,float(ii)),8) )
         fid.close()
-
+'''
 class VerifyRandomNLWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
 #    @pytest.mark.skip(reason="nosetests vs pytest issue")
