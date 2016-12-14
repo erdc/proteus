@@ -2578,7 +2578,7 @@ class RandomNLWaves:
         sys.exit(1)
 
 
-'''
+
 class RandomNLWavesFast:
     """
     This class is used for generating plane random waves with 2ns order correction in an optimised manner
@@ -2735,4 +2735,4 @@ class RandomNLWavesFast:
         """
         uR = self.TS[0].u(x,t)+ self.TS[1].u(x,t)+self.TS[2].u(x,t)
         return uR
-    '''
+    
