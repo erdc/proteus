@@ -61,7 +61,7 @@ if unstructured:
 else:
     domain = box
 #end time of simulation
-T = 0.1#1.0
+T = 1.0
 #number of output time steps
 nDTout = 10
 #smoothing factors
