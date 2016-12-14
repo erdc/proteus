@@ -358,7 +358,6 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         from proteus.WaveTools import coshkzd_test as fcosh
         from proteus.WaveTools import sinhkzd_test as fsinh
         
-        import random
 # Wave direction, random in x,y plane
         period = 2.
         waveHeight = 1.
@@ -366,15 +365,15 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         depth = 0.9
         g = np.array([0,0,-9.81])
         gAbs = 9.81
-        dir1 = 2*random.random() - 1
-        dir2 = 2*random.random() - 1
+        dir1 = 0.6
+        dir2 = 0.5
         waveDir = np.array([dir1,dir2, 0])
-        phi0 = random.random()*2.*pi
+        phi0 = 0.
         a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = np.array([0.]), Bcoeff  = np.array([0.]), meanVelocity = np.array([0.,0,0.]),phi0 = phi0)
-        x = random.random()*200. - 100.
-        y = random.random()*200. - 100.
-        z = mwl - depth + random.random()*( depth)
-        t =  random.random()*200. - 100.
+        x = 150.
+        y = 130.
+        z = mwl 
+        t =  125.
         eta = a.eta([x, y, z], t)
         ux, uy, uz = a.u([x, y, z], t)
 
@@ -415,20 +414,20 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         depth = 0.9
         g = np.array([0,0,-9.81])
         gAbs = 9.81
-        dir1 = 2*random.random() - 1
-        dir2 = 2*random.random() - 1
+        dir1 = 0.5
+        dir2 = 0.45
         waveDir = np.array([dir1,dir2, 0])
-        phi0 = random.random()*2.*pi
+        phi0 = 0.3
         wl = 10.
         YC =  np.array([.05,.001,.0001,.0001])
         BC =  np.array([.05,.001,.001,.001])
         mv =  np.array([1.,1.,1.])
 # Set-up of Y and B coeffs does not correspond to physical properties
         a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=wl,waveType="Fenton",Ycoeff = YC, Bcoeff = BC, Nf = len(YC), meanVelocity = mv,phi0 = phi0)
-        x = random.random()*200. - 100.
-        y = random.random()*200. - 100.
-        z =  mwl - depth + random.random()*( depth)
-        t =  random.random()*200. - 100.
+        x = 145.
+        y = 155.
+        z =  mwl
+        t =  125.
         eta = a.eta([x, y, z], t)
         ux, uy, uz = a.u([x, y, z], t)
         omega = 2.*pi/period
@@ -523,11 +522,11 @@ class VerifyRandomWaves(unittest.TestCase):
         depth = 0.9
         g = np.array([0,0,-9.81])
         gAbs = 9.81
-        dir1 = 2*random.random() - 1
-        dir2 = 2*random.random() - 1
+        dir1 = 0.1
+        dir2 = 2
         waveDir = np.array([dir1,dir2, 0])
         N = 100
-        phi = np.random.rand(N)
+        phi = np.linspace(1,N,N)
         gamma = 1.2
         TMA = True
         spectName = "JONSWAP"
@@ -543,10 +542,10 @@ class VerifyRandomWaves(unittest.TestCase):
                      bandFactor,         #accelerationof gravity
                      spectName# random words will result in error and return the available spectra
                    )
-        x = random.random()*200. - 100.
-        y = random.random()*200. - 100.
-        z = 4.4# mwl - depth + random.random()*( depth)
-        t =  random.random()*200. - 100.
+        x = 103.
+        y = 112.
+        z =  mwl
+        t =  145.
         # Just loading functions
         eta = a.eta([x, y, z], t)
         ux, uy, uz = a.u([x, y, z], t)
@@ -669,11 +668,11 @@ class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
         depth = 0.9
         g = np.array([0,0,-9.81])
         gAbs = 9.81
-        dir1 = 2*random.random() - 1
-        dir2 = 2*random.random() - 1
+        dir1 = 0.8
+        dir2 = 0.6
         waveDir = np.array([dir1,dir2, 0])
         N = 100
-        phi = np.random.rand(N)
+        phi = np.linspace(1,N,N)
         gamma = 1.2
         TMA = True
         spectName = "JONSWAP"
@@ -759,20 +758,20 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
         depth = 0.9
         g = np.array([0,0,-9.81])
         gAbs = 9.81
-        dir1 = 2*random.random() - 1
-        dir2 = 2*random.random() - 1
+        dir1 = 0.15
+        dir2 = 2.
         waveDir = np.array([dir1,dir2, 0])
         waveDir2 = np.array([2.*dir1,dir2, 0])
         N = 100
-        phi = np.random.rand(N)
+        phi = np.linspace(1,5,N)
         gamma = 1.2
         TMA = True
         spectName = "JONSWAP"
         bandFactor = 2.0
-        x = random.random()*200. - 100.
-        y = random.random()*200. - 100.
-        z =  mwl - depth + random.random()*( depth)
-        t =  random.random()*200. - 100.
+        x = 135.
+        y = 123.
+        z =  mwl
+        t =  112.
         # Testing with a specific phi array
         a= RandomWaves(
             Tp,
@@ -885,14 +884,14 @@ class VerifyDirectionals(unittest.TestCase):
         g = np.array([0,0,-9.81])
         gAbs = 9.81
         # Setting the angle to the first quadrant otherwise the acos function further below is confused
-        theta0 = 2*pi* random.random()
+        theta0 = 2.
         dir1 = cos(theta0)
         dir2 = sin(theta0)
 
         waveDir = np.array([dir1,dir2, 0])
         N = 10
         M = 10
-        phi =  2.0*pi*np.random.rand(2*M+1,N)
+        phi =  np.zeros((2*M+1,N),"d")
         gamma = 1.2
         TMA = True
         spectName = "JONSWAP"
@@ -919,10 +918,10 @@ class VerifyDirectionals(unittest.TestCase):
             phi,
             phiSymm
             )
-        x = random.random()*200. - 100.
-        y = random.random()*200. - 100.
-        z =  mwl - depth + random.random()*( depth)
-        t =  random.random()*200. - 100.
+        x = 188.
+        y = 134.
+        z =  mwl
+        t =  167.
         eta = aa.eta([x, y, z], t)
         ux, uy, uz = aa.u([x, y, z], t)
 
@@ -1450,19 +1449,19 @@ class VerifyRandomWavesFast(unittest.TestCase):
         depth = 0.9
         g = np.array([0,0,-9.81])
         gAbs = 9.81
-        dir1 = 2*random.random() - 1
-        dir2 = 2*random.random() - 1
+        dir1 = 0.6
+        dir2 = 0.8
         waveDir = np.array([dir1,dir2, 0.])
         N = 100
         Nf =32
-        phi = 2*pi*np.random.rand(N)
+        phi = np.linspace(1,N,N)
         spectName = "JONSWAP"
         bandFactor = 2.0
         Lgen = 1.5 * waveDir
         x0 =  np.array([2.,0.,-0.2 ])
         Tstart = 0.
         Nwaves = 15
-        duration = 3.*Nwaves*Tp + random.random()*145*Tp
+        duration = 3.*Nwaves*Tp + 70.*Tp
         Tend = Tstart + duration
         aR= RandomWaves(Tp,
                      Hs,
@@ -1520,14 +1519,14 @@ class VerifyRandomWavesFast(unittest.TestCase):
                          Nwaves = 15,
                               checkAcc = True)
 
-        x = x0 + Lgen * random.random()
+        x = x0 + Lgen * 0.5
 
         
         eta0 = np.zeros(len(series),)
         eta1 =  np.zeros(len(series),)
         eta2 =  np.zeros(len(series),)
 
-        t = series[0,0] + 2.*duration*cutoff +random.random()*duration*(1.-4.*cutoff)
+        t = series[0,0] + 2.*duration*cutoff +0.4*duration*(1.-4.*cutoff)
 
         #print "\n"
         #print aRF.printOut()
@@ -1716,7 +1715,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
 
                 ai = aR.ai[ii]*aR.ai[jj]*Bp
                 etaT += eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai)
-        print etaT,aNL.eta_long(xi,t)
+#        print etaT,aNL.eta_long(xi,t)
         self.assertTrue(round(etaT/aNL.eta_long(xi,t),2)==1 )
 
 # Testing setup
@@ -1813,7 +1812,7 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         bandFactor = 1.1
         spectName = "JONSWAP"
         spectral_params = None
-        phi = 6.28 * np.random.random(N)
+        phi = np.linspace(1,N,N)
         waveDir = np.array([1., 0., 0.])
 
 
@@ -2004,7 +2003,7 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
 
 
 #Cjecking consistency of the timeSeriesClass
-        x = x0 + Lgen * random.random()
+        x = x0 + Lgen * 0.3
         t = Tend/2.
 
 
