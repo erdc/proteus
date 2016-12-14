@@ -46,6 +46,8 @@ class D_base:
         # needed for gmsh
         self.volumes = []
         self.boundaryTags = {}
+        self.BCbyFlag = {}
+        self.BC = {}
         # attach a MeshOption class
         self.MeshOptions = MeshOptions(self.nd)
 
@@ -209,6 +211,15 @@ class D_base:
             if self.boundaryTags and group_names is True:
                 flag = '"'+inv_bt[flag]+'", '+str(flag)
             geo.write("Physical Volume({0}) = {{{1}}};\n".format(str(flag), str(ind)[1:-1]))
+
+    def gmsh2proteus(self, geofile, BC_class):
+        self.boundaryTags = getGmshPhysicalGroups(geofile)
+        self.BC = {}
+        self.BCbyFlag = {}
+        for tag, flag in self.boundaryTags.items():
+            self.BC[tag] = BC_class(nd=self.nd)
+            self.BCbyFlag[flag] = self.BC[tag]
+
 
 
 
@@ -1253,3 +1264,26 @@ if __name__ == "__main__":
 #    plcFromFile.readPoly('Container06.GF')
 #    plcFromFile.writeAsymptote('Container06.GF')
 #    os.system("asy -V Container06.GF")
+
+def getGmshPhysicalGroups(geofile):
+    boundaryTags = {}
+    import re
+    # gmsh_cmd = "gmsh {0:s} -0".format(geofile)
+    # check_call(gmsh_cmd, shell=True)
+    with open(geofile, 'r') as f:
+        for line in f:
+            if line.startswith("Physical "):
+                words = line.lstrip().split('=', 1)
+                tagflag = re.search(r'\((.*?)\)', words[0]).group(1).split(',')
+                if len(tagflag) == 2:
+                    tag = tagflag[0]
+                    boundaryTags[tag] = None  # add empty BC holder
+                    flag = int(tagflag[1])
+                    print tagflag
+                else:
+                    try:
+                        flag = tag = int(tagflag[0])
+                    except:
+                        flag = tag = tagflag[0]
+                boundaryTags[tag] = flag  # add empty BC holder
+    return boundaryTags
