@@ -75,7 +75,7 @@ class TestVOFrotationEV():
                              rtol=1e-05, atol=1e-07, equal_nan=True)
         #return ref_total_mass,sim_total_mass
 
-    def test_vof_total_mass_T1(self):
+    def no_test_vof_total_mass_T1(self):
         run_dir = os.path.dirname(os.path.abspath(__file__))
         ref_total_mass = np.loadtxt(os.path.join(run_dir,'comparison_files','total_mass_comp_0_rotation_c0p1_SSP33_level_3_vof.txt'))
         #set the time step
