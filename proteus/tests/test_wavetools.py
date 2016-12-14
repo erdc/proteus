@@ -1595,21 +1595,20 @@ class CheckFailureRandomNLWaves(unittest.TestCase):
 class VerifyRandomNLWaves(unittest.TestCase):
     def testFunctions(self):
         from proteus.WaveTools import RandomWaves,TimeSeries,RandomNLWaves,eta_mode
-        import random
         path =getpath()
         fname = path+"randomSeries.txt"
         # Assinging a random value at a field and getting the expected output
         Tp = 1.
-        Hs = 0.15
+        Hs = 0.1
         mwl = 4.5
         depth = 0.9
         g = np.array([0,0,-9.81])
         gAbs = 9.81
-        dir1 = 2*random.random() - 1
-        dir2 = 2*random.random() - 1
+        dir1 = 0.7
+        dir2 = 0.5
         waveDir = np.array([dir1,dir2, 0])
         N = 20
-        phi = 2*pi*np.random.rand(N)
+        phi = np.linspace(0,N,N)
         spectName = "JONSWAP"
         bandFactor = 2.0
         Lgen = 5 * waveDir
@@ -1629,7 +1628,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
             bandFactor,              #width factor for band around peak frequency fp
             spectName,               #random words will result in error and return the available spectra
             spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
-            phi=None                 #array of component phases
+            phi=phi                 #array of component phases
             )
 
 
@@ -1650,10 +1649,10 @@ class VerifyRandomNLWaves(unittest.TestCase):
             )
         from proteus.WaveTools import fastcos_test as fcos
 
-        x = random.random()*200. - 100.
-        y = random.random()*200. - 100.
-        z =  mwl - depth + random.random()*( depth)
-        t =  random.random()*200. - 100.
+        x = 150.
+        y = 135.
+        z =  mwl 
+        t =  120.
         xi = np.array([x, y, z])
 #        print aR.eta(xi,t),aNL.eta(xi,t)
 
@@ -1666,7 +1665,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
             etaT += eta_mode(xi,t,2.*aR.kDir[ii],2.*aR.omega[ii],2.*aR.phi[ii],ai)
         # 2nd order testing
 #        print etaT,aNL.eta_2ndOrder(xi,t)
-        self.assertTrue(round(etaT/aNL.eta_2ndOrder(xi,t),2)==1 or abs(etaT)<0.01*ai)
+        self.assertTrue(round(etaT/aNL.eta_2ndOrder(xi,t),2)==1)
 
         ww = aR.omega
         ki = aR.ki
@@ -1694,10 +1693,10 @@ class VerifyRandomNLWaves(unittest.TestCase):
                 ai = aR.ai[ii]*aR.ai[jj]*Bp
                 etaT += eta_mode(xi,t,aR.kDir[ii] + aR.kDir[jj],w1p2,aR.phi[ii] + aR.phi[jj],ai)
 #        print etaT,aNL.eta_short(xi,t)
-        self.assertTrue(round(etaT/aNL.eta_short(xi,t),2)==1 or abs(etaT)<0.01*ai)
+        self.assertTrue(round(etaT/aNL.eta_short(xi,t),2)==1 )
 # Testing lower harmonics
         etaT = 0.
-        N = aR.N
+        N = aR.N    
         for ii in range(0,N-1):
             for jj in range(ii+1,N):
                 w1p2 = ww[ii] - ww[jj]
@@ -1717,7 +1716,8 @@ class VerifyRandomNLWaves(unittest.TestCase):
 
                 ai = aR.ai[ii]*aR.ai[jj]*Bp
                 etaT += eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai)
-        self.assertTrue(round(etaT/aNL.eta_long(xi,t),2)==1 or abs(etaT)<0.01*ai)
+        print etaT,aNL.eta_long(xi,t)
+        self.assertTrue(round(etaT/aNL.eta_long(xi,t),2)==1 )
 
 # Testing setup
         etaT = 0.
