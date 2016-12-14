@@ -436,6 +436,120 @@ inline double __cpp_etaDirect(double x[nDim], double x0[nDim], double t, double*
 
       
  }
+ //=========================================2nd order correction==============================================
+
+ inline double __cpp_eta2nd(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd)
+
+
+ {
+
+	
+
+	double HH = 0.;
+	double kw[nDim] = {0.,0.,0.};
+	int ii =0;
+	double ai_2nd=0.;
+
+
+        for (int nn=0; nn<N; nn++)
+	  {
+	    ii = 3*nn;
+	    kw[0] =2.* kDir[ii];
+	    kw[1] =2.* kDir[ii+1];
+	    kw[2] =2.* kDir[ii+2];
+            ai_2nd = (amplitude[nn]*amplitude[nn] * ki[nn]*(2+3./(sinhKd[nn]*sinhKd[nn]) )/(4.*tanhKd[nn] ));	    	    
+	    HH= HH + __cpp_eta_mode(x,t,kw,2.*omega[nn],2.*phi[nn],ai_2nd);
+	  }
+        return HH;      
+      }
+
+ inline double __cpp_eta_short(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs)
+
+
+ {
+
+	
+
+	double HH = 0.;
+	double kw[nDim] = {0.,0.,0.};
+	double kw2[nDim] = {0.,0.,0.};
+	int ii =0;
+	int jj =0;
+	double Dp=0.;
+	double Bp=0.;
+	double tanhSum = 0.;
+	double ai =0.;
+        for (int i=0; i<N-1; i++)
+	  {
+	    ii = 3*i;
+	    kw[0] = kDir[ii];
+	    kw[1] = kDir[ii+1];
+	    kw[2] = kDir[ii+2];
+
+	    for (int j=i+1; j<N; j++)
+	      {
+		jj = 3*j;
+		kw2[0] = kDir[jj]+kw[0];
+		kw2[1] = kDir[jj+1]+kw[1];
+		kw2[2] = kDir[jj+2]+kw[2];
+		
+		tanhSum = (tanhKd[i]+tanhKd[j])/(1.+tanhKd[i]*tanhKd[j]);
+
+                Dp = pow(omega[i]+omega[j],2) - gAbs*(ki[i]+ki[j])*tanhSum;
+                Bp = (pow(omega[i],2)+pow(omega[j],2))/(2*gAbs);
+		Bp = Bp -((omega[i]*omega[j])/(2*gAbs))*(1-1./(tanhKd[i]*tanhKd[j]) )*((pow(omega[i]+omega[j],2) + gAbs*(ki[i]+ki[j])*tanhSum)/Dp);
+		Bp = Bp + ((omega[i]+omega[j])/(2*gAbs*Dp))*((pow(omega[i],3)/pow(sinhKd[i],2)) + (pow(omega[j],3)/pow(sinhKd[j],2)));
+	    
+		ai = amplitude[i]*amplitude[j]*Bp;
+		HH= HH + __cpp_eta_mode(x,t,kw2,omega[i]+omega[j],phi[i]+phi[j],ai);
+	      }
+	  }
+        return HH;      
+      }
+
+ inline double __cpp_eta_long(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs)
+
+
+ {
+
+	
+
+	double HH = 0.;
+	double kw[nDim] = {0.,0.,0.};
+	double kw2[nDim] = {0.,0.,0.};
+	int ii =0;
+	int jj =0;
+	double Dp=0.;
+	double Bp=0.;
+	double tanhSum = 0.;
+	double ai =0.;
+        for (int i=0; i<N-1; i++)
+	  {
+	    ii = 3*i;
+	    kw[0] = kDir[ii];
+	    kw[1] = kDir[ii+1];
+	    kw[2] = kDir[ii+2];
+
+	    for (int j=i+1; j<N; j++)
+	      {
+		jj = 3*j;
+		kw2[0] = -kDir[jj]+kw[0];
+		kw2[1] = -kDir[jj+1]+kw[1];
+		kw2[2] = -kDir[jj+2]+kw[2];
+		
+		tanhSum = (tanhKd[i]-tanhKd[j])/(1.-tanhKd[i]*tanhKd[j]);
+
+                Dp = pow(omega[i]-omega[j],2) - gAbs*(ki[i]-ki[j])*tanhSum;
+                Bp = (pow(omega[i],2)+pow(omega[j],2))/(2*gAbs);
+		Bp = Bp + ((omega[i]*omega[j])/(2*gAbs))*(1+1./(tanhKd[i]*tanhKd[j]) )*((pow(omega[i]-omega[j],2) + gAbs*(ki[i]-ki[j])*tanhSum)/Dp);
+		Bp = Bp + ((omega[i]-omega[j])/(2*gAbs*Dp))*((pow(omega[i],3)/pow(sinhKd[i],2)) - (pow(omega[j],3)/pow(sinhKd[j],2)));
+	    
+		ai = amplitude[i]*amplitude[j]*Bp;
+		HH= HH + __cpp_eta_mode(x,t,kw2,omega[i]-omega[j],phi[i]-phi[j],ai);
+	      }
+	  }
+        return HH;      
+      }
 
 
 
