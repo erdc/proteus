@@ -1796,7 +1796,7 @@ class VerifyRandomNLWaves(unittest.TestCase):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_setUp(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_setUp(xi,float(ii)),8) )
         fid.close()
-'''
+
 class VerifyRandomNLWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
 #    @pytest.mark.skip(reason="nosetests vs pytest issue")
@@ -2011,7 +2011,7 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         self.assertTrue( round(aRF.eta(x,t) == aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t),8) )
         self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
 
-        '''
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
