@@ -151,7 +151,7 @@ class OneLevelTransport(NonlinearEquation):
         self.sd=sd
         for u in uDict.values():
             if u.femSpace.referenceFiniteElement.localFunctionSpace.nonzeroHessians:
-                if stabilization != None:
+                if stabilization is not None:
                     self.Hess=True
         self.Hess=True#False
         self.lowmem=True
@@ -206,7 +206,7 @@ class OneLevelTransport(NonlinearEquation):
         self.stressFluxBoundaryConditionsSetterDict = stressFluxBoundaryConditionsSetterDict
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for ci in range(self.nc):
                 if coefficients.mass.has_key(ci):
                     for flag in coefficients.mass[ci].values():
@@ -236,8 +236,8 @@ class OneLevelTransport(NonlinearEquation):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
-                                                 (numericalFluxType != None) or
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or
+                                                 (numericalFluxType is not None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -278,7 +278,7 @@ class OneLevelTransport(NonlinearEquation):
         else:
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[I] = elementQuadrature
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(I):
@@ -287,7 +287,7 @@ class OneLevelTransport(NonlinearEquation):
                         elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature['default']
                 else:
                     elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(('numDiff',ci,ci)):
@@ -484,7 +484,7 @@ class OneLevelTransport(NonlinearEquation):
         self.scalars_quadrature |= set([('phi',ck) for ck  in self.coefficients.potential.keys()])
         self.scalars_elementBoundaryQuadrature |= set([('phi',ck) for ck  in self.coefficients.potential.keys()])
         self.scalars_phi_ip |= set([('phi',ck) for ck  in self.coefficients.potential.keys()])
-        if numericalFluxType != None:
+        if numericalFluxType is not None:
             self.test_shape_quadrature |= set([('w',ci) for ci in self.coefficients.diffusion.keys()])
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             self.test_shapeGradient_quadrature |= set([('grad(w)*dV_a',ck,ci) for ck in ckDict])
@@ -500,7 +500,7 @@ class OneLevelTransport(NonlinearEquation):
             self.phi_trial_shapeGradient_elementBoundaryQuadrature |= set([('grad(v)',ck) for ck  in ckDict.keys()])
             self.gradient_X_test_shapeGradient_quadrature |= set([('grad(phi)Xgrad(w)*dV_a',ck,ci) for ck in ckDict.keys()])
             self.gradient_X_test_shapeGradient_quadrature |= set([('grad(u)Xgrad(w)*dV_a',ck,ci) for ck in ckDict.keys()]) #\todo remove when nonlinear phi...
-            if numericalFluxType != None:
+            if numericalFluxType is not None:
                 self.test_shape_quadrature |= set([('w*dV_a',ck,ci) for ck in ckDict.keys()])
             for ck,cjDict in ckDict.iteritems():
                 self.tensors_quadrature |= set([('da',ci,ck,cj) for cj  in cjDict.keys()])
@@ -527,7 +527,7 @@ class OneLevelTransport(NonlinearEquation):
                     self.phi_trial_shapeGradient_quadrature |= set([('grad(v)',cj)])
                     self.phi_trial_shapeGradient_X_test_shapeGradient_quadrature |= set([('grad(v)Xgrad(w)*dV_a',ck,cj,ci)])
                     self.phi_trial_shapeGradient_X_test_shape_elementBoundaryQuadrature |= set([('grad(v)Xw*dS_a',ck,cj,ci)])
-                    if numericalFluxType != None:
+                    if numericalFluxType is not None:
                         self.trial_shape_X_test_shape_quadrature |= set([('vXw*dV_a',ck,cj,ci)])
         #mwf what if miss nonlinearities in diffusion that don't match potentials?
         for comb in self.dphi.keys():
@@ -584,14 +584,14 @@ class OneLevelTransport(NonlinearEquation):
             self.tensors_quadrature |= set([('dsigma',ci,cj) for cj  in cjDict.keys()])
             self.tensors_elementBoundaryQuadrature |= set([('dsigma',ci,cj) for cj  in cjDict.keys()])
         #TODO
-        if numericalFluxType != None:#put in more specific check
+        if numericalFluxType is not None:#put in more specific check
             self.test_shape_elementBoundaryQuadrature |= set([('w',ci) for ci in self.coefficients.hamiltonian.keys()])
             self.test_shape_elementBoundaryQuadrature |= set([('w*dS_H',ci) for ci in self.coefficients.hamiltonian.keys()])
             for ci,cjDict in self.coefficients.hamiltonian.iteritems():
                 self.trial_shape_X_test_shape_elementBoundaryQuadrature |= set([('vXw*dS_H',cj,ci) for cj in cjDict.keys()])
 
         #stabilization
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for cjDict in self.coefficients.advection.values():
                 self.vectors_quadrature |= set([('grad(u)',cj) for cj  in cjDict.keys()])
                 self.trial_shapeGradient_quadrature |= set([('grad(v)',cj) for cj  in cjDict.keys()])
@@ -663,7 +663,7 @@ class OneLevelTransport(NonlinearEquation):
             #end usesFEMinterpolant case
 
         #shock capturing
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 self.scalars_quadrature |= set([('numDiff',ci,ci)])
                 self.scalars_quadrature |= set([('pdeResidual',ci)])
@@ -714,7 +714,7 @@ class OneLevelTransport(NonlinearEquation):
         #mwf add for inflow boundary calculations, wastes space for interor
         self.scalars_elementBoundaryQuadrature |= set([('inflowFlux',ci) for ci in self.coefficients.advection.keys()])
         #for 2-sided Hamilton Jacobi fluxes
-        if numericalFluxType != None:#mwf TODO make more specific
+        if numericalFluxType is not None:#mwf TODO make more specific
             self.scalars_elementBoundaryQuadrature |= set([('HamiltonJacobiFlux',ci) for ci in self.coefficients.hamiltonian.keys()])
             #don't have to set exterior explicitly
         #mwf have to go back and separate out logic to remove duplication once things working
@@ -762,7 +762,7 @@ class OneLevelTransport(NonlinearEquation):
         for k in self.tensors_quadrature:
             if (self.sd
                 and k[0] in ['a','da']
-                and self.coefficients.sdInfo != None
+                and self.coefficients.sdInfo is not None
                 and (k[1],k[2]) in self.coefficients.sdInfo.keys()):
                 self.q[k]=numpy.zeros(
                     (self.mesh.nElements_global,
@@ -786,10 +786,10 @@ class OneLevelTransport(NonlinearEquation):
         # numerical flux (dg method)
         # postprocessing cg velocity fields
         #
-        needEBQ = (numericalFluxType != None) and numericalFluxType.hasInterior
-        if self.conservativeFlux != None:
+        needEBQ = (numericalFluxType is not None) and numericalFluxType.hasInterior
+        if self.conservativeFlux is not None:
             for ci in self.conservativeFlux.keys():
-                needEBQ = needEBQ or self.conservativeFlux[ci] != None
+                needEBQ = needEBQ or self.conservativeFlux[ci] is not None
         if options.needEBQ:
             needEBQ = True
         self.needEBQ=needEBQ
@@ -803,7 +803,7 @@ class OneLevelTransport(NonlinearEquation):
             for k in self.tensors_elementBoundaryQuadrature:
                 if (self.sd
                     and k[0] in ['a','da']
-                    and self.coefficients.sdInfo != None
+                    and self.coefficients.sdInfo is not None
                     and (k[1],k[2]) in self.coefficients.sdInfo.keys()):
                     self.ebq[k]=numpy.zeros(
                         (self.mesh.nElements_global,
@@ -841,7 +841,7 @@ class OneLevelTransport(NonlinearEquation):
         for k in self.tensors_elementBoundaryQuadrature_exterior:
             if (self.sd
                 and k[0] in ['a','da']
-                and self.coefficients.sdInfo != None
+                and self.coefficients.sdInfo is not None
                 and (k[1],k[2]) in self.coefficients.sdInfo.keys()):
                 self.ebqe[k]=numpy.zeros(
                     (self.mesh.nExteriorElementBoundaries_global,
@@ -874,10 +874,10 @@ class OneLevelTransport(NonlinearEquation):
         #mwf only need ebq if
         # numerical flux (dg method)
         # postprocessing cg velocity fields
-        needEBQ_GLOBAL = numericalFluxType != None
-        if self.conservativeFlux != None:
+        needEBQ_GLOBAL = numericalFluxType is not None
+        if self.conservativeFlux is not None:
             for ci in self.conservativeFlux.keys():
-                needEBQ_GLOBAL = needEBQ_GLOBAL or self.conservativeFlux[ci] != None
+                needEBQ_GLOBAL = needEBQ_GLOBAL or self.conservativeFlux[ci] is not None
         if options.needEBQ_GLOBAL:
             needEBQ_GLOBAL = True
         self.needEBQ_GLOBAL=needEBQ_GLOBAL
@@ -904,7 +904,7 @@ class OneLevelTransport(NonlinearEquation):
         for k in self.tensors_phi_ip:
             if (self.sd
                 and k[0] in ['a','da']
-                and self.coefficients.sdInfo != None
+                and self.coefficients.sdInfo is not None
                 and (k[1],k[2]) in self.coefficients.sdInfo.keys()):
                 self.phi_ip[k]=numpy.zeros(
                     (self.mesh.nElements_global,
@@ -990,7 +990,7 @@ class OneLevelTransport(NonlinearEquation):
             if ks not in entryStrings:
                 return False
             k0 = (ks,)+(refi,)
-            if self.reuse_test_trial_quadrature and refi != None:
+            if self.reuse_test_trial_quadrature and refi is not None:
                 if k0 in sd.keys():
                     logEvent("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
                     sd[k] = sd[k0]
@@ -1366,7 +1366,7 @@ class OneLevelTransport(NonlinearEquation):
                         self.nElementBoundaryQuadraturePoints_elementBoundary),
                         'd')
 
-                if numericalFluxType != None:
+                if numericalFluxType is not None:
                     self.fluxJacobian_exterior[ci][cj] = numpy.zeros(
                         (self.mesh.nExteriorElementBoundaries_global,
                          self.nElementBoundaryQuadraturePoints_elementBoundary,
@@ -1493,7 +1493,7 @@ class OneLevelTransport(NonlinearEquation):
         else:
             self.timeIntegration = TimeIntegrationClass(self)
 
-        if options != None:
+        if options is not None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
         logEvent("Calculating numerical quadrature formulas",2)
@@ -1502,9 +1502,9 @@ class OneLevelTransport(NonlinearEquation):
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
-            assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
+            assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        if numericalFluxType != None and numericalFluxType.useWeakDirichletConditions:
+        if numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions:
             interleave_DOF=True
             for nDOF_trial_element_ci in self.nDOF_trial_element:
                 if nDOF_trial_element_ci != self.nDOF_trial_element[0]:
@@ -1514,7 +1514,7 @@ class OneLevelTransport(NonlinearEquation):
         self.setupFieldStrides(interleaved=interleave_DOF)
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
-        if numericalFluxType != None:
+        if numericalFluxType is not None:
             if options == None or options.periodicDirichletConditions == None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
@@ -1526,7 +1526,7 @@ class OneLevelTransport(NonlinearEquation):
                                                        advectiveFluxBoundaryConditionsSetterDict,
                                                        diffusiveFluxBoundaryConditionsSetterDictDict,
                                                        options.periodicDirichletConditions)
-            if options != None:
+            if options is not None:
                 self.numericalFlux.setFromOptions(options)
         else:
             self.numericalFlux = None
@@ -1646,21 +1646,21 @@ class OneLevelTransport(NonlinearEquation):
         self.timeIntegration.t=t0
         self.getResidual(u0,r0)
         self.estimate_mt()
-        if DTSET != None:
+        if DTSET is not None:
             self.timeIntegration.chooseInitial_dt(t0,tOut,self.q)
             self.timeIntegration.set_dt(DTSET)
         else:
             self.timeIntegration.chooseInitial_dt(t0,tOut,self.q)
         self.timeIntegration.setInitialStageValues()
         self.timeIntegration.initializeTimeHistory(resetFromDOF=True)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.updateSubgridErrorHistory(initializationPhase=True)#mwf added arg for tracking subscales
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.updateShockCapturingHistory()
     def initializeTimeHistory(self):
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.updateSubgridErrorHistory(initializationPhase=True)#mwf added arg for tracking subscales
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.updateShockCapturingHistory()
     def updateTimeHistory(self,T,resetFromDOF=False):
         """
@@ -1668,14 +1668,14 @@ class OneLevelTransport(NonlinearEquation):
         """
 #         self.timeIntegration.t=T
 #         self.timeIntegration.updateTimeHistory(resetFromDOF)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.updateSubgridErrorHistory()
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.updateShockCapturingHistory()
             #ci
         #if
     def calculateAuxiliaryQuantitiesAfterStep(self):
-        if self.conservativeFlux != None and self.velocityPostProcessor != None:
+        if self.conservativeFlux is not None and self.velocityPostProcessor is not None:
             if self.movingDomain:
                 for ci in range(self.nc):
                     try:
@@ -1825,7 +1825,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                             self.l2g[cj]['freeGlobal'],
                                                                             self.elementJacobian[ci][cj],
                                                                             jacobian)
-                if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                     cfemIntegrals.updateGlobalJacobianFromElementJacobian_eb_dense(self.mesh.elementNeighborsArray,
                                                                                    self.offset[ci],
                                                                                    self.stride[ci],
@@ -1843,7 +1843,7 @@ class OneLevelTransport(NonlinearEquation):
                 #
                 #element boundary contributions
                 #
-                if self.numericalFlux != None and type(self.numericalFlux) != NumericalFlux.DoNothing:
+                if self.numericalFlux is not None and type(self.numericalFlux) != NumericalFlux.DoNothing:
                     if self.numericalFlux.hasInterior:
                         cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(self.offset[ci],
                                                                                                         self.stride[ci],
@@ -1961,7 +1961,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                         self.ebqe[('w*dS_f',ci)],
                                                                                                         jacobian)
                     #mwf TODO can't get here in logic?
-                    if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                    if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                         #
                         cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(self.mesh.elementNeighborsArray,
                                                                                                            self.mesh.nElements_global,
@@ -2156,7 +2156,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                           self.csrColumnOffsets[(ci,cj)],
                                                                           self.elementJacobian[ci][cj],
                                                                           jacobian)
-                if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                     cfemIntegrals.updateGlobalJacobianFromElementJacobian_eb_CSR(self.mesh.elementNeighborsArray,
                                                                                  self.l2g[ci]['nFreeDOF'],
                                                                                  self.l2g[ci]['freeLocal'],
@@ -2169,7 +2169,7 @@ class OneLevelTransport(NonlinearEquation):
                 #
                 #element boundary contributions
                 #
-                if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+                if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
                     if self.numericalFlux.hasInterior:
                         cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(self.mesh.interiorElementBoundariesArray,
                                                                                                       self.mesh.elementBoundaryElementsArray,
@@ -2257,7 +2257,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                           self.ebqe[('w*dS_f',ci)],
                                                                                                           jacobian)
                             #mwf TODO can't get here with current logic?
-                            if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                            if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                             #
                                 cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(self.mesh.exteriorElementBoundariesArray,
                                                                                                                  self.mesh.elementBoundaryElementsArray,
@@ -2429,7 +2429,7 @@ class OneLevelTransport(NonlinearEquation):
                                             self.elementResidual[0],
                                             self.elementResidual[1],
                                             self.elementResidual[2])
-        if  self.stabilization != None:
+        if  self.stabilization is not None:
             for ci in range(self.nc):
                 for cj in self.coefficients.stencil[ci]:
                     cfemIntegrals.updateSubgridError(self.q[('subgridError',cj)],
@@ -2453,7 +2453,7 @@ class OneLevelTransport(NonlinearEquation):
                         else:
                             assert False, "need self.q[('grad(subgridError)Xgrad(w)*dV_numDiff',ci,ci)] if not self.lowmem "
 
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if self.lowmem:
                     cfemIntegrals.updateNumericalDiffusion_lowmem(self.q[('numDiff',ci,ci)],
@@ -2464,7 +2464,7 @@ class OneLevelTransport(NonlinearEquation):
                     cfemIntegrals.updateNumericalDiffusion(self.q[('numDiff',ci,ci)],
                                                            self.q[('grad(u)Xgrad(w)*dV_numDiff',ci,ci)],
                                                            self.elementResidual[ci])
-        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+        if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             for ci in range(self.nc):
                 self.ebq_global[('totalFlux',ci)].fill(0.0)
                 self.ebqe[('totalFlux',ci)].fill(0.0)
@@ -2595,7 +2595,7 @@ class OneLevelTransport(NonlinearEquation):
 #                                                                                                                                    *self.ebqe[('grad(v)',ci)][ebNE,k,i,I]
 #                                                                                                                                    *self.ebqe[('dS_u',ci)][ebNE,k])
             for ci in range(self.nc):
-                if self.numericalFlux.hasInterior or self.conservativeFlux != None:
+                if self.numericalFlux.hasInterior or self.conservativeFlux is not None:
                     cfemIntegrals.copyExteriorElementBoundaryValuesToGlobalElementBoundaryValues(self.mesh.exteriorElementBoundariesArray,
                                                                                                  self.mesh.elementBoundaryElementsArray,
                                                                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -2634,7 +2634,7 @@ class OneLevelTransport(NonlinearEquation):
             for ci,flag in self.fluxBoundaryConditions.iteritems():
                 #put in total flux here as well?
                 self.ebqe[('totalFlux',ci)].fill(0.0)
-                if self.conservativeFlux != None and self.conservativeFlux.has_key(ci) and self.conservativeFlux[ci] != None and self.numericalFlux.hasInterior:
+                if self.conservativeFlux is not None and self.conservativeFlux.has_key(ci) and self.conservativeFlux[ci] is not None and self.numericalFlux.hasInterior:
                     self.ebq_global[('totalFlux',ci)].fill(0.0)
                 if (flag == 'outFlow' or
                     flag == 'mixedFlow' or
@@ -2659,7 +2659,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                             self.ebqe[('w*dS_a',ck,ci)],
                                                                             self.elementResidual[ci])
                             self.ebqe[('totalFlux',ci)]       += self.ebqe[('diffusiveFlux',ck,ci)]
-                if self.conservativeFlux != None and self.conservativeFlux.has_key(ci) and self.conservativeFlux[ci] != None:
+                if self.conservativeFlux is not None and self.conservativeFlux.has_key(ci) and self.conservativeFlux[ci] is not None:
                     cfemIntegrals.copyExteriorElementBoundaryValuesToGlobalElementBoundaryValues(self.mesh.exteriorElementBoundariesArray,
                                                                                                  self.mesh.elementBoundaryElementsArray,
                                                                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -2673,7 +2673,7 @@ class OneLevelTransport(NonlinearEquation):
             cfemIntegrals.updateMass_weak(self.q[('mt',ci)],
                                           self.q[('w*dV_m',ci)],
                                           self.elementResidual[ci])
-        if self.dirichletNodeSetList != None:
+        if self.dirichletNodeSetList is not None:
             for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
                 for eN in range(self.mesh.nElements_global):
                     for j in nodeSetList[eN]:
@@ -2815,7 +2815,7 @@ class OneLevelTransport(NonlinearEquation):
                                                     self.elementJacobian[2][0],
                                                     self.elementJacobian[2][1],
                                                     self.elementJacobian[2][2])
-        if self.stabilization!= None:
+        if self.stabilization is not None:
             for ci in range(self.coefficients.nc):
                 if self.timeIntegration.stabilizationIsImplicit[ci]:
                     for cj in self.coefficients.stencil[ci]:
@@ -2833,7 +2833,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                       self.elementJacobian[ci][ci])
                             else:
                                 assert False
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if self.timeIntegration.shockCapturingIsImplicit[ci]:
                     if self.lowmem:
@@ -2860,9 +2860,9 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.q[('vXw*dV_m',cj,ci)],
                                                                   self.elementJacobian[ci][cj])
             for cj in range(self.nc):
-                if self.timeIntegration.duStar_du[cj] != None:
+                if self.timeIntegration.duStar_du[cj] is not None:
                     self.elementJacobian[ci][cj] *= self.timeIntegration.duStar_du[cj]
-        if self.dirichletNodeSetList != None:
+        if self.dirichletNodeSetList is not None:
             for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
                 for eN in range(self.mesh.nElements_global):
                     for j in nodeSetList[eN]:
@@ -2889,9 +2889,9 @@ class OneLevelTransport(NonlinearEquation):
                                                               self.q[('vXw*dV_m',cj,ci)],
                                                               self.elementJacobian[ci][cj])
         for cj in range(self.nc):
-            if self.timeIntegration.duStar_du[cj] != None:
+            if self.timeIntegration.duStar_du[cj] is not None:
                 self.elementJacobian[ci][cj] *= self.timeIntegration.duStar_du[cj]
-        if self.dirichletNodeSetList != None:
+        if self.dirichletNodeSetList is not None:
             for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
                 for eN in range(self.mesh.nElements_global):
                     for j in nodeSetList[eN]:
@@ -2913,7 +2913,7 @@ class OneLevelTransport(NonlinearEquation):
                 evalElementBoundaryJacobian_hj = True
                 j.fill(0.0)
         #cek clean up this logic using numerical flux
-        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+        if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             #
             self.numericalFlux.updateInteriorNumericalFluxJacobian(self.l2g,self.q,self.ebq,self.ebq_global,self.dphi,
                                                                    self.fluxJacobian,self.fluxJacobian_eb,self.fluxJacobian_hj)
@@ -2928,7 +2928,7 @@ class OneLevelTransport(NonlinearEquation):
         for jDict in self.fluxJacobian_exterior.values():
             for j in jDict.values():
                 j.fill(0.0)
-        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+        if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             self.numericalFlux.updateExteriorNumericalFluxJacobian(self.l2g,self.inflowFlag,self.q,self.ebqe,self.dphi,
                                                                    self.fluxJacobian_exterior,self.fluxJacobian_eb,self.fluxJacobian_hj)
         else:
@@ -3000,7 +3000,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                          cq[('dpdeResidual',ci,cj)])
             for ci,ckDict in self.coefficients.diffusion.iteritems():
                 for ck,cjDict in ckDict.iteritems():
-                    if self.Hess and self.stabilization != None:
+                    if self.Hess and self.stabilization is not None:
                         if self.sd:
                             cfemIntegrals.updateDiffusion2_strong_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                      cq[('a',ci,ck)],
@@ -3062,7 +3062,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                              cq[('grad(u)',cj)],
                                                                              cq[('grad(v)',cj)],
                                                                              cq[('dpdeResidual',ci,cj)])
-                    if self.Hess and self.stabilization != None:
+                    if self.Hess and self.stabilization is not None:
                         for cj in self.coefficients.potential[ck].keys():
                             if self.sd:
                                 cfemIntegrals.updateDiffusionJacobian2_strong_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
@@ -3153,7 +3153,7 @@ class OneLevelTransport(NonlinearEquation):
             if self.q.has_key(('grad(u)',cj)):
                 self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
                                              self.q[('grad(u)',cj)])
-            if self.stabilization != None:
+            if self.stabilization is not None:
                 if self.q.has_key(('Hess(u)',cj)):
                     self.u[cj].getHessianValues(self.q[('Hess(v)',cj)],
                                                 self.q[('Hess(u)',cj)])
@@ -3232,16 +3232,16 @@ class OneLevelTransport(NonlinearEquation):
                     self.dphi[(ck,cj)].projectFromInterpolationConditions(self.phi_ip[('dphi',ck,cj)])
                     #mwf need to communicate values across processors if have spatial heterogeneity and spatial dependence of
                     #potential
-                    if self.phi[ck].par_dof != None:
+                    if self.phi[ck].par_dof is not None:
                         self.phi[ck].par_dof.scatter_forward_insert()
-                    if self.dphi[(ck,cj)].par_dof != None:
+                    if self.dphi[(ck,cj)].par_dof is not None:
                         self.dphi[(ck,cj)].par_dof.scatter_forward_insert()
 
                     self.phi[ck].getValues(self.q[('v',ck)],
                                            self.q[('phi',ck)])
                     self.phi[ck].getGradientValues(self.q[('grad(v)',ck)],
                                                    self.q[('grad(phi)',ck)])
-                    if self.stabilization != None and self.Hess:
+                    if self.stabilization is not None and self.Hess:
                         self.phi[ck].getHessianValues(self.q[('Hess(v)',ck)],
                                                       self.q[('Hess(phi)',ck)])
                     for ci in self.coefficients.diffusion.keys():
@@ -3255,7 +3255,7 @@ class OneLevelTransport(NonlinearEquation):
                     self.q[('phi',ck)][:]=self.q[('u',ck)]
                     self.q[('dphi',ck,cj)].fill(1.0)
                     self.q[('grad(phi)',ck)][:]=self.q[('grad(u)',ck)]
-                    if self.stabilization != None and self.Hess:
+                    if self.stabilization is not None and self.Hess:
                         self.q[('Hess(phi)',ck)][:]=self.q[('Hess(u)',ck)]
                     for ci in self.coefficients.diffusion.keys():
                         if self.coefficients.diffusion[ci].has_key(ck):
@@ -3334,7 +3334,7 @@ class OneLevelTransport(NonlinearEquation):
                                                   self.q[('dH',ci,ci)],
                                                   self.q[('cfl',ci)])
 
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.calculateNumericalDiffusion(self.q)
     def calculateElementBoundaryCoefficients(self):
         """
@@ -3395,12 +3395,12 @@ class OneLevelTransport(NonlinearEquation):
         #
         # calculate the averages and jumps at element boundaries
         #
-        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+        if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             self.numericalFlux.calculateInteriorNumericalFlux(self.q,self.ebq,self.ebq_global)
-        if self.conservativeFlux != None:
+        if self.conservativeFlux is not None:
             for ci in self.conservativeFlux.keys():
                 #don't need for p1-nc?
-                if self.conservativeFlux[ci] not in ['p1-nc','dg','dg-bdm','dg-point-eval','point-eval-gwvd'] and self.conservativeFlux[ci] != None:
+                if self.conservativeFlux[ci] not in ['p1-nc','dg','dg-bdm','dg-point-eval','point-eval-gwvd'] and self.conservativeFlux[ci] is not None:
                     self.ebq[('velocity',ci)].fill(0.0)
                     #self.ebq_global[('velocity',ci)].fill(0.0)
                     self.ebq_global[('velocityAverage',ci)].fill(0.0)
@@ -3448,7 +3448,7 @@ class OneLevelTransport(NonlinearEquation):
                     #
                     #cek can we get rid fo this flag if we're always doing it
                     includeShockCapturingVelocity = True
-                    if self.shockCapturing != None and includeShockCapturingVelocity:
+                    if self.shockCapturing is not None and includeShockCapturingVelocity:
                         fact=1.0
                         cfemIntegrals.updateInteriorElementBoundaryShockCapturingVelocity(self.mesh.interiorElementBoundariesArray,
                                                                                           self.mesh.elementBoundaryElementsArray,
@@ -3531,7 +3531,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         # calculate the averages and jumps at element boundaries
         #
-        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+        if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             self.numericalFlux.calculateExteriorNumericalFlux(self.inflowFlag,self.q,self.ebqe)
         else:
             #cek this wll go away
@@ -3585,7 +3585,7 @@ class OneLevelTransport(NonlinearEquation):
         self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
                                                   self.q['x'])
         if self.movingDomain:
-            if self.tLast_mesh != None:
+            if self.tLast_mesh is not None:
                 self.q['xt'][:]=self.q['x']
                 self.q['xt']-=self.q['x_last']
                 alpha = 1.0/(self.t_mesh - self.tLast_mesh)
@@ -3709,7 +3709,7 @@ class OneLevelTransport(NonlinearEquation):
                 #self.dphi[ci].femSpace.interpolationPoints = self.phi.femSpace.interpolationPoints
         #cek todo, I think this needs to be moved, we don't want to re-initialize variables, just update Eulerian coordinates and quadrature formulas
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             #mwf hack interpolating subgrid error
             if self.stabilization.usesGradientStabilization:
                 self.phi[0].femSpace.elementMaps.getJacobianValues(self.phi[0].femSpace.referenceFiniteElement.interpolationConditions.quadraturePointArray,
@@ -3734,7 +3734,7 @@ class OneLevelTransport(NonlinearEquation):
             else:
                 self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
         #update interpolation points here?
         ##\todo put logic in to evaluate only when necessary
@@ -3762,7 +3762,7 @@ class OneLevelTransport(NonlinearEquation):
         #get metric tensor and unit normals
         #
         if self.movingDomain:
-            if self.tLast_mesh != None:
+            if self.tLast_mesh is not None:
                 self.ebq['xt'][:]=self.ebq['x']
                 self.ebq['xt']-=self.ebq['x_last']
                 alpha = 1.0/(self.t_mesh - self.tLast_mesh)
@@ -3825,7 +3825,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                    self.ebq['xt'])
 
 #         if self.movingDomain:
-#             if self.tLast_mesh != None:
+#             if self.tLast_mesh is not None:
 #                 self.ebq['xt']-=self.ebq['x']
 #                 alpha = -1.0/(self.t_mesh - self.tLast_mesh)
 #                 self.ebq['xt']*=alpha
@@ -3948,9 +3948,9 @@ class OneLevelTransport(NonlinearEquation):
         #mwf should be able to get rid of this too
         #setup flux boundary conditions
         fluxBoundaryCondition_components = set()
-        if self.advectiveFluxBoundaryConditionsSetterDict != None:
+        if self.advectiveFluxBoundaryConditionsSetterDict is not None:
             fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.advectiveFluxBoundaryConditionsSetterDict.keys()))
-        if self.diffusiveFluxBoundaryConditionsSetterDictDict != None:
+        if self.diffusiveFluxBoundaryConditionsSetterDictDict is not None:
             fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.diffusiveFluxBoundaryConditionsSetterDictDict .keys()))
         self.fluxBoundaryConditionsObjectsDictGlobalElementBoundary = {}
         for ci in fluxBoundaryCondition_components:
@@ -3991,7 +3991,7 @@ class OneLevelTransport(NonlinearEquation):
         #get metric tensor and unit normals
         #
         if self.movingDomain:
-            if self.tLast_mesh != None:
+            if self.tLast_mesh is not None:
                 self.ebqe['xt'][:]=self.ebqe['x']
                 self.ebqe['xt']-=self.ebqe['x_last']
                 alpha = 1.0/(self.t_mesh - self.tLast_mesh)
@@ -4012,7 +4012,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                 self.ebqe['sqrt(det(g))'],
                                                                                 self.ebqe['n'])
 #         if self.movingDomain:
-#             if self.tLast_mesh != None:
+#             if self.tLast_mesh is not None:
 #                 self.ebqe['xt']-=self.ebqe['x']
 #                 alpha = -1.0/(self.t_mesh - self.tLast_mesh)
 #                 self.ebqe['xt']*=alpha
@@ -4132,9 +4132,9 @@ class OneLevelTransport(NonlinearEquation):
 
         #setup flux boundary conditions
         fluxBoundaryCondition_components = set()
-        if self.advectiveFluxBoundaryConditionsSetterDict != None:
+        if self.advectiveFluxBoundaryConditionsSetterDict is not None:
             fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.advectiveFluxBoundaryConditionsSetterDict.keys()))
-        if self.diffusiveFluxBoundaryConditionsSetterDictDict != None:
+        if self.diffusiveFluxBoundaryConditionsSetterDictDict is not None:
             fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.diffusiveFluxBoundaryConditionsSetterDictDict .keys()))
         self.fluxBoundaryConditionsObjectsDict = {}
         for ci in fluxBoundaryCondition_components:
@@ -4250,9 +4250,9 @@ class OneLevelTransport(NonlinearEquation):
             for cj in self.coefficients.stencil[ci]: #if we make stencil an array this can pass to C++
                 if useC:
                     hasNumericalFlux=0
-                    if self.numericalFlux != None and self.numericalFlux.hasInterior:
+                    if self.numericalFlux is not None and self.numericalFlux.hasInterior:
                         hasNumericalFlux = 1
-                    hasDiffusionInMixedForm = int(self.numericalFlux != None and  self.numericalFlux.mixedDiffusion[ci] == True)
+                    hasDiffusionInMixedForm = int(self.numericalFlux is not None and  self.numericalFlux.mixedDiffusion[ci] == True)
                     needNumericalFluxJacobian_int = int(needNumericalFluxJacobian)
                     hasOutflowBoundary = int(self.fluxBoundaryConditions[ci] == 'outFlow')
                     needsOutflowJacobian_int = int(needOutflowJacobian == True)
@@ -4290,7 +4290,7 @@ class OneLevelTransport(NonlinearEquation):
                             for jj in range(self.l2g[cj]['nFreeDOF'][eN]):
                                 J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][eN,jj]
                                 columnIndecesDict[I].add(J)
-                        if (self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True and
+                        if (self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True and
                             needNumericalFluxJacobian == True):#pass in array of flags for numflux and mixed
                             for ebN in range(self.mesh.nElementBoundaries_element):
                                 eN_ebN = self.mesh.elementNeighborsArray[eN,ebN]
@@ -4300,7 +4300,7 @@ class OneLevelTransport(NonlinearEquation):
                                         for jj in range(self.l2g[cj]['nFreeDOF'][eN_ebN]):
                                             J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][eN_ebN,jj]
                                             columnIndecesDict[I].add(J)
-                    if self.numericalFlux != None and needNumericalFluxJacobian == True:
+                    if self.numericalFlux is not None and needNumericalFluxJacobian == True:
                         for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                             ebN = self.mesh.interiorElementBoundariesArray[ebNI]
                             left_eN_global   = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -4351,7 +4351,7 @@ class OneLevelTransport(NonlinearEquation):
                                             for  jj  in range(self.l2g[cj]['nFreeDOF'][right_eN_ebN]):
                                                 right_J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][right_eN_ebN,jj]
                                                 columnIndecesDict[right_I].add(right_J)
-                    if ((self.numericalFlux != None and needNumericalFluxJacobian == True) or
+                    if ((self.numericalFlux is not None and needNumericalFluxJacobian == True) or
                         (self.fluxBoundaryConditions[ci] == 'outFlow' and needOutflowJacobian == True)):#BC flag to array
                         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -4364,7 +4364,7 @@ class OneLevelTransport(NonlinearEquation):
                                 for  jj  in range(self.l2g[cj]['nFreeDOF'][eN_global]):
                                     J = self.offset[cj] + self.stride[cj]*self.l2g[cj]['freeGlobal'][eN_global,jj]
                                     columnIndecesDict[I].add(J)
-                            if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                            if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                                 for ebN_eN in range(self.mesh.nElementBoundaries_element):
                                     eN_ebN = self.mesh.elementNeighborsArray[eN_global,ebN_eN]
                                     for  ii  in range(self.l2g[ci]['nFreeDOF'][eN_global]):
@@ -4410,8 +4410,8 @@ class OneLevelTransport(NonlinearEquation):
         self.csrColumnOffsets_eb_eNebN = {}
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]:
-                hasNumericalFlux = int(self.numericalFlux != None)
-                hasDiffusionInMixedForm = int(self.numericalFlux != None and  self.numericalFlux.mixedDiffusion[ci] == True)
+                hasNumericalFlux = int(self.numericalFlux is not None)
+                hasDiffusionInMixedForm = int(self.numericalFlux is not None and  self.numericalFlux.mixedDiffusion[ci] == True)
                 needNumericalFluxJacobian_int = int(needNumericalFluxJacobian)
                 hasOutflowBoundary = int(self.fluxBoundaryConditions[ci] == 'outFlow')
                 needsOutflowJacobian_int = int(needOutflowJacobian == True)
@@ -4476,7 +4476,7 @@ class OneLevelTransport(NonlinearEquation):
                             for jj in range(self.l2g[cj]['nFreeDOF'][eN]):
                                 J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][eN,jj]
                                 self.csrColumnOffsets[(ci,cj)][eN,ii,jj] = columnOffsetDict[(I,J)]
-                        if (self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True):
+                        if (self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True):
                             for ebN in range(self.mesh.nElementBoundaries_element):
                                 eN_ebN = self.mesh.elementNeighborsArray[eN,ebN]
                                 if eN_ebN >= 0:
@@ -4485,7 +4485,7 @@ class OneLevelTransport(NonlinearEquation):
                                         for jj in range(self.l2g[cj]['nFreeDOF'][eN_ebN]):
                                             J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][eN_ebN,jj]
                                             self.csrColumnOffsets_eNebN[(ci,cj)][eN,ebN,ii,jj] = columnOffsetDict[(I,J)]
-                    if self.numericalFlux != None and needNumericalFluxJacobian == True:
+                    if self.numericalFlux is not None and needNumericalFluxJacobian == True:
                         for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                             ebN = self.mesh.interiorElementBoundariesArray[ebNI]
                             left_eN_global   = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -4532,7 +4532,7 @@ class OneLevelTransport(NonlinearEquation):
                                             for  jj  in range(self.l2g[cj]['nFreeDOF'][right_eN_ebN]):
                                                 right_J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][right_eN_ebN,jj]
                                                 self.csrColumnOffsets_eb_eNebN[(ci,cj)][ebN,1,1,ebN_eN,ii,jj] = columnOffsetDict[(right_I,right_J)]
-                    if ((self.numericalFlux != None and needNumericalFluxJacobian == True) or
+                    if ((self.numericalFlux is not None and needNumericalFluxJacobian == True) or
                         (self.fluxBoundaryConditions[ci] == 'outFlow' and needOutflowJacobian  == True)):
                         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -4543,7 +4543,7 @@ class OneLevelTransport(NonlinearEquation):
                                 for  jj  in range(self.l2g[cj]['nFreeDOF'][eN_global]):
                                     J = self.offset[cj] + self.stride[cj]*self.l2g[cj]['freeGlobal'][eN_global,jj]
                                     self.csrColumnOffsets_eb[(ci,cj)][ebN,0,0,ii,jj] = columnOffsetDict[(I,J)]
-                            if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                            if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                                 for ebN_eN in range(self.mesh.nElementBoundaries_element):
                                     eN_ebN = self.mesh.elementNeighborsArray[eN_global,ebN_eN]
                                     for ii in range(self.l2g[ci]['nFreeDOF'][eN_global]):
@@ -4561,7 +4561,7 @@ class OneLevelTransport(NonlinearEquation):
         if Viewers.viewerType == 'vtk':
             return self.viewSolutionVTK(plotOffSet=plotOffSet,titleModifier=titleModifier,dgridnx=dgridnx,
                                         dgridny=dgridny,dgridp=dgridp,pause=pause)
-        if plotOffSet != None:
+        if plotOffSet is not None:
             windowNumberSave = Viewers.windowNumber
             Viewers.windowNumber=plotOffSet
         else:
@@ -4735,7 +4735,7 @@ class OneLevelTransport(NonlinearEquation):
                         Viewers.newPlot()
                         Viewers.newWindow()
 
-                if self.coefficients.vectorComponents != None:
+                if self.coefficients.vectorComponents is not None:
                     scale_x = max(numpy.absolute(self.u[self.coefficients.vectorComponents[0]].dof.flat))
                     scale_y = max(numpy.absolute(self.u[self.coefficients.vectorComponents[1]].dof.flat))
                     L = min((max(self.mesh.nodeArray[:,0]),max(self.mesh.nodeArray[:,1])))
@@ -4797,7 +4797,7 @@ class OneLevelTransport(NonlinearEquation):
                         Viewers.newPlot()
                         Viewers.newWindow()
 
-                if (self.coefficients.vectorComponents != None and
+                if (self.coefficients.vectorComponents is not None and
                     (isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis) and
                      isinstance(self.u[1].femSpace,C0_AffineLinearOnSimplexWithNodalBasis) and
                      isinstance(self.u[2].femSpace,C0_AffineLinearOnSimplexWithNodalBasis) or
@@ -4864,7 +4864,7 @@ class OneLevelTransport(NonlinearEquation):
                 Viewers.windowNumber += nplotted
             #
             if self.nSpace_global == 2:
-                if self.coefficients.vectorComponents != None:
+                if self.coefficients.vectorComponents is not None:
                     vci0 = self.coefficients.vectorComponents[0]
                     vci1 = self.coefficients.vectorComponents[1]
 
@@ -4893,7 +4893,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                   title = 'velocity_{dof}' + titleModifier)
                         Viewers.windowNumber += nplotted
             elif self.nSpace_global == 3:
-                if self.coefficients.vectorComponents != None:
+                if self.coefficients.vectorComponents is not None:
                     vci0 = self.coefficients.vectorComponents[0]
                     vci1 = self.coefficients.vectorComponents[1]
                     vci2 = self.coefficients.vectorComponents[2]
@@ -4926,7 +4926,7 @@ class OneLevelTransport(NonlinearEquation):
                         Viewers.windowNumber += nplotted
 
         #if matlab
-        if windowNumberSave != None:
+        if windowNumberSave is not None:
             Viewers.windowNumber = windowNumberSave
         return Viewers.windowNumber
 
@@ -4935,7 +4935,7 @@ class OneLevelTransport(NonlinearEquation):
                         pause=False):
         import Viewers
         from proteusGraphical import vtkViewers
-        if plotOffSet != None:
+        if plotOffSet is not None:
             windowNumberSave = Viewers.windowNumber
             Viewers.windowNumber=plotOffSet
         else:
@@ -5145,7 +5145,7 @@ class OneLevelTransport(NonlinearEquation):
                     Viewers.newWindow()
 
                 #if has vel
-            if self.coefficients.vectorComponents != None:
+            if self.coefficients.vectorComponents is not None:
                 #
                 scale_x = max(numpy.absolute(self.u[self.coefficients.vectorComponents[0]].dof.flat))
                 scale_y = max(numpy.absolute(self.u[self.coefficients.vectorComponents[1]].dof.flat))
@@ -5236,7 +5236,7 @@ class OneLevelTransport(NonlinearEquation):
                     Viewers.newPlot()
                     Viewers.newWindow()
 
-            if self.coefficients.vectorComponents != None:
+            if self.coefficients.vectorComponents is not None:
                 #
                 scale_x = max(numpy.absolute(self.u[self.coefficients.vectorComponents[0]].dof.flat))
                 scale_y = max(numpy.absolute(self.u[self.coefficients.vectorComponents[1]].dof.flat))
@@ -5268,7 +5268,7 @@ class OneLevelTransport(NonlinearEquation):
                     Viewers.newWindow()
                 #
             #vector components
-        if windowNumberSave != None:
+        if windowNumberSave is not None:
             Viewers.windowNumber = windowNumberSave
         return Viewers.windowNumber
     #### start routines for saving/writing data
@@ -5344,7 +5344,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                         t,init=False,meshChanged=meshChanged,tCount=tCount)
 
             self.u[ci].femSpace.writeFunctionXdmf(archive,self.u[ci],tCount)
-        if writeVectors and self.coefficients.vectorComponents != None:
+        if writeVectors and self.coefficients.vectorComponents is not None:
             c0 = self.coefficients.vectorComponents[0]
             self.u[c0].femSpace.writeVectorFunctionXdmf(archive,
                                                         self.u,
@@ -5352,7 +5352,7 @@ class OneLevelTransport(NonlinearEquation):
                                                         self.coefficients.vectorName,
                                                         tCount)
 
-        if writeVelocityPostProcessor and self.velocityPostProcessor != None:
+        if writeVelocityPostProcessor and self.velocityPostProcessor is not None:
             self.velocityPostProcessor.archiveVelocityValues(archive,t,tCount,initialPhase=initialPhase,meshChanged=meshChanged)
     def archiveElementQuadratureValues(self,archive,t,tCount,scalarKeys=None,vectorKeys=None,
                                        tensorKeys=None,
@@ -5369,7 +5369,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                t=t,init=initialPhase,
                                                                                meshChanged=meshChanged,arGrid=None,
                                                                                tCount=tCount)
-        if scalarKeys != None:
+        if scalarKeys is not None:
             for key in scalarKeys:
                 if isinstance(key,str):
                     name = key
@@ -5382,7 +5382,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                          self.q[key],
                                                                                          name,
                                                                                          tCount)
-        if vectorKeys != None:
+        if vectorKeys is not None:
             for key in vectorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5395,7 +5395,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                          self.q[key],
                                                                                          name,
                                                                                          tCount)
-        if tensorKeys != None:
+        if tensorKeys is not None:
             for key in tensorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5426,7 +5426,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                meshChanged=meshChanged,arGrid=None,
                                                                                                tCount=tCount)
 
-        if scalarKeys != None:
+        if scalarKeys is not None:
             for key in scalarKeys:
                 if isinstance(key,str):
                     name = key
@@ -5439,7 +5439,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                          self.ebq_global[key],
                                                                                                          name,
                                                                                                          tCount)
-        if vectorKeys != None:
+        if vectorKeys is not None:
             for key in vectorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5452,7 +5452,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                          self.ebq_global[key],
                                                                                                          name,
                                                                                                          tCount)
-        if tensorKeys != None:
+        if tensorKeys is not None:
             for key in tensorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5482,7 +5482,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                t=t,init=initialPhase,
                                                                                                                meshChanged=meshChanged,arGrid=None,
                                                                                                                tCount=tCount)
-        if scalarKeys != None:
+        if scalarKeys is not None:
             for key in scalarKeys:
                 if isinstance(key,str):
                     name = key
@@ -5495,7 +5495,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                          self.ebqe[key],
                                                                                                                          name,
                                                                                                                          tCount)
-        if vectorKeys != None:
+        if vectorKeys is not None:
             for key in vectorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5508,7 +5508,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                          self.ebqe[key],
                                                                                                                          name,
                                                                                                                          tCount)
-        if tensorKeys != None:
+        if tensorKeys is not None:
             for key in tensorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5543,7 +5543,7 @@ class OneLevelTransport(NonlinearEquation):
         """
         Setup the storage for the mass jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
         """
-        if self.mass_jacobian != None:
+        if self.mass_jacobian is not None:
             return self.mass_jacobian
 
         import superluWrappers
@@ -5561,7 +5561,7 @@ class OneLevelTransport(NonlinearEquation):
         """
         Setup the storage for the spatial jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
         """
-        if self.space_jacobian != None:
+        if self.space_jacobian is not None:
             return self.space_jacobian
         import superluWrappers
         if self.matType == superluWrappers.SparseMatrix:
@@ -5620,7 +5620,7 @@ class OneLevelTransport(NonlinearEquation):
                                               self.q[('w*dV_r',ci)],
                                               self.elementResidual[ci])
 
-        if self.numericalFlux != None:
+        if self.numericalFlux is not None:
             for ci in self.coefficients.advection.keys():
                 if (self.numericalFlux.advectiveNumericalFlux.has_key(ci) and
                     self.numericalFlux.advectiveNumericalFlux[ci]) == True:
@@ -5755,7 +5755,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         # calculate the averages and jumps at element boundaries
         #
-        if self.numericalFlux != None:
+        if self.numericalFlux is not None:
             self.numericalFlux.calculateExteriorNumericalFlux(self.inflowFlag,self.q,self.ebqe)
         else:
             #cek this wll go away
@@ -6247,7 +6247,7 @@ class MultilevelTransport:
             self.comm=comm
             if (comm.size() > 1):
                 for ci in range(transport.nc):
-                    assert trialSpaceDict[ci].dofMap.dof_offsets_subdomain_owned != None, "trial space %s needs subdomain -> global mappings " % trialSpaceDict
+                    assert trialSpaceDict[ci].dofMap.dof_offsets_subdomain_owned is not None, "trial space %s needs subdomain -> global mappings " % trialSpaceDict
                 #initially assume all the spaces can share the same l2g information ...
                 par_n = trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()]
                 par_N = trialSpaceDict[0].dofMap.nDOF_all_processes
@@ -6479,8 +6479,8 @@ class MultilevelTransport:
                     par_jacobian = flcbdfWrappers.ParMat(par_bs,par_n,par_N,par_nghost,max_dof_neighbors,subdomain2global,jacobian)
             elif  (options.multilevelLinearSolver == PETSc or
                    options.levelLinearSolver == PETSc):
-                assert trialSpaceDict[0].dofMap.subdomain2global != None, "need trivial subdomain2global in dofMap for running PETSc"
-                assert trialSpaceDict[0].dofMap.max_dof_neighbors!= None, "need max_dof_neighbors in dofMap for running PETSc"
+                assert trialSpaceDict[0].dofMap.subdomain2global is not None, "need trivial subdomain2global in dofMap for running PETSc"
+                assert trialSpaceDict[0].dofMap.max_dof_neighbors is not None, "need max_dof_neighbors in dofMap for running PETSc"
                 par_N = par_n =  trialSpaceDict[0].dofMap.nDOF_all_processes
                 par_nghost = 0
                 subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
@@ -6494,8 +6494,8 @@ class MultilevelTransport:
                 par_jacobian = flcbdfWrappers.ParMat(par_bs,par_n,par_N,par_nghost,max_dof_neighbors,subdomain2global[:par_n],jacobian)
             elif  (options.multilevelLinearSolver == KSP_petsc4py or
                    options.levelLinearSolver == KSP_petsc4py):
-                assert trialSpaceDict[0].dofMap.subdomain2global != None, "need trivial subdomain2global in dofMap for running PETSc"
-                assert trialSpaceDict[0].dofMap.max_dof_neighbors!= None, "need max_dof_neighbors in dofMap for running PETSc"
+                assert trialSpaceDict[0].dofMap.subdomain2global is not None, "need trivial subdomain2global in dofMap for running PETSc"
+                assert trialSpaceDict[0].dofMap.max_dof_neighbors is not None, "need max_dof_neighbors in dofMap for running PETSc"
                 par_N = par_n =  trialSpaceDict[0].dofMap.nDOF_all_processes
                 mixed = False
                 for ts in trialSpaceDict.values():
