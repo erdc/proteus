@@ -25,8 +25,9 @@ def _petsc_view(obj, filename):
     viewer = p4pyPETSc.Viewer().createBinary(filename, 'w')
     viewer(obj)
     viewer2 = p4pyPETSc.Viewer().createASCII(filename+".m", 'w')
-    viewer2.setFormat(1)
+    viewer2.pushFormat(1)
     viewer2(obj)
+    viewer2.popFormat()
 
 def _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output=False):
     """ Takes python CSR datatypes and makes a dense matrix """

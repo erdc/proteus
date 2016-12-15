@@ -2373,6 +2373,16 @@ class ParametricMaps(ElementMaps):
         self.localFunctionSpace = localFunctionSpace
         self.meshDOFMap=NodalDOFMap(mesh)
         self.useC=True
+    def getBasisValuesIP(self, interpolationPoints):
+        n_xi = interpolationPoints.shape[0]
+        range_n_xi = range(n_xi)
+        self.psi_ip = numpy.zeros((n_xi,
+                                self.localFunctionSpace.dim),
+                               'd')
+        for k in range_n_xi:
+            for j in self.localFunctionSpace.range_dim:
+                self.psi_ip[k,j] = self.localFunctionSpace.basis[j](interpolationPoints[k])
+        return self.psi_ip
     def getBasisValuesRef(self,xiArray):
         n_xi = xiArray.shape[0]
         range_n_xi = range(n_xi)
@@ -2859,16 +2869,16 @@ class AffineMaps(ParametricMaps):
             n_x = xArray.shape[1]
             range_nx = range(n_x)
             grad_psi = numpy.zeros((self.localFunctionSpace.dim,
-                                      self.referenceElement.dim),
-                                     'd')
+                                    self.referenceElement.dim),
+                                   'd')
             dx = numpy.zeros((self.referenceElement.dim),
-                               'd')
+                             'd')
             jacobian = numpy.zeros((self.referenceElement.dim,
-                                      self.referenceElement.dim),
-                                     'd')
+                                    self.referenceElement.dim),
+                                   'd')
             inverseJacobian = numpy.zeros((self.referenceElement.dim,
-                                             self.referenceElement.dim),
-                                            'd')
+                                           self.referenceElement.dim),
+                                          'd')
             for j in self.localFunctionSpace.range_dim:
                 grad_psi[j,:] = self.localFunctionSpace.basisGradients[j](xiArray[0])
             for eN in range(self.mesh.nElements_global):
@@ -2893,16 +2903,16 @@ class AffineMaps(ParametricMaps):
                         x):
         xi=numpy.zeros((self.referenceElement.dim,),'d')
         grad_psi = numpy.zeros((self.localFunctionSpace.dim,
-                                  self.referenceElement.dim),
-                                 'd')
+                                self.referenceElement.dim),
+                               'd')
         dx = numpy.zeros((self.referenceElement.dim),
-                           'd')
+                         'd')
         jacobian = numpy.zeros((self.referenceElement.dim,
-                                  self.referenceElement.dim),
-                                 'd')
+                                self.referenceElement.dim),
+                               'd')
         inverseJacobian = numpy.zeros((self.referenceElement.dim,
-                                         self.referenceElement.dim),
-                                        'd')
+                                       self.referenceElement.dim),
+                                      'd')
         for j in self.localFunctionSpace.range_dim:
             grad_psi[j,:] = self.localFunctionSpace.basisGradients[j](xi)
         jacobian.flat[:]=0.0
