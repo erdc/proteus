@@ -14,7 +14,7 @@ if cmd_subfolder not in sys.path:
 
 import os.path
 import numpy
-import laplace_template_C0P1_3D as tp_3d
+import laplace_template_C0P1_3D as tp_3D
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import LinearAlgebraTools
@@ -24,14 +24,21 @@ Profiling.verbose = True
 
 class TestLaplaceConstruction3D():
     """ Run tests to verify the construction of the 3D Laplace operator """
-    def __init__(self):
+
+    @classmethod
+    def setup_class(cls):
         pass
 
-    def setUp(self):
-        """ Initialize the test problem """
-        self.laplace_object = tp_3d.ns
+    @classmethod
+    def teardown_class(cls):
+        pass
 
-    def tearDown(self):
+    def setup_method(self,method):
+        """ Initialize the test problem """
+        reload(tp_3D)
+        self.laplace_object = tp_3D.ns
+
+    def teardown_method(self,method):
         """ Tear down function """
         FileList = ["Laplace_matrix_test.h5",
                     "Laplace_matrix_test.xmf",
@@ -61,14 +68,10 @@ class TestLaplaceConstruction3D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.laplace_object.modelList[0].levelModelList[0].getSpatialJacobian(self.Asys)
         laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        comparison_mat = numpy.loadtxt('./comparison_files/laplace_reference_c0p1_3D.txt')
+        expected_output = os.path.dirname(os.path.abspath(__file__)) + '/comparison_files/laplace_reference_c0p1_3D.txt'
+        comparison_mat = numpy.loadtxt(expected_output)
         assert numpy.allclose(laplace_mat,comparison_mat)
 
-
-
 if __name__ == "__main__":
-    tlc3d = TestLaplaceConstruction3D()
-    tlc3d.setUp()
-    tlc3d.test_1()
-    tlc3d.tearDown()
+    pass
     
