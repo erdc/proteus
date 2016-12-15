@@ -19,7 +19,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         reaction={0:{0:'nonlinear'}}
         #reaction={}
         if self.sd:
-            assert nd!=None,"You must set the number of dimensions to use sparse diffusion in LevelSetConservationCoefficients"
+            assert nd is not None,"You must set the number of dimensions to use sparse diffusion in LevelSetConservationCoefficients"
             sdInfo = {(0,0):(numpy.arange(start=0,stop=nd+1,step=1,dtype='i'),
                              numpy.arange(start=0,stop=nd,step=1,dtype='i'))}
         else:
@@ -163,14 +163,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         elif c[('u',0)].shape == self.ebqe_u_ls.shape:
             u_ls = self.ebqe_u_ls
             H_vof = self.ebqe_H_vof
-        elif self.ebq_u_ls != None and c[('u',0)].shape == self.ebq_u_ls.shape:
+        elif self.ebq_u_ls is not None and c[('u',0)].shape == self.ebq_u_ls.shape:
             u_ls = self.ebq_u_ls
             H_vof = self.ebq_H_vof
         else:
             #\todo trap errors in TransportCoefficients.py
             u_ls = None
             H_vof = None
-        if u_ls != None and H_vof != None:
+        if u_ls is not None and H_vof is not None:
             if self.useC:
                 if self.sd:
                     self.levelSetConservationCoefficientsEvaluate_sd(self.epsHeaviside,
@@ -271,7 +271,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization != None:
+	if self.stabilization is not None:
 	    for ci in range(self.nc):
 		if coefficients.mass.has_key(ci):
 		    for flag in coefficients.mass[ci].values():
@@ -301,8 +301,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
-                                                 (numericalFluxType != None) or
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or
+                                                 (numericalFluxType is not None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -335,7 +335,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[I] = elementQuadrature
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(I):
@@ -344,7 +344,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature['default']
                 else:
                     elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(('numDiff',ci,ci)):
@@ -468,7 +468,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
              self.timeIntegration = TimeIntegrationClass(self)
 
-        if options != None:
+        if options is not None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
         logEvent("Calculating numerical quadrature formulas",2)
@@ -478,11 +478,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
-            assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
+            assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
-        if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+        if numericalFluxType is not None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -537,7 +537,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateCoefficients(self):
         pass
     def calculateElementResidual(self):
-        if self.globalResidualDummy != None:
+        if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
     def getResidual(self,u,r):
         import pdb
@@ -603,7 +603,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         logEvent("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy == None:
+        if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)
@@ -870,10 +870,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
     def calculateElementBoundaryQuadrature(self):
         pass
@@ -1010,7 +1010,7 @@ class DummyNewton(proteus.NonlinearSolvers.NonlinearSolver):
                  maxLSits = 100):
         import copy
         self.par_du = par_du
-        if par_du != None:
+        if par_du is not None:
             F.dim_proc = par_du.dim_proc
         NonlinearSolver.__init__(self,F,J,du,
                                  rtol_r,
@@ -1064,7 +1064,7 @@ class ElementNewton(proteus.NonlinearSolvers.NonlinearSolver):
                  maxLSits = 100):
         import copy
         self.par_du = par_du
-        if par_du != None:
+        if par_du is not None:
             F.dim_proc = par_du.dim_proc
         NonlinearSolver.__init__(self,F,J,du,
                                  rtol_r,
@@ -1120,7 +1120,7 @@ class ElementConstantNewton(proteus.NonlinearSolvers.NonlinearSolver):
                  maxLSits = 100):
         import copy
         self.par_du = par_du
-        if par_du != None:
+        if par_du is not None:
             F.dim_proc = par_du.dim_proc
         NonlinearSolver.__init__(self,F,J,du,
                                  rtol_r,
@@ -1176,7 +1176,7 @@ class GlobalConstantNewton(proteus.NonlinearSolvers.NonlinearSolver):
                  maxLSits = 100):
         import copy
         self.par_du = par_du
-        if par_du != None:
+        if par_du is not None:
             F.dim_proc = par_du.dim_proc
         NonlinearSolver.__init__(self,F,J,du,
                                  rtol_r,
