@@ -27,3 +27,6 @@ from Archiver import ArchiveFlags
 
 archiveFlag = ArchiveFlags.EVERY_USER_STEP
 #CEK CHANGED DEFAULT FROM EVERY_SEQUENCE_STEP
+
+dt_system_fixed = None
+"""A system-wide wide time step used by SplitOperator objects"""
