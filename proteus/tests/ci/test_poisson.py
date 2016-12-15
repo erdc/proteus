@@ -43,6 +43,7 @@ class TestPoisson():
         FileList = ['tetgen.ele',
                     'tetgen.face',
                     'tetgen.node',
+                    'hexmesh_3x3.mesh',
                     'poisson_3d_c0p1pe1.xmf',
                     'poisson_3d_c0p1pe1.h5',
                     'poisson_3d_c0p2pe1.xmf',
