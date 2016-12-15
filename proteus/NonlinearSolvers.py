@@ -39,7 +39,7 @@ class NonlinearEquation:
         pass
 
     def getJacobian(jacobian,usePicard=False):
-        """"""
+        """ """
         pass
 
     def resetNonlinearFunctionStatistics(self):
@@ -440,7 +440,7 @@ class Newton(NonlinearSolver):
         u -- solution
         r -- F(u) - b
         """
-
+        
         import Viewers
         memory()
         if self.linearSolver.computeEigenvalues:
@@ -489,7 +489,7 @@ class Newton(NonlinearSolver):
                     self.setLinearSolverTolerance(r)
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                self.linearSolverFailed = self.linearSolver.failed()
+                self.linearSolverFailed = self.linearSolver.failed()                
             u-=self.du
             if par_u != None:
                 par_u.scatter_forward_insert()
@@ -500,7 +500,6 @@ class Newton(NonlinearSolver):
                     par_r.scatter_reverse_add()
                 else:
                     par_r.scatter_forward_insert()
-
             #print "global r",r
             if self.linearSolver.computeEigenvalues:
                 #approximate Lipschitz constant of J
@@ -549,7 +548,7 @@ class Newton(NonlinearSolver):
     #                 while ( (norm_r_cur >= 0.99 * self.norm_r + self.atol_r) and
     #                         (ls_its < self.maxLSits) and
     #                         norm_r_cur/norm_r_last < 1.0):
-                if norm_r_cur > self.rtol_r*self.norm_r0 + self.atol_r:#make sure hasn't converged already
+                if norm_r_cur > self.rtol_r*self.norm_r0 + self.atol_r:#make sure hasnt converged already
                     while ( (norm_r_cur >= 0.9999 * self.norm_r) and
                             (ls_its < self.maxLSits)):
                         self.convergingIts = 0
@@ -572,8 +571,8 @@ class Newton(NonlinearSolver):
                                                                                self.atol_r,
                                                                                self.rtol_r))
                     if ls_its > 0:
-                        logEvent("Linesearches = %i" % ls_its,level=3)
-        else:
+                        logEvent("Linesearches = %i" % ls_its,level=3)            
+        else:            
             if self.linearSolver.computeEigenvalues:
                 try:
                     if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:
@@ -623,10 +622,10 @@ class Newton(NonlinearSolver):
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             logEvent(memory("Newton","Newton"),level=4)
-            return self.failedFlag
+            return self.failedFlag        
         logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-        logEvent(memory("Newton","Newton"),level=4)
+        logEvent(memory("Newton","Newton"),level=4)        
 
 import deim_utils
 class POD_Newton(Newton):
@@ -2618,7 +2617,7 @@ class NLNI(MultilevelNonlinearSolver):
                 p[l+1].matvec(self.solverList[l].F.u[ci].dof,self.solverList[l+1].F.u[ci].dof)
             self.solverList[l+1].F.setFreeDOF(uList[l+1])
         if self.tolList != None:
-            self.switchToResidualConvergence(self.solverList[self.fineLevel],self.tolList[self.fineLevel])
+            self.switchToResidualConvergence(self.solverList[self.fineLevel],self.tolList[self.fineLevel])        
         self.solverList[self.fineLevel].solve(u=uList[self.fineLevel],
                                               r=rList[self.fineLevel],
                                               b=bList[self.fineLevel],

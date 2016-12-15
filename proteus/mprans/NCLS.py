@@ -55,6 +55,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
 
     def __init__(self,
+                 #PARAMETERS FOR ENTROPY VISCOSITY
+                 cE=1.0,cMax=0.1,ENTROPY_VISCOSITY=0,SUPG=1,
+                 #PARAMETER FOR LS-COUPEZ
+                 LS_COUPEZ=0,
+                 #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+                 uL=0.0,uR=1.0,
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
@@ -95,7 +101,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 	self.sc_uref=sc_uref
 	self.sc_beta=sc_beta
         self.waterline_interval = waterline_interval
-
+        #ENTROPY VISCOSITY 
+        self.cE=cE
+        self.cMax=cMax
+        self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
+        self.SUPG=SUPG
+        #PARAMETERS FOR LS-COUPEZ
+        self.LS_COUPEZ=LS_COUPEZ
+        #PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
+        self.uL=uL
+        self.uR=uR
     def attachModels(self,modelList):
         #the level set model
         self.model = modelList[self.modelIndex]
@@ -515,6 +530,9 @@ class LevelModel(OneLevelTransport):
 
         self.setupFieldStrides()
 
+        #cek adding empty data member for low order numerical viscosity structures here for now
+        self.cterm_global=None
+        #cek end low order numerical viscosity data
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -599,7 +617,6 @@ class LevelModel(OneLevelTransport):
 	self.waterline_calls  = 0
 	self.waterline_prints = 0
 
-
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
@@ -613,8 +630,101 @@ class LevelModel(OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-        #mwf debug
-        #pdb.set_trace()
+        #
+        #cek add numerical viscosity c array if not yet allocated and initialized
+        #
+        
+        if self.cterm_global is None:
+            #since we only need cterm_global to persist, we can drop the other self.'s
+            self.cterm={}
+            self.cterm_a={}
+            self.cterm_global={}
+            rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+            nnz = nzval.shape[-1]
+            di = self.q[('grad(u)',0)].copy()
+            self.q[('v',0)] = np.zeros((self.mesh.nElements_global,
+                                        self.nQuadraturePoints_element,
+                                        self.nDOF_trial_element[0]),
+                                       'd')
+            self.u[0].femSpace.getBasisValues(self.elementQuadraturePoints,
+                                              self.q[('v',0)])
+            self.q[('J')] = np.zeros((self.mesh.nElements_global,
+                                      self.nQuadraturePoints_element,
+                                      self.nSpace_global,
+                                      self.nSpace_global),
+                                     'd')
+            self.q[('inverse(J)')] = np.zeros((self.mesh.nElements_global,
+                                               self.nQuadraturePoints_element,
+                                               self.nSpace_global,
+                                               self.nSpace_global),
+                                              'd')
+            self.q[('det(J)')] = np.zeros((self.mesh.nElements_global,
+                                           self.nQuadraturePoints_element),
+                                          'd')
+            self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
+                                                             self.q['J'],
+                                                             self.q['inverse(J)'],
+                                                             self.q['det(J)'])
+            self.q[('grad(w)',0)] = np.zeros((self.mesh.nElements_global,
+                                              self.nQuadraturePoints_element,
+                                              self.nDOF_trial_element[0],
+                                              self.nSpace_global),
+                                             'd')
+            self.u[0].femSpace.getBasisGradientValues(self.elementQuadraturePoints,
+                                                      self.q['inverse(J)'],
+                                                      self.q[('grad(w)',0)])
+            self.q[('grad(w)*dV_f',0)] = np.zeros((self.mesh.nElements_global,
+                                                   self.nQuadraturePoints_element,
+                                                   self.nDOF_trial_element[0],
+                                                   self.nSpace_global),
+                                                  'd')
+            self.q['abs(det(J))'] = np.abs(self.q['det(J)'])
+            cfemIntegrals.calculateWeightedShapeGradients(self.elementQuadratureWeights[('u',0)],
+                                                          self.q['abs(det(J))'],
+                                                          self.q[('grad(w)',0)],
+                                                          self.q[('grad(w)*dV_f',0)])
+            for d in range(self.nSpace_global): #spatial dimensions
+                self.cterm[d] = np.zeros((self.mesh.nElements_global, 
+                                          self.nDOF_trial_element[0], 
+                                          self.nDOF_test_element[0]),'d')
+                self.cterm_a[d] = nzval.copy()
+                self.cterm_global[d] = SparseMat(self.nFreeDOF_global[0],
+                                                 self.nFreeDOF_global[0],
+                                                 nnz,
+                                                 self.cterm_a[d], 
+                                                 colind,
+                                                 rowptr)
+                cfemIntegrals.zeroJacobian_CSR(self.nnz, self.cterm_global[d])
+                di[:] = 0.0
+                di[...,d] = 1.0
+                cfemIntegrals.updateAdvectionJacobian_weak_lowmem(di,
+                                                                  self.q[('v',0)],
+                                                                  self.q[('grad(w)*dV_f',0)],
+                                                                  self.cterm[d])
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                          self.l2g[0]['freeLocal'],
+                                                                          self.l2g[0]['nFreeDOF'],
+                                                                          self.l2g[0]['freeLocal'],
+                                                                          self.csrRowIndeces[(0,0)],
+                                                                          self.csrColumnOffsets[(0,0)],
+                                                                          self.cterm[d],
+                                                                          self.cterm_global[d])
+                #
+        #cek end computationa of cterm_global
+        #
+        #cek showing mquezada an example of using cterm_global sparse matrix
+        #calculation y = c*x where x==1
+        direction=0
+        rowptr, colind, c = self.cterm_global[direction].getCSRrepresentation()
+        y = np.zeros((self.nFreeDOF_global[0],),'d')
+        x = np.ones((self.nFreeDOF_global[0],),'d')
+        ij=0
+        for i in range(self.nFreeDOF_global[0]):
+            for offset in range(rowptr[i],rowptr[i+1]):
+                j = colind[offset]
+                y[i] += c[ij]*x[j]
+                ij+=1
+        #
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
@@ -632,6 +742,13 @@ class LevelModel(OneLevelTransport):
               for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                   self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
+                  
+        #print "***************************************"
+        #print "PRINT SOME PARAMETERS FOR VOF"
+        #print "Coefficients (cE, cMax): ", self.coefficients.cE, self.coefficients.cMax
+        #print "Flags (EV, SUPG): ", self.coefficients.ENTROPY_VISCOSITY, self.coefficients.SUPG
+        #print "Time integration: ", self.timeIntegration.IMPLICIT
+        #print "***************************************"
         self.ncls.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -687,7 +804,18 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
-            self.ebqe[('u',0)])
+            self.ebqe[('u',0)],
+            #PARAMETERS FOR ENTROPY VISCOSITY METHOD
+            self.coefficients.cE,
+            self.coefficients.cMax, 
+            self.coefficients.ENTROPY_VISCOSITY, 
+            self.timeIntegration.IMPLICIT, 
+            self.coefficients.SUPG, 
+            #PARAMETER FOR LS-COUPEZ
+            self.coefficients.LS_COUPEZ,
+            #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+            self.coefficients.uL,
+            self.coefficients.uR)
 
 	if self.forceStrongConditions:#
 	    for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -757,7 +885,9 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
-            self.csrColumnOffsets_eb[(0,0)])
+            self.csrColumnOffsets_eb[(0,0)], 
+            self.timeIntegration.IMPLICIT, 
+            self.coefficients.SUPG)
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:

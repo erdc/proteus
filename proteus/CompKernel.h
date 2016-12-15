@@ -1,6 +1,7 @@
 #ifndef COMPKERNEL_H
 #define COMPKERNEL_H
 #include <cmath>
+
 /**
  *   A class to provide indexing into Euclidean vectors and tensors.
  */
@@ -1983,6 +1984,19 @@ public:
       tmp += df[I]*grad_u[I];
     return tmp;
   }
+
+  // ENTROPY RESIDUAL (MQL) //
+  //inline double Entropy_residual(const double df[NSPACE],
+  //			 const double un, 
+  //			 const double unm1,
+  //			 const double grad_un[NSPACE],
+  //			 const double grad_unm1[NSPACE])
+  //{
+  //double tmp=0.0;
+  //for(int I=0;I<2;I++)
+  //  tmp += df[I]*ENTROPY_GRAD(u,grad_u[I])
+  //return tmp;
+  //}
 
   inline double AdvectionJacobian_strong(const double df[2],
 					 const double grad_v[2])

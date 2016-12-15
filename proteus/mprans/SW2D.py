@@ -86,13 +86,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  sd=True,
                  movingDomain=False,
                  useRBLES=0.0,
-		 useMetrics=0.0):
+		 useMetrics=0.0,
+                 modelIndex=0):
         self.useRBLES=useRBLES
         self.useMetrics=useMetrics
         self.sd=sd
         self.nu = nu
         self.g = g
         self.nd=nd
+        self.modelIndex=modelIndex
         mass={}
         advection={}
         diffusion={}
@@ -141,7 +143,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              movingDomain=movingDomain)
             self.vectorComponents=[1,2]
     def attachModels(self,modelList):
-        pass
+        self.model = modelList[self.modelIndex]
+        #pass
+
     def initializeMesh(self,mesh):
         pass
     def initializeElementQuadrature(self,t,cq):
@@ -154,6 +158,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
     def evaluate(self,t,c):
         pass
+    def preStep(self,t,firstStep=False):
+        self.model.h_dof_old_old[:] = self.model.h_dof_old
+        self.model.u_dof_old_old[:] = self.model.u_dof_old
+        self.model.v_dof_old_old[:] = self.model.v_dof_old
+        self.model.h_dof_old[:] = self.model.u[0].dof
+        self.model.u_dof_old[:] = self.model.u[1].dof
+        self.model.v_dof_old[:] = self.model.u[2].dof
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls=0
@@ -381,6 +392,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe={}
         self.phi_ip={}
         #mesh
+        # old DOFs (mql)
+        self.h_dof_old_old = self.u[0].dof.copy()
+        self.u_dof_old_old = self.u[1].dof.copy()
+        self.v_dof_old_old = self.u[2].dof.copy()
+        self.h_dof_old = self.u[0].dof.copy()
+        self.u_dof_old = self.u[1].dof.copy()
+        self.v_dof_old = self.u[2].dof.copy()
         self.h_dof_sge = self.u[0].dof.copy()
         self.u_dof_sge = self.u[1].dof.copy()
         self.v_dof_sge = self.u[2].dof.copy()
@@ -590,15 +608,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
                                    compKernelFlag)
         try_supg = False
+        try_entropy_viscosity = False
         if options != None and 'try_supg_stabilization' in dir(options):
             try_supg = options.try_supg_stabilization
             logEvent("setting try_supg_stabilization from options= {0}".format(try_supg),level=1)
+        if options != None and 'try_entropy_viscosity_stabilization' in dir(options):
+            try_entropy_viscosity = options.try_entropy_viscosity_stabilization
+            logEvent("setting try_entropy_viscosity_stabilization from options= {0}".format(try_entropy_viscosity),level=1)
+
         if try_supg:
             self.calculateResidual = self.sw2d.calculateResidual_supg
             self.calculateJacobian = self.sw2d.calculateJacobian_supg
         else:
             self.calculateResidual =  self.sw2d.calculateResidual
             self.calculateJacobian = self.sw2d.calculateJacobian
+        if try_entropy_viscosity:
+            self.calculateResidual = self.sw2d.calculateResidual_entropy_viscosity
+            self.calculateJacobian = self.sw2d.calculateJacobian_entropy_viscosity
 
     def getResidual(self,u,r):
         """
@@ -633,8 +659,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #import pdb
-        #pdb.set_trace()
-        
+        #pdb.set_trace()        
+                    
         self.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -677,6 +703,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.u[1].femSpace.dofMap.l2g,
             self.coefficients.b.dof,
+            self.h_dof_old_old,
+            self.u_dof_old_old,
+            self.v_dof_old_old,
+            self.h_dof_old,
+            self.u_dof_old,
+            self.v_dof_old,
             self.u[0].dof,
             self.u[1].dof,
             self.u[2].dof,
@@ -745,8 +777,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                      r[self.offset[cj]+self.stride[cj]*dofN] = 0
 
-
-
         cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
         logEvent("Maximum CFL = " + str(cflMax),level=2)
 
@@ -798,6 +828,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.u[1].femSpace.dofMap.l2g,
             self.coefficients.b.dof,
+            self.h_dof_old,
+            self.u_dof_old,
+            self.v_dof_old,
             self.u[0].dof,
             self.u[1].dof,
             self.u[2].dof,
@@ -947,6 +980,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
     def calculateSolutionAtQuadrature(self):
         pass
+
     def calculateAuxiliaryQuantitiesAfterStep(self):
         self.h_dof_sge[:] = self.u[0].dof
         self.u_dof_sge[:] = self.u[1].dof
@@ -985,7 +1019,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #                                      self.u[1].femSpace.psi_trace,
         #                                      self.ebqe[('velocity',0)],
         #                                      self.ebq_global[('velocityAverage',0)])
-        OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+        #OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
 
     def getForce(self,cg,forceExtractionFaces,force,moment):
         pass
