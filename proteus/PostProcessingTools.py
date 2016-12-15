@@ -1051,7 +1051,7 @@ class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
                                                                    self.q[('conservationResidual',ci)],
                                                                    self.ebq_global[('velocity',ci)])
 
-        logEvent("Max local divergence (dgp1 enriched all elements) = %12.5e" % globalMax(max(numpy.absolute(self.q[('conservationResidual',ci)].flat))))
+        logEvent("Max local conservation (dgp1 enriched all elements) = %12.5e" % globalMax(max(numpy.absolute(self.q[('conservationResidual',ci)].flat))))
         divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.vt.ebqe['dS'],
                                                                 self.vt.ebqe[('velocity',ci)],
                                                                 self.vt.ebqe['n'],
@@ -3878,7 +3878,7 @@ class VelocityPostProcessor_Original:
                                                                    self.vt.ebq_global['n'],
                                                                    self.q[('conservationResidual',ci)],
                                                                    self.ebq_global[('velocity',ci)])
-        logEvent("Max local divergence (dgp1 enriched all elements) = %12.5e" % globalMax(max(numpy.absolute(self.q[('conservationResidual',ci)].flat))))
+        logEvent("Max local conservation (dgp1 enriched all elements) = %12.5e" % globalMax(max(numpy.absolute(self.q[('conservationResidual',ci)].flat))))
         divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.vt.ebqe['dS'],
                                                                 self.vt.ebqe[('velocity',ci)],
                                                                 self.vt.ebqe['n'],
