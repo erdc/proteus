@@ -20,6 +20,7 @@ before_install:
 - mv .hashdist $HOME
 
 install:
+- curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
 - git lfs checkout
 - make hashdist
 - make stack
