@@ -55,7 +55,6 @@ class TestVOFrotationEV():
     def test_vof_total_mass_T1m1(self):
 
         run_dir = os.path.dirname(os.path.abspath(__file__))
-        ref_total_mass = np.loadtxt(os.path.join(run_dir,'comparison_files','total_mass_comp_0_rotation_c0p1_SSP33_level_3_vof_T1m1.txt'))
         #set the time step
         vf.p.T = 0.1
         vf.n.DT = vf.p.T/float(vf.n.nDTout)
@@ -67,17 +66,19 @@ class TestVOFrotationEV():
         aux = ns.auxiliaryVariables[ns.modelList[0].name][0]
         self.sim_names.append(sim_name)
         self.aux_names.append(aux.ofile.name)
+
         ns.calculateSolution('test_vof_total_mass_T1')
         aux.ofile.close() #have to close manually for now, would be good to have a hook for this
-        sim_total_mass = np.loadtxt('total_mass_comp_0_rotation_c0p1_SSP33_level_3_vof.txt')
+        ref_total_mass = np.loadtxt(os.path.join(run_dir,'comparison_files','total_mass_comp_0_T1m1_'+sim_name+'.txt'))
+        sim_total_mass = np.loadtxt('total_mass_comp_0_'+sim_name+'.txt')
 
         failed = np.allclose(ref_total_mass, sim_total_mass,
                              rtol=1e-05, atol=1e-07, equal_nan=True)
         #return ref_total_mass,sim_total_mass
 
-    def no_test_vof_total_mass_T1(self):
+    def test_vof_total_mass_T1(self):
         run_dir = os.path.dirname(os.path.abspath(__file__))
-        ref_total_mass = np.loadtxt(os.path.join(run_dir,'comparison_files','total_mass_comp_0_rotation_c0p1_SSP33_level_3_vof.txt'))
+
         #set the time step
         vf.p.T = 1.0
         vf.n.DT = vf.p.T/float(vf.n.nDTout)
@@ -92,7 +93,8 @@ class TestVOFrotationEV():
 
         ns.calculateSolution('test_vof_total_mass_T1')
         aux.ofile.close() #have to close manually for now, would be good to have a hook for this
-        sim_total_mass = np.loadtxt('total_mass_comp_0_rotation_c0p1_SSP33_level_3_vof.txt')
+        ref_total_mass = np.loadtxt(os.path.join(run_dir,'comparison_files','total_mass_comp_0_T1_'+sim_name+'.txt'))
+        sim_total_mass = np.loadtxt('total_mass_comp_0_'+sim_name+'.txt')
 
         failed = np.allclose(ref_total_mass, sim_total_mass,
                              rtol=1e-05, atol=1e-07, equal_nan=True)
@@ -100,10 +102,3 @@ class TestVOFrotationEV():
 
 if __name__ == '__main__':
     pass
-    # reload(vf)
-    # ref,sim = TestVOFrotationEV().test_vof_total_mass_T1()
-    # print ref.shape
-    # print sim.shape
-    # ref1 = np.loadtxt('total_mass_save_T01.txt')
-    # print ref1.shape
-    # np.max(ref1[:,2]-sim[:,2])

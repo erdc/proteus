@@ -106,13 +106,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def attachModels(self,modelList):
         #self
         self.model = modelList[self.modelIndex]
-	self.u_dof_old = numpy.copy(self.model.u[0].dof)
-	self.u_dof_old_old = numpy.copy(self.model.u[0].dof)
+        self.u_dof_old = numpy.copy(self.model.u[0].dof)
+        self.u_dof_old_old = numpy.copy(self.model.u[0].dof)
         #Velocities for edge viscosity (MQL)
         self.velx_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
         self.vely_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
-        #operators to contruct low order solution 
-	self.flux_plus_dLij_times_soln = numpy.copy(self.model.u[0].dof)
+        #operators to contruct low order solution
+        self.flux_plus_dLij_times_soln = numpy.copy(self.model.u[0].dof)
         #redistanced level set
         if self.RD_modelIndex is not None:
             self.rdModel = modelList[self.RD_modelIndex]
@@ -126,7 +126,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.ebqe_phi = numpy.zeros(self.model.ebqe[('u',0)].shape,'d')#cek hack, we don't need this
         #flow model
-        #print "flow model index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))        
+        #print "flow model index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))
 
         if self.flowModelIndex is not None:
             if modelList[self.flowModelIndex].q.has_key(('velocity',0)):
@@ -673,16 +673,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
     def FCTStep(self,t):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
-        self.vof.FCTStep(self.timeIntegration.dt, 
-                         self.nnz, #number of non zero entries 
+        self.vof.FCTStep(self.timeIntegration.dt,
+                         self.nnz, #number of non zero entries
                          len(rowptr)-1, #number of DOFs
                          self.ML, #Lumped mass matrix
                          self.coefficients.u_dof_old, #soln
                          self.u[0].dof, #solH
-                         self.coefficients.flux_plus_dLij_times_soln, 
+                         self.coefficients.flux_plus_dLij_times_soln,
                          rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
                          colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
-                         MassMatrix, 
+                         MassMatrix,
                          self.dL_minus_dC)
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
@@ -697,7 +697,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
 
-        #COMPUTE C MATRIX 
+        #COMPUTE C MATRIX
         if self.cterm_global is None:
             #since we only need cterm_global to persist, we can drop the other self.'s
             self.cterm={}
@@ -739,7 +739,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  self.q['abs(det(J))'],
                                                  self.q[('w',0)],
                                                  self.q[('w*dV_m',0)])
-            #### GRADIENT OF TEST FUNCTIONS 
+            #### GRADIENT OF TEST FUNCTIONS
             self.q[('grad(w)',0)] = np.zeros((self.mesh.nElements_global,
                                               self.nQuadraturePoints_element,
                                               self.nDOF_test_element[0],
@@ -831,8 +831,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 di[:] = 0.0
                 di[...,d] = -1.0
                 cfemIntegrals.updateAdvectionJacobian_weak_lowmem(di,
-                                                                  self.q[('w',0)], 
-                                                                  self.q[('grad(w)*dV_f',0)], 
+                                                                  self.q[('w',0)],
+                                                                  self.q[('grad(w)*dV_f',0)],
                                                                   self.cterm_transpose[d]) # -int[(-di*grad(wi))*wj*dV]
                 cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
                                                                           self.l2g[0]['freeLocal'],
@@ -864,7 +864,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #        j = colind[offset]
         #        y[i] += c[ij]*x[j]
         #        ij+=1
-                        
+
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
@@ -891,7 +891,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #print "Flags (EV, SUPG): ", self.coefficients.ENTROPY_VISCOSITY, self.coefficients.SUPG
         #print "Time integration: ", self.timeIntegration.IMPLICIT
         #print "***************************************"
-                      
+
         self.vof.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -930,7 +930,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].dof,
             self.coefficients.u_dof_old,
             self.coefficients.u_dof_old_old,
-            self.coefficients.velx_tn_dof, 
+            self.coefficients.velx_tn_dof,
             self.coefficients.vely_tn_dof, # HACKED TO 2D FOR NOW (MQL)
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
@@ -966,11 +966,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.IMPLICIT,
             self.coefficients.SUPG,
             #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
-            self.coefficients.uL, 
+            self.coefficients.uL,
             self.coefficients.uR,
             #PARAMETERS FOR EDGE VISCOSITY
             len(rowptr)-1, #num of DOFs
-            len(Cx), #num of non-zero entries in the sparsity pattern           
+            len(Cx), #num of non-zero entries in the sparsity pattern
             rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
             colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
             self.csrRowIndeces[(0,0)], #row indices (convenient for element loops)
@@ -978,9 +978,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             Cx, #Cij Matrix
             Cy,
             CTx,
-            CTy, #NOTE: for now I assume the problem is in 2D!!!! (MQL). TODO: make it general 
+            CTy, #NOTE: for now I assume the problem is in 2D!!!! (MQL). TODO: make it general
             # FLUX CORRECTED TRANSPORT
-            self.coefficients.flux_plus_dLij_times_soln, 
+            self.coefficients.flux_plus_dLij_times_soln,
             self.dL_minus_dC)
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -1048,7 +1048,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u',0)],
             self.ebqe[('advectiveFlux_bc_flag',0)],
             self.ebqe[('advectiveFlux_bc',0)],
-            self.csrColumnOffsets_eb[(0,0)], 
+            self.csrColumnOffsets_eb[(0,0)],
             self.timeIntegration.IMPLICIT,
             self.coefficients.SUPG)
         #Load the Dirichlet conditions directly into residual

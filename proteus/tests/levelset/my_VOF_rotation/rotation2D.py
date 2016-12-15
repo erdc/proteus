@@ -1,8 +1,9 @@
 from proteus import Domain, Norms,Profiling
 from proteus.mprans import VOF
 import numpy as np
-timeIntegration_vof = "SSP33" #vbdf,be,flcbdf,rk
-#timeIntegration_vof = "be" #vbdf,be,flcbdf,rk
+
+timeIntegration_vof = "FE"#"SSP33"
+
 fullNewton=False
 #ENTROPY VISCOSITY and ART COMPRESSION PARAMETERS
 ENTROPY_VISCOSITY=1
