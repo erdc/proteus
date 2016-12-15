@@ -20,6 +20,7 @@ before_install:
 - mv .hashdist $HOME
 
 install:
+- git lfs checkout
 - make hashdist
 - make stack
 - make stack/default.yaml
