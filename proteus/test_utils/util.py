@@ -1,6 +1,10 @@
+""" basic utilities in Proteus
+"""
+
 import os
-import sys
-from proteus import Comm, Profiling
+
+def get_include_dir():
+    return os.path.dirname(os.path.realpath(__file__))
 
 def setup_profiling():
     comm = Comm.get()
