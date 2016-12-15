@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Test module for 2D Quadrilateral Meshes
+Test module for Laplace Matrix
 """
 
 import os,sys,inspect
@@ -20,22 +20,25 @@ comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
 import numpy
-import numpy.testing as npt
 import laplace_template_TH_2D as L_2d
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
-from nose.tools import set_trace
 
 class TestMassConstruction2D():
-    """ Verify construction of 2D Mass Matrix using transport coefficients """
-    def __init__(self):
+    """ Verify construction of 2D Laplce using transport coefficients """
+
+    @classmethod
+    def setup_class(cls):
         pass
 
-    def setUp(self):
+    @classmethod
+    def teardown_class(cls):
+        pass
+
+    def setup_method(self,method):
         """ Initialize the test problem """
+        reload(L_2d)
         self.Laplace_object = L_2d.ns
-        
-    def tearDown(self):
+
+    def teardown_method(self,method):
         """ Tear down function """
         FileList = ['Laplace_matrix_test.xmf',
                     'Laplace_matrix_test.h5',
@@ -64,7 +67,8 @@ class TestMassConstruction2D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.Laplace_object.modelList[0].levelModelList[0].getJacobian(self.Asys)
         Laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        comparison_mat = numpy.load('./comparison_files/Laplace_mat_reference_element_1.npy')
+        expected_output = os.path.dirname(os.path.abspath(__file__)) + '/comparison_files/Laplace_mat_reference_element_1.npy'
+        comparison_mat = numpy.load(expected_output)
         assert numpy.allclose(Laplace_mat,comparison_mat)
 
 
@@ -73,14 +77,9 @@ class TestMassConstruction2D():
         mm = self.Laplace_object.modelList[0].levelModelList[0]
         mm.attachLaplaceOperator()
         Laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(mm.LaplaceOperator)
-        comparison_mat = numpy.load('./comparison_files/Laplace_mat_reference_element_1.npy')
+        expected_output = os.path.dirname(os.path.abspath(__file__)) + '/comparison_files/Laplace_mat_reference_element_1.npy'
+        comparison_mat = numpy.load(expected_output)
         assert numpy.allclose(Laplace_mat,comparison_mat)
 
 if __name__ == '__main__':
-    tt = TestMassConstruction2D()
-    tt.setUp()
-    tt.test_2()
-    tt.tearDown()
-    tt.setUp()
-    tt.test_1()
-    tt.tearDown()
+    pass
