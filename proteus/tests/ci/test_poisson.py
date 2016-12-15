@@ -9,6 +9,7 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
+import pytest
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()

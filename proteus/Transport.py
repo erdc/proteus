@@ -6466,15 +6466,6 @@ class MultilevelTransport:
                         #build subdomain2global mappings
                         #
                         subdomain2global_list = [ts.dofMap.subdomain2global for ts in  trialSpaceDict.values()]
-                        #save the original global ordering before partitioning
-                        #for debugging w.r.t. serial results
-                        # that is, the partitioned proteus global ordering
-                        #is not the original global ordering
-                        transport.global2original  = numpy.hstack([offset+transport.mesh.globalMesh.nodeNumbering_global2original
-                                                                   for offset in
-                                                                   global_component_offset[:-1]])
-                        if comm.isMaster():
-                            numpy.savetxt("g2o.txt",transport.global2original)
                         #
                         #form lists of owned and ghosts elements
                         #
