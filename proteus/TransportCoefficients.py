@@ -185,6 +185,14 @@ class TC_base:
         for ci in range(self.nc):
             self.elementIntegralKeys.append(('u',ci))
             self.elementBoundaryIntegralKeys.append(('u',ci))
+        if self.sdInfo == {}:
+            for ci,ckDict in self.diffusion.iteritems():
+                for ck in ckDict.keys():
+                    if not self.sdInfo.has_key((ci,ck)):
+                        self.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=self.nd**2+1,step=self.nd,dtype='i'),
+                                                          numpy.array([range(self.nd) for row in range(self.nd)],dtype='i').flatten())
+                        logEvent("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`self.sdInfo[(ci,ck)]`)
+
     def evaluate(self,t,c):
         """
         Evaluate the coefficients at a given time, t, using the coefficient storage passed in as the dictionary c.
@@ -1444,6 +1452,7 @@ class DiscreteLaplaceOperator(TC_base):
                              reaction,
                              hamiltonian,
                              variableNames,
+                             sparseDiffusionTensors={},
                              useSparseDiffusion=True)
             self.vectorComponents=[1,2]
         if nd==3:

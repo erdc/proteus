@@ -12,6 +12,10 @@ cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(insp
 if cmd_subfolder not in sys.path:
     sys.path.insert(0,cmd_subfolder)
 
+cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],"comparison_files")))
+if cmd_subfolder not in sys.path:
+    sys.path.insert(0,cmd_subfolder)
+
 import os.path
 import numpy
 from proteus.iproteus import *
@@ -24,14 +28,21 @@ Profiling.verbose = True
 
 class TestLaplaceConstruction2D():
     """ Run tests to verify the construction of the 2D Laplace operator """
-    def __init__(self):
+
+    @classmethod
+    def setup_class(cls):
         pass
 
-    def setUp(self):
-        """ Initialize the test problem """
+    @classmethod
+    def teardown_class(cls):
+        pass
+
+    def setup_method(self,method):
+        """ Intialize the test problem """
+        reload(tp_2d)
         self.laplace_object = tp_2d.ns
 
-    def tearDown(self):
+    def teardown_method(self,method):
         """ Tear down function """
         FileList = ["Laplace_matrix_test.h5",
                     "Laplace_matrix_test.xmf",
@@ -60,11 +71,9 @@ class TestLaplaceConstruction2D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.laplace_object.modelList[0].levelModelList[0].getSpatialJacobian(self.Asys)
         laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        comparison_mat = numpy.loadtxt('./comparison_files/laplace_reference_c0p1_2D.txt')
+        expected_output = os.path.dirname(os.path.abspath(__file__)) + '/comparison_files/laplace_reference_c0p1_2D.txt'
+        comparison_mat = numpy.loadtxt(expected_output)
         assert numpy.allclose(laplace_mat,comparison_mat)
 
 if __name__ == "__main__":
-    tlc2d = TestLaplaceConstruction2D()
-    tlc2d.setUp()
-    tlc2d.test_1()
-    tlc2d.tearDown()
+    pass
