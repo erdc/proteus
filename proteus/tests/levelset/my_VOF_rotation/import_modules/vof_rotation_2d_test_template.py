@@ -78,11 +78,12 @@ n.updateJacobian = False
 
 n.nDTout = rot2D.nDTout
 n.DT = p.T/float(n.nDTout)
+#mwf should probably make the step controllers be Min_dt_cfl_controller
 if rot2D.timeIntegration_vof == "SSP33":
     n.timeIntegration = TimeIntegration.SSP33
     n.stepController = StepControl.Min_dt_controller
 else:
-    n.timeIntegration = TimeIntegration.ForwardEuler
+    n.timeIntegration = TimeIntegration.SSP33 #mwf right now need timeIntegration to be SSP33 to run
     n.stepController = StepControl.Min_dt_controller
 
 n.timeOrder = 1
@@ -143,7 +144,7 @@ n.conservativeFlux = {}
 n.auxiliaryVariables = [AuxiliaryVariables.MassOverRegion()]
 
 so = default_so
-so.name = p.name
+so.name = rot2D.soname
 so.sList=[default_s]
 so.systemStepExact = True
 
