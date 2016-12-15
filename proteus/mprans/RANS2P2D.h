@@ -861,7 +861,7 @@ namespace proteus
       mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s);
       mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s);
       /* mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_s); */
-
+      
       dmom_u_source[0] = H_s*viscosity*(alpha + beta*(uc + u*duc_du));
       dmom_u_source[1] = H_s*viscosity*beta*u*duc_dv;
       /* dmom_u_source[2] = H_s*viscosity*beta*u*duc_dw; */
