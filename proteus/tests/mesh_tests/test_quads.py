@@ -5,10 +5,10 @@ Test module for 2D Quadrilateral Meshes
 
 """
 from proteus.iproteus import *
-from proteus.tests import TestTools
+from proteus.test_utils import TestTools
 from proteus import Comm
 comm = Comm.get()
-proteus.tests.TestTools.addSubFolders( inspect.currentframe() )
+TestTools.addSubFolders( inspect.currentframe() )
 import stokes_2d_p
 import stokes_2d_n
 #Profiling.logLevel=7
@@ -77,7 +77,7 @@ class Test2DStokesOnQuads():
                     "proteus.log",
                     "poiseulleFlow.xmf",
                     "poiseulleFlow.h5"]
-        proteus.tests.TestTools.closeFiles(Filelist)
+        TestTools.closeFiles(Filelist)
        
     def test_01_FullRun(self):
         import filecmp
