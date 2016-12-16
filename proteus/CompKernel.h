@@ -151,6 +151,18 @@ public:
       for(int I=0;I<NSPACE;I++)
 	grad[I] += dof[l2g_element[j]]*grad_trial[j*NSPACE+I];
   }
+  
+  inline void hessFromDOF(const double* dof,const int* l2g_element,const double* hess_trial,double* hess)
+  {
+    const int NSPACE2=NSPACE*NSPACE;
+    for(int I=0;I<NSPACE;I++)
+      for(int J=0;J<NSPACE;J++)
+	hess[I*NSPACE+J] = 0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      for(int I=0;I<NSPACE;I++)
+	for(int J=0;J<NSPACE;J++)
+	  hess[I*NSPACE+J] += dof[l2g_element[j]]*hess_trial[j*NSPACE2+I*NSPACE+J];
+  }
 };
 
 //specialization for 3D
@@ -459,6 +471,18 @@ public:
       for(int I=0;I<3;I++)
 	grad[I] += dof[l2g_element[j]]*grad_trial[j*3+I];
   }
+
+  inline void hessFromDOF(const double* dof,const int* l2g_element,const double* hess_trial,double* hess)
+  {
+    for(int I=0;I<3;I++)
+      for(int J=0;J<3;J++)
+	hess[I*3+J] = 0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      for(int I=0;I<3;I++)
+	for(int J=0;J<3;J++)
+	  hess[I*3+J] += dof[l2g_element[j]]*hess_trial[j*9+I*3+J];
+  }
+  
   inline void calculateMapping_element(const int eN,
 				       const int k,
 				       double* mesh_dof,
@@ -835,6 +859,18 @@ public:
       for(int I=0;I<2;I++)
 	grad[I] += dof[l2g_element[j]]*grad_trial[j*2+I];
   }
+
+  inline void hessFromDOF(const double* dof,const int* l2g_element,const double* hess_trial,double* hess)
+  {
+    for(int I=0;I<2;I++)
+      for(int J=0;J<2;J++)
+	hess[I*2+J] = 0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      for(int I=0;I<2;I++)
+	for(int J=0;J<2;J++)
+	  hess[I*2+J] += dof[l2g_element[j]]*hess_trial[j*4+I*2+J];
+  }
+  
   inline void calculateMapping_element(const int eN,
 				       const int k,
 				       double* mesh_dof,
@@ -1032,6 +1068,19 @@ public:
       for(int I=0;I<NSPACE;I++)
 	grad[I] += dof[l2g_element[j]]*grad_trial[j*NSPACE+I];
   }
+
+  inline void hessFromDOF(const double* dof,const int* l2g_element,const double* hess_trial,double* hess)
+  {
+    const int NSPACE2=NSPACE*NSPACE;
+    for(int I=0;I<NSPACE;I++)
+      for(int J=0;J<NSPACE;J++)
+	hess[I*2+J] = 0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<NSPACE;I++)
+	for(int J=0;J<NSPACE;J++)
+	  hess[I*NSPACE+J] += dof[l2g_element[j]]*hess_trial[j*NSPACE2+I*NSPACE+J];
+  }
+
   inline void valFromElementDOF(const double* dof,const double* trial_ref,double& val)
   {
     val=0.0;
@@ -1057,6 +1106,20 @@ public:
       for(int I=0;I<NSPACE;I++)
 	for(int J=0;J<NSPACE;J++)
 	  grad_trial[j*NSPACE+I] += jacInv[J*NSPACE+I]*grad_trial_ref[j*NSPACE+J];
+  }
+  
+  inline void hessTrialFromRef(const double* hess_trial_ref, const double* jacInv, double* hess_trial)
+  {
+    const int NSPACE2=NSPACE*NSPACE;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<NSPACE;I++)
+	hess_trial[j*NSPACE+I] = 0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<NSPACE;I++)
+	for(int J=0;J<NSPACE;J++)
+	  for(int K=0;K<NSPACE;K++)
+	    for(int L=0;L<NSPACE;L++)
+	      hess_trial[j*NSPACE2+I*NSPACE+J] += hess_trial_ref[j*NSPACE2+K*NSPACE+L]*jacInv[L*NSPACE+J]*jacInv[K*NSPACE+I];
   }
   
   inline void gradTestFromRef(const double* grad_test_ref, const double* jacInv, double* grad_test)
@@ -1781,6 +1844,18 @@ public:
       for(int I=0;I<2;I++)
 	grad[I] += dof[l2g_element[j]]*grad_trial[j*2+I];
   }
+
+  inline void hessFromDOF(const double* dof,const int* l2g_element,const double* hess_trial,double* hess)
+  {
+    for(int I=0;I<2;I++)
+      for(int J=0;J<2;J++)
+	hess[I*2+J] = 0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<2;I++)
+	for(int J=0;J<2;J++)
+	  hess[I*2+J] += dof[l2g_element[j]]*hess_trial[j*4+I*2+J];
+  }
+
   inline void valFromElementDOF(const double* dof,const double* trial_ref,double& val)
   {
     val=0.0;
@@ -1806,6 +1881,20 @@ public:
       for(int I=0;I<2;I++)
 	for(int J=0;J<2;J++)
 	  grad_trial[j*2+I] += jacInv[J*2+I]*grad_trial_ref[j*2+J];
+  }
+  
+  inline void hessTrialFromRef(const double* hess_trial_ref, const double* jacInv, double* hess_trial)
+  {
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<2;I++)
+	for(int J=0;J<2;J++)
+	  hess_trial[j*4+I*2+J] = 0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<2;I++)
+	for(int J=0;J<2;J++)
+	  for(int K=0;K<2;K++)
+	    for(int L=0;L<2;L++)
+	      hess_trial[j*4+I*2+J] += hess_trial_ref[j*4+K*2+L]*jacInv[L*2+J]*jacInv[K*2+I];
   }
   
   inline void gradTestFromRef(const double* grad_test_ref, const double* jacInv, double* grad_test)
