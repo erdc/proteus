@@ -105,7 +105,7 @@ namespace proteus
       double fsinh =0.;
 
       
-      if(kAbs*Z > -2*PI_)
+      if(kAbs*Z > -PI_)
       {
 	fcosh = fastcosh(kAbs, Z,  true); 
 	fsinh = fastcosh(kAbs, Z,  false); 

@@ -352,6 +352,59 @@ class CheckMonochromaticWavesFailures(unittest.TestCase):
         self.assertTrue(None == None)
 
 class VerifyMonoChromaticLinearWaves(unittest.TestCase):
+    def testVprof(self):
+        from proteus.WaveTools import MonochromaticWaves
+        from proteus.WaveTools import fastcos_test as fcos
+        from proteus.WaveTools import coshkzd_test as fcosh
+        from proteus.WaveTools import sinhkzd_test as fsinh
+        
+# Wave direction, random in x,y plane
+        period = 1.
+        waveHeight = 1.
+        mwl = 0
+        depth = 10
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 0.6
+        dir2 = 0.5
+        waveDir = np.array([dir1,dir2, 0])
+        phi0 = 0.
+        a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = np.array([0.]), Bcoeff  = np.array([0.]), meanVelocity = np.array([0.,0,0.]),phi0 = phi0)
+        x = 150.
+        y = 130.
+        z = mwl 
+        t =  125.
+        ux, uy, uz = a.u([x, y, z], t)
+        omega = 2.*pi/period
+        Uo = waveHeight*omega / 2.
+# dispersion and setDirVector are tested above
+        from proteus.WaveTools import dispersion,setDirVector
+        kw = dispersion(omega,depth,gAbs)
+        normDir = setDirVector(waveDir)
+        amp = 0.5 * waveHeight
+# Flow equation from Wikipedia, Airy wave theory https://en.wikipedia.org/wiki/Airy_wave_theoryhttps://en.wikipedia.org/wiki/Airy_wave_theory
+
+        err_x = 0.
+        err_y = 0.
+        err_z = 0.
+        errMax = 0.
+        N = 1001
+        dx = depth/N
+        for ii in range(0,N):
+            z0 = -ii*depth*dx
+            uxRef = normDir[0]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
+            uyRef = normDir[1]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
+            uzRef = amp*omega*sinh(kw*(z0+depth))*sin(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
+            ux, uy, uz = a.u([x, y, z], t)            
+            err_x =+abs(ux/uxRef - 1.)**2
+            err_y =+abs(uy/uyRef - 1.)**2
+            err_z =+abs(uz/uzRef - 1.)**2
+            errMax = max(err_x, err_y,err_z,errMax)
+        print "Max error in velocity profiles=", np.sqrt(errMax)/Uo
+        self.assertTrue((np.sqrt(err_x/N)/Uo <= 1e-4))
+        self.assertTrue((np.sqrt(err_y/N)/Uo <= 1e-4))
+        self.assertTrue((np.sqrt(err_z/N)/Uo <= 1e-4))
+        self.assertTrue((np.sqrt(errMax)/Uo <= 1e-3))
     def testLinear(self):
         from proteus.WaveTools import MonochromaticWaves
         from proteus.WaveTools import fastcos_test as fcos
