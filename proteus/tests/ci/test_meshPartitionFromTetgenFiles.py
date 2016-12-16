@@ -9,6 +9,7 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
+import pytest
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
@@ -116,12 +117,4 @@ class TestPoissonTetgen():
 #     assert(True)
 
 if __name__ == '__main__':
-    test_c0p1(genMesh=True)
-    test_c0p2(genMesh=False)
-    Profiling.logEvent("Closing Log")
-    try:
-        Profiling.closeLog()
-    except:
-        pass
-#    test_c0q1()
-#    test_c0q2()
+    pass
