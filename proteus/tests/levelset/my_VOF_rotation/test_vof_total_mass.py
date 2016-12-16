@@ -57,6 +57,7 @@ class TestVOFrotationEV():
         run_dir = os.path.dirname(os.path.abspath(__file__))
         #set the time step
         vf.p.T = 0.1
+        vf.n.nDTout = 10
         vf.n.DT = vf.p.T/float(vf.n.nDTout)
         vf.so.DT = vf.n.DT
         vf.so.tnList = [i*vf.n.DT for i  in range(vf.n.nDTout+1)]
@@ -81,6 +82,7 @@ class TestVOFrotationEV():
 
         #set the time step
         vf.p.T = 1.0
+        vf.n.nDTout = 10
         vf.n.DT = vf.p.T/float(vf.n.nDTout)
         vf.so.DT = vf.n.DT
         vf.so.tnList = [i*vf.n.DT for i  in range(vf.n.nDTout+1)]
