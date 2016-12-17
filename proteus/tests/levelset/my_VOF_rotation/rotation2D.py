@@ -2,7 +2,7 @@ from proteus import Domain, Norms,Profiling
 from proteus.mprans import VOF
 import numpy as np
 
-timeIntegration_vof = "FE"#"SSP33"
+timeIntegration_vof = "SSP33"#"FE"#"SSP33"
 
 fullNewton=False
 #ENTROPY VISCOSITY and ART COMPRESSION PARAMETERS
@@ -13,7 +13,10 @@ cMax = 0.1
 cK = 0.25
 shockCapturingFactor_vof=0.2
 #Other time parameters
-timeOrder = 1
+if timeIntegration_vof == "SSP33":
+    timeOrder = 3
+else:
+    timeOrder = 1
 runCFL = 0.1#0.3,0.185,0.125 for dgp1,dgp2,dgpk(3)
 lag_shockCapturing_vof=True
 #if True uses PETSc solvers
@@ -62,7 +65,7 @@ if unstructured:
 else:
     domain = box
 #end time of simulation
-T = 1.0
+T = 0.1
 #number of output time steps
 nDTout = 10
 #smoothing factors

@@ -48,6 +48,129 @@ class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIP
                                                                                         getAdvectiveFluxBoundaryConditions,
                                                                                         getDiffusiveFluxBoundaryConditions)
 
+
+class RKEV(proteus.TimeIntegration.SSP33):
+    """
+    Wrapper for SSPRK time integration using EV
+
+    ... more to come ...
+    """
+    def __init__(self, transport, timeOrder=1, nStages=1, runCFL=0.1):
+        TimeIntegration.SSP33.__init__(self, transport,runCFL=runCFL)
+        self.timeOrder = timeOrder  #order of approximation
+        self.nStages = nStages  #number of stages total
+        self.lstage = 0  #last stage completed
+        # storage vectors
+        # previous time step mass and solution dof per component
+        self.m_last = {}
+        self.u_dof_last = {}
+        # per component stage values, list with array at each stage
+        self.m_stage = {}
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+             if transport.q.has_key(('m',ci)):
+                self.m_last[ci] = transport.q[('m',ci)].copy()
+                self.u_dof_last[ci] = transport.u[ci].dof.copy()
+                self.m_stage[ci] = []
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages+1):                    
+                    self.m_stage[ci].append(transport.q[('m',ci)].copy())
+                    self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
+                    
+        # mwf start with just forward euler
+        self.nStages = 1; self.timeOrder = 1
+        self.setCoefficients()
+    #def set_dt(self, DTSET):
+    #    self.dt = DTSET #  don't update t
+    def choose_dt(self):
+        maxCFL = 1.0e-6
+        for ci in range(self.nc):
+            if self.cfl.has_key(ci):
+                maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
+        self.dt = self.runCFL/maxCFL
+        if self.dtLast == None:
+            self.dtLast = self.dt
+        # mwf debug
+        print "RKEv max cfl component ci dt dtLast {0} {1} {2} {3}".format(maxCFL,ci,self.dt,self.dtLast)
+        if self.dt/self.dtLast  > self.dtRatioMax:
+            self.dt = self.dtLast*self.dtRatioMax
+        self.t = self.tLast + self.dt
+    def initialize_dt(self,t0,tOut,q):
+        """
+        Modify self.dt
+        """
+        self.tLast=t0
+        self.choose_dt()
+        self.t = t0+self.dt
+ 
+    def setCoefficients(self):
+        """
+        beta are all 1's here
+        """
+        self.alpha = numpy.zeros((self.nStages, self.nStages),'d')
+        if self.timeOrder == 1:
+            self.alpha[0,0] = 1.0
+        else:
+            raise NotImplementedError, "order {0} not supported".format(self.timeOrder)
+        #
+        self.dcoefs = numpy.zeros((self.nStages),'d')
+        if self.timeOrder == 1:
+            self.dcoefs[0] = 1.0
+        else:
+            raise NotImplementedError, "order {0} not supported".format(self.timeOrder)
+
+    def updateStage(self):
+        self.lstage += 1
+        #mwf just Forward Euler for start
+        self.t = self.tLast + self.dt
+        #need to put in the correct formulas
+        assert self.timeOrder in [1,3]
+        if self.timeOrder == 3:
+            if self.lstage == 1:
+                for ci in range(self.nc):
+                    self.m_stage[ci][self.lstage][:] = self.transport.q[('m',ci)][:]
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
+            elif self.lstage == 2:
+                for ci in range(self.nc):
+                    self.m_stage[ci][self.lstage][:] = self.transport.q[('m',ci)][:]
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
+                    self.m_stage[ci][self.lstage] *= 0.25
+                    self.m_stage[ci][self.lstage] += 0.75*self.m_last[ci]
+                    self.u_dof_stage[ci][self.lstage] *= 0.25
+                    self.u_dof_stage[ci][self.lstage] += 0.75*self.u_dof_last[ci]
+            elif self.lstage == 3:
+                for ci in range(self.nc):
+                    self.m_stage[ci][self.lstage][:] = self.transport.q[('m',ci)][:]
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
+                    self.m_stage[ci][self.lstage] *= 2.0/3.0
+                    self.m_stage[ci][self.lstage] += 1.0/3.0*self.m_last[ci]
+                    self.u_dof_stage[ci][self.lstage] *= 2.0/3.0
+                    self.u_dof_stage[ci][self.lstage] += 2.0/3.0*self.u_dof_last[ci]
+                    #update transport model and re-evaluate residual
+                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage][:]
+                    self.transport.q[('m',ci)][:] = self.m_stage[ci][self.lstage][:]
+        else:
+            assert self.lstage == 1
+            for ci in range(self.nc):
+                self.m_stage[ci][self.lstage][:]=self.transport.q[('m',ci)][:]
+                self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
+ 
+        
+    def updateTimeHistory(self,resetFromDOF=False):
+        """
+        assumes successful step has been taken
+        """
+        self.t = self.tLast + self.dt
+        for ci in range(self.nc):
+            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+            for k in range(self.nStages):
+                self.m_stage[ci][k][:]=self.transport.q[('m',ci)][:]
+                self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
+        self.lstage=0
+        self.dtLast = self.dt
+        self.tLast = self.t
+ 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import VOFCoefficientsEvaluate
     from proteus.UnstructuredFMMandFSWsolvers import FMMEikonalSolver,FSWEikonalSolver
@@ -891,7 +1014,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #print "Flags (EV, SUPG): ", self.coefficients.ENTROPY_VISCOSITY, self.coefficients.SUPG
         #print "Time integration: ", self.timeIntegration.IMPLICIT
         #print "***************************************"
-
+        #mwf debug
+        #pdb.set_trace()
         self.vof.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -928,7 +1052,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.u[0].dof,
-            self.coefficients.u_dof_old,
+            # mwf will need to have a separate hook for u_old (last time step) and last stage
+            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],#mwf hack self.coefficients.u_dof_old,
+            
             self.coefficients.u_dof_old_old,
             self.coefficients.velx_tn_dof,
             self.coefficients.vely_tn_dof, # HACKED TO 2D FOR NOW (MQL)

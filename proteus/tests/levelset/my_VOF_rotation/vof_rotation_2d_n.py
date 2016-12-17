@@ -7,13 +7,15 @@ multilevelNonlinearSolver  = NLNI
 levelNonlinearSolver = Newton
 fullNewtonFlag = fullNewton
 updateJacobian = False
-
-if timeIntegration_vof == "SSP33":
-    timeIntegration = SSP33
-    stepController = Min_dt_controller
+timeIntegration = VOF.RKEV # SSP33 #mwf right now need timeIntegration to be SSP33 to run
+stepController = Min_dt_RKcontroller#Min_dt_controller #mwf we should probably 
+if timeIntegration_vof == "SSP33" and False: #mwf hack
+    timeOrder = 3
+    nStagesTime = 3
 else:
-    timeIntegration = SSP33 #mwf right now need timeIntegration to be SSP33 to run
-    stepController = Min_dt_controller #mwf we should probably make these Min_dt_cfl_controller
+    timeOrder = 1
+    nStagesTime = 1
+
 
 if cDegree_vof==0:
     if useHex:

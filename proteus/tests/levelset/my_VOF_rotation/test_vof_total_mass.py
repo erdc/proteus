@@ -55,6 +55,7 @@ class TestVOFrotationEV():
     def test_vof_total_mass_T1m1(self):
 
         run_dir = os.path.dirname(os.path.abspath(__file__))
+        
         #set the time step
         vf.p.T = 0.1
         vf.n.nDTout = 10

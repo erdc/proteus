@@ -78,14 +78,15 @@ n.updateJacobian = False
 
 n.nDTout = rot2D.nDTout
 n.DT = p.T/float(n.nDTout)
-#mwf should probably make the step controllers be Min_dt_cfl_controller
+n.timeIntegration = TimeIntegration.VOF.RKEV
+n.stepController = StepControl.Min_dt_RKcontroller
 if rot2D.timeIntegration_vof == "SSP33":
-    n.timeIntegration = TimeIntegration.SSP33
-    n.stepController = StepControl.Min_dt_controller
+    n.timeOrder = 3
+    n.nStagesTime = 3
 else:
-    n.timeIntegration = TimeIntegration.SSP33 #mwf right now need timeIntegration to be SSP33 to run
-    n.stepController = StepControl.Min_dt_controller
-
+    n.timeOrder = 1
+    n.nStagesTime = 1
+ 
 n.timeOrder = 1
 n.runCFL = rot2D.runCFL
 n.rtol_u = rot2D.rtol_u
