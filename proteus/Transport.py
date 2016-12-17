@@ -5991,7 +5991,19 @@ class OneLevelTransport(NonlinearEquation):
                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
 
     def attachLaplaceOperator(self,nu=1.0):
-        """Attach a Discrete Laplace Operator to the Transport Class """
+        """Attach a Discrete Laplace Operator to the Transport Class.
+
+        Arguments
+        ---------
+        nu : float
+             Viscosity parameter for the Laplace operator.
+
+        Notes
+        -----
+        This function creates a Laplace matrix and stores the result in the 
+        :class:`proteus.OneLevelTransport` class to assist in the construction 
+        of physics based preconditione
+        """
 
         self.laplace_val = self.nzval.copy()
         self.LaplaceOperator = SparseMat(self.nFreeVDOF_global,
@@ -6009,7 +6021,7 @@ class OneLevelTransport(NonlinearEquation):
 
         Laplace_phi = {}
         Laplace_dphi = {}
-        # ...initialize the phi functions...
+
         for ci,space in self.testSpace.iteritems():
             Laplace_phi[ci] = FiniteElementFunction(space)
 
@@ -6027,7 +6039,6 @@ class OneLevelTransport(NonlinearEquation):
         scalar_quad |= set([('u',ci) for ci in range(self.nc)])
         tensors_quad |= set([('a',ci,ci) for ci in range(self.nc)])
         tensors_quad |= set([('da',ci,ci,ci) for ci in range(self.nc)])
-
 
         scalar_quad.allocate(self.Laplace_q)
         
@@ -6076,9 +6087,6 @@ class OneLevelTransport(NonlinearEquation):
                                                                           self.csrColumnOffsets[(ci,cj)],
                                                                           LaplaceJacobian[ci][cj],
                                                                           self.LaplaceOperator)
-
-        # TODO / THOUGHT - how to extract a submatrix from a CSR sparse representation?  Can this be
-        # done effectively using the superluwrappers?
 
         self.LaplaceOperatorpetsc = superlu_2_petsc4py(self.LaplaceOperator)
         
