@@ -3,22 +3,8 @@
 Test module for Laplace Matrix
 """
 
-import os,sys,inspect
-
-cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
-if cmd_folder not in sys.path:
-    sys.path.insert(0,cmd_folder)
-
-cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],
-                                                              "import_modules")))
-if cmd_subfolder not in sys.path:
-    sys.path.insert(0,cmd_subfolder)
-
 from proteus.iproteus import *
-from proteus import Comm
-comm = Comm.get()
-Profiling.logLevel=7
-Profiling.verbose=True
+import set_paths
 import numpy
 import laplace_template_TH_2D as L_2d
 
@@ -70,7 +56,6 @@ class TestMassConstruction2D():
         expected_output = os.path.dirname(os.path.abspath(__file__)) + '/comparison_files/Laplace_mat_reference_element_1.npy'
         comparison_mat = numpy.load(expected_output)
         assert numpy.allclose(Laplace_mat,comparison_mat)
-
 
     def test_2(self):
         """ Tests the attachMassOperator function in one-level-transport """
