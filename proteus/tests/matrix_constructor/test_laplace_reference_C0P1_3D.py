@@ -2,25 +2,15 @@
 """
 Test module for Laplace Matrix builder
 """
-import os,sys,inspect
 
-cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
-if cmd_folder not in sys.path:
-    sys.path.insert(0,cmd_folder)
+from proteus.iproteus import *
+from proteus import LinearAlgebraTools
 
-cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],"import_modules")))
-if cmd_subfolder not in sys.path:
-    sys.path.insert(0,cmd_subfolder)
-
+import set_paths
 import os.path
 import numpy
+
 import laplace_template_C0P1_3D as tp_3D
-from proteus.iproteus import *
-from proteus import Comm
-from proteus import LinearAlgebraTools
-comm = Comm.get()
-Profiling.logLevel = 7
-Profiling.verbose = True
 
 class TestLaplaceConstruction3D():
     """ Run tests to verify the construction of the 3D Laplace operator """
