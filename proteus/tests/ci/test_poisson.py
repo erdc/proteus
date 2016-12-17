@@ -9,16 +9,8 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
-import pytest
 from proteus.iproteus import *
-from proteus import Comm
-comm = Comm.get()
-Profiling.logLevel=7
-Profiling.verbose=True
 from petsc4py import PETSc
-OptDB = PETSc.Options()
-OptDB.setValue("ksp_type", "cg")
-OptDB.setValue("pc_type", "gamg")
 import os
 import poisson_3d_p
 import poisson_3d_c0p1_n
@@ -37,6 +29,9 @@ class TestPoisson():
         pass
 
     def setup_method(self,method):
+        OptDB = PETSc.Options()
+        OptDB.setValue("ksp_type", "cg")
+        OptDB.setValue("pc_type", "gamg")
         reload(poisson_3d_p)
 
     def teardown_method(self,method):
