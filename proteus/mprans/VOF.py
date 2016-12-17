@@ -55,10 +55,10 @@ class RKEV(proteus.TimeIntegration.SSP33):
 
     ... more to come ...
     """
-    def __init__(self, transport, timeOrder=1, nStages=1, runCFL=0.1):
+    def __init__(self, transport, timeOrder=1, runCFL=0.1):
         TimeIntegration.SSP33.__init__(self, transport,runCFL=runCFL)
         self.timeOrder = timeOrder  #order of approximation
-        self.nStages = nStages  #number of stages total
+        self.nStages = timeOrder  #number of stages total
         self.lstage = 0  #last stage completed
         # storage vectors
         # previous time step mass and solution dof per component
@@ -76,10 +76,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                 for k in range(self.nStages+1):                    
                     self.m_stage[ci].append(transport.q[('m',ci)].copy())
                     self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
-                    
-        # mwf start with just forward euler
-        self.nStages = 1; self.timeOrder = 1
-        self.setCoefficients()
+        
     #def set_dt(self, DTSET):
     #    self.dt = DTSET #  don't update t
     def choose_dt(self):
@@ -95,6 +92,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
+        self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
     def initialize_dt(self,t0,tOut,q):
         """
         Modify self.dt
@@ -106,20 +104,18 @@ class RKEV(proteus.TimeIntegration.SSP33):
     def setCoefficients(self):
         """
         beta are all 1's here
+        mwf not used right now
         """
         self.alpha = numpy.zeros((self.nStages, self.nStages),'d')
-        if self.timeOrder == 1:
-            self.alpha[0,0] = 1.0
-        else:
-            raise NotImplementedError, "order {0} not supported".format(self.timeOrder)
-        #
         self.dcoefs = numpy.zeros((self.nStages),'d')
-        if self.timeOrder == 1:
-            self.dcoefs[0] = 1.0
-        else:
-            raise NotImplementedError, "order {0} not supported".format(self.timeOrder)
-
+        
     def updateStage(self):
+        """
+        Need to switch to use coefficients
+        """
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
         self.lstage += 1
         #mwf just Forward Euler for start
         self.t = self.tLast + self.dt
@@ -170,7 +166,49 @@ class RKEV(proteus.TimeIntegration.SSP33):
         self.lstage=0
         self.dtLast = self.dt
         self.tLast = self.t
- 
+    def generateSubsteps(self,tList):
+        """
+        create list of substeps over time values given in tList. These correspond to stages
+        """
+        self.substeps = []
+        tLast = self.tLast
+        for t in tList:
+            dttmp = t-tLast
+            self.substeps.extend([tLast + dttmp for i in range(self.nStages)])
+            tLast = t
+
+    def resetOrder(self,order):
+        """
+        initialize data structures for stage updges
+        """
+        self.timeOrder = order  #order of approximation
+        self.nStages = order  #number of stages total
+        self.lstage = 0  #last stage completed
+        # storage vectors
+        # per component stage values, list with array at each stage
+        self.m_stage = {}
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+             if self.transport.q.has_key(('m',ci)):
+                self.m_stage[ci] = []
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages+1):                    
+                    self.m_stage[ci].append(self.transport.q[('m',ci)].copy())
+                    self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
+        self.substeps = [self.t for i in range(self.nStages)]            
+    def setFromOptions(self,nOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        flags = ['timeOrder']
+        for flag in flags:
+            if flag in dir(nOptions):
+                val = getattr(nOptions,flag)
+                setattr(self,flag,val)
+                if flag == 'timeOrder':
+                    self.resetOrder(self.timeOrder)
+        
+        
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import VOFCoefficientsEvaluate
     from proteus.UnstructuredFMMandFSWsolvers import FMMEikonalSolver,FSWEikonalSolver
@@ -1053,8 +1091,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementDiametersArray,
             self.u[0].dof,
             # mwf will need to have a separate hook for u_old (last time step) and last stage
-            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],#mwf hack self.coefficients.u_dof_old,
-            
+            #self.coefficients.u_dof_old,
+            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],
             self.coefficients.u_dof_old_old,
             self.coefficients.velx_tn_dof,
             self.coefficients.vely_tn_dof, # HACKED TO 2D FOR NOW (MQL)

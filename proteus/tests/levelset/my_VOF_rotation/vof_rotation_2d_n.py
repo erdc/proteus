@@ -9,7 +9,7 @@ fullNewtonFlag = fullNewton
 updateJacobian = False
 timeIntegration = VOF.RKEV # SSP33 #mwf right now need timeIntegration to be SSP33 to run
 stepController = Min_dt_RKcontroller#Min_dt_controller #mwf we should probably 
-if timeIntegration_vof == "SSP33" and False: #mwf hack
+if timeIntegration_vof == "SSP33": #mwf hack
     timeOrder = 3
     nStagesTime = 3
 else:
