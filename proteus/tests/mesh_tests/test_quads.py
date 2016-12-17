@@ -6,15 +6,13 @@ Test module for 2D Quadrilateral Meshes
 """
 from proteus.iproteus import *
 from proteus.test_utils import TestTools
-from proteus import Comm
-comm = Comm.get()
 TestTools.addSubFolders( inspect.currentframe() )
+
 import stokes_2d_p
 import stokes_2d_n
-#Profiling.logLevel=7
-#Profiling.verbose=True
 import pytest
 import inspect
+
 pytestmark = pytest.mark.meshtest
 
 def test_mesh_build():
@@ -40,15 +38,14 @@ def test_mesh_build():
     assert mlMesh.meshList[1].nElements_global == 4*(nnx-1)*(nny-1), 'Mesh generator has built incorrect number of quads'
 
 class Test2DStokesOnQuads():
-    """ Runs a simple 2D Poiseulle Stokes problem on Quads with TH elements """
+    """ Runs a 2D Poiseulle Stokes problem on Quads with TH elements """
+
     @classmethod    
     def setup_class(cls):
-        """ Initialize the test problem """
         pass
 
     @classmethod
     def teardown_class(cls):
-        """Pass """
         pass
 
     def setup_method(self,method):
