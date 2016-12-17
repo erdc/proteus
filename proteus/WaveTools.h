@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include <iostream>
-#include <valarray>
+
 namespace proteus
 {
  const int nDim(3);
@@ -195,7 +195,7 @@ namespace proteus
 	    Uf[0] = Uf[0]+ *(Ufenton);//[0];
 	    Uf[1] = Uf[1]+ *(Ufenton+1);//[1];
 	    Uf[2] = Uf[2]+ *(Ufenton+2);//[2];
-
+	    delete [] Ufenton;
 	  }
 	
 	for ( int kk = 0; kk<3; kk++)
@@ -264,7 +264,7 @@ namespace proteus
 	    Uf[0] = Uf[0]+ *(Ufenton);//[0];
 	    Uf[1] = Uf[1]+ *(Ufenton+1);//[1];
 	    Uf[2] = Uf[2]+ *(Ufenton+2);//[2];
-
+	    delete [] Ufenton;
 	  }
 	
         return Uf;
