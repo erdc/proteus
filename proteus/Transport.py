@@ -27,6 +27,7 @@ import Comm
 import flcbdfWrappers
 import cmeshTools
 from .Profiling import logEvent
+from petsc4py import PETSc as p4pyPETSc
 import superluWrappers
 import numpy
 
@@ -47,21 +48,26 @@ class OneLevelTransport(NonlinearEquation):
     Objects of this type take the initial-boundary value
     problem for
 
-    .. math:: m_t^i + \nabla \cdot (\mathbf{f}^i - \sum_k \mathbf{a}^{ik} \nabla \phi^k) + H^i(\nabla u) + r^i = 0
+    .. math:: 
+
+            m_t^i + \nabla \cdot (\mathbf{f}^i - \sum_k \mathbf{a}^{ik}
+            \nabla \phi^k) + H^i(\nabla u) + r^i = 0
 
     and turn it into the discrete (nonlinear or linear) algebraic
     problem
 
     .. math:: F(U) = 0
 
-    where F and U have dimension self.dim. The Jacobian of F or an
+    where F and U have dimension `self.dim`. The Jacobian of F or an
     approximation for it may also be  provided.
 
     The NonlinearEquation interface is
 
-    self.dim
-    getResidual(u,r)
-    getJacobian(jacobian)
+    * self.dim
+
+    * getResidual(u,r)
+
+    * getJacobian(jacobian).
 
     The rest of the functions in this class are either private functions
     or return various other pieces of information.
@@ -92,40 +98,54 @@ class OneLevelTransport(NonlinearEquation):
                  reuse_trial_and_test_quadrature=False,
                  sd = True,
                  movingDomain=False):#,
-        import Comm
-        """
-        Allocate storage and initialize some variables.
+        r""" Allocate storage and initialize some variables.
 
-        uDict   -- a dictionary of FiniteElementFunction objects
+        Parameters
+        ----------
+        uDict : dict
+            Dictionary of 
+            :class:`proteus.FemTools.FiniteElementFunction` objects.
 
-        phiDict -- a dictionary of FiniteElementFunction objects
+        phiDict : dict
+            Dictionary of
+            :class:`proteus.FemTools.FiniteElementFunction` objects.
 
-        testSpaceDict -- a dictionary of FiniteElementSpace objects
+        testSpaceDict : dict
+            Dictionary of FiniteElementSpace objects
 
-        dofBoundaryConditionsDict -- a dictionary of DOFBoundaryConditions objects for
-        the Dirichlet conditions
+        dofBoundaryConditionsDict : dict
+            Dictionary of DOFBoundaryConditions objects for the 
+            Dirichlet conditions.
 
-        coefficients -- a TransportCoefficients object
+        coefficients : :class:`proteus.TransportCoefficients.TC_base`
+            Problem's Transport Coefficients class.
 
-        elementQuadratureDict -- a dictionary of dictionaries of quadrature rules for each
-        element integral in each component equation
+        elementQuadratureDict : dict
+            Dictionary of dictionaries of quadrature rules for each 
+            element integral in each component equation.
 
-        elementBoundaryQuadratureDict -- a dictionary of dictionaries of quadrature rules
-        for each element boundary integral in each component equation
+        elementBoundaryQuadratureDict : dict
+            Dictionary of dictionaries of quadrature rules for each 
+            element boundary integral in each component equation
 
-        stabilization
+        stabilization : bool
 
-        shockCapturing
+        shockCapturing : bool
 
-        numericalFlux
+        numericalFlux : bool
+
+        Notes
+        -----
 
         The constructor sets the input arguments, calculates
         dimensions, and allocates storage. The meanings of variable
         suffixes are
 
-        _global          -- per physical domain
-        _element         -- per element
-        _elementBoundary -- per element boundary
+        * global          -- per physical domain
+
+        * element         -- per element
+
+        * elementBoundary -- per element boundary
 
         The prefix n means 'number of'.
 
@@ -134,13 +154,22 @@ class OneLevelTransport(NonlinearEquation):
         dictionary for all the quantities of that type. The names
         and dimensions of the storage dictionaries are
 
-        e          -- at element
-        q          -- at element quadrature, unique to elements
-        ebq        -- at element boundary quadrature, unique to elements
-        ebq_global -- at element boundary quadrature, unique to element boundary
-        ebqe       -- at element boundary quadrature, unique to global, exterior element boundary
-        phi_ip     -- at the generalized interpolation points required to build a nonlinear  phi
+        * e -- at element
+
+        * q -- at element quadrature, unique to elements
+
+        * ebq -- at element boundary quadrature, unique to elements
+
+        * ebq_global -- at element boundary quadrature, unique to element 
+          boundary
+
+        * ebqe -- at element boundary quadrature, unique to global, 
+          exterior element boundary
+
+        * phi_ip -- at the generalized interpolation points required to
+          build a nonlinear phi
         """
+        import Comm
         #
         #set the objects describing the method and boundary conditions
         #
@@ -5961,12 +5990,128 @@ class OneLevelTransport(NonlinearEquation):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
 
+    def attachLaplaceOperator(self,nu=1.0):
+        """Attach a Discrete Laplace Operator to the Transport Class.
+
+        Arguments
+        ---------
+        nu : float
+             Viscosity parameter for the Laplace operator.
+
+        Notes
+        -----
+        This function creates a Laplace matrix and stores the result in the 
+        :class:`proteus.OneLevelTransport` class to assist in the construction 
+        of physics based preconditione
+        """
+
+        self.laplace_val = self.nzval.copy()
+        self.LaplaceOperator = SparseMat(self.nFreeVDOF_global,
+                                         self.nFreeVDOF_global,
+                                         self.nnz,
+                                         self.laplace_val,
+                                         self.colind,
+                                         self.rowptr)
+
+        _nd = self.coefficients.nd
+        if self.coefficients.nu != None:
+            _nu = self.coefficients.nu
+        self.LaplaceOperatorCoeff = DiscreteLaplaceOperator(nd=_nd)
+        _t = 1.0
+
+        Laplace_phi = {}
+        Laplace_dphi = {}
+
+        for ci,space in self.testSpace.iteritems():
+            Laplace_phi[ci] = FiniteElementFunction(space)
+
+        for ck,phi in Laplace_phi.iteritems():
+            Laplace_dphi[(ck,ck)] = FiniteElementFunction(Laplace_phi[ck].femSpace)
+
+        for ci,dphi in Laplace_dphi.iteritems():
+            dphi.dof.fill(1.0)
+
+        self.Laplace_q = {}
+        scalar_quad = StorageSet(shape=(self.mesh.nElements_global,
+                                        self.nQuadraturePoints_element))
+        tensors_quad = StorageSet(shape={})
+        
+        scalar_quad |= set([('u',ci) for ci in range(self.nc)])
+        tensors_quad |= set([('a',ci,ci) for ci in range(self.nc)])
+        tensors_quad |= set([('da',ci,ci,ci) for ci in range(self.nc)])
+
+        scalar_quad.allocate(self.Laplace_q)
+        
+        for k in tensors_quad:
+            self.Laplace_q[k] = numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nQuadraturePoints_element,
+                 self.LaplaceOperatorCoeff.sdInfo[(k[1],k[2])][0][self.nSpace_global]),
+                'd')
+
+        if _nd == 2:
+            self.LaplaceOperatorCoeff.evaluate(_t,self.Laplace_q)
+        
+        LaplaceJacobian = {}
+        for ci in range(self.nc):
+            LaplaceJacobian[ci] = {}
+            for cj in range(self.nc):
+                if cj in self.LaplaceOperatorCoeff.stencil[ci]:
+                    LaplaceJacobian[ci][cj] = numpy.zeros(
+                        (self.mesh.nElements_global,
+                         self.nDOF_test_element[ci],
+                         self.nDOF_trial_element[cj]),
+                        'd')
+
+        for ci,ckDict in self.LaplaceOperatorCoeff.diffusion.iteritems():
+            for ck,cjDict in ckDict.iteritems():
+                for cj in set(cjDict.keys()+self.LaplaceOperatorCoeff.potential[ck].keys()):
+                    cfemIntegrals.updateDiffusionJacobian_weak_sd(self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][0],
+                                                                  self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][1],
+                                                                  self.phi[ck].femSpace.dofMap.l2g,
+                                                                  self.Laplace_q[('a',ci,ck)],
+                                                                  self.Laplace_q[('da',ci,ck,cj)],
+                                                                  self.q[('grad(phi)',ck)],
+                                                                  self.q[('grad(w)*dV_a',ck,ci)],
+                                                                  Laplace_dphi[(ck,cj)].dof,
+                                                                  self.q[('v',cj)],
+                                                                  self.q[('grad(v)',cj)],
+                                                                  LaplaceJacobian[ci][cj])
+        for ci in range(self.nc):
+            for cj in self.LaplaceOperatorCoeff.stencil[ci]:
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[ci]['nFreeDOF'],
+                                                                          self.l2g[ci]['freeLocal'],
+                                                                          self.l2g[cj]['nFreeDOF'],
+                                                                          self.l2g[cj]['freeLocal'],
+                                                                          self.csrRowIndeces[(ci,cj)],
+                                                                          self.csrColumnOffsets[(ci,cj)],
+                                                                          LaplaceJacobian[ci][cj],
+                                                                          self.LaplaceOperator)
+
+        self.LaplaceOperatorpetsc = superlu_2_petsc4py(self.LaplaceOperator)
+        
+        var_range = []
+        isp_list = []
+        starting_idx = 0
+        for comp in range(self.nc):
+            comp_num_dof = self.phi[comp].femSpace.dofMap.nDOF
+            var_range.append(numpy.arange(start=starting_idx,
+                                          stop=starting_idx+comp_num_dof,
+                                          dtype='i'))
+            isp_list.append(p4pyPETSc.IS())
+            isp_list[comp].createGeneral(var_range[comp])
+            starting_idx+=comp_num_dof
+
+        self.LaplaceOperatorList = []
+        for comp in range(self.nc):
+            self.LaplaceOperatorList.append(self.LaplaceOperatorpetsc.getSubMatrix
+                                            (isp_list[comp],
+                                             isp_list[comp]))
+
 #end Transport definition
 class MultilevelTransport:
     """Nonlinear ADR on a multilevel mesh"""
     def __init__(self,problem,numerics,mlMesh,OneLevelTransportType=OneLevelTransport):
-        #import pdb
-        #pdb.set_trace()
         self.name = problem.name
         #cek temporary fix to get everything weaned off the old BC's
         if numerics.numericalFluxType == None:
