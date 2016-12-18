@@ -5943,8 +5943,11 @@ from LinearAlgebraTools import ParVec
 import Comm
 
 class FiniteElementFunction:
-    """
-    A member of a finite element space of scalar functions.
+    """  A member of a finite element space of scalar functions.
+
+    Arguments
+    ---------
+    finiteElementSpace : :class:`proteus.FemTools.ParametricFiniteElementSpace`
     """
     def __init__(self,finiteElementSpace,dof=None,dim_dof=1,name="no_name",isVector=False):
         self.name=name
@@ -5978,6 +5981,15 @@ class FiniteElementFunction:
                     dof_eN_i = functionals[i](interpolationValues[eN])
                     self.dof[self.femSpace.dofMap.l2g[eN,i]*self.dim_dof:self.femSpace.dofMap.l2g[eN,i]*self.dim_dof+self.dim_dof] = dof_eN_i
     def getValue(self,eN,xi):
+        """ Calculate the function value at a point on an element.
+
+        Arguments
+        ---------
+        eN : int
+            Global element number.
+        xi : point
+            Evaluation coordinate.
+        """
         value = 0.0
         for i,psi in zip(
             self.femSpace.finiteElements[eN].globalDOFNumbers,
