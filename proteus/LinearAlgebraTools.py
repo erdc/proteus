@@ -108,7 +108,9 @@ def superlu_2_petsc4py(sparse_superlu):
     nr       = sparse_superlu.shape[0]
     nc       = sparse_superlu.shape[1]
     A_petsc4py = p4pyPETSc.Mat().createAIJWithArrays((nr,nc),
-                                                     (A_rowptr,A_colind,A_nzval))
+                                                     (A_rowptr,
+                                                      A_colind,
+                                                      A_nzval))
     return A_petsc4py
 
 class ParVec:
