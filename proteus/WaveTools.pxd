@@ -6,6 +6,7 @@ cimport cython
 from libc.math cimport tanh, sqrt, exp, log, sin, cos, cosh, sinh, M_PI #from math import pi, tanh, sqrt, exp, log, sin, cos, cosh, sinh
 cimport numpy as np
 from libcpp cimport bool
+from cpython.mem cimport PyMem_Malloc, PyMem_Realloc, PyMem_Free
 
 cdef extern from "WaveTools.h" namespace "proteus":
     cdef const int nDim

@@ -660,7 +660,7 @@ class  MonochromaticWaves:
             Type: float
 
             """
-    def __init__(self,
+    def __cinit__(self,
                  period,
                  waveHeight,
                  mwl,
@@ -767,7 +767,6 @@ class  MonochromaticWaves:
             self._cpp_eta = self.etaFenton
             self._cpp_u = self.uFenton
 
-
     def  etaLinear(self,  x,  t):    
  
         return __cpp_eta_mode(x ,t, self.kDir_,self.omega,self.phi0,self.amplitude)
@@ -777,9 +776,7 @@ class  MonochromaticWaves:
         return __cpp_etaFenton(x,t,self.kDir_, self.k, self.omega,self.phi0,self.amplitude, self.Nf, self.Ycoeff_)
 
 
-    def  uLinear(self,  x,  t):
-
-        
+    def  uLinear(self,  x,  t):        
         return __cpp_vel_mode(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.tanhL)
 
     def  uFenton(self,  x,  t):
@@ -801,14 +798,16 @@ class  MonochromaticWaves:
             Free-surface elevation as a float
 
         """
+
         cython.declare(xx=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
+
         if self.waveType =="Linear":
             return self.etaLinear(xx,t)
         else:
-            return self.etaFenton(xx,t)
+           return self.etaFenton(xx,t)
 
     def u(self,x,t):
         """Calculates wave velocity vector (MonochromaticWaves class).
@@ -826,6 +825,8 @@ class  MonochromaticWaves:
 
         """
         cython.declare(xx=cython.double[3])
+        cython.declare(cppUL=cython.double[3])
+        cython.declare(cppUF=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
@@ -835,12 +836,12 @@ class  MonochromaticWaves:
             U[0] = cppUL[0]
             U[1] = cppUL[1]
             U[2] = cppUL[2]
-
         else:
-            cppUF = self.uFenton(xx,t)            
+            cppUF = self.uLinear(xx,t)            
             U[0] = cppUF[0]
             U[1] = cppUF[1]
             U[2] = cppUF[2]
+
         return U
 
     
@@ -1030,6 +1031,7 @@ class RandomWaves:
         """
 
         cython.declare(xx=cython.double[3])
+        cython.declare(cppUL=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
@@ -1233,7 +1235,7 @@ class MultiSpectraRandomWaves:
         return __cpp_etaRandom(x,t,self.kDirM_, self.omegaM_,self.phiM_,self.aiM_, self.Nall)
 
     def eta(self, x, t):
-        """Calculates free surface elevation (RandomWaves class)
+        """Calculates free surface elevation (MultiSpectraRandomWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1258,7 +1260,7 @@ class MultiSpectraRandomWaves:
         return __cpp_uDir(x,t,self.kDirM_, self.kiM_, self.omegaM_,self.phiM_,self.aiM_,self.mwl,self.depth, self.Nall, self.waveDirM_, self.vDir_, self.tanhM_)
 
     def u(self, x, t):
-        """Calculates wave velocity vector (RandomWaves class)
+        """Calculates wave velocity vector (MultiSpectraRandomWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1274,6 +1276,7 @@ class MultiSpectraRandomWaves:
         """
 
         cython.declare(xx=cython.double[3])
+        cython.declare(cppUL=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
@@ -1480,7 +1483,7 @@ class DirectionalWaves:
         return __cpp_etaRandom(x,t,self.kDir_, self.omega_,self.phi_,self.ai_, self.Nall)
 
     def eta(self, x, t):
-        """Calculates free surface elevation (RandomWaves class)
+        """Calculates free surface elevation (DirectionalWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1505,7 +1508,7 @@ class DirectionalWaves:
         return __cpp_uDir(x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.Nall, self.waveDir_, self.vDir_, self.tanh_)
 
     def u(self, x, t):
-        """Calculates wave velocity vector (RandomWaves class)
+        """Calculates wave velocity vector (DirectionalWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1521,6 +1524,7 @@ class DirectionalWaves:
         """
 
         cython.declare(xx=cython.double[3])
+        cython.declare(cppUL=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
@@ -1958,6 +1962,7 @@ class TimeSeries:
 
         """
         cython.declare(xx=cython.double[3])
+        cython.declare(cppUL=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
@@ -2032,6 +2037,7 @@ class TimeSeries:
 
         """
         cython.declare(xx=cython.double[3])
+        cython.declare(cppUL=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]

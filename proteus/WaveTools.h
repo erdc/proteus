@@ -92,39 +92,38 @@ namespace proteus
   }
 
 
- inline double* __cpp_vel_mode(double x[nDim], double t, double kDir[nDim],double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double waveDir[nDim], double vDir[nDim], double tanhkd)
+ inline double* __cpp_vel_mode(double * x, double t, double *kDir,double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double *waveDir, double *vDir, double tanhkd)
    {
-
      double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
-      double Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
-       double* VV;
-      VV = new double[nDim];
-      double Uhype =0.;
-      double Vhype =0.;
-      double fcosh =0.;
-      double fsinh =0.;
+     double Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
+     double* VV;
+     VV = new double[nDim];
+     double Uhype =0.;
+     double Vhype =0.;
+     double fcosh =0.;
+     double fsinh =0.;
 
       
-      if(kAbs*Z > -PI_)
-      {
-	fcosh = fastcosh(kAbs, Z,  true); 
-	fsinh = fastcosh(kAbs, Z,  false); 
-	Uhype = fcosh / tanhkd + fsinh; 
-	Vhype = fsinh / tanhkd + fcosh; 
-      }
-      double fcos = fastcos(phase);
-      double fsin = fastcos(Pihalf_ - phase);
-	
-      double UH=amplitude*omega*Uhype*fcos;
-      double UV=amplitude*omega*Vhype*fsin;
+     if(kAbs*Z > -PI_)
+       {
+	 fcosh = fastcosh(kAbs, Z,  true); 
+	 fsinh = fastcosh(kAbs, Z,  false); 
+	 Uhype = fcosh / tanhkd + fsinh; 
+	 Vhype = fsinh / tanhkd + fcosh; 
+       }
+     double fcos = fastcos(phase);
+     double fsin = fastcos(Pihalf_ - phase);
+     
+     double UH=amplitude*omega*Uhype*fcos;
+     double UV=amplitude*omega*Vhype*fsin;
      //Setting wave direction
-      for(int ii=0; ii<nDim ; ii++)
-	  {
-	    VV[ii] = UH*waveDir[ii] + UV*vDir[ii];
-	  }
-      return VV;
-      delete [] VV;
-      }
+     for(int ii=0; ii<nDim ; ii++)
+       {
+	 VV[ii] = UH*waveDir[ii] + UV*vDir[ii];
+       }
+     return VV;
+     delete [] VV;
+   }
 
 
  
