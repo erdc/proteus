@@ -197,7 +197,9 @@ namespace proteus
 				   double* ebqe_bc_flux_w_diff_ext,
 				   double* q_x,
 				   double* q_velocity,
+				   double* q_div_velocity,
 				   double* ebqe_velocity,
+				   double* ebqe_div_velocity,
 				   double* flux,
 				   double* elementResidual_p,
 				   int* elementFlags,
@@ -1620,7 +1622,9 @@ namespace proteus
 			   double* ebqe_bc_flux_w_diff_ext,
 			   double* q_x,
 			   double* q_velocity,
+			   double* q_div_velocity,
 			   double* ebqe_velocity,
+			   double* ebqe_div_velocity,
 			   double* flux,
 			   double* elementResidual_p_save,
 			   int* elementFlags,
@@ -2271,6 +2275,8 @@ namespace proteus
 	      q_velocity[eN_k_nSpace+0]=u;
 	      q_velocity[eN_k_nSpace+1]=v;
 	      /* q_velocity[eN_k_nSpace+2]=w;*/
+	      // save the div of the velocity (MQL) //
+	      q_div_velocity[eN_k] = grad_u[0] + grad_v[1]; // u_x + v_y
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  register int i_nSpace=i*nSpace;
@@ -2901,6 +2907,10 @@ namespace proteus
 					     flux_mom_w_adv_ext,
 					     &ebqe_velocity_star[ebNE_kb_nSpace],
                                              &ebqe_velocity[ebNE_kb_nSpace]);
+	      // calculate divergence of velocity at boundary (MQL) //
+	      // save the div of the velocity (MQL) //
+	      ebqe_div_velocity[ebNE_kb] = grad_u_ext[0] + grad_v_ext[1]; // u_x + v_y
+
 	      exteriorNumericalDiffusiveFlux(eps_rho,
 					     ebqe_phi_ext[ebNE_kb],
 					     sdInfo_u_u_rowptr,

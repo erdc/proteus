@@ -190,7 +190,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * ebqe_bc_flux_w_diff_ext,
                                double * q_x,
                                double * q_velocity,
+			       double * q_div_velocity,
                                double * ebqe_velocity,
+                               double * ebqe_div_velocity,
                                double * flux,
                                double * elementResidual_p,
                                int * elementFlags,
@@ -623,7 +625,9 @@ cdef class RANS3PF:
                           numpy.ndarray ebqe_bc_flux_w_diff_ext,
                           numpy.ndarray q_x,
                           numpy.ndarray q_velocity,
+                          numpy.ndarray q_div_velocity,
                           numpy.ndarray ebqe_velocity,
+                          numpy.ndarray ebqe_div_velocity,
                           numpy.ndarray flux,
                           numpy.ndarray elementResidual_p,
                           numpy.ndarray elementFlags,
@@ -793,7 +797,9 @@ cdef class RANS3PF:
                                         < double * > ebqe_bc_flux_w_diff_ext.data,
                                         < double * > q_x.data,
                                         < double * > q_velocity.data,
+                                        < double * > q_div_velocity.data,
                                         < double * > ebqe_velocity.data,
+                                        < double * > ebqe_div_velocity.data,
                                         < double * > flux.data,
                                         < double * > elementResidual_p.data,
                                         < int * > elementFlags.data,
@@ -1350,7 +1356,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * ebqe_bc_flux_w_diff_ext,
                                double * q_x,
                                double * q_velocity,
+                               double * q_div_velocity,
                                double * ebqe_velocity,
+                               double * ebqe_div_velocity,
                                double * flux,
                                double * elementResidual_p,
                                int * elementFlags,
@@ -1787,7 +1795,9 @@ cdef class RANS3PF2D:
                           numpy.ndarray ebqe_bc_flux_w_diff_ext,
                           numpy.ndarray q_x,
                           numpy.ndarray q_velocity,
+                          numpy.ndarray q_div_velocity,
                           numpy.ndarray ebqe_velocity,
+                          numpy.ndarray ebqe_div_velocity,
                           numpy.ndarray flux,
                           numpy.ndarray elementResidual_p,
                           numpy.ndarray elementFlags,
@@ -1958,7 +1968,9 @@ cdef class RANS3PF2D:
                                         < double * > ebqe_bc_flux_w_diff_ext.data,
                                         < double * > q_x.data,
                                         < double * > q_velocity.data,
+                                        < double * > q_div_velocity.data,
                                         < double * > ebqe_velocity.data,
+                                        < double * > ebqe_div_velocity.data,
                                         < double * > flux.data,
                                         < double * > elementResidual_p.data,
                                         < int * > elementFlags.data,
@@ -3527,13 +3539,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             numpy.ones((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('f', 0)] = numpy.zeros((self.mesh.nElements_global,
                                         self.nQuadraturePoints_element, self.nSpace_global), 'd')
-        self.q[
-            ('velocity',
-             0)] = numpy.zeros(
-            (self.mesh.nElements_global,
-             self.nQuadraturePoints_element,
-             self.nSpace_global),
-            'd')
+        self.q[('velocity',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
+	# divergence of velocity (MQL)
+        self.q['div_velocity'] = numpy.zeros((self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['velocity_solid'] = numpy.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
@@ -3672,6 +3680,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
+	# div of velocity at boundary at quad points (MQL)
+        self.ebqe['div_velocity'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         # VRANS start, defaults to RANS
         self.q[('r', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
@@ -4349,7 +4359,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('diffusiveFlux_bc', 2, 2)],
             self.q['x'],
             self.q[('velocity', 0)],
+            self.q['div_velocity'],
             self.ebqe[('velocity', 0)],
+            self.ebqe['div_velocity'],
             self.ebq_global[('totalFlux', 0)],
             self.elementResidual[0],
             self.mesh.elementMaterialTypes,
