@@ -72,6 +72,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * vely_tn_dof,
                                double * velz_tn_dof,
                                double * velocity,
+                               double * div_velocity,
                                double * q_m,
                                double * q_u,
                                double * q_m_betaBDF,
@@ -87,6 +88,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                int * elementBoundaryElementsArray,
                                int * elementBoundaryLocalElementBoundariesArray,
                                double * ebqe_velocity_ext,
+                               double * ebqe_div_velocity_ext,
                                const double * ebqe_vos_ext,
                                int * isDOFBoundary_u,
                                double * ebqe_bc_u_ext,
@@ -259,6 +261,7 @@ cdef class VOF3P:
                           numpy.ndarray vely_tn_dof,
                           numpy.ndarray velz_tn_dof,
                           numpy.ndarray velocity,
+                          numpy.ndarray div_velocity,
                           numpy.ndarray q_m,
                           numpy.ndarray q_u,
                           numpy.ndarray q_m_betaBDF,
@@ -274,6 +277,7 @@ cdef class VOF3P:
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray,
                           numpy.ndarray ebqe_velocity_ext,
+                          numpy.ndarray ebqe_div_velocity_ext,
                           numpy.ndarray ebqe_vos_ext,
                           numpy.ndarray isDOFBoundary_u,
                           numpy.ndarray ebqe_bc_u_ext,
@@ -344,6 +348,7 @@ cdef class VOF3P:
                                        <double*> vely_tn_dof.data,
                                        <double*> velz_tn_dof.data,
                                        <double*> velocity.data,
+                                       <double*> div_velocity.data,
                                        <double*> q_m.data,
                                        <double*> q_u.data,
                                        <double*> q_m_betaBDF.data,
@@ -360,6 +365,7 @@ cdef class VOF3P:
                                        <int*> elementBoundaryElementsArray.data,
                                        <int*> elementBoundaryLocalElementBoundariesArray.data,
                                        <double*> ebqe_velocity_ext.data,
+                                       <double*> ebqe_div_velocity_ext.data,
                                        <double*> ebqe_vos_ext.data,
                                        <int*> isDOFBoundary_u.data,
                                        <double*> ebqe_bc_u_ext.data,
@@ -685,20 +691,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
             if modelList[self.V_model].q.has_key(('velocity', 0)):
                 self.q_v = modelList[self.V_model].q[('velocity', 0)]
-                self.ebqe_v = modelList[
-                    self.V_model].ebqe[
-                    ('velocity', 0)]
+                self.ebqe_v = modelList[self.V_model].ebqe[('velocity', 0)]
             else:
                 self.q_v = modelList[self.V_model].q[('f', 0)]
                 self.ebqe_v = modelList[self.V_model].ebqe[('f', 0)]
             if modelList[self.V_model].ebq.has_key(('velocity', 0)):
-                self.ebq_v = modelList[
-                    self.V_model].ebq[
-                    ('velocity', 0)]
+                self.ebq_v = modelList[self.V_model].ebq[('velocity', 0)]
             else:
                 if modelList[self.V_model].ebq.has_key(('f', 0)):
                     self.ebq_v = modelList[self.V_model].ebq[('f', 0)]
 
+            # Take divergence from velocity model 
+            self.q_div_velocity = modelList[self.V_model].q['div_velocity']
+            self.ebqe_div_velocity = modelList[self.V_model].ebqe['div_velocity']
             # Take trial functions and their grads on vel space
             self.nDOF_vel_trial_element = modelList[self.V_model].nDOF_trial_element[0]
             self.vel_l2g = modelList[self.V_model].u[0].femSpace.dofMap.l2g            
@@ -707,6 +712,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.velx_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
             self.vely_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
             self.velz_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
+
+            # If no velocity model I assume the vel field is div free 
+            self.q_div_velocity = numpy.zeros(self.model.q[('u', 0)].shape,'d')
+            self.ebqe_div_velocity = numpy.zeros(self.model.ebqe[('u', 0)].shape,'d')
 
             # Take trial functions and their grads on vel space
             self.nDOF_vel_trial_element = self.model.nDOF_trial_element[0]
@@ -1649,6 +1658,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.vely_tn_dof, 
             self.coefficients.velz_tn_dof, 
             self.coefficients.q_v,
+            self.coefficients.q_div_velocity,
             self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
             self.timeIntegration.beta_bdf[0],
@@ -1664,6 +1674,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
+            self.coefficients.ebqe_div_velocity,
             # VRANS start
             self.coefficients.ebqe_vos,
             # VRANS end

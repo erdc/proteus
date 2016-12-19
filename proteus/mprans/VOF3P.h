@@ -84,6 +84,7 @@ namespace proteus
 				   double* vely_tn_dof, 
 				   double* velz_tn_dof, 
 				   double* velocity,
+				   double* div_velocity,
 				   double* q_m,
 				   double* q_u,
 				   double* q_m_betaBDF,
@@ -99,6 +100,7 @@ namespace proteus
 				   int* elementBoundaryElementsArray,
 				   int* elementBoundaryLocalElementBoundariesArray,
 				   double* ebqe_velocity_ext,
+				   double* ebqe_div_velocity_ext,
 				   //VRANS
 				   const double* ebqe_vos_ext,
 				   //
@@ -521,6 +523,7 @@ namespace proteus
 			   double* vely_tn_dof,
 			   double* velz_tn_dof,
 			   double* velocity,
+			   double* div_velocity,
 			   double* q_m,
 			   double* q_u,
 			   double* q_m_betaBDF,
@@ -536,6 +539,7 @@ namespace proteus
 			   int* elementBoundaryElementsArray,
 			   int* elementBoundaryLocalElementBoundariesArray,
 			   double* ebqe_velocity_ext,
+			   double* ebqe_div_velocity_ext,
 			   //VRANS
 			   const double* ebqe_vos_ext,
 			   //
