@@ -837,7 +837,7 @@ class  MonochromaticWaves:
             U[1] = cppUL[1]
             U[2] = cppUL[2]
         else:
-            cppUF = self.uLinear(xx,t)            
+            cppUF = self.uFenton(xx,t)            
             U[0] = cppUF[0]
             U[1] = cppUF[1]
             U[2] = cppUF[2]
