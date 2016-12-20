@@ -660,7 +660,7 @@ class  MonochromaticWaves:
             Type: float
 
             """
-    def __init__(self,
+    def __cinit__(self,
                  period,
                  waveHeight,
                  mwl,
@@ -767,7 +767,6 @@ class  MonochromaticWaves:
             self._cpp_eta = self.etaFenton
             self._cpp_u = self.uFenton
 
-
     def  etaLinear(self,  x,  t):    
  
         return __cpp_eta_mode(x ,t, self.kDir_,self.omega,self.phi0,self.amplitude)
@@ -777,14 +776,11 @@ class  MonochromaticWaves:
         return __cpp_etaFenton(x,t,self.kDir_, self.k, self.omega,self.phi0,self.amplitude, self.Nf, self.Ycoeff_)
 
 
-    def  uLinear(self,  x,  t):
+    def  uLinear(self, U, x,  t):        
+        __cpp_vel_mode_p(U, x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.tanhL)
 
-        
-        return __cpp_vel_mode(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.tanhL)
-
-    def  uFenton(self,  x,  t):
-        
-        return __cpp_uFenton(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_, self.tanhF_)
+    def  uFenton(self,  U, x,  t):
+        __cpp_uFenton(U,x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_, self.tanhF_)
 
     def eta(self,x,t):
         """Calculates free surface elevation (MonochromaticWaves class)
@@ -801,14 +797,16 @@ class  MonochromaticWaves:
             Free-surface elevation as a float
 
         """
+
         cython.declare(xx=cython.double[3])
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
+
         if self.waveType =="Linear":
             return self.etaLinear(xx,t)
         else:
-            return self.etaFenton(xx,t)
+           return self.etaFenton(xx,t)
 
     def u(self,x,t):
         """Calculates wave velocity vector (MonochromaticWaves class).
@@ -826,21 +824,24 @@ class  MonochromaticWaves:
 
         """
         cython.declare(xx=cython.double[3])
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
+        cython.declare(cppU=cython.double[3])
+        for ii in range(3):
+            xx[ii] = x[ii]
+            cppU[ii] = 0.
+
+
         U = np.zeros(3,)
         if self.waveType =="Linear":
-            cppUL = self.uLinear(xx,t)            
-            U[0] = cppUL[0]
-            U[1] = cppUL[1]
-            U[2] = cppUL[2]
-
+            self.uLinear(cppU,xx,t)
+            U[0] = cppU[0]
+            U[1] = cppU[1]
+            U[2] = cppU[2]
         else:
-            cppUF = self.uFenton(xx,t)            
-            U[0] = cppUF[0]
-            U[1] = cppUF[1]
-            U[2] = cppUF[2]
+            self.uFenton(cppU,xx,t)            
+            U[0] = cppU[0]
+            U[1] = cppU[1]
+            U[2] = cppU[2]
+
         return U
 
     
@@ -1009,9 +1010,8 @@ class RandomWaves:
         xx[2] = x[2]
         return self._cpp_eta(xx,t)
 
-    def _cpp_u(self,  x,  t):
-
-        return __cpp_uRandom(x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.N, self.waveDir_, self.vDir_, self.tanh_)
+    def _cpp_u(self,  U, x,  t):
+        __cpp_uRandom(U, x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.N, self.waveDir_, self.vDir_, self.tanh_)
 
     def u(self, x, t):
         """Calculates wave velocity vector (RandomWaves class)
@@ -1030,14 +1030,15 @@ class RandomWaves:
         """
 
         cython.declare(xx=cython.double[3])
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
+        cython.declare(cppU=cython.double[3])
+        for ii in range(3):
+            xx[ii] = x[ii]
+            cppU[ii] = 0.
         U = np.zeros(3,)
-        cppUL = self._cpp_u(xx,t)            
-        U[0] = cppUL[0]
-        U[1] = cppUL[1]
-        U[2] = cppUL[2]
+        self._cpp_u(cppU,xx,t)            
+        U[0] = cppU[0]
+        U[1] = cppU[1]
+        U[2] = cppU[2]
 
         return U
     def writeEtaSeries(self,Tstart,Tend,x0,fname,Vgen= np.array([0.,0,0])):
@@ -1233,7 +1234,7 @@ class MultiSpectraRandomWaves:
         return __cpp_etaRandom(x,t,self.kDirM_, self.omegaM_,self.phiM_,self.aiM_, self.Nall)
 
     def eta(self, x, t):
-        """Calculates free surface elevation (RandomWaves class)
+        """Calculates free surface elevation (MultiSpectraRandomWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1253,12 +1254,12 @@ class MultiSpectraRandomWaves:
         xx[2] = x[2]
         return self._cpp_eta(xx,t)
 
-    def _cpp_u(self,  x,  t):
+    def _cpp_u(self,  U, x,  t):
 
-        return __cpp_uDir(x,t,self.kDirM_, self.kiM_, self.omegaM_,self.phiM_,self.aiM_,self.mwl,self.depth, self.Nall, self.waveDirM_, self.vDir_, self.tanhM_)
+        __cpp_uDir(U, x,t,self.kDirM_, self.kiM_, self.omegaM_,self.phiM_,self.aiM_,self.mwl,self.depth, self.Nall, self.waveDirM_, self.vDir_, self.tanhM_)
 
     def u(self, x, t):
-        """Calculates wave velocity vector (RandomWaves class)
+        """Calculates wave velocity vector (MultiSpectraRandomWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1274,15 +1275,15 @@ class MultiSpectraRandomWaves:
         """
 
         cython.declare(xx=cython.double[3])
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
+        cython.declare(cppU=cython.double[3])
+        for ii in range(3):
+            xx[ii] = x[ii]
+            cppU[ii] = 0.
         U = np.zeros(3,)
-        cppUL = self._cpp_u(xx,t)            
-        U[0] = cppUL[0]
-        U[1] = cppUL[1]
-        U[2] = cppUL[2]
-
+        self._cpp_u(cppU,xx,t)            
+        U[0] = cppU[0]
+        U[1] = cppU[1]
+        U[2] = cppU[2]
         return U
 
 
@@ -1480,7 +1481,7 @@ class DirectionalWaves:
         return __cpp_etaRandom(x,t,self.kDir_, self.omega_,self.phi_,self.ai_, self.Nall)
 
     def eta(self, x, t):
-        """Calculates free surface elevation (RandomWaves class)
+        """Calculates free surface elevation (DirectionalWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1500,12 +1501,12 @@ class DirectionalWaves:
         xx[2] = x[2]
         return self._cpp_eta(xx,t)
 
-    def _cpp_u(self,  x,  t):
+    def _cpp_u(self,U,  x,  t):
 
-        return __cpp_uDir(x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.Nall, self.waveDir_, self.vDir_, self.tanh_)
+        __cpp_uDir(U, x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.Nall, self.waveDir_, self.vDir_, self.tanh_)
 
     def u(self, x, t):
-        """Calculates wave velocity vector (RandomWaves class)
+        """Calculates wave velocity vector (DirectionalWaves class)
         Parameters
         ----------
         x : numpy.ndarray
@@ -1521,15 +1522,15 @@ class DirectionalWaves:
         """
 
         cython.declare(xx=cython.double[3])
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
+        cython.declare(cppU=cython.double[3])
+        for ii in range(3):
+            xx[ii] = x[ii]
+            cppU[ii] = 0.
         U = np.zeros(3,)
-        cppUL = self._cpp_u(xx,t)            
-        U[0] = cppUL[0]
-        U[1] = cppUL[1]
-        U[2] = cppUL[2]
-
+        self._cpp_u(cppU,xx,t)            
+        U[0] = cppU[0]
+        U[1] = cppU[1]
+        U[2] = cppU[2]
         return U
        
 
@@ -1917,8 +1918,8 @@ class TimeSeries:
 
     def _cpp_etaDirect(self,x,t):
         return __cpp_etaDirect(x,self.x0_,t,self.kDir_,self.omega_,self.phi_,self.ai_,self.Nf)
-    def _cpp_uDirect(self,x,t):
-        return __cpp_uDirect(x,self.x0_,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,self.waveDir_, self.vDir_, self.tanh_)
+    def _cpp_uDirect(self,U,x,t):
+        __cpp_uDirect(U,x,self.x0_,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,self.waveDir_, self.vDir_, self.tanh_)
 
     def etaDirect(self, x, t):
 
@@ -1957,15 +1958,17 @@ class TimeSeries:
             Velocity vector as 1D array
 
         """
+
         cython.declare(xx=cython.double[3])
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
+        cython.declare(cppU=cython.double[3])
+        for ii in range(3):
+            xx[ii] = x[ii]
+            cppU[ii] = 0.
         U = np.zeros(3,)
-        cppUL = self._cpp_uDirect(xx,t)            
-        U[0] = cppUL[0]
-        U[1] = cppUL[1]
-        U[2] = cppUL[2]
+        self._cpp_uDirect(cppU,xx,t)            
+        U[0] = cppU[0]
+        U[1] = cppU[1]
+        U[2] = cppU[2]
 
         return U
  
@@ -1990,9 +1993,9 @@ class TimeSeries:
         Nw = __cpp_findWindow(t,self.handover, self.t0,self.Twindow,self.Nwindows, self.whand_) #Nw
         
         return __cpp_etaWindow(x,self.x0_,t,self.T0_,self.kDir_,self.omega_,self.phi_,self.ai_,self.Nf,Nw)
-    def _cpp_uWindow(self,x,t):
+    def _cpp_uWindow(self,U, x,t):
         Nw = __cpp_findWindow(t,self.handover, self.t0,self.Twindow,self.Nwindows, self.whand_) #Nw
-        return __cpp_uWindow(x,self.x0_,t,self.T0_,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,Nw,self.waveDir_, self.vDir_, self.tanh_)
+        __cpp_uWindow(U,x,self.x0_,t,self.T0_,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,Nw,self.waveDir_, self.vDir_, self.tanh_)
 
     def etaWindow(self, x, t):
         """Calculates free surface elevation(Timeseries class-window method
@@ -2032,14 +2035,15 @@ class TimeSeries:
 
         """
         cython.declare(xx=cython.double[3])
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
+        cython.declare(cppU=cython.double[3])
+        for ii in range(3):
+            xx[ii] = x[ii]
+            cppU[ii] = 0.
         U = np.zeros(3,)
-        cppUL = self._cpp_uWindow(xx,t)            
-        U[0] = cppUL[0]
-        U[1] = cppUL[1]
-        U[2] = cppUL[2]
+        self._cpp_uWindow(cppU,xx,t)            
+        U[0] = cppU[0]
+        U[1] = cppU[1]
+        U[2] = cppU[2]
 
         return U
 
