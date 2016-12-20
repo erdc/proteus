@@ -782,15 +782,8 @@ class  MonochromaticWaves:
         return __cpp_etaFenton(x,t,self.kDir_, self.k, self.omega,self.phi0,self.amplitude, self.Nf, self.Ycoeff_)
 
 
-<<<<<<< HEAD
-    def  uLinear(self,  x,  t):
-
-        
-        return __cpp_vel_mode(x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.tanhL)
-=======
     def  uLinear(self, U, x,  t):        
         __cpp_vel_mode_p(U, x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.tanhL)
->>>>>>> 7e4e4fc... Fixed leaking issues, removed any returned pointers, modifying velocities through passing pointers at the arguments
 
     def  uFenton(self,  U, x,  t):
         __cpp_uFenton(U,x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_, self.tanhF_)
@@ -835,23 +828,6 @@ class  MonochromaticWaves:
 
         """
         cython.declare(xx=cython.double[3])
-<<<<<<< HEAD
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
-        U = np.zeros(3,)
-        if self.waveType =="Linear":
-            cppUL = self.uLinear(xx,t)            
-            U[0] = cppUL[0]
-            U[1] = cppUL[1]
-            U[2] = cppUL[2]
-
-        else:
-            cppUF = self.uFenton(xx,t)            
-            U[0] = cppUF[0]
-            U[1] = cppUF[1]
-            U[2] = cppUF[2]
-=======
         cython.declare(cppU=cython.double[3])
         for ii in range(3):
             xx[ii] = x[ii]
@@ -869,8 +845,6 @@ class  MonochromaticWaves:
             U[0] = cppU[0]
             U[1] = cppU[1]
             U[2] = cppU[2]
-
->>>>>>> 7e4e4fc... Fixed leaking issues, removed any returned pointers, modifying velocities through passing pointers at the arguments
         return U
 
     
@@ -1059,16 +1033,10 @@ class RandomWaves:
         """
 
         cython.declare(xx=cython.double[3])
-<<<<<<< HEAD
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
-=======
         cython.declare(cppU=cython.double[3])
         for ii in range(3):
             xx[ii] = x[ii]
             cppU[ii] = 0.
->>>>>>> 7e4e4fc... Fixed leaking issues, removed any returned pointers, modifying velocities through passing pointers at the arguments
         U = np.zeros(3,)
         self._cpp_u(cppU,xx,t)            
         U[0] = cppU[0]
@@ -1310,16 +1278,10 @@ class MultiSpectraRandomWaves:
         """
 
         cython.declare(xx=cython.double[3])
-<<<<<<< HEAD
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
-=======
         cython.declare(cppU=cython.double[3])
         for ii in range(3):
             xx[ii] = x[ii]
             cppU[ii] = 0.
->>>>>>> 7e4e4fc... Fixed leaking issues, removed any returned pointers, modifying velocities through passing pointers at the arguments
         U = np.zeros(3,)
         self._cpp_u(cppU,xx,t)            
         U[0] = cppU[0]
@@ -1563,16 +1525,10 @@ class DirectionalWaves:
         """
 
         cython.declare(xx=cython.double[3])
-<<<<<<< HEAD
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
-=======
         cython.declare(cppU=cython.double[3])
         for ii in range(3):
             xx[ii] = x[ii]
             cppU[ii] = 0.
->>>>>>> 7e4e4fc... Fixed leaking issues, removed any returned pointers, modifying velocities through passing pointers at the arguments
         U = np.zeros(3,)
         self._cpp_u(cppU,xx,t)            
         U[0] = cppU[0]
@@ -2007,16 +1963,10 @@ class TimeSeries:
         """
 
         cython.declare(xx=cython.double[3])
-<<<<<<< HEAD
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
-=======
         cython.declare(cppU=cython.double[3])
         for ii in range(3):
             xx[ii] = x[ii]
             cppU[ii] = 0.
->>>>>>> 7e4e4fc... Fixed leaking issues, removed any returned pointers, modifying velocities through passing pointers at the arguments
         U = np.zeros(3,)
         self._cpp_uDirect(cppU,xx,t)            
         U[0] = cppU[0]
@@ -2058,7 +2008,7 @@ class TimeSeries:
             Position vector
         t : float
             Time variable
-<
+
         Returns
         --------
         float
@@ -2088,16 +2038,10 @@ class TimeSeries:
 
         """
         cython.declare(xx=cython.double[3])
-<<<<<<< HEAD
-        xx[0] = x[0]
-        xx[1] = x[1]
-        xx[2] = x[2]
-=======
         cython.declare(cppU=cython.double[3])
         for ii in range(3):
             xx[ii] = x[ii]
             cppU[ii] = 0.
->>>>>>> 7e4e4fc... Fixed leaking issues, removed any returned pointers, modifying velocities through passing pointers at the arguments
         U = np.zeros(3,)
         self._cpp_uWindow(cppU,xx,t)            
         U[0] = cppU[0]
