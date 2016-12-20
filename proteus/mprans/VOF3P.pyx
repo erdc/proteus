@@ -33,6 +33,21 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
 		     int* csrColumnOffsets_DofLoops, 
 		     double* MassMatrix, 
 		     double* dL_minus_dC) 
+        void getInflowDOFs(double* mesh_dof,            
+                           int* mesh_l2g,
+                           double* mesh_trial_trace_ref,
+                           double* mesh_grad_trial_trace_ref,
+                           double* normal_ref,
+                           double* boundaryJac_ref,
+                           int* u_l2g, 
+                           int offset_u, 
+                           int stride_u, 
+                           int nExteriorElementBoundaries_global,
+                           int* exteriorElementBoundariesArray,
+                           int* elementBoundaryElementsArray,
+                           int* elementBoundaryLocalElementBoundariesArray,
+                           double* ebqe_velocity_ext,
+                           double* inflow_DOFs)
         void calculateResidual(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -221,6 +236,37 @@ cdef class VOF3P:
                              <int*> csrColumnOffsets_DofLoops.data,
                              <double*> MassMatrix.data,
                              <double*> dL_minus_dC.data)
+    def getInflowDOFs(self, 
+                      numpy.ndarray mesh_dof,            
+                      numpy.ndarray mesh_l2g,
+                      numpy.ndarray mesh_trial_trace_ref,
+                      numpy.ndarray mesh_grad_trial_trace_ref,
+                      numpy.ndarray normal_ref,
+                      numpy.ndarray boundaryJac_ref,
+                      numpy.ndarray u_l2g, 
+                      int offset_u, 
+                      int stride_u, 
+                      int nExteriorElementBoundaries_global,
+                      numpy.ndarray exteriorElementBoundariesArray,
+                      numpy.ndarray elementBoundaryElementsArray,
+                      numpy.ndarray elementBoundaryLocalElementBoundariesArray,
+                      numpy.ndarray ebqe_velocity_ext,
+                      numpy.ndarray inflow_DOFs):
+        self.thisptr.getInflowDOFs(<double*> mesh_dof.data,
+                                    <int*> mesh_l2g.data,
+                                    <double*> mesh_trial_trace_ref.data,
+                                    <double*> mesh_grad_trial_trace_ref.data,
+                                    <double*> normal_ref.data,
+                                    <double*> boundaryJac_ref.data,
+                                    <int*> u_l2g.data,
+                                    offset_u, 
+                                    stride_u, 
+                                    nExteriorElementBoundaries_global,
+                                    <int*> exteriorElementBoundariesArray.data,
+                                    <int*> elementBoundaryElementsArray.data,
+                                    <int*> elementBoundaryLocalElementBoundariesArray.data,
+                                    <double*> ebqe_velocity_ext.data,
+                                    <double*> inflow_DOFs.data)
     def calculateResidual(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -1275,6 +1321,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # dL_global and dC_global are not the full matrices but just the CSR arrays containing the non zero entries
         self.flux_plus_dLij_times_soln=None
         self.dL_minus_dC=None
+        self.inflow_DOFs=None
         comm = Comm.get()
         self.comm = comm
         if comm.size() > 1:
@@ -1563,6 +1610,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # This is dummy. I just care about the csr structure of the sparse matrix
         self.dL_minus_dC = numpy.zeros(Cx.shape,'d')
         self.flux_plus_dLij_times_soln = numpy.zeros(self.u[0].dof.shape,'d')
+        self.inflow_DOFs = numpy.zeros(self.u[0].dof.shape,'d')
         #
         #cek end computationa of cterm_global
         #
@@ -1604,9 +1652,28 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     t[0], t[1]], self.timeIntegration.t)
             self.ebqe[('advectiveFlux_bc_flag', 0)][t[0], t[1]] = 1
 
+        # TODO (MQL): Do this in a cleaner way; e.g., do a getInflowDOFs() c++ function
+
+        self.vof.getInflowDOFs(self.mesh.nodeArray,
+                               self.mesh.elementNodesArray,
+                               self.u[0].femSpace.elementMaps.psi_trace,
+                               self.u[0].femSpace.elementMaps.grad_psi_trace,
+                               self.u[0].femSpace.elementMaps.boundaryNormals,
+                               self.u[0].femSpace.elementMaps.boundaryJacobians,
+                               self.u[0].femSpace.dofMap.l2g,
+                               self.offset[0], 
+                               self.stride[0],
+                               self.mesh.nExteriorElementBoundaries_global,
+                               self.mesh.exteriorElementBoundariesArray,
+                               self.mesh.elementBoundaryElementsArray,
+                               self.mesh.elementBoundaryLocalElementBoundariesArray,
+                               self.coefficients.ebqe_v,
+                               self.inflow_DOFs)
+
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                if self.coefficients.vely_tn_dof[dofN] < 0: #HACKED FOR THIS PROBLEM (MQL) TMP
+                #if self.coefficients.vely_tn_dof[dofN] < 0: #HACKED FOR THIS PROBLEM (MQL) TMP
+                if self.inflow_DOFs[dofN] == 1.0: 
                     self.u[0].dof[dofN] = g(
                         self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
                         self.timeIntegration.t)
@@ -1715,7 +1782,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                if self.coefficients.vely_tn_dof[dofN] < 0: #HACKED FOR THIS PROBLEM (MQL)
+                #if self.coefficients.vely_tn_dof[dofN] < 0: #HACKED FOR THIS PROBLEM (MQL)
+                if self.inflow_DOFs[dofN] == 1.0: #HACKED FOR THIS PROBLEM (MQL) TMP
                     r[dofN] = 0
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
@@ -1788,7 +1856,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             scaling = 1.0  # probably want to add some scaling to match non-dirichlet diagonals in linear system
             for dofN in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.keys():
                 global_dofN = dofN
-                if self.coefficients.vely_tn_dof[dofN] < 0: #HACKED FOR THIS PROBLEM (MQL)
+                #if self.coefficients.vely_tn_dof[dofN] < 0: #HACKED FOR THIS PROBLEM (MQL)
+                if self.inflow_DOFs[dofN] == 1.0: #HACKED FOR THIS PROBLEM (MQL) TMP
                     for i in range(
                         self.rowptr[global_dofN],
                         self.rowptr[
