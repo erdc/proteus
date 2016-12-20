@@ -74,7 +74,9 @@ def fastcosh_test(k,Z):
     cos(phi)
 
     """
-    return fastcosh(k,Z,True)
+    cython.declare(xx=cython.double[2])
+    fastcosh(xx,k,Z)
+    return xx[0]
 def fastsinh_test(k,Z):
     """Fast hyperbolic sine function with Taylor approximation - TO BE USED FOR TESTING"
     Parameters
@@ -87,7 +89,10 @@ def fastsinh_test(k,Z):
     cos(phi)
 
     """
-    return fastcosh(k,Z,False)
+    cython.declare(xx=cython.double[2])
+    fastcosh(xx,k,Z)
+    return xx[1]
+
 
 def coshkzd_test(k,Z,d):
     return fastcosh_test(k,Z) / np.tanh(k*d) + fastsinh_test(k,Z)

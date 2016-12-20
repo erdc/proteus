@@ -10,7 +10,7 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Realloc, PyMem_Free
 
 cdef extern from "WaveTools.h" namespace "proteus":
     cdef const int nDim
-    cdef double fastcosh(double k, double Z,  bool cosh)
+    cdef double fastcosh(double * hype,double k, double Z)
     cdef double fastcos(double phase)
     cdef double __cpp_eta_mode(double* x, double t, double* kDir, double omega, double phi, double amplitude)
     cdef double __cpp_etaFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, int Nf, double* Ycoeff)
