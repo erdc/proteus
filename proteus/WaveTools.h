@@ -84,7 +84,6 @@ namespace proteus
 
  /*
  inline double* __cpp_vel_mode(double * x, double t, double *kDir,double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double *waveDir, double *vDir, double tanhkd)
->>>>>>> 7e4e4fc... Fixed leaking issues, removed any returned pointers, modifying velocities through passing pointers at the arguments
    {
 
      double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
@@ -146,7 +145,6 @@ namespace proteus
 
    }
  
->>>>>>> 7e4e4fc... Fixed leaking issues, removed any returned pointers, modifying velocities through passing pointers at the arguments
 
 
  
