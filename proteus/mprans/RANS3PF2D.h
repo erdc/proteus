@@ -7,7 +7,8 @@
 #include "SedClosure.h"
 
 namespace proteus
-{
+{      const int nSpace2=4;
+
   class cppRANS3PF2D_base
   {
   public:
@@ -406,8 +407,7 @@ namespace proteus
   {
   public:
     cppHsuSedStress<2> closure;
-    const int nDOF_test_X_trial_element,
-      nSpace2=4;
+    const int nDOF_test_X_trial_element;
     CompKernelType ck;
     cppRANS3PF2D():
       closure(150.0,
