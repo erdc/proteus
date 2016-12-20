@@ -17,7 +17,7 @@ namespace proteus
  const double 	Pi17_ =  (1.7*PI_);
 
 
- inline double fastcosh(double k, double Z , bool cosh)
+ inline void fastcosh(double * hype, double k, double Z )
  {
 
        double Kd = k * Z;
@@ -30,17 +30,8 @@ namespace proteus
        double  Kd8 = Kd7 * Kd*1.2500000000E-01; 
        double Kd9 = Kd8 * Kd*1.1111111111E-01;
        double  Kd10 =Kd9 * Kd*0.1;
-       double hype = 0.;
-       if(cosh)
-	 {
-	   hype = 1. + Kd2  + Kd4  + Kd6   + Kd8   + Kd10;
-	 }
-       else
-	 {
-	   hype =      Kd   + Kd3  + Kd5   + Kd7   + Kd9;
-	 }
-       
-       return hype;
+       hype[0] = 1. + Kd2  + Kd4  + Kd6   + Kd8   + Kd10;
+       hype[1] =      Kd   + Kd3  + Kd5   + Kd7   + Kd9;
      
  }
 
@@ -133,16 +124,14 @@ namespace proteus
      double Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
      double Uhype =0.;
      double Vhype =0.;
-     double fcosh =0.;
-     double fsinh =0.;
-
+     double hype[2] = {0};
       
      if(kAbs*Z > -PI_)
        {
-	 fcosh = fastcosh(kAbs, Z,  true); 
-	 fsinh = fastcosh(kAbs, Z,  false); 
-	 Uhype = fcosh / tanhkd + fsinh; 
-	 Vhype = fsinh / tanhkd + fcosh; 
+	 fastcosh(hype,kAbs, Z); 
+
+	 Uhype = hype[0] / tanhkd + hype[1]; 
+	 Vhype = hype[1]/ tanhkd + hype[0]; 
        }
      double fcos = fastcos(phase);
      double fsin = fastcos(Pihalf_ - phase);
