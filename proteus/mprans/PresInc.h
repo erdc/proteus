@@ -38,6 +38,7 @@ namespace proteus
 				   int* u_l2g,
                                    double* u_dof,
                                    double alphaBDF,
+				   double* q_div_velocity,
                                    double* q_vf,
                                    double* q_vs,
                                    double* q_vos,
@@ -63,7 +64,9 @@ namespace proteus
 				   int nExteriorElementBoundaries_global,
 				   int* exteriorElementBoundariesArray,
 				   int* elementBoundaryElementsArray,
-				   int* elementBoundaryLocalElementBoundariesArray)=0;
+				   int* elementBoundaryLocalElementBoundariesArray,
+				   //INTEGRATE BY PARTS DIV(VEL) TERM? (MQL)
+				   int INTEGRATE_BY_PARTS)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -227,6 +230,7 @@ namespace proteus
 					 int* u_l2g, 
 					 double* u_dof,
                                          double alphaBDF,
+					 double* q_div_velocity,
                                          double* q_vf,
                                          double* q_vs,
                                          double* q_vos,
@@ -250,7 +254,8 @@ namespace proteus
 					 int* elementBoundaryElementsArray,
 					 int* elementBoundaryLocalElementBoundariesArray,
 					 double* element_u,
-					 int eN)
+					 int eN, 
+					 int INTEGRATE_BY_PARTS)
     {
       for (int i=0;i<nDOF_test_element;i++)
 	{
@@ -324,15 +329,19 @@ namespace proteus
 	      //register int eN_k_i=eN_k*nDOF_test_element+i;
 	      //register int eN_k_i_nSpace = eN_k_i*nSpace;
 	      register int  i_nSpace=i*nSpace;
-	      
-	      elementResidual_u[i] += ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]) + 
-		ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]);
+	      if (INTEGRATE_BY_PARTS==1) // a*int[grad_phi*grad_wd*x]-int[vel*grad_w*dx]
+		elementResidual_u[i] += 
+		  ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]) +  //NOTE: It is not really numerical diffusion 
+		  ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]);
+	      else // a*int[grad_phi*grad_wd*x]+int[div(vel)*w*dx]
+		elementResidual_u[i] += 
+		  ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]) +  //NOTE: It is not really numerical diffusion 
+		  q_div_velocity[eN_k]*u_test_dV[i];
 	    }//i
 	  //
 	  //save momentum for time history and velocity for subgrid error
 	  //save solution for other models 	     	      
 	  //
-	  
 	  q_u[eN_k] = u;
           for (int I=0;I<nSpace;I++)
             q_grad_u[eN_k_nSpace+I] = grad_u[I];
@@ -366,6 +375,7 @@ namespace proteus
 			   int* u_l2g, 
 			   double* u_dof,
                            double alphaBDF,
+			   double* q_div_velocity,
                            double* q_vf,
                            double* q_vs,
                            double* q_vos,
@@ -391,7 +401,9 @@ namespace proteus
 			   int nExteriorElementBoundaries_global,
 			   int* exteriorElementBoundariesArray,
 			   int* elementBoundaryElementsArray,
-			   int* elementBoundaryLocalElementBoundariesArray)
+			   int* elementBoundaryLocalElementBoundariesArray,
+			   //INTEGRATE BY PARTS DIV(VEL) TERM? (MQL)
+			   int INTEGRATE_BY_PARTS)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -434,6 +446,7 @@ namespace proteus
 				   u_l2g, 
 				   u_dof,
                                    alphaBDF,
+				   q_div_velocity,
                                    q_vf,
                                    q_vs,
                                    q_vos,
@@ -457,14 +470,14 @@ namespace proteus
 				   elementBoundaryElementsArray,
 				   elementBoundaryLocalElementBoundariesArray,
 				   element_u,
-				   eN);
+				   eN, 
+				   INTEGRATE_BY_PARTS);
 	  //
 	  //load element into global residual and save element residual
 	  //
 	  for(int i=0;i<nDOF_test_element;i++) 
 	    { 
-	      register int eN_i=eN*nDOF_test_element+i;
-          
+	      register int eN_i=eN*nDOF_test_element+i;          
 	      globalResidual[offset_u+stride_u*u_l2g[eN_i]]+=elementResidual_u[i];
 	    }//i
 	}//elements
@@ -599,9 +612,13 @@ namespace proteus
 	      //
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
-		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(adv_flux_ext,u_test_dS[i])
-                    + 
-                    ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]);
+		  if (INTEGRATE_BY_PARTS==1)
+		    elementResidual_u[i] += //int_B [(vel.normal)*w*ds] - int_B [grad_phi*normal)*w*ds]
+		      ck.ExteriorElementBoundaryFlux(adv_flux_ext,u_test_dS[i]) + 
+		      ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]);
+		  else
+		    elementResidual_u[i] += // - int_B [grad_phi*normal)*w*ds]
+		      ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]);
                   /* + */
                   /*   ck.ExteriorElementBoundaryScalarDiffusionAdjoint(isDOFBoundary[ebNE_kb], */
                   /*                                                    isFluxBoundary[ebNE_kb], */
@@ -619,7 +636,6 @@ namespace proteus
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
 	      int eN_i = eN*nDOF_test_element+i;
-
 	      globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
 	    }//i
 	}//ebNE

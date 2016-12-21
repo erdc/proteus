@@ -866,9 +866,9 @@ class NS_base:  # (HasTraits):
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
-                                if (model.levelModelList[0].timeIntegration is not None and  
-                                    model.levelModelList[0].timeIntegration.use_SSP33):
-                                #if (False): #NOTE: I USE FORWARD EULER WHILE DEVELOPING SPATIAL DISCRETIZATIONS
+                                #if (model.levelModelList[0].timeIntegration is not None and  
+                                 #   model.levelModelList[0].timeIntegration.use_SSP33):
+                                if (False): #NOTE: I USE FORWARD EULER WHILE DEVELOPING SPATIAL DISCRETIZATIONS
                                     #get stage 1 solution
                                     uStage1 = numpy.copy(model.uList[0])
                                     ####################
