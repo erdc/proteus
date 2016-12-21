@@ -8,7 +8,7 @@
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define LUMPED_MASS_MATRIX 1
 #define KUZMINS_METHOD 1
-#define INTEGRATE_BY_PARTS 0 
+#define INTEGRATE_BY_PARTS 1
 /////////////////////
 //ENTROPY FUNCTION //
 /////////////////////
@@ -573,11 +573,11 @@ namespace proteus
 		  
 		  //if (y_ext==-1.0)
 		  //{
-		  //  std::cout << x_ext << ", " << y_ext << "\t "
-		  //	<< normal[0] << ", " << normal[1] << "\t "
-		  //	<< ebqe_velocity_ext[0] << ", " << ebqe_velocity_ext[1] << "\t "
-		  //	<< flow << ", "
-		  //	<< std::endl;
+		  //std::cout << x_ext << ", " << y_ext << "\t "
+		  //<< normal[0] << ", " << normal[1] << "\t "
+		  //<< ebqe_velocity_ext[ebNE_kb_nSpace+0] << ", " << ebqe_velocity_ext[ebNE_kb_nSpace+1] << "\t "
+		  //<< flow << ", "
+		  //<< std::endl;
 		  //}
 		}//kb
 	      if (cell_flow<0)
@@ -992,7 +992,7 @@ namespace proteus
 		      //
 		      double flow = 0.;
 		      for (int I=0; I < nSpace; I++)
-			flow += normal[I]*velocity[I];
+			flow += normal[I]*ebqe_velocity_ext[ebNE_kb_nSpace+I];
 		      if (flow >= 0)
 			dflux_ext = flow;
 		      else 
@@ -1092,7 +1092,7 @@ namespace proteus
 		      // compute flow = v.n
 		      double flow=0.0;
 		      for (int I=0; I < nSpace; I++)
-			flow += normal[I]*velocity[I];		      		      
+			flow += normal[I]*ebqe_velocity_ext[ebNE_kb_nSpace+I];		      		      
 		      for (int j=0;j<nDOF_trial_element;j++)
 			u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
 		      //load the boundary values
@@ -1189,7 +1189,7 @@ namespace proteus
 			  // first-order dissipative operator
 			  dLij = -std::max(0.0,std::max(TransportMatrix[ij],TransposeTransportMatrix[ij]));
 			  // weight low-order dissipative matrix to make it higher order
-			  //dLij *= std::max(psi[i],psi[j]); //TMP
+			  dLij *= std::max(psi[i],psi[j]); //TMP
 			      
 			  // high-order (entropy viscosity) dissipative operator 
 			  double dEij = dLij;
@@ -1254,7 +1254,7 @@ namespace proteus
 			  // first-order dissipative operator
 			  dLij = -std::max(std::abs(vxi*Cx[ij] + vyi*Cy[ij]),std::abs(vxj*CTx[ij] + vyj*CTy[ij]));
 			  // weight low-order dissipative matrix to make it higher order
-			  //dLij *= std::max(psi[i],psi[j]); //TMP
+			  dLij *= std::max(psi[i],psi[j]); //TMP
 			      
 			  // high-order (entropy viscosity) dissipative operator 
 			  double dEij = dLij;
@@ -1285,8 +1285,8 @@ namespace proteus
 		      ij+=1;
 		    }
 		  // update residual 
-		  //globalResidual[i] += dt*(ith_flux_term + ith_dissipative_term);
-		  globalResidual[i] += dt*(ith_flux_term + ith_low_order_dissipative_term); //TMP
+		  globalResidual[i] += dt*(ith_flux_term + ith_dissipative_term);
+		  //globalResidual[i] += dt*(ith_flux_term + ith_low_order_dissipative_term); //TMP
 		  flux_plus_dLij_times_soln[i] = ith_flux_term + ith_low_order_dissipative_term;
 		}
 	    }

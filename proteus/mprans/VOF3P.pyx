@@ -1654,22 +1654,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         # TODO (MQL): Do this in a cleaner way; e.g., do a getInflowDOFs() c++ function
 
-        self.vof.getInflowDOFs(self.mesh.nodeArray,
-                               self.mesh.elementNodesArray,
-                               self.u[0].femSpace.elementMaps.psi_trace,
-                               self.u[0].femSpace.elementMaps.grad_psi_trace,
-                               self.u[0].femSpace.elementMaps.boundaryNormals,
-                               self.u[0].femSpace.elementMaps.boundaryJacobians,
-                               self.u[0].femSpace.dofMap.l2g,
-                               self.offset[0], 
-                               self.stride[0],
-                               self.mesh.nExteriorElementBoundaries_global,
-                               self.mesh.exteriorElementBoundariesArray,
-                               self.mesh.elementBoundaryElementsArray,
-                               self.mesh.elementBoundaryLocalElementBoundariesArray,
-                               self.coefficients.ebqe_v,
-                               self.inflow_DOFs)
-
+        if self.forceStrongConditions:
+            self.vof.getInflowDOFs(self.mesh.nodeArray,
+                                   self.mesh.elementNodesArray,
+                                   self.u[0].femSpace.elementMaps.psi_trace,
+                                   self.u[0].femSpace.elementMaps.grad_psi_trace,
+                                   self.u[0].femSpace.elementMaps.boundaryNormals,
+                                   self.u[0].femSpace.elementMaps.boundaryJacobians,
+                                   self.u[0].femSpace.dofMap.l2g,
+                                   self.offset[0], 
+                                   self.stride[0],
+                                   self.mesh.nExteriorElementBoundaries_global,
+                                   self.mesh.exteriorElementBoundariesArray,
+                                   self.mesh.elementBoundaryElementsArray,
+                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                   self.coefficients.ebqe_v,
+                                   self.inflow_DOFs)
+            
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                 #if self.coefficients.vely_tn_dof[dofN] < 0: #HACKED FOR THIS PROBLEM (MQL) TMP
