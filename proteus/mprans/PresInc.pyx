@@ -44,6 +44,7 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                int * u_l2g,
                                double * u_dof,
                                double alphaBDF,
+			       double * q_div_velocity, 
                                double * q_vf,
                                double * q_vs,
                                double * q_vos,
@@ -69,7 +70,8 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                int nExteriorElementBoundaries_global,
                                int * exteriorElementBoundariesArray,
                                int * elementBoundaryElementsArray,
-                               int * elementBoundaryLocalElementBoundariesArray)
+                               int * elementBoundaryLocalElementBoundariesArray, 
+			       int INTEGRATE_BY_PARTS)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -168,6 +170,7 @@ cdef class PresInc:
                           numpy.ndarray u_l2g,
                           numpy.ndarray u_dof,
                           double alphaBDF,
+			  numpy.ndarray q_div_velocity,
                           numpy.ndarray q_vf,
                           numpy.ndarray q_vs,
                           numpy.ndarray q_vos,
@@ -193,7 +196,8 @@ cdef class PresInc:
                           int nExteriorElementBoundaries_global,
                           numpy.ndarray exteriorElementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
-                          numpy.ndarray elementBoundaryLocalElementBoundariesArray):
+                          numpy.ndarray elementBoundaryLocalElementBoundariesArray, 
+			  int INTEGRATE_BY_PARTS):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -218,6 +222,7 @@ cdef class PresInc:
                                        < int * > u_l2g.data,
                                        < double * > u_dof.data,
                                         alphaBDF,
+				       < double * > q_div_velocity.data,	
                                        < double * > q_vf.data,
                                        < double * > q_vs.data,
                                        < double * > q_vos.data,
@@ -243,7 +248,8 @@ cdef class PresInc:
                                        nExteriorElementBoundaries_global,
                                        < int * > exteriorElementBoundariesArray.data,
                                        < int * > elementBoundaryElementsArray.data,
-                                       < int * > elementBoundaryLocalElementBoundariesArray.data)
+                                       < int * > elementBoundaryLocalElementBoundariesArray.data,
+				       INTEGRATE_BY_PARTS)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -363,7 +369,8 @@ class Coefficients(TC_base):
                  rho_s_min=998.0,
                  nd=2,
                  modelIndex = None,
-                 fluidModelIndex = None):
+                 fluidModelIndex = None, 
+		 INTEGRATE_BY_PARTS=1):
         """Construct a coefficients object
 
         :param modelIndex: This model's index into the model list
@@ -389,6 +396,7 @@ class Coefficients(TC_base):
         self.rho_s_min = rho_s_min
         self.modelIndex = modelIndex
         self.fluidModelIndex = fluidModelIndex
+        self.INTEGRATE_BY_PARTS = INTEGRATE_BY_PARTS
 
     def attachModels(self,modelList):
         """
@@ -1066,6 +1074,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.u[0].dof,
             self.coefficients.fluidModel.timeIntegration.alpha_bdf,
+	    self.coefficients.fluidModel.q['div_velocity'],
             self.coefficients.fluidModel.q[('velocity',0)],
             self.coefficients.fluidModel.coefficients.q_velocity_solid,
             self.coefficients.fluidModel.coefficients.q_vos,
@@ -1090,7 +1099,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray)
+            self.mesh.elementBoundaryLocalElementBoundariesArray, 
+	    self.coefficients.INTEGRATE_BY_PARTS)
+
         log("Global residual", level=9, data=r)
         self.coefficients.massConservationError = fabs(
             globalSum(sum(r.flat[:self.mesh.nNodes_owned])))
