@@ -112,6 +112,8 @@ RUN cd proteus && make develop
 ENV PATH /home/$NB_USER/proteus/linux2/bin:$PATH
 ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux2/lib:$LD_LIBRARY_PATH
 
+RUN make jupyter
+
 USER root
 
 # Configure container startup as root
