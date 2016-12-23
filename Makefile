@@ -113,7 +113,7 @@ default_stack: stack
 	@echo "Stack repository updated to .hashstack_default"
 	HASHSTACK_VERSION=${HASHSTACK_DEFAULT_VERSION}
 	@echo "hashdist repository updated to .hashdist_default"
-	cd hashdist && git checkout ${HASHDIST_DEFAULT_VERSION}
+	cd hashdist; git fetch origin; git checkout -q ${HASHDIST_DEFAULT_VERSION}
 
 hashdist: 
 	@echo "No hashdist found.  Cloning hashdist from GitHub"
