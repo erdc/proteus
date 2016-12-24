@@ -50,6 +50,8 @@ RUN apt-get update && apt-get install -yq --no-install-recommends --fix-missing 
     binfmt-support \
     python3-dev \
     python3-wheel \
+    libffi-dev \
+    python-lzma \
     && apt-get clean
 
 RUN pip3 install notebook terminado
@@ -72,31 +74,31 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
 # Create jovyan user with UID=1000 and in the 'users' group
-RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER && \
-    chown -R $NB_USER:users /home/$NB_USER
-
-USER jovyan
+RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER
 
 RUN mkdir /home/$NB_USER/work && \
     mkdir /home/$NB_USER/.jupyter && \
-    mkdir /home/$NB_USER/.local
+    mkdir /home/$NB_USER/.local && \
+    mkdir /home/$NB_USER/.hashdist 
 
-#RUN wget https://dl.dropboxusercontent.com/u/26353144/hashdist_config_jovyan.yaml && \
-#    mkdir /home/$NB_USER/.hashdist && \
-#    mv hashdist_config_jovyan.yaml /home/$NB_USER/.hashdist/config.yaml && \
-#    cat /home/$NB_USER/.hashdist/config.yaml
+ADD https://dl.dropboxusercontent.com/u/26353144/hashdist_config_jovyan.yaml /home/$NB_USER/.hashdist/config.yaml
+
+RUN chown -R $NB_USER:users /home/$NB_USER
+
+USER jovyan
+
+RUN ls /home/$NB_USER/.hashdist && \
+    cat /home/$NB_USER/.hashdist/config.yaml
 
 WORKDIR /home/$NB_USER
 
 RUN git clone https://github.com/erdc-cm/workshops -b erdc-fsi-tutorials
 
-RUN git clone https://github.com/erdc-cm/proteus && \
-    cd proteus && \
+RUN cat /home/$NB_USER/.hashdist/config.yaml && \
+    git clone https://github.com/erdc-cm/proteus && \
+    cd proteus && git checkout update_jupyter && \
     make hashdist stack stack/default.yaml && \
     cd stack && \
-    git remote add erdc-cm http://github.com/erdc-cm/hashstack-private && \
-    git fetch --all && \
-    git checkout erdc-cm/cekees/kitchen_sink && \
     /usr/bin/mpicc -show && \
     which mpiexec && \
     which mpirun && \
