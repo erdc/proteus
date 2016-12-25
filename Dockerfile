@@ -52,9 +52,10 @@ RUN apt-get update && apt-get install -yq --no-install-recommends --fix-missing 
     python3-wheel \
     libffi-dev \
     python-lzma \
+    cmake \
     && apt-get clean
 
-RUN pip3 install notebook terminado
+RUN pip3 install notebook jupyterhub terminado
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
@@ -114,7 +115,7 @@ RUN cd proteus && make develop
 ENV PATH /home/$NB_USER/proteus/linux2/bin:$PATH
 ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux2/lib:$LD_LIBRARY_PATH
 
-RUN make jupyter
+RUN cd proteus && make jupyter
 
 USER root
 
@@ -125,13 +126,19 @@ ENTRYPOINT ["tini", "--"]
 CMD ["start-notebook.sh"]
 
 RUN cd /usr/local/bin && \
-    wget https://raw.githubusercontent.com/jupyter/docker-stacks/master/minimal-notebook/start-notebook.sh
+    wget https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start-notebook.sh
 
-ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/minimal-notebook/jupyter_notebook_config.py /home/$NB_USER/.jupyter/jupyter_notebook_config.py
+ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/jupyter_notebook_config.py /home/$NB_USER/.jupyter/jupyter_notebook_config.py
 
 RUN mkdir /etc/jupyter && \
     chmod a+rwX /etc/jupyter && \
     chown -R $NB_USER:users /home/$NB_USER
+
+RUN mkdir /usr/local/etc/jupyter && \
+    chmod a+rwX /usr/local/etc/jupyter
+
+#RUN mkdir /usr/local/share/jupyter && \
+#    chmod a+rwX /usr/local/share/jupyter
 
 #jupyter/ipython extensions
 RUN pip3 install \
@@ -143,9 +150,9 @@ USER jovyan
     
 RUN cd ~/.jupyter && \
     ipython profile create mpi --parallel && \
-    ipcluster nbextension enable && \
+    ipcluster nbextension enable --user && \
     echo '\nc.NotebookApp.server_extensions.append("ipyparallel.nbextension")' >> /home/$NB_USER/.jupyter/jupyter_notebook_config.py && \
-    cp jupyter_notebook_config.py /etc/jupyter/ && \
+    cp jupyter_notebook_config.py /usr/local/etc/jupyter/ && \
     echo "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\nc.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" \
           >> /home/$NB_USER/.ipython/profile_mpi/ipcluster_config.py  
 
