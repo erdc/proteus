@@ -79,6 +79,8 @@ def linkcode_resolve(domain, info):
         suffix = 'pyx'
     return "https://github.com/erdc-cm/proteus/tree/master/%s.%s" % (filename, suffix)
 
+autoclass_content = 'both'
+
 todo_include_todos = False
 
 # Add any paths that contain templates here, relative to this directory.
