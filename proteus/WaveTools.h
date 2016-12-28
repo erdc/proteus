@@ -17,7 +17,7 @@ namespace proteus
  const double 	Pi17_ =  (1.7*PI_);
 
 
- inline double fastcosh(double k, double Z , bool cosh)
+ inline void fastcosh(double * hype, double k, double Z )
  {
 
        double Kd = k * Z;
@@ -30,17 +30,8 @@ namespace proteus
        double  Kd8 = Kd7 * Kd*1.2500000000E-01; 
        double Kd9 = Kd8 * Kd*1.1111111111E-01;
        double  Kd10 =Kd9 * Kd*0.1;
-       double hype = 0.;
-       if(cosh)
-	 {
-	   hype = 1. + Kd2  + Kd4  + Kd6   + Kd8   + Kd10;
-	 }
-       else
-	 {
-	   hype =      Kd   + Kd3  + Kd5   + Kd7   + Kd9;
-	 }
-       
-       return hype;
+       hype[0] = 1. + Kd2  + Kd4  + Kd6   + Kd8   + Kd10;
+       hype[1] =      Kd   + Kd3  + Kd5   + Kd7   + Kd9;
      
  }
 
@@ -91,8 +82,8 @@ namespace proteus
 
   }
 
-
- inline double* __cpp_vel_mode(double x[nDim], double t, double kDir[nDim],double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double waveDir[nDim], double vDir[nDim], double tanhkd)
+ /*
+ inline double* __cpp_vel_mode(double * x, double t, double *kDir,double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double *waveDir, double *vDir, double tanhkd)
    {
 
      double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
@@ -118,13 +109,42 @@ namespace proteus
       double UH=amplitude*omega*Uhype*fcos;
       double UV=amplitude*omega*Vhype*fsin;
      //Setting wave direction
-      for(int ii=0; ii<nDim ; ii++)
-	  {
-	    VV[ii] = UH*waveDir[ii] + UV*vDir[ii];
-	  }
-      return VV;
-      delete [] VV;
-      }
+     for(int ii=0; ii<nDim ; ii++)
+       {
+	 VV[ii] = UH*waveDir[ii] + UV*vDir[ii];
+       }
+     return VV;
+     delete [] VV;
+   }
+ */
+ inline void __cpp_vel_mode_p(double* U, double  x[nDim], double t, double kDir[nDim],double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double waveDir[nDim], double vDir[nDim], double tanhkd)
+   {
+     double phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi;
+     double Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl;
+     double Uhype =0.;
+     double Vhype =0.;
+     double hype[2] = {0};
+      
+     if(kAbs*Z > -PI_)
+       {
+	 fastcosh(hype,kAbs, Z); 
+
+	 Uhype = hype[0] / tanhkd + hype[1]; 
+	 Vhype = hype[1]/ tanhkd + hype[0]; 
+       }
+     double fcos = fastcos(phase);
+     double fsin = fastcos(Pihalf_ - phase);
+     
+     double UH=amplitude*omega*Uhype*fcos;
+     double UV=amplitude*omega*Vhype*fsin;
+     //Setting wave direction
+     for(int ii=0; ii<nDim ; ii++)
+       {
+	 U[ii] += UH*waveDir[ii] + UV*vDir[ii];
+       }
+
+   }
+ 
 
 
  
@@ -158,8 +178,8 @@ namespace proteus
         return HH/kAbs;
       }
 
- inline double* __cpp_uFenton(double x[nDim],double t,double kDir[nDim],double kAbs,double omega,double phi0,double amplitude,
-			      double mwl, double depth, double gAbs, int Nf, double* Bcoeff ,double* mV, double waveDir[nDim], double vDir[nDim], double* tanhF)
+ inline void __cpp_uFenton(double* U, double x[nDim],double t,double kDir[nDim],double kAbs,double omega,double phi0,double amplitude,
+			      double mwl, double depth, double gAbs, int Nf, double* Bcoeff ,double mV[nDim], double waveDir[nDim], double vDir[nDim], double* tanhF)
 
 
       {
@@ -170,12 +190,6 @@ namespace proteus
 	double phi = 0.;
 	double kmode = 0.;
 	double amp = 0.;
-	double* Ufenton;
-	double* Uf;
-	Uf = new double[nDim];
-	Uf[0] = 0.;
-	Uf[1] = 0.;
-	Uf[2] = 0.;
 
 	double sqrtAbs(sqrt(gAbs/kAbs));
 
@@ -191,22 +205,15 @@ namespace proteus
 	    kw[2] = ii*kDir[2];
 	    phi = ii*phi0;
             amp = tanhF[nn]*sqrtAbs*Bcoeff[nn]/omega;
-	    Ufenton = __cpp_vel_mode(x, t ,kw, kmode, om, phi, amp, mwl, depth, waveDir, vDir, tanhF[nn]); 
-	    Uf[0] = Uf[0]+ *(Ufenton);//[0];
-	    Uf[1] = Uf[1]+ *(Ufenton+1);//[1];
-	    Uf[2] = Uf[2]+ *(Ufenton+2);//[2];
+	    __cpp_vel_mode_p(U,x, t ,kw, kmode, om, phi, amp, mwl, depth, waveDir, vDir, tanhF[nn]); 
 
 	  }
 	
 	for ( int kk = 0; kk<3; kk++)
 	  {
-	    Uf[kk] = Uf[kk]+mV[kk];
-	    }
+	    U[kk] = U[kk]+mV[kk];
+	  }
 
-        return Uf;
-
-	delete [] Ufenton;      
-	delete [] Uf;
 
 
       
@@ -238,18 +245,12 @@ namespace proteus
         return HH;
       }
 
- inline double* __cpp_uRandom(double x[nDim],double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double waveDir[nDim], double vDir[nDim], double* tanhF )
+ inline void __cpp_uRandom(double * U, double x[nDim],double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double waveDir[nDim], double vDir[nDim], double* tanhF )
 
 
       {
 
 	double kw[nDim] = {0.,0.,0.};
-	double* Ufenton;
-	double* Uf;
-	Uf = new double[nDim];
-	Uf[0] = 0.;
-	Uf[1] = 0.;
-	Uf[2] = 0.;
 
 
 	int ii =0;
@@ -260,37 +261,24 @@ namespace proteus
 	    kw[0] = kDir[ii];
 	    kw[1] = kDir[ii+1];
 	    kw[2] = kDir[ii+2];
-	    Ufenton = __cpp_vel_mode(x, t ,kw, kAbs[nn], omega[nn], phi[nn], amplitude[nn], mwl, depth, waveDir, vDir, tanhF[nn]); 
-	    Uf[0] = Uf[0]+ *(Ufenton);//[0];
-	    Uf[1] = Uf[1]+ *(Ufenton+1);//[1];
-	    Uf[2] = Uf[2]+ *(Ufenton+2);//[2];
+	    __cpp_vel_mode_p(U,x, t ,kw, kAbs[nn], omega[nn], phi[nn], amplitude[nn], mwl, depth, waveDir, vDir, tanhF[nn]); 
 
 	  }
 	
-        return Uf;
 
-	delete [] Ufenton;      
-	delete [] Uf;
 
 
       
  }
 //---------------------------------------------------------Directional RANDOM / Velocity-------------------------------------------------------------------------
 
- inline double* __cpp_uDir(double x[nDim],double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double vDir[nDim], double* tanhF )
+ inline void __cpp_uDir(double * U, double x[nDim],double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double vDir[nDim], double* tanhF )
 
 
       {
 
 	double kw[nDim] = {0.,0.,0.};
 	double wd[nDim] = {0.,0.,0.};
-	double* Ufenton;
-	double* Uf;
-	Uf = new double[nDim];
-	Uf[0] = 0.;
-	Uf[1] = 0.;
-	Uf[2] = 0.;
-
 
 	int ii =0;
 
@@ -303,17 +291,10 @@ namespace proteus
 	    wd[0] = waveDir[ii];
 	    wd[1] = waveDir[ii+1];
 	    wd[2] = waveDir[ii+2];
-	    Ufenton = __cpp_vel_mode(x, t ,kw, kAbs[nn], omega[nn], phi[nn], amplitude[nn], mwl, depth, wd, vDir, tanhF[nn]); 
-	    Uf[0] = Uf[0]+ *(Ufenton);
-	    Uf[1] = Uf[1]+ *(Ufenton+1);
-	    Uf[2] = Uf[2]+ *(Ufenton+2);
+	    __cpp_vel_mode_p(U,x, t ,kw, kAbs[nn], omega[nn], phi[nn], amplitude[nn], mwl, depth, wd, vDir, tanhF[nn]); 
 
 	  }
 	
-        return Uf;
-
-	delete [] Ufenton;      
-	delete [] Uf;
 
 
       }    
@@ -340,11 +321,12 @@ inline double __cpp_etaDirect(double x[nDim], double x0[nDim], double t, double*
 
 
 { 
-  x[0] = x[0] - x0[0];
-  x[1] = x[1] - x0[1];
-  x[2] = x[2] - x0[2];
+   double xx[3];
+   xx[0] = x[0] - x0[0];
+   xx[1] = x[1] - x0[1];
+   xx[2] = x[2] - x0[2];
 
-  return __cpp_etaRandom(x,  t,  kDir,  omega,  phi,  amplitude,  N); 
+  return __cpp_etaRandom(xx,  t,  kDir,  omega,  phi,  amplitude,  N); 
 }
 
 
@@ -352,16 +334,17 @@ inline double __cpp_etaDirect(double x[nDim], double x0[nDim], double t, double*
 
 
    
- inline double* __cpp_uDirect(double* x, double* x0, double t, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd )
+ inline void __cpp_uDirect(double * U, double x[nDim], double x0[nDim], double t, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double vDir[nDim], double* tanhKd )
 
 
 
  {
-	x[0] = x[0] - x0[0];
-	x[1] = x[1] - x0[1];
-	x[2] = x[2] - x0[2];
+   double xx[3];
+   xx[0] = x[0] - x0[0];
+   xx[1] = x[1] - x0[1];
+   xx[2] = x[2] - x0[2];
 
-	return __cpp_uRandom(x, t,  kDir,  kAbs,  omega,  phi,  amplitude,  mwl,  depth,  N,  waveDir,  vDir,  tanhKd );
+   __cpp_uRandom(U, xx, t,  kDir,  kAbs,  omega,  phi,  amplitude,  mwl,  depth,  N,  waveDir,  vDir,  tanhKd );
 
  }
 
@@ -371,9 +354,10 @@ inline double __cpp_etaDirect(double x[nDim], double x0[nDim], double t, double*
 
 { 
   int Is = Nw*N;
-  x[0] = x[0] - x0[0];
-  x[1] = x[1] - x0[1];
-  x[2] = x[2] - x0[2];
+  double xx[3];
+  xx[0] = x[0] - x0[0];
+  xx[1] = x[1] - x0[1];
+  xx[2] = x[2] - x0[2];
   t = t-t0[Nw];
   double HH = 0.;
   double kw[nDim] = {0.,0.,0.};
@@ -385,7 +369,7 @@ inline double __cpp_etaDirect(double x[nDim], double x0[nDim], double t, double*
 	    kw[0] = kDir[ii];
 	    kw[1] = kDir[ii+1];
 	    kw[2] = kDir[ii+2];
-	    HH= HH + __cpp_eta_mode(x,t,kw,omega[nn],phi[nn],amplitude[nn]);
+	    HH= HH + __cpp_eta_mode(xx,t,kw,omega[nn],phi[nn],amplitude[nn]);
 	  }
   return HH;
 
@@ -394,24 +378,19 @@ inline double __cpp_etaDirect(double x[nDim], double x0[nDim], double t, double*
 
 
 
- inline double* __cpp_uWindow(double* x, double* x0, double t, double* t0, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N,int Nw, double* waveDir, double* vDir, double* tanhF )
+ inline double* __cpp_uWindow(double* U, double x[nDim], double x0[nDim], double t, double* t0, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N,int Nw, double* waveDir, double* vDir, double* tanhF )
 
 
  {
   int Is = Nw*N;
-  x[0] = x[0] - x0[0];
-  x[1] = x[1] - x0[1];
-  x[2] = x[2] - x0[2];
+  double xx[3];
+  xx[0] = x[0] - x0[0];
+  xx[1] = x[1] - x0[1];
+  xx[2] = x[2] - x0[2];
   t = t-t0[Nw];
 
   double kw[nDim] = {0.,0.,0.};
-  double* Ufenton;
-  double* Uf;
-  Uf = new double[nDim];
-  Uf[0] = 0.;
-  Uf[1] = 0.;
-  Uf[2] = 0.;
-
+  
 
   int ii =0;
 
@@ -421,17 +400,10 @@ inline double __cpp_etaDirect(double x[nDim], double x0[nDim], double t, double*
       kw[0] = kDir[ii];
       kw[1] = kDir[ii+1];
       kw[2] = kDir[ii+2];
-      Ufenton = __cpp_vel_mode(x, t ,kw, kAbs[nn], omega[nn], phi[nn], amplitude[nn], mwl, depth, waveDir, vDir, tanhF[nn]); 
-      Uf[0] = Uf[0]+ *(Ufenton);//[0];
-      Uf[1] = Uf[1]+ *(Ufenton+1);//[1];
-      Uf[2] = Uf[2]+ *(Ufenton+2);//[2];
+      __cpp_vel_mode_p(U, xx, t ,kw, kAbs[nn], omega[nn], phi[nn], amplitude[nn], mwl, depth, waveDir, vDir, tanhF[nn]); 
 
     }
 	
-        return Uf;
-
-	delete [] Ufenton;      
-	delete [] Uf;
 
 
       
