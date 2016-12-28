@@ -16,7 +16,7 @@ addons:
     - libffi-dev
     - python-lzma
     - libssl-dev
-				
+
 before_install:
 - wget https://dl.dropboxusercontent.com/u/26353144/hashdist_trusty.tgz
 - tar xzf hashdist_trusty.tgz 
