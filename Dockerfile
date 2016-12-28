@@ -1,12 +1,15 @@
-FROM debian:jessie
+FROM debian@sha256:32a225e412babcd54c0ea777846183c61003d125278882873fb2bc97f9057c51
 
 MAINTAINER Proteus Project <proteus@googlegroups.com>
 
 USER root
 
-# Install all OS dependencies for fully functional notebook server
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update && apt-get install -yq --no-install-recommends --fix-missing \
+
+RUN REPO=http://cdn-fastly.deb.debian.org \
+    && echo "deb $REPO/debian jessie main\ndeb $REPO/debian-security jessie/updates main" > /etc/apt/sources.list \
+    && apt-get update && apt-get -yq dist-upgrade \
+    && apt-get install -yq --no-install-recommends --fix-missing \
     git \
     vim \
     jed \
@@ -53,16 +56,16 @@ RUN apt-get update && apt-get install -yq --no-install-recommends --fix-missing 
     libffi-dev \
     python-lzma \
     cmake \
-    && apt-get clean
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install notebook jupyterhub terminado
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
 
 # Install Tini
-RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.9.0/tini && \
-    echo "faafbfb5b079303691a939a747d7f60591f2143164093727e870b289a44d9872 *tini" | sha256sum -c - && \
+RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini && \
+    echo "1361527f39190a7338a0b434bd8c88ff7233ce7b9a4876f3315c22fce7eca1b0 *tini" | sha256sum -c - && \
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
@@ -80,7 +83,8 @@ RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER
 RUN mkdir /home/$NB_USER/work && \
     mkdir /home/$NB_USER/.jupyter && \
     mkdir /home/$NB_USER/.local && \
-    mkdir /home/$NB_USER/.hashdist 
+    mkdir /home/$NB_USER/.hashdist && \
+    echo "cacert=/etc/ssl/certs/ca-certificates.crt" > /home/$NB_USER/.curlrc
 
 ADD https://dl.dropboxusercontent.com/u/26353144/hashdist_config_jovyan.yaml /home/$NB_USER/.hashdist/config.yaml
 
@@ -96,13 +100,10 @@ WORKDIR /home/$NB_USER
 RUN git clone https://github.com/erdc-cm/workshops -b erdc-fsi-tutorials
 
 RUN cat /home/$NB_USER/.hashdist/config.yaml && \
-    git clone https://github.com/erdc-cm/proteus && \
-    cd proteus && git checkout update_jupyter && \
+    git clone https://github.com/erdc-cm/proteus -b update_jupyter && \
+    cd proteus && \
     make hashdist stack stack/default.yaml && \
     cd stack && \
-    /usr/bin/mpicc -show && \
-    which mpiexec && \
-    which mpirun && \
     ../hashdist/bin/hit build default.yaml -v
 
 ENV CC mpicc
@@ -119,58 +120,69 @@ RUN cd proteus && make jupyter
 
 USER root
 
-# Configure container startup as root
+RUN pip3 install notebook jupyterhub terminado ipyparallel ipywidgets
+
 EXPOSE 8888
 WORKDIR /home/$NB_USER/work
+
 ENTRYPOINT ["tini", "--"]
 CMD ["start-notebook.sh"]
 
-RUN cd /usr/local/bin && \
-    wget https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start-notebook.sh
-
+# Add local files as late as possible to avoid cache busting
+#COPY start.sh /usr/local/bin/
+ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start.sh /usr/local/bin/start.sh
+#COPY start-notebook.sh /usr/local/bin/
+ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start-notebook.sh /usr/local/bin/start-notebook.sh
+#COPY start-singleuser.sh /usr/local/bin/
+ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/start-singleuser.sh /usr/local/bin/start-singleuser.sh
+#COPY jupyter_notebook_config.py /home/$NB_USER/.jupyter/
 ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/base-notebook/jupyter_notebook_config.py /home/$NB_USER/.jupyter/jupyter_notebook_config.py
 
-RUN mkdir /etc/jupyter && \
-    chmod a+rwX /etc/jupyter && \
-    chown -R $NB_USER:users /home/$NB_USER
+RUN chmod a+rx /usr/local/bin/*
 
-RUN mkdir /usr/local/etc/jupyter && \
-    chmod a+rwX /usr/local/etc/jupyter
+RUN chown -R $NB_USER:users /home/$NB_USER/.jupyter
 
-#RUN mkdir /usr/local/share/jupyter && \
-#    chmod a+rwX /usr/local/share/jupyter
 
-#jupyter/ipython extensions
-RUN pip3 install \
-    ipyparallel \
-    ipywidgets
+#RUN mkdir /usr/local/etc/jupyter && \
+#    chmod a+rwX /usr/local/etc/jupyter
 
 # Switch back to jovyan to avoid accidental container runs as root
-USER jovyan
-    
+USER $NB_USER
+
 RUN cd ~/.jupyter && \
     ipython profile create mpi --parallel && \
     ipcluster nbextension enable --user && \
     echo '\nc.NotebookApp.server_extensions.append("ipyparallel.nbextension")' >> /home/$NB_USER/.jupyter/jupyter_notebook_config.py && \
-    cp jupyter_notebook_config.py /usr/local/etc/jupyter/ && \
+#    cp jupyter_notebook_config.py /usr/local/etc/jupyter/ && \
     echo "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\nc.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" \
           >> /home/$NB_USER/.ipython/profile_mpi/ipcluster_config.py  
 
-USER root
+#RUN mkdir /etc/jupyter && \
+#    chmod a+rwX /etc/jupyter && \
+#    chown -R $NB_USER:users /home/$NB_USER
 
-RUN jupyter kernelspec install-self
+#RUN mkdir /usr/local/share/jupyter && \
+#    chmod a+rwX /usr/local/share/jupyter
+
+# Switch back to jovyan to avoid accidental container runs as root
+#USER jovyan
+    
+
+#USER root
+
+#RUN jupyter kernelspec install-self
 
 # fetch juptyerhub-singleuser entrypoint
-RUN wget -q https://raw.githubusercontent.com/jupyter/jupyterhub/master/scripts/jupyterhub-singleuser -O /usr/local/bin/jupyterhub-singleuser && \
-    chmod 755 /usr/local/bin/jupyterhub-singleuser
+#RUN wget -q https://raw.githubusercontent.com/jupyter/jupyterhub/master/scripts/jupyterhub-singleuser -O /usr/local/bin/jupyterhub-singleuser && \
+#    chmod 755 /usr/local/bin/jupyterhub-singleuser
 
-ADD https://raw.githubusercontent.com/jupyter/dockerspawner/master/singleuser/singleuser.sh /srv/singleuser/singleuser.sh
+#ADD https://raw.githubusercontent.com/jupyter/dockerspawner/master/singleuser/singleuser.sh /srv/singleuser/singleuser.sh
 
-RUN chmod 755 /srv/singleuser/singleuser.sh
+#RUN chmod 755 /srv/singleuser/singleuser.sh
 
-USER jovyan
+#USER jovyan
 
-RUN cat /srv/singleuser/singleuser.sh
+#RUN cat /srv/singleuser/singleuser.sh
 # smoke test that it's importable at least
-RUN sh /srv/singleuser/singleuser.sh -h
-CMD ["sh", "/srv/singleuser/singleuser.sh"]
+#RUN sh /srv/singleuser/singleuser.sh -h
+#CMD ["sh", "/srv/singleuser/singleuser.sh"]
