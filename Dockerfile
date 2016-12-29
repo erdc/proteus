@@ -66,7 +66,6 @@ RUN REPO=http://cdn-fastly.deb.debian.org \
     python-pip \
     cmake \
     gfortran \
-    libzmq-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -131,6 +130,7 @@ RUN cd proteus && make jupyter
 
 USER root
 
+RUN pip3 install pyzmq --install-option="--zmq=/home/$NB_USER/proteus/linux2/lib"
 RUN pip3 install notebook jupyterhub terminado ipyparallel ipywidgets
 
 EXPOSE 8888
