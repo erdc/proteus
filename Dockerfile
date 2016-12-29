@@ -1,4 +1,4 @@
-FROM debian@sha256:32a225e412babcd54c0ea777846183c61003d125278882873fb2bc97f9057c51
+FROM debian:jessie
 
 MAINTAINER Proteus Project <proteus@googlegroups.com>
 
@@ -33,7 +33,15 @@ RUN REPO=http://cdn-fastly.deb.debian.org \
     libav-tools \
     libmpich2-dev \
     liblapack-dev \
+    freeglut3 \
     freeglut3-dev \
+    libglew1.5 \
+    libglew1.5-dev \
+    libglu1-mesa \
+    libglu1-mesa-dev \
+    libgl1-mesa-glx \
+    libgl1-mesa-dev \
+    curl \
     libjpeg-dev \
     m4 \
     libssl-dev \
@@ -55,7 +63,10 @@ RUN REPO=http://cdn-fastly.deb.debian.org \
     python3-wheel \
     libffi-dev \
     python-lzma \
+    python-pip \
     cmake \
+    gfortran \
+    libzmq-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
