@@ -424,7 +424,8 @@ setup(name='proteus',
                   (os.path.join(proteus_install_path,'tests','linalgebra_tests'),
                    ['proteus/tests/linalgebra_tests/sparse_mat_1.txt']),
                   (os.path.join(proteus_install_path,'tests','mesh_tests','comparison_files'),
-                   ['proteus/tests/mesh_tests/comparison_files/poiseulle_xmf.output'])
+                   ['proteus/tests/mesh_tests/comparison_files/poiseulle_xmf.output',
+                    'proteus/tests/mesh_tests/comparison_files/poiseulle_global_xmf.output'])
       ],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/povgen.py',
                  'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
