@@ -125,12 +125,5 @@ PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = ['-g']
 if os.getenv('SIM_INCLUDE_DIR') != None:
   PROTEUS_SCOREC_INCLUDE_DIRS = PROTEUS_SCOREC_INCLUDE_DIRS+[pjoin(prefix, 'include'), os.getenv('SIM_INCLUDE_DIR')]
   PROTEUS_SCOREC_LIB_DIRS = PROTEUS_SCOREC_LIB_DIRS+[pjoin(prefix, 'lib'), os.getenv('SIM_LIB_DIR')]
-  PROTEUS_SCOREC_LIBS = PROTEUS_SCOREC_LIBS + ['gmi_sim',
-    'apf_sim',
-    'SimPartitionedMesh-mpi',
-    'SimPartitionedMesh-mpi',
-    'SimMeshing',
-    'SimModel',
-    'SimMeshTools',
-    'SimPartitionWrapper-mpich3']
-  PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = PROTEUS_SCOREC_EXTRA_COMPILE_ARGS + ['-DPROTEUS_USE_SIMMETRIX']
+  PROTEUS_SCOREC_LIBS = PROTEUS_SCOREC_LIBS
+  PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = PROTEUS_SCOREC_EXTRA_COMPILE_ARGS
