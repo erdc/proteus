@@ -1820,12 +1820,6 @@ int partitionElementsOriginal(Mesh& mesh, int nElements_overlap)
   mesh.elementNumbering_subdomain2global = new int[mesh.subdomainp->nElements_global];
   for (int eN=0;eN<mesh.subdomainp->nElements_global;eN++)
     mesh.elementNumbering_subdomain2global[eN] = elementNumbering_subdomain2global[eN];
-  mesh.elementNumbering_global2original = new int[mesh.nElements_global];
-  for (int eN=0;eN<mesh.nElements_global;eN++)
-    mesh.elementNumbering_global2original[eN] = elementNumbering_global_new2old[eN];
-  mesh.nodeNumbering_global2original = new int[mesh.nNodes_global];
-  for (int nN=0;nN<mesh.nNodes_global;nN++)
-    mesh.nodeNumbering_global2original[nN] = nodeNumbering_global_new2old[nN];
 
   ISRestoreIndices(elementNumberingIS_global_old2new,&elementNumbering_global_old2new);
 
@@ -2722,38 +2716,18 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   mesh.elementNumbering_subdomain2global = new int[mesh.subdomainp->nElements_global];
   for (int eN = 0; eN < mesh.subdomainp->nElements_global; eN++)
     mesh.elementNumbering_subdomain2global[eN] = elementNumbering_subdomain2global[eN];
-  if (mesh.elementNumbering_global2original)
-    delete [] mesh.elementNumbering_global2original;
-  mesh.elementNumbering_global2original = new int[mesh.nElements_global];
-  for (int eN = 0; eN < mesh.nElements_global; eN++)
-    mesh.elementNumbering_global2original[eN] = elementNumbering_global_new2old[eN];
-  if (mesh.nodeNumbering_global2original)
-    delete [] mesh.nodeNumbering_global2original;
-  mesh.nodeNumbering_global2original = new int[mesh.nNodes_global];
-  for (int nN = 0; nN < mesh.nNodes_global; nN++)
-    mesh.nodeNumbering_global2original[nN] = nodeNumbering_global_new2old[nN];
   //
   if (mesh.elementBoundaryNumbering_subdomain2global)
     delete [] mesh.elementBoundaryNumbering_subdomain2global;
   mesh.elementBoundaryNumbering_subdomain2global = new int[mesh.subdomainp->nElementBoundaries_global];
   for (int ebN = 0; ebN < mesh.subdomainp->nElementBoundaries_global; ebN++)
     mesh.elementBoundaryNumbering_subdomain2global[ebN] = elementBoundaryNumbering_subdomain2global[ebN];
-  if (mesh.elementBoundaryNumbering_global2original)
-    delete [] mesh.elementBoundaryNumbering_global2original;
-  mesh.elementBoundaryNumbering_global2original = new int[mesh.nElementBoundaries_global];
-  for (int ebN = 0; ebN < mesh.nElementBoundaries_global; ebN++)
-    mesh.elementBoundaryNumbering_global2original[ebN] = elementBoundaryNumbering_global_new2old[ebN];
   //
   if (mesh.edgeNumbering_subdomain2global)
     delete [] mesh.edgeNumbering_subdomain2global;
   mesh.edgeNumbering_subdomain2global = new int[mesh.subdomainp->nEdges_global];
   for (int i=0; i< mesh.subdomainp->nEdges_global; i++)
     mesh.edgeNumbering_subdomain2global[i] = edgeNumbering_subdomain2global[i];
-  if (mesh.edgeNumbering_global2original)
-    delete [] mesh.edgeNumbering_global2original;
-  mesh.edgeNumbering_global2original = new int[mesh.nEdges_global];
-  for (int ig=0; ig<mesh.nEdges_global; ig++)
-    mesh.edgeNumbering_global2original[ig] = edgeNumbering_global_new2old[ig];
 
   //cleanup
   ISRestoreIndices(nodeNumberingIS_global_old2new,&nodeNumbering_global_old2new);
@@ -4266,46 +4240,18 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   newMesh.elementNumbering_subdomain2global = new int[newMesh.subdomainp->nElements_global];
   for (int eN = 0; eN < newMesh.subdomainp->nElements_global; eN++)
     newMesh.elementNumbering_subdomain2global[eN] = elementNumbering_subdomain2global[eN];
-  if (newMesh.elementNumbering_global2original)
-    delete [] newMesh.elementNumbering_global2original;
-  /* cek hack
-  newMesh.elementNumbering_global2original = new int[newMesh.nElements_global];
-  for (int eN = 0; eN < newMesh.nElements_global; eN++)
-    newMesh.elementNumbering_global2original[eN] = elementNumbering_global_new2old[eN];
-  */
-  if (newMesh.nodeNumbering_global2original)
-    delete [] newMesh.nodeNumbering_global2original;
-  /* cek hack
-  newMesh.nodeNumbering_global2original = new int[newMesh.nNodes_global];
-  for (int nN = 0; nN < newMesh.nNodes_global; nN++)
-    newMesh.nodeNumbering_global2original[nN] = nodeNumbering_global_new2old[nN];
-  */
   //
   if (newMesh.elementBoundaryNumbering_subdomain2global)
     delete [] newMesh.elementBoundaryNumbering_subdomain2global;
   newMesh.elementBoundaryNumbering_subdomain2global = new int[newMesh.subdomainp->nElementBoundaries_global];
   for (int ebN = 0; ebN < newMesh.subdomainp->nElementBoundaries_global; ebN++)
     newMesh.elementBoundaryNumbering_subdomain2global[ebN] = elementBoundaryNumbering_subdomain2global[ebN];
-  if (newMesh.elementBoundaryNumbering_global2original)
-    delete [] newMesh.elementBoundaryNumbering_global2original;
-  /*cek hack
-  newMesh.elementBoundaryNumbering_global2original = new int[newMesh.nElementBoundaries_global];
-  for (int ebN = 0; ebN < newMesh.nElementBoundaries_global; ebN++)
-    newMesh.elementBoundaryNumbering_global2original[ebN] = elementBoundaryNumbering_global_new2old[ebN];
-  */
   //
   if (newMesh.edgeNumbering_subdomain2global)
     delete [] newMesh.edgeNumbering_subdomain2global;
   newMesh.edgeNumbering_subdomain2global = new int[newMesh.subdomainp->nEdges_global];
   for (int i=0; i< newMesh.subdomainp->nEdges_global; i++)
     newMesh.edgeNumbering_subdomain2global[i] = edgeNumbering_subdomain2global[i];
-  if (newMesh.edgeNumbering_global2original)
-    delete [] newMesh.edgeNumbering_global2original;
-  /*cek hack
-  newMesh.edgeNumbering_global2original = new int[newMesh.nEdges_global];
-  for (int ig=0; ig<newMesh.nEdges_global; ig++)
-    newMesh.edgeNumbering_global2original[ig] = edgeNumbering_global_new2old[ig];
-  */
   //cleanup
   /* out of core*/
   H5Sclose(filespace);
@@ -4849,16 +4795,15 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   IS edgeNumberingIS_global_new2old;
   ISAllGather(edgeNumberingIS_new2old,&edgeNumberingIS_global_new2old);
   const PetscInt *edgeNumbering_global_new2old;
-  //cek hack not needed
-  /*
-    valarray<int> edgeNumbering_old2new_global(mesh.nEdges_global);
-    ISGetIndices(edgeNumberingIS_global_new2old,&edgeNumbering_global_new2old);
-    for (int ig=0;ig<mesh.nEdges_global;ig++)
-    {
-    edgeNumbering_old2new_global[edgeNumbering_global_new2old[ig]] = ig;
-    }
-    */
 
+  
+  valarray<int> edgeNumbering_old2new_global(mesh.nEdges_global);
+  ISGetIndices(edgeNumberingIS_global_new2old,&edgeNumbering_global_new2old);
+  for (int ig=0;ig<mesh.nEdges_global;ig++)
+    {
+      edgeNumbering_old2new_global[edgeNumbering_global_new2old[ig]] = ig;
+    }
+  
   //create  array with (new edge) --> (new node 0, new node 1)
   //and map from (new node 0, new node 1) --> (new global edge)
   valarray<int> edgeNodesArray_newNodesAndEdges(2*mesh.nEdges_global);
@@ -5280,18 +5225,6 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   for (int i=0; i< mesh.subdomainp->nEdges_global; i++)
     mesh.edgeNumbering_subdomain2global[i] = edgeNumbering_subdomain2global[i];
 
-  mesh.elementNumbering_global2original = new int[mesh.nElements_global];
-  for (int eN=0;eN<mesh.nElements_global;eN++)
-    mesh.elementNumbering_global2original[eN] = elementNumbering_global_new2old[eN];
-  mesh.nodeNumbering_global2original = new int[mesh.nNodes_global];
-  for (int nN=0;nN<mesh.nNodes_global;nN++)
-    mesh.nodeNumbering_global2original[nN] = nodeNumbering_global_new2old[nN];
-  mesh.elementBoundaryNumbering_global2original = new int[mesh.nElementBoundaries_global];
-  for (int ebN=0;ebN<mesh.nElementBoundaries_global;ebN++)
-    mesh.elementBoundaryNumbering_global2original[ebN] = elementBoundaryNumbering_global_new2old[ebN];
-  mesh.edgeNumbering_global2original = new int[mesh.nEdges_global];
-  for (int ig=0; ig<mesh.nEdges_global; ig++)
-    mesh.edgeNumbering_global2original[ig] = edgeNumbering_global_new2old[ig];
   //
   //go ahead and renumber global mesh
   //
@@ -6457,16 +6390,12 @@ static PyObject* flcbdfWrappersPartitionElements(PyObject* self,
   PyObject *cmesh,*subdomain_cmesh,
     *elementOffsets_subdomain_owned,
     *elementNumbering_subdomain2global,
-    *elementNumbering_global2original,
     *nodeOffsets_subdomain_owned,
     *nodeNumbering_subdomain2global,
-    *nodeNumbering_global2original,
     *elementBoundaryOffsets_subdomain_owned,
     *elementBoundaryNumbering_subdomain2global,
-    *elementBoundaryNumbering_global2original,
     *edgeOffsets_subdomain_owned,
-    *edgeNumbering_subdomain2global,
-    *edgeNumbering_global2original;
+    *edgeNumbering_subdomain2global;
   if (!PyArg_ParseTuple(args,
                         "iOO",
                         &nLayersOfOverlap,
@@ -6515,12 +6444,6 @@ static PyObject* flcbdfWrappersPartitionElements(PyObject* self,
                                                               dims,
                                                               PyArray_INT,
                                                               (char*)MESH(cmesh).elementNumbering_subdomain2global);
-  dims[0] = MESH(cmesh).nElements_global;
-  elementNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                             dims,
-                                                             PyArray_INT,
-                                                             (char*)MESH(cmesh).elementNumbering_global2original);
-  
   dims[0] = size+1;
   nodeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
                                                         dims,
@@ -6532,12 +6455,6 @@ static PyObject* flcbdfWrappersPartitionElements(PyObject* self,
                                                            dims,
                                                            PyArray_INT,
                                                            (char*)MESH(cmesh).nodeNumbering_subdomain2global);
-  dims[0] = MESH(cmesh).nNodes_global;
-  nodeNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                          dims,
-                                                          PyArray_INT,
-                                                          (char*)MESH(cmesh).nodeNumbering_global2original);
-  
   dims[0] = size+1;
   elementBoundaryOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
                                                                    dims,
@@ -6549,12 +6466,6 @@ static PyObject* flcbdfWrappersPartitionElements(PyObject* self,
                                                                       dims,
                                                                       PyArray_INT,
                                                                       (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
-  dims[0] = MESH(cmesh).nElementBoundaries_global;
-  elementBoundaryNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                                     dims,
-                                                                     PyArray_INT,
-                                                                     (char*)MESH(cmesh).elementBoundaryNumbering_global2original);
-  
   dims[0] = size+1;
   edgeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
                                                         dims,
@@ -6566,24 +6477,15 @@ static PyObject* flcbdfWrappersPartitionElements(PyObject* self,
                                                            dims,
                                                            PyArray_INT,
                                                            (char*)MESH(cmesh).edgeNumbering_subdomain2global);
-  dims[0] = MESH(cmesh).nEdges_global;
-  edgeNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                          dims,
-                                                          PyArray_INT,
-                                                          (char*)MESH(cmesh).edgeNumbering_global2original);
-  return Py_BuildValue("OOOOOOOOOOOO",
+  return Py_BuildValue("OOOOOOOO",
                        elementOffsets_subdomain_owned,
                        elementNumbering_subdomain2global,
-                       elementNumbering_global2original,
                        nodeOffsets_subdomain_owned,
                        nodeNumbering_subdomain2global,
-                       nodeNumbering_global2original,
                        elementBoundaryOffsets_subdomain_owned,
                        elementBoundaryNumbering_subdomain2global,
-                       elementBoundaryNumbering_global2original,
                        edgeOffsets_subdomain_owned,
-                       edgeNumbering_subdomain2global,
-                       edgeNumbering_global2original);
+                       edgeNumbering_subdomain2global);
 }
 static PyObject* flcbdfWrappersPartitionNodes(PyObject* self,
                                               PyObject* args)
@@ -6593,16 +6495,12 @@ static PyObject* flcbdfWrappersPartitionNodes(PyObject* self,
   PyObject *cmesh,*subdomain_cmesh,
     *elementOffsets_subdomain_owned,
     *elementNumbering_subdomain2global,
-    *elementNumbering_global2original,
     *nodeOffsets_subdomain_owned,
     *nodeNumbering_subdomain2global,
-    *nodeNumbering_global2original,
     *elementBoundaryOffsets_subdomain_owned,
     *elementBoundaryNumbering_subdomain2global,
-    *elementBoundaryNumbering_global2original,
     *edgeOffsets_subdomain_owned,
-    *edgeNumbering_subdomain2global,
-    *edgeNumbering_global2original;
+    *edgeNumbering_subdomain2global;
   if (!PyArg_ParseTuple(args,
                         "iOO",
                         &nLayersOfOverlap,
@@ -6650,12 +6548,6 @@ static PyObject* flcbdfWrappersPartitionNodes(PyObject* self,
                                                               dims,
                                                               PyArray_INT,
                                                               (char*)MESH(cmesh).elementNumbering_subdomain2global);
-  dims[0] = MESH(cmesh).nElements_global;
-  elementNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                             dims,
-                                                             PyArray_INT,
-                                                             (char*)MESH(cmesh).elementNumbering_global2original);
-  
   dims[0] = size+1;
   nodeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
                                                         dims,
@@ -6667,12 +6559,6 @@ static PyObject* flcbdfWrappersPartitionNodes(PyObject* self,
                                                            dims,
                                                            PyArray_INT,
                                                            (char*)MESH(cmesh).nodeNumbering_subdomain2global);
-  dims[0] = MESH(cmesh).nNodes_global;
-  nodeNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                          dims,
-                                                          PyArray_INT,
-                                                          (char*)MESH(cmesh).nodeNumbering_global2original);
-  
   dims[0] = size+1;
   elementBoundaryOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
                                                                    dims,
@@ -6684,12 +6570,6 @@ static PyObject* flcbdfWrappersPartitionNodes(PyObject* self,
                                                                       dims,
                                                                       PyArray_INT,
                                                                       (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
-  dims[0] = MESH(cmesh).nElementBoundaries_global;
-  elementBoundaryNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                                     dims,
-                                                                     PyArray_INT,
-                                                                     (char*)MESH(cmesh).elementBoundaryNumbering_global2original);
-  
   dims[0] = size+1;
   edgeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
                                                         dims,
@@ -6701,25 +6581,16 @@ static PyObject* flcbdfWrappersPartitionNodes(PyObject* self,
                                                            dims,
                                                            PyArray_INT,
                                                            (char*)MESH(cmesh).edgeNumbering_subdomain2global);
-  dims[0] = MESH(cmesh).nEdges_global;
-  edgeNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                          dims,
-                                                          PyArray_INT,
-                                                          (char*)MESH(cmesh).edgeNumbering_global2original);
 
-  return Py_BuildValue("OOOOOOOOOOOO",
+  return Py_BuildValue("OOOOOOOO",
                        elementOffsets_subdomain_owned,
                        elementNumbering_subdomain2global,
-                       elementNumbering_global2original,
                        nodeOffsets_subdomain_owned,
                        nodeNumbering_subdomain2global,
-                       nodeNumbering_global2original,
                        elementBoundaryOffsets_subdomain_owned,
                        elementBoundaryNumbering_subdomain2global,
-                       elementBoundaryNumbering_global2original,
                        edgeOffsets_subdomain_owned,
-                       edgeNumbering_subdomain2global,
-                       edgeNumbering_global2original);
+                       edgeNumbering_subdomain2global);
 }
 
 static PyObject* flcbdfWrappersConvertPUMIPartitionToPython(PyObject* self,
@@ -6816,16 +6687,12 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
   PyObject *cmesh,*subdomain_cmesh,
     *elementOffsets_subdomain_owned,
     *elementNumbering_subdomain2global,
-    *elementNumbering_global2original,
     *nodeOffsets_subdomain_owned,
     *nodeNumbering_subdomain2global,
-    *nodeNumbering_global2original,
     *elementBoundaryOffsets_subdomain_owned,
     *elementBoundaryNumbering_subdomain2global,
-    *elementBoundaryNumbering_global2original,
     *edgeOffsets_subdomain_owned,
-    *edgeNumbering_subdomain2global,
-    *edgeNumbering_global2original;
+    *edgeNumbering_subdomain2global;
   if (!PyArg_ParseTuple(args,
                         "siiOO",
                         &filebase,
@@ -6874,13 +6741,6 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
                                                               dims,
                                                               PyArray_INT,
                                                               (char*)MESH(cmesh).elementNumbering_subdomain2global);
-  /*cek hack
-  dims[0] = MESH(cmesh).nElements_global;
-  elementNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                             dims,
-                                                             PyArray_INT,
-                                                             (char*)MESH(cmesh).elementNumbering_global2original);
-  */
   dims[0] = size+1;
   nodeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
                                                         dims,
@@ -6892,13 +6752,6 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
                                                            dims,
                                                            PyArray_INT,
                                                            (char*)MESH(cmesh).nodeNumbering_subdomain2global);
-  /*cek hack
-  dims[0] = MESH(cmesh).nNodes_global;
-  nodeNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                          dims,
-                                                          PyArray_INT,
-                                                          (char*)MESH(cmesh).nodeNumbering_global2original);
-  */
   dims[0] = size+1;
   elementBoundaryOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
                                                                    dims,
@@ -6910,13 +6763,6 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
 								      dims,
 								      PyArray_INT,
 								      (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
-  /*cek hack
-  dims[0] = MESH(cmesh).nElementBoundaries_global;
-  elementBoundaryNumbering_global2original = PyArray_FromDimsAndData(1,
-								     dims,
-								     PyArray_INT,
-								     (char*)MESH(cmesh).elementBoundaryNumbering_global2original);
-  */
   dims[0] = size+1;
   edgeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
                                                         dims,
@@ -6928,26 +6774,15 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
 							   dims,
 							   PyArray_INT,
 							   (char*)MESH(cmesh).edgeNumbering_subdomain2global);
-  /*cek hack
-  dims[0] = MESH(cmesh).nEdges_global;
-  edgeNumbering_global2original = PyArray_FromDimsAndData(1,
-							  dims,
-							  PyArray_INT,
-							  (char*)MESH(cmesh).edgeNumbering_global2original);
-  */
   return Py_BuildValue("OOOOOOOO",
                        elementOffsets_subdomain_owned,
                        elementNumbering_subdomain2global,
-                       //elementNumbering_global2original,
                        nodeOffsets_subdomain_owned,
                        nodeNumbering_subdomain2global,
-                       //nodeNumbering_global2original,
 		       elementBoundaryOffsets_subdomain_owned,
                        elementBoundaryNumbering_subdomain2global,
-                       //elementBoundaryNumbering_global2original,
 		       edgeOffsets_subdomain_owned,
-                       edgeNumbering_subdomain2global/*,
-						       edgeNumbering_global2original*/);
+                       edgeNumbering_subdomain2global);
 }
 
 
