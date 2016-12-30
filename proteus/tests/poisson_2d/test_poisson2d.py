@@ -10,18 +10,12 @@ This module solves equations of the form
 
 """
 from proteus.iproteus import *
-from proteus import Comm
-comm = Comm.get()
-Profiling.logLevel=7
-Profiling.verbose=True
-import numpy.testing as npt
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
 
 def test_c0p1(use_strong_constraints=False):
     import poisson_het_2d_p
     reload(poisson_het_2d_p)
     import poisson_het_2d_c0pk_n
+    reload(poisson_het_2d_c0pk_n)
     pList = [poisson_het_2d_p]
     nList = [poisson_het_2d_c0pk_n]
     reload(default_so)
@@ -41,8 +35,6 @@ def test_c0p1(use_strong_constraints=False):
     if use_strong_constraints == True:
         nList[0].numericalFluxType = nList[0].Exterior_StrongFlux
         soln_name = 'poisson_2d_c0p1_strong_dirichlet'
-    #nList[0].linearSolver=default_n.LU
-    #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution(soln_name)
     del ns

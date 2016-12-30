@@ -60,7 +60,7 @@ class NS_base:  # (HasTraits):
        }
     """
 
-    def __init__(self, so,pList,nList,sList,opts,simFlagsList=None):
+    def __init__(self,so,pList,nList,sList,opts,simFlagsList=None):
         import Comm
         comm=Comm.get()
         self.comm=comm
