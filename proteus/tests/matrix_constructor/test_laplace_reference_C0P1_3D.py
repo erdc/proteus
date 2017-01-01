@@ -9,9 +9,8 @@ from proteus import LinearAlgebraTools
 import set_paths
 import os.path
 import numpy
-import laplace_template_C0P1_3D as tp_3D
-tp_3D.ns.ar[0].hdfFile.close()
 
+import laplace_template_C0P1_3D as tp_3D
 
 class TestLaplaceConstruction3D():
     """ Run tests to verify the construction of the 3D Laplace operator """
@@ -62,7 +61,6 @@ class TestLaplaceConstruction3D():
         expected_output = os.path.dirname(os.path.abspath(__file__)) + '/comparison_files/laplace_reference_c0p1_3D.txt'
         comparison_mat = numpy.loadtxt(expected_output)
         assert numpy.allclose(laplace_mat,comparison_mat)
-        tp_3D.ns.ar[0].hdfFile.close()
 
 if __name__ == "__main__":
     pass

@@ -11,7 +11,6 @@ import os.path
 import numpy
 
 import laplace_template_C0P1_2D as tp_2d
-tp_2d.ns.ar[0].hdfFile.close()
 
 class TestLaplaceConstruction2D():
     """ Run tests to verify the construction of the 2D Laplace operator """
@@ -61,7 +60,6 @@ class TestLaplaceConstruction2D():
         expected_output = os.path.dirname(os.path.abspath(__file__)) + '/comparison_files/laplace_reference_c0p1_2D.txt'
         comparison_mat = numpy.loadtxt(expected_output)
         assert numpy.allclose(laplace_mat,comparison_mat)
-        tp_2d.ns.ar[0].hdfFile.close()
 
 if __name__ == "__main__":
     pass
