@@ -9,6 +9,7 @@
 #define LUMPED_MASS_MATRIX 1
 #define KUZMINS_METHOD 1
 #define INTEGRATE_BY_PARTS 1
+#define QUANTITIES_OF_INTEREST 1
 /////////////////////
 //ENTROPY FUNCTION //
 /////////////////////
@@ -696,6 +697,46 @@ namespace proteus
 			   double* quantDOFs)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
+      // COMPUTE QUANTITIES OF INTEREST //
+      if (QUANTITIES_OF_INTEREST==1)
+	{
+	  for(int eN=0;eN<nElements_global;eN++)
+	    {
+	      //declare local storage for local contributions and initialize
+	      register double elementQuantDOFs[nDOF_test_element];
+	      for (int i=0;i<nDOF_test_element;i++)
+		elementQuantDOFs[i]=0.0;
+	      //loop over quadrature points and compute integrands
+	      for  (int k=0;k<nQuadraturePoints_element;k++)
+		{
+		  //compute indeces and declare local storage
+		  register int eN_k = eN*nQuadraturePoints_element+k;
+		  register double 
+		    //for mass matrix contributions
+		    u_test_dV[nDOF_trial_element], 
+		    //for integration weight
+		    jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],dV,x,y,z;
+		  //get the physical integration weight
+		  ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
+		  dV = fabs(jacDet)*dV_ref[k];
+		  //precalculate test function products with integration weights for mass matrix terms
+		  for (int j=0;j<nDOF_trial_element;j++)
+		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		  // ith-LOOP //
+		  for(int i=0;i<nDOF_test_element;i++) 
+		    elementQuantDOFs[i] += div_velocity[eN_k]*u_test_dV[i];// div(vel)*wi
+		}
+	      // DISTRIBUTE // load cell based element into global vectors
+	      for(int i=0;i<nDOF_test_element;i++) 
+		{ 
+		  int eN_i=eN*nDOF_test_element+i;
+		  int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		  quantDOFs[gi] += 1; //elementQuantDOFs[i];
+		}//i
+	    }//elements
+	} 
+      // END OF COMPUTING AUX QUANTITIES OF INTEREST //
+      
       if (EDGE_VISCOSITY==1)
 	{
 	  // Allocate space for the transport matrices
