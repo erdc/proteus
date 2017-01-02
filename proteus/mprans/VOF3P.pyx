@@ -133,7 +133,8 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * flux_plus_dLij_times_soln,
                                double * dL_minus_dC, 
                                double cMax, 
-                               double cE)
+                               double cE, 
+                               double * quantDOFs)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -353,7 +354,8 @@ cdef class VOF3P:
                           numpy.ndarray flux_plus_dLij_times_soln,
                           numpy.ndarray dL_minus_dC, 
                           double cMax, 
-                          double cE):
+                          double cE, 
+                          numpy.ndarray quantDOFs):
         self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -442,7 +444,8 @@ cdef class VOF3P:
                                        <double*> flux_plus_dLij_times_soln.data,
                                        <double*> dL_minus_dC.data, 
                                        cMax,
-                                       cE)
+                                       cE,
+                                       <double*> quantDOFs.data)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -701,6 +704,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.forceStrongConditions=forceStrongConditions
         self.cMax=cMax
         self.cE=cE
+
+        
 
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h
@@ -1322,6 +1327,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.flux_plus_dLij_times_soln=None
         self.dL_minus_dC=None
         self.inflow_DOFs=None
+        # Aux quantity at DOFs to be filled by optimized code (MQL)
+        self.quantDOFs=None
+
         comm = Comm.get()
         self.comm = comm
         if comm.size() > 1:
@@ -1611,6 +1619,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.dL_minus_dC = numpy.zeros(Cx.shape,'d')
         self.flux_plus_dLij_times_soln = numpy.zeros(self.u[0].dof.shape,'d')
         self.inflow_DOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
         #
         #cek end computationa of cterm_global
         #
@@ -1779,7 +1788,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dL_minus_dC, 
             # PARAMETERS FOR ELEMENT BASED ENTROPY VISCOSITY
             self.coefficients.cMax,
-            self.coefficients.cE)
+            self.coefficients.cE,
+            self.quantDOFs) #TMP
 
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
