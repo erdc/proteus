@@ -238,7 +238,7 @@ html_short_title = u"Proteus"
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = "tritonBorder.ico"
+html_favicon = "_static/tritonBorder.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -327,7 +327,7 @@ latex_documents = [
 #latex_use_parts = False
 
 # Additional stuff for the LaTeX preamble.
-latex_preamble = '\input{macros}'
+latex_elements['preamble'] = '\input{macros}'
 
 # If true, show page references after internal links.
 #latex_show_pagerefs = False
