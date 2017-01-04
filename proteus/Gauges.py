@@ -221,7 +221,8 @@ class Gauges(AV_base):
 
         # determine global nearest node
         haveElement = int(local_element is not None)
-        global_have_element, owning_proc = comm.allreduce(haveElement, op=MPI.MAXLOC)
+        global_have_element, owning_proc = comm.allreduce((haveElement, comm.rank),
+                                                          op=MPI.MAXLOC)
         if global_have_element:
             logEvent("Gauges on element at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
                                                                     owning_proc), 3)

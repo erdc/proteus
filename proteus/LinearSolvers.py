@@ -99,8 +99,8 @@ class LinearSolver:
             r=self.r
         else:
             self.r=r
-        if b == None:
-            if self.b == None:
+        if b is None:
+            if self.b is None:
                 self.b = Vec(self.n)
             b=self.b
         else:

@@ -108,10 +108,13 @@ update:
 	@echo "Type: git checkout -b branch_name to save changes" 
 	@echo "+======================================================================================================+"
 
-default_stack: stack
+default_stack: stack hashdist
 	cd stack; git fetch origin; git checkout -q ${HASHSTACK_DEFAULT_VERSION}
 	@echo "Stack repository updated to .hashstack_default"
 	HASHSTACK_VERSION=${HASHSTACK_DEFAULT_VERSION}
+	@echo "hashdist repository updated to .hashdist_default"
+	cd hashdist; git fetch origin; git checkout -q ${HASHDIST_DEFAULT_VERSION}
+	HASHDIST_VERSION=${HASHDIST_DEFAULT_VERSION}
 
 hashdist: 
 	@echo "No hashdist found.  Cloning hashdist from GitHub"
@@ -155,7 +158,7 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find 
 
 	$(call show_info)
 
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -f -k error default.yaml ${PROTEUS_PREFIX}
 
 	@echo "************************"
 	@echo "Dependency build complete"
@@ -279,3 +282,18 @@ test:
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests --ignore proteus/tests/POD
 	@echo "Tests complete "
 	@echo "************************************"
+
+jupyter:
+	@echo "************************************"
+	@echo "Enabling jupyter notebook/lab/widgets"
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
+	pip install jupyter jupyterlab  ipywidgets ipyleaflet jupyter_dashboards pythreejs RISE cesiumpy bqplot mayavi
+	jupyter serverextension enable --py jupyterlab --sys-prefix
+	jupyter nbextension enable --py --sys-prefix widgetsnbextension
+	jupyter nbextension install --py --sys-prefix mayavi
+	jupyter nbextension enable --py --sys-prefix bqplot
+	jupyter nbextension enable --py --sys-prefix pythreejs
+	jupyter nbextension enable --py --sys-prefix ipyleaflet
+	jupyter nbextension install --py --sys-prefix rise
+	jupyter nbextension enable --py --sys-prefix rise
+	jupyter dashboards quick-setup --sys-prefix

@@ -22,7 +22,7 @@ class TestLaplaceConstruction3D():
     @classmethod
     def teardown_class(cls):
         pass
-
+        
     def setup_method(self,method):
         """ Initialize the test problem """
         reload(tp_3D)
