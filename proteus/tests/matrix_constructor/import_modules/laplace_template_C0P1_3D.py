@@ -63,3 +63,4 @@ so.sList=[default_s]
 from proteus import *
 opts = None
 ns = NumericalSolution.NS_base(so,[p],[n],so.sList,ip.opts)
+ns.ar[0].hdfFile.close()

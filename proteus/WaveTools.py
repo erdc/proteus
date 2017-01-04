@@ -2535,7 +2535,7 @@ class RandomNLWaves:
         Tlag = max(Tlag)
         Tstart = Tstart - Tlag
 
-        Nseries = int(Tend - Tstart)/dt + 1
+        Nseries = int((Tend - Tstart)/dt) + 1
         timelst=np.linspace(Tstart, Tend, Nseries)
         series = np.zeros((Nseries,2),)
         series[:,0] = timelst

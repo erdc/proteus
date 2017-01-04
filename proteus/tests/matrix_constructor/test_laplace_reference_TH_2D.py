@@ -6,6 +6,7 @@ Test module for Laplace Matrix
 from proteus.iproteus import *
 import set_paths
 import numpy
+
 import laplace_template_TH_2D as L_2d
 
 class TestMassConstruction2D():
