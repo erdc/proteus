@@ -90,8 +90,7 @@ ENV LANGUAGE en_US.UTF-8
 # Create jovyan user with UID=1000 and in the 'users' group
 RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER
 
-RUN mkdir /home/$NB_USER/work && \
-    mkdir /home/$NB_USER/.jupyter && \
+RUN mkdir /home/$NB_USER/.jupyter && \
     mkdir /home/$NB_USER/.local && \
     mkdir /home/$NB_USER/.hashdist && \
     echo "cacert=/etc/ssl/certs/ca-certificates.crt" > /home/$NB_USER/.curlrc
@@ -107,10 +106,8 @@ RUN ls /home/$NB_USER/.hashdist && \
 
 WORKDIR /home/$NB_USER
 
-RUN git clone https://github.com/erdc-cm/workshops -b erdc-fsi-tutorials
-
 RUN cat /home/$NB_USER/.hashdist/config.yaml && \
-    git clone https://github.com/erdc-cm/proteus -b update_jupyter && \
+    git clone https://github.com/erdc-cm/proteus && \
     cd proteus && \
     make hashdist stack stack/default.yaml && \
     cd stack && \
