@@ -73,13 +73,17 @@ class Test2DStokesOnQuads():
                     "reference_simplex.poly",
                     "proteus.log",
                     "poiseulleFlow.xmf",
-                    "poiseulleFlow.h5"]
+                    "poiseulleFlow.h5",
+                    "poiseulleFlow0.h5"]
         TestTools.closeFiles(Filelist)
        
     def test_01_FullRun(self):
         import filecmp
         self.ns.calculateSolution('test1')
-        relpath = "comparison_files/poiseulle_xmf.output"
+        if self.ns.ar[0].global_sync:
+            relpath = "comparison_files/poiseulle_global_xmf.output"
+        else:
+            relpath = "comparison_files/poiseulle_xmf.output"
         xmf_file = filecmp.cmp('poiseulleFlow.xmf',os.path.join(self._scriptdir,relpath))
         assert xmf_file == True, '******** xmf_file compare failed **********'
 

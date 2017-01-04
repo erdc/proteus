@@ -13,11 +13,15 @@ addons:
   apt:
     packages:
     - gfortran
+    - libffi-dev
+    - python-lzma
+    - libssl-dev
 
 before_install:
 - wget https://dl.dropboxusercontent.com/u/26353144/hashdist_trusty.tgz
 - tar xzf hashdist_trusty.tgz 
 - mv .hashdist $HOME
+- pip install pyliblzma
 
 install:
 - curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
@@ -32,7 +36,7 @@ install:
 - ls $SSL_CERT_DIR
 
 script:
-- py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-1.1.0-py2.7-linux-x86_64.egg/proteus/tests
+- py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests
 
 notifications:
   email:
