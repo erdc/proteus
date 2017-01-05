@@ -94,7 +94,7 @@ class LinearSolver:
             r-=b
     def solveInitialize(self,u,r,b,initialGuessIsZero=True):
         if r == None:
-            if self.r == None:
+            if self.r is None:
                 self.r = Vec(self.n)
             r=self.r
         else:
