@@ -297,3 +297,8 @@ jupyter:
 	jupyter nbextension install --py --sys-prefix rise
 	jupyter nbextension enable --py --sys-prefix rise
 	jupyter dashboards quick-setup --sys-prefix
+	jupyter nbextension install --sys-prefix --py ipyparallel
+	jupyter nbextension enable --sys-prefix --py ipyparallel
+	jupyter serverextension enable --sys-prefix --py ipyparallel
+	ipython profile create mpi --parallel
+	echo "c.IPClusterEngines.engine_launcher_class = 'MPI'" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py

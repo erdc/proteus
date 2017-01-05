@@ -452,9 +452,15 @@ class NS_base:  # (HasTraits):
         self.nlsList=[]
         from collections import OrderedDict
         self.modelSpinUp = OrderedDict()
-        #
         for p in pList:
-            assert p.coefficients.sdInfo != {}, "The transport coefficients sdInfo has not been set."
+            p.coefficients.opts = self.opts
+            if p.coefficients.sdInfo == {}:
+                 for ci,ckDict in p.coefficients.diffusion.iteritems():
+                     for ck in ckDict.keys():
+                         if not p.coefficients.sdInfo.has_key((ci,ck)):
+                             p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
+                                                               numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
+                             logEvent("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`p.coefficients.sdInfo[(ci,ck)]`)
         for p,n,s,mlMesh,index in zip(pList,nList,sList,mlMesh_nList,range(len(pList))):
             if so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True

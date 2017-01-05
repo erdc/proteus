@@ -186,13 +186,6 @@ class TC_base:
         for ci in range(self.nc):
             self.elementIntegralKeys.append(('u',ci))
             self.elementBoundaryIntegralKeys.append(('u',ci))
-        if self.sdInfo == {}:
-            for ci,ckDict in self.diffusion.iteritems():
-                for ck in ckDict.keys():
-                    if not self.sdInfo.has_key((ci,ck)):
-                        self.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=self.nd**2+1,step=self.nd,dtype='i'),
-                                                          numpy.array([range(self.nd) for row in range(self.nd)],dtype='i').flatten())
-                        logEvent("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`self.sdInfo[(ci,ck)]`)
 
     def evaluate(self,t,c):
         """
@@ -1444,6 +1437,12 @@ class DiscreteLaplaceOperator(TC_base):
             potential = {0:{0:'u'},
                          1:{1:'u'},
                          2:{2:'u'}}
+            sdInfo    = {(0,0):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i')),
+                         (1,1):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i')),
+                         (2,2):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i'))}
             TC_base.__init__(self,
                              3,
                              mass,
@@ -1453,7 +1452,7 @@ class DiscreteLaplaceOperator(TC_base):
                              reaction,
                              hamiltonian,
                              variableNames,
-                             sparseDiffusionTensors={},
+                             sparseDiffusionTensors=sdInfo,
                              useSparseDiffusion=True)
             self.vectorComponents=[1,2]
         if nd==3:
@@ -1466,6 +1465,10 @@ class DiscreteLaplaceOperator(TC_base):
                          1:{1:'u'},
                          2:{2:'u'},
                          3:{3:'u'}}
+            sdInfo  = {(0,0):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (1,1):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (2,2):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (3,3):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i'))}
             TC_base.__init__(self,
                              4,
                              mass,
@@ -1475,6 +1478,7 @@ class DiscreteLaplaceOperator(TC_base):
                              reaction,
                              hamiltonian,
                              variableNames,
+                             sparseDiffusionTensors=sdInfo,
                              useSparseDiffusion=True)
             self.vectorComponents=[1,2,3]
     def evaluate(self,t,c):
