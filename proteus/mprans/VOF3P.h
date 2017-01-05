@@ -731,7 +731,7 @@ namespace proteus
 		{ 
 		  int eN_i=eN*nDOF_test_element+i;
 		  int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
-		  quantDOFs[gi] += 1; //elementQuantDOFs[i];
+		  quantDOFs[gi] += elementQuantDOFs[i];
 		}//i
 	    }//elements
 	} 
