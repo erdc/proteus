@@ -9,8 +9,9 @@
 #define LUMPED_MASS_MATRIX 0
 #define KUZMINS_METHOD 1
 #define INTEGRATE_BY_PARTS 1
-#define QUANTITIES_OF_INTEREST 0
+#define QUANTITIES_OF_INTEREST 1
 #define FIX_BOUNDARY_KUZMINS 0
+
 /////////////////////
 //ENTROPY FUNCTION //
 /////////////////////
@@ -698,9 +699,12 @@ namespace proteus
 			   double* quantDOFs)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
+      ////////////////////////////////////
       // COMPUTE QUANTITIES OF INTEREST //
+      ////////////////////////////////////
       if (QUANTITIES_OF_INTEREST==1)
 	{
+	  // INTERIOR BOUNDARY // 
 	  for(int eN=0;eN<nElements_global;eN++)
 	    {
 	      //declare local storage for local contributions and initialize
@@ -711,21 +715,30 @@ namespace proteus
 	      for  (int k=0;k<nQuadraturePoints_element;k++)
 		{
 		  //compute indeces and declare local storage
-		  register int eN_k = eN*nQuadraturePoints_element+k;
+		  register int eN_k = eN*nQuadraturePoints_element+k, eN_k_nSpace = eN_k*nSpace;
 		  register double 
 		    //for mass matrix contributions
-		    u_test_dV[nDOF_trial_element], 
+		    u_test_dV[nDOF_trial_element], u_grad_test_dV[nDOF_test_element*nSpace], u_grad_trial[nDOF_trial_element*nSpace],
 		    //for integration weight
 		    jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],dV,x,y,z;
 		  //get the physical integration weight
 		  ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
 		  dV = fabs(jacDet)*dV_ref[k];
+		  ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		  //precalculate test function products with integration weights for mass matrix terms
 		  for (int j=0;j<nDOF_trial_element;j++)
-		    u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		    {
+		      u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+		      for (int I=0;I<nSpace;I++)
+			u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+		    }
 		  // ith-LOOP //
 		  for(int i=0;i<nDOF_test_element;i++) 
-		    elementQuantDOFs[i] += div_velocity[eN_k]*u_test_dV[i];// div(vel)*wi
+		    {
+		      elementQuantDOFs[i] += // -int[vel*grad(wi)*dV] 
+			- (velocity[eN_k_nSpace]*u_grad_test_dV[i*nSpace] + velocity[eN_k_nSpace+1]*u_grad_test_dV[i*nSpace+1]);
+		      //elementQuantDOFs[i] += div_velocity[eN_k]*u_test_dV[i];// div(vel)*wi
+		    }
 		}
 	      // DISTRIBUTE // load cell based element into global vectors
 	      for(int i=0;i<nDOF_test_element;i++) 
@@ -735,9 +748,81 @@ namespace proteus
 		  quantDOFs[gi] += elementQuantDOFs[i];
 		}//i
 	    }//elements
-	} 
+	  // END OF INTERIOR BOUNDARY //
+	  // EXTERIOR BOUNDARY //
+	  for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) 
+	    { 
+	      register int ebN = exteriorElementBoundariesArray[ebNE], 
+		eN  = elementBoundaryElementsArray[ebN*2+0],
+		ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
+		eN_nDOF_trial_element = eN*nDOF_trial_element;
+	      register double elementQuantDOFs[nDOF_test_element];
+	      for (int i=0;i<nDOF_test_element;i++)
+		elementQuantDOFs[i]=0.0;
+	      for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) 
+		{ 
+		  register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
+		    ebNE_kb_nSpace = ebNE_kb*nSpace,
+		    ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+		    ebN_local_kb_nSpace = ebN_local_kb*nSpace;		      
+		  register double
+		    jac_ext[nSpace*nSpace],
+		    jacDet_ext,
+		    jacInv_ext[nSpace*nSpace],
+		    boundaryJac[nSpace*(nSpace-1)],
+		    metricTensor[(nSpace-1)*(nSpace-1)],
+		    metricTensorDetSqrt,
+		    dS,
+		    u_test_dS[nDOF_test_element],		    
+		    normal[nSpace],x_ext,y_ext,z_ext;
+		  // 
+		  //calculate the solution and gradients at quadrature points 
+		  // 
+		  //compute information about mapping from reference element to physical element
+		  ck.calculateMapping_elementBoundary(eN,
+						      ebN_local,
+						      kb,
+						      ebN_local_kb,
+						      mesh_dof,
+						      mesh_l2g,
+						      mesh_trial_trace_ref,
+						      mesh_grad_trial_trace_ref,
+						      boundaryJac_ref,
+						      jac_ext,
+						      jacDet_ext,
+						      jacInv_ext,
+						      boundaryJac,
+						      metricTensor,
+						      metricTensorDetSqrt,
+						      normal_ref,
+						      normal,
+						      x_ext,y_ext,z_ext);
+		  dS = metricTensorDetSqrt*dS_ref[kb];
+		  // compute flow = v.n
+		  double flow=0.0;
+		  for (int I=0; I < nSpace; I++)
+		    flow += normal[I]*ebqe_velocity_ext[ebNE_kb_nSpace+I];
+		  //precalculate test function products with integration weights
+		  for (int j=0;j<nDOF_trial_element;j++)
+		    u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+		  // compute int[(vel*normal)*wi*dS]
+		  for (int i=0;i<nDOF_test_element;i++)
+		    elementQuantDOFs[i] += flow*u_test_dS[i];
+		}//kb
+	      // Distribute
+	      for (int i=0;i<nDOF_test_element;i++)
+		{
+		  int eN_i = eN*nDOF_test_element+i;
+		  int gi = offset_u+stride_u*u_l2g[eN_i]; // global i-th index
+		  quantDOFs[gi] += elementQuantDOFs[i];
+		}//i
+	    }//ebNE
+	  // END OF EXTERIOR BOUNDARY //
+	}
+      /////////////////////////////////////////////////
       // END OF COMPUTING AUX QUANTITIES OF INTEREST //
-      
+      /////////////////////////////////////////////////
+
       if (EDGE_VISCOSITY==1)
 	{
 	  // Allocate space for the transport matrices
