@@ -445,7 +445,8 @@ class Coefficients(TC_base):
         for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
             self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
             #cek hack, need to do scale this right for 3p flow
-            self.fluidModel.ebqe[('velocity',0)][...,i] = (self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
+            self.fluidModel.ebqe[('velocity',0)][...,i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
+            #self.fluidModel.ebqe[('velocity',0)][...,i] = (self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
             self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
             self.fluidModel.coefficients.ebqe_velocity_solid[...,i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
         self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]

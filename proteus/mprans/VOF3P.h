@@ -6,10 +6,11 @@
 #include "ModelFactory.h"
 
 #define POWER_SMOOTHNESS_INDICATOR 2
-#define LUMPED_MASS_MATRIX 1
+#define LUMPED_MASS_MATRIX 0
 #define KUZMINS_METHOD 1
 #define INTEGRATE_BY_PARTS 1
-#define QUANTITIES_OF_INTEREST 1
+#define QUANTITIES_OF_INTEREST 0
+#define FIX_BOUNDARY_KUZMINS 0
 /////////////////////
 //ENTROPY FUNCTION //
 /////////////////////
@@ -941,7 +942,7 @@ namespace proteus
 	  // ADD BOUNDARY TERM TO TRANSPORT MATRICES //
 	  /////////////////////////////////////////////
 	  //   * Compute outflow boundary integral as a matrix; i.e., int_B[ (vel.normal)*wi*wj*dx]
-	  if (KUZMINS_METHOD==1 && INTEGRATE_BY_PARTS==1 && false)
+	  if (KUZMINS_METHOD==1 && INTEGRATE_BY_PARTS==1 && FIX_BOUNDARY_KUZMINS==1)
 	    {
 	      for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) 
 		{ 
@@ -1078,10 +1079,10 @@ namespace proteus
 	      // END OF ADDING BOUNDARY TERM TO TRANSPORT MATRICES //
 	    }
 	      
-	  ///////////////////////////////
-	  // COMPUTE BOUNDARY INTEGRAL //
-	  ///////////////////////////////
-	  if (KUZMINS_METHOD==1 && INTEGRATE_BY_PARTS==1 && false)
+	  ////////////////////////////////////////
+	  // COMPUTE (INFLOW) BOUNDARY INTEGRAL //
+	  ////////////////////////////////////////
+	  if (KUZMINS_METHOD==1 && INTEGRATE_BY_PARTS==1 && FIX_BOUNDARY_KUZMINS==1)
 	    {
 	      //ebNE is the Exterior element boundary INdex
 	      //ebN is the element boundary INdex
@@ -1168,7 +1169,7 @@ namespace proteus
 	    }
 
 	  // TMP BOUNDARY LOOP
-	  if (true)
+	  if (KUZMINS_METHOD==1 && INTEGRATE_BY_PARTS==1 && FIX_BOUNDARY_KUZMINS==0)
 	    for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) 
 	      { 
 		register int ebN = exteriorElementBoundariesArray[ebNE], 
@@ -2426,7 +2427,7 @@ namespace proteus
 		  register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
 		  fluxJacobian_u_u[j]=
 		    0*dt*(EDGE_VISCOSITY==1 ? 0. : 1.)*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j])
-		    +0*dt*(KUZMINS_METHOD==1 ? 1. : 0.)*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+		    +dt*(FIX_BOUNDARY_KUZMINS==0 ? 1.: 0.)*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
 		}//j
 	      //
 	      //update the global Jacobian from the flux Jacobian

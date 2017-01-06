@@ -329,11 +329,11 @@ namespace proteus
 	      //register int eN_k_i=eN_k*nDOF_test_element+i;
 	      //register int eN_k_i_nSpace = eN_k_i*nSpace;
 	      register int  i_nSpace=i*nSpace;
-	      if (INTEGRATE_BY_PARTS==1) // a*int[grad_phi*grad_wd*x]-int[vel*grad_w*dx]
+	      if (INTEGRATE_BY_PARTS==1) // a*int[grad_phi*grad_w*dx]-int[vel*grad_w*dx]
 		elementResidual_u[i] += 
 		  ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]) +  //NOTE: It is not really numerical diffusion 
 		  ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]);
-	      else // a*int[grad_phi*grad_wd*x]+int[div(vel)*w*dx]
+	      else // a*int[grad_phi*grad_w*dx]+int[div(vel)*w*dx]
 		elementResidual_u[i] += 
 		  ck.NumericalDiffusion(a,grad_u,&u_grad_test_dV[i_nSpace]) +  //NOTE: It is not really numerical diffusion 
 		  q_div_velocity[eN_k]*u_test_dV[i];
