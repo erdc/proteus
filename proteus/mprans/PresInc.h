@@ -40,6 +40,7 @@ namespace proteus
                                    double alphaBDF,
 				   double* q_div_velocity,
                                    double* q_vf,
+				   double* q_vtCorr,
                                    double* q_vs,
                                    double* q_vos,
                                    double rho_s,
@@ -47,6 +48,7 @@ namespace proteus
                                    double rho_s_min,
                                    double rho_f_min,
                                    double* ebqe_vf,
+                                   double* ebqe_vtCorr,
                                    double* ebqe_vs,
                                    double* ebqe_vos,
                                    double* ebqe_rho_f,
@@ -149,11 +151,15 @@ namespace proteus
     inline
       void exteriorNumericalAdvectiveFlux(const double n[nSpace],
                                           const double f[nSpace],
-                                          double& flux)
+                                          double& flux,
+					  double* vtCorr)
     {
       flux = 0.0;
       for (int I=0; I < nSpace; I++)
-	flux += n[I]*f[I];
+	{
+	  flux += n[I]*f[I];
+	  vtCorr[I] = f[I];
+	}
     }
 
     inline
@@ -166,7 +172,8 @@ namespace proteus
                                         const double& bc_u,
                                         const double& bc_flux,
 					const double& penalty,
-					double& flux)
+					double& flux,
+					double* vtCorr)
     {
       if(isFluxBoundary == 1)
 	{
@@ -176,8 +183,16 @@ namespace proteus
 	{
 	  flux = 0.0;
 	  for(int I=0;I<nSpace;I++)
-            flux+= a*grad_potential[I]*n[I];
-	  flux + a*penalty*(u-bc_u);
+            {
+	      //if you change this, be sure to change vtCorr below
+	      flux -= a*grad_potential[I]*n[I];
+	    }
+	  flux += a*penalty*(u-bc_u);
+	  for (int I=0;I<nSpace;I++)
+	    {
+	      //add penalty flux to the normal component
+	      vtCorr[I] += -a*grad_potential[I] + a*penalty*(u-bc_u)*n[I];
+	    }
 	}
       else
 	{
@@ -232,6 +247,7 @@ namespace proteus
                                          double alphaBDF,
 					 double* q_div_velocity,
                                          double* q_vf,
+					 double* q_vtCorr,
                                          double* q_vs,
                                          double* q_vos,
                                          double rho_s,
@@ -344,7 +360,10 @@ namespace proteus
 	  //
 	  q_u[eN_k] = u;
           for (int I=0;I<nSpace;I++)
-            q_grad_u[eN_k_nSpace+I] = grad_u[I];
+            {
+	      q_grad_u[eN_k_nSpace+I] = grad_u[I];
+	      q_vtCorr[eN_k_nSpace+I] = f[I] - a*grad_u[I];
+	    }
 	}
     }
     
@@ -377,6 +396,7 @@ namespace proteus
                            double alphaBDF,
 			   double* q_div_velocity,
                            double* q_vf,
+			   double* q_vtCorr,
                            double* q_vs,
                            double* q_vos,
                            double rho_s,
@@ -385,6 +405,7 @@ namespace proteus
                            double rho_f_min,
                            double* ebqe_vf,
                            double* ebqe_vs,
+			   double* ebqe_vtCorr,
                            double* ebqe_vos,
                            double* ebqe_rho_f,
                            double* q_u,
@@ -448,6 +469,7 @@ namespace proteus
                                    alphaBDF,
 				   q_div_velocity,
                                    q_vf,
+                                   q_vtCorr,
                                    q_vs,
                                    q_vos,
                                    rho_s,
@@ -589,7 +611,8 @@ namespace proteus
 	      // 
 	      exteriorNumericalAdvectiveFlux(normal,
 					     f_ext,
-					     adv_flux_ext);
+					     adv_flux_ext,
+					     &ebqe_vtCorr[ebNE_kb_nSpace]);
               exteriorNumericalDiffusiveFlux(isDOFBoundary[ebNE_kb],
                                              isFluxBoundary[ebNE_kb],
                                              normal,
@@ -599,7 +622,8 @@ namespace proteus
                                              bc_u_ext,
                                              bc_diff_flux[ebNE_kb],
                                              penalty,
-                                             diff_flux_ext);
+                                             diff_flux_ext,
+					     &ebqe_vtCorr[ebNE_kb_nSpace]);
               if(isFluxBoundary[ebNE_kb] == 1)
                 {
                   adv_flux_ext = 0.0;
