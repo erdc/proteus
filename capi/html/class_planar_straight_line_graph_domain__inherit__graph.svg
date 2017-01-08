@@ -9,21 +9,21 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 80)">
 <title>PlanarStraightLineGraphDomain</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-80 160,-80 160,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node0 -->
+<g id="node1" class="node"><title>Node0</title>
 <polygon fill="#bfbfbf" stroke="black" points="0,-0.5 0,-19.5 156,-19.5 156,-0.5 0,-0.5"/>
 <text text-anchor="middle" x="78" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">PlanarStraightLineGraphDomain</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node1 -->
+<g id="node2" class="node"><title>Node1</title>
 <g id="a_node2"><a xlink:href="class_d__base.html" target="_top" xlink:title="D_base">
 <polygon fill="white" stroke="black" points="53,-56.5 53,-75.5 103,-75.5 103,-56.5 53,-56.5"/>
 <text text-anchor="middle" x="78" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">D_base</text>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node1 -->
-<g id="edge1" class="edge"><title>Node2&#45;&gt;Node1</title>
+<!-- Node1&#45;&gt;Node0 -->
+<g id="edge1" class="edge"><title>Node1&#45;&gt;Node0</title>
 <path fill="none" stroke="midnightblue" d="M78,-45.8045C78,-36.9102 78,-26.7798 78,-19.7511"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="74.5001,-46.083 78,-56.083 81.5001,-46.083 74.5001,-46.083"/>
 </g>

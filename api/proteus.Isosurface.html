@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.Isosurface module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.Isosurface module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.LatexReport module" href="proteus.LatexReport.html" />
     <link rel="prev" title="proteus.InputTranslators module" href="proteus.InputTranslators.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -138,56 +139,6 @@
   <div class="section" id="module-proteus.Isosurface">
 <span id="proteus-isosurface-module"></span><h1>proteus.Isosurface module<a class="headerlink" href="#module-proteus.Isosurface" title="Permalink to this headline">¶</a></h1>
 <p>AuxiliaryVariables subclasses for extracting isosurfaces and contours</p>
-<object data="../_images/inheritance-fc8b5a508a6707fee27a6f47ba66c91e07492729.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.Isosurface</p></object>
-<dl class="class">
-<dt id="proteus.Isosurface.Isosurface">
-<em class="property">class </em><code class="descclassname">proteus.Isosurface.</code><code class="descname">Isosurface</code><span class="sig-paren">(</span><em>isosurfaces</em>, <em>domain</em>, <em>activeTime=None</em>, <em>sampleRate=0</em>, <em>format='pov'</em>, <em>writeBoundary=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Isosurface.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Isosurface.Isosurface" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.AV_base" title="proteus.AuxiliaryVariables.AV_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AuxiliaryVariables.AV_base</span></code></a></p>
-<p>Extract isosurfaces</p>
-<dl class="method">
-<dt id="proteus.Isosurface.Isosurface.attachModel">
-<code class="descname">attachModel</code><span class="sig-paren">(</span><em>model</em>, <em>ar</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Isosurface.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Isosurface.Isosurface.attachModel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Attach this isosurface to the given simulation model.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.Isosurface.Isosurface.attachHDF5">
-<code class="descname">attachHDF5</code><span class="sig-paren">(</span><em>h5</em>, <em>step</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Isosurface.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Isosurface.Isosurface.attachHDF5" title="Permalink to this definition">¶</a></dt>
-<dd><p>Attach this isosurface to and HDF5 archive</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.Isosurface.Isosurface.triangulateIsosurface">
-<code class="descname">triangulateIsosurface</code><span class="sig-paren">(</span><em>field</em>, <em>value</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Isosurface.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Isosurface.Isosurface.triangulateIsosurface" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build a triangular mesh of the isosurface</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.Isosurface.Isosurface.writeIsosurfaceMesh">
-<code class="descname">writeIsosurfaceMesh</code><span class="sig-paren">(</span><em>field</em>, <em>value</em>, <em>frame</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Isosurface.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Isosurface.Isosurface.writeIsosurfaceMesh" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.Isosurface.Isosurface.writeIsosurfaceMesh_povray">
-<code class="descname">writeIsosurfaceMesh_povray</code><span class="sig-paren">(</span><em>field</em>, <em>value</em>, <em>frame</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Isosurface.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Isosurface.Isosurface.writeIsosurfaceMesh_povray" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write the triangular mesh to a povray file</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.Isosurface.Isosurface.calculate">
-<code class="descname">calculate</code><span class="sig-paren">(</span><em>checkTime=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Isosurface.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Isosurface.Isosurface.calculate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extracts isosourfaces at current time and update open output files</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.Isosurface.Isosurface.writeSceneHeader">
-<code class="descname">writeSceneHeader</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Isosurface.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Isosurface.Isosurface.writeSceneHeader" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write a scene description (can be modified before running povray)</p>
-</dd></dl>
-
-</dd></dl>
-
 </div>
 
 
@@ -202,8 +153,8 @@
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

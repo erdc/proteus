@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.Gauges module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.Gauges module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.InputTranslators module" href="proteus.InputTranslators.html" />
     <link rel="prev" title="proteus.FemTools module" href="proteus.FemTools.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -137,72 +138,82 @@
       
   <div class="section" id="module-proteus.Gauges">
 <span id="proteus-gauges-module"></span><h1>proteus.Gauges module<a class="headerlink" href="#module-proteus.Gauges" title="Permalink to this headline">¶</a></h1>
-<p>Gauges module</p>
+<p>Auxiliary variable classes for storing solutions at points and
+along lines to mimic gauges in lab and field experiments.</p>
 <object data="../_images/inheritance-e9e08121212a3f872c12fc8a9ce0e23a0244c369.svg" type="image/svg+xml">
             <p class="warning">Inheritance diagram of proteus.Gauges</p></object>
 <dl class="function">
 <dt id="proteus.Gauges.PointGauges">
 <code class="descclassname">proteus.Gauges.</code><code class="descname">PointGauges</code><span class="sig-paren">(</span><em>gauges</em>, <em>activeTime=None</em>, <em>sampleRate=0</em>, <em>fileName='point_gauges.csv'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.PointGauges" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a set of point gauges that will automatically be serialized as CSV data to the requested file.</p>
+<dd><p>Create a set of point gauges that will automatically be serialized
+as CSV data to the requested file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> &#8211; An iterable of &#8220;gauges&#8221;.  Each gauge is specified by a 2-tuple, with the first element in the</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> &#8211; An iterable of &#8220;gauges&#8221;.  Each gauge is specified
+by a 2-tuple, with the first element in the tuple a
+set of fields to be monitored, and the second
+element a tuple of the 3-space representations of
+the gauge locations.</td>
 </tr>
 </tbody>
 </table>
-<p>tuple a set of fields to be monitored, and the second element a tuple of the 3-space representations of the gauge
-locations.</p>
 <p>See the Gauges class for an explanation of the other parameters.</p>
 <p>Example:</p>
-<dl class="docutils">
-<dt>p = PointGauges(gauges=(((&#8216;u&#8217;, &#8216;v&#8217;), ((0.5, 0.5, 0), (1, 0.5, 0))),</dt>
-<dd><blockquote class="first">
-<div>((&#8216;p&#8217;,), ((0.5, 0.5, 0),))),</div></blockquote>
-<p class="last">activeTime=(0, 2.5),
-sampleRate=0.2,
-fileName=&#8217;combined_gauge_0_0.5_sample_all.csv&#8217;)</p>
-</dd>
-</dl>
-<p>This creates a PointGauges object that will monitor the u and v fields at the locations [0.5, 0.5,
-0] and [1, 0.5, 0], and the p field at [0.5, 0.5, 0] at simulation time between = 0 and 2.5 with samples
-taken no more frequently than every 0.2 seconds.  Results will be saved to:
-combined_gauge_0_0.5_sample_all.csv.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">p</span> <span class="o">=</span> <span class="n">PointGauges</span><span class="p">(</span><span class="n">gauges</span><span class="o">=</span><span class="p">(((</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">),</span> <span class="p">((</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">))),</span>
+                       <span class="p">((</span><span class="s1">&#39;p&#39;</span><span class="p">,),</span> <span class="p">((</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">0</span><span class="p">),))),</span>
+                <span class="n">activeTime</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">),</span>
+                <span class="n">sampleRate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                <span class="n">fileName</span><span class="o">=</span><span class="s1">&#39;combined_gauge_0_0.5_sample_all.csv&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This creates a PointGauges object that will monitor the u and v
+fields at the locations [0.5, 0.5, 0] and [1, 0.5, 0], and the p
+field at [0.5, 0.5, 0] at simulation time between = 0 and 2.5 with
+samples taken no more frequently than every 0.2 seconds.  Results
+will be saved to: combined_gauge_0_0.5_sample_all.csv.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.Gauges.LineGauges">
 <code class="descclassname">proteus.Gauges.</code><code class="descname">LineGauges</code><span class="sig-paren">(</span><em>gauges</em>, <em>activeTime=None</em>, <em>sampleRate=0</em>, <em>fileName='line_gauges.csv'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.LineGauges" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a set of line gauges that will automatically be serialized as CSV data to the requested file.  The
-line gauges will gather data at every element on the mesh between the two endpoints on each line.</p>
+<dd><p>Create a set of line gauges that will automatically be serialized
+as CSV data to the requested file.  The line gauges will gather
+data at every element on the mesh between the two endpoints on
+each line.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> &#8211; An iterable of &#8220;gauges&#8221;.  Each gauge is specified by a 2-tuple, with the first element in the</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> &#8211; An iterable of &#8220;gauges&#8221;.  Each gauge is specified
+by a 2-tuple, with the first element in the tuple a
+set of fields to be monitored, and the second
+element a list of pairs of endpoints of the gauges
+in 3-space representation.</td>
 </tr>
 </tbody>
 </table>
-<p>tuple a set of fields to be monitored, and the second element a list of pairs of endpoints of the gauges in
-3-space representation.</p>
 <p>See the Gauges class for an explanation of the other parameters.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.Gauges.LineIntegralGauges">
 <code class="descclassname">proteus.Gauges.</code><code class="descname">LineIntegralGauges</code><span class="sig-paren">(</span><em>gauges</em>, <em>activeTime=None</em>, <em>sampleRate=0</em>, <em>fileName='line_integral_gauges.csv'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.LineIntegralGauges" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a set of line integral gauges that will automatically be serialized as CSV data to the requested file.</p>
+<dd><p>Create a set of line integral gauges that will automatically be
+serialized as CSV data to the requested file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> &#8211; An iterable of &#8220;gauges&#8221;.  Each gauge is specified by a 2-tuple, with the first element in the</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>gauges</strong> &#8211; An iterable of &#8220;gauges&#8221;.  Each gauge is specified
+by a 2-tuple, with the first element in the tuple a
+set of fields to be monitored, and the second
+element a list of pairs of endpoints of the gauges
+in 3-space representation.</td>
 </tr>
 </tbody>
 </table>
-<p>tuple a set of fields to be monitored, and the second element a list of pairs of endpoints of the gauges in
-3-space representation.</p>
 <p>See the Gauges class for an explanation of the other parameters.</p>
 </dd></dl>
 
@@ -211,16 +222,48 @@ line gauges will gather data at every element on the mesh between the two endpoi
 <em class="property">class </em><code class="descclassname">proteus.Gauges.</code><code class="descname">Gauges</code><span class="sig-paren">(</span><em>fields</em>, <em>activeTime=None</em>, <em>sampleRate=0</em>, <em>fileName='gauges.csv'</em>, <em>points=None</em>, <em>lines=None</em>, <em>integrate=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.Gauges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.AV_base" title="proteus.AuxiliaryVariables.AV_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AuxiliaryVariables.AV_base</span></code></a></p>
 <p>Monitor fields at specific values.</p>
-<p>This class provides a generic point-wise and line-integral monitor that can be instantiated and attached to
-Proteus simulations by including them in the list of Auxiliary Variables in problem setup.</p>
-<p>Each Gauges instance may contain one or more fields, which may contain one or more locations to
-monitor.  The monitoring is defined over a given time and sample rate, and a filename is also supplied.  All
-results are serialized to a CSV file.</p>
-<p>Parallel Implementation Notes:
-After the gauge has been attached, all processes are partitioned into Gauge Owners and non-Gauge Owners.  The
-calculate method is a &#8220;no-op&#8221; for non-Owners.  For Gauge Owners, all values are computed individually,
-then collectively transmitted to the &#8220;root&#8221; process, which is the only process responsible for serializing gauge
-results to disk.  This code has not been aggressively vetted for parallel correctness or scalability.</p>
+<p>This class provides a generic point-wise and line-integral monitor
+that can be instantiated and attached to Proteus simulations by
+including them in the list of Auxiliary Variables in problem
+setup.</p>
+<p>Each Gauges instance may contain one or more fields, which may
+contain one or more locations to monitor.  The monitoring is
+defined over a given time and sample rate, and a filename is also
+supplied.  All results are serialized to a CSV file.</p>
+<p>Parallel Implementation Notes: After the gauge has been attached,
+all processes are partitioned into Gauge Owners and non-Gauge
+Owners.  The calculate method is a &#8220;no-op&#8221; for non-Owners.  For
+Gauge Owners, all values are computed individually, then
+collectively transmitted to the &#8220;root&#8221; process, which is the only
+process responsible for serializing gauge results to disk.  This
+code has not been aggressively vetted for parallel correctness or
+scalability.</p>
+<p>Create a set of gauges that will automatically be serialized as
+CSV data to the requested file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>activeTime</strong> &#8211; If not None, a 2-tuple of start time and
+end time for which the point gauge is
+active.</li>
+<li><strong>sampleRate</strong> &#8211; The intervals at which samples should be
+measured.  Note that this is a rough lower
+bound, and that the gauge values could be
+computed less frequently depending on the
+time integrator.  The default value of zero
+computes the gauge values at every time
+step.</li>
+<li><strong>fileName</strong> &#8211; The name of the file to serialize results to.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Data is currently column-formatted, with 10 characters
+allotted to the time field, and 45 characters allotted to each
+point field.</p>
 <dl class="method">
 <dt id="proteus.Gauges.Gauges.getLocalNearestNode">
 <code class="descname">getLocalNearestNode</code><span class="sig-paren">(</span><em>location</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.Gauges.getLocalNearestNode" title="Permalink to this definition">¶</a></dt>
@@ -229,40 +272,51 @@ results to disk.  This code has not been aggressively vetted for parallel correc
 <dl class="method">
 <dt id="proteus.Gauges.Gauges.getLocalElement">
 <code class="descname">getLocalElement</code><span class="sig-paren">(</span><em>femSpace</em>, <em>location</em>, <em>node</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.Gauges.getLocalElement" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a location and its nearest node, determine if it is on a local element.</p>
-<p>Returns None if location is not on any elements owned by this process</p>
+<dd><p>Given a location and its nearest node, determine if it is on a
+local element.</p>
+<p>Returns None if location is not on any elements owned by this
+process</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Gauges.Gauges.findNearestNode">
 <code class="descname">findNearestNode</code><span class="sig-paren">(</span><em>femSpace</em>, <em>location</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.Gauges.findNearestNode" title="Permalink to this definition">¶</a></dt>
-<dd><p>Given a gauge location, attempts to locate the most suitable process for monitoring information about
-this location, as well as the node on the process closest to the location.</p>
-<p>Returns a 2-tuple containing an identifier for the closest &#8216;owning&#8217; process as well as the local ids of the
-node and nearest element.</p>
+<dd><p>Given a gauge location, attempts to locate the most suitable
+process for monitoring information about this location, as
+well as the node on the process closest to the location.</p>
+<p>Returns a 2-tuple containing an identifier for the closest
+&#8216;owning&#8217; process as well as the local ids of the node and
+nearest element.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Gauges.Gauges.buildQuantityRow">
 <code class="descname">buildQuantityRow</code><span class="sig-paren">(</span><em>m</em>, <em>femFun</em>, <em>quantity_id</em>, <em>quantity</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.Gauges.buildQuantityRow" title="Permalink to this definition">¶</a></dt>
-<dd><p>Builds up contributions to gauge operator from the underlying element space</p>
+<dd><p>Builds up contributions to gauge operator from the underlying
+element space</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Gauges.Gauges.initOutputWriter">
 <code class="descname">initOutputWriter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.Gauges.initOutputWriter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initialize communication strategy for collective output of gauge data.</p>
-<p>On the root process in this communicator, create a map of quantity owners and the corresponding location in
-their arrays.  This process is responsible for collecting gauge data and saving it to disk.</p>
-<p>Gauge data is globally ordered by field, then by location id (as ordered by globalMeasuredQuantities)</p>
+<dd><p>Initialize communication strategy for collective output of gauge
+data.</p>
+<p>On the root process in this communicator, create a map of
+quantity owners and the corresponding location in their
+arrays.  This process is responsible for collecting gauge data
+and saving it to disk.</p>
+<p>Gauge data is globally ordered by field, then by location id
+(as ordered by globalMeasuredQuantities)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Gauges.Gauges.buildGaugeComm">
 <code class="descname">buildGaugeComm</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Gauges.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Gauges.Gauges.buildGaugeComm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a communicator composed only of processes that own gauge quantities.</p>
-<p>Collective over global communicator.  Builds a local communicator for collecting all gauge data.
-This communicator contains only processes that will contain gauge data.</p>
+<dd><p>Create a communicator composed only of processes that own gauge
+quantities.</p>
+<p>Collective over global communicator.  Builds a local
+communicator for collecting all gauge data.  This communicator
+contains only processes that will contain gauge data.</p>
 </dd></dl>
 
 <dl class="method">
@@ -353,8 +407,8 @@ length_segments - a pair of intersections augmented by length</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

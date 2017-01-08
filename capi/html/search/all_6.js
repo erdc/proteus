@@ -6,6 +6,8 @@ var searchData=
   ['facets',['facets',['../class_piecewise_linear_complex_domain.html#acfff7c9b64b08a4f8bf7022e7385877f',1,'PiecewiseLinearComplexDomain']]],
   ['factorlocalbdm1projectionmatrices',['factorLocalBDM1projectionMatrices',['../group__postprocessing.html#gab45a0c546b5cef9cca1b69d28e55eaee',1,'factorLocalBDM1projectionMatrices(int nElements_global, int nVDOFs_element, double *BDMprojectionMat_element, int *BDMprojectionMatPivots_element):&#160;postprocessing.c'],['../group__postprocessing.html#gab45a0c546b5cef9cca1b69d28e55eaee',1,'factorLocalBDM1projectionMatrices(int nElements_global, int nVDOFs_element, double *BDMprojectionMat_element, int *BDMprojectionMatPivots_element):&#160;postprocessing.c']]],
   ['far',['FAR',['../class_f_m_m_eikonal_solver_base.html#a6a8b0973f39ff91be0dc9030284f904eaafb8409af82a2e78a67e8c4065077adf',1,'FMMEikonalSolverBase']]],
+  ['fastcos',['fastcos',['../namespaceproteus.html#aa3421b002530bc7a03b58006dd8ac792',1,'proteus']]],
+  ['fastcosh',['fastcosh',['../namespaceproteus.html#a54f118eea86cdad14d1ac134fa937a41',1,'proteus']]],
   ['femintegrals',['femIntegrals',['../group__fem_integrals.html',1,'']]],
   ['femintegrals_2ec',['femIntegrals.c',['../fem_integrals_8c.html',1,'']]],
   ['femintegrals_2eh',['femIntegrals.h',['../fem_integrals_8h.html',1,'']]],

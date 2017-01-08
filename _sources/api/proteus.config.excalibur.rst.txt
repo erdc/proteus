@@ -1,0 +1,7 @@
+proteus.config.excalibur module
+===============================
+
+.. automodule:: proteus.config.excalibur
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.Viewers module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.Viewers module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.WaveTools module" href="proteus.WaveTools.html" />
     <link rel="prev" title="proteus.UnstructuredFMMandFSWsolvers module" href="proteus.UnstructuredFMMandFSWsolvers.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -201,30 +202,40 @@
 <dl class="method">
 <dt id="proteus.Viewers.V_base.stepProcessPlot">
 <code class="descname">stepProcessPlot</code><span class="sig-paren">(</span><em>mlvt</em>, <em>tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.V_base.stepProcessPlot" title="Permalink to this definition">¶</a></dt>
-<dd><p>plot desired quantities for a single step
-input :</p>
-<blockquote>
-<div>p    &#8212; problem definition
-n    &#8212; numerics definition
-mlvt &#8212; multilevel vector transport that holds the quantities to measure
-tsim &#8212; simulation time</div></blockquote>
-<p>assumes this is the correct time to plot
-TO DO:</p>
+<dd><p>plot desired quantities for a single step</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) &#8211; </li>
+<li><strong>tsim</strong> (<em>simulation time</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>assumes this is the correct time to plot</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.Viewers.V_base.stepPlotExact">
 <code class="descname">stepPlotExact</code><span class="sig-paren">(</span><em>mlvt</em>, <em>tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.V_base.stepPlotExact" title="Permalink to this definition">¶</a></dt>
-<dd><p>plot &#8216;exact&#8217; value of desired quantities for a single step
-input :</p>
-<blockquote>
-<div>p    &#8212; problem definition
-n    &#8212; numerics definition
-mlvt &#8212; multilevel vector transport that holds the quantities to measure
-tsim &#8212; simulation time</div></blockquote>
+<dd><p>plot &#8216;exact&#8217; value of desired quantities for a single step</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) &#8211; </li>
+<li><strong>tsim</strong> (<em>simulation time</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <p>assumes this is the correct time to plot
-and plotOffSet is set correctly
-TO DO: Fix scaling for exact vector components to match Transport</p>
+and plotOffSet is set correctly</p>
 </dd></dl>
 
 <dl class="method">
@@ -244,14 +255,20 @@ and plotOffSet is set correctly</p>
 <dl class="method">
 <dt id="proteus.Viewers.V_base.plotScalarElementQuantity">
 <code class="descname">plotScalarElementQuantity</code><span class="sig-paren">(</span><em>ckey</em>, <em>mlvt</em>, <em>tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.V_base.plotScalarElementQuantity" title="Permalink to this definition">¶</a></dt>
-<dd><p>plotting routine to look at scalar quantity stored in element quad dictionary q
-input :</p>
-<blockquote>
-<div>ckey &#8212; what should be plotted
-p    &#8212; problem definition
-n    &#8212; numerics definition
-mlvt &#8212; multilevel vector transport that holds the quantities to measure
-tsim &#8212; simulation time</div></blockquote>
+<dd><p>plotting routine to look at scalar quantity stored in element quad dictionary q</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ckey</strong> (<em>what should be plotted</em>) &#8211; </li>
+<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) &#8211; </li>
+<li><strong>tsim</strong> (<em>simulation time</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <p>assumes this is the correct time to plot
 and plotOffSet is set correctly</p>
 </dd></dl>
@@ -259,14 +276,20 @@ and plotOffSet is set correctly</p>
 <dl class="method">
 <dt id="proteus.Viewers.V_base.plotVectorGlobalElementBoundaryQuantity">
 <code class="descname">plotVectorGlobalElementBoundaryQuantity</code><span class="sig-paren">(</span><em>ckey</em>, <em>mlvt</em>, <em>tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.V_base.plotVectorGlobalElementBoundaryQuantity" title="Permalink to this definition">¶</a></dt>
-<dd><p>plotting routine to look at vector quantity stored in global elementBoundary quad dictionary ebq_global
-input :</p>
-<blockquote>
-<div>ckey &#8212; what should be plotted
-p    &#8212; problem definition
-n    &#8212; numerics definition
-mlvt &#8212; multilevel vector transport that holds the quantities to measure
-tsim &#8212; simulation time</div></blockquote>
+<dd><p>plotting routine to look at vector quantity stored in global elementBoundary quad dictionary ebq_global</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ckey</strong> (<em>what should be plotted</em>) &#8211; </li>
+<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) &#8211; </li>
+<li><strong>tsim</strong> (<em>simulation time</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <p>assumes this is the correct time to plot
 and plotOffSet is set correctly</p>
 </dd></dl>
@@ -296,10 +319,11 @@ and plotOffSet is set correctly</p>
 <dt id="proteus.Viewers.MatlabWriter">
 <em class="property">class </em><code class="descclassname">proteus.Viewers.</code><code class="descname">MatlabWriter</code><span class="sig-paren">(</span><em>nxgrid=50</em>, <em>nygrid=50</em>, <em>nzgrid=10</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter" title="Permalink to this definition">¶</a></dt>
 <dd><p>collect functionality for generating visualation data and commands in matlab
-TODO:</p>
-<blockquote>
-<div>C0P2 in 3d
-DG monomials</div></blockquote>
+.. todo:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">C0P2</span> <span class="ow">in</span> <span class="mi">3</span><span class="n">d</span>
+<span class="n">DG</span> <span class="n">monomials</span>
+</pre></div>
+</div>
 <dl class="method">
 <dt id="proteus.Viewers.MatlabWriter.storePointMeshData">
 <code class="descname">storePointMeshData</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>x</em>, <em>name</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.storePointMeshData" title="Permalink to this definition">¶</a></dt>
@@ -418,199 +442,47 @@ tri_name_ex &#8211; element-node representation (2d,3d)</dd>
 <dl class="method">
 <dt id="proteus.Viewers.MatlabWriter.viewScalar_LagrangeC0P1">
 <code class="descname">viewScalar_LagrangeC0P1</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>nodeArray</em>, <em>elementNodesArray</em>, <em>u_dof</em>, <em>name='u'</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewScalar_LagrangeC0P1" title="Permalink to this definition">¶</a></dt>
-<dd><p>given C0 P1 function with nodal Lagrange representation
-generate a matlab representation that is as faithful as possible to
-the actual finite element function structure</p>
-<dl class="docutils">
-<dt>C0-P1 output:</dt>
-<dd>mesh vertices and element connectivity
-degrees of freedom at vertices</dd>
-<dt>scalar data is stored in</dt>
-<dd>name</dd>
-<dt>if storeMeshData = True, writes out</dt>
-<dd>name_x      &#8211; mesh vertices
-tri_name_v  &#8211; element-node representation</dd>
-</dl>
-<p>returns number of figures actually plotted</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Viewers.MatlabWriter.viewVector_LagrangeC0P1">
 <code class="descname">viewVector_LagrangeC0P1</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>nodeArray</em>, <em>elementNodesArray</em>, <em>u_dof</em>, <em>v_dof=None</em>, <em>w_dof=None</em>, <em>name='velocity'</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewVector_LagrangeC0P1" title="Permalink to this definition">¶</a></dt>
-<dd><p>given a vector valued C0 P1 function with nodal Lagrange representation
-generate a matlab representation that is as faithful as possible to
-the actual finite element function structure</p>
-<p>Assumes 1 &lt;= number of components &lt;= nSpace
-C0-P1 output:</p>
-<blockquote>
-<div>mesh vertices and element connectivity
-degrees of freedom at vertices</div></blockquote>
-<dl class="docutils">
-<dt>vector data is stored in</dt>
-<dd>name which is [nNodes,nCoord]</dd>
-<dt>if storeMeshData = True, writes out</dt>
-<dd>name_x      &#8211; mesh vertices
-tri_name_v  &#8211; element-node representation</dd>
-</dl>
-<p>returns number of figures actually plotted</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Viewers.MatlabWriter.viewScalar_LagrangeC0P2">
 <code class="descname">viewScalar_LagrangeC0P2</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>lagrangeNodesArray</em>, <em>elementNodesArray</em>, <em>l2g</em>, <em>u_dof</em>, <em>name='u'</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewScalar_LagrangeC0P2" title="Permalink to this definition">¶</a></dt>
-<dd><p>TODO 3D
-given C0 P2 function with nodal Lagrange representation
-generate a matlab representation that is as faithful as possible to
-the actual finite element function structure</p>
-<dl class="docutils">
-<dt>C0-P2 output:</dt>
-<dd>matlab mesh vertices stored according [geometric vertices, midNodesVertices]
-and element connectivity for refined mesh
-degrees of freedom at all vertices
-&#8216;mid-edge&#8217; vertices stored in midNodesArray</dd>
-<dt>scalar data is stored in</dt>
-<dd>name</dd>
-<dt>if storeMeshData = True, writes out</dt>
-<dd>name_x      &#8211; matlab mesh vertices
-tri_name_v  &#8211; matlab element-node representation</dd>
-</dl>
-<p>returns number of figures actually plotted</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Viewers.MatlabWriter.viewVector_LagrangeC0P2">
 <code class="descname">viewVector_LagrangeC0P2</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>lagrangeNodesArray</em>, <em>elementNodesArray</em>, <em>l2g</em>, <em>u_dof</em>, <em>v_dof=None</em>, <em>w_dof=None</em>, <em>name='velocity'</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewVector_LagrangeC0P2" title="Permalink to this definition">¶</a></dt>
-<dd><p>TODO: 3D</p>
-<p>given a vector valued C0 P2 function with nodal Lagrange representation
-generate a matlab representation that is as faithful as possible to
-the actual finite element function structure</p>
-<p>Assumes 1 &lt;= number of components &lt;= nSpace
-C0-P2 output:</p>
-<blockquote>
-<div>matlab mesh vertices stored according [geometric vertices, midNodesVertices]
-and element connectivity for refined mesh
-degrees of freedom at all vertices
-&#8216;mid-edge&#8217; vertices stored in midNodesArray</div></blockquote>
-<dl class="docutils">
-<dt>vector data is stored in</dt>
-<dd>name which is [nNodes,nCoord]</dd>
-<dt>if storeMeshData = True, writes out</dt>
-<dd>name_x      &#8211; mesh vertices
-tri_name_v  &#8211; element-node representation</dd>
-</dl>
-<p>returns number of figures actually plotted</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Viewers.MatlabWriter.viewScalar_DGP0">
 <code class="descname">viewScalar_DGP0</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>nodeArray</em>, <em>elementNodesArray</em>, <em>l2g</em>, <em>u_dof</em>, <em>name='u'</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewScalar_DGP0" title="Permalink to this definition">¶</a></dt>
-<dd><p>given DG P0 function
-generate a matlab representation that is as faithful as possible to
-the actual finite element function structure</p>
-<p>Assumes local dof associated with local node numbering
-DG-P0 output:</p>
-<blockquote>
-<div>element-wise list of vertices and local elemntwise-connectivity matrices
-degrees of freedom at element vertices (as if a DG-P1 function)</div></blockquote>
-<dl class="docutils">
-<dt>scalar data is stored in</dt>
-<dd>name</dd>
-<dt>if storeMeshData = True, writes out</dt>
-<dd>name_x      &#8211; mesh vertices
-tri_name    &#8211; element-node representation</dd>
-</dl>
-<p>returns number of figures actually plotted</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Viewers.MatlabWriter.viewScalar_LagrangeDGP1">
 <code class="descname">viewScalar_LagrangeDGP1</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>nodeArray</em>, <em>elementNodesArray</em>, <em>l2g</em>, <em>u_dof</em>, <em>name='u'</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewScalar_LagrangeDGP1" title="Permalink to this definition">¶</a></dt>
-<dd><p>given DG P1 function with nodal Lagrange representation
-generate a matlab representation that is as faithful as possible to
-the actual finite element function structure</p>
-<p>Assumes local dof associated with local node numbering
-DG-P1 output:</p>
-<blockquote>
-<div>element-wise list of vertices and local elemntwise-connectivity matrices
-degrees of freedom at vertices</div></blockquote>
-<dl class="docutils">
-<dt>scalar data is stored in</dt>
-<dd>name</dd>
-<dt>if storeMeshData = True, writes out</dt>
-<dd>name_x      &#8211; mesh vertices
-tri_name    &#8211; element-node representation</dd>
-</dl>
-<p>returns number of figures actually plotted</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Viewers.MatlabWriter.viewScalar_LagrangeDGP2">
 <code class="descname">viewScalar_LagrangeDGP2</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>nodeArray</em>, <em>elementNodesArray</em>, <em>midNodesArray</em>, <em>l2g</em>, <em>cg_l2g</em>, <em>u_dof</em>, <em>name='u'</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewScalar_LagrangeDGP2" title="Permalink to this definition">¶</a></dt>
-<dd><p>TODO: 3d
-given DG P1 function with nodal Lagrange representation
-generate a matlab representation that is as faithful as possible to
-the actual finite element function structure</p>
-<p>Assumes local dof associated with local node numbering
-and then local edge numbering</p>
-<p>uses cg numbering for accessing mid-edge vertices
-DG-P2 output:</p>
-<blockquote>
-<div>element-wise list of vertices and mid-edge vertices along
-with local elemntwise-connectivity matrices
-degrees of freedom at vertices and mid-edge vertices</div></blockquote>
-<dl class="docutils">
-<dt>scalar data is stored in</dt>
-<dd>name</dd>
-<dt>if storeMeshData = True, writes out</dt>
-<dd>name_x      &#8211; mesh vertices and mid-edge vertices
-tri_name    &#8211; element-node representation</dd>
-</dl>
-<p>returns number of figures actually plotted</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Viewers.MatlabWriter.viewScalar_CrouzeixRaviartP1">
 <code class="descname">viewScalar_CrouzeixRaviartP1</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>nodeArray</em>, <em>elementNodesArray</em>, <em>l2g</em>, <em>u_dof</em>, <em>name='u'</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewScalar_CrouzeixRaviartP1" title="Permalink to this definition">¶</a></dt>
-<dd><p>given FEM function with local Crouzeix-Raviart representation
-generate a matlab representation that is as faithful as possible to
-the actual finite element function structure</p>
-<p>Assumes local dof associated with local node numbering
-CR output:</p>
-<blockquote>
-<div>Just treat as a DGP1 function
-element-wise list of vertices and local elemntwise-connectivity matrices
-degrees of freedom at vertices instead of face barycenters</div></blockquote>
-<dl class="docutils">
-<dt>scalar data is stored in</dt>
-<dd>name</dd>
-<dt>if storeMeshData = True, writes out</dt>
-<dd>name_x      &#8211; mesh vertices
-tri_name    &#8211; element-node representation</dd>
-</dl>
-<p>returns number of figures actually plotted</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.Viewers.MatlabWriter.viewScalar_MonomialDGPK">
 <code class="descname">viewScalar_MonomialDGPK</code><span class="sig-paren">(</span><em>cmdFile</em>, <em>nSpace</em>, <em>nodeArray</em>, <em>elementNodesArray</em>, <em>interpolationPoints</em>, <em>u_interpolationPoints</em>, <em>name='u'</em>, <em>storeMeshData=True</em>, <em>figureNumber=1</em>, <em>title=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Viewers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Viewers.MatlabWriter.viewScalar_MonomialDGPK" title="Permalink to this definition">¶</a></dt>
-<dd><p>given DG PK function with monomial basis
-generate a matlab representation that is as faithful as possible to
-the actual finite element function structure</p>
-<p>input is u values at interpolation points (not dof)
-Generates an array of triangulations of interpolation points on each element
-DG-PK output:</p>
-<blockquote>
-<div>element-wise list of interpolation points and local elementwise-connectivity matrices
-degrees of freedom at interpolation points</div></blockquote>
-<dl class="docutils">
-<dt>scalar data is stored in</dt>
-<dd>name</dd>
-<dt>if storeMeshData = True, writes out</dt>
-<dd>name_x      &#8211; mesh vertices
-tri_name    &#8211; element-node representation</dd>
-</dl>
-<p>returns number of figures actually plotted</p>
-</dd></dl>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -628,8 +500,8 @@ tri_name    &#8211; element-node representation</dd>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

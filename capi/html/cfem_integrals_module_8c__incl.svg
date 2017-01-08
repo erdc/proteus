@@ -9,54 +9,54 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 80)">
 <title>cfemIntegralsModule.c</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-80 429,-80 429,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node0 -->
+<g id="node1" class="node"><title>Node0</title>
 <polygon fill="#bfbfbf" stroke="black" points="124,-56.5 124,-75.5 240,-75.5 240,-56.5 124,-56.5"/>
 <text text-anchor="middle" x="182" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">cfemIntegralsModule.c</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node1 -->
+<g id="node2" class="node"><title>Node1</title>
 <polygon fill="white" stroke="#bfbfbf" points="0,-0.5 0,-19.5 56,-19.5 56,-0.5 0,-0.5"/>
 <text text-anchor="middle" x="28" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">Python.h</text>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
-<g id="edge1" class="edge"><title>Node1&#45;&gt;Node2</title>
+<!-- Node0&#45;&gt;Node1 -->
+<g id="edge1" class="edge"><title>Node0&#45;&gt;Node1</title>
 <path fill="none" stroke="midnightblue" d="M157.598,-56.4435C131.803,-47.3986 90.9234,-33.064 61.9822,-22.9158"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="62.8824,-19.5226 52.2876,-19.5164 60.5661,-26.1283 62.8824,-19.5226"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node2 -->
+<g id="node3" class="node"><title>Node2</title>
 <polygon fill="white" stroke="#bfbfbf" points="74.5,-0.5 74.5,-19.5 179.5,-19.5 179.5,-0.5 74.5,-0.5"/>
 <text text-anchor="middle" x="127" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">numpy/arrayobject.h</text>
 </g>
-<!-- Node1&#45;&gt;Node3 -->
-<g id="edge2" class="edge"><title>Node1&#45;&gt;Node3</title>
+<!-- Node0&#45;&gt;Node2 -->
+<g id="edge2" class="edge"><title>Node0&#45;&gt;Node2</title>
 <path fill="none" stroke="midnightblue" d="M172.918,-56.083C164.829,-48.1409 152.805,-36.3354 143.09,-26.7973"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="145.501,-24.2595 135.913,-19.7511 140.597,-29.2545 145.501,-24.2595"/>
 </g>
-<!-- Node4 -->
-<g id="node4" class="node"><title>Node4</title>
+<!-- Node3 -->
+<g id="node4" class="node"><title>Node3</title>
 <g id="a_node4"><a xlink:href="fem_integrals_8h.html" target="_top" xlink:title="A library of functions for computing the discrete finite element formulations. ">
 <polygon fill="white" stroke="black" points="197.5,-0.5 197.5,-19.5 276.5,-19.5 276.5,-0.5 197.5,-0.5"/>
 <text text-anchor="middle" x="237" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">femIntegrals.h</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node4 -->
-<g id="edge3" class="edge"><title>Node1&#45;&gt;Node4</title>
+<!-- Node0&#45;&gt;Node3 -->
+<g id="edge3" class="edge"><title>Node0&#45;&gt;Node3</title>
 <path fill="none" stroke="midnightblue" d="M191.082,-56.083C199.171,-48.1409 211.195,-36.3354 220.91,-26.7973"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="223.403,-29.2545 228.087,-19.7511 218.499,-24.2595 223.403,-29.2545"/>
 </g>
-<!-- Node5 -->
-<g id="node5" class="node"><title>Node5</title>
+<!-- Node4 -->
+<g id="node5" class="node"><title>Node4</title>
 <g id="a_node5"><a xlink:href="superlu_wrappers_module_8h.html" target="_top" xlink:title="Python interface to superlu. ">
 <polygon fill="white" stroke="black" points="295,-0.5 295,-19.5 425,-19.5 425,-0.5 295,-0.5"/>
 <text text-anchor="middle" x="360" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">superluWrappersModule.h</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node5 -->
-<g id="edge4" class="edge"><title>Node1&#45;&gt;Node5</title>
+<!-- Node0&#45;&gt;Node4 -->
+<g id="edge4" class="edge"><title>Node0&#45;&gt;Node4</title>
 <path fill="none" stroke="midnightblue" d="M210.205,-56.4435C240.41,-47.2801 288.511,-32.6876 322.029,-22.5192"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="323.374,-25.7688 331.927,-19.5164 321.342,-19.0703 323.374,-25.7688"/>
 </g>

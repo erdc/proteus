@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,10 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus package" href="proteus.html" />
     <link rel="prev" title="Introduction" href="../index.html" />
 <meta charset='utf-8'>
@@ -54,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -148,14 +150,15 @@
 <li class="toctree-l4"><a class="reference internal" href="proteus.mprans.html#submodules">Submodules</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="proteus.tests.html">proteus.tests package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="proteus.tests.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.test_utils.html">proteus.test_utils package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="proteus.test_utils.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="proteus.html#submodules">Submodules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="proteus.ADR.html">proteus.ADR module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.AnalysisTools.html">proteus.AnalysisTools module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.AnalyticalSolutions.html">proteus.AnalyticalSolutions module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.Archiver.html">proteus.Archiver module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.AuxiliaryVariables.html">proteus.AuxiliaryVariables module</a></li>
@@ -186,10 +189,7 @@
 <li class="toctree-l3"><a class="reference internal" href="proteus.RefUtils.html">proteus.RefUtils module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.ShockCapturing.html">proteus.ShockCapturing module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.SimTools.html">proteus.SimTools module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="proteus.SpatialTools.html">proteus.SpatialTools module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="proteus.SpatialTools.html#example">Example</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="proteus.SpatialTools.html">proteus.SpatialTools module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.SplitOperator.html">proteus.SplitOperator module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.StepControl.html">proteus.StepControl module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.StupidHeap.html">proteus.StupidHeap module</a></li>
@@ -213,7 +213,6 @@
 <li class="toctree-l3"><a class="reference internal" href="proteus.iproteus.html">proteus.iproteus module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.subsurfaceTransportFunctions.html">proteus.subsurfaceTransportFunctions module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.testStuff.html">proteus.testStuff module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="proteus.util.html">proteus.util module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.version.html">proteus.version module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="proteus.waveFunctions.html">proteus.waveFunctions module</a></li>
 </ul>
@@ -236,8 +235,8 @@
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

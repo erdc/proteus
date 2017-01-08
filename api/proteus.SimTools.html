@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.SimTools module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.SimTools module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.SpatialTools module" href="proteus.SpatialTools.html" />
     <link rel="prev" title="proteus.ShockCapturing module" href="proteus.ShockCapturing.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -177,6 +178,8 @@
 calculating error, saving it to disk, etc.</p>
 <p>TO DO</p>
 <p>be able to append data to file correctly</p>
+<p>save flags for what to compute, how to compute it,
+and labels for storing things, etc</p>
 <dl class="attribute">
 <dt id="proteus.SimTools.SimulationProcessor.defaultFlags">
 <code class="descname">defaultFlags</code><em class="property"> = {'dataFile': 'results.dat', 'plotTimes': [None], 'errorTimes': [None], 'simulationNameProc': None, 'storeTimes': [None], 'simulationName': None, 'errorQuantities': [None], 'appendResults': False, 'errorNorms': [None], 'dataDir': '.', 'storeQuantities': [None], 'components': [0], 'plotOptions': {'vtk': {'on': False}, 'matlab': {'on': False}, 'gnuplot': {'on': False}, 'ensight': {'on': False}}, 'echo': False, 'plotQuantities': [None], 'errorTypes': [None]}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.defaultFlags" title="Permalink to this definition">¶</a></dt>
@@ -245,27 +248,37 @@ calculating error, saving it to disk, etc.</p>
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.processTimeLevel">
 <code class="descname">processTimeLevel</code><span class="sig-paren">(</span><em>mlvt</em>, <em>tsim=None</em>, <em>plotOffSet=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.processTimeLevel" title="Permalink to this definition">¶</a></dt>
-<dd><p>calculate desired quantities after each macro time step
-input :</p>
-<blockquote>
-<div>p    &#8212; problem definition
-n    &#8212; numerics definition
-mlvt &#8212; multilevel vector transport that holds the quantities to measure
-tsim &#8212; simulation time</div></blockquote>
-<p>TO DO:</p>
+<dd><p>calculate desired quantities after each macro time step</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) &#8211; </li>
+<li><strong>tsim</strong> (<em>simulation time</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.postprocess">
 <code class="descname">postprocess</code><span class="sig-paren">(</span><em>mlvt</em>, <em>tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.postprocess" title="Permalink to this definition">¶</a></dt>
-<dd><p>calculate desired quantities after simulation ends
-input :</p>
-<blockquote>
-<div>p    &#8212; problem definition
-n    &#8212; numerics definition
-mlvt &#8212; multilevel vector transport that holds the quantities to measure
-tsim &#8212; simulation time</div></blockquote>
-<p>TO DO:</p>
+<dd><p>calculate desired quantities after simulation ends</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) &#8211; </li>
+<li><strong>tsim</strong> (<em>simulation time</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -279,18 +292,19 @@ make sure can append if necessary?</p>
 <dl class="method">
 <dt id="proteus.SimTools.SimulationProcessor.stepProcessError">
 <code class="descname">stepProcessError</code><span class="sig-paren">(</span><em>mlvt</em>, <em>tsim</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.SimulationProcessor.stepProcessError" title="Permalink to this definition">¶</a></dt>
-<dd><p>calculate desired error quantities for a single step
-input :</p>
-<blockquote>
-<div>p    &#8212; problem definition
-n    &#8212; numerics definition
-mlvt &#8212; multilevel vector transport that holds the quantities to measure
-tsim &#8212; simulation time</div></blockquote>
-<dl class="docutils">
-<dt>TO DO:</dt>
-<dd>synchronize Norms L*error*AF[,2] functions used to calculate error
-setup to work in parallel</dd>
-</dl>
+<dd><p>calculate desired error quantities for a single step</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mlvt</strong> (<em>multilevel vector transport that holds the quantities to measure</em>) &#8211; </li>
+<li><strong>tsim</strong> (<em>simulation time</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -518,11 +532,7 @@ TODO : check format for 3d</p>
 <code class="descclassname">proteus.SimTools.</code><code class="descname">projectToFinestLevel</code><span class="sig-paren">(</span><em>mlTransport</em>, <em>level</em>, <em>tsim=0.0</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SimTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SimTools.projectToFinestLevel" title="Permalink to this definition">¶</a></dt>
 <dd><p>use multilevel transport prolongation to get fine grid information
 starting at level.</p>
-<p>returns quadrature dictionary of projected values on fine grid
-TODO</p>
-<blockquote>
-<div>appears broken (error values not consistent) 1/13/10
-set uproj to be size of level down to mfine rather than full hiearachy</div></blockquote>
+<p>returns quadrature dictionary of projected values on fine grid</p>
 </dd></dl>
 
 <dl class="function">
@@ -568,8 +578,8 @@ starting at level.</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

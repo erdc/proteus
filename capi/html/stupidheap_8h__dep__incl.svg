@@ -9,34 +9,34 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 80)">
 <title>stupidheap.h</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-80 201.5,-80 201.5,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node6 -->
+<g id="node1" class="node"><title>Node6</title>
 <polygon fill="#bfbfbf" stroke="black" points="66,-56.5 66,-75.5 138,-75.5 138,-56.5 66,-56.5"/>
 <text text-anchor="middle" x="102" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">stupidheap.h</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node7 -->
+<g id="node2" class="node"><title>Node7</title>
 <g id="a_node2"><a xlink:href="_f_m_mand_f_s_w_8cpp.html" target="_top" xlink:title="FMMandFSW.cpp">
 <polygon fill="white" stroke="black" points="0,-0.5 0,-19.5 96,-19.5 96,-0.5 0,-0.5"/>
 <text text-anchor="middle" x="48" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">FMMandFSW.cpp</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
-<g id="edge1" class="edge"><title>Node1&#45;&gt;Node2</title>
+<!-- Node6&#45;&gt;Node7 -->
+<g id="edge1" class="edge"><title>Node6&#45;&gt;Node7</title>
 <path fill="none" stroke="midnightblue" d="M86.0024,-49.0024C76.4329,-39.4329 64.6389,-27.6389 56.7511,-19.7511"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="83.537,-51.4868 93.083,-56.083 88.4868,-46.537 83.537,-51.4868"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node8 -->
+<g id="node3" class="node"><title>Node8</title>
 <g id="a_node3"><a xlink:href="stupidheap_8cpp.html" target="_top" xlink:title="stupidheap.cpp">
 <polygon fill="white" stroke="black" points="114.5,-0.5 114.5,-19.5 197.5,-19.5 197.5,-0.5 114.5,-0.5"/>
 <text text-anchor="middle" x="156" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">stupidheap.cpp</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node3 -->
-<g id="edge2" class="edge"><title>Node1&#45;&gt;Node3</title>
+<!-- Node6&#45;&gt;Node8 -->
+<g id="edge2" class="edge"><title>Node6&#45;&gt;Node8</title>
 <path fill="none" stroke="midnightblue" d="M117.998,-49.0024C127.567,-39.4329 139.361,-27.6389 147.249,-19.7511"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="115.513,-46.537 110.917,-56.083 120.463,-51.4868 115.513,-46.537"/>
 </g>

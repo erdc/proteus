@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.mprans.Dissipation module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.mprans.Dissipation module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus.mprans package" href="proteus.mprans.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.mprans.Kappa module" href="proteus.mprans.Kappa.html" />
     <link rel="prev" title="proteus.mprans.BoundaryConditions module" href="proteus.mprans.BoundaryConditions.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -184,131 +185,8 @@
 <dt id="proteus.mprans.Dissipation.Coefficients">
 <em class="property">class </em><code class="descclassname">proteus.mprans.Dissipation.</code><code class="descname">Coefficients</code><span class="sig-paren">(</span><em>LS_model=None, V_model=0, RD_model=None, kappa_model=None, ME_model=7, dissipation_model_flag=1, c_mu=0.09, c_1=0.126, c_2=1.92, c_e=0.07, sigma_e=1.29, rho_0=998.2, nu_0=1.004e-06, rho_1=1.205, nu_1=1.5e-05, g=[0.0, -9.8], nd=3, epsFact=0.01, useMetrics=0.0, sc_uref=1.0, sc_beta=1.0, default_kappa=0.001</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Dissipation.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Dissipation.Coefficients" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
-<dl class="docutils">
-<dt>Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11</dt>
-<dd>or k-omega (Wilcox 1998). Solves for just dissipation variable (epsilon, or omega) assuming kappa (intensity) computed independently and lagged in time</dd>
-</dl>
-<p>ar{
-ec v} = &lt;
-ec v&gt; Reynolds-averaged (mean) velocity</p>
-<p>ec v^{&#8216;}   = turbulent fluctuation 
-assume 
-ec v = &lt;
-ec v&gt; + 
-ec v^{&#8216;}, with &lt;
-ec v^{&#8216;}&gt; = 0</p>
-<p>Reynolds averaged NS equations</p>
-<p>deld ar{
-ec v} = 0</p>
-<p>pd{ar{
-ec v}}{t} + deld left(ar{
-ec v} outer ar{
-ec v}
-ight)</p>
-<blockquote>
-<div><ul class="simple">
-<li></li>
-</ul>
-</div></blockquote>
-<p>u deld         en ar{D} + 
-rac{1}{
-ho}grad ar p</p>
-<blockquote>
-<div><ul class="simple">
-<li></li>
-</ul>
-</div></blockquote>
-<p>rac{1}{rho}deld      en{R} = 0</p>
-<p>Reynolds stress term</p>
-<blockquote>
-<div>en R = -</div></blockquote>
-<p>ho &lt;
-ec v^{&#8216;}outer 
-ec v^{&#8216;}&gt;</p>
-<p>rac{1}{
-ho}     en{R} = 2 
-u_t ar{D} - 
-rac{2}{3}k        en{I}</p>
-<p>D_{ij}(
-ec v) = 
-rac{1}{2} left( pd{v_i}{x_j} + pd{v_j}{x_i})</p>
-<blockquote>
-<div>en D ar{       en D} = D(&lt;</div></blockquote>
-<p>ec v&gt;),     en D^{&#8216;} =      en D(
-ec v^{&#8216;})</p>
-<p>k-epsilon tranport equations</p>
-<p>pd{k}{t} + deld (kar{
-ec v})</p>
-<blockquote>
-<div><ul class="simple">
-<li>deldleft[left(</li>
-</ul>
-</div></blockquote>
-<p>rac{
-u_t}{sigma_k} + 
-u
-ight)grad k 
-ight]</p>
-<blockquote>
-<div><ul class="simple">
-<li>4</li>
-</ul>
-</div></blockquote>
-<p>u_t Pi_{D} + epsilon = 0</p>
-<p>pd{
-arepsilon}{t} + deld (
-arepsilon ar{
-ec v})</p>
-<blockquote>
-<div><ul class="simple">
-<li>deldleft[left(</li>
-</ul>
-</div></blockquote>
-<p>rac{
-u_t}{sigma_
-arepsilon} + 
-u
-ight)grad 
-arepsilon 
-ight]</p>
-<blockquote>
-<div><ul class="simple">
-<li>4c_1 k Pi_{D} + c_2</li>
-</ul>
-</div></blockquote>
-<p>rac{epsilon^2}{k} = 0</p>
-<p>k              &#8211; turbulent kinetic energy = &lt;
-ec v^{&#8216;}dot 
-ec v^{&#8216;}&gt;</p>
-<p>arepsilon    &#8211; turbulent dissipation rate = 4 
-u &lt;Pi_{D^{&#8216;}}&gt;</p>
-<p>u            &#8211; kinematic viscosity (mu/
-ho)</p>
-<p>u_t          &#8211; turbulent viscosity = c_mu 
-rac{k^2}{
-arepsilon}</p>
-<p>Pi_{   en A} = 
-rac{1}{2}tr(   en A^2) = 1/2   en Acdot       en A</p>
-<blockquote>
-<div>en D cdot      en D =</div></blockquote>
-<dl class="docutils">
-<dt>rac{1}{4}left[ (4 u_x^2 + 4 v_y^2 + </dt>
-<dd>1/2 (u_y + v_x)^2</dd>
-</dl>
-<p>ight]</p>
-<p>4 Pi_{D} = 2 
-rac{1}{4}left[ (4 u_x^2 + 4 v_y^2 +</p>
-<blockquote>
-<div>1/2 (u_y + v_x)^2</div></blockquote>
-<dl class="docutils">
-<dt>ight]</dt>
-<dd>= left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2</dd>
-</dl>
-<p>ight]</p>
-<p>sigma_k &#8211; Prandtl number pprox 1
-sigma_e &#8211; c_{mu}/c_e</p>
-<p>c_{mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{
-arepsilon} = 0.07</p>
+<p>Basic k-epsilon model for incompressible flow from Hutter etal
+Chaper 11 or k-omega (Wilcox 1998).</p>
 <dl class="method">
 <dt id="proteus.mprans.Dissipation.Coefficients.initializeMesh">
 <code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/Dissipation.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.Dissipation.Coefficients.initializeMesh" title="Permalink to this definition">¶</a></dt>
@@ -449,8 +327,8 @@ and the shape information at the quadrature points on global element boundaries.
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

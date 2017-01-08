@@ -9,102 +9,102 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 176)">
 <title>Graphical Class Hierarchy</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-176 430,-176 430,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node0 -->
+<g id="node1" class="node"><title>Node0</title>
 <g id="a_node1"><a xlink:href="class_f_m_m_eikonal_solver_base.html" target="_top" xlink:title="FMMEikonalSolverBase">
 <polygon fill="white" stroke="black" points="0,-95.5 0,-114.5 122,-114.5 122,-95.5 0,-95.5"/>
 <text text-anchor="middle" x="61" y="-102.5" font-family="Helvetica,sans-Serif" font-size="10.00">FMMEikonalSolverBase</text>
 </a>
 </g>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node1 -->
+<g id="node2" class="node"><title>Node1</title>
 <g id="a_node2"><a xlink:href="class_f_m_m_eikonal_solver1d.html" target="_top" xlink:title="FMMEikonalSolver1d">
 <polygon fill="white" stroke="black" points="164,-152.5 164,-171.5 274,-171.5 274,-152.5 164,-152.5"/>
 <text text-anchor="middle" x="219" y="-159.5" font-family="Helvetica,sans-Serif" font-size="10.00">FMMEikonalSolver1d</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
-<g id="edge1" class="edge"><title>Node1&#45;&gt;Node2</title>
+<!-- Node0&#45;&gt;Node1 -->
+<g id="edge1" class="edge"><title>Node0&#45;&gt;Node1</title>
 <path fill="none" stroke="midnightblue" d="M94.1594,-118.384C112.703,-125.936 136.527,-135.361 158,-143 167.162,-146.259 177.205,-149.549 186.41,-152.454"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="95.2979,-115.068 84.7175,-114.515 92.6435,-121.545 95.2979,-115.068"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node2 -->
+<g id="node3" class="node"><title>Node2</title>
 <g id="a_node3"><a xlink:href="class_f_m_m_eikonal_solver2d.html" target="_top" xlink:title="FMMEikonalSolver2d">
 <polygon fill="white" stroke="black" points="164,-114.5 164,-133.5 274,-133.5 274,-114.5 164,-114.5"/>
 <text text-anchor="middle" x="219" y="-121.5" font-family="Helvetica,sans-Serif" font-size="10.00">FMMEikonalSolver2d</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node3 -->
-<g id="edge2" class="edge"><title>Node1&#45;&gt;Node3</title>
+<!-- Node0&#45;&gt;Node2 -->
+<g id="edge2" class="edge"><title>Node0&#45;&gt;Node2</title>
 <path fill="none" stroke="midnightblue" d="M132.391,-113.573C142.988,-114.864 153.775,-116.178 163.959,-117.418"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="132.664,-110.081 122.314,-112.346 131.817,-117.029 132.664,-110.081"/>
 </g>
-<!-- Node4 -->
-<g id="node4" class="node"><title>Node4</title>
+<!-- Node3 -->
+<g id="node4" class="node"><title>Node3</title>
 <g id="a_node4"><a xlink:href="class_f_m_m_eikonal_solver3d.html" target="_top" xlink:title="FMMEikonalSolver3d">
 <polygon fill="white" stroke="black" points="164,-76.5 164,-95.5 274,-95.5 274,-76.5 164,-76.5"/>
 <text text-anchor="middle" x="219" y="-83.5" font-family="Helvetica,sans-Serif" font-size="10.00">FMMEikonalSolver3d</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node4 -->
-<g id="edge3" class="edge"><title>Node1&#45;&gt;Node4</title>
+<!-- Node0&#45;&gt;Node3 -->
+<g id="edge3" class="edge"><title>Node0&#45;&gt;Node3</title>
 <path fill="none" stroke="midnightblue" d="M132.391,-96.4268C142.988,-95.136 153.775,-93.8223 163.959,-92.582"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="131.817,-92.9707 122.314,-97.6541 132.664,-99.9193 131.817,-92.9707"/>
 </g>
-<!-- Node5 -->
-<g id="node5" class="node"><title>Node5</title>
+<!-- Node4 -->
+<g id="node5" class="node"><title>Node4</title>
 <g id="a_node5"><a xlink:href="class_f_s_w_eikonal_solver_base.html" target="_top" xlink:title="FSWEikonalSolverBase">
 <polygon fill="white" stroke="black" points="158,-38.5 158,-57.5 280,-57.5 280,-38.5 158,-38.5"/>
 <text text-anchor="middle" x="219" y="-45.5" font-family="Helvetica,sans-Serif" font-size="10.00">FSWEikonalSolverBase</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node5 -->
-<g id="edge4" class="edge"><title>Node1&#45;&gt;Node5</title>
+<!-- Node0&#45;&gt;Node4 -->
+<g id="edge4" class="edge"><title>Node0&#45;&gt;Node4</title>
 <path fill="none" stroke="midnightblue" d="M94.1594,-91.6162C112.703,-84.0639 136.527,-74.6391 158,-67 167.162,-63.7406 177.205,-60.451 186.41,-57.5462"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="92.6435,-88.4548 84.7175,-95.4855 95.2979,-94.9321 92.6435,-88.4548"/>
 </g>
-<!-- Node6 -->
-<g id="node6" class="node"><title>Node6</title>
+<!-- Node5 -->
+<g id="node6" class="node"><title>Node5</title>
 <g id="a_node6"><a xlink:href="class_f_s_w_eikonal_solver1d.html" target="_top" xlink:title="FSWEikonalSolver1d">
 <polygon fill="white" stroke="black" points="316,-76.5 316,-95.5 426,-95.5 426,-76.5 316,-76.5"/>
 <text text-anchor="middle" x="371" y="-83.5" font-family="Helvetica,sans-Serif" font-size="10.00">FSWEikonalSolver1d</text>
 </a>
 </g>
 </g>
-<!-- Node5&#45;&gt;Node6 -->
-<g id="edge5" class="edge"><title>Node5&#45;&gt;Node6</title>
+<!-- Node4&#45;&gt;Node5 -->
+<g id="edge5" class="edge"><title>Node4&#45;&gt;Node5</title>
 <path fill="none" stroke="midnightblue" d="M267.811,-60.1121C288.702,-65.4044 312.847,-71.5213 332.421,-76.4799"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="268.405,-56.652 257.851,-57.589 266.686,-63.4377 268.405,-56.652"/>
 </g>
-<!-- Node7 -->
-<g id="node7" class="node"><title>Node7</title>
+<!-- Node6 -->
+<g id="node7" class="node"><title>Node6</title>
 <g id="a_node7"><a xlink:href="class_f_s_w_eikonal_solver2d.html" target="_top" xlink:title="FSWEikonalSolver2d">
 <polygon fill="white" stroke="black" points="316,-38.5 316,-57.5 426,-57.5 426,-38.5 316,-38.5"/>
 <text text-anchor="middle" x="371" y="-45.5" font-family="Helvetica,sans-Serif" font-size="10.00">FSWEikonalSolver2d</text>
 </a>
 </g>
 </g>
-<!-- Node5&#45;&gt;Node7 -->
-<g id="edge6" class="edge"><title>Node5&#45;&gt;Node7</title>
+<!-- Node4&#45;&gt;Node6 -->
+<g id="edge6" class="edge"><title>Node4&#45;&gt;Node6</title>
 <path fill="none" stroke="midnightblue" d="M290.422,-48C298.902,-48 307.46,-48 315.661,-48"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="290.146,-44.5001 280.146,-48 290.146,-51.5001 290.146,-44.5001"/>
 </g>
-<!-- Node8 -->
-<g id="node8" class="node"><title>Node8</title>
+<!-- Node7 -->
+<g id="node8" class="node"><title>Node7</title>
 <g id="a_node8"><a xlink:href="class_f_s_w_eikonal_solver3d.html" target="_top" xlink:title="FSWEikonalSolver3d">
 <polygon fill="white" stroke="black" points="316,-0.5 316,-19.5 426,-19.5 426,-0.5 316,-0.5"/>
 <text text-anchor="middle" x="371" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">FSWEikonalSolver3d</text>
 </a>
 </g>
 </g>
-<!-- Node5&#45;&gt;Node8 -->
-<g id="edge7" class="edge"><title>Node5&#45;&gt;Node8</title>
+<!-- Node4&#45;&gt;Node7 -->
+<g id="edge7" class="edge"><title>Node4&#45;&gt;Node7</title>
 <path fill="none" stroke="midnightblue" d="M267.811,-35.8879C288.702,-30.5956 312.847,-24.4787 332.421,-19.5201"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="266.686,-32.5623 257.851,-38.411 268.405,-39.348 266.686,-32.5623"/>
 </g>

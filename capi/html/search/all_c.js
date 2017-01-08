@@ -11,6 +11,8 @@ var searchData=
   ['lambdaw',['lambdaw',['../class_fractional_flow_variables.html#a293c0ca40a7b62e288932ab56a3100c6',1,'FractionalFlowVariables']]],
   ['lapackwrappers',['lapackWrappers',['../group__lapack_wrappers.html',1,'']]],
   ['lapackwrappersmodule_2ec',['lapackWrappersModule.c',['../lapack_wrappers_module_8c.html',1,'']]],
+  ['laplace_5fevaluate2d',['Laplace_Evaluate2D',['../transport_coefficients_8c.html#a830f7bd853b8861e820b273bc3b2923d',1,'transportCoefficients.c']]],
+  ['laplace_5fevaluate3d',['Laplace_Evaluate3D',['../transport_coefficients_8c.html#a6795346d46c64c46db8f2efecf9a969d',1,'transportCoefficients.c']]],
   ['lastindex',['lastIndex',['../class_psk_spline.html#acff855f25f9b3a050b14c178ceacde2e',1,'PskSpline']]],
   ['left',['left',['../class_element_neighbors.html#a12731f54d53f40632a2c5257ac71d08b',1,'ElementNeighbors']]],
   ['left_5febn_5felement',['left_ebN_element',['../class_element_neighbors.html#ab6447ca674d902db1ba8a0a4b9f1e55b',1,'ElementNeighbors']]],

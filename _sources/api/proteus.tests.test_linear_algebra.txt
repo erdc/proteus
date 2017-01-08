@@ -1,7 +1,0 @@
-proteus.tests.test_linear_algebra module
-========================================
-
-.. automodule:: proteus.tests.test_linear_algebra
-    :members:
-    :undoc-members:
-    :show-inheritance:

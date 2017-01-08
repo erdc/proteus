@@ -9,102 +9,102 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 136)">
 <title>csmoothersModule.c</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-136 669,-136 669,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node0 -->
+<g id="node1" class="node"><title>Node0</title>
 <polygon fill="#bfbfbf" stroke="black" points="236,-112.5 236,-131.5 343,-131.5 343,-112.5 236,-112.5"/>
 <text text-anchor="middle" x="289.5" y="-119.5" font-family="Helvetica,sans-Serif" font-size="10.00">csmoothersModule.c</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node1 -->
+<g id="node2" class="node"><title>Node1</title>
 <polygon fill="white" stroke="#bfbfbf" points="335.5,-0.5 335.5,-19.5 391.5,-19.5 391.5,-0.5 335.5,-0.5"/>
 <text text-anchor="middle" x="363.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">Python.h</text>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
-<g id="edge1" class="edge"><title>Node1&#45;&gt;Node2</title>
+<!-- Node0&#45;&gt;Node1 -->
+<g id="edge1" class="edge"><title>Node0&#45;&gt;Node1</title>
 <path fill="none" stroke="midnightblue" d="M235.911,-118.136C173.939,-112.84 84.6282,-97.8911 119.5,-56 145.226,-25.0956 263.205,-15.3338 325.194,-12.3134"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="325.53,-15.8019 335.362,-11.8541 325.214,-8.80907 325.53,-15.8019"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node2 -->
+<g id="node3" class="node"><title>Node2</title>
 <g id="a_node3"><a xlink:href="smoothers_8h.html" target="_top" xlink:title="C implementations of multilevel smoother algorithms. ">
 <polygon fill="white" stroke="black" points="0,-56.5 0,-75.5 71,-75.5 71,-56.5 0,-56.5"/>
 <text text-anchor="middle" x="35.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">smoothers.h</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node3 -->
-<g id="edge2" class="edge"><title>Node1&#45;&gt;Node3</title>
+<!-- Node0&#45;&gt;Node2 -->
+<g id="edge2" class="edge"><title>Node0&#45;&gt;Node2</title>
 <path fill="none" stroke="midnightblue" d="M249.253,-112.444C203.414,-102.698 128.692,-86.8124 80.8348,-76.6381"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="81.5598,-73.2141 71.0505,-74.558 80.1041,-80.0611 81.5598,-73.2141"/>
 </g>
-<!-- Node5 -->
-<g id="node5" class="node"><title>Node5</title>
+<!-- Node4 -->
+<g id="node5" class="node"><title>Node4</title>
 <polygon fill="white" stroke="#bfbfbf" points="128,-56.5 128,-75.5 233,-75.5 233,-56.5 128,-56.5"/>
 <text text-anchor="middle" x="180.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">numpy/arrayobject.h</text>
 </g>
-<!-- Node1&#45;&gt;Node5 -->
-<g id="edge4" class="edge"><title>Node1&#45;&gt;Node5</title>
+<!-- Node0&#45;&gt;Node4 -->
+<g id="edge4" class="edge"><title>Node0&#45;&gt;Node4</title>
 <path fill="none" stroke="midnightblue" d="M271.987,-112.324C254.428,-103.625 227.169,-90.1202 206.969,-80.113"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="208.484,-76.9575 197.969,-75.6545 205.376,-83.23 208.484,-76.9575"/>
 </g>
-<!-- Node6 -->
-<g id="node6" class="node"><title>Node6</title>
+<!-- Node5 -->
+<g id="node6" class="node"><title>Node5</title>
 <polygon fill="white" stroke="#bfbfbf" points="251.5,-56.5 251.5,-75.5 327.5,-75.5 327.5,-56.5 251.5,-56.5"/>
 <text text-anchor="middle" x="289.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">supermatrix.h</text>
 </g>
-<!-- Node1&#45;&gt;Node6 -->
-<g id="edge5" class="edge"><title>Node1&#45;&gt;Node6</title>
+<!-- Node0&#45;&gt;Node5 -->
+<g id="edge5" class="edge"><title>Node0&#45;&gt;Node5</title>
 <path fill="none" stroke="midnightblue" d="M289.5,-112.083C289.5,-105.006 289.5,-94.8611 289.5,-85.9865"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="293,-85.751 289.5,-75.7511 286,-85.7511 293,-85.751"/>
 </g>
-<!-- Node7 -->
-<g id="node7" class="node"><title>Node7</title>
+<!-- Node6 -->
+<g id="node7" class="node"><title>Node6</title>
 <polygon fill="white" stroke="#bfbfbf" points="345.5,-56.5 345.5,-75.5 391.5,-75.5 391.5,-56.5 345.5,-56.5"/>
 <text text-anchor="middle" x="368.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">stdio.h</text>
 </g>
-<!-- Node1&#45;&gt;Node7 -->
-<g id="edge6" class="edge"><title>Node1&#45;&gt;Node7</title>
+<!-- Node0&#45;&gt;Node6 -->
+<g id="edge6" class="edge"><title>Node0&#45;&gt;Node6</title>
 <path fill="none" stroke="midnightblue" d="M302.193,-112.324C314.401,-103.979 333.078,-91.2122 347.503,-81.3524"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="349.558,-84.1871 355.839,-75.6545 345.608,-78.4082 349.558,-84.1871"/>
 </g>
-<!-- Node8 -->
-<g id="node8" class="node"><title>Node8</title>
+<!-- Node7 -->
+<g id="node8" class="node"><title>Node7</title>
 <g id="a_node8"><a xlink:href="superlu_wrappers_module_8h.html" target="_top" xlink:title="Python interface to superlu. ">
 <polygon fill="white" stroke="black" points="409.5,-56.5 409.5,-75.5 539.5,-75.5 539.5,-56.5 409.5,-56.5"/>
 <text text-anchor="middle" x="474.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">superluWrappersModule.h</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node8 -->
-<g id="edge7" class="edge"><title>Node1&#45;&gt;Node8</title>
+<!-- Node0&#45;&gt;Node7 -->
+<g id="edge7" class="edge"><title>Node0&#45;&gt;Node7</title>
 <path fill="none" stroke="midnightblue" d="M318.814,-112.444C350.342,-103.241 400.631,-88.5617 435.486,-78.3879"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="436.705,-81.6783 445.323,-75.5164 434.743,-74.9587 436.705,-81.6783"/>
 </g>
-<!-- Node9 -->
-<g id="node9" class="node"><title>Node9</title>
+<!-- Node8 -->
+<g id="node9" class="node"><title>Node8</title>
 <g id="a_node9"><a xlink:href="csmoothers_module_8h.html" target="_top" xlink:title="The python interface to smoothers. ">
 <polygon fill="white" stroke="black" points="558,-56.5 558,-75.5 665,-75.5 665,-56.5 558,-56.5"/>
 <text text-anchor="middle" x="611.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">csmoothersModule.h</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node9 -->
-<g id="edge8" class="edge"><title>Node1&#45;&gt;Node9</title>
+<!-- Node0&#45;&gt;Node8 -->
+<g id="edge8" class="edge"><title>Node0&#45;&gt;Node8</title>
 <path fill="none" stroke="midnightblue" d="M340.522,-112.444C397.518,-102.885 489.739,-87.4195 550.5,-77.2298"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="551.433,-80.6222 560.717,-75.5164 550.276,-73.7186 551.433,-80.6222"/>
 </g>
-<!-- Node4 -->
-<g id="node4" class="node"><title>Node4</title>
+<!-- Node3 -->
+<g id="node4" class="node"><title>Node3</title>
 <polygon fill="white" stroke="#bfbfbf" points="2,-0.5 2,-19.5 69,-19.5 69,-0.5 2,-0.5"/>
 <text text-anchor="middle" x="35.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">slu_ddefs.h</text>
 </g>
-<!-- Node3&#45;&gt;Node4 -->
-<g id="edge3" class="edge"><title>Node3&#45;&gt;Node4</title>
+<!-- Node2&#45;&gt;Node3 -->
+<g id="edge3" class="edge"><title>Node2&#45;&gt;Node3</title>
 <path fill="none" stroke="midnightblue" d="M35.5,-56.083C35.5,-49.0059 35.5,-38.8611 35.5,-29.9865"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="39.0001,-29.751 35.5,-19.7511 32.0001,-29.7511 39.0001,-29.751"/>
 </g>
-<!-- Node9&#45;&gt;Node2 -->
-<g id="edge9" class="edge"><title>Node9&#45;&gt;Node2</title>
+<!-- Node8&#45;&gt;Node1 -->
+<g id="edge9" class="edge"><title>Node8&#45;&gt;Node1</title>
 <path fill="none" stroke="midnightblue" d="M572.204,-56.4435C525.476,-46.269 448.008,-29.401 401.747,-19.3279"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="402.329,-15.8727 391.813,-17.1649 400.839,-22.7124 402.329,-15.8727"/>
 </g>

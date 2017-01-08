@@ -9,31 +9,31 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 80)">
 <title>shockCapturing.c</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-80 162,-80 162,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node0 -->
+<g id="node1" class="node"><title>Node0</title>
 <polygon fill="#bfbfbf" stroke="black" points="21,-56.5 21,-75.5 114,-75.5 114,-56.5 21,-56.5"/>
 <text text-anchor="middle" x="67.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">shockCapturing.c</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node1 -->
+<g id="node2" class="node"><title>Node1</title>
 <polygon fill="white" stroke="#bfbfbf" points="0,-0.5 0,-19.5 47,-19.5 47,-0.5 0,-0.5"/>
 <text text-anchor="middle" x="23.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">math.h</text>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
-<g id="edge1" class="edge"><title>Node1&#45;&gt;Node2</title>
+<!-- Node0&#45;&gt;Node1 -->
+<g id="edge1" class="edge"><title>Node0&#45;&gt;Node1</title>
 <path fill="none" stroke="midnightblue" d="M60.2343,-56.083C53.9552,-48.3768 44.7124,-37.0333 37.0692,-27.6531"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="39.6606,-25.2926 30.6305,-19.7511 34.2339,-29.7143 39.6606,-25.2926"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node2 -->
+<g id="node3" class="node"><title>Node2</title>
 <g id="a_node3"><a xlink:href="shock_capturing_8h.html" target="_top" xlink:title="C implementations of shock capturing diffusion calculations. ">
 <polygon fill="white" stroke="black" points="65,-0.5 65,-19.5 158,-19.5 158,-0.5 65,-0.5"/>
 <text text-anchor="middle" x="111.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">shockCapturing.h</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node3 -->
-<g id="edge2" class="edge"><title>Node1&#45;&gt;Node3</title>
+<!-- Node0&#45;&gt;Node2 -->
+<g id="edge2" class="edge"><title>Node0&#45;&gt;Node2</title>
 <path fill="none" stroke="midnightblue" d="M74.7657,-56.083C81.0448,-48.3768 90.2876,-37.0333 97.9308,-27.6531"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="100.766,-29.7143 104.369,-19.7511 95.3394,-25.2926 100.766,-29.7143"/>
 </g>

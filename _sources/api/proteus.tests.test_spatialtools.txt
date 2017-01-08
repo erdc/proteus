@@ -1,7 +1,0 @@
-proteus.tests.test_spatialtools module
-======================================
-
-.. automodule:: proteus.tests.test_spatialtools
-    :members:
-    :undoc-members:
-    :show-inheritance:

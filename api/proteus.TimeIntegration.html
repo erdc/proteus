@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.TimeIntegration module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.TimeIntegration module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.Transport module" href="proteus.Transport.html" />
     <link rel="prev" title="proteus.SubsurfaceTransportCoefficients module" href="proteus.SubsurfaceTransportCoefficients.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -163,6 +164,8 @@ method and results in the steady state scalar
 transport equation:</p>
 <p>deld ( f - a grad phi) + r = 0</p>
 <p>NoIntegration is an alias for this class.</p>
+<p>Set flags that indicate that all terms
+are implicit.</p>
 <dl class="method">
 <dt id="proteus.TimeIntegration.TI_base.calculateU">
 <code class="descname">calculateU</code><span class="sig-paren">(</span><em>u</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.TI_base.calculateU" title="Permalink to this definition">¶</a></dt>
@@ -831,27 +834,24 @@ This routine now just computes the error estimate ...</p>
 <dl class="method">
 <dt id="proteus.TimeIntegration.VBDF.computeErrorEstimate">
 <code class="descname">computeErrorEstimate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.VBDF.computeErrorEstimate" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div>calculate</div></blockquote>
-<dl class="docutils">
-<dt>ec{e}^{n+1}</dt>
-<dd><p class="first">depending on order of approximation
-To be consistent, this must be called after step taken but before
-update time history</p>
-<p class="last">Initially, use (</p>
-</dd>
-</dl>
-<p>ec y^{n+1}-
-ec y^{n+1,p})/2 for first order</p>
+<dd><p>calculate :math:`
+ec{e}^{n+1}`</p>
 <blockquote>
-<div>and
-r/(1+r)(</div></blockquote>
+<div><p>depending on order of approximation To be consistent, this
+must be called after step taken but before update time history</p>
+<p>Initially, use</p>
+<div class="math">
+\[(\]</div>
+</div></blockquote>
+<p>ec y^{n+1}-
+ec y^{n+1,p})/2</p>
+<blockquote>
+<div>for first order and</div></blockquote>
 <p>ec y^{n+1}-(1+r)
 ec y^{n}+r
-ec y^{n-1}) for second order</p>
+ec y^{n-1})</p>
 <blockquote>
-<div>sets variables
-error_estimate</div></blockquote>
+<div>for second order.</div></blockquote>
 </dd></dl>
 
 <dl class="method">
@@ -926,16 +926,18 @@ stages so t^{n+1} at the last stage &#8211;&gt; t^n for the next time step</p>
 <dt id="proteus.TimeIntegration.ExplicitRK_base.setCoefficients">
 <code class="descname">setCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ExplicitRK_base.setCoefficients" title="Permalink to this definition">¶</a></dt>
 <dd><p>set alpha,beta, d for</p>
-<p>u^0 = u^n
-u^l = sum_{k=0}^{l-1}lpha_{l,k}u^k + eta_{l,k} Delta t L(u^{k},t^n + d_{k} Delta t^n)
-u^{n+1} = u^{m}</p>
-<p>must be implemented in derived class
-Note that</p>
-<blockquote>
-<div>alpha[l,k] &#8211;&gt;  alpha_{l+1,k}
-beta[l,k]  &#8211;&gt;  beta_{l+1,k}
-dcoefs[k]  &#8211;&gt;  d_{k+1} because of the whole cachingdelayed eval deal</div></blockquote>
-<p>second index (k) is actual level</p>
+<div class="math">
+\[u^0 = u^n
+u^l = \sum_{k=0}^{l-1}lpha_{l,k}u^k + eta_{l,k} \Delta t L(u^{k},t^n + d_{k} \Delta t^n)
+u^{n+1} = u^{m}\]</div>
+<p>must be implemented in derived class</p>
+<p>Note that</p>
+<div class="math">
+\[alpha[l,k] --&gt;  alpha_{l+1,k}
+beta[l,k]  --&gt;  beta_{l+1,k}
+dcoefs[k]  --&gt;  d_{k+1}\]</div>
+<p>because of the whole cachingdelayed eval deal second index
+(k) is actual level</p>
 </dd></dl>
 
 <dl class="method">
@@ -1060,29 +1062,26 @@ has been loaded into lstage+1</p>
 <blockquote>
 <div><p>implementation of Explicit RK schemes for ODE that are SSP for
 linear operators (aka) spatial discretizations in</p>
-<p>od{</p>
+<div class="math">
+\[\od{\]</div>
 </div></blockquote>
 <p>ec y}{t} = mat{L}
 ec y</p>
 <blockquote>
 <div><p>See Gottlieb, Shu, Tadmor siam review article and notes</p>
 <p>Their formulation for this scheme is</p>
-<blockquote>
-<div><p>u^0 = u^n
-u^l = u^{l-1} + Delta t L(u^{l-1}) l = 1,...,m-1
-u^m = sum_{k=0}^{l-1}lpha_{m,k}u^k +</p>
-<blockquote>
-<div>lpha_{m,m-1} Delta t L(u^{m-1})</div></blockquote>
-<p>u^{n+1} = u^m</p>
-<dl class="docutils">
-<dt>so lpha_{l,l-1} = 1, eta_{l,l-1} = 1.0  l &lt; m,</dt>
-<dd>eta_{m,m-1}  = lph_{m,m-1}</dd>
-<dt>Apparently,</dt>
-<dd>d_{l} = l Delta t l &lt; m,
-d_m = 1.0</dd>
-</dl>
+<div class="math">
+\[ \begin{align}\begin{aligned}u^0 = u^n
+u^l = u^{l-1} + \Delta t L(u^{l-1}) l = 1,...,m-1
+u^m = \sum_{k=0}^{l-1}lpha_{m,k}u^k +
+      lpha_{m,m-1} \Delta t L(u^{m-1})
+u^{n+1} = u^m\\so lpha_{l,l-1} = 1, eta_{l,l-1} = 1.0  l &lt; m,
+   eta_{m,m-1}  = lph_{m,m-1}\end{aligned}\end{align} \]</div>
+<p>Apparently,</p>
+<div class="math">
+\[d_{l} = l \Delta t l &lt; m,
+d_m = 1.0\]</div>
 <p>which doesn&#8217;t make a lot of sense for time dependent problems</p>
-</div></blockquote>
 </div></blockquote>
 <dl class="method">
 <dt id="proteus.TimeIntegration.LinearSSPRKintegration.setCoefficients">
@@ -1117,42 +1116,46 @@ dcoefs[k]  &#8211;&gt;  d_{k+1} because of the whole cachingdelayed eval deal</d
 <dt id="proteus.TimeIntegration.SSPRKPIintegration">
 <em class="property">class </em><code class="descclassname">proteus.TimeIntegration.</code><code class="descname">SSPRKPIintegration</code><span class="sig-paren">(</span><em>transport</em>, <em>order=1</em>, <em>runCFL=0.1</em>, <em>limiterType=None</em>, <em>usingSSPRKNewton=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SSPRKPIintegration" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.TimeIntegration.ExplicitRK_base" title="proteus.TimeIntegration.ExplicitRK_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TimeIntegration.ExplicitRK_base</span></code></a></p>
-<blockquote>
-<div><p>So called SSP RK integration with limiting step at end of each
-phase This one holds the original TVD RK schemes up to 3rd order
+<dl class="docutils">
+<dt>So called SSP RK integration with limiting step at end of each</dt>
+<dd><p class="first">phase This one holds the original TVD RK schemes up to 3rd order
 1st order is Forward Euler</p>
-<p>2nd order
-u^1 = u^n + Delta t L(u^n)
-u^2 = 0.5(u^n + u^1) + 0.5Delta t L(u^1,t^n + Delta t^n), same stage values etc linear SSPRK</p>
-<p>3rd order
-u^1 =  u^n + Delta t L(u^n,t^n)
-u^2 = 0.75 u^n + 0.25u^1  + 0.25Delta t L(u^1,t^n + Delta t^n),
-u^3 = 1/3 u^n + 2/3 u^2 + 2/3 Delta t L(u^2,t^n + 0.5Delta t^n)</p>
-<p>generic formula is
-u^0 = u^n
-u^l = sum_{k=0}^{l-1}lpha_{l,k}u^k + eta_l Delta t L(u^{l-1},t^n + d_{l-1} Delta t^n)
-u^{n+1} = u^{m}</p>
-<p>so beta_l &#8211;&gt; beta_{l,k-1} in our basic framework
-Try to put this into Rothe paradigm with linear implicit mass matrix evaluation
-by saying at stage l</p>
-<p>m_t pprox</p>
-</div></blockquote>
+<p>2nd order</p>
+<div class="math">
+\[u^1 = u^n + \Delta t L(u^n)
+u^2 = 0.5(u^n + u^1) + 0.5\Delta t L(u^1,t^n + \Delta t^n), same stage values etc linear SSPRK\]</div>
+<p>3rd order</p>
+<div class="math">
+\[u^1 =  u^n + \Delta t L(u^n,t^n)
+u^2 = 0.75 u^n + 0.25u^1  + 0.25\Delta t L(u^1,t^n + \Delta t^n),
+u^3 = 1/3 u^n + 2/3 u^2 + 2/3 \Delta t L(u^2,t^n + 0.5\Delta t^n)\]</div>
+<p>generic formula is</p>
+<div class="math">
+\[u^0 = u^n
+u^l = \sum_{k=0}^{l-1}lpha_{l,k}u^k + eta_l \Delta t L(u^{l-1},t^n + d_{l-1} \Delta t^n)
+u^{n+1} = u^{m}\]</div>
+<p>so <span class="math">\(beta_l --&gt; beta_{l,k-1}\)</span> in our basic framework</p>
+<p>Try to put this into Rothe paradigm with linear implicit mass matrix
+evaluation by saying at stage l</p>
+<div class="last math">
+\[m_t pprox\]</div>
+</dd>
+</dl>
 <p>rac{u^l - sum_{k=0}^{l-1}lpha_{l,k}u^k}{Delta t}</p>
 <blockquote>
 <div><p>spatial residual &#8211;&gt; spatial residual * beta_l</p>
-<p>and solve system for u^l</p>
+<p>and solve system for <span class="math">\(u^l\)</span></p>
 <p>The limiting right now assumes same space for each component</p>
 </div></blockquote>
 <dl class="method">
 <dt id="proteus.TimeIntegration.SSPRKPIintegration.setCoefficients">
 <code class="descname">setCoefficients</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.SSPRKPIintegration.setCoefficients" title="Permalink to this definition">¶</a></dt>
 <dd><p>See Cockburn and Hou and Shu</p>
-<p>For TVD schemes beta_{l,k} = 0  k &lt; l-1
-Note that</p>
-<blockquote>
-<div>alpha[l,k] &#8211;&gt;  alpha_{l+1,k}
+<p>For TVD schemes beta_{l,k} = 0  k &lt; l-1</p>
+<p>Note that</p>
+<p>alpha[l,k] &#8211;&gt;  alpha_{l+1,k}
 beta[l,k]  &#8211;&gt;  beta_{l+1,k}
-dcoefs[k]  &#8211;&gt;  d_{k+1} because of the whole cachingdelayed eval deal</div></blockquote>
+dcoefs[k]  &#8211;&gt;  d_{k+1} because of the whole cachingdelayed eval deal</p>
 </dd></dl>
 
 <dl class="method">
@@ -1178,6 +1181,7 @@ lstage here is last stage completed</p>
 just uses linear SSP RK coefficients so not really correct NL SSP (TVD) RK
 for 3rd order (or higher)</p>
 <p>Way limiter right now assumes same space for everything</p>
+<p>Later on, pass in limiter object I guess</p>
 <dl class="method">
 <dt id="proteus.TimeIntegration.LinearSSPRKPIintegration.updateStage">
 <code class="descname">updateStage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.LinearSSPRKPIintegration.updateStage" title="Permalink to this definition">¶</a></dt>
@@ -1320,27 +1324,7 @@ Don&#8217;t overwrite solution if tag == 1</p>
 <dd><dl class="method">
 <dt id="proteus.TimeIntegration.UnstructuredLimiter_base.initializeMeshInfo">
 <code class="descname">initializeMeshInfo</code><span class="sig-paren">(</span><em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.UnstructuredLimiter_base.initializeMeshInfo" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><dl class="docutils">
-<dt>elementNeighborShapeGradients stores local gradients for simpleces formed from</dt>
-<dd>an element&#8217;s barycenter and neighboring element baryceners</dd>
-<dt>elementNeighborShapeGradients[eN,i] &lt;&#8212; local simplex formed from</dt>
-<dd>(ar{</dd>
-</dl>
-</div></blockquote>
-<p>ec x}_{eN},ar{
-ec x}^i_{eN},ar{
-ec x}^{i+1}_{eN})</p>
-<blockquote>
-<div>where i goes over local numbering of faces, ar{</div></blockquote>
-<dl class="docutils">
-<dt>ec x}^{i}_{eN} is the barycenter</dt>
-<dd><blockquote class="first">
-<div>of the neighbor across from face i.</div></blockquote>
-<p class="last">Local numbering for the neighboring simplex is always in that order</p>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.TimeIntegration.UnstructuredLimiter_base.setFromOptions">
@@ -1544,17 +1528,12 @@ Don&#8217;t overwrite solution if tag == 1</p>
 <code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP1Lagrange1d_Sw.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply limiting procedure directly using dofs using standard approach
 Then go through and eliminate negative values of water height</p>
-<dl class="docutils">
-<dt>for cells that have average (h_bar &lt; h_eps)</dt>
-<dd><p class="first">if average height is negative, then zero
-if both vertices are positive leave alone (could kill slope)
-if one of the vertices is negative</p>
-<blockquote>
-<div>choose slope so that this value is exactly zero
-zero discharge at this vertex</div></blockquote>
-<p class="last">May need to add additional step that limits discharge where h is much less than h_eps</p>
-</dd>
-</dl>
+<p>for cells that have average (h_bar &lt; h_eps)</p>
+<p>if average height is negative, then zero</p>
+<p>if both vertices are positive leave alone (could kill slope)</p>
+<p>if one of the vertices is negative choose slope so that this value is exactly zero</p>
+<p>zero discharge at this vertex</p>
+<p>May need to add additional step that limits discharge where h is much less than h_eps</p>
 </dd></dl>
 
 <dl class="method">
@@ -1583,17 +1562,13 @@ zero discharge at this vertex</div></blockquote>
 <code class="descname">applySlopeLimiting</code><span class="sig-paren">(</span><em>uIn</em>, <em>uDofOut</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.DGlimiterP2Lagrange1d_Sw.applySlopeLimiting" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply limiting procedure directly using dofs using standard approach
 Then go through and eliminate negative values of water height</p>
-<dl class="docutils">
-<dt>for cells that have average (h_bar &lt; h_eps)</dt>
-<dd><p class="first">if average height is negative, then zero
-if both vertices are positive leave alone (could kill slope)
-if one of the vertices is negative</p>
-<blockquote>
-<div>choose slope so that this value is exactly zero
-zero discharge at this vertex</div></blockquote>
-<p class="last">May need to add additional step that limits discharge where h is much less than h_eps</p>
-</dd>
-</dl>
+<p>for cells that have average (h_bar &lt; h_eps)</p>
+<p>if average height is negative, then zero</p>
+<p>if both vertices are positive leave alone (could kill slope)</p>
+<p>if one of the vertices is negative, choose slope so that this
+value is exactly zero, zero discharge at this vertex</p>
+<p>May need to add additional step that limits discharge where h
+is much less than h_eps</p>
 </dd></dl>
 
 <dl class="method">
@@ -1664,6 +1639,10 @@ zero discharge at this vertex</div></blockquote>
 <dd><p>class that is responsible for basic process of integrating a problem
 forward in time given a VectorTranport Problem, Nonlinear Solver,
 and a Time Integration method</p>
+<p>mlvTran  &#8212; multilevel vector transport object for system being integrated
+mlNL     &#8212; multilevel nonlinear solver to solve discrete system
+dtMet    &#8212; time integration method to use
+nOptions &#8212; configuration options</p>
 <dl class="method">
 <dt id="proteus.TimeIntegration.ForwardIntegrator.initialize">
 <code class="descname">initialize</code><span class="sig-paren">(</span><em>DTSET=None</em>, <em>t0=0.0</em>, <em>T=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TimeIntegration.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TimeIntegration.ForwardIntegrator.initialize" title="Permalink to this definition">¶</a></dt>
@@ -1790,8 +1769,8 @@ compute steady state solution regardless of requested time step</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

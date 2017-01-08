@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.BoundaryConditions module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.BoundaryConditions module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.Comm module" href="proteus.Comm.html" />
     <link rel="prev" title="proteus.AuxiliaryVariables module" href="proteus.AuxiliaryVariables.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -137,42 +138,6 @@
       
   <div class="section" id="module-proteus.BoundaryConditions">
 <span id="proteus-boundaryconditions-module"></span><h1>proteus.BoundaryConditions module<a class="headerlink" href="#module-proteus.BoundaryConditions" title="Permalink to this headline">¶</a></h1>
-<p>Module for creating boundary conditions. Imported in SpatialTools.py</p>
-<object data="../_images/inheritance-80eb3576afbbb7b545bf64274760dff0f3feaa8c.svg" type="image/svg+xml">
-            <p class="warning">Inheritance diagram of proteus.BoundaryConditions</p></object>
-<dl class="class">
-<dt id="proteus.BoundaryConditions.BC_Base">
-<em class="property">class </em><code class="descclassname">proteus.BoundaryConditions.</code><code class="descname">BC_Base</code><span class="sig-paren">(</span><em>shape=None</em>, <em>name=None</em>, <em>b_or=None</em>, <em>b_i=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.BoundaryConditions.BC_Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="http://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
-<p>class defining boundary conditions for a facet or a segment</p>
-<dl class="classmethod">
-<dt id="proteus.BoundaryConditions.BC_Base.newGlobalBC">
-<em class="property">classmethod </em><code class="descname">newGlobalBC</code><span class="sig-paren">(</span><em>name</em>, <em>default_value=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.BoundaryConditions.BC_Base.newGlobalBC" title="Permalink to this definition">¶</a></dt>
-<dd><p>Makes a new boundary condition with a default value. This creates a new
-class instance and adds it to all BoundaryConditions class instances.
-:param name: name of the new class attribute
-:param default: default value of BC for attr (usually a funtion of</p>
-<blockquote>
-<div>(x, t) or None)</div></blockquote>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="proteus.BoundaryConditions.constantBC">
-<code class="descclassname">proteus.BoundaryConditions.</code><code class="descname">constantBC</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.BoundaryConditions.constantBC" title="Permalink to this definition">¶</a></dt>
-<dd><p>function returning constant BC</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="proteus.BoundaryConditions.linearBC">
-<code class="descclassname">proteus.BoundaryConditions.</code><code class="descname">linearBC</code><span class="sig-paren">(</span><em>a0</em>, <em>a1</em>, <em>i</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.BoundaryConditions.linearBC" title="Permalink to this definition">¶</a></dt>
-<dd><p>function returning linear BC
-:param a0:
-:param a1:
-:param i:</p>
-</dd></dl>
-
 </div>
 
 
@@ -187,8 +152,8 @@ class instance and adds it to all BoundaryConditions class instances.
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

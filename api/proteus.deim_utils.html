@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.deim_utils module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.deim_utils module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.iproteus module" href="proteus.iproteus.html" />
     <link rel="prev" title="proteus.default_so module" href="proteus.default_so.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -160,7 +161,7 @@ If dof_map is not none, this determines shape of the output array</p>
 <dd><p>assumes nsnap values of array in val_name are stored in h5file as
 /val_name&#8217;i&#8217; for i=0,nspap-1</p>
 <dl class="docutils">
-<dt>loads these into a matrix, performs an SVD, and stores the output in outbase_SVD_basis, </dt>
+<dt>loads these into a matrix, performs an SVD, and stores the output in outbase_SVD_basis,</dt>
 <dd>outbase_singular_values in numpy&#8217;s binary format</dd>
 </dl>
 <p>returns U,s,V svd decomposition of snapshots</p>
@@ -179,41 +180,7 @@ ec F$ values</p>
 <dl class="function">
 <dt id="proteus.deim_utils.deim_alg">
 <code class="descclassname">proteus.deim_utils.</code><code class="descname">deim_alg</code><span class="sig-paren">(</span><em>Uin</em>, <em>m</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/deim_utils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.deim_utils.deim_alg" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Basic procedure</p>
-<ul class="simple">
-<li>given $m$, dimension for $F$ reduced basis $mathbf{U}_m$</li>
-<li>call DEIM algorithm to determine $</li>
-</ul>
-</div></blockquote>
-<p>ec 
-ho$.</p>
-<blockquote>
-<div><ul class="simple">
-<li>build $mathbf{P}$ from $</li>
-</ul>
-</div></blockquote>
-<dl class="docutils">
-<dt>ho$ as </dt>
-<dd>$$
-mathbf{P} = [</dd>
-</dl>
-<p>ec e_{
-ho_1},
-ec e_{
-ho_2},dots,
-ec e_{
-ho_m}]</p>
-<blockquote>
-<div><blockquote>
-<div>$$</div></blockquote>
-<ul class="simple">
-<li>invert $mathbf{P}^Tmathbf{U}_m$</li>
-<li>return</li>
-</ul>
-</div></blockquote>
-<p>ho and $mathbf{P}_F=mathbf{U}_m(mathbf{P}^Tmathbf{U}_m)^{-1}$</p>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="proteus.deim_utils.visualize_zslice">
@@ -224,7 +191,7 @@ ho_m}]</p>
 <dl class="function">
 <dt id="proteus.deim_utils.extract_sub_matrix_csr">
 <code class="descclassname">proteus.deim_utils.</code><code class="descname">extract_sub_matrix_csr</code><span class="sig-paren">(</span><em>rho</em>, <em>rowptr</em>, <em>colind</em>, <em>nnzval</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/deim_utils.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.deim_utils.extract_sub_matrix_csr" title="Permalink to this definition">¶</a></dt>
-<dd><p>manually extract the rows in the deim index vector rho from a csr matrix representation 
+<dd><p>manually extract the rows in the deim index vector rho from a csr matrix representation
 returns a csr representation</p>
 </dd></dl>
 
@@ -242,8 +209,8 @@ returns a csr representation</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

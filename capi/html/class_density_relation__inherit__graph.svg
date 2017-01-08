@@ -9,73 +9,73 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 136)">
 <title>DensityRelation</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-136 403.5,-136 403.5,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node0 -->
+<g id="node1" class="node"><title>Node0</title>
 <polygon fill="#bfbfbf" stroke="black" points="160,-112.5 160,-131.5 246,-131.5 246,-112.5 160,-112.5"/>
 <text text-anchor="middle" x="203" y="-119.5" font-family="Helvetica,sans-Serif" font-size="10.00">DensityRelation</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node1 -->
+<g id="node2" class="node"><title>Node1</title>
 <g id="a_node2"><a xlink:href="class_constant_density.html" target="_top" xlink:title="ConstantDensity">
 <polygon fill="white" stroke="black" points="0,-56.5 0,-75.5 90,-75.5 90,-56.5 0,-56.5"/>
 <text text-anchor="middle" x="45" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">ConstantDensity</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
-<g id="edge1" class="edge"><title>Node1&#45;&gt;Node2</title>
+<!-- Node0&#45;&gt;Node1 -->
+<g id="edge1" class="edge"><title>Node0&#45;&gt;Node1</title>
 <path fill="none" stroke="midnightblue" d="M168.392,-109.172C138.641,-99.0039 96.4529,-84.5852 69.9184,-75.5164"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="167.37,-112.521 177.964,-112.444 169.634,-105.898 167.37,-112.521"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node2 -->
+<g id="node3" class="node"><title>Node2</title>
 <g id="a_node3"><a xlink:href="class_ideal_gas_density.html" target="_top" xlink:title="IdealGasDensity">
 <polygon fill="white" stroke="black" points="108.5,-56.5 108.5,-75.5 197.5,-75.5 197.5,-56.5 108.5,-56.5"/>
 <text text-anchor="middle" x="153" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">IdealGasDensity</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node3 -->
-<g id="edge2" class="edge"><title>Node1&#45;&gt;Node3</title>
+<!-- Node0&#45;&gt;Node2 -->
+<g id="edge2" class="edge"><title>Node0&#45;&gt;Node2</title>
 <path fill="none" stroke="midnightblue" d="M187.924,-104.718C179.111,-95.1997 168.334,-83.5608 161.103,-75.7511"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="185.381,-107.123 194.744,-112.083 190.518,-102.367 185.381,-107.123"/>
 </g>
-<!-- Node4 -->
-<g id="node4" class="node"><title>Node4</title>
+<!-- Node3 -->
+<g id="node4" class="node"><title>Node3</title>
 <g id="a_node4"><a xlink:href="class_linear_density.html" target="_top" xlink:title="LinearDensity">
 <polygon fill="white" stroke="black" points="215.5,-56.5 215.5,-75.5 292.5,-75.5 292.5,-56.5 215.5,-56.5"/>
 <text text-anchor="middle" x="254" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">LinearDensity</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node4 -->
-<g id="edge3" class="edge"><title>Node1&#45;&gt;Node4</title>
+<!-- Node0&#45;&gt;Node3 -->
+<g id="edge3" class="edge"><title>Node0&#45;&gt;Node3</title>
 <path fill="none" stroke="midnightblue" d="M218.378,-104.718C227.367,-95.1997 238.359,-83.5608 245.735,-75.7511"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="215.743,-102.41 211.422,-112.083 220.832,-107.216 215.743,-102.41"/>
 </g>
-<!-- Node6 -->
-<g id="node6" class="node"><title>Node6</title>
+<!-- Node5 -->
+<g id="node6" class="node"><title>Node5</title>
 <g id="a_node6"><a xlink:href="class_real_gas_density.html" target="_top" xlink:title="RealGasDensity">
 <polygon fill="white" stroke="black" points="310.5,-56.5 310.5,-75.5 399.5,-75.5 399.5,-56.5 310.5,-56.5"/>
 <text text-anchor="middle" x="355" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">RealGasDensity</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node6 -->
-<g id="edge5" class="edge"><title>Node1&#45;&gt;Node6</title>
+<!-- Node0&#45;&gt;Node5 -->
+<g id="edge5" class="edge"><title>Node0&#45;&gt;Node5</title>
 <path fill="none" stroke="midnightblue" d="M236.668,-109.039C265.268,-98.8786 305.612,-84.5457 331.028,-75.5164"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="235.336,-105.798 227.085,-112.444 237.68,-112.394 235.336,-105.798"/>
 </g>
-<!-- Node5 -->
-<g id="node5" class="node"><title>Node5</title>
+<!-- Node4 -->
+<g id="node5" class="node"><title>Node4</title>
 <g id="a_node5"><a xlink:href="class_exponential_density.html" target="_top" xlink:title="ExponentialDensity">
 <polygon fill="white" stroke="black" points="203.5,-0.5 203.5,-19.5 304.5,-19.5 304.5,-0.5 203.5,-0.5"/>
 <text text-anchor="middle" x="254" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">ExponentialDensity</text>
 </a>
 </g>
 </g>
-<!-- Node4&#45;&gt;Node5 -->
-<g id="edge4" class="edge"><title>Node4&#45;&gt;Node5</title>
+<!-- Node3&#45;&gt;Node4 -->
+<g id="edge4" class="edge"><title>Node3&#45;&gt;Node4</title>
 <path fill="none" stroke="midnightblue" d="M254,-45.8045C254,-36.9102 254,-26.7798 254,-19.7511"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="250.5,-46.083 254,-56.083 257.5,-46.083 250.5,-46.083"/>
 </g>

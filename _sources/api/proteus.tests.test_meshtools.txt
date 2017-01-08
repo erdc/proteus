@@ -1,7 +1,0 @@
-proteus.tests.test_meshtools module
-===================================
-
-.. automodule:: proteus.tests.test_meshtools
-    :members:
-    :undoc-members:
-    :show-inheritance:

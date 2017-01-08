@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.MeshTools module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.MeshTools module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.NonlinearSolvers module" href="proteus.NonlinearSolvers.html" />
     <link rel="prev" title="proteus.LinearSolvers module" href="proteus.LinearSolvers.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -149,7 +150,7 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><strong>N</strong> &#8211; node number</li>
+<li><a class="reference internal" href="proteus.WaveTools.html#proteus.WaveTools.RandomWaves.N" title="proteus.WaveTools.RandomWaves.N"><strong>N</strong></a> &#8211; node number</li>
 <li><strong>p</strong> &#8211; Euclidean coordinates</li>
 </ul>
 </td>
@@ -160,7 +161,7 @@
 coordinates.  This allows using Node objects and tuples of node objects as
 dictionary keys, but in that use case one should be careful not to modify
 the node coordinates.</p>
-<div class="highlight-default"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n0</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeNumber</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n0</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeNumber</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">n1</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">nodeNumber</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">x</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span><span class="n">y</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span><span class="n">z</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">n1</span> <span class="o">&gt;=</span> <span class="n">n0</span>
 <span class="go">True</span>
@@ -197,7 +198,7 @@ the node coordinates.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
-<li><strong>N</strong> &#8211; element number</li>
+<li><a class="reference internal" href="proteus.WaveTools.html#proteus.WaveTools.RandomWaves.N" title="proteus.WaveTools.RandomWaves.N"><strong>N</strong></a> &#8211; element number</li>
 <li><strong>nodes</strong> &#8211; sorted tuple of nodes defining the polytope</li>
 </ul>
 </td>
@@ -357,12 +358,12 @@ of Edges.</p>
 plotting the edges of the mesh in Matlab</p>
 <dl class="method">
 <dt id="proteus.MeshTools.Mesh.partitionMesh">
-<code class="descname">partitionMesh</code><span class="sig-paren">(</span><em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Mesh.partitionMesh" title="Permalink to this definition">¶</a></dt>
+<code class="descname">partitionMesh</code><span class="sig-paren">(</span><em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Mesh.partitionMesh" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.MeshTools.Mesh.partitionMeshFromFiles">
-<code class="descname">partitionMeshFromFiles</code><span class="sig-paren">(</span><em>filebase</em>, <em>base</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Mesh.partitionMeshFromFiles" title="Permalink to this definition">¶</a></dt>
+<code class="descname">partitionMeshFromFiles</code><span class="sig-paren">(</span><em>filebase</em>, <em>base</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Mesh.partitionMeshFromFiles" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1007,12 +1008,12 @@ the edges and nodes from the boundary triangles.</p>
 
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelTetrahedralMesh">
-<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelTetrahedralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTetrahedralMesh" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelTetrahedralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTetrahedralMesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A hierarchical multilevel mesh with tetrahedral cells</p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelTetrahedralMesh.generateFromExistingCoarseMesh">
-<code class="descname">generateFromExistingCoarseMesh</code><span class="sig-paren">(</span><em>mesh0</em>, <em>refinementLevels</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTetrahedralMesh.generateFromExistingCoarseMesh" title="Permalink to this definition">¶</a></dt>
+<code class="descname">generateFromExistingCoarseMesh</code><span class="sig-paren">(</span><em>mesh0</em>, <em>refinementLevels</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTetrahedralMesh.generateFromExistingCoarseMesh" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1034,12 +1035,12 @@ the edges and nodes from the boundary triangles.</p>
 
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelHexahedralMesh">
-<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelHexahedralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>px=0</em>, <em>py=0</em>, <em>pz=0</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelHexahedralMesh" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelHexahedralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>px=0</em>, <em>py=0</em>, <em>pz=0</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelHexahedralMesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A hierarchical multilevel mesh with hexahedral cells</p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelHexahedralMesh.generateFromExistingCoarseMesh">
-<code class="descname">generateFromExistingCoarseMesh</code><span class="sig-paren">(</span><em>mesh0</em>, <em>refinementLevels</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelHexahedralMesh.generateFromExistingCoarseMesh" title="Permalink to this definition">¶</a></dt>
+<code class="descname">generateFromExistingCoarseMesh</code><span class="sig-paren">(</span><em>mesh0</em>, <em>refinementLevels</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelHexahedralMesh.generateFromExistingCoarseMesh" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1120,12 +1121,6 @@ give a lexicographic ordering.</p>
 <code class="descname">constructTriangularMeshOnRectangle</code><span class="sig-paren">(</span><em>Lx</em>, <em>Ly</em>, <em>nx</em>, <em>ny</em>, <em>writeMesh=0</em>, <em>meshFileBase='mesh2d'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.TriangularMesh.constructTriangularMeshOnRectangle" title="Permalink to this definition">¶</a></dt>
 <dd><p>wrapper function for making a triangular mesh on the rectangle
 [0,Lx] x [0,Ly].</p>
-<p>viewMesh is a flag to allow printing mesh when constructed
-viewMesh &#8211; 0 no visualization</p>
-<blockquote>
-<div>1 gnuplot
-2 matlab</div></blockquote>
-<p>mwf</p>
 </dd></dl>
 
 <dl class="method">
@@ -1339,12 +1334,12 @@ to run using C.  Implementing this will require some work to the mesh.cpp module
 
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelTriangularMesh">
-<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelTriangularMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em>, <em>triangleFlag=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelTriangularMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em>, <em>triangleFlag=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A hierarchical  multilevel mesh of triangular cells</p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelTriangularMesh.generateFromExistingCoarseMesh">
-<code class="descname">generateFromExistingCoarseMesh</code><span class="sig-paren">(</span><em>mesh0</em>, <em>refinementLevels</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh.generateFromExistingCoarseMesh" title="Permalink to this definition">¶</a></dt>
+<code class="descname">generateFromExistingCoarseMesh</code><span class="sig-paren">(</span><em>mesh0</em>, <em>refinementLevels</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelTriangularMesh.generateFromExistingCoarseMesh" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1373,7 +1368,7 @@ to run using C.  Implementing this will require some work to the mesh.cpp module
 
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelQuadrilateralMesh">
-<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelQuadrilateralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em>, <em>triangleFlag=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelQuadrilateralMesh" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelQuadrilateralMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em>, <em>triangleFlag=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelQuadrilateralMesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A heirarchical multilevel mesh of quadrilaterals
 WIP</p>
@@ -1529,7 +1524,7 @@ lexicographic ordering.</p>
 
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelEdgeMesh">
-<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelEdgeMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelEdgeMesh" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelEdgeMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelEdgeMesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <p>A hierarchical multilevel mesh of intervals (edges)</p>
 <dl class="attribute">
@@ -1593,17 +1588,9 @@ topologyid2name &#8211; lookup for number of nodes in a given element type</p>
 <p>returns</p>
 <p>nElements_global  &#8211; the number of elements in the mesh
 nNodes_element    &#8211; number of nodes per element
-elementNodesArray &#8211; element &#8211;&gt; node connectivity</p>
-<blockquote>
-<div>stored as flattened array accessed using elementNodes_offset</div></blockquote>
-<dl class="docutils">
-<dt>elementNodes_offset &#8211; offsets into the elementNodesArray storage for element connectivity</dt>
-<dd><dl class="first last docutils">
-<dt>&#8211; element eN nodes are in</dt>
-<dd>elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]</dd>
-</dl>
-</dd>
-</dl>
+elementNodesArray &#8211; element &#8211;&gt; node connectivity stored as flattened array accessed using elementNodes_offset
+elementNodes_offset &#8211; offsets into the elementNodesArray storage for element connectivity,
+element eN nodes are in elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]</p>
 </dd></dl>
 
 <dl class="function">
@@ -1614,62 +1601,25 @@ Heavy data stored in hdf5
 topologyid2name &#8211; lookup for number of nodes in a given element type</p>
 <p>returns</p>
 <p>nElements_global  &#8211; the number of elements in the mesh
-elementNodesArray &#8211; element &#8211;&gt; node connectivity</p>
-<blockquote>
-<div>stored as flattened array accessed using elementNodes_offset</div></blockquote>
-<dl class="docutils">
-<dt>elementNodes_offset &#8211; offsets into the elementNodesArray storage for element connectivity</dt>
-<dd><dl class="first last docutils">
-<dt>&#8211; element eN nodes are in</dt>
-<dd>elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]</dd>
-</dl>
-</dd>
-</dl>
+elementNodesArray &#8211; element &#8211;&gt; node connectivity stored as flattened
+array accessed using elementNodes_offset
+elementNodes_offset &#8211; offsets into the elementNodesArray storage for element
+connectivity, element eN nodes are
+inelementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.MeshTools.readMeshXdmf">
 <code class="descclassname">proteus.MeshTools.</code><code class="descname">readMeshXdmf</code><span class="sig-paren">(</span><em>xmf_archive_base</em>, <em>heavy_file_base</em>, <em>MeshTag='Spatial_Domain'</em>, <em>hasHDF5=True</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.readMeshXdmf" title="Permalink to this definition">¶</a></dt>
-<dd><p>start trying to read an xdmf archive with name xmf_archive_base.xmf
-assumes heavy_file_base.h5 has heavy data
-root Element is Xdmf</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>last child of Xdmf which should be a Domain Element</dt>
-<dd><dl class="first last docutils">
-<dt>find child of Domain that is a Temporal Grid Collection with a name containing MeshTag, if None use first collection</dt>
-<dd><dl class="first last docutils">
-<dt>last child of Temporal Grid Collection should be a Uniform Grid at final time</dt>
-<dd><dl class="first docutils">
-<dt>Attribute (usually 1) of child is  Topology</dt>
-<dd><p class="first">set elementTopologyName to Type
-if Type != Mixed</p>
-<blockquote>
-<div>get text attribute and read this entry from  hdf5 file
-set nNodes_element based on Type, nElements_global from leading dimension of elementNodesArray
-create elementNodes_offset from Type and flatten elementNodesArray</div></blockquote>
-<dl class="last docutils">
-<dt>else</dt>
-<dd><p class="first">get text attribute and read this entry from  hdf5 file to place in into xdmf_topology
-generate elementNodesArray from xdmf_topology, calculating the number of elements using</p>
-<blockquote class="last">
-<div>walk through xdmf_topology</div></blockquote>
-</dd>
-</dl>
-</dd>
-<dt>Attribute (usually 2) of child is Geometry  &#8211;&gt; load data into nodeArray</dt>
-<dd>set nNodes_global from nodeArray</dd>
-</dl>
-<p class="last">If has Attribute nodeMaterials read this from hdf file, else set to default of all zeros
-If has Attribute elementMaterialTypes, read this from hdf file, else set to default of all zeros</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd>
-</dl>
-</div></blockquote>
-<p>returns a BasicMeshInfo object with the minimal information read</p>
+<dd><p>Read in a mesh from XDMF, assuming heavy data is in hdf5</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a BasicMeshInfo object with the minimal information read</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -1688,11 +1638,11 @@ xN yN zN
 
 <dl class="class">
 <dt id="proteus.MeshTools.MultilevelNURBSMesh">
-<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelNURBSMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>px=1</em>, <em>py=1</em>, <em>pz=1</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelNURBSMesh" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MultilevelNURBSMesh</code><span class="sig-paren">(</span><em>nx</em>, <em>ny</em>, <em>nz</em>, <em>x=0.0</em>, <em>y=0.0</em>, <em>z=0.0</em>, <em>px=1</em>, <em>py=1</em>, <em>pz=1</em>, <em>Lx=1.0</em>, <em>Ly=1.0</em>, <em>Lz=1.0</em>, <em>refinementLevels=1</em>, <em>skipInit=False</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelNURBSMesh" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.MeshTools.MultilevelMesh" title="proteus.MeshTools.MultilevelMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.MultilevelMesh</span></code></a></p>
 <dl class="method">
 <dt id="proteus.MeshTools.MultilevelNURBSMesh.generateFromExistingCoarseMesh">
-<code class="descname">generateFromExistingCoarseMesh</code><span class="sig-paren">(</span><em>mesh0</em>, <em>refinementLevels</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelNURBSMesh.generateFromExistingCoarseMesh" title="Permalink to this definition">¶</a></dt>
+<code class="descname">generateFromExistingCoarseMesh</code><span class="sig-paren">(</span><em>mesh0</em>, <em>refinementLevels</em>, <em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MultilevelNURBSMesh.generateFromExistingCoarseMesh" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1792,8 +1742,8 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

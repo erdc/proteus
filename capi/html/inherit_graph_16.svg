@@ -9,50 +9,50 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 100)">
 <title>Graphical Class Hierarchy</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-100 251,-100 251,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node0 -->
+<g id="node1" class="node"><title>Node0</title>
 <g id="a_node1"><a xlink:href="class_d__base.html" target="_top" xlink:title="D_base">
 <polygon fill="white" stroke="black" points="0,-38.5 0,-57.5 50,-57.5 50,-38.5 0,-38.5"/>
 <text text-anchor="middle" x="25" y="-45.5" font-family="Helvetica,sans-Serif" font-size="10.00">D_base</text>
 </a>
 </g>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node1 -->
+<g id="node2" class="node"><title>Node1</title>
 <g id="a_node2"><a xlink:href="class_piecewise_linear_complex_domain.html" target="_top" xlink:title="PiecewiseLinearComplexDomain">
 <polygon fill="white" stroke="black" points="86,-76.5 86,-95.5 247,-95.5 247,-76.5 86,-76.5"/>
 <text text-anchor="middle" x="166.5" y="-83.5" font-family="Helvetica,sans-Serif" font-size="10.00">PiecewiseLinearComplexDomain</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
-<g id="edge1" class="edge"><title>Node1&#45;&gt;Node2</title>
+<!-- Node0&#45;&gt;Node1 -->
+<g id="edge1" class="edge"><title>Node0&#45;&gt;Node1</title>
 <path fill="none" stroke="midnightblue" d="M59.7561,-59.1585C68.2841,-61.848 77.4487,-64.6275 86,-67 97.8966,-70.3006 110.889,-73.5522 122.858,-76.4069"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="60.7033,-55.7868 50.1123,-56.0724 58.5697,-62.4538 60.7033,-55.7868"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node2 -->
+<g id="node3" class="node"><title>Node2</title>
 <g id="a_node3"><a xlink:href="class_planar_straight_line_graph_domain.html" target="_top" xlink:title="PlanarStraightLineGraphDomain">
 <polygon fill="white" stroke="black" points="88.5,-38.5 88.5,-57.5 244.5,-57.5 244.5,-38.5 88.5,-38.5"/>
 <text text-anchor="middle" x="166.5" y="-45.5" font-family="Helvetica,sans-Serif" font-size="10.00">PlanarStraightLineGraphDomain</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node3 -->
-<g id="edge2" class="edge"><title>Node1&#45;&gt;Node3</title>
+<!-- Node0&#45;&gt;Node2 -->
+<g id="edge2" class="edge"><title>Node0&#45;&gt;Node2</title>
 <path fill="none" stroke="midnightblue" d="M60.3067,-48C68.9578,-48 78.5995,-48 88.4374,-48"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="60.2991,-44.5001 50.299,-48 60.299,-51.5001 60.2991,-44.5001"/>
 </g>
-<!-- Node4 -->
-<g id="node4" class="node"><title>Node4</title>
+<!-- Node3 -->
+<g id="node4" class="node"><title>Node3</title>
 <g id="a_node4"><a xlink:href="class_rectangular_domain.html" target="_top" xlink:title="RectangularDomain">
 <polygon fill="white" stroke="black" points="115,-0.5 115,-19.5 218,-19.5 218,-0.5 115,-0.5"/>
 <text text-anchor="middle" x="166.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">RectangularDomain</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node4 -->
-<g id="edge3" class="edge"><title>Node1&#45;&gt;Node4</title>
+<!-- Node0&#45;&gt;Node3 -->
+<g id="edge3" class="edge"><title>Node0&#45;&gt;Node3</title>
 <path fill="none" stroke="midnightblue" d="M59.7561,-36.8415C68.2841,-34.152 77.4487,-31.3725 86,-29 97.8966,-25.6994 110.889,-22.4478 122.858,-19.5931"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="58.5697,-33.5462 50.1123,-39.9276 60.7033,-40.2132 58.5697,-33.5462"/>
 </g>

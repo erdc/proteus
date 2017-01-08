@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.Context module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.Context module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.DiagUtils module" href="proteus.DiagUtils.html" />
     <link rel="prev" title="proteus.Comm module" href="proteus.Comm.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -144,17 +145,23 @@ provides methods for setting and getting such a global user context.
 It also alows declaring input options to the user context that can be
 set from the command line.</p>
 <p>Example (set the global context from an object):</p>
-<p>#create a simple context class
-globalSettings = {&#8220;nnx&#8221;:11, &#8220;T&#8221;:10.0, &#8220;g&#8221;=9.8}
-MyContext = namedtuple(&#8220;MyContext&#8221;,globalSettings.keys())
-#set the global  context  object
-proteus.Context.set(MyContext._make(globalSettings.values())</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#create a simple context class</span>
+<span class="n">globalSettings</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;nnx&quot;</span><span class="p">:</span><span class="mi">11</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span><span class="mf">10.0</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="o">=</span><span class="mf">9.8</span><span class="p">}</span>
+<span class="n">MyContext</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;MyContext&quot;</span><span class="p">,</span><span class="n">globalSettings</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="c1">#set the global  context  object</span>
+<span class="n">proteus</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">MyContext</span><span class="o">.</span><span class="n">_make</span><span class="p">(</span><span class="n">globalSettings</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+</pre></div>
+</div>
 <p>Example (set the global context from a module):</p>
-<p>import globalSettingsModule
-proteus.Context.setFromModule(globalSettingsModule)</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">globalSettingsModule</span>
+<span class="n">proteus</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">setFromModule</span><span class="p">(</span><span class="n">globalSettingsModule</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Example (use the global context):</p>
-<p>ct = proteus.Context.get()
-nnx = ct.nnx</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ct</span> <span class="o">=</span> <span class="n">proteus</span><span class="o">.</span><span class="n">Context</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="n">nnx</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">nnx</span>
+</pre></div>
+</div>
 <dl class="data">
 <dt id="proteus.Context.context">
 <code class="descclassname">proteus.Context.</code><code class="descname">context</code><em class="property"> = None</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Context.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Context.context" title="Permalink to this definition">¶</a></dt>
@@ -188,19 +195,20 @@ from proteus.LinearAlgebraToptions object (named tuple)</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>optionsList</strong> &#8211; An iteratble of options tuples. Each option is a 3-tuple,</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>optionsList</strong> &#8211; An iteratble of options tuples. Each option is
+a 3-tuple, with the first entry the option
+name string, the second entry the default
+value, and the third entry a help string</td>
 </tr>
 </tbody>
 </table>
-<p>with the first entry the option name string, the second entry the default value,
-and the third entry a help string</p>
 <p>Example:</p>
-<dl class="docutils">
-<dt>opts=Context.Options([(&#8220;nnx&#8221;, 11, &#8220;number of mesh nodes in x-direction&#8221;),</dt>
-<dd>(&#8220;nny&#8221;, 21, &#8220;number of mesh nodes in y-direction&#8221;])</dd>
-</dl>
-<p>nnx = opts.nnx
-nny = opts.nny</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">opts</span><span class="o">=</span><span class="n">Context</span><span class="o">.</span><span class="n">Options</span><span class="p">([(</span><span class="s2">&quot;nnx&quot;</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="s2">&quot;number of mesh nodes in x-direction&quot;</span><span class="p">),</span>
+                      <span class="p">(</span><span class="s2">&quot;nny&quot;</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="s2">&quot;number of mesh nodes in y-direction&quot;</span><span class="p">])</span>
+<span class="n">nnx</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">nnx</span>
+<span class="n">nny</span> <span class="o">=</span> <span class="n">opts</span><span class="o">.</span><span class="n">nny</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -217,8 +225,8 @@ nny = opts.nny</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.StepControl module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.StepControl module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.StupidHeap module" href="proteus.StupidHeap.html" />
     <link rel="prev" title="proteus.SplitOperator module" href="proteus.SplitOperator.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -145,14 +146,6 @@
 <em class="property">class </em><code class="descclassname">proteus.StepControl.</code><code class="descname">SC_base</code><span class="sig-paren">(</span><em>model</em>, <em>nOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.SC_base" title="Permalink to this definition">¶</a></dt>
 <dd><p>A simple fixed time stepping controller with no error/stability
 control and reduction by 1/2 in case of solver failures.</p>
-<dl class="docutils">
-<dt>TODO:</dt>
-<dd><dl class="first last docutils">
-<dt>Implementation:</dt>
-<dd>Get data file format straight</dd>
-</dl>
-</dd>
-</dl>
 <dl class="method">
 <dt id="proteus.StepControl.SC_base.setInitialGuess">
 <code class="descname">setInitialGuess</code><span class="sig-paren">(</span><em>uList</em>, <em>rList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.SC_base.setInitialGuess" title="Permalink to this definition">¶</a></dt>
@@ -231,8 +224,6 @@ without regard to time integration scheme</p>
 <dd><p>record some relevant time step and solver statistics
 uses finest level to get this information
 called before updating t_model &#8211;&gt; t_model_last etc</p>
-<blockquote>
-<div>k |  Step Size   |      tn      <a href="#id7"><span class="problematic" id="id8">|errf|nlsf|ilsf|func|jacs|NLit|L_IT|linS|</span></a></div></blockquote>
 </dd></dl>
 
 </dd></dl>
@@ -559,15 +550,6 @@ solver iterations</p>
 <p>dt <a href="#id5"><span class="problematic" id="id6">*</span></a>= dtNLfailureReduceFactor</p>
 <p>Also includes simple linear predictor for initial guess</p>
 <p>y^{n+1,p} = y^{n} + (y^{n}-y^{n-1})/(Delta t^{n})(t - t^{n-1})</p>
-<dl class="docutils">
-<dt>TODO:</dt>
-<dd><p class="first">Implementation:</p>
-<dl class="last docutils">
-<dt>Algorithm:</dt>
-<dd>Decide if retryStep_solverFailure should retry predictor as well, right now does not</dd>
-</dl>
-</dd>
-</dl>
 <dl class="method">
 <dt id="proteus.StepControl.HeuristicNL_dt_controller.setInitialGuess">
 <code class="descname">setInitialGuess</code><span class="sig-paren">(</span><em>uList</em>, <em>rList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.HeuristicNL_dt_controller.setInitialGuess" title="Permalink to this definition">¶</a></dt>
@@ -652,25 +634,10 @@ r_a_min &#8211; min growth rate</p>
 </dl>
 <p>Also includes simple linear predictor for initial guess</p>
 <p>y^{n+1,p} = y^{n} + (y^{n}-y^{n-1})/(Delta t^{n})(t - t^{n-1})</p>
-<dl class="docutils">
-<dt>TODO:</dt>
-<dd><dl class="first last docutils">
-<dt>Implementation:</dt>
-<dd>Figure out if need to change initialize_dt_model
-Incorporate dt from timeIntegrator</dd>
-<dt>Algorithm:</dt>
-<dd>Decide if retryStep_solverFailure should retry predictor as well, right now does not</dd>
-</dl>
-</dd>
-</dl>
 <dl class="method">
 <dt id="proteus.StepControl.GustafssonFullNewton_dt_controller.setInitialGuess">
 <code class="descname">setInitialGuess</code><span class="sig-paren">(</span><em>uList</em>, <em>rList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.GustafssonFullNewton_dt_controller.setInitialGuess" title="Permalink to this definition">¶</a></dt>
 <dd><p>for now ignore time integrations predictor since that is for m and not u by default ...</p>
-<dl class="docutils">
-<dt>TODO:</dt>
-<dd>Need a good place to trigger predictor calculation in timeIntegration</dd>
-</dl>
 </dd></dl>
 
 <dl class="method">
@@ -682,10 +649,11 @@ Incorporate dt from timeIntegrator</dd>
 <dt id="proteus.StepControl.GustafssonFullNewton_dt_controller.retryStep_solverFailure">
 <code class="descname">retryStep_solverFailure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/StepControl.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.StepControl.GustafssonFullNewton_dt_controller.retryStep_solverFailure" title="Permalink to this definition">¶</a></dt>
 <dd><p>nonlinear solver failure
-TODO:</p>
-<blockquote>
-<div>make sure predictor gets called again after this to get error
-estimate correct for next solve</div></blockquote>
+.. todo:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">sure</span> <span class="n">predictor</span> <span class="n">gets</span> <span class="n">called</span> <span class="n">again</span> <span class="n">after</span> <span class="n">this</span> <span class="n">to</span> <span class="n">get</span> <span class="n">error</span>
+<span class="n">estimate</span> <span class="n">correct</span> <span class="k">for</span> <span class="nb">next</span> <span class="n">solve</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -773,8 +741,8 @@ use finest level to pick for now</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

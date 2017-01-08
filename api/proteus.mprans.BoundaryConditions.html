@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.mprans.BoundaryConditions module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.mprans.BoundaryConditions module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus.mprans package" href="proteus.mprans.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.mprans.Dissipation module" href="proteus.mprans.Dissipation.html" />
     <link rel="prev" title="proteus.mprans.ArchiveBeams module" href="proteus.mprans.ArchiveBeams.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -137,195 +138,6 @@
       
   <div class="section" id="module-proteus.mprans.BoundaryConditions">
 <span id="proteus-mprans-boundaryconditions-module"></span><h1>proteus.mprans.BoundaryConditions module<a class="headerlink" href="#module-proteus.mprans.BoundaryConditions" title="Permalink to this headline">¶</a></h1>
-<p>Module for creating boundary conditions. Imported in mprans.SpatialTools.py</p>
-<dl class="class">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS">
-<em class="property">class </em><code class="descclassname">proteus.mprans.BoundaryConditions.</code><code class="descname">BC_RANS</code><span class="sig-paren">(</span><em>shape=None</em>, <em>name=None</em>, <em>b_or=None</em>, <em>b_i=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.BoundaryConditions.html#proteus.BoundaryConditions.BC_Base" title="proteus.BoundaryConditions.BC_Base"><code class="xref py py-class docutils literal"><span class="pre">proteus.BoundaryConditions.BC_Base</span></code></a></p>
-<p>class defining boundary conditions for a facet or a segment</p>
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.reset">
-<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resets all boundary conditions to None, apart from:
-- moveMesh BCs</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setNonMaterial">
-<code class="descname">setNonMaterial</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setNonMaterial" title="Permalink to this definition">¶</a></dt>
-<dd><p>For non-material boundaries.
-Sets diffusive flux and advective vof to zero</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setTank">
-<code class="descname">setTank</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setTank" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setFixedNodes">
-<code class="descname">setFixedNodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setFixedNodes" title="Permalink to this definition">¶</a></dt>
-<dd><p>For moving domains: fixes nodes/boundary</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setNoSlip">
-<code class="descname">setNoSlip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setNoSlip" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets no slip conditions at the boundary</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setFreeSlip">
-<code class="descname">setFreeSlip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setFreeSlip" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets free slip conditions at the boundary</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setOpenAir">
-<code class="descname">setOpenAir</code><span class="sig-paren">(</span><em>orientation=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setOpenAir" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets open boundary conditions (water can come out)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setMoveMesh">
-<code class="descname">setMoveMesh</code><span class="sig-paren">(</span><em>last_pos</em>, <em>h=(0.0</em>, <em>0.0</em>, <em>0.0)</em>, <em>rot_matrix=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setMoveMesh" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets rigid body boundary conditions for moving the mesh
-:param last_pos: position (barycentre) of body pre-calculation
-:param h: displacement during time step
-:param rot_matrix: rotation matrix of body pre-calculation
-(!) should not be set manually</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setUnsteadyTwoPhaseVelocityInlet">
-<code class="descname">setUnsteadyTwoPhaseVelocityInlet</code><span class="sig-paren">(</span><em>wave</em>, <em>vert_axis=None</em>, <em>windSpeed=(0.0</em>, <em>0.0</em>, <em>0.0)</em>, <em>air=1.0</em>, <em>water=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setUnsteadyTwoPhaseVelocityInlet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Imposes a velocity profile lower than the sea level and an open
-boundary for higher than the sealevel.
-:param U: Velocity vector at the global system.
-:param vert_axis: index of vertical in position vector, must always be</p>
-<blockquote>
-<div>aligned with gravity, by default set to 1].</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>air</strong> &#8211; Volume fraction for air (1.0 by default).</li>
-<li><strong>water</strong> &#8211; Volume fraction for water (0.0 by default).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Below the seawater level, the condition returns the _dirichlet and
-p_advective condition according to the inflow velocity.
-Above the sea water level, the condition returns the gravity as zero,
-and sets _dirichlet condition to zero, only if there is a zero inflow
-velocity component.
-(!) This condition is best used for boundaries and gravity aligned with</p>
-<blockquote>
-<div>one of the main axes.</div></blockquote>
-<p>(!) Boundary condition relies on specific variables defined in Context</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setTwoPhaseVelocityInlet">
-<code class="descname">setTwoPhaseVelocityInlet</code><span class="sig-paren">(</span><em>U</em>, <em>waterLevel</em>, <em>vert_axis=None</em>, <em>air=1.0</em>, <em>water=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setTwoPhaseVelocityInlet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Imposes a velocity profile lower than the sea level and an open
-boundary for higher than the sealevel.
-:param U: Velocity vector at the global system.
-:param waterLevel: water level at global coordinate system.
-:param vert_axis: index of vertical in position vector, must always be</p>
-<blockquote>
-<div>aligned with gravity, by default set to 1].</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>air</strong> &#8211; Volume fraction for air (1.0 by default).</li>
-<li><strong>water</strong> &#8211; Volume fraction for water (0.0 by default).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Below the seawater level, the condition returns the _dirichlet and
-p_advective condition according to the inflow velocity.
-Above the sea water level, the condition returns the gravity as zero,
-and sets _dirichlet condition to zero, only if there is a zero inflow
-velocity component.
-(!) This condition is best used for boundaries and gravity aligned with</p>
-<blockquote>
-<div>one of the main axes.</div></blockquote>
-</dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.setHydrostaticPressureOutlet">
-<code class="descname">setHydrostaticPressureOutlet</code><span class="sig-paren">(</span><em>rho</em>, <em>g</em>, <em>refLevel</em>, <em>vof</em>, <em>pRef=0.0</em>, <em>vert_axis=-1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.setHydrostaticPressureOutlet" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.BC_RANS.hydrostaticPressureOutletWithDepth">
-<code class="descname">hydrostaticPressureOutletWithDepth</code><span class="sig-paren">(</span><em>seaLevel</em>, <em>rhoUp</em>, <em>rhoDown</em>, <em>g</em>, <em>refLevel</em>, <em>pRef=0.0</em>, <em>vert_axis=None</em>, <em>air=1.0</em>, <em>water=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.BC_RANS.hydrostaticPressureOutletWithDepth" title="Permalink to this definition">¶</a></dt>
-<dd><p>Imposes a hydrostatic pressure profile and open boundary conditions
-with a known otuflow depth
-:param rhoUp: Phase density of the upper part.
-:param rhoDown: Phase density of the lower part.
-:param g: Gravitational acceleration vector.
-:param refLevel: Level at which pressure = pRef.
-:param pRef: Reference value for the pressure at x[vert_axis]=refLevel,</p>
-<blockquote>
-<div>be default set to 0.</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vert_axis</strong> &#8211; index of vertical in position vector, must always be
-aligned with gravity, by default set to 1.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">hydrostaticPressureOutlet except when the pressure and the
-vof are defined. Then it returns the pressure and vof profile
-based on the known depth.</td>
-</tr>
-</tbody>
-</table>
-<p>If the boundary is aligned with one of the main axes, sets the
-tangential velocity components to zero as well.
-(!) This condition is best used for boundaries and gravity aligned with</p>
-<blockquote>
-<div>one of the main axes.</div></blockquote>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="proteus.mprans.BoundaryConditions.RelaxationZone">
-<em class="property">class </em><code class="descclassname">proteus.mprans.BoundaryConditions.</code><code class="descname">RelaxationZone</code><span class="sig-paren">(</span><em>shape</em>, <em>zone_type</em>, <em>center</em>, <em>orientation</em>, <em>waves</em>, <em>windSpeed</em>, <em>epsFact_solid</em>, <em>dragAlpha</em>, <em>dragBeta</em>, <em>porosity</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.RelaxationZone.setGenerationFunctions">
-<code class="descname">setGenerationFunctions</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZone.setGenerationFunctions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets the functions necessary for generation zones</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator">
-<em class="property">class </em><code class="descclassname">proteus.mprans.BoundaryConditions.</code><code class="descname">RelaxationZoneWaveGenerator</code><span class="sig-paren">(</span><em>zones</em>, <em>nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="proteus.AuxiliaryVariables.html#proteus.AuxiliaryVariables.AV_base" title="proteus.AuxiliaryVariables.AV_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.AuxiliaryVariables.AV_base</span></code></a></p>
-<p>Prescribe a velocity penalty scaling in a material zone via a
-Darcy-Forchheimer penalty
-:param zones: A dictionary mapping integer material types to Zones, where a
-Zone is a named tuple specifying the x coordinate of the zone center and
-the velocity components</p>
-<dl class="method">
-<dt id="proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.calculate">
-<code class="descname">calculate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/mprans/BoundaryConditions.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.mprans.BoundaryConditions.RelaxationZoneWaveGenerator.calculate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 </div>
 
 
@@ -340,8 +152,8 @@ the velocity components</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

@@ -1,7 +1,6 @@
 var searchData=
 [
   ['edgenodesarray',['edgeNodesArray',['../struct_mesh.html#aabe8196d403a4e08ab8ae82add6c95ad',1,'Mesh']]],
-  ['edgenumbering_5fglobal2original',['edgeNumbering_global2original',['../struct_mesh.html#a8055247c1650bebfe2ac893d74328c58',1,'Mesh']]],
   ['edgenumbering_5fsubdomain2global',['edgeNumbering_subdomain2global',['../struct_mesh.html#a087e6d20726837e45bd1caaf1f4bd404',1,'Mesh']]],
   ['edgeoffsets_5fsubdomain_5fowned',['edgeOffsets_subdomain_owned',['../struct_mesh.html#aad6fb618bfc1b53f688723ae41b0ce3f',1,'Mesh']]],
   ['elementbarycentersarray',['elementBarycentersArray',['../struct_mesh.html#ab31abbfccc0c4d695624f2123dd97bbc',1,'Mesh']]],
@@ -12,7 +11,6 @@ var searchData=
   ['elementboundarylocalelementboundariesarray',['elementBoundaryLocalElementBoundariesArray',['../struct_mesh.html#a80fee2f34a4f1ce046b8d238ca6eb44d',1,'Mesh']]],
   ['elementboundarymaterialtypes',['elementBoundaryMaterialTypes',['../struct_mesh.html#a9d8f135ebe113d6c9d1ef60e2ea56cb1',1,'Mesh']]],
   ['elementboundarynodesarray',['elementBoundaryNodesArray',['../struct_mesh.html#a005d4b8e1dde115eea69745da68ce51e',1,'Mesh']]],
-  ['elementboundarynumbering_5fglobal2original',['elementBoundaryNumbering_global2original',['../struct_mesh.html#ab8d76ff14175318e685658c31ba76aca',1,'Mesh']]],
   ['elementboundarynumbering_5fsubdomain2global',['elementBoundaryNumbering_subdomain2global',['../struct_mesh.html#a18cf197b92cbab062e2a294849766cf1',1,'Mesh']]],
   ['elementboundaryoffsets_5fsubdomain_5fowned',['elementBoundaryOffsets_subdomain_owned',['../struct_mesh.html#a5806b14e322aa308b7b2332137195d0e',1,'Mesh']]],
   ['elementchildrenarray',['elementChildrenArray',['../struct_multilevel_mesh.html#abd7168c12797775bfefbb4dc915190d8',1,'MultilevelMesh']]],
@@ -23,7 +21,6 @@ var searchData=
   ['elementmaterialtypes',['elementMaterialTypes',['../struct_mesh.html#aa7d0c5c7194c72ae5673282fd26f80e6',1,'Mesh']]],
   ['elementneighborsarray',['elementNeighborsArray',['../struct_mesh.html#a7dc84c8761e788b972cadef8126c3714',1,'Mesh']]],
   ['elementnodesarray',['elementNodesArray',['../struct_mesh.html#a75f9e7d19dc4a7e7589f712f2e8fe849',1,'Mesh']]],
-  ['elementnumbering_5fglobal2original',['elementNumbering_global2original',['../struct_mesh.html#a73f2f26ced3c2dafb71b4f7c31ac34e8',1,'Mesh']]],
   ['elementnumbering_5fsubdomain2global',['elementNumbering_subdomain2global',['../struct_mesh.html#a9a62f7c5208b688193ad82dfb8cc3b4c',1,'Mesh']]],
   ['elementoffsets_5fsubdomain_5fowned',['elementOffsets_subdomain_owned',['../struct_mesh.html#a6d8c1e8a3743ccf2b9ac61d79d2aed42',1,'Mesh']]],
   ['elementparentsarray',['elementParentsArray',['../struct_multilevel_mesh.html#a6ada5eb59a4afae6c8300ecaeca2d9bb',1,'MultilevelMesh']]],

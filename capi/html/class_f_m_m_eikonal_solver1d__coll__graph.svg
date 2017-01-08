@@ -9,76 +9,76 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 148)">
 <title>FMMEikonalSolver1d</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-148 548.5,-148 548.5,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node2 -->
+<g id="node1" class="node"><title>Node2</title>
 <polygon fill="#bfbfbf" stroke="black" points="233,-0.5 233,-19.5 343,-19.5 343,-0.5 233,-0.5"/>
 <text text-anchor="middle" x="288" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">FMMEikonalSolver1d</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node3 -->
+<g id="node2" class="node"><title>Node3</title>
 <g id="a_node2"><a xlink:href="class_f_m_m_eikonal_solver_base.html" target="_top" xlink:title="FMMEikonalSolverBase">
 <polygon fill="white" stroke="black" points="227,-57.5 227,-76.5 349,-76.5 349,-57.5 227,-57.5"/>
 <text text-anchor="middle" x="288" y="-64.5" font-family="Helvetica,sans-Serif" font-size="10.00">FMMEikonalSolverBase</text>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node1 -->
-<g id="edge1" class="edge"><title>Node2&#45;&gt;Node1</title>
+<!-- Node3&#45;&gt;Node2 -->
+<g id="edge1" class="edge"><title>Node3&#45;&gt;Node2</title>
 <path fill="none" stroke="midnightblue" d="M288,-47.1166C288,-37.8173 288,-27.0557 288,-19.7149"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="284.5,-47.4062 288,-57.4062 291.5,-47.4063 284.5,-47.4062"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node4 -->
+<g id="node3" class="node"><title>Node4</title>
 <g id="a_node3"><a xlink:href="class_unstructured_local_upwind_solvers.html" target="_top" xlink:title="UnstructuredLocalUpwindSolvers">
 <polygon fill="white" stroke="black" points="0,-124.5 0,-143.5 162,-143.5 162,-124.5 0,-124.5"/>
 <text text-anchor="middle" x="81" y="-131.5" font-family="Helvetica,sans-Serif" font-size="10.00">UnstructuredLocalUpwindSolvers</text>
 </a>
 </g>
 </g>
-<!-- Node3&#45;&gt;Node2 -->
-<g id="edge2" class="edge"><title>Node3&#45;&gt;Node2</title>
+<!-- Node4&#45;&gt;Node3 -->
+<g id="edge2" class="edge"><title>Node4&#45;&gt;Node3</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M114.535,-121.131C136.712,-113.404 166.48,-103.262 193,-95 213.954,-88.4722 237.704,-81.7222 256.215,-76.6041"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="113.201,-117.89 104.919,-124.496 115.514,-124.497 113.201,-117.89"/>
 <text text-anchor="middle" x="221.5" y="-98" font-family="Helvetica,sans-Serif" font-size="10.00"> localSolvers</text>
 </g>
-<!-- Node4 -->
-<g id="node4" class="node"><title>Node4</title>
+<!-- Node5 -->
+<g id="node4" class="node"><title>Node5</title>
 <polygon fill="white" stroke="#bfbfbf" points="180,-124.5 180,-143.5 272,-143.5 272,-124.5 180,-124.5"/>
 <text text-anchor="middle" x="226" y="-131.5" font-family="Helvetica,sans-Serif" font-size="10.00">std::vector&lt; int &gt;</text>
 </g>
-<!-- Node4&#45;&gt;Node2 -->
-<g id="edge3" class="edge"><title>Node4&#45;&gt;Node2</title>
+<!-- Node5&#45;&gt;Node3 -->
+<g id="edge3" class="edge"><title>Node5&#45;&gt;Node3</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M241.265,-116.997C253.423,-104.25 269.977,-86.8947 279.771,-76.6273"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="238.731,-114.582 234.362,-124.234 243.796,-119.413 238.731,-114.582"/>
 <text text-anchor="middle" x="278" y="-98" font-family="Helvetica,sans-Serif" font-size="10.00"> Known</text>
 </g>
-<!-- Node5 -->
-<g id="node5" class="node"><title>Node5</title>
+<!-- Node6 -->
+<g id="node5" class="node"><title>Node6</title>
 <polygon fill="white" stroke="#bfbfbf" points="290.5,-124.5 290.5,-143.5 411.5,-143.5 411.5,-124.5 290.5,-124.5"/>
 <text text-anchor="middle" x="351" y="-131.5" font-family="Helvetica,sans-Serif" font-size="10.00">std::vector&lt; STATUS &gt;</text>
 </g>
-<!-- Node5&#45;&gt;Node2 -->
-<g id="edge4" class="edge"><title>Node5&#45;&gt;Node2</title>
+<!-- Node6&#45;&gt;Node3 -->
+<g id="edge4" class="edge"><title>Node6&#45;&gt;Node3</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M335.489,-116.997C323.134,-104.25 306.313,-86.8947 296.362,-76.6273"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="333.031,-119.489 342.504,-124.234 338.057,-114.617 333.031,-119.489"/>
 <text text-anchor="middle" x="340" y="-98" font-family="Helvetica,sans-Serif" font-size="10.00"> Status</text>
 </g>
-<!-- Node6 -->
-<g id="node6" class="node"><title>Node6</title>
+<!-- Node7 -->
+<g id="node6" class="node"><title>Node7</title>
 <g id="a_node6"><a xlink:href="struct_mesh.html" target="_top" xlink:title="Mesh">
 <polygon fill="white" stroke="black" points="429.5,-124.5 429.5,-143.5 470.5,-143.5 470.5,-124.5 429.5,-124.5"/>
 <text text-anchor="middle" x="450" y="-131.5" font-family="Helvetica,sans-Serif" font-size="10.00">Mesh</text>
 </a>
 </g>
 </g>
-<!-- Node6&#45;&gt;Node2 -->
-<g id="edge5" class="edge"><title>Node6&#45;&gt;Node2</title>
+<!-- Node7&#45;&gt;Node3 -->
+<g id="edge5" class="edge"><title>Node7&#45;&gt;Node3</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M420.766,-120.301C403.22,-112.769 380.415,-103.134 360,-95 343.878,-88.5765 325.563,-81.7143 311.439,-76.5154"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="419.863,-123.723 430.431,-124.466 422.633,-117.294 419.863,-123.723"/>
 <text text-anchor="middle" x="399" y="-98" font-family="Helvetica,sans-Serif" font-size="10.00"> mesh</text>
 </g>
-<!-- Node6&#45;&gt;Node6 -->
-<g id="edge6" class="edge"><title>Node6&#45;&gt;Node6</title>
+<!-- Node7&#45;&gt;Node7 -->
+<g id="edge6" class="edge"><title>Node7&#45;&gt;Node7</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M480.816,-139.442C485.4,-138.594 488.5,-136.78 488.5,-134 488.5,-129.438 480.152,-127.477 470.597,-128.119"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="480.437,-135.955 470.597,-139.881 480.738,-142.949 480.437,-135.955"/>
 <text text-anchor="middle" x="516.5" y="-131.5" font-family="Helvetica,sans-Serif" font-size="10.00"> subdomainp</text>

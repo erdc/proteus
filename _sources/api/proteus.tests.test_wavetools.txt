@@ -1,7 +1,0 @@
-proteus.tests.test_wavetools module
-===================================
-
-.. automodule:: proteus.tests.test_wavetools
-    :members:
-    :undoc-members:
-    :show-inheritance:

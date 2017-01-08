@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.PostProcessingTools module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.PostProcessingTools module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.Profiling module" href="proteus.Profiling.html" />
     <link rel="prev" title="proteus.Optimizers module" href="proteus.Optimizers.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -141,7 +142,7 @@
 <dt>Collect classes and routines for postprocessing solution to get</dt>
 <dd>quantities like conservative velocities, higher accuracy, etc</dd>
 </dl>
-<object data="../_images/inheritance-f482e2636254edb12fa14343c7a061f03d154ca7.svg" type="image/svg+xml">
+<object data="../_images/inheritance-1cba64de19a90b1ec3808b57cce704d64b1a0b38.svg" type="image/svg+xml">
             <p class="warning">Inheritance diagram of proteus.PostProcessingTools</p></object>
 <dl class="function">
 <dt id="proteus.PostProcessingTools.VelocityPostProcessingChooser">
@@ -152,11 +153,8 @@
 <dl class="class">
 <dt id="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase">
 <em class="property">class </em><code class="descclassname">proteus.PostProcessingTools.</code><code class="descname">VelocityPostProcessingAlgorithmBase</code><span class="sig-paren">(</span><em>postProcessingType=None, vectorTransport=None, vtComponents=[0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for velocity post processing algorithms
-Applies same algorithm to all components in vtComponents
-TODO</p>
-<blockquote>
-<div>make velocity representation type an enum</div></blockquote>
+<dd><p>Base class for velocity post processing algorithms</p>
+<p>Applies same algorithm to all components in vtComponents</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase.computeGeometricInfo">
 <code class="descname">computeGeometricInfo</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase.computeGeometricInfo" title="Permalink to this definition">¶</a></dt>
@@ -165,9 +163,8 @@ TODO</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase.postprocess">
 <code class="descname">postprocess</code><span class="sig-paren">(</span><em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase.postprocess" title="Permalink to this definition">¶</a></dt>
-<dd><p>main functionality
-generate post-processed velocity field for attached
-VectorTransport object and store them in local dictionaries</p>
+<dd><p>generate post-processed velocity field for attached VectorTransport
+object and store them in local dictionaries</p>
 </dd></dl>
 
 <dl class="method">
@@ -187,29 +184,17 @@ for now assumes x shaped like nE x nq x 3</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase.removeBoundaryFluxesFromResidual">
 <code class="descname">removeBoundaryFluxesFromResidual</code><span class="sig-paren">(</span><em>ci</em>, <em>flag_elementBoundaries=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase.removeBoundaryFluxesFromResidual" title="Permalink to this definition">¶</a></dt>
-<dd><p>remove boundary fluxes from element residuals
-TODO:</p>
-<blockquote>
-<div>get rid of temporary creation, just add a scalar argument like daxpy</div></blockquote>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase.addBoundaryFluxesBackToResidual">
 <code class="descname">addBoundaryFluxesBackToResidual</code><span class="sig-paren">(</span><em>ci</em>, <em>flag_elementBoundaries=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase.addBoundaryFluxesBackToResidual" title="Permalink to this definition">¶</a></dt>
-<dd><p>add boundary fluxes to element residuals
-TODO</p>
-<blockquote>
-<div>add scalar multiple for call like remove boundary fluxes</div></blockquote>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase.archiveVelocityValues">
 <code class="descname">archiveVelocityValues</code><span class="sig-paren">(</span><em>archive</em>, <em>t</em>, <em>tCount</em>, <em>initialPhase=False</em>, <em>meshChanged=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase.archiveVelocityValues" title="Permalink to this definition">¶</a></dt>
-<dd><p>write out post processed velocity values as a finite element space
-TODO</p>
-<blockquote>
-<div>test
-reuse data arrays</div></blockquote>
+<dd><p>write out post processed velocity values as a finite element space</p>
 </dd></dl>
 
 </dd></dl>
@@ -222,11 +207,9 @@ reuse data arrays</div></blockquote>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_P1nc_RT0.postprocess_component">
 <code class="descname">postprocess_component</code><span class="sig-paren">(</span><em>ci</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_P1nc_RT0.postprocess_component" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute velocity field in RT_0 assuming a potential field in P^1_{nc} has already been solved for</p>
-<p>Uses Chou and Tang approach for now, so averaged pressure is not correct
-TODO:</p>
-<blockquote>
-<div>cleanup use of mt,r</div></blockquote>
+<dd><p>compute velocity field in RT_0 assuming a potential field in
+<span class="math">\(P^1_{nc}\)</span> has already been solved for</p>
+<p>Uses Chou and Tang approach for now, so averaged pressure is not correct</p>
 </dd></dl>
 
 <dl class="method">
@@ -296,34 +279,27 @@ for now assumes x shaped like nE x nq x 3</p>
 <dt id="proteus.PostProcessingTools.VPP_PWL_RT0">
 <em class="property">class </em><code class="descclassname">proteus.PostProcessingTools.</code><code class="descname">VPP_PWL_RT0</code><span class="sig-paren">(</span><em>vectorTransport=None, vtComponents=[0], omitFluxBoundaryNodes=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_PWL_RT0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase" title="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase"><code class="xref py py-class docutils literal"><span class="pre">proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase</span></code></a></p>
-<blockquote>
-<div><p>Local Larson-Niklasson method with RT_0 representation for element velocities
-This is not the correct postprocessing for optimized NS codes</p>
-<p>uses RT_0 representation in terms of local basis</p>
-</div></blockquote>
-<p>ec N_i = 
+<dl class="docutils">
+<dt>Local Larson-Niklasson method with RT_0 representation for element</dt>
+<dd><p class="first">velocities This is not the correct postprocessing for optimized NS
+codes</p>
+<p class="last">uses RT_0 representation in terms of local basis</p>
+</dd>
+</dl>
+<p>ec N_i =
 rac{1}{d|E|}(
 ec x - p_i)</p>
 <blockquote>
-<div>where p_i is the vertex across from face i, <a href="#id11"><span class="problematic" id="id12">|E|</span></a> is the volume of the element,
-and d is the space dimension
-the degrees of freedom are V^i = int_{e_i}</div></blockquote>
-<p>ec vdot n_{i}ds</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>TODO:</dt>
-<dd><dl class="first last docutils">
-<dt>remove python loops in building mesh infrastructure or get rid of dependence</dt>
-<dd>on these forms of node star info and use data structures in cmesh</dd>
-</dl>
-</dd>
-</dl>
-</div></blockquote>
+<div>where <span class="math">\(p_i\)</span> is the vertex across from face i, <span class="math">\(|E|\)</span> is the volume of
+the element, and d is the space dimension the degrees of freedom
+are :math:<a href="#id1"><span class="problematic" id="id2">`</span></a>V^i = int_{e_i}</div></blockquote>
+<p>ec vdot n_{i}ds`</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_PWL_RT0.postprocess_component">
 <code class="descname">postprocess_component</code><span class="sig-paren">(</span><em>ci</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_PWL_RT0.postprocess_component" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute mass conservative velocity field following Larson and Niklasson assuming a P^k C0
-Galerkin solution has already been found</p>
+<dd><p>compute mass conservative velocity field following Larson and
+Niklasson assuming a <span class="math">\(P^k C_0\)</span> Galerkin solution has already been
+found</p>
 </dd></dl>
 
 <dl class="method">
@@ -341,7 +317,7 @@ Galerkin solution has already been found</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_PWL_RT0.evaluateLocalVelocityRepresentation">
 <code class="descname">evaluateLocalVelocityRepresentation</code><span class="sig-paren">(</span><em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_PWL_RT0.evaluateLocalVelocityRepresentation" title="Permalink to this definition">¶</a></dt>
-<dd><p>project to RT_0 velocity from element boundary fluxes</p>
+<dd><p>project to <span class="math">\(RT_0\)</span> velocity from element boundary fluxes</p>
 </dd></dl>
 
 <dl class="method">
@@ -357,33 +333,23 @@ for now assumes x shaped like nE x nq x 3</p>
 <dt id="proteus.PostProcessingTools.VPP_PWL_BDM">
 <em class="property">class </em><code class="descclassname">proteus.PostProcessingTools.</code><code class="descname">VPP_PWL_BDM</code><span class="sig-paren">(</span><em>vectorTransport=None, vtComponents=[0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_PWL_BDM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.PostProcessingTools.VPP_PWL_RT0" title="proteus.PostProcessingTools.VPP_PWL_RT0"><code class="xref py py-class docutils literal"><span class="pre">proteus.PostProcessingTools.VPP_PWL_RT0</span></code></a></p>
-<blockquote>
-<div><p>Local Larson-Niklasson method with BDM1 representation for element velocities
-This is not the correct postprocessing for optimized NS codes</p>
+<dl class="docutils">
+<dt>Local Larson-Niklasson method with BDM1 representation for element</dt>
+<dd><p class="first">velocities This is not the correct postprocessing for optimized NS
+codes</p>
 <p>Only difference from VPP_PWL_RT0 should be steps for local velocity representation
-This one uses  BDM_1 space which is [P^1]^d locally with continuous
+This one uses  BDM_1 space which is <span class="math">\([P^1]^d\)</span> locally with continuous
 linear fluxes on each face
 use standard basis</p>
-</div></blockquote>
+<div class="last math">
+\[\]</div>
+</dd>
+</dl>
 <p>ec N_i = lambda_{i/d}
 ec e_{i%d}</p>
 <blockquote>
-<div><blockquote>
-<div>That is the dofs are locally (say in 2d) [v^x_0,v^y_0,v^x_1,v^y_1,v^x_2,v^y_2]</div></blockquote>
+<div><p>That is the dofs are locally (say in 2d) <span class="math">\([v^x_0,v^y_0,v^x_1,v^y_1,v^x_2,v^y_2]\)</span></p>
 <p>Have to use BDM projection to get degrees of freedom</p>
-<dl class="docutils">
-<dt>TODO:</dt>
-<dd><p class="first">need additional code to compute velocities at ebq and ebq_global if desired
-looks like ebq_global, ebqe may not be getting a good approximation if v.n=0 on boundary?</p>
-<blockquote>
-<div>for example try LN_Example1 with no heterogeneity</div></blockquote>
-<dl class="last docutils">
-<dt>Check what the problem is when running with numerical flux. mass balances are right</dt>
-<dd>but getting strange convergence and error values. May need to check what is getting
-added to ebq[(&#8216;velocity&#8217;,ci)] from numerical flux</dd>
-</dl>
-</dd>
-</dl>
 </div></blockquote>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_PWL_BDM.computeBDM1projectionMatrices">
@@ -406,9 +372,7 @@ added to ebq[(&#8216;velocity&#8217;,ci)] from numerical flux</dd>
 <code class="descname">evaluateElementVelocityField</code><span class="sig-paren">(</span><em>x</em>, <em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_PWL_BDM.evaluateElementVelocityField" title="Permalink to this definition">¶</a></dt>
 <dd><p>evaluate velocity field assuming velocity_dofs already calculated
 for now assumes x shaped like nE x nq x 3
-TODO:</p>
-<blockquote>
-<div>put python loops in c</div></blockquote>
+.. todo:: put python loops in c</p>
 </dd></dl>
 
 <dl class="method">
@@ -480,15 +444,18 @@ for now assumes x shaped like nE x nq x 3</p>
 <dt id="proteus.PostProcessingTools.VPP_PWL_BDM_OPT">
 <em class="property">class </em><code class="descclassname">proteus.PostProcessingTools.</code><code class="descname">VPP_PWL_BDM_OPT</code><span class="sig-paren">(</span><em>vectorTransport=None, vtComponents=[0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_PWL_BDM_OPT" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.PostProcessingTools.VPP_PWL_RT0_OPT" title="proteus.PostProcessingTools.VPP_PWL_RT0_OPT"><code class="xref py py-class docutils literal"><span class="pre">proteus.PostProcessingTools.VPP_PWL_RT0_OPT</span></code></a></p>
-<blockquote>
-<div><p>Local Larson-Niklasson method with BDM1 representation for element velocities
-for optimized parallel codes</p>
-<p>Only difference from VPP_PWL_RT0_OPT should be steps for local velocity representation
-This one uses  BDM_1 space which is [P^1]^d locally with continuous
-linear fluxes on each face
-use standard basis</p>
-</div></blockquote>
-<p>ec N_i = lambda_{i%(d+1)} 
+<dl class="docutils">
+<dt>Local Larson-Niklasson method with BDM1 representation for element</dt>
+<dd><p class="first">velocities for optimized parallel codes</p>
+<p>Only difference from VPP_PWL_RT0_OPT should be steps for local
+velocity representation This one uses BDM_1 space which is <span class="math">\([P^1]^d\)</span>
+locally with continuous linear fluxes on each face use standard
+basis</p>
+<div class="last math">
+\[\]</div>
+</dd>
+</dl>
+<p>ec N_i = lambda_{i%(d+1)}
 ec e_{i/(d+1)}</p>
 <blockquote>
 <div>Have to use BDM projection to get degrees of freedom</div></blockquote>
@@ -550,36 +517,34 @@ for now assumes x shaped like nE x nq x 3</p>
 <dt id="proteus.PostProcessingTools.VPP_PWC_RT0">
 <em class="property">class </em><code class="descclassname">proteus.PostProcessingTools.</code><code class="descname">VPP_PWC_RT0</code><span class="sig-paren">(</span><em>vectorTransport=None, vtComponents=[0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_PWC_RT0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase" title="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase"><code class="xref py py-class docutils literal"><span class="pre">proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase</span></code></a></p>
-<blockquote>
-<div><p>Global piecewise constant Larson-Niklasson method with RT_0 representation for element velocities</p>
+<dl class="docutils">
+<dt>Global piecewise constant Larson-Niklasson method with <span class="math">\(RT_0\)</span></dt>
+<dd><p class="first">representation for element velocities</p>
 <p>uses RT_0 representation in terms of local basis</p>
-</div></blockquote>
-<p>ec N_i = 
+<div class="last math">
+\[\]</div>
+</dd>
+</dl>
+<p>ec N_i =
 rac{1}{d|E|}(
 ec x - p_i)</p>
 <blockquote>
-<div>where p_i is the vertex across from face i, <a href="#id13"><span class="problematic" id="id14">|E|</span></a> is the volume of the element,
-and d is the space dimension
-the degrees of freedom are V^i = int_{e_i}</div></blockquote>
-<p>ec vdot n_{i}ds</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>TOOD:</dt>
-<dd>make sure works with weak dirichlet conditions
-remove python loops in building global Jacobian</dd>
-</dl>
-</div></blockquote>
+<div>where <span class="math">\(p_i\)</span> is the vertex across from face <span class="math">\(i\)</span>,
+<span class="math">\(|E|\)</span> is the volume of the element, and <span class="math">\(d\)</span> is the
+space dimension the degrees of freedom are :math:<a href="#id3"><span class="problematic" id="id4">`</span></a>V^i =
+int_{e_i}</div></blockquote>
+<p>ec vdot n_{i}ds`</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_PWC_RT0.postprocess_component">
 <code class="descname">postprocess_component</code><span class="sig-paren">(</span><em>ci</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_PWC_RT0.postprocess_component" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute mass conservative velocity field following Larson and Niklasson Global piecewise
-constant correcction</p>
+<dd><p>compute mass conservative velocity field following Larson and
+Niklasson Global piecewise constant correcction</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_PWC_RT0.evaluateLocalVelocityRepresentation">
 <code class="descname">evaluateLocalVelocityRepresentation</code><span class="sig-paren">(</span><em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_PWC_RT0.evaluateLocalVelocityRepresentation" title="Permalink to this definition">¶</a></dt>
-<dd><p>project to RT_0 velocity from element boundary fluxes</p>
+<dd><p>project to <span class="math">\(RT_0\)</span> velocity from element boundary fluxes</p>
 </dd></dl>
 
 <dl class="method">
@@ -595,36 +560,33 @@ for now assumes x shaped like nE x nq x 3</p>
 <dt id="proteus.PostProcessingTools.VPP_SUN_RT0">
 <em class="property">class </em><code class="descclassname">proteus.PostProcessingTools.</code><code class="descname">VPP_SUN_RT0</code><span class="sig-paren">(</span><em>vectorTransport=None, vtComponents=[0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_SUN_RT0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase" title="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase"><code class="xref py py-class docutils literal"><span class="pre">proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase</span></code></a></p>
-<blockquote>
-<div><p>Global piecewise constant Sun-Wheeler method with RT_0 representation for element velocities</p>
+<dl class="docutils">
+<dt>Global piecewise constant Sun-Wheeler method with <span class="math">\(RT_0\)</span></dt>
+<dd><p class="first">representation for element velocities</p>
 <p>uses RT_0 representation in terms of local basis</p>
-</div></blockquote>
-<p>ec N_i = 
+<div class="last math">
+\[\]</div>
+</dd>
+</dl>
+<p>ec N_i =
 rac{1}{d|E|}(
 ec x - p_i)</p>
 <blockquote>
-<div>where p_i is the vertex across from face i, <a href="#id15"><span class="problematic" id="id16">|E|</span></a> is the volume of the element,
-and d is the space dimension
-the degrees of freedom are V^i = int_{e_i}</div></blockquote>
-<p>ec vdot n_{i}ds</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>TOOD:</dt>
-<dd>make sure works with weak dirichlet conditions
-remove python loops in building global Jacobian</dd>
-</dl>
-</div></blockquote>
+<div>where <span class="math">\(p_i\)</span> is the vertex across from face i, <span class="math">\(|E|\)</span> is
+the volume of the element, and d is the space dimension the
+degrees of freedom are :math:<a href="#id5"><span class="problematic" id="id6">`</span></a>V^i = int_{e_i}</div></blockquote>
+<p>ec vdot n_{i}ds`</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_SUN_RT0.postprocess_component">
 <code class="descname">postprocess_component</code><span class="sig-paren">(</span><em>ci</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_SUN_RT0.postprocess_component" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute mass conservative velocity field following Sun and Wheeler Global piecewise
-constant correcction</p>
+<dd><p>compute mass conservative velocity field following Sun and Wheeler
+Global piecewise constant correcction</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_SUN_RT0.evaluateLocalVelocityRepresentation">
 <code class="descname">evaluateLocalVelocityRepresentation</code><span class="sig-paren">(</span><em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_SUN_RT0.evaluateLocalVelocityRepresentation" title="Permalink to this definition">¶</a></dt>
-<dd><p>project to RT_0 velocity from element boundary fluxes</p>
+<dd><p>project to <span class="math">\(RT_0\)</span> velocity from element boundary fluxes</p>
 </dd></dl>
 
 <dl class="method">
@@ -640,30 +602,33 @@ for now assumes x shaped like nE x nq x 3</p>
 <dt id="proteus.PostProcessingTools.VPP_SUN_GS_RT0">
 <em class="property">class </em><code class="descclassname">proteus.PostProcessingTools.</code><code class="descname">VPP_SUN_GS_RT0</code><span class="sig-paren">(</span><em>vectorTransport=None, vtComponents=[0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_SUN_GS_RT0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase" title="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase"><code class="xref py py-class docutils literal"><span class="pre">proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase</span></code></a></p>
-<blockquote>
-<div><p>Local Sun-Wheeler &#8220;Gauss-Seidel&#8221; method with RT_0 representation for element velocities</p>
-<p>uses RT_0 representation in terms of local basis</p>
-</div></blockquote>
-<p>ec N_i = 
+<dl class="docutils">
+<dt>Local Sun-Wheeler &#8220;Gauss-Seidel&#8221; method with <span class="math">\(RT_0\)</span> representation</dt>
+<dd><p class="first">for element velocities</p>
+<p>uses <span class="math">\(RT_0\)</span> representation in terms of local basis</p>
+<div class="last math">
+\[\]</div>
+</dd>
+</dl>
+<p>ec N_i =
 rac{1}{d|E|}(
 ec x - p_i)</p>
 <blockquote>
-<div>where p_i is the vertex across from face i, <a href="#id17"><span class="problematic" id="id18">|E|</span></a> is the volume of the element,
-and d is the space dimension
-the degrees of freedom are V^i = int_{e_i}</div></blockquote>
-<p>ec vdot n_{i}ds</p>
-<blockquote>
-<div>TODO:</div></blockquote>
+<div>where p_i is the vertex across from face i, <span class="math">\(|E|\)</span> is the
+volume of the element, and d is the space dimension the degrees of
+freedom are :math:<a href="#id7"><span class="problematic" id="id8">`</span></a>V^i = int_{e_i}</div></blockquote>
+<p>ec vdot n_{i}ds`</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_SUN_GS_RT0.postprocess_component">
 <code class="descname">postprocess_component</code><span class="sig-paren">(</span><em>ci</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_SUN_GS_RT0.postprocess_component" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute mass conservative velocity field following Sun and Wheeler local Gauss-Seidel</p>
+<dd><p>compute mass conservative velocity field following Sun and Wheeler
+local Gauss-Seidel</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_SUN_GS_RT0.evaluateLocalVelocityRepresentation">
 <code class="descname">evaluateLocalVelocityRepresentation</code><span class="sig-paren">(</span><em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_SUN_GS_RT0.evaluateLocalVelocityRepresentation" title="Permalink to this definition">¶</a></dt>
-<dd><p>project to RT_0 velocity from element boundary fluxes</p>
+<dd><p>project to <span class="math">\(RT_0\)</span> velocity from element boundary fluxes</p>
 </dd></dl>
 
 <dl class="method">
@@ -679,7 +644,8 @@ for now assumes x shaped like nE x nq x 3</p>
 <dt id="proteus.PostProcessingTools.VPP_DG_RT0">
 <em class="property">class </em><code class="descclassname">proteus.PostProcessingTools.</code><code class="descname">VPP_DG_RT0</code><span class="sig-paren">(</span><em>vectorTransport=None, vtComponents=[0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_DG_RT0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase" title="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase"><code class="xref py py-class docutils literal"><span class="pre">proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase</span></code></a></p>
-<p>Post process DG solution velocity by projecting boundary fluxes onto local RT0 space</p>
+<p>Post process DG solution velocity by projecting boundary fluxes
+onto local <span class="math">\(RT_0\)</span> space</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_DG_RT0.postprocess_component">
 <code class="descname">postprocess_component</code><span class="sig-paren">(</span><em>ci</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_DG_RT0.postprocess_component" title="Permalink to this definition">¶</a></dt>
@@ -688,11 +654,7 @@ for now assumes x shaped like nE x nq x 3</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_DG_RT0.evaluateLocalVelocityRepresentation">
 <code class="descname">evaluateLocalVelocityRepresentation</code><span class="sig-paren">(</span><em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_DG_RT0.evaluateLocalVelocityRepresentation" title="Permalink to this definition">¶</a></dt>
-<dd><p>project to RT_0 velocity from element boundary fluxes
-TODO:</p>
-<blockquote>
-<div>Check if need to evaluate element boundary and global element boundary velocities (and exterior global element boundary  too?)
-or if they are already evaluated with DG fluxes</div></blockquote>
+<dd><p>project to <span class="math">\(RT_0\)</span> velocity from element boundary fluxes</p>
 </dd></dl>
 
 <dl class="method">
@@ -708,22 +670,18 @@ for now assumes x shaped like nE x nq x 3</p>
 <dt id="proteus.PostProcessingTools.VPP_DG_BDM">
 <em class="property">class </em><code class="descclassname">proteus.PostProcessingTools.</code><code class="descname">VPP_DG_BDM</code><span class="sig-paren">(</span><em>vectorTransport=None, vtComponents=[0]</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_DG_BDM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.PostProcessingTools.VPP_DG_RT0" title="proteus.PostProcessingTools.VPP_DG_RT0"><code class="xref py py-class docutils literal"><span class="pre">proteus.PostProcessingTools.VPP_DG_RT0</span></code></a></p>
-<blockquote>
-<div>Project DG solution onto BDM1 local representation
-which is [P^1]^d locally with continuous
-linear fluxes on each face
-use standard basis</div></blockquote>
-<p>ec N_i = lambda_{i%(d+1)} 
+<dl class="docutils">
+<dt>Project DG solution onto BDM1 local representation which is</dt>
+<dd><p class="first"><span class="math">\([P^1]^d\)</span> locally with continuous linear fluxes on each face</p>
+<p>use standard basis</p>
+<div class="last math">
+\[\]</div>
+</dd>
+</dl>
+<p>ec N_i = lambda_{i%(d+1)}
 ec e_{i/(d+1)}</p>
 <blockquote>
-<div><p>Have to use BDM projection to get degrees of freedom</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>TODO:</dt>
-<dd>need additional code to compute velocities at ebq and ebq_global if desired</dd>
-</dl>
-</div></blockquote>
-</div></blockquote>
+<div>Have to use BDM projection to get degrees of freedom</div></blockquote>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_DG_BDM.computeBDM1projectionMatrices">
 <code class="descname">computeBDM1projectionMatrices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_DG_BDM.computeBDM1projectionMatrices" title="Permalink to this definition">¶</a></dt>
@@ -737,21 +695,14 @@ ec e_{i/(d+1)}</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_DG_BDM.evaluateLocalVelocityRepresentation">
 <code class="descname">evaluateLocalVelocityRepresentation</code><span class="sig-paren">(</span><em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_DG_BDM.evaluateLocalVelocityRepresentation" title="Permalink to this definition">¶</a></dt>
-<dd><p>project to BDM velocity from element boundary fluxes
-TODO:</p>
-<blockquote>
-<div>evaluate element boundary and global element boundary velocities (and exterior global element boundary  too?)
-Check that they aren&#8217;t already evaluated with DG fluxes</div></blockquote>
+<dd><p>project to BDM velocity from element boundary fluxes</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_DG_BDM.evaluateElementVelocityField">
 <code class="descname">evaluateElementVelocityField</code><span class="sig-paren">(</span><em>x</em>, <em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_DG_BDM.evaluateElementVelocityField" title="Permalink to this definition">¶</a></dt>
 <dd><p>evaluate velocity field assuming velocity_dofs already calculated
-for now assumes x shaped like nE x nq x 3
-TODO:</p>
-<blockquote>
-<div>put python loops in c</div></blockquote>
+for now assumes x shaped like nE x nq x 3</p>
 </dd></dl>
 
 <dl class="method">
@@ -789,19 +740,14 @@ trial solution</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_POINT_EVAL.postprocess_component">
 <code class="descname">postprocess_component</code><span class="sig-paren">(</span><em>ci</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_POINT_EVAL.postprocess_component" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>compute velocity field by just using point evaluation of trial solution
-and coefficients</p>
-<blockquote>
-<div>v = - en{a}_hgrad phi_h +</div></blockquote>
-</div></blockquote>
-<p>ec f_h</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>TODO</dt>
-<dd>Include off diagonal potentials</dd>
+<dd><dl class="docutils">
+<dt>compute velocity field by just using point evaluation of trial</dt>
+<dd><p class="first">solution and coefficients</p>
+<div class="last math">
+\[v = - en{a}_h\grad \phi_h +\]</div>
+</dd>
 </dl>
-</div></blockquote>
+<p>ec f_h</p>
 </dd></dl>
 
 <dl class="method">
@@ -837,9 +783,7 @@ included in the getResidual step of the solution</p>
 <code class="descname">evaluateElementVelocityField</code><span class="sig-paren">(</span><em>x</em>, <em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_POINT_EVAL_GWVD.evaluateElementVelocityField" title="Permalink to this definition">¶</a></dt>
 <dd><p>evaluate velocity field assuming velocity_dofs already calculated
 for now assumes x shaped like nE x nq x 3
-TODO:</p>
-<blockquote>
-<div>put python loops in c</div></blockquote>
+.. todo:: put python loops in c</p>
 </dd></dl>
 
 <dl class="method">
@@ -859,43 +803,31 @@ TODO:</p>
 <dt id="proteus.PostProcessingTools.VPP_LOW_K_IB_PWL_RT0">
 <em class="property">class </em><code class="descclassname">proteus.PostProcessingTools.</code><code class="descname">VPP_LOW_K_IB_PWL_RT0</code><span class="sig-paren">(</span><em>vectorTransport=None, vtComponents=[0], jump_tol=10000.0, min_tol=1e-05</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_LOW_K_IB_PWL_RT0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase" title="proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase"><code class="xref py py-class docutils literal"><span class="pre">proteus.PostProcessingTools.VelocityPostProcessingAlgorithmBase</span></code></a></p>
-<p>Local Larson-Niklasson method with RT_0 representation for element velocities
-This version tries to address flux through low permeability interfaces by
-manually setting boundaries with a &#8216;large&#8217; jump in permeability and one of
-these boundaries being &#8216;small&#8217; to no flux</p>
-<dl class="docutils">
-<dt>TODO:</dt>
-<dd><p class="first">get tolerances from coefficients?
-remove python loops in building mesh infrastructure or get rid of dependence</p>
-<blockquote class="last">
-<div>on these forms of node star info and use data structures in cmesh</div></blockquote>
-</dd>
-</dl>
+<p>Local Larson-Niklasson method with RT_0 representation for element
+velocities This version tries to address flux through low
+permeability interfaces by manually setting boundaries with a
+&#8216;large&#8217; jump in permeability and one of these boundaries being
+&#8216;small&#8217; to no flux</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_LOW_K_IB_PWL_RT0.setInteriorFluxBoundaries">
 <code class="descname">setInteriorFluxBoundaries</code><span class="sig-paren">(</span><em>ci</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_LOW_K_IB_PWL_RT0.setInteriorFluxBoundaries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Flag interior flux boundaries</p>
-<p>this version flags boundaries where <a href="#id1"><span class="problematic" id="id2">|</span></a>max(<a href="#id3"><span class="problematic" id="id4">|</span></a>a|_L)-max(<a href="#id5"><span class="problematic" id="id6">|</span></a>a|_R)|_{ebN} &gt; jump_tol and min(max(<a href="#id7"><span class="problematic" id="id8">|</span></a>a|_L),max(<a href="#id9"><span class="problematic" id="id10">|</span></a>a|_R)) &lt; min_tol
-TODO:</p>
-<blockquote>
-<div>put in off-diagional potentials (ie (&#8216;a&#8217;,ci,cj) cj != ci)
-put in c (once it works)</div></blockquote>
+<p>this version flags boundaries where
+<span class="math">\(|max(|a|_L)-max(|a|_R)|_{ebN} &gt; jump_{tol}\)</span> and
+<span class="math">\(min(max(|a|_L),max(|a|_R)) &lt; min_{tol}\)</span></p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_LOW_K_IB_PWL_RT0.setInteriorFluxBoundaryValues">
 <code class="descname">setInteriorFluxBoundaryValues</code><span class="sig-paren">(</span><em>ci</em>, <em>ebq_global_velocity</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_LOW_K_IB_PWL_RT0.setInteriorFluxBoundaryValues" title="Permalink to this definition">¶</a></dt>
 <dd><p>set interior flux boundary values
-this version sets interior flux boundaries to no flux
-TODO:</p>
-<blockquote>
-<div>put in c (once it works)</div></blockquote>
+this version sets interior flux boundaries to no flux</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VPP_LOW_K_IB_PWL_RT0.postprocess_component">
 <code class="descname">postprocess_component</code><span class="sig-paren">(</span><em>ci</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VPP_LOW_K_IB_PWL_RT0.postprocess_component" title="Permalink to this definition">¶</a></dt>
-<dd><p>compute mass conservative velocity field following Larson and Niklasson assuming a P^k C0
+<dd><p>compute mass conservative velocity field following Larson and Niklasson assuming a <span class="math">\(P^k C_0\)</span>
 Galerkin solution has already been found</p>
 </dd></dl>
 
@@ -932,7 +864,7 @@ for now assumes x shaped like nE x nq x 3</p>
 <dd><p>collect different velocity postprocessing algorithms for a (possibly) multicomponent system</p>
 <dl class="attribute">
 <dt id="proteus.PostProcessingTools.AggregateVelocityPostProcessor.vpp_types">
-<code class="descname">vpp_types</code><em class="property"> = {'pwl-ib-fix-0': &lt;class proteus.PostProcessingTools.VPP_LOW_K_IB_PWL_RT0 at 0x7f4f37e452c0&gt;, 'sun-gs-rt0': &lt;class proteus.PostProcessingTools.VPP_SUN_GS_RT0 at 0x7f4f37e450b8&gt;, 'pwl-opt': &lt;class proteus.PostProcessingTools.VPP_PWL_RT0_OPT at 0x7f4f37f6ae88&gt;, 'sun-rt0': &lt;class proteus.PostProcessingTools.VPP_SUN_RT0 at 0x7f4f37e45050&gt;, 'dg': &lt;class proteus.PostProcessingTools.VPP_DG_RT0 at 0x7f4f37e45120&gt;, 'pwc': &lt;class proteus.PostProcessingTools.VPP_PWC_RT0 at 0x7f4f37f6af58&gt;, 'pwl-bdm': &lt;class proteus.PostProcessingTools.VPP_PWL_BDM at 0x7f4f37f6ae20&gt;, 'pwl': &lt;class proteus.PostProcessingTools.VPP_PWL_RT0 at 0x7f4f37f6adb8&gt;, 'p1-nc': &lt;class proteus.PostProcessingTools.VPP_P1nc_RT0 at 0x7f4f37f6ad50&gt;, 'point-eval': &lt;class proteus.PostProcessingTools.VPP_POINT_EVAL at 0x7f4f37e451f0&gt;, 'pwl-bdm-opt': &lt;class proteus.PostProcessingTools.VPP_PWL_BDM_OPT at 0x7f4f37f6aef0&gt;, 'dg-bdm': &lt;class proteus.PostProcessingTools.VPP_DG_BDM at 0x7f4f37e45188&gt;, 'dg-point-eval': &lt;class proteus.PostProcessingTools.VPP_POINT_EVAL at 0x7f4f37e451f0&gt;, 'point-eval-gwvd': &lt;class proteus.PostProcessingTools.VPP_POINT_EVAL_GWVD at 0x7f4f37e45258&gt;}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.AggregateVelocityPostProcessor.vpp_types" title="Permalink to this definition">¶</a></dt>
+<code class="descname">vpp_types</code><em class="property"> = {'pwl-ib-fix-0': &lt;class proteus.PostProcessingTools.VPP_LOW_K_IB_PWL_RT0&gt;, 'sun-gs-rt0': &lt;class proteus.PostProcessingTools.VPP_SUN_GS_RT0&gt;, 'pwl-opt': &lt;class proteus.PostProcessingTools.VPP_PWL_RT0_OPT&gt;, 'sun-rt0': &lt;class proteus.PostProcessingTools.VPP_SUN_RT0&gt;, 'dg': &lt;class proteus.PostProcessingTools.VPP_DG_RT0&gt;, 'pwc': &lt;class proteus.PostProcessingTools.VPP_PWC_RT0&gt;, 'pwl-bdm': &lt;class proteus.PostProcessingTools.VPP_PWL_BDM&gt;, 'pwl': &lt;class proteus.PostProcessingTools.VPP_PWL_RT0&gt;, 'p1-nc': &lt;class proteus.PostProcessingTools.VPP_P1nc_RT0&gt;, 'point-eval': &lt;class proteus.PostProcessingTools.VPP_POINT_EVAL&gt;, 'pwl-bdm-opt': &lt;class proteus.PostProcessingTools.VPP_PWL_BDM_OPT&gt;, 'dg-bdm': &lt;class proteus.PostProcessingTools.VPP_DG_BDM&gt;, 'dg-point-eval': &lt;class proteus.PostProcessingTools.VPP_POINT_EVAL&gt;, 'point-eval-gwvd': &lt;class proteus.PostProcessingTools.VPP_POINT_EVAL_GWVD&gt;}</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.AggregateVelocityPostProcessor.vpp_types" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -961,23 +893,17 @@ for now assumes x shaped like nE x nq x 3</p>
 <dl class="class">
 <dt id="proteus.PostProcessingTools.VelocityPostProcessor_Original">
 <em class="property">class </em><code class="descclassname">proteus.PostProcessingTools.</code><code class="descname">VelocityPostProcessor_Original</code><span class="sig-paren">(</span><em>postProcessingTypes=None, vectorTransport=None, vtComponents=[0], mlMesh=None, thisLevel=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VelocityPostProcessor_Original" title="Permalink to this definition">¶</a></dt>
-<dd><p>accumulate basic functionality for post-processing velocity vields from
-scalar potentials</p>
-<p>stores values in quadrature dictonary corresponding to vt.q and vt.ebq_global
-Allowed types:</p>
-<blockquote>
-<div>p1-nc
+<dd><p>accumulate basic functionality for post-processing velocity vields
+from scalar potentials</p>
+<p>stores values in quadrature dictonary corresponding to vt.q and vt.ebq_global</p>
+<p>Allowed types
+p1-nc
 pwl (default is rt0 local representation)
 pwl-bdm
 pwc (with rt0)
 point-eval
 sun-rt0
-sun-gs-rt0</div></blockquote>
-<dl class="docutils">
-<dt>TO DO</dt>
-<dd>Figure out how to use just dS_u quadrature rules
-Put in projection to higher order mixed space?</dd>
-</dl>
+sun-gs-rt0</p>
 <dl class="method">
 <dt id="proteus.PostProcessingTools.VelocityPostProcessor_Original.buildLocalBDM1projectionMatrices">
 <code class="descname">buildLocalBDM1projectionMatrices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VelocityPostProcessor_Original.buildLocalBDM1projectionMatrices" title="Permalink to this definition">¶</a></dt>
@@ -1131,8 +1057,8 @@ this is supposed to be the same as getConservationFluxPWL(ci)</p>
 <dd><blockquote>
 <div><p>compute velocity field by just using point evaluation of trial solution
 and coefficients</p>
-<blockquote>
-<div>v = - en{a}_hgrad phi_h +</div></blockquote>
+<div class="math">
+\[v = - en{a}_h\grad \phi_h +\]</div>
 </div></blockquote>
 <p>ec f_h</p>
 </dd></dl>
@@ -1148,10 +1074,6 @@ and coefficients</p>
 <dt id="proteus.PostProcessingTools.VelocityPostProcessor_Original.postprocessSunWheeler">
 <code class="descname">postprocessSunWheeler</code><span class="sig-paren">(</span><em>ci</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/PostProcessingTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.PostProcessingTools.VelocityPostProcessor_Original.postprocessSunWheeler" title="Permalink to this definition">¶</a></dt>
 <dd><p>try to implement Sun and Wheeler Gauss-Seidel postprocessing algorithm</p>
-<dl class="docutils">
-<dt>TODO:</dt>
-<dd>account for velocity fields that aren&#8217;t globally conservative</dd>
-</dl>
 </dd></dl>
 
 <dl class="method">
@@ -1189,8 +1111,8 @@ for now assumes x shaped like nE x nq x 3</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

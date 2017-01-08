@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Introduction &mdash; Proteus 1.1.0 documentation</title>
+    <title>Introduction &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
@@ -27,10 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="#" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="proteus" href="api/modules.html" />
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
@@ -48,12 +50,12 @@
      style="height:1in;"> A Python toolkit for computational methods and simulation</p>
     <div class="btn-group" role="group">
       <a class="btn btn-success"
-          href="https://github.com/erdc-cm/proteus/archive/v0.9.0.tar.gz">
+          href="https://github.com/erdc-cm/proteus/archive/1.2.0.tar.gz">
             <span class="glyphicon glyphicon-download"></span> Download
       </a>
       <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
       <ul class="dropdown-menu">
-        <li><a https://github.com/erdc-cm/proteus/archive/v0.9.0.tar.gz">Version 0.9.0</a></li>
+        <li><a https://github.com/erdc-cm/proteus/archive/1.2.0.tar.gz">Version 1.2.0</a></li>
       </ul>
     </div>
   </div>
@@ -72,7 +74,7 @@
         </button>
         <a class="navbar-brand" href="#">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -110,7 +112,6 @@
       aria-labelledby="dLabelLocalToc"><ul>
 <li><a class="reference internal" href="#">Introduction</a></li>
 <li><a class="reference internal" href="#obtaining-and-installing-proteus">Obtaining and Installing Proteus</a></li>
-<li><a class="reference internal" href="#getting-started">Getting Started</a></li>
 <li><a class="reference internal" href="#running">Running</a></li>
 <li><a class="reference internal" href="#capabilities">Capabilities</a></li>
 <li><a class="reference internal" href="#release-policy">Release Policy</a></li>
@@ -188,31 +189,25 @@ methods, both of which are described in more detail below
 </div>
 <div class="section" id="obtaining-and-installing-proteus">
 <span id="obtaining-sec"></span><h1>Obtaining and Installing Proteus<a class="headerlink" href="#obtaining-and-installing-proteus" title="Permalink to this headline">¶</a></h1>
-<p>For now, Proteus is only available as source from our public <a class="reference external" href="https://github.com/erdc-cm/proteus">GitHub</a> repository  because we haven&#8217;t
-had the resources to devote to producing regular binary releases.  We
-use the <a class="reference external" href="https://hashdist.github.io/">HashDist</a> software environment
-installation tool to bootstrap any needed dependencies for you.  If
-you already have compilers and Git installed on your system, you can
-install Proteus with the following commands:</p>
+<p>For learning and experimenting there is an anonymous temporary Jupyter
+notebook server at <a class="reference external" href="http://try.proteustoolkit.org:8000">try.proteustoolkit.org:8000</a>.</p>
+<p>Proteus is available as source from our public <a class="reference external" href="https://github.com/erdc-cm/proteus">GitHub</a> repository.  If you already
+have compilers (C,C++, and Fortran!) and Git installed on your system,
+you can install Proteus with the following commands.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">erdc</span><span class="o">-</span><span class="n">cm</span><span class="o">/</span><span class="n">proteus</span>
+<span class="o">%</span> <span class="n">cd</span> <span class="n">proteus</span>
+<span class="o">%</span> <span class="n">make</span> <span class="n">develop</span>
+<span class="o">%</span> <span class="n">make</span> <span class="n">test</span>
+</pre></div>
+</div>
 <p>More information is available on our <a class="reference external" href="https://github.com/erdc-cm/proteus/wiki">Wiki</a>, and you can ask for help on
 the <a class="reference external" href="https://groups.google.com/forum/#!forum/proteus-dev">Developers&#8217; Mailing List</a>.</p>
 </div>
-<div class="section" id="getting-started">
-<span id="getting-start-sec"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
-<p>The following IPython Notebooks provide a gentle introduction to
-getting started with Proteus, from setting up a model domain to
-solving your own problems with a comprehensive example.  The notebooks
-can all be downloaded as an <a class="reference external" href="https://github.com/erdc-cm/proteus-notebooks/archive/master.zip">archive</a>.</p>
-<ul class="simple">
-<li><a class="reference external" href="http://nbviewer.ipython.org/github/erdc-cm/proteus-notebooks/blob/master/Equation_Tutorial.ipynb">Defining the Model Equations</a></li>
-<li><a class="reference external" href="http://nbviewer.ipython.org/github/erdc-cm/proteus-notebooks/blob/master/Domain_Tutorial.ipynb">Defining a Model Domain</a></li>
-</ul>
-</div>
 <div class="section" id="running">
 <span id="running-sec"></span><h1>Running<a class="headerlink" href="#running" title="Permalink to this headline">¶</a></h1>
-<p>If you have successfully compiled Proteus then you should be able to do:</p>
-<div class="highlight-default"><div class="highlight"><pre>%cd $PROTEUS/test
-%$PROTEUS_PREFIX/bin/parun poisson_3d_p.py poisson_3d_c0p1_n.py
+<p>If you have successfully compiled and tested Proteus then you should be able to do:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>% cd $PROTEUS/tests/ci
+% $PROTEUS_PREFIX/bin/parun poisson_3d_p.py poisson_3d_c0p1_n.py
 </pre></div>
 </div>
 <p>The solution will be saved in a file ending in .xmf, which can be
@@ -364,8 +359,8 @@ Equation on Unstructured Meshes</a>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

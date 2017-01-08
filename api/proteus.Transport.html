@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.Transport module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.Transport module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.TransportCoefficients module" href="proteus.TransportCoefficients.html" />
     <link rel="prev" title="proteus.TimeIntegration module" href="proteus.TimeIntegration.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -147,7 +148,7 @@ the nonlinear coefficients are <span class="math">\(m^i,f^i,a^{ik},\phi^k, H^i\)
 <dl class="class">
 <dt id="proteus.Transport.StorageSet">
 <em class="property">class </em><code class="descclassname">proteus.Transport.</code><code class="descname">StorageSet</code><span class="sig-paren">(</span><em>initializer=[]</em>, <em>shape=(0</em>, <em>)</em>, <em>storageType='d'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.StorageSet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="http://docs.python.org/2/library/stdtypes.html#set" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">set</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#set" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">set</span></code></a></p>
 <dl class="method">
 <dt id="proteus.Transport.StorageSet.allocate">
 <code class="descname">allocate</code><span class="sig-paren">(</span><em>storageDict</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.StorageSet.allocate" title="Permalink to this definition">¶</a></dt>
@@ -164,19 +165,73 @@ advective-diffusive-reactive transport on a single spatial mesh.</p>
 <p>Objects of this type take the initial-boundary value
 problem for</p>
 <div class="math">
-\[m_t^i + \nabla \cdot (\mathbf{f}^i - \sum_k \mathbf{a}^{ik} \nabla \phi^k) + H^i(\nabla u) + r^i = 0\]</div>
+\[m_t^i + \nabla \cdot (\mathbf{f}^i - \sum_k \mathbf{a}^{ik}
+\nabla \phi^k) + H^i(\nabla u) + r^i = 0\]</div>
 <p>and turn it into the discrete (nonlinear or linear) algebraic
 problem</p>
 <div class="math">
 \[F(U) = 0\]</div>
-<p>where F and U have dimension self.dim. The Jacobian of F or an
+<p>where F and U have dimension <cite>self.dim</cite>. The Jacobian of F or an
 approximation for it may also be  provided.</p>
 <p>The NonlinearEquation interface is</p>
-<p>self.dim
-getResidual(u,r)
-getJacobian(jacobian)</p>
+<ul class="simple">
+<li>self.dim</li>
+<li>getResidual(u,r)</li>
+<li>getJacobian(jacobian).</li>
+</ul>
 <p>The rest of the functions in this class are either private functions
 or return various other pieces of information.</p>
+<p>Allocate storage and initialize some variables.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>uDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of
+<a class="reference internal" href="proteus.FemTools.html#proteus.FemTools.FiniteElementFunction" title="proteus.FemTools.FiniteElementFunction"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.FiniteElementFunction</span></code></a> objects.</li>
+<li><strong>phiDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of
+<a class="reference internal" href="proteus.FemTools.html#proteus.FemTools.FiniteElementFunction" title="proteus.FemTools.FiniteElementFunction"><code class="xref py py-class docutils literal"><span class="pre">proteus.FemTools.FiniteElementFunction</span></code></a> objects.</li>
+<li><strong>testSpaceDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of FiniteElementSpace objects</li>
+<li><strong>dofBoundaryConditionsDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of DOFBoundaryConditions objects for the
+Dirichlet conditions.</li>
+<li><strong>coefficients</strong> (<a class="reference internal" href="proteus.TransportCoefficients.html#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a>) &#8211; Problem&#8217;s Transport Coefficients class.</li>
+<li><strong>elementQuadratureDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of dictionaries of quadrature rules for each
+element integral in each component equation.</li>
+<li><strong>elementBoundaryQuadratureDict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Dictionary of dictionaries of quadrature rules for each
+element boundary integral in each component equation</li>
+<li><strong>stabilization</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; </li>
+<li><strong>shockCapturing</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; </li>
+<li><strong>numericalFlux</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The constructor sets the input arguments, calculates
+dimensions, and allocates storage. The meanings of variable
+suffixes are</p>
+<ul class="simple">
+<li>global          &#8211; per physical domain</li>
+<li>element         &#8211; per element</li>
+<li>elementBoundary &#8211; per element boundary</li>
+</ul>
+<p>The prefix n means &#8216;number of&#8217;.</p>
+<p>Storage is divided into quantities required at different sets
+of points or geometric entities. Each type of storage has a
+dictionary for all the quantities of that type. The names
+and dimensions of the storage dictionaries are</p>
+<ul class="simple">
+<li>e &#8211; at element</li>
+<li>q &#8211; at element quadrature, unique to elements</li>
+<li>ebq &#8211; at element boundary quadrature, unique to elements</li>
+<li>ebq_global &#8211; at element boundary quadrature, unique to element
+boundary</li>
+<li>ebqe &#8211; at element boundary quadrature, unique to global,
+exterior element boundary</li>
+<li>phi_ip &#8211; at the generalized interpolation points required to
+build a nonlinear phi</li>
+</ul>
 <dl class="method">
 <dt id="proteus.Transport.OneLevelTransport.setupFieldStrides">
 <code class="descname">setupFieldStrides</code><span class="sig-paren">(</span><em>interleaved=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.setupFieldStrides" title="Permalink to this definition">¶</a></dt>
@@ -501,6 +556,24 @@ This is being used right now to test nonlinear pod and deim</p>
 This is being used right now to test nonlinear pod and deim and is inefficient</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="proteus.Transport.OneLevelTransport.attachLaplaceOperator">
+<code class="descname">attachLaplaceOperator</code><span class="sig-paren">(</span><em>nu=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Transport.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Transport.OneLevelTransport.attachLaplaceOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach a Discrete Laplace Operator to the Transport Class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nu</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; Viscosity parameter for the Laplace operator.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>This function creates a Laplace matrix and stores the result in the
+<code class="xref py py-class docutils literal"><span class="pre">proteus.OneLevelTransport</span></code> class to assist in the construction
+of physics based preconditione</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -555,8 +628,8 @@ possess save methods, otherwise, do nothing.</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

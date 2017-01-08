@@ -1,0 +1,7 @@
+proteus.AnalysisTools module
+============================
+
+.. automodule:: proteus.AnalysisTools
+    :members:
+    :undoc-members:
+    :show-inheritance:

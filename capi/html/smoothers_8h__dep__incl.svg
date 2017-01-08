@@ -9,34 +9,34 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 80)">
 <title>smoothers.h</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-80 200,-80 200,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node2 -->
+<g id="node1" class="node"><title>Node2</title>
 <polygon fill="#bfbfbf" stroke="black" points="71,-56.5 71,-75.5 142,-75.5 142,-56.5 71,-56.5"/>
 <text text-anchor="middle" x="106.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">smoothers.h</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node3 -->
+<g id="node2" class="node"><title>Node3</title>
 <g id="a_node2"><a xlink:href="csmoothers_module_8c.html" target="_top" xlink:title="csmoothersModule.c">
 <polygon fill="white" stroke="black" points="0,-0.5 0,-19.5 107,-19.5 107,-0.5 0,-0.5"/>
 <text text-anchor="middle" x="53.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">csmoothersModule.c</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
-<g id="edge1" class="edge"><title>Node1&#45;&gt;Node2</title>
+<!-- Node2&#45;&gt;Node3 -->
+<g id="edge1" class="edge"><title>Node2&#45;&gt;Node3</title>
 <path fill="none" stroke="midnightblue" d="M90.5191,-48.7175C81.1775,-39.1997 69.7541,-27.5608 62.089,-19.7511"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="88.2455,-51.3978 97.7481,-56.083 93.2413,-46.4945 88.2455,-51.3978"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node4 -->
+<g id="node3" class="node"><title>Node4</title>
 <g id="a_node3"><a xlink:href="smoothers_8c.html" target="_top" xlink:title="smoothers.c">
 <polygon fill="white" stroke="black" points="125,-0.5 125,-19.5 196,-19.5 196,-0.5 125,-0.5"/>
 <text text-anchor="middle" x="160.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">smoothers.c</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node3 -->
-<g id="edge2" class="edge"><title>Node1&#45;&gt;Node3</title>
+<!-- Node2&#45;&gt;Node4 -->
+<g id="edge2" class="edge"><title>Node2&#45;&gt;Node4</title>
 <path fill="none" stroke="midnightblue" d="M122.498,-49.0024C132.067,-39.4329 143.861,-27.6389 151.749,-19.7511"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="120.013,-46.537 115.417,-56.083 124.963,-51.4868 120.013,-46.537"/>
 </g>

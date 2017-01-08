@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.Quadrature module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.Quadrature module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.RefUtils module" href="proteus.RefUtils.html" />
     <link rel="prev" title="proteus.Profiling module" href="proteus.Profiling.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -138,7 +139,7 @@
   <div class="section" id="module-proteus.Quadrature">
 <span id="proteus-quadrature-module"></span><h1>proteus.Quadrature module<a class="headerlink" href="#module-proteus.Quadrature" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy for numerical integration on reference domains in 1,2, and 3D.</p>
-<object data="../_images/inheritance-bf0d2bb32589986e8a07995752c261c0449281e3.svg" type="image/svg+xml">
+<object data="../_images/inheritance-04a493ad5c2381967ad39b7d7966f279a565310d.svg" type="image/svg+xml">
             <p class="warning">Inheritance diagram of proteus.Quadrature</p></object>
 <dl class="class">
 <dt id="proteus.Quadrature.Q_base">
@@ -296,7 +297,19 @@ order is number of intervals</p>
 <dt id="proteus.Quadrature.SimplexGaussQuadrature">
 <em class="property">class </em><code class="descclassname">proteus.Quadrature.</code><code class="descname">SimplexGaussQuadrature</code><span class="sig-paren">(</span><em>nd=3</em>, <em>order=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.SimplexGaussQuadrature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.Quadrature.Q_base" title="proteus.Quadrature.Q_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.Quadrature.Q_base</span></code></a></p>
-<p>A class for all quadrature on unit simplices.</p>
+<p>A class which defines quadrature on unit simplices.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nd</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Dimension of the finite element problem.</li>
+<li><strong>order</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Polynomial order for which the integration is exact.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="proteus.Quadrature.SimplexGaussQuadrature.setOrder">
 <code class="descname">setOrder</code><span class="sig-paren">(</span><em>k</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/Quadrature.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.Quadrature.SimplexGaussQuadrature.setOrder" title="Permalink to this definition">¶</a></dt>
@@ -347,8 +360,8 @@ order is number of intervals</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

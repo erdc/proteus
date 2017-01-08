@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>proteus.test_utils.TestTools module &#8212; Proteus 1.2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="proteus.test_utils.util module" href="proteus.test_utils.util.html" />
+    <link rel="prev" title="proteus.test_utils package" href="proteus.test_utils.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+          proteus</a>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="proteus.html">API</a></li>
+                <li><a href="../capi/html/hierarchy.html">C/C++/Fortran</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">proteus</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="proteus.html">proteus package</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">proteus.test_utils.TestTools module</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+  <li>
+    <a href="proteus.test_utils.html" title="Previous Chapter: proteus.test_utils package"><span class="glyphicon glyphicon-chevron-left visible-sm"></span><span class="hidden-sm hidden-tablet">&laquo; proteus.test_...</span>
+    </a>
+  </li>
+  <li>
+    <a href="proteus.test_utils.util.html" title="Next Chapter: proteus.test_utils.util module"><span class="glyphicon glyphicon-chevron-right visible-sm"></span><span class="hidden-sm hidden-tablet">proteus.test_... &raquo;</span>
+    </a>
+  </li>
+              
+            
+            
+            
+            
+              <li class="hidden-sm"></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="module-proteus.test_utils.TestTools">
+<span id="proteus-test-utils-testtools-module"></span><h1>proteus.test_utils.TestTools module<a class="headerlink" href="#module-proteus.test_utils.TestTools" title="Permalink to this headline">¶</a></h1>
+<p>Helper functions commonly used in tests.</p>
+<dl class="function">
+<dt id="proteus.test_utils.TestTools.addSubFolders">
+<code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">addSubFolders</code><span class="sig-paren">(</span><em>currentframe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.addSubFolders" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add import_modules and comparison_files to sys.path</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><strong>currentframe</strong> &#8211; </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.test_utils.TestTools.closeFiles">
+<code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">closeFiles</code><span class="sig-paren">(</span><em>filelist</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.closeFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close a set of files.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.test_utils.TestTools.NumericResults">
+<em class="property">class </em><code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">NumericResults</code><span class="sig-paren">(</span><em>data_dict</em>, <em>data_dict_header</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse and stores numerical data from a Proteus log file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data_dictionary</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A data_dictionary that stores the NumericalAnalytics data.</li>
+<li><strong>data_dictionary_header</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A dictionary that stores information about the simulation.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Initializes the Numeric Results class</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data_dict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Data dictionary.</li>
+<li><strong>data_dict_header</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; Data dictionary header.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="classmethod">
+<dt id="proteus.test_utils.TestTools.NumericResults.build_from_proteus_log">
+<em class="property">classmethod </em><code class="descname">build_from_proteus_log</code><span class="sig-paren">(</span><em>file_name</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.build_from_proteus_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the class from a proteus log file.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="proteus.test_utils.TestTools.NumericResults.load_from_pickle">
+<em class="property">classmethod </em><code class="descname">load_from_pickle</code><span class="sig-paren">(</span><em>file_name</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.load_from_pickle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the class from a pickled file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.test_utils.TestTools.NumericResults.pickle_data">
+<code class="descname">pickle_data</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.pickle_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pickle the dictionary created after parsing the file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; filename for dictionary storeage</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.test_utils.TestTools.NumericResults.print_info">
+<code class="descname">print_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.print_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Output a variety of information about the data-structure</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.test_utils.TestTools.NumericResults.print_header_latex">
+<code class="descname">print_header_latex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.print_header_latex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints the header information in a latex consistent format</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.test_utils.TestTools.NumericResults.ipython_plot_newton_it">
+<code class="descname">ipython_plot_newton_it</code><span class="sig-paren">(</span><em>time_level</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.ipython_plot_newton_it" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the Newton iteration residual in a jupyter notebook.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_level</strong> (<em>lst of tuples</em>) &#8211; A list of tuples with the structure (time,level) to be ploted.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.test_utils.TestTools.NumericResults.ipython_plot_ksp_residual">
+<code class="descname">ipython_plot_ksp_residual</code><span class="sig-paren">(</span><em>time_level_it</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.ipython_plot_ksp_residual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the outer KSP residual in a jupyter notebook.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_level_it</strong> &#8211; </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.test_utils.TestTools.NumericResults.ipython_plot_ksp_schur_residual">
+<code class="descname">ipython_plot_ksp_schur_residual</code><span class="sig-paren">(</span><em>time_level_it</em>, <em>axis=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.ipython_plot_ksp_schur_residual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the inner KSP residual in a jupyter notebook.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_level_it</strong> &#8211; </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

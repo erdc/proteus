@@ -9,105 +9,105 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 180)">
 <title>FSWEikonalSolverBase</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-180 562.5,-180 562.5,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node5 -->
+<g id="node1" class="node"><title>Node5</title>
 <polygon fill="#bfbfbf" stroke="black" points="137.5,-0.5 137.5,-19.5 259.5,-19.5 259.5,-0.5 137.5,-0.5"/>
 <text text-anchor="middle" x="198.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">FSWEikonalSolverBase</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node6 -->
+<g id="node2" class="node"><title>Node6</title>
 <g id="a_node2"><a xlink:href="class_f_m_m_eikonal_solver_base.html" target="_top" xlink:title="FMMEikonalSolverBase">
 <polygon fill="white" stroke="black" points="137.5,-84 137.5,-103 259.5,-103 259.5,-84 137.5,-84"/>
 <text text-anchor="middle" x="198.5" y="-91" font-family="Helvetica,sans-Serif" font-size="10.00">FMMEikonalSolverBase</text>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node1 -->
-<g id="edge1" class="edge"><title>Node2&#45;&gt;Node1</title>
+<!-- Node6&#45;&gt;Node5 -->
+<g id="edge1" class="edge"><title>Node6&#45;&gt;Node5</title>
 <path fill="none" stroke="midnightblue" d="M198.5,-73.3762C198.5,-56.3977 198.5,-32.3673 198.5,-19.6592"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="195,-73.778 198.5,-83.7781 202,-73.7781 195,-73.778"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node7 -->
+<g id="node3" class="node"><title>Node7</title>
 <g id="a_node3"><a xlink:href="class_unstructured_local_upwind_solvers.html" target="_top" xlink:title="UnstructuredLocalUpwindSolvers">
 <polygon fill="white" stroke="black" points="396.5,-156.5 396.5,-175.5 558.5,-175.5 558.5,-156.5 396.5,-156.5"/>
 <text text-anchor="middle" x="477.5" y="-163.5" font-family="Helvetica,sans-Serif" font-size="10.00">UnstructuredLocalUpwindSolvers</text>
 </a>
 </g>
 </g>
-<!-- Node3&#45;&gt;Node2 -->
-<g id="edge2" class="edge"><title>Node3&#45;&gt;Node2</title>
+<!-- Node7&#45;&gt;Node6 -->
+<g id="edge2" class="edge"><title>Node7&#45;&gt;Node6</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M433.919,-153.988C378.178,-139.903 282.827,-115.808 232.273,-103.034"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="433.293,-157.439 443.846,-156.496 435.008,-150.653 433.293,-157.439"/>
 <text text-anchor="middle" x="392" y="-130" font-family="Helvetica,sans-Serif" font-size="10.00"> localSolvers</text>
 </g>
-<!-- Node4 -->
-<g id="node4" class="node"><title>Node4</title>
+<!-- Node8 -->
+<g id="node4" class="node"><title>Node8</title>
 <polygon fill="white" stroke="#bfbfbf" points="13.5,-156.5 13.5,-175.5 105.5,-175.5 105.5,-156.5 13.5,-156.5"/>
 <text text-anchor="middle" x="59.5" y="-163.5" font-family="Helvetica,sans-Serif" font-size="10.00">std::vector&lt; int &gt;</text>
 </g>
-<!-- Node4&#45;&gt;Node2 -->
-<g id="edge3" class="edge"><title>Node4&#45;&gt;Node2</title>
+<!-- Node8&#45;&gt;Node6 -->
+<g id="edge3" class="edge"><title>Node8&#45;&gt;Node6</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M85.5024,-151.812C113.658,-137.531 157.742,-115.172 181.674,-103.034"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="83.6019,-148.851 76.2666,-156.496 86.7683,-155.094 83.6019,-148.851"/>
 <text text-anchor="middle" x="150.5" y="-130" font-family="Helvetica,sans-Serif" font-size="10.00"> Known</text>
 </g>
-<!-- Node7 -->
-<g id="node7" class="node"><title>Node7</title>
+<!-- Node11 -->
+<g id="node7" class="node"><title>Node11</title>
 <polygon fill="white" stroke="#bfbfbf" points="0,-78.5 0,-108.5 119,-108.5 119,-78.5 0,-78.5"/>
 <text text-anchor="start" x="8" y="-96.5" font-family="Helvetica,sans-Serif" font-size="10.00">std::vector&lt; std::vector</text>
 <text text-anchor="middle" x="59.5" y="-85.5" font-family="Helvetica,sans-Serif" font-size="10.00">&lt; int &gt; &gt;</text>
 </g>
-<!-- Node4&#45;&gt;Node7 -->
-<g id="edge8" class="edge"><title>Node4&#45;&gt;Node7</title>
+<!-- Node8&#45;&gt;Node11 -->
+<g id="edge8" class="edge"><title>Node8&#45;&gt;Node11</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M59.5,-146.236C59.5,-134.408 59.5,-119.383 59.5,-108.576"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="56.0001,-146.355 59.5,-156.355 63.0001,-146.355 56.0001,-146.355"/>
 <text text-anchor="middle" x="81" y="-130" font-family="Helvetica,sans-Serif" font-size="10.00"> elements</text>
 </g>
-<!-- Node5 -->
-<g id="node5" class="node"><title>Node5</title>
+<!-- Node9 -->
+<g id="node5" class="node"><title>Node9</title>
 <polygon fill="white" stroke="#bfbfbf" points="124,-156.5 124,-175.5 245,-175.5 245,-156.5 124,-156.5"/>
 <text text-anchor="middle" x="184.5" y="-163.5" font-family="Helvetica,sans-Serif" font-size="10.00">std::vector&lt; STATUS &gt;</text>
 </g>
-<!-- Node5&#45;&gt;Node2 -->
-<g id="edge4" class="edge"><title>Node5&#45;&gt;Node2</title>
+<!-- Node9&#45;&gt;Node6 -->
+<g id="edge4" class="edge"><title>Node9&#45;&gt;Node6</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M188.202,-146.358C190.975,-132.395 194.642,-113.926 196.769,-103.215"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="184.732,-145.865 186.217,-156.355 191.598,-147.229 184.732,-145.865"/>
 <text text-anchor="middle" x="208.5" y="-130" font-family="Helvetica,sans-Serif" font-size="10.00"> Status</text>
 </g>
-<!-- Node6 -->
-<g id="node6" class="node"><title>Node6</title>
+<!-- Node10 -->
+<g id="node6" class="node"><title>Node10</title>
 <g id="a_node6"><a xlink:href="struct_mesh.html" target="_top" xlink:title="Mesh">
 <polygon fill="white" stroke="black" points="263,-156.5 263,-175.5 304,-175.5 304,-156.5 263,-156.5"/>
 <text text-anchor="middle" x="283.5" y="-163.5" font-family="Helvetica,sans-Serif" font-size="10.00">Mesh</text>
 </a>
 </g>
 </g>
-<!-- Node6&#45;&gt;Node2 -->
-<g id="edge5" class="edge"><title>Node6&#45;&gt;Node2</title>
+<!-- Node10&#45;&gt;Node6 -->
+<g id="edge5" class="edge"><title>Node10&#45;&gt;Node6</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M264.915,-149.585C247.776,-135.37 222.945,-114.775 209.008,-103.215"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="263.146,-152.665 273.077,-156.355 267.615,-147.277 263.146,-152.665"/>
 <text text-anchor="middle" x="263.5" y="-130" font-family="Helvetica,sans-Serif" font-size="10.00"> mesh</text>
 </g>
-<!-- Node6&#45;&gt;Node6 -->
-<g id="edge6" class="edge"><title>Node6&#45;&gt;Node6</title>
+<!-- Node10&#45;&gt;Node10 -->
+<g id="edge6" class="edge"><title>Node10&#45;&gt;Node10</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M314.316,-171.442C318.9,-170.594 322,-168.78 322,-166 322,-161.438 313.652,-159.477 304.097,-160.119"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="313.937,-167.955 304.097,-171.881 314.238,-174.949 313.937,-167.955"/>
 <text text-anchor="middle" x="350" y="-163.5" font-family="Helvetica,sans-Serif" font-size="10.00"> subdomainp</text>
 </g>
-<!-- Node7&#45;&gt;Node1 -->
-<g id="edge7" class="edge"><title>Node7&#45;&gt;Node1</title>
+<!-- Node11&#45;&gt;Node5 -->
+<g id="edge7" class="edge"><title>Node11&#45;&gt;Node5</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M92.3528,-73.2374C121.356,-56.232 162.285,-32.2341 183.865,-19.5811"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="90.2512,-70.4123 83.395,-78.4897 93.7918,-76.4509 90.2512,-70.4123"/>
 <text text-anchor="middle" x="164.5" y="-46.5" font-family="Helvetica,sans-Serif" font-size="10.00"> Order</text>
 </g>
-<!-- Node8 -->
-<g id="node8" class="node"><title>Node8</title>
+<!-- Node12 -->
+<g id="node8" class="node"><title>Node12</title>
 <polygon fill="white" stroke="#bfbfbf" points="278,-84 278,-103 395,-103 395,-84 278,-84"/>
 <text text-anchor="middle" x="336.5" y="-91" font-family="Helvetica,sans-Serif" font-size="10.00">std::valarray&lt; double &gt;</text>
 </g>
-<!-- Node8&#45;&gt;Node1 -->
-<g id="edge9" class="edge"><title>Node8&#45;&gt;Node1</title>
+<!-- Node12&#45;&gt;Node5 -->
+<g id="edge9" class="edge"><title>Node12&#45;&gt;Node5</title>
 <path fill="none" stroke="#9a32cd" stroke-dasharray="5,2" d="M313.093,-78.6761C284.538,-61.812 237.124,-33.8108 213.229,-19.6984"/>
 <polygon fill="#9a32cd" stroke="#9a32cd" points="311.602,-81.8606 321.992,-83.9321 315.162,-75.8332 311.602,-81.8606"/>
 <text text-anchor="middle" x="300.5" y="-52" font-family="Helvetica,sans-Serif" font-size="10.00"> T0</text>

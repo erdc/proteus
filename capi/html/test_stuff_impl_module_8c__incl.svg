@@ -9,46 +9,46 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 136)">
 <title>testStuffImplModule.c</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-136 220.805,-136 220.805,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node0 -->
+<g id="node1" class="node"><title>Node0</title>
 <polygon fill="#bfbfbf" stroke="black" points="8.80542,-112.5 8.80542,-131.5 121.805,-131.5 121.805,-112.5 8.80542,-112.5"/>
 <text text-anchor="middle" x="65.3054" y="-119.5" font-family="Helvetica,sans-Serif" font-size="10.00">testStuffImplModule.c</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node1 -->
+<g id="node2" class="node"><title>Node1</title>
 <polygon fill="white" stroke="#bfbfbf" points="52.3054,-0.5 52.3054,-19.5 108.305,-19.5 108.305,-0.5 52.3054,-0.5"/>
 <text text-anchor="middle" x="80.3054" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">Python.h</text>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
-<g id="edge1" class="edge"><title>Node1&#45;&gt;Node2</title>
+<!-- Node0&#45;&gt;Node1 -->
+<g id="edge1" class="edge"><title>Node0&#45;&gt;Node1</title>
 <path fill="none" stroke="midnightblue" d="M45.745,-112.312C22.9124,-100.858 -10.1226,-79.4005 3.30542,-56 11.9209,-40.9862 27.6963,-30.5036 42.7351,-23.4579"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="44.1273,-26.6691 51.933,-19.5053 41.3636,-20.2378 44.1273,-26.6691"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node2 -->
+<g id="node3" class="node"><title>Node2</title>
 <polygon fill="white" stroke="#bfbfbf" points="12.8054,-56.5 12.8054,-75.5 117.805,-75.5 117.805,-56.5 12.8054,-56.5"/>
 <text text-anchor="middle" x="65.3054" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">numpy/arrayobject.h</text>
 </g>
-<!-- Node1&#45;&gt;Node3 -->
-<g id="edge2" class="edge"><title>Node1&#45;&gt;Node3</title>
+<!-- Node0&#45;&gt;Node2 -->
+<g id="edge2" class="edge"><title>Node0&#45;&gt;Node2</title>
 <path fill="none" stroke="midnightblue" d="M65.3054,-112.083C65.3054,-105.006 65.3054,-94.8611 65.3054,-85.9865"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="68.8055,-85.751 65.3054,-75.7511 61.8055,-85.7511 68.8055,-85.751"/>
 </g>
-<!-- Node4 -->
-<g id="node4" class="node"><title>Node4</title>
+<!-- Node3 -->
+<g id="node4" class="node"><title>Node3</title>
 <g id="a_node4"><a xlink:href="test_stuff_impl_8h.html" target="_top" xlink:title="Pyton interface to things that don&#39;t yet have a home. ">
 <polygon fill="white" stroke="black" points="135.805,-56.5 135.805,-75.5 216.805,-75.5 216.805,-56.5 135.805,-56.5"/>
 <text text-anchor="middle" x="176.305" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">testStuffImpl.h</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node4 -->
-<g id="edge3" class="edge"><title>Node1&#45;&gt;Node4</title>
+<!-- Node0&#45;&gt;Node3 -->
+<g id="edge3" class="edge"><title>Node0&#45;&gt;Node3</title>
 <path fill="none" stroke="midnightblue" d="M83.1395,-112.324C101.021,-103.625 128.78,-90.1202 149.351,-80.113"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="151.054,-83.1765 158.516,-75.6545 147.992,-76.8819 151.054,-83.1765"/>
 </g>
-<!-- Node4&#45;&gt;Node2 -->
-<g id="edge4" class="edge"><title>Node4&#45;&gt;Node2</title>
+<!-- Node3&#45;&gt;Node1 -->
+<g id="edge4" class="edge"><title>Node3&#45;&gt;Node1</title>
 <path fill="none" stroke="midnightblue" d="M160.881,-56.324C145.766,-47.8215 122.49,-34.7288 104.834,-24.7975"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="106.123,-21.5066 95.6912,-19.6545 102.691,-27.6077 106.123,-21.5066"/>
 </g>

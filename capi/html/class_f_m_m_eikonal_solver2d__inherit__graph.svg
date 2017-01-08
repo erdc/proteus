@@ -9,21 +9,21 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 80)">
 <title>FMMEikonalSolver2d</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-80 126,-80 126,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node0 -->
+<g id="node1" class="node"><title>Node0</title>
 <polygon fill="#bfbfbf" stroke="black" points="6,-0.5 6,-19.5 116,-19.5 116,-0.5 6,-0.5"/>
 <text text-anchor="middle" x="61" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">FMMEikonalSolver2d</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node1 -->
+<g id="node2" class="node"><title>Node1</title>
 <g id="a_node2"><a xlink:href="class_f_m_m_eikonal_solver_base.html" target="_top" xlink:title="FMMEikonalSolverBase">
 <polygon fill="white" stroke="black" points="0,-56.5 0,-75.5 122,-75.5 122,-56.5 0,-56.5"/>
 <text text-anchor="middle" x="61" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">FMMEikonalSolverBase</text>
 </a>
 </g>
 </g>
-<!-- Node2&#45;&gt;Node1 -->
-<g id="edge1" class="edge"><title>Node2&#45;&gt;Node1</title>
+<!-- Node1&#45;&gt;Node0 -->
+<g id="edge1" class="edge"><title>Node1&#45;&gt;Node0</title>
 <path fill="none" stroke="midnightblue" d="M61,-45.8045C61,-36.9102 61,-26.7798 61,-19.7511"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="57.5001,-46.083 61,-56.083 64.5001,-46.083 57.5001,-46.083"/>
 </g>

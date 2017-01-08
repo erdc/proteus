@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.LinearAlgebraTools module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.LinearAlgebraTools module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.LinearSolvers module" href="proteus.LinearSolvers.html" />
     <link rel="prev" title="proteus.LatexReport module" href="proteus.LatexReport.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -141,10 +142,78 @@
 <p>Vectors are just numpy arrays, as are dense matrices. Sparse matrices
 are CSR matrices. Parallel vector and matrix are built on top of those
 representations using PETSc.</p>
-<blockquote>
-<div>odo LinearAlgebraTools: make better use of numpy.linalg and petsc4py to provide the needed functionality and improve test suite</div></blockquote>
-<object data="../_images/inheritance-c109a6e500558ea805ddf9ef0af377deddc81a2e.svg" type="image/svg+xml">
+<object data="../_images/inheritance-8e938a6e9a069cbd73c2b69f14711566a4358228.svg" type="image/svg+xml">
             <p class="warning">Inheritance diagram of proteus.LinearAlgebraTools</p></object>
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.superlu_sparse_2_dense">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">superlu_sparse_2_dense</code><span class="sig-paren">(</span><em>sparse_matrix</em>, <em>output=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_sparse_2_dense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a sparse superluWrapper into a dense matrix.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sparse_matrix</strong> &#8211; </li>
+<li><strong>output</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Out file name to store the matrix.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>dense_matrix</strong> &#8211; A numpy array storing the dense matrix.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>This function should not be used for large matrices.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.petsc4py_sparse_2_dense">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">petsc4py_sparse_2_dense</code><span class="sig-paren">(</span><em>sparse_matrix</em>, <em>output=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.petsc4py_sparse_2_dense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a PETSc4Py matrix to a dense numpyarray.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sparse_matrix</strong> (<em>PETSc4py matrix</em>) &#8211; </li>
+<li><strong>output</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Output file name to store the matrix.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>dense_matrix</strong> &#8211; A numpy array with the dense matrix.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy array</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>This function is very inefficient for large matrices.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.LinearAlgebraTools.superlu_2_petsc4py">
+<code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">superlu_2_petsc4py</code><span class="sig-paren">(</span><em>sparse_superlu</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.superlu_2_petsc4py" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy a sparse superlu matrix to a sparse petsc4py matrix</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sparse_matrix</strong> (<code class="xref py py-class docutils literal"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code>) &#8211; </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>sparse_matrix</strong></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">PETSc4py matrix</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.ParVec">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">ParVec</code><span class="sig-paren">(</span><em>array</em>, <em>blockSize</em>, <em>n</em>, <em>N</em>, <em>nghosts=None</em>, <em>subdomain2global=None</em>, <em>blockVecType='simple'</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.ParVec" title="Permalink to this definition">¶</a></dt>
@@ -205,20 +274,23 @@ element spaces that cannot be interwoven such as Taylor Hood.</p>
 <dt id="proteus.LinearAlgebraTools.Vec">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">Vec</code><span class="sig-paren">(</span><em>n</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Vec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a vector of length n (using numpy)</p>
-<p>For example:
-&gt;&gt;&gt; Vec(3)
-array([ 0.,  0.,  0.])</p>
+<p>For example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Vec</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">array([ 0.,  0.,  0.])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.Mat">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">Mat</code><span class="sig-paren">(</span><em>m</em>, <em>n</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.Mat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build an m x n matrix (using numpy)</p>
-<p>For example:
-&gt;&gt;&gt; Mat(2,3)
-array([[ 0.,  0.,  0.],</p>
-<blockquote>
-<div>[ 0.,  0.,  0.]])</div></blockquote>
+<p>For example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Mat</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">array([[ 0.,  0.,  0.],</span>
+<span class="go">      [ 0.,  0.,  0.]])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -231,12 +303,47 @@ array([[ 0.,  0.,  0.],</p>
 <dt id="proteus.LinearAlgebraTools.SparseMat">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">SparseMat</code><span class="sig-paren">(</span><em>nr</em>, <em>nc</em>, <em>nnz</em>, <em>nzval</em>, <em>colind</em>, <em>rowptr</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a nr x nc sparse matrix from the CSR data structures</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>nr</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of rows.</li>
+<li><strong>nc</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of columns.</li>
+<li><strong>nnz</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The number of non-zero matrix entries.</li>
+<li><strong>nzval</strong> (<em>numpy array</em>) &#8211; Array with non-zero matrix entries.</li>
+<li><strong>colind</strong> (<em>numpy array of 32bit integers</em>) &#8211; CSR column array.</li>
+<li><strong>rowptr</strong> (<em>numpy array of 32bit integers</em>) &#8211; CSR row pointer.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>sparse_matrix</strong> &#8211; superlu sparse matrix in CSR format.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="xref py py-class docutils literal"><span class="pre">proteus.superluWrappers.SparseMatrix</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For the superluWrapper, both the colind and rowptr should use
+32-bit integer data types.</p>
+</div>
 </dd></dl>
 
 <dl class="class">
 <dt id="proteus.LinearAlgebraTools.SparseMatShell">
 <em class="property">class </em><code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">SparseMatShell</code><span class="sig-paren">(</span><em>ghosted_csr_mat</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains)</p>
+<dd><p>Build a parallel matrix shell from CSR data structures.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ghosted_csr_mat</strong> &#8211; </td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="proteus.LinearAlgebraTools.SparseMatShell.create">
 <code class="descname">create</code><span class="sig-paren">(</span><em>A</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.SparseMatShell.create" title="Permalink to this definition">¶</a></dt>
@@ -252,7 +359,7 @@ array([[ 0.,  0.,  0.],</p>
 <dl class="function">
 <dt id="proteus.LinearAlgebraTools.l2Norm">
 <code class="descclassname">proteus.LinearAlgebraTools.</code><code class="descname">l2Norm</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/LinearAlgebraTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.LinearAlgebraTools.l2Norm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the parallel l_2 norm</p>
+<dd><p>Compute the parallel <span class="math">\(l_2\)</span> norm</p>
 </dd></dl>
 
 <dl class="function">
@@ -316,7 +423,7 @@ weight vector h.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x,y,h</strong> &#8211; numpy arrays for vectors and weight</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong><strong>,</strong><strong>y</strong><strong>,</strong><strong>h</strong> &#8211; numpy arrays for vectors and weight</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the weighted dot product</td>
 </tr>
@@ -402,8 +509,8 @@ weight vector h.</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

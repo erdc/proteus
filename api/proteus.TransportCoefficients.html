@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.TransportCoefficients module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.TransportCoefficients module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.TriangleFileUtils module" href="proteus.TriangleFileUtils.html" />
     <link rel="prev" title="proteus.Transport module" href="proteus.Transport.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -140,7 +141,7 @@
 <p>Classes for implementing the coefficients of transport equations.</p>
 <p>TC_base defines the interface. The classes derived from TC_base in
 this module define common PDE&#8217;s.</p>
-<object data="../_images/inheritance-bce69b2700caf7fc93f594b8e468493108364f76.svg" type="image/svg+xml">
+<object data="../_images/inheritance-4f6aa2c396063f4f28735d47c367ca0444ba17b3.svg" type="image/svg+xml">
             <p class="warning">Inheritance diagram of proteus.TransportCoefficients</p></object>
 <dl class="class">
 <dt id="proteus.TransportCoefficients.TC_base">
@@ -171,6 +172,11 @@ the given coefficient.</p>
 <div class="math">
 \[\]</div>
 <p>a_{i,j} = 1</p>
+<p>Set the number of components (equations) of the
+PDE and initialize the dicitionaries describing the form of the
+coefficients. Strings naming each component (used for viewing
+and archiving) and a structure defining the sparsity pattern
+of diffusion tensors may also be provided.</p>
 <dl class="method">
 <dt id="proteus.TransportCoefficients.TC_base.evaluate">
 <code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.TC_base.evaluate" title="Permalink to this definition">¶</a></dt>
@@ -436,32 +442,14 @@ a system of advection-diffuion-reaction equations.</p>
 <dt id="proteus.TransportCoefficients.ShallowWater">
 <em class="property">class </em><code class="descclassname">proteus.TransportCoefficients.</code><code class="descname">ShallowWater</code><span class="sig-paren">(</span><em>g=9.8</em>, <em>nd=1</em>, <em>h_eps=1e-08</em>, <em>bedFrictionCoefficient=0.0</em>, <em>bedFrictionPower=1.0</em>, <em>bathymetryFunc=None</em>, <em>bathymetryGradientFunc=None</em>, <em>eddyViscosity=0.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.ShallowWater" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
-<blockquote>
-<div><p>The coefficients for the shallow water equations.</p>
-<dl class="docutils">
-<dt>right hand side for bed friction looks like</dt>
-<dd><ul class="first last simple">
-<li>au_b /</li>
-</ul>
-</dd>
-</dl>
-</div></blockquote>
-<dl class="docutils">
-<dt>ho</dt>
-<dd><dl class="first last docutils">
-<dt>where the bed friction stress is</dt>
-<dd>au_b =</dd>
-</dl>
-</dd>
-</dl>
-<p>ho C_f 
-ec u |
-ec u|</p>
-<blockquote>
-<div><p>C_f = g b/h^{a}</p>
-<p>b = n^2 for Mannings law &#8211;&gt; bedFrictionCoefficient
-a = 1/3 for Mannings law &#8211;&gt; bedFrictionPower</p>
-</div></blockquote>
+<p>The coefficients for the shallow water equations.</p>
+<p>Right hand side for bed friction looks like <span class="math">\(-\tau_b/\rho\)</span>
+where the bed friction stress is</p>
+<div class="math">
+\[\tau_b = \rho C_f \vec u \|\vec u\|
+C_f = g b/h^{a}\]</div>
+<p><span class="math">\(b = n^2\)</span> for Mannings law &#8211;&gt; bedFrictionCoefficient
+<span class="math">\(a = 1/3\)</span> for Mannings law &#8211;&gt; bedFrictionPower</p>
 <dl class="method">
 <dt id="proteus.TransportCoefficients.ShallowWater.initializeMesh">
 <code class="descname">initializeMesh</code><span class="sig-paren">(</span><em>mesh</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.ShallowWater.initializeMesh" title="Permalink to this definition">¶</a></dt>
@@ -502,6 +490,36 @@ a = 1/3 for Mannings law &#8211;&gt; bedFrictionPower</p>
 <dt id="proteus.TransportCoefficients.ShallowWater.shallowWater_2D_Evaluate">
 <code class="descname">shallowWater_2D_Evaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.ShallowWater.shallowWater_2D_Evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate the coefficients of the shallow water equations in 2D</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.TransportCoefficients.DiscreteLaplaceOperator">
+<em class="property">class </em><code class="descclassname">proteus.TransportCoefficients.</code><code class="descname">DiscreteLaplaceOperator</code><span class="sig-paren">(</span><em>nd=2</em>, <em>nu=1.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.DiscreteLaplaceOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<p>A coefficient class to construct the discrete Laplace Operator.</p>
+<p>This class defines the coefficients necessary to construct the
+discrete Laplace operator <span class="math">\(A\)</span> where</p>
+<div class="math">
+\[a^{c}_{i,j} = \int_{T} \nabla \phi^{c}_{i} \cdot \nabla \phi^{c}_{j} dT\]</div>
+<p>for all <span class="math">\(T \in \Omega\)</span>, <span class="math">\(c=1,...,nc\)</span> and
+<span class="math">\(\phi^{c}_{i}, i=1,...,k\)</span> is a basis for component <span class="math">\(c\)</span>.</p>
+<dl class="method">
+<dt id="proteus.TransportCoefficients.DiscreteLaplaceOperator.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>t</em>, <em>c</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.DiscreteLaplaceOperator.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.TransportCoefficients.DiscreteLaplaceOperator.Laplace_2D_Evaluate">
+<code class="descname">Laplace_2D_Evaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.DiscreteLaplaceOperator.Laplace_2D_Evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate the coefficients of the distcrete 2D Laplace operator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.TransportCoefficients.DiscreteLaplaceOperator.Laplace_3D_Evaluate">
+<code class="descname">Laplace_3D_Evaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.DiscreteLaplaceOperator.Laplace_3D_Evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>evaluate the coefficients of the discrete 3D Laplace operator</p>
 </dd></dl>
 
 </dd></dl>
@@ -924,14 +942,10 @@ a = 1/3 for Mannings law &#8211;&gt; bedFrictionPower</p>
 <em class="property">class </em><code class="descname">EikonalSolver</code><span class="sig-paren">(</span><em>levelSolverType</em>, <em>F</em>, <em>relativeTolerance=0.0</em>, <em>absoluteTolerance=1e-08</em>, <em>maxSolverIts=100</em>, <em>frontTolerance=0.0001</em>, <em>frontInitType='magnitudeOnly'</em>, <em>bandTolerance=-0.01</em>, <em>eikonalVariable=0</em>, <em>localReconstruction=None</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.NCLevelSetCoefficients.EikonalSolver" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple wrapper for special purpose Eikonal equation solvers on a single level.
 Current types allowed:</p>
-<blockquote>
-<div>FMMEikonalSolver
-FSWEikonalSOlver</div></blockquote>
-<dl class="docutils">
-<dt>TODO Feb 20</dt>
-<dd>Debug change in use truncation approach for positive and negative solutions
-Debug local Reconstruction</dd>
-</dl>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FMMEikonalSolver</span>
+<span class="n">FSWEikonalSolver</span>
+</pre></div>
+</div>
 <dl class="method">
 <dt id="proteus.TransportCoefficients.NCLevelSetCoefficients.EikonalSolver.convertFromC0P1Rep">
 <code class="descname">convertFromC0P1Rep</code><span class="sig-paren">(</span><em>dofin</em>, <em>dofout</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.NCLevelSetCoefficients.EikonalSolver.convertFromC0P1Rep" title="Permalink to this definition">¶</a></dt>
@@ -961,23 +975,19 @@ representation here</p>
 <dl class="class">
 <dt id="proteus.TransportCoefficients.NCLevelSetCoefficients.FMMEikonalSolver">
 <em class="property">class </em><code class="descclassname">NCLevelSetCoefficients.</code><code class="descname">FMMEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.NCLevelSetCoefficients.FMMEikonalSolver" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Encapsulate naive implementation of Fast Marching Methods on unstructured grids</dt>
-<dd><p class="first">for
-|grad T| = 1/F</p>
-<p class="last">T = 0 on Gamma</p>
-</dd>
-</dl>
-<p>1d local solver is standard upwind approximation
-2d local solver variations:</p>
+<dd><p>Encapsulate naive implementation of Fast Marching Methods on
+unstructured grids for</p>
 <blockquote>
-<div>acute triangulations version 1 or version 2 from Qian Zhang etal 07
-obtuse triangulation not implemented</div></blockquote>
+<div><div class="math">
+\[\|\grad T\| = 1/F\]</div>
+<p><span class="math">\(T = 0\)</span> on <span class="math">\(\Gamma\)</span></p>
+<p>1d local solver is standard upwind approximation</p>
+<p>2d local solver variations: acute triangulations version 1 or
+version 2 from Qian Zhang etal 07 obtuse triangulation not
+implemented</p>
 <p>3d local solver varitions: not fully checked</p>
-<p>For now, the input should be non-negative!
-TODO:</p>
-<blockquote>
-<div>3D version needs to be tested more</div></blockquote>
+<p>For now, the input should be non-negative!</p>
+</div></blockquote>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.NCLevelSetCoefficients.FMMEikonalSolver.cfmmfsw">
 <code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.NCLevelSetCoefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
@@ -1031,21 +1041,17 @@ ec x_n)</p>
 <em class="property">class </em><code class="descclassname">NCLevelSetCoefficients.</code><code class="descname">FSWEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>iterAtol=1e-08</em>, <em>iterRtol=0.0</em>, <em>maxIts=100</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>refPoints=None</em>, <em>orderApprox=1</em>, <em>LARGE=1.234e+28</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.NCLevelSetCoefficients.FSWEikonalSolver" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Encapsulate naive implementation of Fast Marching Methods on unstructured grids</dt>
-<dd><p class="first">for
-|grad T| = 1/F</p>
-<p class="last">T = 0 on Gamma</p>
-</dd>
+<dd>for</dd>
 </dl>
-<p>1d local solver is standard upwind approximation
-2d local solver variations:</p>
-<blockquote>
-<div>acute triangulations version 1 or version 2 from Qian Zhang etal 07
-obtuse triangulation not implemented</div></blockquote>
+<div class="math">
+\[\|\grad T\| = 1/F\]</div>
+<p><span class="math">\(T = 0\)</span> on <span class="math">\(\Gamma\)</span></p>
+<p>1d local solver is standard upwind approximation</p>
+<p>2d local solver variations: acute triangulations version 1 or
+version 2 from Qian Zhang etal 07 obtuse triangulation not
+implemented</p>
 <p>3d local solver variations: not fully checked</p>
-<p>For now, the input should be non-negative!
-TODO:</p>
-<blockquote>
-<div>3D version needs to be tested more</div></blockquote>
+<p>For now, the input should be non-negative!</p>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.NCLevelSetCoefficients.FSWEikonalSolver.cfmmfsw">
 <code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.NCLevelSetCoefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
@@ -1138,14 +1144,10 @@ ec x_n)</p>
 <em class="property">class </em><code class="descname">EikonalSolver</code><span class="sig-paren">(</span><em>levelSolverType</em>, <em>F</em>, <em>relativeTolerance=0.0</em>, <em>absoluteTolerance=1e-08</em>, <em>maxSolverIts=100</em>, <em>frontTolerance=0.0001</em>, <em>frontInitType='magnitudeOnly'</em>, <em>bandTolerance=-0.01</em>, <em>eikonalVariable=0</em>, <em>localReconstruction=None</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.CLevelSetCoefficients.EikonalSolver" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple wrapper for special purpose Eikonal equation solvers on a single level.
 Current types allowed:</p>
-<blockquote>
-<div>FMMEikonalSolver
-FSWEikonalSOlver</div></blockquote>
-<dl class="docutils">
-<dt>TODO Feb 20</dt>
-<dd>Debug change in use truncation approach for positive and negative solutions
-Debug local Reconstruction</dd>
-</dl>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FMMEikonalSolver</span>
+<span class="n">FSWEikonalSolver</span>
+</pre></div>
+</div>
 <dl class="method">
 <dt id="proteus.TransportCoefficients.CLevelSetCoefficients.EikonalSolver.convertFromC0P1Rep">
 <code class="descname">convertFromC0P1Rep</code><span class="sig-paren">(</span><em>dofin</em>, <em>dofout</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.CLevelSetCoefficients.EikonalSolver.convertFromC0P1Rep" title="Permalink to this definition">¶</a></dt>
@@ -1175,23 +1177,19 @@ representation here</p>
 <dl class="class">
 <dt id="proteus.TransportCoefficients.CLevelSetCoefficients.FMMEikonalSolver">
 <em class="property">class </em><code class="descclassname">CLevelSetCoefficients.</code><code class="descname">FMMEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.CLevelSetCoefficients.FMMEikonalSolver" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Encapsulate naive implementation of Fast Marching Methods on unstructured grids</dt>
-<dd><p class="first">for
-|grad T| = 1/F</p>
-<p class="last">T = 0 on Gamma</p>
-</dd>
-</dl>
-<p>1d local solver is standard upwind approximation
-2d local solver variations:</p>
+<dd><p>Encapsulate naive implementation of Fast Marching Methods on
+unstructured grids for</p>
 <blockquote>
-<div>acute triangulations version 1 or version 2 from Qian Zhang etal 07
-obtuse triangulation not implemented</div></blockquote>
+<div><div class="math">
+\[\|\grad T\| = 1/F\]</div>
+<p><span class="math">\(T = 0\)</span> on <span class="math">\(\Gamma\)</span></p>
+<p>1d local solver is standard upwind approximation</p>
+<p>2d local solver variations: acute triangulations version 1 or
+version 2 from Qian Zhang etal 07 obtuse triangulation not
+implemented</p>
 <p>3d local solver varitions: not fully checked</p>
-<p>For now, the input should be non-negative!
-TODO:</p>
-<blockquote>
-<div>3D version needs to be tested more</div></blockquote>
+<p>For now, the input should be non-negative!</p>
+</div></blockquote>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.CLevelSetCoefficients.FMMEikonalSolver.cfmmfsw">
 <code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.CLevelSetCoefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
@@ -1245,21 +1243,17 @@ ec x_n)</p>
 <em class="property">class </em><code class="descclassname">CLevelSetCoefficients.</code><code class="descname">FSWEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>iterAtol=1e-08</em>, <em>iterRtol=0.0</em>, <em>maxIts=100</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>refPoints=None</em>, <em>orderApprox=1</em>, <em>LARGE=1.234e+28</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.CLevelSetCoefficients.FSWEikonalSolver" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Encapsulate naive implementation of Fast Marching Methods on unstructured grids</dt>
-<dd><p class="first">for
-|grad T| = 1/F</p>
-<p class="last">T = 0 on Gamma</p>
-</dd>
+<dd>for</dd>
 </dl>
-<p>1d local solver is standard upwind approximation
-2d local solver variations:</p>
-<blockquote>
-<div>acute triangulations version 1 or version 2 from Qian Zhang etal 07
-obtuse triangulation not implemented</div></blockquote>
+<div class="math">
+\[\|\grad T\| = 1/F\]</div>
+<p><span class="math">\(T = 0\)</span> on <span class="math">\(\Gamma\)</span></p>
+<p>1d local solver is standard upwind approximation</p>
+<p>2d local solver variations: acute triangulations version 1 or
+version 2 from Qian Zhang etal 07 obtuse triangulation not
+implemented</p>
 <p>3d local solver variations: not fully checked</p>
-<p>For now, the input should be non-negative!
-TODO:</p>
-<blockquote>
-<div>3D version needs to be tested more</div></blockquote>
+<p>For now, the input should be non-negative!</p>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.CLevelSetCoefficients.FSWEikonalSolver.cfmmfsw">
 <code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.CLevelSetCoefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
@@ -1362,14 +1356,10 @@ ec x_n)</p>
 <em class="property">class </em><code class="descname">EikonalSolver</code><span class="sig-paren">(</span><em>levelSolverType</em>, <em>F</em>, <em>relativeTolerance=0.0</em>, <em>absoluteTolerance=1e-08</em>, <em>maxSolverIts=100</em>, <em>frontTolerance=0.0001</em>, <em>frontInitType='magnitudeOnly'</em>, <em>bandTolerance=-0.01</em>, <em>eikonalVariable=0</em>, <em>localReconstruction=None</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.VOFCoefficients.EikonalSolver" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple wrapper for special purpose Eikonal equation solvers on a single level.
 Current types allowed:</p>
-<blockquote>
-<div>FMMEikonalSolver
-FSWEikonalSOlver</div></blockquote>
-<dl class="docutils">
-<dt>TODO Feb 20</dt>
-<dd>Debug change in use truncation approach for positive and negative solutions
-Debug local Reconstruction</dd>
-</dl>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FMMEikonalSolver</span>
+<span class="n">FSWEikonalSolver</span>
+</pre></div>
+</div>
 <dl class="method">
 <dt id="proteus.TransportCoefficients.VOFCoefficients.EikonalSolver.convertFromC0P1Rep">
 <code class="descname">convertFromC0P1Rep</code><span class="sig-paren">(</span><em>dofin</em>, <em>dofout</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.VOFCoefficients.EikonalSolver.convertFromC0P1Rep" title="Permalink to this definition">¶</a></dt>
@@ -1399,23 +1389,19 @@ representation here</p>
 <dl class="class">
 <dt id="proteus.TransportCoefficients.VOFCoefficients.FMMEikonalSolver">
 <em class="property">class </em><code class="descclassname">VOFCoefficients.</code><code class="descname">FMMEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.VOFCoefficients.FMMEikonalSolver" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Encapsulate naive implementation of Fast Marching Methods on unstructured grids</dt>
-<dd><p class="first">for
-|grad T| = 1/F</p>
-<p class="last">T = 0 on Gamma</p>
-</dd>
-</dl>
-<p>1d local solver is standard upwind approximation
-2d local solver variations:</p>
+<dd><p>Encapsulate naive implementation of Fast Marching Methods on
+unstructured grids for</p>
 <blockquote>
-<div>acute triangulations version 1 or version 2 from Qian Zhang etal 07
-obtuse triangulation not implemented</div></blockquote>
+<div><div class="math">
+\[\|\grad T\| = 1/F\]</div>
+<p><span class="math">\(T = 0\)</span> on <span class="math">\(\Gamma\)</span></p>
+<p>1d local solver is standard upwind approximation</p>
+<p>2d local solver variations: acute triangulations version 1 or
+version 2 from Qian Zhang etal 07 obtuse triangulation not
+implemented</p>
 <p>3d local solver varitions: not fully checked</p>
-<p>For now, the input should be non-negative!
-TODO:</p>
-<blockquote>
-<div>3D version needs to be tested more</div></blockquote>
+<p>For now, the input should be non-negative!</p>
+</div></blockquote>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.VOFCoefficients.FMMEikonalSolver.cfmmfsw">
 <code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.VOFCoefficients.FMMEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
@@ -1469,21 +1455,17 @@ ec x_n)</p>
 <em class="property">class </em><code class="descclassname">VOFCoefficients.</code><code class="descname">FSWEikonalSolver</code><span class="sig-paren">(</span><em>mesh</em>, <em>dofMap</em>, <em>nSpace</em>, <em>iterAtol=1e-08</em>, <em>iterRtol=0.0</em>, <em>maxIts=100</em>, <em>localSolverType='QianEtalV2'</em>, <em>frontInitType='magnitudeOnly'</em>, <em>refPoints=None</em>, <em>orderApprox=1</em>, <em>LARGE=1.234e+28</em>, <em>debugLevel=3</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.VOFCoefficients.FSWEikonalSolver" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Encapsulate naive implementation of Fast Marching Methods on unstructured grids</dt>
-<dd><p class="first">for
-|grad T| = 1/F</p>
-<p class="last">T = 0 on Gamma</p>
-</dd>
+<dd>for</dd>
 </dl>
-<p>1d local solver is standard upwind approximation
-2d local solver variations:</p>
-<blockquote>
-<div>acute triangulations version 1 or version 2 from Qian Zhang etal 07
-obtuse triangulation not implemented</div></blockquote>
+<div class="math">
+\[\|\grad T\| = 1/F\]</div>
+<p><span class="math">\(T = 0\)</span> on <span class="math">\(\Gamma\)</span></p>
+<p>1d local solver is standard upwind approximation</p>
+<p>2d local solver variations: acute triangulations version 1 or
+version 2 from Qian Zhang etal 07 obtuse triangulation not
+implemented</p>
 <p>3d local solver variations: not fully checked</p>
-<p>For now, the input should be non-negative!
-TODO:</p>
-<blockquote>
-<div>3D version needs to be tested more</div></blockquote>
+<p>For now, the input should be non-negative!</p>
 <dl class="attribute">
 <dt id="proteus.TransportCoefficients.VOFCoefficients.FSWEikonalSolver.cfmmfsw">
 <code class="descname">cfmmfsw</code><em class="property"> = &lt;module 'proteus.cfmmfsw' from '/home/cekees/proteus/proteus/cfmmfsw.so'&gt;</em><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.VOFCoefficients.FSWEikonalSolver.cfmmfsw" title="Permalink to this definition">¶</a></dt>
@@ -2370,127 +2352,31 @@ ec x_n)</p>
 <em class="property">class </em><code class="descclassname">proteus.TransportCoefficients.</code><code class="descname">kEpsilon</code><span class="sig-paren">(</span><em>flowModelID=0, nd=2, c_mu=0.09, c_1=0.126, c_2=1.92, c_epsilon=0.07, sigma_k=1.0, sigma_e=1.29, g=[0.0, -9.8], nu=1.004e-06, rho=998.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.kEpsilon" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
 <p>Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11</p>
-<p>ar{
-ec v} = &lt;
-ec v&gt; Reynolds-averaged (mean) velocity</p>
-<p>ec v^{&#8216;}   = turbulent fluctuation
-assume 
-ec v = &lt;
-ec v&gt; + 
-ec v^{&#8216;}, with &lt;
-ec v^{&#8216;}&gt; = 0</p>
+<p><span class="math">\(\bar{\vec v} = &lt;\vec v&gt;\)</span> Reynolds-averaged (mean) velocity
+<span class="math">\(\vec v^{'}   =\)</span> turbulent fluctuation</p>
+<p>assume <span class="math">\(\vec v = &lt;\vec v&gt; + \vec v^{'}\)</span>, with <span class="math">\(&lt;\vec v^{'}&gt; = 0\)</span></p>
 <p>Reynolds averaged NS equations</p>
-<p>deld ar{
-ec v} = 0</p>
-<p>pd{ar{
-ec v}}{t} + deld left(ar{
-ec v} outer ar{
-ec v}
-ight)</p>
-<blockquote>
-<div><ul class="simple">
-<li></li>
-</ul>
-</div></blockquote>
-<p>u deld         en ar{D} + 
-rac{1}{
-ho}grad ar p</p>
-<blockquote>
-<div><ul class="simple">
-<li></li>
-</ul>
-</div></blockquote>
-<p>rac{1}{rho}deld      en{R} = 0</p>
+<div class="math">
+\[\deld \bar{\vec v} = 0\]</div>
+<div class="math">
+\[\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+        -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
+        - \frac{1}{rho}\deld \ten{R} = 0\]</div>
 <p>Reynolds stress term</p>
-<blockquote>
-<div>en R = -</div></blockquote>
-<p>ho &lt;
-ec v^{&#8216;}outer 
-ec v^{&#8216;}&gt;</p>
-<p>rac{1}{
-ho}     en{R} = 2 
-u_t ar{D} - 
-rac{2}{3}k        en{I}</p>
-<p>D_{ij}(
-ec v) = 
-rac{1}{2} left( pd{v_i}{x_j} + pd{v_j}{x_i})</p>
-<blockquote>
-<div>en D ar{       en D} = D(&lt;</div></blockquote>
-<p>ec v&gt;),     en D^{&#8216;} =      en D(
-ec v^{&#8216;})</p>
+<div class="math">
+\[\ten R = -\rho &lt;\vec v^{'}\outer \vec v^{'}&gt;
+\frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
+\ten D \bar{\ten D} = D(&lt;\vec v&gt;), \ten D^{'} = \ten D(\vec v^{'})\]</div>
 <p>k-epsilon tranport equations</p>
-<p>pd{k}{t} + deld (kar{
-ec v})</p>
-<blockquote>
-<div><ul class="simple">
-<li>deldleft[left(</li>
-</ul>
-</div></blockquote>
-<p>rac{
-u_t}{sigma_k} + 
-u
-ight)grad k 
-ight]</p>
-<blockquote>
-<div><ul class="simple">
-<li>4</li>
-</ul>
-</div></blockquote>
-<p>u_t Pi_{D} + epsilon = 0</p>
-<p>pd{
-arepsilon}{t} + deld (
-arepsilon ar{
-ec v})</p>
-<blockquote>
-<div><ul class="simple">
-<li>deldleft[left(</li>
-</ul>
-</div></blockquote>
-<p>rac{
-u_t}{sigma_
-arepsilon} + 
-u
-ight)grad 
-arepsilon 
-ight]</p>
-<blockquote>
-<div><ul class="simple">
-<li>4c_1 k Pi_{D} + c_2</li>
-</ul>
-</div></blockquote>
-<p>rac{epsilon^2}{k} = 0</p>
-<p>k              &#8211; turbulent kinetic energy = &lt;
-ec v^{&#8216;}dot 
-ec v^{&#8216;}&gt;</p>
-<p>arepsilon    &#8211; turbulent dissipation rate = 4 
-u &lt;Pi_{D^{&#8216;}}&gt;</p>
-<p>u            &#8211; kinematic viscosity (mu/
-ho)</p>
-<p>u_t          &#8211; turbulent viscosity = c_mu 
-rac{k^2}{
-arepsilon}</p>
-<p>Pi_{   en A} = 
-rac{1}{2}tr(   en A^2) = 1/2   en Acdot       en A</p>
-<blockquote>
-<div>en D cdot      en D =</div></blockquote>
-<dl class="docutils">
-<dt>rac{1}{4}left[ (4 u_x^2 + 4 v_y^2 +</dt>
-<dd>1/2 (u_y + v_x)^2</dd>
-</dl>
-<p>ight]</p>
-<p>4 Pi_{D} = 2 
-rac{1}{4}left[ (4 u_x^2 + 4 v_y^2 +</p>
-<blockquote>
-<div>1/2 (u_y + v_x)^2</div></blockquote>
-<dl class="docutils">
-<dt>ight]</dt>
-<dd>= left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2</dd>
-</dl>
-<p>ight]</p>
-<p>sigma_k &#8211; Prandtl number pprox 1
-sigma_e &#8211; c_{mu}/c_e</p>
-<p>c_{mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{
-arepsilon} = 0.07</p>
+<div class="math">
+\[\pd{k}{t} + \deld (k\bar{\vec v})
+- \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
+- 4\nu_t \Pi_{D} + \epsilon = 0\]</div>
+<div class="math">
+\[\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
+- \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
+- 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0\]</div>
 <dl class="method">
 <dt id="proteus.TransportCoefficients.kEpsilon.attachModels">
 <code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.kEpsilon.attachModels" title="Permalink to this definition">¶</a></dt>
@@ -2545,131 +2431,47 @@ arepsilon} = 0.07</p>
 <dt id="proteus.TransportCoefficients.kEpsilon_k">
 <em class="property">class </em><code class="descclassname">proteus.TransportCoefficients.</code><code class="descname">kEpsilon_k</code><span class="sig-paren">(</span><em>flowModelID=0, epsilonModelID=2, nd=2, c_mu=0.09, sigma_k=1.0, g=[0.0, -9.8], nu=1.004e-06, rho=998.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.kEpsilon_k" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
-<dl class="docutils">
-<dt>Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11</dt>
-<dd>but solves for just k assuming epsilon computed independently and lagged in time</dd>
-</dl>
-<p>ar{
-ec v} = &lt;
-ec v&gt; Reynolds-averaged (mean) velocity</p>
-<p>ec v^{&#8216;}   = turbulent fluctuation
-assume 
-ec v = &lt;
-ec v&gt; + 
-ec v^{&#8216;}, with &lt;
-ec v^{&#8216;}&gt; = 0</p>
+<p>Basic k-epsilon model for incompressible flow from Hutter etal
+Chaper 11 but solves for just k assuming epsilon computed
+independently and lagged in time</p>
+<p><span class="math">\(\bar{\vec v} = &lt;\vec v&gt;\)</span> Reynolds-averaged (mean) velocity</p>
+<p><span class="math">\(\vec v^{'}   =\)</span> turbulent fluctuation</p>
+<p>assume <span class="math">\(\vec v = &lt;\vec v&gt; + \vec v^{'}\)</span>, with <span class="math">\(&lt;\vec v^{'}&gt; = 0\)</span></p>
 <p>Reynolds averaged NS equations</p>
-<p>deld ar{
-ec v} = 0</p>
-<p>pd{ar{
-ec v}}{t} + deld left(ar{
-ec v} outer ar{
-ec v}
-ight)</p>
-<blockquote>
-<div><ul class="simple">
-<li></li>
-</ul>
-</div></blockquote>
-<p>u deld         en ar{D} + 
-rac{1}{
-ho}grad ar p</p>
-<blockquote>
-<div><ul class="simple">
-<li></li>
-</ul>
-</div></blockquote>
-<p>rac{1}{rho}deld      en{R} = 0</p>
+<div class="math">
+\[\deld \bar{\vec v} = 0
+\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+        -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
+        - \frac{1}{rho}\deld \ten{R} = 0\]</div>
 <p>Reynolds stress term</p>
-<blockquote>
-<div>en R = -</div></blockquote>
-<p>ho &lt;
-ec v^{&#8216;}outer 
-ec v^{&#8216;}&gt;</p>
-<p>rac{1}{
-ho}     en{R} = 2 
-u_t ar{D} - 
-rac{2}{3}k        en{I}</p>
-<p>D_{ij}(
-ec v) = 
-rac{1}{2} left( pd{v_i}{x_j} + pd{v_j}{x_i})</p>
-<blockquote>
-<div>en D ar{       en D} = D(&lt;</div></blockquote>
-<p>ec v&gt;),     en D^{&#8216;} =      en D(
-ec v^{&#8216;})</p>
+<div class="math">
+\[\ten R = -\rho &lt;\vec v^{'}\outer \vec v^{'}&gt;
+\frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
+\ten D \bar{\ten D} = D(&lt;\vec v&gt;), \ten D^{'} = \ten D(\vec v^{'})\]</div>
 <p>k-epsilon tranport equations</p>
-<p>pd{k}{t} + deld (kar{
-ec v})</p>
-<blockquote>
-<div><ul class="simple">
-<li>deldleft[left(</li>
-</ul>
-</div></blockquote>
-<p>rac{
-u_t}{sigma_k} + 
-u
-ight)grad k 
-ight]</p>
-<blockquote>
-<div><ul class="simple">
-<li>4</li>
-</ul>
-</div></blockquote>
-<p>u_t Pi_{D} + epsilon = 0</p>
-<p>pd{
-arepsilon}{t} + deld (
-arepsilon ar{
-ec v})</p>
-<blockquote>
-<div><ul class="simple">
-<li>deldleft[left(</li>
-</ul>
-</div></blockquote>
-<p>rac{
-u_t}{sigma_
-arepsilon} + 
-u
-ight)grad 
-arepsilon 
-ight]</p>
-<blockquote>
-<div><ul class="simple">
-<li>4c_1 k Pi_{D} + c_2</li>
-</ul>
-</div></blockquote>
-<p>rac{epsilon^2}{k} = 0</p>
-<p>k              &#8211; turbulent kinetic energy = &lt;
-ec v^{&#8216;}dot 
-ec v^{&#8216;}&gt;</p>
-<p>arepsilon    &#8211; turbulent dissipation rate = 4 
-u &lt;Pi_{D^{&#8216;}}&gt;</p>
-<p>u            &#8211; kinematic viscosity (mu/
-ho)</p>
-<p>u_t          &#8211; turbulent viscosity = c_mu 
-rac{k^2}{
-arepsilon}</p>
-<p>Pi_{   en A} = 
-rac{1}{2}tr(   en A^2) = 1/2   en Acdot       en A</p>
-<blockquote>
-<div>en D cdot      en D =</div></blockquote>
-<dl class="docutils">
-<dt>rac{1}{4}left[ (4 u_x^2 + 4 v_y^2 +</dt>
-<dd>1/2 (u_y + v_x)^2</dd>
-</dl>
-<p>ight]</p>
-<p>4 Pi_{D} = 2 
-rac{1}{4}left[ (4 u_x^2 + 4 v_y^2 +</p>
-<blockquote>
-<div>1/2 (u_y + v_x)^2</div></blockquote>
-<dl class="docutils">
-<dt>ight]</dt>
-<dd>= left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2</dd>
-</dl>
-<p>ight]</p>
-<p>sigma_k &#8211; Prandtl number pprox 1
-sigma_e &#8211; c_{mu}/c_e</p>
-<p>c_{mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{
-arepsilon} = 0.07</p>
+<div class="math">
+\[\pd{k}{t} + \deld (k\bar{\vec v})
+  - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
+  - 4\nu_t \Pi_{D} + \epsilon = 0
+\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
+  - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
+  - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0\]</div>
+<p><span class="math">\(k\)</span>              &#8211; turbulent kinetic energy = &lt;vec v^{&#8216;}dot vec v^{&#8216;}&gt;
+<span class="math">\(\varepsilon\)</span>   &#8211; turbulent dissipation rate = 4 nu &lt;Pi_{D^{&#8216;}}&gt;
+<span class="math">\(\nu\)</span>            &#8211; kinematic viscosity (mu/rho)
+<span class="math">\(\nu_t\)</span>          &#8211; turbulent viscosity = c_mu frac{k^2}{varepsilon}</p>
+<div class="math">
+\[\Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
+\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+                                 1/2 (u_y + v_x)^2 \right]
+4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+                         1/2 (u_y + v_x)^2 \right]
+   = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]\]</div>
+<p><span class="math">\(\sigma_k\)</span> &#8211; Prandtl number approx 1
+<span class="math">\(\sigma_e\)</span> &#8211; c_{mu}/c_e</p>
+<div class="math">
+\[c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07\]</div>
 <dl class="method">
 <dt id="proteus.TransportCoefficients.kEpsilon_k.attachModels">
 <code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.kEpsilon_k.attachModels" title="Permalink to this definition">¶</a></dt>
@@ -2718,131 +2520,45 @@ arepsilon} = 0.07</p>
 <dt id="proteus.TransportCoefficients.kEpsilon_epsilon">
 <em class="property">class </em><code class="descclassname">proteus.TransportCoefficients.</code><code class="descname">kEpsilon_epsilon</code><span class="sig-paren">(</span><em>flowModelID=0, kModelID=1, nd=2, c_mu=0.09, c_1=0.126, c_2=1.92, c_epsilon=0.07, sigma_e=1.29, g=[0.0, -9.8], nu=1.004e-06, rho=998.0</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.kEpsilon_epsilon" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
-<dl class="docutils">
-<dt>Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11</dt>
-<dd>but solves for just epsilon assuming k lagged</dd>
-</dl>
-<p>ar{
-ec v} = &lt;
-ec v&gt; Reynolds-averaged (mean) velocity</p>
-<p>ec v^{&#8216;}   = turbulent fluctuation
-assume 
-ec v = &lt;
-ec v&gt; + 
-ec v^{&#8216;}, with &lt;
-ec v^{&#8216;}&gt; = 0</p>
+<p>Basic k-epsilon model for incompressible flow from Hutter etal
+Chaper 11 but solves for just epsilon assuming k lagged</p>
+<p><span class="math">\(\bar{\vec v} = &lt;\vec v&gt;\)</span> Reynolds-averaged (mean) velocity</p>
+<p><span class="math">\(\vec v^{'}\)</span>   = turbulent fluctuation</p>
+<p>assume <span class="math">\(\vec v = &lt;\vec v&gt; + \vec v^{'}\)</span>, with <span class="math">\(&lt;\vec v^{'}&gt; = 0\)</span></p>
 <p>Reynolds averaged NS equations</p>
-<p>deld ar{
-ec v} = 0</p>
-<p>pd{ar{
-ec v}}{t} + deld left(ar{
-ec v} outer ar{
-ec v}
-ight)</p>
-<blockquote>
-<div><ul class="simple">
-<li></li>
-</ul>
-</div></blockquote>
-<p>u deld         en ar{D} + 
-rac{1}{
-ho}grad ar p</p>
-<blockquote>
-<div><ul class="simple">
-<li></li>
-</ul>
-</div></blockquote>
-<p>rac{1}{rho}deld      en{R} = 0</p>
+<div class="math">
+\[\deld \bar{\vec v} = 0
+\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+        -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
+        - \frac{1}{rho}\deld \ten{R} = 0\]</div>
 <p>Reynolds stress term</p>
-<blockquote>
-<div>en R = -</div></blockquote>
-<p>ho &lt;
-ec v^{&#8216;}outer 
-ec v^{&#8216;}&gt;</p>
-<p>rac{1}{
-ho}     en{R} = 2 
-u_t ar{D} - 
-rac{2}{3}k        en{I}</p>
-<p>D_{ij}(
-ec v) = 
-rac{1}{2} left( pd{v_i}{x_j} + pd{v_j}{x_i})</p>
-<blockquote>
-<div>en D ar{       en D} = D(&lt;</div></blockquote>
-<p>ec v&gt;),     en D^{&#8216;} =      en D(
-ec v^{&#8216;})</p>
+<div class="math">
+\[\ten R = -\rho &lt;\vec v^{'}\outer \vec v^{'}&gt;
+\frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
+\ten D \bar{\ten D} = D(&lt;\vec v&gt;), \ten D^{'} = \ten D(\vec v^{'})\]</div>
 <p>k-epsilon tranport equations</p>
-<p>pd{k}{t} + deld (kar{
-ec v})</p>
-<blockquote>
-<div><ul class="simple">
-<li>deldleft[left(</li>
-</ul>
-</div></blockquote>
-<p>rac{
-u_t}{sigma_k} + 
-u
-ight)grad k 
-ight]</p>
-<blockquote>
-<div><ul class="simple">
-<li>4</li>
-</ul>
-</div></blockquote>
-<p>u_t Pi_{D} + epsilon = 0</p>
-<p>pd{
-arepsilon}{t} + deld (
-arepsilon ar{
-ec v})</p>
-<blockquote>
-<div><ul class="simple">
-<li>deldleft[left(</li>
-</ul>
-</div></blockquote>
-<p>rac{
-u_t}{sigma_
-arepsilon} + 
-u
-ight)grad 
-arepsilon 
-ight]</p>
-<blockquote>
-<div><ul class="simple">
-<li>4c_1 k Pi_{D} + c_2</li>
-</ul>
-</div></blockquote>
-<p>rac{epsilon^2}{k} = 0</p>
-<p>k              &#8211; turbulent kinetic energy = &lt;
-ec v^{&#8216;}dot 
-ec v^{&#8216;}&gt;</p>
-<p>arepsilon    &#8211; turbulent dissipation rate = 4 
-u &lt;Pi_{D^{&#8216;}}&gt;</p>
-<p>u            &#8211; kinematic viscosity (mu/
-ho)</p>
-<p>u_t          &#8211; turbulent viscosity = c_mu 
-rac{k^2}{
-arepsilon}</p>
-<p>Pi_{   en A} = 
-rac{1}{2}tr(   en A^2) = 1/2   en Acdot       en A</p>
-<blockquote>
-<div>en D cdot      en D =</div></blockquote>
-<dl class="docutils">
-<dt>rac{1}{4}left[ (4 u_x^2 + 4 v_y^2 +</dt>
-<dd>1/2 (u_y + v_x)^2</dd>
-</dl>
-<p>ight]</p>
-<p>4 Pi_{D} = 2 
-rac{1}{4}left[ (4 u_x^2 + 4 v_y^2 +</p>
-<blockquote>
-<div>1/2 (u_y + v_x)^2</div></blockquote>
-<dl class="docutils">
-<dt>ight]</dt>
-<dd>= left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2</dd>
-</dl>
-<p>ight]</p>
-<p>sigma_k &#8211; Prandtl number pprox 1
-sigma_e &#8211; c_{mu}/c_e</p>
-<p>c_{mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{
-arepsilon} = 0.07</p>
+<div class="math">
+\[\pd{k}{t} + \deld (k\bar{\vec v})
+   - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
+   - 4\nu_t \Pi_{D} + \epsilon = 0\]</div>
+<div class="math">
+\[\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
+   - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
+   - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0\]</div>
+<p><span class="math">\(k\)</span>              &#8211; turbulent kinetic energy = &lt;vec v^{&#8216;}dot vec v^{&#8216;}&gt;
+<span class="math">\(\varepsilon\)</span>    &#8211; turbulent dissipation rate = 4 nu &lt;Pi_{D^{&#8216;}}&gt;
+<span class="math">\(\nu\)</span>            &#8211; kinematic viscosity (mu/rho)
+<span class="math">\(\nu_t\)</span>          &#8211; turbulent viscosity = c_mu frac{k^2}{varepsilon}</p>
+<div class="math">
+\[ \begin{align}\begin{aligned}\Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
+\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+                                 1/2 (u_y + v_x)^2 \right]\\ 4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+                         1/2 (u_y + v_x)^2 \right]
+   = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]\end{aligned}\end{align} \]</div>
+<p><span class="math">\(\sigma_k\)</span> &#8211; Prandtl number approx 1
+<span class="math">\(\sigma_e\)</span> &#8211; <span class="math">\(c_{\mu}/c_e\)</span></p>
+<p>:math:c_{mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{varepsilon} = 0.07`</p>
 <dl class="method">
 <dt id="proteus.TransportCoefficients.kEpsilon_epsilon.attachModels">
 <code class="descname">attachModels</code><span class="sig-paren">(</span><em>modelList</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.kEpsilon_epsilon.attachModels" title="Permalink to this definition">¶</a></dt>
@@ -3361,6 +3077,8 @@ S=0 injecting into S=1 background saturation using his definition of f</p>
 <dt id="proteus.TransportCoefficients.DiffusiveWave_1D">
 <em class="property">class </em><code class="descclassname">proteus.TransportCoefficients.</code><code class="descname">DiffusiveWave_1D</code><span class="sig-paren">(</span><em>alpha=1.6666666666666667</em>, <em>gamma=0.5</em>, <em>epsilon=1e-06</em>, <em>bathymetryFunc=None</em>, <em>reactionFunc=None</em>, <em>analyticalSoln=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.DiffusiveWave_1D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<p>Construct a coefficients object given the parameters of the Manning/Chezy formula and the regularization parameter.</p>
+<p>Optionally provide a function for bathymetry, right hand side (source), and an analytical solution. The</p>
 <dl class="method">
 <dt id="proteus.TransportCoefficients.DiffusiveWave_1D.diffusiveWave1DCoefficientsEvaluate">
 <code class="descname">diffusiveWave1DCoefficientsEvaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.DiffusiveWave_1D.diffusiveWave1DCoefficientsEvaluate" title="Permalink to this definition">¶</a></dt>
@@ -3409,6 +3127,8 @@ S=0 injecting into S=1 background saturation using his definition of f</p>
 <dt id="proteus.TransportCoefficients.DiffusiveWave_2D">
 <em class="property">class </em><code class="descclassname">proteus.TransportCoefficients.</code><code class="descname">DiffusiveWave_2D</code><span class="sig-paren">(</span><em>nd=2</em>, <em>alpha=1.6666666666666667</em>, <em>gamma=0.5</em>, <em>epsilon=1e-06</em>, <em>bathymetryFunc=None</em>, <em>bathymetryGradientFunc=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.DiffusiveWave_2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.TransportCoefficients.TC_base" title="proteus.TransportCoefficients.TC_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.TransportCoefficients.TC_base</span></code></a></p>
+<p>Construct a coefficients object given the parameters of the Manning/Chezy formula and the regularization parameter.</p>
+<p>Optionally provide a function for bathymetry, right hand side (source), and an analytical solution. The</p>
 <dl class="method">
 <dt id="proteus.TransportCoefficients.DiffusiveWave_2D.diffusiveWave2DCoefficientsEvaluate">
 <code class="descname">diffusiveWave2DCoefficientsEvaluate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/TransportCoefficients.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.TransportCoefficients.DiffusiveWave_2D.diffusiveWave2DCoefficientsEvaluate" title="Permalink to this definition">¶</a></dt>
@@ -3517,8 +3237,8 @@ S=0 injecting into S=1 background saturation using his definition of f</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

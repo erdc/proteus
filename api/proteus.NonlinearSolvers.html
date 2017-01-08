@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.NonlinearSolvers module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.NonlinearSolvers module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.Norms module" href="proteus.Norms.html" />
     <link rel="prev" title="proteus.MeshTools module" href="proteus.MeshTools.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -509,14 +510,10 @@ r &#8211; F(u) - b</p>
 <em class="property">class </em><code class="descclassname">proteus.NonlinearSolvers.</code><code class="descname">EikonalSolver</code><span class="sig-paren">(</span><em>levelSolverType</em>, <em>F</em>, <em>relativeTolerance=0.0</em>, <em>absoluteTolerance=1e-08</em>, <em>maxSolverIts=100</em>, <em>frontTolerance=0.0001</em>, <em>frontInitType='magnitudeOnly'</em>, <em>bandTolerance=-0.01</em>, <em>eikonalVariable=0</em>, <em>localReconstruction=None</em>, <em>printInfo=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.EikonalSolver" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple wrapper for special purpose Eikonal equation solvers on a single level.
 Current types allowed:</p>
-<blockquote>
-<div>FMMEikonalSolver
-FSWEikonalSOlver</div></blockquote>
-<dl class="docutils">
-<dt>TODO Feb 20</dt>
-<dd>Debug change in use truncation approach for positive and negative solutions
-Debug local Reconstruction</dd>
-</dl>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FMMEikonalSolver</span>
+<span class="n">FSWEikonalSolver</span>
+</pre></div>
+</div>
 <dl class="method">
 <dt id="proteus.NonlinearSolvers.EikonalSolver.solve">
 <code class="descname">solve</code><span class="sig-paren">(</span><em>u</em>, <em>r</em>, <em>b=None</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NonlinearSolvers.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NonlinearSolvers.EikonalSolver.solve" title="Permalink to this definition">¶</a></dt>
@@ -615,8 +612,8 @@ representation here</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

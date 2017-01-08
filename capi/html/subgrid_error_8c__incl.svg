@@ -9,51 +9,51 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 80)">
 <title>subgridError.c</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-80 281.5,-80 281.5,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node0 -->
+<g id="node1" class="node"><title>Node0</title>
 <polygon fill="#bfbfbf" stroke="black" points="90,-56.5 90,-75.5 167,-75.5 167,-56.5 90,-56.5"/>
 <text text-anchor="middle" x="128.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">subgridError.c</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node1 -->
+<g id="node2" class="node"><title>Node1</title>
 <polygon fill="white" stroke="#bfbfbf" points="0,-0.5 0,-19.5 47,-19.5 47,-0.5 0,-0.5"/>
 <text text-anchor="middle" x="23.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">math.h</text>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
-<g id="edge1" class="edge"><title>Node1&#45;&gt;Node2</title>
+<!-- Node0&#45;&gt;Node1 -->
+<g id="edge1" class="edge"><title>Node0&#45;&gt;Node1</title>
 <path fill="none" stroke="midnightblue" d="M111.63,-56.324C94.7912,-47.6641 68.6935,-34.2424 49.262,-24.249"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="50.8218,-21.1155 40.3282,-19.6545 47.6204,-27.3405 50.8218,-21.1155"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node2 -->
+<g id="node3" class="node"><title>Node2</title>
 <polygon fill="white" stroke="#bfbfbf" points="65.5,-0.5 65.5,-19.5 111.5,-19.5 111.5,-0.5 65.5,-0.5"/>
 <text text-anchor="middle" x="88.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">stdio.h</text>
 </g>
-<!-- Node1&#45;&gt;Node3 -->
-<g id="edge2" class="edge"><title>Node1&#45;&gt;Node3</title>
+<!-- Node0&#45;&gt;Node2 -->
+<g id="edge2" class="edge"><title>Node0&#45;&gt;Node2</title>
 <path fill="none" stroke="midnightblue" d="M121.895,-56.083C116.245,-48.4554 107.955,-37.2645 101.049,-27.9408"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="103.747,-25.7034 94.9823,-19.7511 98.1221,-29.87 103.747,-25.7034"/>
 </g>
-<!-- Node4 -->
-<g id="node4" class="node"><title>Node4</title>
+<!-- Node3 -->
+<g id="node4" class="node"><title>Node3</title>
 <g id="a_node4"><a xlink:href="subgrid_error_8h.html" target="_top" xlink:title="C implementations of subgrid error calculations. ">
 <polygon fill="white" stroke="black" points="130,-0.5 130,-19.5 207,-19.5 207,-0.5 130,-0.5"/>
 <text text-anchor="middle" x="168.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">subgridError.h</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node4 -->
-<g id="edge3" class="edge"><title>Node1&#45;&gt;Node4</title>
+<!-- Node0&#45;&gt;Node3 -->
+<g id="edge3" class="edge"><title>Node0&#45;&gt;Node3</title>
 <path fill="none" stroke="midnightblue" d="M135.105,-56.083C140.755,-48.4554 149.045,-37.2645 155.951,-27.9408"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="158.878,-29.87 162.018,-19.7511 153.253,-25.7034 158.878,-29.87"/>
 </g>
-<!-- Node5 -->
-<g id="node5" class="node"><title>Node5</title>
+<!-- Node4 -->
+<g id="node5" class="node"><title>Node4</title>
 <polygon fill="white" stroke="#bfbfbf" points="225.5,-0.5 225.5,-19.5 277.5,-19.5 277.5,-0.5 225.5,-0.5"/>
 <text text-anchor="middle" x="251.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">assert.h</text>
 </g>
-<!-- Node1&#45;&gt;Node5 -->
-<g id="edge4" class="edge"><title>Node1&#45;&gt;Node5</title>
+<!-- Node0&#45;&gt;Node4 -->
+<g id="edge4" class="edge"><title>Node0&#45;&gt;Node4</title>
 <path fill="none" stroke="midnightblue" d="M147.99,-56.4435C168.142,-47.5961 199.823,-33.6875 222.831,-23.5865"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="224.352,-26.7411 232.101,-19.5164 221.538,-20.3316 224.352,-26.7411"/>
 </g>

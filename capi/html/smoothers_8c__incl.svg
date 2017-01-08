@@ -9,61 +9,61 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 136)">
 <title>smoothers.c</title>
 <polygon fill="white" stroke="none" points="-4,4 -4,-136 272,-136 272,4 -4,4"/>
-<!-- Node1 -->
-<g id="node1" class="node"><title>Node1</title>
+<!-- Node0 -->
+<g id="node1" class="node"><title>Node0</title>
 <polygon fill="#bfbfbf" stroke="black" points="86,-112.5 86,-131.5 157,-131.5 157,-112.5 86,-112.5"/>
 <text text-anchor="middle" x="121.5" y="-119.5" font-family="Helvetica,sans-Serif" font-size="10.00">smoothers.c</text>
 </g>
-<!-- Node2 -->
-<g id="node2" class="node"><title>Node2</title>
+<!-- Node1 -->
+<g id="node2" class="node"><title>Node1</title>
 <polygon fill="white" stroke="#bfbfbf" points="0,-56.5 0,-75.5 47,-75.5 47,-56.5 0,-56.5"/>
 <text text-anchor="middle" x="23.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">math.h</text>
 </g>
-<!-- Node1&#45;&gt;Node2 -->
-<g id="edge1" class="edge"><title>Node1&#45;&gt;Node2</title>
+<!-- Node0&#45;&gt;Node1 -->
+<g id="edge1" class="edge"><title>Node0&#45;&gt;Node1</title>
 <path fill="none" stroke="midnightblue" d="M105.755,-112.324C90.1813,-103.743 66.1227,-90.486 48.0407,-80.5224"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="49.6539,-77.4152 39.2063,-75.6545 46.2756,-83.546 49.6539,-77.4152"/>
 </g>
-<!-- Node3 -->
-<g id="node3" class="node"><title>Node3</title>
+<!-- Node2 -->
+<g id="node3" class="node"><title>Node2</title>
 <polygon fill="white" stroke="#bfbfbf" points="65.5,-56.5 65.5,-75.5 111.5,-75.5 111.5,-56.5 65.5,-56.5"/>
 <text text-anchor="middle" x="88.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">stdio.h</text>
 </g>
-<!-- Node1&#45;&gt;Node3 -->
-<g id="edge2" class="edge"><title>Node1&#45;&gt;Node3</title>
+<!-- Node0&#45;&gt;Node2 -->
+<g id="edge2" class="edge"><title>Node0&#45;&gt;Node2</title>
 <path fill="none" stroke="midnightblue" d="M116.051,-112.083C111.486,-104.613 104.832,-93.7244 99.2066,-84.5199"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="102.049,-82.4588 93.8479,-75.7511 96.0759,-86.109 102.049,-82.4588"/>
 </g>
-<!-- Node4 -->
-<g id="node4" class="node"><title>Node4</title>
+<!-- Node3 -->
+<g id="node4" class="node"><title>Node3</title>
 <polygon fill="white" stroke="#bfbfbf" points="130,-56.5 130,-75.5 179,-75.5 179,-56.5 130,-56.5"/>
 <text text-anchor="middle" x="154.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">string.h</text>
 </g>
-<!-- Node1&#45;&gt;Node4 -->
-<g id="edge3" class="edge"><title>Node1&#45;&gt;Node4</title>
+<!-- Node0&#45;&gt;Node3 -->
+<g id="edge3" class="edge"><title>Node0&#45;&gt;Node3</title>
 <path fill="none" stroke="midnightblue" d="M126.949,-112.083C131.514,-104.613 138.168,-93.7244 143.793,-84.5199"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="146.924,-86.109 149.152,-75.7511 140.951,-82.4588 146.924,-86.109"/>
 </g>
-<!-- Node5 -->
-<g id="node5" class="node"><title>Node5</title>
+<!-- Node4 -->
+<g id="node5" class="node"><title>Node4</title>
 <g id="a_node5"><a xlink:href="smoothers_8h.html" target="_top" xlink:title="C implementations of multilevel smoother algorithms. ">
 <polygon fill="white" stroke="black" points="197,-56.5 197,-75.5 268,-75.5 268,-56.5 197,-56.5"/>
 <text text-anchor="middle" x="232.5" y="-63.5" font-family="Helvetica,sans-Serif" font-size="10.00">smoothers.h</text>
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node5 -->
-<g id="edge4" class="edge"><title>Node1&#45;&gt;Node5</title>
+<!-- Node0&#45;&gt;Node4 -->
+<g id="edge4" class="edge"><title>Node0&#45;&gt;Node4</title>
 <path fill="none" stroke="midnightblue" d="M139.334,-112.324C157.216,-103.625 184.975,-90.1202 205.546,-80.113"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="207.249,-83.1765 214.71,-75.6545 204.187,-76.8819 207.249,-83.1765"/>
 </g>
-<!-- Node6 -->
-<g id="node6" class="node"><title>Node6</title>
+<!-- Node5 -->
+<g id="node6" class="node"><title>Node5</title>
 <polygon fill="white" stroke="#bfbfbf" points="199,-0.5 199,-19.5 266,-19.5 266,-0.5 199,-0.5"/>
 <text text-anchor="middle" x="232.5" y="-7.5" font-family="Helvetica,sans-Serif" font-size="10.00">slu_ddefs.h</text>
 </g>
-<!-- Node5&#45;&gt;Node6 -->
-<g id="edge5" class="edge"><title>Node5&#45;&gt;Node6</title>
+<!-- Node4&#45;&gt;Node5 -->
+<g id="edge5" class="edge"><title>Node4&#45;&gt;Node5</title>
 <path fill="none" stroke="midnightblue" d="M232.5,-56.083C232.5,-49.0059 232.5,-38.8611 232.5,-29.9865"/>
 <polygon fill="midnightblue" stroke="midnightblue" points="236,-29.751 232.5,-19.7511 229,-29.7511 236,-29.751"/>
 </g>

@@ -5,20 +5,21 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.SplitOperator module &mdash; Proteus 1.1.0 documentation</title>
+    <title>proteus.SplitOperator module &#8212; Proteus 1.2.0 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/bootswatch-3.3.4/spacelab/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/spacelab/bootstrap.min.css" type="text/css" />
     <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.1.0',
+        VERSION:     '1.2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
@@ -27,11 +28,11 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
     <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
-    <script type="text/javascript" src="../_static/bootstrap-3.3.4/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
     <link rel="shortcut icon" href="../_static/tritonBorder.ico"/>
-    <link rel="top" title="Proteus 1.1.0 documentation" href="../index.html" />
-    <link rel="up" title="proteus package" href="proteus.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="proteus.StepControl module" href="proteus.StepControl.html" />
     <link rel="prev" title="proteus.SpatialTools module" href="proteus.SpatialTools.html" />
 <meta charset='utf-8'>
@@ -55,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.1.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -138,7 +139,7 @@
   <div class="section" id="module-proteus.SplitOperator">
 <span id="proteus-splitoperator-module"></span><h1>proteus.SplitOperator module<a class="headerlink" href="#module-proteus.SplitOperator" title="Permalink to this headline">¶</a></h1>
 <p>A class hierarchy for split operator methods.</p>
-<object data="../_images/inheritance-b3e592c6d69a1211574130cbdbd713561dd6fdd4.svg" type="image/svg+xml">
+<object data="../_images/inheritance-8bea75b79cd964d6658439d769141eec372923a8.svg" type="image/svg+xml">
             <p class="warning">Inheritance diagram of proteus.SplitOperator</p></object>
 <dl class="class">
 <dt id="proteus.SplitOperator.System">
@@ -150,8 +151,12 @@
 <em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">SO_base</code><span class="sig-paren">(</span><em>modelList</em>, <em>system=&lt;proteus.SplitOperator.System instance&gt;</em>, <em>stepExact=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for operating splitting methods for systems.</p>
 <p>The base class implements sequential splitting with a fixed time
-step based on the list of time intervals.</p>
-<p>Here each model take the same fixed time step</p>
+step based on the input parameter <cite>default_so.dt_system</cite>. If
+<cite>default_so.stepExactSystem</cite> is True then the time step will be
+reduced when needed to match the output times in
+<cite>default_so.tnList</cite>, otherwise the output will be the first time
+step after each step in <cite>tnList</cite>.</p>
+<p>Here each model takes the same fixed time step</p>
 <dl class="method">
 <dt id="proteus.SplitOperator.SO_base.converged">
 <code class="descname">converged</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.SO_base.converged" title="Permalink to this definition">¶</a></dt>
@@ -236,18 +241,12 @@ step based on the list of time intervals.</p>
 <dt id="proteus.SplitOperator.Sequential_FixedStep_Simple">
 <em class="property">class </em><code class="descclassname">proteus.SplitOperator.</code><code class="descname">Sequential_FixedStep_Simple</code><span class="sig-paren">(</span><em>modelList</em>, <em>system=&lt;proteus.SplitOperator.System instance&gt;</em>, <em>stepExact=True</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#proteus.SplitOperator.SO_base" title="proteus.SplitOperator.SO_base"><code class="xref py py-class docutils literal"><span class="pre">proteus.SplitOperator.SO_base</span></code></a></p>
-<p>Base class for operating splitting methods for systems.</p>
-<p>The base class implements sequential splitting with a fixed time
-step based on the list of time intervals.</p>
+<p>Implements sequential splitting with a fixed time
+step based on the list of time intervals (tnList).</p>
 <p>Here each model take the same fixed time step</p>
 <dl class="method">
 <dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.converged">
 <code class="descname">converged</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.converged" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.stepExact_system">
-<code class="descname">stepExact_system</code><span class="sig-paren">(</span><em>tExact</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.stepExact_system" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -284,6 +283,12 @@ step based on the list of time intervals.</p>
 <dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.retrySequence_modelStepFailure">
 <code class="descname">retrySequence_modelStepFailure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.retrySequence_modelStepFailure" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.SplitOperator.Sequential_FixedStep_Simple.setFromOptions">
+<code class="descname">setFromOptions</code><span class="sig-paren">(</span><em>soOptions</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/SplitOperator.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.SplitOperator.Sequential_FixedStep_Simple.setFromOptions" title="Permalink to this definition">¶</a></dt>
+<dd><p>allow classes to set various numerical parameters</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -657,8 +662,8 @@ well as all the model steps</p>
       
     </p>
     <p>
-        &copy; Copyright 2016, The Proteus Team.<br/>
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.<br/>
+        &copy; Copyright 2017, The Proteus Team.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.<br/>
     </p>
   </div>
 </footer>

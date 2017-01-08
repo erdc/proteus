@@ -1,0 +1,81 @@
+proteus package
+===============
+
+.. automodule:: proteus
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    proteus.config
+    proteus.mprans
+    proteus.test_utils
+
+Submodules
+----------
+
+.. toctree::
+
+   proteus.ADR
+   proteus.AnalysisTools
+   proteus.AnalyticalSolutions
+   proteus.Archiver
+   proteus.AuxiliaryVariables
+   proteus.BoundaryConditions
+   proteus.Comm
+   proteus.Context
+   proteus.DiagUtils
+   proteus.Domain
+   proteus.EGeometry
+   proteus.ErrorEstimators
+   proteus.FemTools
+   proteus.Gauges
+   proteus.InputTranslators
+   proteus.Isosurface
+   proteus.LatexReport
+   proteus.LinearAlgebraTools
+   proteus.LinearSolvers
+   proteus.MeshTools
+   proteus.NonlinearSolvers
+   proteus.Norms
+   proteus.NumericalFlux
+   proteus.NumericalSolution
+   proteus.ObjectiveFunctions
+   proteus.Optimizers
+   proteus.PostProcessingTools
+   proteus.Profiling
+   proteus.Quadrature
+   proteus.RefUtils
+   proteus.ShockCapturing
+   proteus.SimTools
+   proteus.SpatialTools
+   proteus.SplitOperator
+   proteus.StepControl
+   proteus.StupidHeap
+   proteus.SubgridError
+   proteus.SubsurfaceTransportCoefficients
+   proteus.TimeIntegration
+   proteus.Transport
+   proteus.TransportCoefficients
+   proteus.TriangleFileUtils
+   proteus.TriangleTools
+   proteus.TriangleUtils
+   proteus.TwophaseDarcyCoefficients
+   proteus.UnstructuredFMMandFSWsolvers
+   proteus.Viewers
+   proteus.WaveTools
+   proteus.default_n
+   proteus.default_p
+   proteus.default_s
+   proteus.default_so
+   proteus.deim_utils
+   proteus.iproteus
+   proteus.subsurfaceTransportFunctions
+   proteus.testStuff
+   proteus.version
+   proteus.waveFunctions
+
