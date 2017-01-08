@@ -5,8 +5,6 @@ Vectors are just numpy arrays, as are dense matrices. Sparse matrices
 are CSR matrices. Parallel vector and matrix are built on top of those
 representations using PETSc.
 
-\todo LinearAlgebraTools: make better use of numpy.linalg and petsc4py to provide the needed functionality and improve test suite
-
 .. inheritance-diagram:: proteus.LinearAlgebraTools
    :parts: 1
 """
@@ -283,9 +281,11 @@ def Vec(n):
     """
     Build a vector of length n (using numpy)
 
-    For example:
-    >>> Vec(3)
-    array([ 0.,  0.,  0.])
+    For example::
+    
+      >>> Vec(3)
+      array([ 0.,  0.,  0.])
+
     """
     return numpy.zeros((n,),'d')
 
@@ -294,10 +294,12 @@ def Mat(m,n):
     """
     Build an m x n matrix (using numpy)
 
-    For example:
-    >>> Mat(2,3)
-    array([[ 0.,  0.,  0.],
-           [ 0.,  0.,  0.]])
+    For example::
+
+      >>> Mat(2,3)
+      array([[ 0.,  0.,  0.],
+            [ 0.,  0.,  0.]])
+
     """
     return numpy.zeros((m,n),'d')
 

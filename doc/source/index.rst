@@ -214,6 +214,5 @@ Source Code Documentation
    :maxdepth: 1
 
    api/modules
-   cfiles
    
 

@@ -5543,7 +5543,7 @@ void conservativeHeadRichardsL2projMualemVanGenuchtenHetEvaluate(const int nSimp
     }
 }
 
-/** Coefficients for the mass conservative total head-based (h=\psi+z) Richards' equation using Mualem-Van Genuchten.
+/** Coefficients for the mass conservative total head-based (\f[ h=\psi+z \f]) Richards' equation using Mualem-Van Genuchten.
  */
 void conservativeTotalHeadRichardsMualemVanGenuchtenHomEvaluate(const int nPoints,
 								const int nSpace,

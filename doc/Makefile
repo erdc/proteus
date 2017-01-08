@@ -59,9 +59,7 @@ source/api/modules.rst:
 	sphinx-apidoc --output-dir=source/api ../proteus --separate -M
 
 $(BUILDDIR)/capi/html/files.html:
-	-mkdir -p build/html/capi
 	doxygen
-	cp doxygenIndexRedirect.html build/html/capi/html/index.html
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
