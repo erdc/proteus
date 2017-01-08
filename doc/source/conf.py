@@ -97,7 +97,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Proteus'
-copyright = u'2016, The Proteus Team'
+copyright = u'2017, The Proteus Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -452,5 +452,4 @@ todo_include_todos = False
 
 graphviz_output_format = 'svg'
 
-#mathjax_path = "https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 mathjax_pth = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTM"
