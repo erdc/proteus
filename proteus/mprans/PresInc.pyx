@@ -448,10 +448,10 @@ class Coefficients(TC_base):
         Calculate the mean value of phi and adjust to make mean value 0.
         """
         alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
-        #for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
+        for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
             #cek hack: for three-phase flow we'll have to do this differently
-            #self.fluidModel.q[('velocity',0)][:] = self.model.q[('velocity',0)]
-            #self.fluidModel.ebqe[('velocity',0)][:] = self.model.ebqe[('velocity',0)]
+            self.fluidModel.q[('velocity',0)][:] = self.model.q[('velocity',0)]
+            self.fluidModel.ebqe[('velocity',0)][:] = self.model.ebqe[('velocity',0)]
             #old
             #self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
             #cek hack, need to do scale this right for 3p flow
