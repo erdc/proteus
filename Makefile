@@ -20,6 +20,7 @@ HASHDIST_DEFAULT_VERSION := $(shell cat .hashdist_default)
 HASHSTACK_DEFAULT_VERSION := $(shell cat .hashstack_default)
 HASHDIST_VERSION := $(shell cd hashdist; ${VER_CMD})
 HASHSTACK_VERSION := $(shell cd stack; ${VER_CMD})
+HASHSTACK_BLD := $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print '{Distributor}_{Release}'.format(**rel)")
 
 define show_info
 	@echo "Please include this information in all bug reports."
@@ -120,6 +121,15 @@ hashdist:
 	@echo "No hashdist found.  Cloning hashdist from GitHub"
 	git clone https://github.com/hashdist/hashdist.git 
 	cd hashdist && git checkout ${HASHDIST_DEFAULT_VERSION}
+
+hashdist_src:
+	@echo "Trying to add hashdist source cache for your arch"
+	./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source"
+
+hashdist_bld:
+	@echo "Trying to add hashdist build cache for your arch"
+	./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_${HASHSTACK_BLD} --objects="build"
+
 stack: 
 	@echo "No stack found.  Cloning stack from GitHub"
 	git clone https://github.com/hashdist/hashstack.git stack
