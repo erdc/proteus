@@ -92,24 +92,20 @@ RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER
 
 RUN mkdir /home/$NB_USER/.jupyter && \
     mkdir /home/$NB_USER/.local && \
-    mkdir /home/$NB_USER/.hashdist && \
     echo "cacert=/etc/ssl/certs/ca-certificates.crt" > /home/$NB_USER/.curlrc
-
-ADD https://dl.dropboxusercontent.com/u/26353144/hashdist_config_jovyan.yaml /home/$NB_USER/.hashdist/config.yaml
 
 RUN chown -R $NB_USER:users /home/$NB_USER
 
 USER jovyan
 
-RUN ls /home/$NB_USER/.hashdist && \
-    cat /home/$NB_USER/.hashdist/config.yaml
-
 WORKDIR /home/$NB_USER
 
-RUN cat /home/$NB_USER/.hashdist/config.yaml && \
-    git clone https://github.com/erdc-cm/proteus && \
+RUN git clone https://github.com/erdc-cm/proteus -b update_notebooks && \
     cd proteus && \
     make hashdist stack stack/default.yaml && \
+    ./hashdist/bin/hit init-home && \
+    ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source" && \
+    ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_debian_jessie --objects="build" && \
     cd stack && \
     ../hashdist/bin/hit build default.yaml -v
 
