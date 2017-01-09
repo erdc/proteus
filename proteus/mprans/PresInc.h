@@ -158,7 +158,7 @@ namespace proteus
       for (int I=0; I < nSpace; I++)
 	{
 	  flux += n[I]*f[I];
-	  vtCorr[I] = f[I];
+	  vtCorr[I] = f[I]; 
 	}
     }
 
@@ -191,7 +191,7 @@ namespace proteus
 	  for (int I=0;I<nSpace;I++)
 	    {
 	      //add penalty flux to the normal component
-	      vtCorr[I] += -a*grad_potential[I] + a*penalty*(u-bc_u)*n[I];
+	      vtCorr[I] += -a*grad_potential[I] + a*penalty*(u-bc_u)*n[I]; //TMP
 	    }
 	}
       else
@@ -362,7 +362,7 @@ namespace proteus
           for (int I=0;I<nSpace;I++)
             {
 	      q_grad_u[eN_k_nSpace+I] = grad_u[I];
-	      q_vtCorr[eN_k_nSpace+I] = f[I] - a*grad_u[I];
+	      q_vtCorr[eN_k_nSpace+I] = f[I] - a*grad_u[I]; //TMP
 	    }
 	}
     }
