@@ -46,6 +46,7 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                double alphaBDF,
 			       double * q_div_velocity, 
                                double * q_vf,
+			       double * q_vtCorr,
                                double * q_vs,
                                double * q_vos,
                                double rho_s,
@@ -53,6 +54,7 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                double rho_s_min,
                                double rho_f_min,
                                double * ebqe_vf,
+			       double * ebqe_vtCorr,
                                double * ebqe_vs,
                                double * ebqe_vos,
                                double * ebqe_rho_f,
@@ -172,6 +174,7 @@ cdef class PresInc:
                           double alphaBDF,
 			  numpy.ndarray q_div_velocity,
                           numpy.ndarray q_vf,
+                          numpy.ndarray q_vtCorr,
                           numpy.ndarray q_vs,
                           numpy.ndarray q_vos,
                           double rho_s,
@@ -179,6 +182,7 @@ cdef class PresInc:
                           double rho_s_min,
                           double rho_f_min,
                           numpy.ndarray ebqe_vf,
+                          numpy.ndarray ebqe_vtCorr,
                           numpy.ndarray ebqe_vs,
                           numpy.ndarray ebqe_vos,
                           numpy.ndarray ebqe_rho_f,
@@ -224,13 +228,15 @@ cdef class PresInc:
                                         alphaBDF,
 				       < double * > q_div_velocity.data,	
                                        < double * > q_vf.data,
-                                       < double * > q_vs.data,
+                                        < double * > q_vtCorr.data,
+                                        < double * > q_vs.data,
                                        < double * > q_vos.data,
                                         rho_s,
                                        < double * > q_rho_f.data,
                                         rho_s_min,
                                         rho_f_min,
                                        < double * > ebqe_vf.data,
+                                       < double * > ebqe_vtCorr.data,
                                        < double * > ebqe_vs.data,
                                        < double * > ebqe_vos.data,
                                        < double * > ebqe_rho_f.data,
@@ -443,12 +449,16 @@ class Coefficients(TC_base):
         """
         alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
         for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
-            self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
+            #cek hack: for three-phase flow we'll have to do this differently
+            self.fluidModel.q[('velocity',0)][:] = self.model.q[('velocity',0)]
+            self.fluidModel.ebqe[('velocity',0)][:] = self.model.ebqe[('velocity',0)]
+            #old
+            #self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
             #cek hack, need to do scale this right for 3p flow
             #self.fluidModel.ebqe[('velocity',0)][...,i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
-            self.fluidModel.ebqe[('velocity',0)][...,i] = (self.model.ebqe[('advectiveFlux',0)]-self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
-            self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
-            self.fluidModel.coefficients.ebqe_velocity_solid[...,i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
+            #self.fluidModel.ebqe[('velocity',0)][...,i] = (self.model.ebqe[('advectiveFlux',0)]+self.model.ebqe[('diffusiveFlux',0,0)])*self.model.ebqe['n'][...,i]
+            #self.fluidModel.coefficients.q_velocity_solid[...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
+            #self.fluidModel.coefficients.ebqe_velocity_solid[...,i] -= self.model.ebqe[('grad(u)',0)][...,i]/(self.rho_s_min*alphaBDF)
         self.fluidModel.stabilization.v_last[:] = self.fluidModel.q[('velocity',0)]
         self.fluidModel.coefficients.ebqe_velocity_last[:] = self.fluidModel.ebqe[('velocity',0)]
         copyInstructions = {}
@@ -746,6 +756,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nQuadraturePoints_element,
              self.nSpace_global),
             'd')
+        self.q[
+            ('velocity',
+             0)] = numpy.zeros(
+            (self.mesh.nElements_global,
+             self.nQuadraturePoints_element,
+             self.nSpace_global),
+            'd')
         self.ebqe[
             ('u',
              0)] = numpy.zeros(
@@ -754,6 +771,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             'd')
         self.ebqe[
             ('grad(u)',
+             0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebqe[
+            ('velocity',
              0)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
@@ -1077,6 +1101,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.fluidModel.timeIntegration.alpha_bdf,
 	    self.coefficients.fluidModel.q['div_velocity'],
             self.coefficients.fluidModel.q[('velocity',0)],
+            self.q[('velocity',0)],
             self.coefficients.fluidModel.coefficients.q_velocity_solid,
             self.coefficients.fluidModel.coefficients.q_vos,
             self.coefficients.fluidModel.coefficients.rho_s,
@@ -1084,6 +1109,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.rho_s_min,
             self.coefficients.rho_f_min,
             self.coefficients.fluidModel.ebqe[('velocity',0)],
+            self.ebqe[('velocity',0)],
             self.coefficients.fluidModel.coefficients.ebqe_velocity_solid,
             self.coefficients.fluidModel.coefficients.ebqe_vos,
             self.coefficients.fluidModel.coefficients.ebqe_rho,
