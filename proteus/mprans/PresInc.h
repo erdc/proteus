@@ -214,7 +214,7 @@ namespace proteus
       if(isFluxBoundary==0 && isDOFBoundary==1)
 	{
 	  for(int I=0;I<nSpace;I++)
-            tmp += a*grad_v[I]*n[I];
+            tmp -= a*grad_v[I]*n[I];
 	  tmp +=a*penalty*v;
 	}
       return tmp;
@@ -636,22 +636,25 @@ namespace proteus
 	      //
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
-		  if (INTEGRATE_BY_PARTS==1)
-		    elementResidual_u[i] += //int_B [(vel.normal)*w*ds] - int_B [grad_phi*normal)*w*ds]
-		      ck.ExteriorElementBoundaryFlux(adv_flux_ext,u_test_dS[i]) + 
-		      ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]);
-		  else
-		    elementResidual_u[i] += // - int_B [grad_phi*normal)*w*ds]
-		      ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]);
-                  /* + */
-                  /*   ck.ExteriorElementBoundaryScalarDiffusionAdjoint(isDOFBoundary[ebNE_kb], */
-                  /*                                                    isFluxBoundary[ebNE_kb], */
-                  /*                                                    1.0, */
-                  /*                                                    u_ext, */
-                  /*                                                    bc_u_ext, */
-                  /*                                                    normal, */
-                  /*                                                    a_ext, */
-                  /*                                                    &u_grad_test_dS[i*nSpace]); */
+		  /* if (INTEGRATE_BY_PARTS==1) */
+		  /*   elementResidual_u[i] += //int_B [(vel.normal)*w*ds] - int_B [grad_phi*normal)*w*ds] */
+		  /*     ck.ExteriorElementBoundaryFlux(adv_flux_ext,u_test_dS[i]) +  */
+		  /*     ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]); */
+		  /* else */
+		  /*   elementResidual_u[i] += // - int_B [grad_phi*normal)*w*ds] */
+		  /*     ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]); */
+		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(adv_flux_ext,u_test_dS[i])
+                    + 
+                    ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i])
+                  +
+                    ck.ExteriorElementBoundaryScalarDiffusionAdjoint(isDOFBoundary[ebNE_kb],
+                                                                     isFluxBoundary[ebNE_kb],
+                                                                     1.0,
+                                                                     u_ext,
+                                                                     bc_u_ext,
+                                                                     normal,
+                                                                     a_ext,
+                                                                     &u_grad_test_dS[i*nSpace]);
 		}//i
 	    }//kb
 	  //
@@ -911,7 +914,6 @@ namespace proteus
 		df_ext[nSpace],
 		dflux_u_u_ext=0.0,
 		bc_u_ext=0.0,
-		//bc_grad_u_ext[nSpace],
 		bc_m_ext=0.0,
 		bc_dm_ext=0.0,
 		bc_f_ext[nSpace],
@@ -934,24 +936,11 @@ namespace proteus
 	      // 
 	      //calculate the solution and gradients at quadrature points 
 	      // 
-	      // u_ext=0.0;
-	      // for (int I=0;I<nSpace;I++)
-	      //   {
-	      //     grad_u_ext[I] = 0.0;
-	      //     bc_grad_u_ext[I] = 0.0;
-	      //   }
-	      // for (int j=0;j<nDOF_trial_element;j++) 
-	      //   { 
-	      //     register int eN_j = eN*nDOF_trial_element+j,
-	      //       ebNE_kb_j = ebNE_kb*nDOF_trial_element+j,
-	      //       ebNE_kb_j_nSpace= ebNE_kb_j*nSpace;
-	      //     u_ext += valFromDOF_c(u_dof[u_l2g[eN_j]],u_trial_ext[ebNE_kb_j]); 
-	                     
-	      //     for (int I=0;I<nSpace;I++)
-	      //       {
-	      //         grad_u_ext[I] += gradFromDOF_c(u_dof[u_l2g[eN_j]],u_grad_trial_ext[ebNE_kb_j_nSpace+I]); 
-	      //       } 
-	      //   }
+	      u_ext=0.0;
+	      for (int I=0;I<nSpace;I++)
+	        {
+	          grad_u_ext[I] = 0.0;
+	        }
 	      ck.calculateMapping_elementBoundary(eN,
 						  ebN_local,
 						  kb,
@@ -1010,21 +999,21 @@ namespace proteus
                         ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j,
                         j_nSpace = j*nSpace;		  
 
-		      /* globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += ExteriorNumericalDiffusiveFluxJacobian(isDOFBoundary[ebNE_kb], */
-                      /*                                                                                                                      isFluxBoundary[ebNE_kb], */
-                      /*                                                                                                                      normal, */
-                      /*                                                                                                                      a_ext, */
-                      /*                                                                                                                      u_trial_trace_ref[ebN_local_kb_j], */
-                      /*                                                                                                                      &u_grad_trial_trace[j_nSpace], */
-                      /*                                                                                                                      penalty)*u_test_dS[i] */
-                      /*   + */
-		      /*   ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian(isDOFBoundary[ebNE_kb], */
-                      /*                                                            isFluxBoundary[ebNE_kb], */
-                      /*                                                            1.0, */
-                      /*                                                            u_trial_trace_ref[ebN_local_kb_j], */
-                      /*                                                            normal, */
-                      /*                                                            a_ext, */
-                      /*                                                            &u_grad_test_dS[i*nSpace]); */
+		      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += ExteriorNumericalDiffusiveFluxJacobian(isDOFBoundary[ebNE_kb],
+                                                                                                                                           isFluxBoundary[ebNE_kb],
+                                                                                                                                           normal,
+                                                                                                                                           a_ext,
+                                                                                                                                           u_trial_trace_ref[ebN_local_kb_j],
+                                                                                                                                           &u_grad_trial_trace[j_nSpace],
+                                                                                                                                           penalty)*u_test_dS[i]
+                        +
+		        ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian(isDOFBoundary[ebNE_kb],
+                                                                                 isFluxBoundary[ebNE_kb],
+                                                                                 1.0,
+                                                                                 u_trial_trace_ref[ebN_local_kb_j],
+                                                                                 normal,
+                                                                                 a_ext,
+                                                                                 &u_grad_test_dS[i*nSpace]);
 		    }//j
 		}//i
 	    }//kb
