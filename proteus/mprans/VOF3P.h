@@ -2511,8 +2511,7 @@ namespace proteus
 		  //register int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
 		  register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
 		  fluxJacobian_u_u[j]=
-		    0*dt*(EDGE_VISCOSITY==1 ? 0. : 1.)*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j])
-		    +dt*(FIX_BOUNDARY_KUZMINS==0 ? 1.: 0.)*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+		    +dt*(EDGE_VISCOSITY==1 ? 0. : 1.)*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
 		}//j
 	      //
 	      //update the global Jacobian from the flux Jacobian
