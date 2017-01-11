@@ -1465,17 +1465,24 @@ class VBDF(TI_base):
         self.chooseOrder()
     #
     def computeErrorEstimate(self):
-        """
-         calculate \vec{e}^{n+1}
-         depending on order of approximation
-         To be consistent, this must be called after step taken but before
-         update time history
+        """calculate :math:`\vec{e}^{n+1}`
 
-         Initially, use (\vec y^{n+1}-\vec y^{n+1,p})/2 for first order
-         and
-         r/(1+r)(\vec y^{n+1}-(1+r)\vec y^{n}+r\vec y^{n-1}) for second order
-         sets variables
-         error_estimate
+        depending on order of approximation To be consistent, this
+        must be called after step taken but before update time history
+
+        Initially, use
+
+        .. math::
+        
+            (\vec y^{n+1}-\vec y^{n+1,p})/2
+
+        for first order and
+
+        .. math:
+        
+            r/(1+r)(\vec y^{n+1}-(1+r)\vec y^{n}+r\vec y^{n-1})
+
+        for second order.
 
         """
         #mwf debug
@@ -1724,19 +1731,27 @@ class ExplicitRK_base(TI_base):
         #end ci
     #
     def setCoefficients(self):
-        """
-        set alpha,beta, d for
+        """set alpha,beta, d for
 
-        u^0 = u^n
-        u^l = \sum_{k=0}^{l-1}\alpha_{l,k}u^k + \beta_{l,k} \Delta t L(u^{k},t^n + d_{k} \Delta t^n)
-        u^{n+1} = u^{m}
+        .. math::
+
+            u^0 = u^n
+            u^l = \sum_{k=0}^{l-1}\alpha_{l,k}u^k + \beta_{l,k} \Delta t L(u^{k},t^n + d_{k} \Delta t^n)
+            u^{n+1} = u^{m}
 
         must be implemented in derived class
+
         Note that
-          alpha[l,k] -->  alpha_{l+1,k}
-          beta[l,k]  -->  beta_{l+1,k}
-          dcoefs[k]  -->  d_{k+1} because of the whole caching\ delayed eval deal
-        second index (k) is actual level
+
+        .. math::
+
+            alpha[l,k] -->  alpha_{l+1,k}
+            beta[l,k]  -->  beta_{l+1,k}
+            dcoefs[k]  -->  d_{k+1} 
+
+        because of the whole caching\delayed eval deal second index
+        (k) is actual level
+
         """
         self.alpha = None
         self.beta  = None
@@ -2051,25 +2066,32 @@ class LinearSSPRKintegration(ExplicitRK_base):
     implementation of Explicit RK schemes for ODE that are SSP for
     linear operators (aka) spatial discretizations in
 
-    \od{\vec y}{t} = \mat{L}\vec y
+    .. math::
+
+        \od{\vec y}{t} = \mat{L}\vec y
 
     See Gottlieb, Shu, Tadmor siam review article and notes
 
     Their formulation for this scheme is
 
-      u^0 = u^n
-      u^l = u^{l-1} + \Delta t L(u^{l-1}) l = 1,...,m-1
-      u^m = \sum_{k=0}^{l-1}\alpha_{m,k}u^k +
-             \alpha_{m,m-1} \Delta t L(u^{m-1})
-      u^{n+1} = u^m
+    .. math::
 
-      so \alpha_{l,l-1} = 1, \beta_{l,l-1} = 1.0  l < m,
-         \beta_{m,m-1}  = \alph_{m,m-1}
+        u^0 = u^n
+        u^l = u^{l-1} + \Delta t L(u^{l-1}) l = 1,...,m-1
+        u^m = \sum_{k=0}^{l-1}\alpha_{m,k}u^k +
+              \alpha_{m,m-1} \Delta t L(u^{m-1})
+        u^{n+1} = u^m
 
-      Apparently,
+        so \alpha_{l,l-1} = 1, \beta_{l,l-1} = 1.0  l < m,
+           \beta_{m,m-1}  = \alph_{m,m-1}
+
+    Apparently,
+
+    .. math::
          d_{l} = l \Delta t l < m,
          d_m = 1.0
-      which doesn't make a lot of sense for time dependent problems
+      
+    which doesn't make a lot of sense for time dependent problems
 
     """
     def __init__(self,transport,order=1,runCFL=0.1,usingSSPRKNewton=False):
@@ -2142,37 +2164,46 @@ class LinearSSPRKintegration(ExplicitRK_base):
 
 
 class SSPRKPIintegration(ExplicitRK_base):
-    """
-    So called SSP RK integration with limiting step at end of each
+    """So called SSP RK integration with limiting step at end of each
     phase This one holds the original TVD RK schemes up to 3rd order
     1st order is Forward Euler
 
     2nd order
-    u^1 = u^n + \Delta t L(u^n)
-    u^2 = 0.5(u^n + u^1) + 0.5\Delta t L(u^1,t^n + \Delta t^n), same stage values etc linear SSPRK
+
+    .. math::
+        u^1 = u^n + \Delta t L(u^n)
+        u^2 = 0.5(u^n + u^1) + 0.5\Delta t L(u^1,t^n + \Delta t^n), same stage values etc linear SSPRK
 
     3rd order
-    u^1 =  u^n + \Delta t L(u^n,t^n)
-    u^2 = 0.75 u^n + 0.25u^1  + 0.25\Delta t L(u^1,t^n + \Delta t^n),
-    u^3 = 1/3 u^n + 2/3 u^2 + 2/3 \Delta t L(u^2,t^n + 0.5\Delta t^n)
+
+    .. math::
+        u^1 =  u^n + \Delta t L(u^n,t^n)
+        u^2 = 0.75 u^n + 0.25u^1  + 0.25\Delta t L(u^1,t^n + \Delta t^n),
+        u^3 = 1/3 u^n + 2/3 u^2 + 2/3 \Delta t L(u^2,t^n + 0.5\Delta t^n)
 
     generic formula is
-    u^0 = u^n
-    u^l = \sum_{k=0}^{l-1}\alpha_{l,k}u^k + \beta_l \Delta t L(u^{l-1},t^n + d_{l-1} \Delta t^n)
-    u^{n+1} = u^{m}
 
-    so beta_l --> beta_{l,k-1} in our basic framework
-    Try to put this into Rothe paradigm with linear implicit mass matrix evaluation
-    by saying at stage l
+    .. math::
 
-    m_t \approx \frac{u^l - \sum_{k=0}^{l-1}\alpha_{l,k}u^k}{\Delta t}
+        u^0 = u^n
+        u^l = \sum_{k=0}^{l-1}\alpha_{l,k}u^k + \beta_l \Delta t L(u^{l-1},t^n + d_{l-1} \Delta t^n)
+        u^{n+1} = u^{m}
+
+    so :math:`beta_l --> beta_{l,k-1}` in our basic framework
+
+    Try to put this into Rothe paradigm with linear implicit mass matrix
+    evaluation by saying at stage l
+    
+    .. math::
+
+        m_t \approx \frac{u^l - \sum_{k=0}^{l-1}\alpha_{l,k}u^k}{\Delta t}
 
     spatial residual --> spatial residual * beta_l
 
-    and solve system for u^l
-
+    and solve system for :math:`u^l`
 
     The limiting right now assumes same space for each component
+
     """
     def __init__(self,transport,order=1,runCFL=0.1,limiterType=None,usingSSPRKNewton=False):
         ExplicitRK_base.__init__(self,transport,timeOrder=order,nStages=order,runCFL=runCFL,
@@ -2193,10 +2224,13 @@ class SSPRKPIintegration(ExplicitRK_base):
         See Cockburn and Hou and Shu
 
         For TVD schemes beta_{l,k} = 0  k < l-1
+
         Note that
-          alpha[l,k] -->  alpha_{l+1,k}
-          beta[l,k]  -->  beta_{l+1,k}
-          dcoefs[k]  -->  d_{k+1} because of the whole caching\ delayed eval deal
+          
+        alpha[l,k] -->  alpha_{l+1,k}
+        beta[l,k]  -->  beta_{l+1,k}
+        dcoefs[k]  -->  d_{k+1} because of the whole caching\ delayed eval deal
+
         """
         order = self.timeOrder; stages = self.nStages
         assert order == stages, "SSPRKPI problem order (%s) != stages (%s) " % (order,stages)
@@ -2672,16 +2706,16 @@ class UnstructuredLimiter_base:
         self.useC  = True
         self.initializeMeshInfo(verbose=0)
     def initializeMeshInfo(self,verbose=0):
-        """
-        elementNeighborShapeGradients stores local gradients for simpleces formed from
-          an element's barycenter and neighboring element baryceners
-        elementNeighborShapeGradients[eN,i] <--- local simplex formed from
-          (\bar{\vec x}_{eN},\bar{\vec x}^i_{eN},\bar{\vec x}^{i+1}_{eN})
-        where i goes over local numbering of faces, \bar{\vec x}^{i}_{eN} is the barycenter
-          of the neighbor across from face i.
-        Local numbering for the neighboring simplex is always in that order
+        # """elementNeighborShapeGradients stores local gradients for simpleces
+        # formed from an element's barycenter and neighboring element
+        # baryceners elementNeighborShapeGradients[eN,i] <--- local
+        # simplex formed from (\bar{\vec x}_{eN},\bar{\vec
+        # x}^i_{eN},\bar{\vec x}^{i+1}_{eN}) where i goes over local
+        # numbering of faces, \bar{\vec x}^{i}_{eN} is the barycenter of
+        # the neighbor across from face i.  Local numbering for the
+        # neighboring simplex is always in that order
 
-        """
+        # """
         self.elementNeighborShapeGradients = numpy.zeros((self.mesh.nElements_global,
                                                             self.mesh.nElementBoundaries_element,
                                                             self.mesh.nElementBoundaries_element,
@@ -2868,9 +2902,6 @@ class DGlimiterP1Lagrange2d(CockburnNotesLimiter2d_base):
         self.useC = True
 
     def applySlopeLimiting(self,uIn,uDofOut):
-        """
-
-        """
         for ci in range(self.nc):
             if self.useC == True:
                 self.applyCockburnDGlimiterP1Lagrange2d(self.nu,self.Mfact,
@@ -3276,9 +3307,6 @@ class DGlimiterDurlofskyP1Lagrange2d(UnstructuredLimiter_base):
         del J; del invJ; del detJ
 
     def applySlopeLimiting(self,uIn,uDofOut):
-        """
-
-        """
         for ci in range(self.nc):
             self.applyDurlofskyDGlimiterP1Lagrange2d(self.killExtrema,
                                                      self.allowMinWithUndershoot,
@@ -3346,9 +3374,6 @@ class DGlimiterDurlofskyP1Lagrange3d(UnstructuredLimiter_base):
         del J; del invJ; del detJ
 
     def applySlopeLimiting(self,uIn,uDofOut):
-        """
-
-        """
         for ci in range(self.nc):
             self.applyDurlofskyDGlimiterP1Lagrange3d(self.killExtrema,
                                                      self.allowMinWithUndershoot,
@@ -3389,13 +3414,17 @@ class DGlimiterP1Lagrange1d_Sw(DGlimiterP1Lagrange1d):
         Then go through and eliminate negative values of water height
 
         for cells that have average (h_bar < h_eps)
-           if average height is negative, then zero
-           if both vertices are positive leave alone (could kill slope)
-           if one of the vertices is negative
-              choose slope so that this value is exactly zero
-              zero discharge at this vertex
+           
+        if average height is negative, then zero
+           
+        if both vertices are positive leave alone (could kill slope)
+        
+        if one of the vertices is negative choose slope so that this value is exactly zero
+           
+        zero discharge at this vertex
 
-           May need to add additional step that limits discharge where h is much less than h_eps
+        May need to add additional step that limits discharge where h is much less than h_eps
+
         """
         #go ahead and limit h and hu
         for ci in range(self.nc):
@@ -3433,18 +3462,21 @@ class DGlimiterP2Lagrange1d_Sw(DGlimiterP2Lagrange1d):
         self.transport=transport
     #
     def applySlopeLimiting(self,uIn,uDofOut):
-        """
-        Apply limiting procedure directly using dofs using standard approach
+        """Apply limiting procedure directly using dofs using standard approach
         Then go through and eliminate negative values of water height
 
         for cells that have average (h_bar < h_eps)
-           if average height is negative, then zero
-           if both vertices are positive leave alone (could kill slope)
-           if one of the vertices is negative
-              choose slope so that this value is exactly zero
-              zero discharge at this vertex
+           
+        if average height is negative, then zero
+           
+        if both vertices are positive leave alone (could kill slope)
+           
+        if one of the vertices is negative, choose slope so that this
+        value is exactly zero, zero discharge at this vertex
 
-           May need to add additional step that limits discharge where h is much less than h_eps
+        May need to add additional step that limits discharge where h
+        is much less than h_eps
+
         """
         #go ahead and limit h and hu
         for ci in range(self.nc):

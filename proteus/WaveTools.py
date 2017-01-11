@@ -1094,46 +1094,49 @@ class RandomWaves:
 
 
 class MultiSpectraRandomWaves:
-    """This class is used for generating random waves
-    by combining multiple spectra with different distributions and directions
+    """This class is used for generating random waves by combining
+    multiple spectra with different distributions and directions
+
     Parameters
     ----------
-    param : Nspectra
-            Description: Total number of spectra
-            Type: integer
-    param : Tp
-            Description: List of peak wave periods
-            Type: list
-    param : Hs
-            Description: List of significant wave heights
-            Type: list
-    param : mwl
-            Description: Still water level
-            Type: float
-    param : depth
-            Description: Water depth
-            Type: float
-    param : waveDir
-            Description: Lsit of wave direction vector
-            Type: numpy array
-    param : g
-            Description: Gravitational acceleration vector
-            Type: Numpy array
-    param : N
-            Description: List of numbers of frequency components
-            Type: list
-    param : bandfactor
-            Description: List of spectral band factors
-            Type: list
-    param : spectName
-            Description: List of names of spectral distribution
-            Type: list
-    param : spectral_params
-            Description: List of names of spectral distribution (see RandomWaves class)
-            Type: list
-    param : phi
-            Description: List of component phases
-            Type: list
+
+        param : Nspectra
+                Description: Total number of spectra
+                Type: integer
+        param : Tp
+                Description: List of peak wave periods
+                Type: list
+        param : Hs
+                Description: List of significant wave heights
+                Type: list
+        param : mwl
+                Description: Still water level
+                Type: float
+        param : depth
+                Description: Water depth
+                Type: float
+        param : waveDir
+                Description: Lsit of wave direction vector
+                Type: numpy array
+        param : g
+                Description: Gravitational acceleration vector
+                Type: Numpy array
+        param : N
+                Description: List of numbers of frequency components
+                Type: list
+        param : bandfactor
+                Description: List of spectral band factors
+                Type: list
+        param : spectName
+                Description: List of names of spectral distribution
+                Type: list
+        param : spectral_params
+                Description: List of names of spectral distribution (see RandomWaves class)
+                Type: list
+        param : phi
+                Description: List of component phases
+                Type: list
+
     """
     def __cinit__(self,
                  Nspectra,
