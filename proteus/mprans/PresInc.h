@@ -601,16 +601,16 @@ namespace proteus
 		{
 		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(adv_flux_ext,u_test_dS[i])
                     + 
-                    ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i])
-                  +
-                    ck.ExteriorElementBoundaryScalarDiffusionAdjoint(isDOFBoundary[ebNE_kb],
-                                                                     isFluxBoundary[ebNE_kb],
-                                                                     1.0,
-                                                                     u_ext,
-                                                                     bc_u_ext,
-                                                                     normal,
-                                                                     a_ext,
-                                                                     &u_grad_test_dS[i*nSpace]);
+                    ck.ExteriorElementBoundaryFlux(diff_flux_ext,u_test_dS[i]);
+                  /* + */
+                  /*   ck.ExteriorElementBoundaryScalarDiffusionAdjoint(isDOFBoundary[ebNE_kb], */
+                  /*                                                    isFluxBoundary[ebNE_kb], */
+                  /*                                                    1.0, */
+                  /*                                                    u_ext, */
+                  /*                                                    bc_u_ext, */
+                  /*                                                    normal, */
+                  /*                                                    a_ext, */
+                  /*                                                    &u_grad_test_dS[i*nSpace]); */
 		}//i
 	    }//kb
 	  //
@@ -962,15 +962,15 @@ namespace proteus
                                                                                                                                            a_ext,
                                                                                                                                            u_trial_trace_ref[ebN_local_kb_j],
                                                                                                                                            &u_grad_trial_trace[j_nSpace],
-                                                                                                                                           penalty)*u_test_dS[i]
-                        +
-		        ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian(isDOFBoundary[ebNE_kb],
-                                                                                 isFluxBoundary[ebNE_kb],
-                                                                                 1.0,
-                                                                                 u_trial_trace_ref[ebN_local_kb_j],
-                                                                                 normal,
-                                                                                 a_ext,
-                                                                                 &u_grad_test_dS[i*nSpace]);
+                                                                                                                                           penalty)*u_test_dS[i];
+                        /* + */
+		        /* ck.ExteriorElementBoundaryScalarDiffusionAdjointJacobian(isDOFBoundary[ebNE_kb], */
+                        /*                                                          isFluxBoundary[ebNE_kb], */
+                        /*                                                          1.0, */
+                        /*                                                          u_trial_trace_ref[ebN_local_kb_j], */
+                        /*                                                          normal, */
+                        /*                                                          a_ext, */
+                        /*                                                          &u_grad_test_dS[i*nSpace]); */
 		    }//j
 		}//i
 	    }//kb
