@@ -381,8 +381,8 @@ number of edges         = %d
         #minimal information necessary
         spaceDim = 2
         assert(meshin.nElementBoundaries_element == spaceDim+1)
-        assert(not meshin.nodeArray == None)
-        assert(not meshin.elementNodesArray == None)
+        assert(meshin.nodeArray is not None)
+        assert(meshin.elementNodesArray is not None)
 
         #get a clean slate
         tri0 = triangleWrappers.new()
@@ -450,11 +450,11 @@ number of edges         = %d
         #now create an initial representation
         tri0 = triangleWrappers.new()
 
-        if nodesM == None:
+        if nodesM is None:
             triangleWrappers.setPoints(tri0,nodes)
         else:
             triangleWrappers.setPointsAndMarkers(tri0,nodes,nodesM)
-        if not nodesA == None:
+        if nodesA is not None:
             triangleWrappers.setPointAttributes(tri0,nodesA)
 
         #run triangleWrappers on it using the base flags and whatever else was
@@ -519,16 +519,16 @@ number of edges         = %d
         #now create an initial representation
         tri0 = triangleWrappers.new()
 
-        if nodesM == None:
+        if nodesM is None:
             triangleWrappers.setPoints(tri0,nodes)
         else:
             triangleWrappers.setPointsAndMarkers(tri0,nodes,nodesM)
-        if not nodesA == None:
+        if nodesA is not None:
             triangleWrappers.setPointAttributes(tri0,nodesA)
         #end if
 
         triangleWrappers.setTriangles(tri0,triangles)
-        if not trianglesA == None:
+        if trianglesA is not None:
             triangleWrappers.setTriangleAttributes(tri0,trianglesA)
 
         #run triangulate on it using the base flags and whatever else was
@@ -607,25 +607,25 @@ number of edges         = %d
         #end if
         tri0 = triangleWrappers.new()
 
-        if nodesM == None:
+        if nodesM is None:
             triangleWrappers.setPoints(tri0,nodes)
         else:
             nodesMtmp = numpy.zeros(nodesM.shape,'i')
             nodesMtmp[:] = nodesM
             nodesM = nodesMtmp
             triangleWrappers.setPointsAndMarkers(tri0,nodes,nodesM)
-        if not nodesA == None:
+        if nodesA is not None:
             triangleWrappers.setPointAttributes(tri0,nodesA)
         #end if
-        if segmentsM == None:
+        if segmentsM is None:
             triangleWrappers.setSegments(tri0,segments)
         else:
             triangleWrappers.setSegmentsAndMarkers(tri0,segments,segmentsM)
         #end if
-        if (not holes == None):
+        if (holes is not None):
             triangleWrappers.setHoles(tri0,holes)
         #end if
-        if (not regions == None):
+        if (regions is not None):
             #print 'setting trin1 regions=\n',regions2
             triangleWrappers.setRegions(tri0,regions)
         #end if

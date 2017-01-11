@@ -7,6 +7,7 @@ A class hierarchy for methods of controlling the step size
 from .Profiling import logEvent
 #mwf add Comm for saving info about time step in separate file
 import Comm
+from petsc4py import PETSc
 from flcbdfWrappers import globalMax
 
 class SC_base:
@@ -152,8 +153,8 @@ class SC_base:
         uses finest level to get this information
         called before updating t_model --> t_model_last etc
 
-         k |  Step Size   |      tn      |errf|nlsf|ilsf|func|jacs|NLit|L_IT|linS|
         """
+#         k |  Step Size   |      tn      |errf|nlsf|ilsf|func|jacs|NLit|L_IT|linS|
         #cek hack had to comment out to get some other things working
         pass
 #         lineform = \
