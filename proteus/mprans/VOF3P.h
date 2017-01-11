@@ -737,7 +737,6 @@ namespace proteus
 		    {
 		      elementQuantDOFs[i] += // -int[vel*grad(wi)*dV] 
 			- (velocity[eN_k_nSpace]*u_grad_test_dV[i*nSpace] + velocity[eN_k_nSpace+1]*u_grad_test_dV[i*nSpace+1]);
-		      //elementQuantDOFs[i] += div_velocity[eN_k]*u_test_dV[i];// div(vel)*wi
 		    }
 		}
 	      // DISTRIBUTE // load cell based element into global vectors
