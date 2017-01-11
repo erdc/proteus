@@ -100,7 +100,7 @@ USER jovyan
 
 WORKDIR /home/$NB_USER
 
-RUN git clone https://github.com/erdc-cm/proteus -b update_notebooks && \
+RUN git clone https://github.com/erdc-cm/proteus && \
     cd proteus && \
     make hashdist stack stack/default.yaml && \
     ./hashdist/bin/hit init-home && \
