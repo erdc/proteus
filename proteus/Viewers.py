@@ -158,16 +158,14 @@ class V_base:
             tsim in self.s.viewTimes):
             self.stepProcessPlot(mlvt,tsim)
     def stepProcessPlot(self,mlvt,tsim):
-        """
-        plot desired quantities for a single step
-        input :
-          p    --- problem definition
-          n    --- numerics definition
-          mlvt --- multilevel vector transport that holds the quantities to measure
-          tsim --- simulation time
+        """plot desired quantities for a single step
+        
+        Parameters
+        ----------
+           mlvt : multilevel vector transport that holds the quantities to measure
+           tsim : simulation time
 
         assumes this is the correct time to plot
-        TO DO:
 
         """
         import pdb
@@ -183,19 +181,18 @@ class V_base:
         self.stepPlotExact(mlvt,tsim)
         self.stepPlotElementQuantities(mlvt,tsim)
     def stepPlotExact(self,mlvt,tsim):
-        """
-        plot 'exact' value of desired quantities for a single step
-        input :
-          p    --- problem definition
-          n    --- numerics definition
-          mlvt --- multilevel vector transport that holds the quantities to measure
-          tsim --- simulation time
+        """plot 'exact' value of desired quantities for a single step
+
+        Parameters
+        ----------
+           mlvt :  multilevel vector transport that holds the quantities to measure
+           tsim : simulation time
 
         assumes this is the correct time to plot
         and plotOffSet is set correctly
-        TO DO: Fix scaling for exact vector components to match Transport
 
         """
+#        TO DO: Fix scaling for exact vector components to match Transport
         #mwf taking a lot of time on jade
         if ('u_exact' not in self.s.viewQuantities) and ('velocity_exact' not in self.s.viewQuantities):
             return
@@ -595,14 +592,13 @@ class V_base:
             self.stepPlotCalled['elementQuantities'] = True
     #
     def plotScalarElementQuantity(self,ckey,mlvt,tsim):
-        """
-        plotting routine to look at scalar quantity stored in element quad dictionary q
-        input :
-          ckey --- what should be plotted
-          p    --- problem definition
-          n    --- numerics definition
-          mlvt --- multilevel vector transport that holds the quantities to measure
-          tsim --- simulation time
+        """plotting routine to look at scalar quantity stored in element quad dictionary q
+
+        Parameters
+        -----------
+          ckey : what should be plotted
+          mlvt : multilevel vector transport that holds the quantities to measure
+          tsim : simulation time
         assumes this is the correct time to plot
         and plotOffSet is set correctly
 
@@ -735,14 +731,14 @@ class V_base:
 
     #def
     def plotVectorGlobalElementBoundaryQuantity(self,ckey,mlvt,tsim):
-        """
-        plotting routine to look at vector quantity stored in global elementBoundary quad dictionary ebq_global
-        input :
-          ckey --- what should be plotted
-          p    --- problem definition
-          n    --- numerics definition
-          mlvt --- multilevel vector transport that holds the quantities to measure
-          tsim --- simulation time
+        """plotting routine to look at vector quantity stored in global elementBoundary quad dictionary ebq_global
+
+        Parameters
+        -----------
+          ckey : what should be plotted
+          mlvt : multilevel vector transport that holds the quantities to measure
+          tsim : simulation time
+
         assumes this is the correct time to plot
         and plotOffSet is set correctly
 
@@ -1845,25 +1841,23 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 
     def viewScalar_LagrangeC0P1(self,cmdFile,nSpace,nodeArray,elementNodesArray,u_dof,
                                 name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given C0 P1 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """given C0 P1 function with nodal Lagrange representation generate a
+        # matlab representation that is as faithful as possible to the
+        # actual finite element function structure
 
-        C0-P1 output:
-           mesh vertices and element connectivity
-           degrees of freedom at vertices
+        # C0-P1 output: mesh vertices and element connectivity degrees of freedom at vertices
 
-        scalar data is stored in
-            name
+        # scalar data is stored in name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name_v  -- element-node representation
+        # if storeMeshData = True, writes out
+        
+        # name_x      -- mesh vertices
+        
+        # tri_name_v  -- element-node representation
 
-        returns number of figures actually plotted
-
-        """
+        # returns number of figures actually plotted
+        
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -1967,26 +1961,26 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewVector_LagrangeC0P1(self,cmdFile,nSpace,nodeArray,elementNodesArray,
                                 u_dof,v_dof=None,w_dof=None,
                                 name="velocity",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given a vector valued C0 P1 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # given a vector valued C0 P1 function with nodal Lagrange representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes 1 <= number of components <= nSpace
-        C0-P1 output:
-           mesh vertices and element connectivity
-           degrees of freedom at vertices
+        # Assumes 1 <= number of components <= nSpace
+        # C0-P1 output:
+        #    mesh vertices and element connectivity
+        #    degrees of freedom at vertices
 
-        vector data is stored in
-            name which is [nNodes,nCoord]
+        # vector data is stored in
+        #     name which is [nNodes,nCoord]
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name_v  -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name_v  -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2112,28 +2106,26 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewScalar_LagrangeC0P2(self,cmdFile,nSpace,lagrangeNodesArray,elementNodesArray,
                                 l2g,u_dof,
                                 name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        TODO 3D
-        given C0 P2 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """TODO 3D
+        # given C0 P2 function with nodal Lagrange representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        C0-P2 output:
-           matlab mesh vertices stored according [geometric vertices, midNodesVertices]
-           and element connectivity for refined mesh
-           degrees of freedom at all vertices
-           'mid-edge' vertices stored in midNodesArray
+        # C0-P2 output: matlab mesh vertices stored according [geometric
+        # vertices, midNodesVertices] and element connectivity for
+        # refined mesh degrees of freedom at all vertices 'mid-edge'
+        # vertices stored in midNodesArray
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- matlab mesh vertices
-            tri_name_v  -- matlab element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- matlab mesh vertices
+        #     tri_name_v  -- matlab element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2271,30 +2263,30 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewVector_LagrangeC0P2(self,cmdFile,nSpace,lagrangeNodesArray,elementNodesArray,
                                 l2g,u_dof,v_dof=None,w_dof=None,
                                 name="velocity",storeMeshData=True,figureNumber=1,title=None):
-        """
-        TODO: 3D
+        # """
+        # TODO: 3D
 
-        given a vector valued C0 P2 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # given a vector valued C0 P2 function with nodal Lagrange representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes 1 <= number of components <= nSpace
-        C0-P2 output:
-           matlab mesh vertices stored according [geometric vertices, midNodesVertices]
-           and element connectivity for refined mesh
-           degrees of freedom at all vertices
-           'mid-edge' vertices stored in midNodesArray
+        # Assumes 1 <= number of components <= nSpace
+        # C0-P2 output:
+        #    matlab mesh vertices stored according [geometric vertices, midNodesVertices]
+        #    and element connectivity for refined mesh
+        #    degrees of freedom at all vertices
+        #    'mid-edge' vertices stored in midNodesArray
 
-        vector data is stored in
-            name which is [nNodes,nCoord]
+        # vector data is stored in
+        #     name which is [nNodes,nCoord]
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name_v  -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name_v  -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2455,26 +2447,26 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     #
     def viewScalar_DGP0(self,cmdFile,nSpace,nodeArray,elementNodesArray,l2g,u_dof,
                         name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given DG P0 function
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # given DG P0 function
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes local dof associated with local node numbering
-        DG-P0 output:
-           element-wise list of vertices and local elemntwise-connectivity matrices
-           degrees of freedom at element vertices (as if a DG-P1 function)
+        # Assumes local dof associated with local node numbering
+        # DG-P0 output:
+        #    element-wise list of vertices and local elemntwise-connectivity matrices
+        #    degrees of freedom at element vertices (as if a DG-P1 function)
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name    -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name    -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2643,26 +2635,26 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 
     def viewScalar_LagrangeDGP1(self,cmdFile,nSpace,nodeArray,elementNodesArray,l2g,u_dof,
                                 name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given DG P1 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # given DG P1 function with nodal Lagrange representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes local dof associated with local node numbering
-        DG-P1 output:
-           element-wise list of vertices and local elemntwise-connectivity matrices
-           degrees of freedom at vertices
+        # Assumes local dof associated with local node numbering
+        # DG-P1 output:
+        #    element-wise list of vertices and local elemntwise-connectivity matrices
+        #    degrees of freedom at vertices
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name    -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name    -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2830,31 +2822,31 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewScalar_LagrangeDGP2(self,cmdFile,nSpace,nodeArray,elementNodesArray,midNodesArray,
                                 l2g,cg_l2g,u_dof,
                                 name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        TODO: 3d
-        given DG P1 function with nodal Lagrange representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # TODO: 3d
+        # given DG P1 function with nodal Lagrange representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes local dof associated with local node numbering
-        and then local edge numbering
+        # Assumes local dof associated with local node numbering
+        # and then local edge numbering
 
-        uses cg numbering for accessing mid-edge vertices
-        DG-P2 output:
-           element-wise list of vertices and mid-edge vertices along
-           with local elemntwise-connectivity matrices
-           degrees of freedom at vertices and mid-edge vertices
+        # uses cg numbering for accessing mid-edge vertices
+        # DG-P2 output:
+        #    element-wise list of vertices and mid-edge vertices along
+        #    with local elemntwise-connectivity matrices
+        #    degrees of freedom at vertices and mid-edge vertices
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices and mid-edge vertices
-            tri_name    -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices and mid-edge vertices
+        #     tri_name    -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -2999,27 +2991,27 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     #
     def viewScalar_CrouzeixRaviartP1(self,cmdFile,nSpace,nodeArray,elementNodesArray,l2g,u_dof,
                                      name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given FEM function with local Crouzeix-Raviart representation
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # given FEM function with local Crouzeix-Raviart representation
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        Assumes local dof associated with local node numbering
-        CR output:
-           Just treat as a DGP1 function
-           element-wise list of vertices and local elemntwise-connectivity matrices
-           degrees of freedom at vertices instead of face barycenters
+        # Assumes local dof associated with local node numbering
+        # CR output:
+        #    Just treat as a DGP1 function
+        #    element-wise list of vertices and local elemntwise-connectivity matrices
+        #    degrees of freedom at vertices instead of face barycenters
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name    -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name    -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
@@ -3211,27 +3203,27 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewScalar_MonomialDGPK(self,cmdFile,nSpace,nodeArray,elementNodesArray,
                                 interpolationPoints,u_interpolationPoints,
                                 name="u",storeMeshData=True,figureNumber=1,title=None):
-        """
-        given DG PK function with monomial basis
-        generate a matlab representation that is as faithful as possible to
-        the actual finite element function structure
+        # """
+        # given DG PK function with monomial basis
+        # generate a matlab representation that is as faithful as possible to
+        # the actual finite element function structure
 
-        input is u values at interpolation points (not dof)
-        Generates an array of triangulations of interpolation points on each element
-        DG-PK output:
-           element-wise list of interpolation points and local elementwise-connectivity matrices
-           degrees of freedom at interpolation points
+        # input is u values at interpolation points (not dof)
+        # Generates an array of triangulations of interpolation points on each element
+        # DG-PK output:
+        #    element-wise list of interpolation points and local elementwise-connectivity matrices
+        #    degrees of freedom at interpolation points
 
-        scalar data is stored in
-            name
+        # scalar data is stored in
+        #     name
 
-        if storeMeshData = True, writes out
-            name_x      -- mesh vertices
-            tri_name    -- element-node representation
+        # if storeMeshData = True, writes out
+        #     name_x      -- mesh vertices
+        #     tri_name    -- element-node representation
 
-        returns number of figures actually plotted
+        # returns number of figures actually plotted
 
-        """
+        # """
         #1d
         cmd1dData = """
 nElements_global = %i; nPoints_element = %i;

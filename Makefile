@@ -120,6 +120,16 @@ hashdist:
 	@echo "No hashdist found.  Cloning hashdist from GitHub"
 	git clone https://github.com/hashdist/hashdist.git 
 	cd hashdist && git checkout ${HASHDIST_DEFAULT_VERSION}
+
+hashdist_src:
+	@echo "Trying to add hashdist source cache"
+	./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source"
+
+hashdist_bld:
+	@echo "Trying to add hashdist build cache for your arch"
+	HASHSTACK_BLD = $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print '{Distributor}_{Release}'.format(**rel)")
+	./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_${HASHSTACK_BLD} --objects="build"
+
 stack: 
 	@echo "No stack found.  Cloning stack from GitHub"
 	git clone https://github.com/hashdist/hashstack.git stack
@@ -297,3 +307,8 @@ jupyter:
 	jupyter nbextension install --py --sys-prefix rise
 	jupyter nbextension enable --py --sys-prefix rise
 	jupyter dashboards quick-setup --sys-prefix
+	jupyter nbextension install --sys-prefix --py ipyparallel
+	jupyter nbextension enable --sys-prefix --py ipyparallel
+	jupyter serverextension enable --sys-prefix --py ipyparallel
+	ipython profile create mpi --parallel
+	echo "c.IPClusterEngines.engine_launcher_class = 'MPI'" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
