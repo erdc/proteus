@@ -2272,16 +2272,15 @@ class MultilevelNonlinearSolver:
 class EikonalSolver:
     """
     Simple wrapper for special purpose Eikonal equation solvers on a single level.
-    Current types allowed:
-       FMMEikonalSolver
-       FSWEikonalSOlver
+    Current types allowed::
 
-    TODO Feb 20
-      Debug change in use truncation approach for positive and negative solutions
-      Debug local Reconstruction
+       FMMEikonalSolver
+       FSWEikonalSolver
 
     """
-
+#    TODO Feb 20
+#      Debug change in use truncation approach for positive and negative solutions
+#      Debug local Reconstruction
     def __init__(self,
                  levelSolverType,
                  F,
