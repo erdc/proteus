@@ -54,7 +54,7 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                double rho_s_min,
                                double rho_f_min,
                                double * ebqe_vf,
-			       double * ebqe_vtCorr,
+                               double * ebqe_vtCorr,
                                double * ebqe_vs,
                                double * ebqe_vos,
                                double * ebqe_rho_f,
@@ -73,7 +73,8 @@ cdef extern from "mprans/PresInc.h" namespace "proteus":
                                int * exteriorElementBoundariesArray,
                                int * elementBoundaryElementsArray,
                                int * elementBoundaryLocalElementBoundariesArray, 
-			       int INTEGRATE_BY_PARTS)
+			       int INTEGRATE_BY_PARTS, 
+			       double * quantDOFs)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -201,7 +202,8 @@ cdef class PresInc:
                           numpy.ndarray exteriorElementBoundariesArray,
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray, 
-			  int INTEGRATE_BY_PARTS):
+			  int INTEGRATE_BY_PARTS, 
+			  numpy.ndarray quantDOFs):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -255,7 +257,8 @@ cdef class PresInc:
                                        < int * > exteriorElementBoundariesArray.data,
                                        < int * > elementBoundaryElementsArray.data,
                                        < int * > elementBoundaryLocalElementBoundariesArray.data,
-				       INTEGRATE_BY_PARTS)
+				       INTEGRATE_BY_PARTS,
+				       < double * > quantDOFs.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -783,7 +786,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
-
         self.q[('v',0)] = numpy.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
@@ -957,6 +959,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         log("Calculating numerical quadrature formulas", 2)
         self.calculateQuadrature()
         self.setupFieldStrides()
+        # Aux quantity at DOFs to be filled by optimized code (MQL)
+        self.quantDOFs=None
 
         comm = Comm.get()
         self.comm = comm
@@ -1072,6 +1076,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[0].dof[dofN] = g(
                     self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
                     self.timeIntegration.t)
+
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
         self.presinc.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1109,7 +1115,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.rho_s_min,
             self.coefficients.rho_f_min,
             self.coefficients.fluidModel.ebqe[('velocity',0)],
-            self.ebqe[('velocity',0)],
+            self.ebqe[('velocity', 0)],
             self.coefficients.fluidModel.coefficients.ebqe_velocity_solid,
             self.coefficients.fluidModel.coefficients.ebqe_vos,
             self.coefficients.fluidModel.coefficients.ebqe_rho,
@@ -1127,7 +1133,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray, 
-	    self.coefficients.INTEGRATE_BY_PARTS)
+	    self.coefficients.INTEGRATE_BY_PARTS,
+	    self.quantDOFs)
 
         log("Global residual", level=9, data=r)
         log("Mass conservation Error v1: ", level=9, data=fabs(globalSum(sum(r.flat[:self.mesh.nNodes_owned]))))

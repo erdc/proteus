@@ -1116,7 +1116,7 @@ class NS_base:  # (HasTraits):
                                                                    self.tnList[0],
                                                                    self.tCount,
                                                                    quantDOFs,
-                                                                   res_name_base='quant_of_interest_at_DOFs')
+                                                                   res_name_base='quantDOFs_for_'+model.name)
             logEvent("Writing initial quantity of interest at DOFs for = "+model.name,level=3)
         except:
             pass        
@@ -1196,7 +1196,7 @@ class NS_base:  # (HasTraits):
                                                                    self.tnList[0],
                                                                    self.tCount,
                                                                    quantDOFs,
-                                                                   res_name_base='quant_of_interest_at_DOFs')
+                                                                   res_name_base='quantDOFs_for_'+model.name)
             logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass        
