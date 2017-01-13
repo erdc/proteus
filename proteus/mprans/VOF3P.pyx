@@ -32,7 +32,9 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
 		     int* csrRowIndeces_DofLoops, 
 		     int* csrColumnOffsets_DofLoops, 
 		     double* MassMatrix, 
-		     double* dL_minus_dC) 
+		     double* dL_minus_dC,
+                     double* min_u_bc,
+                     double* max_u_bc) 
         void getInflowDOFs(double* mesh_dof,            
                            int* mesh_l2g,
                            double* mesh_trial_trace_ref,
@@ -131,7 +133,9 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double uR,
                                double cK,
                                double * flux_plus_dLij_times_soln,
-                               double * dL_minus_dC, 
+                               double * dL_minus_dC,
+                               double * min_u_bc,
+                               double * max_u_bc,
                                double cMax, 
                                double cE, 
                                double * quantDOFs)
@@ -225,7 +229,9 @@ cdef class VOF3P:
                 numpy.ndarray csrRowIndeces_DofLoops, 
                 numpy.ndarray csrColumnOffsets_DofLoops, 
                 numpy.ndarray MassMatrix, 
-                numpy.ndarray dL_minus_dC):
+                numpy.ndarray dL_minus_dC,
+                numpy.ndarray min_u_bc,
+                numpy.ndarray max_u_bc):
         self.thisptr.FCTStep(dt, 
                              NNZ,
                              numDOFs,
@@ -236,7 +242,9 @@ cdef class VOF3P:
                              <int*> csrRowIndeces_DofLoops.data,
                              <int*> csrColumnOffsets_DofLoops.data,
                              <double*> MassMatrix.data,
-                             <double*> dL_minus_dC.data)
+                             <double*> dL_minus_dC.data,
+                             <double*> min_u_bc.data,
+                             <double*> max_u_bc.data)
     def getInflowDOFs(self, 
                       numpy.ndarray mesh_dof,            
                       numpy.ndarray mesh_l2g,
@@ -353,6 +361,8 @@ cdef class VOF3P:
                           double cK, 
                           numpy.ndarray flux_plus_dLij_times_soln,
                           numpy.ndarray dL_minus_dC, 
+                          numpy.ndarray min_u_bc,
+                          numpy.ndarray max_u_bc,
                           double cMax, 
                           double cE, 
                           numpy.ndarray quantDOFs):
@@ -443,6 +453,8 @@ cdef class VOF3P:
                                        cK,
                                        <double*> flux_plus_dLij_times_soln.data,
                                        <double*> dL_minus_dC.data, 
+                                       <double*> min_u_bc.data,
+                                       <double*> max_u_bc.data,
                                        cMax,
                                        cE,
                                        <double*> quantDOFs.data)
@@ -1326,6 +1338,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # dL_global and dC_global are not the full matrices but just the CSR arrays containing the non zero entries
         self.flux_plus_dLij_times_soln=None
         self.dL_minus_dC=None
+        self.min_u_bc=None
+        self.max_u_bc=None
         self.inflow_DOFs=None
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs=None
@@ -1444,7 +1458,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                          rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
                          colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
                          MassMatrix, 
-                         self.dL_minus_dC)
+                         self.dL_minus_dC,
+                         self.min_u_bc,
+                         self.max_u_bc)
     def calculateCoefficients(self):
         pass
 
@@ -1617,6 +1633,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             rowptr, colind, CTz = self.cterm_global_transpose[2].getCSRrepresentation()        
         # This is dummy. I just care about the csr structure of the sparse matrix
         self.dL_minus_dC = numpy.zeros(Cx.shape,'d')
+        self.min_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
+        self.max_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
+        self.min_u_bc.fill(1E10);
+        self.max_u_bc.fill(-1E10);
         self.flux_plus_dLij_times_soln = numpy.zeros(self.u[0].dof.shape,'d')
         self.inflow_DOFs = numpy.zeros(self.u[0].dof.shape,'d')
         self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
@@ -1786,6 +1806,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # FLUX CORRECTED TRANSPORT 
             self.flux_plus_dLij_times_soln,
             self.dL_minus_dC, 
+            self.min_u_bc,
+            self.max_u_bc,
             # PARAMETERS FOR ELEMENT BASED ENTROPY VISCOSITY
             self.coefficients.cMax,
             self.coefficients.cE,

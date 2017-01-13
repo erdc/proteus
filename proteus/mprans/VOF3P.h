@@ -41,7 +41,9 @@ namespace proteus
 			 int* csrRowIndeces_DofLoops, //csr row indeces 
 			 int* csrColumnOffsets_DofLoops, //csr column offsets 
 			 double* MassMatrix, //mass matrix
-			 double* dL_minus_dC //low minus high order dissipative matrices
+			 double* dL_minus_dC, //low minus high order dissipative matrices
+			 double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
+			 double* max_u_bc
 			 )=0;
     virtual void getInflowDOFs(
 			       double* mesh_dof,
@@ -154,7 +156,9 @@ namespace proteus
 				   double cK,
 				   // FOR FCT
 				   double* flux_plus_dLij_times_soln, 
-				   double* dL_minus_dC, 
+				   double* dL_minus_dC,
+				   double* min_u_bc,
+				   double* max_u_bc,
 				   // ELEMENT BASED ENTROPY VISCOSITY
 				   double cMax, 
 				   double cE,
@@ -420,7 +424,9 @@ namespace proteus
 		 int* csrRowIndeces_DofLoops, //csr row indeces 
 		 int* csrColumnOffsets_DofLoops, //csr column offsets 
 		 double* MassMatrix, //mass matrix
-		 double* dL_minus_dC //low minus high order dissipative matrices
+		 double* dL_minus_dC, //low minus high order dissipative matrices
+		 double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
+		 double* max_u_bc
 		 )
     {
       register double Rpos[numDOFs], Rneg[numDOFs];
@@ -440,11 +446,10 @@ namespace proteus
 	  // mi*(uLi-uni) + dt*sum_j[(Tij+dLij)*unj] = 0
 	  solL[i] = solni-dt/mi*flux_plus_dLij_times_soln[i];
 
-	  double mini=1E10, maxi=-1E10;
+	  double mini=min_u_bc[i], maxi=max_u_bc[i]; // init min/max with value at BCs (NOTE: if no boundary then min=1E10, max=-1E10)
+	  //double mini=1E10, maxi=-1E-10;
 	  double Pposi=0, Pnegi=0;
 
-	  //if ith-DOF is at boundary 
-	  mini = 1.0; maxi = 1.0; //(MQL) Hacked to work just for BC value = 1
 	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
@@ -695,6 +700,8 @@ namespace proteus
 			   // FOR FCT
 			   double* flux_plus_dLij_times_soln, 
 			   double* dL_minus_dC, 
+			   double* min_u_bc,
+			   double* max_u_bc,
 			   // ELEMENT BASED ENTROPY VISCOSITY
 			   double cMax, 
 			   double cE, 
@@ -910,6 +917,7 @@ namespace proteus
 	    {
 	      for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) 
 		{ 
+		  double min_u_bc_local = 1E10, max_u_bc_local = -1E10;
 		  register int ebN = exteriorElementBoundariesArray[ebNE]; 
 		  register int eN  = elementBoundaryElementsArray[ebN*2+0],
 		    ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
@@ -1038,7 +1046,19 @@ namespace proteus
 				+= fluxTransport[i]*u_test_dS[j];
 			    }//j
 			}//i
+			    
+		      // local min/max at boundary
+		      min_u_bc_local = std::min(ebqe_bc_u_ext[ebNE_kb], min_u_bc_local);
+		      max_u_bc_local = std::max(ebqe_bc_u_ext[ebNE_kb], max_u_bc_local);
 		    }//kb
+		  // global min/max at boundary 
+		  for (int i=0;i<nDOF_test_element;i++)
+		    {
+		      int eN_i = eN*nDOF_test_element+i;
+		      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		      min_u_bc[gi] = std::min(min_u_bc_local,min_u_bc[gi]);
+		      max_u_bc[gi] = std::max(max_u_bc_local,max_u_bc[gi]);		      
+		    }
 		}//ebNE
 	      // END OF ADDING BOUNDARY TERM TO TRANSPORT MATRICES //
 	    }
