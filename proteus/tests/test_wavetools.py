@@ -508,7 +508,7 @@ class CheckRandomWavesFailures(unittest.TestCase):
         self.assertTrue(None == None)
 
 class VerifyRandomWaves(unittest.TestCase):
-    @pytest.mark.skip(reason="nosetests vs pytest issue")
+#    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandom(self):
         from proteus.WaveTools import RandomWaves
         import random
@@ -1536,7 +1536,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
         print "End time = ",series[-1,0]
         print "Cutoff = ",cutoff
         """
-        print "\n Max error in fast approximation=%s%%" %round(100*aRF.er1,3)
+        #print "\n Max error in fast approximation=%s%%" %round(100*aRF.er1,3)
 
         
         self.assertTrue(round(abs(aRF.eta(x,t)/aT.eta(x,t)),8) == 1.)
