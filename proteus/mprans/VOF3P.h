@@ -442,6 +442,9 @@ namespace proteus
 
 	  double mini=1E10, maxi=-1E10;
 	  double Pposi=0, Pnegi=0;
+
+	  //if ith-DOF is at boundary 
+	  mini = 1.0; maxi = 1.0; //(MQL) Hacked to work just for BC value = 1
 	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
@@ -451,7 +454,7 @@ namespace proteus
 	      ////////////////////////
 	      mini = std::min(mini,soln[j]);
 	      maxi = std::max(maxi,soln[j]);
-
+	      
 	      // i-th row of flux correction matrix 
 	      FluxCorrectionMatrix[ij] = (((i==j) ? 1 : 0)*mi - MassMatrix[ij])*(solH[j]-soln[j] - (solHi-solni)) + dt*dL_minus_dC[ij]*(soln[j]-solni);
 
@@ -491,10 +494,10 @@ namespace proteus
 	      int j = csrColumnOffsets_DofLoops[offset];
 	      ith_Limiter_times_FluxCorrectionMatrix += 
 		((FluxCorrectionMatrix[ij]>0) ? std::min(Rposi,Rneg[j]) : std::min(Rnegi,Rpos[j])) * FluxCorrectionMatrix[ij];
+	      //ith_Limiter_times_FluxCorrectionMatrix += FluxCorrectionMatrix[ij]; //TMP
 	      //update ij
 	      ij+=1;
 	    }
-	  //solH[i] = solL[i];
 	  solH[i] = solL[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
 	}
     }
@@ -1040,6 +1043,28 @@ namespace proteus
 	      // END OF ADDING BOUNDARY TERM TO TRANSPORT MATRICES //
 	    }
 	      
+	  /////////////////////////////////////////////////////////////
+	  // MULTIPLICATION OF TRANSPORT MATRIX TIMES SOLUTION AT tn //
+	  /////////////////////////////////////////////////////////////
+	  int ij=0;
+	  if (KUZMINS_METHOD==1)
+	    {	  
+	      for (int i=0; i<numDOFs; i++)
+		{		  
+		  double ith_TransportMatrix_times_solution = 0.;
+		  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+		  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+		    {
+		      int j = csrColumnOffsets_DofLoops[offset];
+		      ith_TransportMatrix_times_solution += TransportMatrix[ij]*u_dof_old[j];
+		      //update ij
+		      ij+=1;
+		    }
+		  globalResidual[i] += dt*ith_TransportMatrix_times_solution;
+		  flux_plus_dLij_times_soln[i] = ith_TransportMatrix_times_solution; 
+		}
+	    }
+
 	  ////////////////////////////////////////
 	  // COMPUTE (INFLOW) BOUNDARY INTEGRAL //
 	  ////////////////////////////////////////
@@ -1117,13 +1142,15 @@ namespace proteus
 		      else 
 			flux_ext = 0;
 		      for (int i=0;i<nDOF_test_element;i++)
-			elementResidual_u[i] += dt*ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]); 
+			elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]); 
 		    }//kb
 		  // Distribute
 		  for (int i=0;i<nDOF_test_element;i++)
 		    {
 		      int eN_i = eN*nDOF_test_element+i;
-		      globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+		      int gi = offset_u+stride_u*u_l2g[eN_i];
+		      globalResidual[gi] += dt*elementResidual_u[i];
+		      flux_plus_dLij_times_soln[gi] += elementResidual_u[i]; // add inflow boundary integral to low order flux
 		    }//i
 		}//ebNE	  
 	      // END OF BOUNDARY INTEGRAL //
@@ -1306,30 +1333,8 @@ namespace proteus
 		    globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
 		  }//i
 	      }//ebNE
-	  // END OF TMP BOUNDARY LOOP
-	      
-	  /////////////////////////////////////////////////////////////
-	  // MULTIPLICATION OF TRANSPORT MATRIX TIMES SOLUTION AT tn //
-	  /////////////////////////////////////////////////////////////
-	  int ij=0;
-	  if (KUZMINS_METHOD==1)
-	    {	  
-	      for (int i=0; i<numDOFs; i++)
-		{		  
-		  double ith_TransportMatrix_times_solution = 0.;
-		  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
-		  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
-		    {
-		      int j = csrColumnOffsets_DofLoops[offset];
-		      ith_TransportMatrix_times_solution += TransportMatrix[ij]*u_dof_old[j];
-		      //update ij
-		      ij+=1;
-		    }
-		  globalResidual[i] += dt*ith_TransportMatrix_times_solution;
-		  flux_plus_dLij_times_soln[i] = ith_TransportMatrix_times_solution;
-		}
-	    }
-	      
+	  // END OF FULL BOUNDARY INTEGRAL
+	      	      
 	  //////////////////////////////////
 	  // COMPUTE SMOOTHNESS INDICATOR // and // COMPUTE LOCAL MAX OF ENT RESIDUALS //
 	  //////////////////////////////////
@@ -1382,7 +1387,7 @@ namespace proteus
 			  // first-order dissipative operator
 			  dLij = -std::max(0.0,std::max(TransportMatrix[ij],TransposeTransportMatrix[ij]));
 			  // weight low-order dissipative matrix to make it higher order
-			  dLij *= std::max(psi[i],psi[j]); //TMP
+			  dLij *= std::max(psi[i],psi[j]); 
 			      
 			  // high-order (entropy viscosity) dissipative operator 
 			  double dEij = dLij;
@@ -1439,15 +1444,14 @@ namespace proteus
 		      double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
 			  
 		      double dLij=0., dCij=0.;
-		      //ith_flux_term += (solnj-0*solni)*(vxj*Cx[ij] + vyj*Cy[ij]);
-		      ith_flux_term -= (solnj-0*solni)*(vxj*CTx[ij] + vyj*CTy[ij]); //TMP
-			  
+		      ith_flux_term += solnj*(vxj*Cx[ij] + vyj*Cy[ij]);
+		      			  
 		      if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
 			{
 			  // first-order dissipative operator
 			  dLij = -std::max(std::abs(vxi*Cx[ij] + vyi*Cy[ij]),std::abs(vxj*CTx[ij] + vyj*CTy[ij]));
 			  // weight low-order dissipative matrix to make it higher order
-			  dLij *= std::max(psi[i],psi[j]); //TMP
+			  dLij *= std::max(psi[i],psi[j]); 
 			      
 			  // high-order (entropy viscosity) dissipative operator 
 			  double dEij = dLij;
