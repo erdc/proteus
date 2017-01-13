@@ -11,56 +11,6 @@ The non-conservative level set description of a bubble in a two-phase flow
 
 LevelModelType = VOF.LevelModel
 
-#My Own Coefficients
-class MyCoefficients(VOF.Coefficients):
-    def attachModels(self,modelList):
-        self.model = modelList[self.modelIndex]
-	self.u_dof_old = numpy.copy(self.model.u[0].dof)
-	self.u_dof_old_old = numpy.copy(self.model.u[0].dof)
-        self.velx_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')+1E10
-        self.vely_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')+1E10
-        self.flux_plus_dLij_times_soln = numpy.zeros(self.model.u[0].dof.shape,'d')
-        self.q_v = numpy.zeros((self.model.mesh.nElements_global,self.model.nQuadraturePoints_element,self.model.nSpace_global),'d')+1E10
-        self.ebqe_v = numpy.zeros((self.model.mesh.nExteriorElementBoundaries_global,self.model.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.model.q[('velocity',0)]=self.q_v
-        self.model.ebqe[('velocity',0)]=self.ebqe_v
-        self.ebqe_phi = numpy.zeros(self.model.ebqe[('u',0)].shape,'d') #NOTE: this is not needed (is for LS)
-    def preStep(self,t,firstStep=False):
-        # SAVE OLD SOLUTIONS
-        self.u_dof_old_old = numpy.copy(self.u_dof_old)
-        self.u_dof_old = numpy.copy(self.model.u[0].dof)
-
-        # COMPUTE VELOCITY
-        pi = math.pi
-        import numpy as np 
-
-        # GET VELOCITY AT DOFs (FOR EDGE BASED METHODS)
-        x_dof = self.model.u[0].femSpace.mesh.nodeArray[:,0]
-        y_dof = self.model.u[0].femSpace.mesh.nodeArray[:,1]
-        self.velx_tn_dof = -2.0*pi*y_dof
-        self.vely_tn_dof = 2.0*pi*x_dof
-
-        # GET VELOCITY AT QUADRATURE POINTS (FOR CELL BASE METHODS)
-        x = self.model.q['x'][...,0]
-        y = self.model.q['x'][...,1]
-        #ROTATION
-        self.q_v[...,0]  = -2.0*pi*y
-        self.q_v[...,1]  =  2.0*pi*x
-        #PERIODIC VORTEX
-        #T=8
-        #self.q_v[...,0] = -2*np.sin(pi*y)*np.cos(pi*y)*np.sin(pi*x)**2*np.cos(pi*t/T)
-        #self.q_v[...,1] = 2*np.sin(pi*x)*np.cos(pi*x)*np.sin(pi*y)**2*np.cos(pi*t/T)        
-        #TRANSLATION
-        #self.q_v[...,0]  = 0.0
-        #self.q_v[...,1]  = -1.0
-        copyInstructions = {}
-        return copyInstructions
-    def postStep(self,t,firstStep=False):
-        self.model.FCTStep(t)
-        copyInstructions = {}
-        return copyInstructions
-    def evaluate(self,t,c):
-        pass
 
 #coefficients = VOF.Coefficients(RD_model=None,ME_model=0,checkMass=checkMass,
 #                                    epsFact=epsFact_vof,useMetrics=useMetrics)
@@ -95,7 +45,7 @@ class init_cond:
         #    dBubble = -1
         return smoothedHeaviside(epsFactHeaviside*he,dBubble)#Heaviside(dBubble)
 
-        # SMOOTH 
+        # SMOOTH
         #sm = 0.25
         #dist2 = dx**2 + dy**2
         #return 0.5*(1-tanh(dist2/sm**2-1))
