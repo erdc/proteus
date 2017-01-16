@@ -1,3 +1,4 @@
+import cython
 """
 Module for creating boundary conditions. Imported in SpatialTools.py
 
@@ -5,41 +6,82 @@ Module for creating boundary conditions. Imported in SpatialTools.py
    :parts: 1
 """
 
-
-class BC_Base(object):
+class BC_Base():
     """
-    class defining boundary conditions for a facet or a segment
+    Generic class regrouping boundary conditions
     """
-    def __init__(self, shape=None, name=None, b_or=None, b_i=None):
+    def __init__(self, shape=None, name=None, b_or=None, b_i=0, nd=None):
         self.Shape = shape
         self.name = name
         self.BC_type = 'None'
-        self._b_or = b_or  # array of orientation of all boundaries of shape
-        self._b_i = b_i  # indice for this boundary in list of boundaries
+        if shape is not None:
+          self.nd = self.Shape.Domain.nd
+        elif nd is not None:
+            self.nd = nd
+        else:
+            assert nd is not None, 'Shape or nd must be passed to BC'
+        if b_or is not None:
+            self._b_or = b_or[b_i]  # array of orientation of all boundaries of shape
 
-    @classmethod
-    def newGlobalBC(cls, name, default_value=None):
+    # @staticmethod
+    # def newGlobalBC(name, default_value):
+    #     """
+    #     Makes a new BoundaryCondition class instance attached to BC_Base.
+    #     This creates a new class attributed that will be added to all BC_Base
+    #     class instances.
+
+    #     Parameters
+    #     ----------
+    #     name: string
+    #     """
+    #     setattr(BC_Base, name, default_value)
+
+    def getContext(self, context=None):
         """
-        Makes a new boundary condition with a default value. This creates a new
-        class instance and adds it to all BoundaryConditions class instances.
-        :param name: name of the new class attribute
-        :param default: default value of BC for attr (usually a funtion of
-                        (x, t) or None)
+        Gets context from proteus.Context or
+
+        Parameters
+        ----------
+        context: class, optional
+             if set to None, the context will be created from proteus.Context
         """
-        setattr(cls, name, default_value)
+        if context:
+            from proteus import Context
+            self.ct = Context.get()
+        else:
+            self.ct = context
 
 
-def constantBC(value):
+class BoundaryCondition():
     """
-    function returning constant BC
-    """
-    return lambda x, t: value
+    Boundary condition class
 
-def linearBC(a0, a1, i):
+    Attributes
+    ----------
+    uOfXT: func or None
+        boundary condition function of x (array_like) and t (float) or None for
+        no boundary condition
     """
-    function returning linear BC
-    :param a0:
-    :param a1:
-    :param i:
-    """
-    return lambda x, t: a0 + a1*x[i]
+    def __init__(self):
+        self.uOfXT = None
+
+    def init_cython(self):
+        return self.uOfXT
+
+    def resetBC(self):
+        self.uOfXT = None
+
+    def setConstantBC(self, value):
+        """
+        function returning constant BC
+
+        Parameters
+        ----------
+        value :
+
+        """
+        self.uOfXT = lambda x, t: value
+
+
+    def setLinearBC(self, a0, a1, i):
+        self.uOfXT = lambda x, t: a0+a1*x[i]

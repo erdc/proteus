@@ -1,41 +1,31 @@
 #!/usr/bin/env python
 """
-Test module for 2D Quadrilateral Meshes
+Test module for Laplace Matrix
 """
 
-import os,sys,inspect
-
-cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
-if cmd_folder not in sys.path:
-    sys.path.insert(0,cmd_folder)
-
-cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],
-                                                              "import_modules")))
-if cmd_subfolder not in sys.path:
-    sys.path.insert(0,cmd_subfolder)
-
 from proteus.iproteus import *
-from proteus import Comm
-comm = Comm.get()
-Profiling.logLevel=7
-Profiling.verbose=True
+import set_paths
 import numpy
-import numpy.testing as npt
+
 import laplace_template_TH_2D as L_2d
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
-from nose.tools import set_trace
 
 class TestMassConstruction2D():
-    """ Verify construction of 2D Mass Matrix using transport coefficients """
-    @classmethod
-    def setup_class(self):
-        """ Initialize the test problem """
-        self.Laplace_object = L_2d.ns
-        self._setRelativePath()
+    """ Verify construction of 2D Laplce using transport coefficients """
 
     @classmethod
-    def teardown_class(self):
+    def setup_class(cls):
+        pass
+
+    @classmethod
+    def teardown_class(cls):
+        pass
+
+    def setup_method(self,method):
+        """ Initialize the test problem """
+        reload(L_2d)
+        self.Laplace_object = L_2d.ns
+
+    def teardown_method(self,method):
         """ Tear down function """
         FileList = ['Laplace_matrix_test.xmf',
                     'Laplace_matrix_test.h5',
@@ -67,26 +57,18 @@ class TestMassConstruction2D():
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.Laplace_object.modelList[0].levelModelList[0].getJacobian(self.Asys)
         Laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        rel_path = "comparison_files/Laplace_mat_reference_element_1.npy"
-        comparison_mat = numpy.load(os.path.join(self._scriptdir,rel_path))
+        expected_output = os.path.dirname(os.path.abspath(__file__)) + '/comparison_files/Laplace_mat_reference_element_1.npy'
+        comparison_mat = numpy.load(expected_output)
         assert numpy.allclose(Laplace_mat,comparison_mat)
-
 
     def test_2(self):
         """ Tests the attachMassOperator function in one-level-transport """
         mm = self.Laplace_object.modelList[0].levelModelList[0]
-        op_constructor = LinearSolvers.OperatorConstructor(mm)
-        op_constructor.attachLaplaceOperator()
-        Laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.LaplaceOperator)
-        rel_path = "comparison_files/Laplace_mat_reference_element_1.npy"
-        comparison_mat = numpy.load(os.path.join(self._scriptdir,rel_path))
+        mm.attachLaplaceOperator()
+        Laplace_mat = LinearAlgebraTools.superlu_sparse_2_dense(mm.LaplaceOperator)
+        expected_output = os.path.dirname(os.path.abspath(__file__)) + '/comparison_files/Laplace_mat_reference_element_1.npy'
+        comparison_mat = numpy.load(expected_output)
         assert numpy.allclose(Laplace_mat,comparison_mat)
 
 if __name__ == '__main__':
-    tt = TestMassConstruction2D()
-    tt.setUp()
-#    tt.test_2()
-#    tt.tearDown()
- #   tt.setUp()
-    tt.test_2()
-    tt.tearDown()
+    pass

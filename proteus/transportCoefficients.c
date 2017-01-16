@@ -1814,14 +1814,14 @@ void Laplace_2D_Evaluate(const int nPoints,
   int k;
   for (k=0; k<nPoints; k++)
     {
-      mom_p_diff_ten[k*4+0] = 1.0;
-      mom_p_diff_ten[k*4+3] = 1.0;
+      mom_p_diff_ten[k*2+0] = 1.0;
+      mom_p_diff_ten[k*2+1] = 1.0;
 
-      mom_u_diff_ten[k*4+0] = 1.0;
-      mom_u_diff_ten[k*4+3] = 1.0;
+      mom_u_diff_ten[k*2+0] = 1.0;
+      mom_u_diff_ten[k*2+1] = 1.0;
 
-      mom_v_diff_ten[k*4+0] = 1.0;
-      mom_v_diff_ten[k*4+3] = 1.0;
+      mom_v_diff_ten[k*2+0] = 1.0;
+      mom_v_diff_ten[k*2+1] = 1.0;
     } 
 }
 
@@ -1834,21 +1834,21 @@ void Laplace_3D_Evaluate(const int nPoints,
   int k;
   for (k=0; k<nPoints; k++)
     {
-      mom_p_diff_ten[k*9+0] = 1.0;
-      mom_p_diff_ten[k*9+4] = 1.0;
-      mom_p_diff_ten[k*9+8] = 1.0;
+      mom_p_diff_ten[k*3+0] = 1.0;
+      mom_p_diff_ten[k*3+1] = 1.0;
+      mom_p_diff_ten[k*3+2] = 1.0;
 
-      mom_u_diff_ten[k*9+0] = 1.0;
-      mom_u_diff_ten[k*9+4] = 1.0;
-      mom_u_diff_ten[k*9+8] = 1.0;
+      mom_u_diff_ten[k*3+0] = 1.0;
+      mom_u_diff_ten[k*3+1] = 1.0;
+      mom_u_diff_ten[k*3+2] = 1.0;
 
-      mom_v_diff_ten[k*9+0] = 1.0;
-      mom_v_diff_ten[k*9+4] = 1.0;
-      mom_v_diff_ten[k*9+8] = 1.0;
+      mom_v_diff_ten[k*3+0] = 1.0;
+      mom_v_diff_ten[k*3+1] = 1.0;
+      mom_v_diff_ten[k*3+2] = 1.0;
 
-      mom_w_diff_ten[k*9+0] = 1.0;
-      mom_w_diff_ten[k*9+4] = 1.0;
-      mom_w_diff_ten[k*9+8] = 1.0;
+      mom_w_diff_ten[k*3+0] = 1.0;
+      mom_w_diff_ten[k*3+1] = 1.0;
+      mom_w_diff_ten[k*3+2] = 1.0;
     } 
 }
 
@@ -5659,7 +5659,7 @@ void conservativeHeadRichardsL2projMualemVanGenuchtenHetEvaluate(const int nSimp
     }
 }
 
-/** Coefficients for the mass conservative total head-based (h=\psi+z) Richards' equation using Mualem-Van Genuchten.
+/** Coefficients for the mass conservative total head-based (\f[ h=\psi+z \f]) Richards' equation using Mualem-Van Genuchten.
  */
 void conservativeTotalHeadRichardsMualemVanGenuchtenHomEvaluate(const int nPoints,
 								const int nSpace,
