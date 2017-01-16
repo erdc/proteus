@@ -9,7 +9,7 @@ except ImportError:
     import pkgutil
     __path__ = pkgutil.extend_path(__path__, __name__)
 
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 __all__ = ["Archiver",
            "Domain",
@@ -71,4 +71,6 @@ __all__ = ["Archiver",
            "ADR",
            "deim_utils",
            "WaveTools",
-           "Context"]
+           "Context",
+           "BoundaryConditions",
+           "SpatialTools"]
