@@ -25,8 +25,9 @@ def _petsc_view(obj, filename):
     viewer = p4pyPETSc.Viewer().createBinary(filename, 'w')
     viewer(obj)
     viewer2 = p4pyPETSc.Viewer().createASCII(filename+".m", 'w')
-    viewer2.setFormat(1)
+    viewer2.pushFormat(1)
     viewer2(obj)
+    viewer2.popFormat()
 
 def _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output=False):
     """ Takes python CSR datatypes and makes a dense matrix """
@@ -35,7 +36,7 @@ def _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output=False):
         row_vals = data[rowptr[idx]:rowptr[idx+1]]
         for val_idx,j in enumerate(colptr[rowptr[idx]:rowptr[idx+1]]):
             dense_matrix[idx][j] = row_vals[val_idx]
-    if output!= False:
+    if output is not False:
         numpy.save(output,dense_matrix)
     return dense_matrix
 
@@ -107,7 +108,9 @@ def superlu_2_petsc4py(sparse_superlu):
     nr       = sparse_superlu.shape[0]
     nc       = sparse_superlu.shape[1]
     A_petsc4py = p4pyPETSc.Mat().createAIJWithArrays((nr,nc),
-                                                     (A_rowptr,A_colind,A_nzval))
+                                                     (A_rowptr,
+                                                      A_colind,
+                                                      A_nzval))
     return A_petsc4py
 
 class ParVec:
@@ -117,7 +120,7 @@ class ParVec:
     def __init__(self,array,blockSize,n,N,nghosts=None,subdomain2global=None,blockVecType="simple"):#"block"
         import flcbdfWrappers
         self.dim_proc=n*blockSize
-        if nghosts==None:
+        if nghosts is None:
             if blockVecType=="simple":
                 self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,-1,None,array,0)
             else:
@@ -149,7 +152,7 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
                                                  proteus2petsc_subdomain=None,
                                                  petsc2proteus_subdomain=None):
         p4pyPETSc.Vec.__init__(self)
-        if array == None:
+        if array is None:
             return#when duplicating for petsc usage
         self.proteus2petsc_subdomain=proteus2petsc_subdomain
         self.petsc2proteus_subdomain=petsc2proteus_subdomain
@@ -159,7 +162,7 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
         self.blockVecType = blockVecType
         assert self.blockVecType == "simple", "petsc4py wrappers require self.blockVecType=simple"
         self.proteus_array = array
-        if nghosts == None:
+        if nghosts is None:
             if blockVecType == "simple":
                 self.createWithArray(array,size=(blockSize*n,blockSize*N),bsize=1)
             else:
@@ -172,7 +175,7 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
             assert subdomain2global.shape[0] == (n+nghosts), ("The subdomain2global map is the wrong length n=%i,nghosts=%i,shape=%i \n" % (n,n+nghosts,subdomain2global.shape[0]))
             assert len(array.flat) == (n+nghosts)*blockSize, "%i  != (%i+%i)*%i \n" % (len(array.flat),  n,nghosts,blockSize)
             if blockVecType == "simple":
-                if ghosts == None:
+                if ghosts is None:
                     ghosts = numpy.zeros((blockSize*nghosts),'i')
                     for j in range(blockSize):
                         ghosts[j::blockSize]=subdomain2global[n:]*blockSize+j
@@ -220,12 +223,12 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
     """
     def __init__(self,ghosted_csr_mat=None,par_bs=None,par_n=None,par_N=None,par_nghost=None,subdomain2global=None,blockVecType="simple",pde=None, par_nc=None, par_Nc=None, proteus_jacobian=None, nzval_proteus2petsc=None):
         p4pyPETSc.Mat.__init__(self)
-        if ghosted_csr_mat == None:
+        if ghosted_csr_mat is None:
             return#when duplicating for petsc usage
         self.pde = pde
-        if par_nc == None:
+        if par_nc is None:
             par_nc = par_n
-        if par_Nc == None:
+        if par_Nc is None:
             par_Nc = par_N
         self.proteus_jacobian=proteus_jacobian
         self.nzval_proteus2petsc = nzval_proteus2petsc
@@ -255,7 +258,7 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         logEvent("ParMat_petsc4py comm.rank= %s blockSize = %s par_n= %s par_N=%s par_nghost=%s par_jacobian.getSizes()= %s "
                  % (comm.rank(),self.blockSize,par_n,par_N,par_nghost,self.getSizes()))
         self.csr_rep = ghosted_csr_mat.getCSRrepresentation()
-        if self.proteus_jacobian != None:
+        if self.proteus_jacobian is not None:
             self.proteus_csr_rep = self.proteus_jacobian.getCSRrepresentation()
         if self.blockSize > 1:
             blockOwned = self.blockSize*par_n
@@ -373,10 +376,10 @@ class SparseMatShell:
     def create(self, A):
         pass
     def mult(self, A, x, y):
-        assert self.par_b!=None, "The parallel RHS vector par_b must be " \
+        assert self.par_b is not None, "The parallel RHS vector par_b must be " \
                             "initialized before using the mult function"
         logEvent("Using SparseMatShell in LinearSolver matrix multiply")
-        if self.xGhosted == None:
+        if self.xGhosted is None:
             self.xGhosted = self.par_b.duplicate()
             self.yGhosted = self.par_b.duplicate()
         self.xGhosted.setArray(x.getArray())

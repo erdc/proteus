@@ -1,6 +1,7 @@
-language: python
+dist: trusty
+sudo: required
 
-sudo: false
+language: python
 
 env:
 - TEST_PROFILE="test.proteus.yaml"
@@ -12,21 +13,24 @@ addons:
   apt:
     packages:
     - gfortran
-    - cmake
-    - swig
-    - libblas-dev
-    - liblapack-dev
+    - libffi-dev
+    - python-lzma
+    - libssl-dev
 
 before_install:
-- wget https://dl.dropboxusercontent.com/u/26353144/hashdist_travis.tgz
-- tar xzf hashdist_travis.tgz 
+- wget https://dl.dropboxusercontent.com/u/26353144/hashdist_trusty.tgz
+- tar xzf hashdist_trusty.tgz 
 - mv .hashdist $HOME
+- pip install pyliblzma
 
 install:
+- curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+- sudo apt-get install git-lfs
+- git lfs checkout
 - make hashdist
 - make stack
 - make stack/default.yaml
-- FC=gfortran CFLAGS='-w -fno-var-tracking-assignments' make install
+- FC=gfortran make install
 - export PATH=$PWD/linux2/bin:$PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR

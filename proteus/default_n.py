@@ -214,7 +214,7 @@ auxiliaryVariables=[]
 periodicDirichletConditions=None
 
 restrictFineSolutionToAllMeshes=False
-parallelPartitioningType = MeshParallelPartitioningTypes.element
+parallelPartitioningType = MeshParallelPartitioningTypes.node
 #default number of layers to use > 1 with element partition means
 #C0P1 methods don't need to do communication in global element assembly
 #nodal partitioning does not need communication for C0P1 (has overlap 1) regardless

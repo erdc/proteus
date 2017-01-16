@@ -555,23 +555,19 @@ class Mesh:
         self.nEdges_owned=self.nEdges_global
         self.elementOffsets_subdomain_owned=[0,self.nElements_global]
         self.elementNumbering_subdomain2global=np.arange(self.nElements_global,dtype='i')
-        self.elementNumbering_global2original=np.arange(self.nElements_global,dtype='i')
         self.nodeOffsets_subdomain_owned=[0,self.nNodes_global]
         self.nodeNumbering_subdomain2global=np.arange(self.nNodes_global,dtype='i')
-        self.nodeNumbering_global2original=np.arange(self.nNodes_global,dtype='i')
         self.elementBoundaryOffsets_subdomain_owned=[0,self.nElementBoundaries_global]
         self.elementBoundaryNumbering_subdomain2global=np.arange(self.nElementBoundaries_global,dtype='i')
-        self.elementBoundaryNumbering_global2original=np.arange(self.nElementBoundaries_global,dtype='i')
         self.edgeOffsets_subdomain_owned=[0,self.nEdges_global]
         self.edgeNumbering_subdomain2global=np.arange(self.nEdges_global,dtype='i')
-        self.edgeNumbering_global2original=np.arange(self.nEdges_global,dtype='i')
         self.subdomainMesh=self
         self.globalMesh = None
         self.arGridCollection=None
         self.arGrid=None
         self.nLayersOfOverlap = None
         self.parallelPartitioningType = MeshParallelPartitioningTypes.element
-    def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
+    def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         import flcbdfWrappers
@@ -588,29 +584,21 @@ class Mesh:
             #mwf for now always gives 1 layer of overlap
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionNodes(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodes(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         else:
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionElements(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElements(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         #
         logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
@@ -646,7 +634,7 @@ class Mesh:
         # #cmeshTools.deleteMeshDataStructures(self.cmesh)
         # logEvent(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
-    def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
+    def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         import flcbdfWrappers
@@ -663,29 +651,21 @@ class Mesh:
             #mwf for now always gives 1 layer of overlap
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         else:
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionElementsFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElementsFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         #
         logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.buildFromCNoArrays(self.cmesh)
@@ -3637,7 +3617,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         MultilevelMesh.__init__(self)
@@ -3673,7 +3653,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                     logEvent(self.meshList[-1].meshInfo())
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
@@ -3752,7 +3732,7 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         MultilevelMesh.__init__(self)
@@ -3789,7 +3769,7 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                     logEvent(self.meshList[-1].meshInfo())
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
@@ -4669,7 +4649,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0):
         import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC = True
@@ -4708,7 +4688,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
     #
     #mwf what's the best way to build from an existing mesh
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
@@ -4778,7 +4758,7 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0):
         import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC = False   # Implementing with C will take a bit more work. Disabling for now.
@@ -4876,9 +4856,9 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         logEvent("InterpolatedBathymetryMesh: Converting to Proteus Mesh")
         self.coarseMesh=tmesh.convertToProteusMesh(verbose=1)
         MultilevelTriangularMesh.__init__(self,0,0,0,skipInit=True,nLayersOfOverlap=0,
-                                          parallelPartitioningType=MeshParallelPartitioningTypes.element)
+                                          parallelPartitioningType=MeshParallelPartitioningTypes.node)
         self.generateFromExistingCoarseMesh(self.coarseMesh,1,
-                                            parallelPartitioningType=MeshParallelPartitioningTypes.element)
+                                            parallelPartitioningType=MeshParallelPartitioningTypes.node)
         self.computeGeometricInfo()
         print self.meshList[-1].volume
         #allocate some arrays based on the bathymetry data
@@ -5457,7 +5437,7 @@ class MultilevelEdgeMesh(MultilevelMesh):
                  Lx=1.0, Ly=1.0, Lz=1.0,
                  refinementLevels=1,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC=True
@@ -5813,7 +5793,7 @@ class MultilevelNURBSMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         MultilevelMesh.__init__(self)
@@ -5836,7 +5816,7 @@ class MultilevelNURBSMesh(MultilevelMesh):
                 self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
 
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType

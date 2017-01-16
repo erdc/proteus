@@ -8,9 +8,11 @@ this module define common PDE's.
    :parts: 1
 """
 from math import *
+from warnings import warn
 import numpy
 import Norms
 from Profiling import logEvent
+from warnings import warn
 
 ## \file TransportCoefficients.py
 #
@@ -150,7 +152,7 @@ class TC_base:
                 self.elementIntegralKeys.append(('a',ci,ck))
                 self.elementBoundaryIntegralKeys.append(('a',ci,ck))
                 if not self.potential.has_key(ck):
-                    warn("""a[ci=%d][ck=%d] is non-zero but phi[ck=%d] is undefined. Setting
+                    logEvent("""a[ci=%d][ck=%d] is non-zero but phi[ck=%d] is undefined. Setting
                     phi[ck=%d]=u[ck=%d], the potential definition
                     should be corrected in the future\n""" % (ci,ck,ck,ck,ck))
                     self.potential[ck]='u'
@@ -184,6 +186,14 @@ class TC_base:
         for ci in range(self.nc):
             self.elementIntegralKeys.append(('u',ci))
             self.elementBoundaryIntegralKeys.append(('u',ci))
+        if self.sdInfo == {}:
+            for ci,ckDict in self.diffusion.iteritems():
+                for ck in ckDict.keys():
+                    if not self.sdInfo.has_key((ci,ck)):
+                        self.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=self.nd**2+1,step=self.nd,dtype='i'),
+                                                          numpy.array([range(self.nd) for row in range(self.nd)],dtype='i').flatten())
+                        logEvent("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`self.sdInfo[(ci,ck)]`)
+
     def evaluate(self,t,c):
         """
         Evaluate the coefficients at a given time, t, using the coefficient storage passed in as the dictionary c.
@@ -1401,6 +1411,89 @@ class ShallowWater(TC_base):
 #                                           c[('dH',2,0)],
 #                                           c[('H',3)],
 #                                           c[('dH',3,0)])
+
+class DiscreteLaplaceOperator(TC_base):
+    r""" A coefficient class to construct the discrete Laplace Operator.
+    
+    This class defines the coefficients necessary to construct the
+    discrete Laplace operator :math:`A` where
+
+    .. math::
+    
+        a^{c}_{i,j} = \int_{T} \nabla \phi^{c}_{i} \cdot \nabla \phi^{c}_{j} dT
+
+    for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
+    :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
+    """
+    from ctransportCoefficients import Laplace_2D_Evaluate
+    from ctransportCoefficients import Laplace_3D_Evaluate
+    def __init__(self,nd=2,nu=1.0):
+        self.nd=nd
+        self.nu=nu # ... Detail I need to worry about later ...
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames=['p','u','v']
+            diffusion = {0:{0:{0:'constant'}},
+                         1:{1:{1:'constant'}},
+                         2:{2:{2:'constant'}}}
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
+                         2:{2:'u'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors={},
+                             useSparseDiffusion=True)
+            self.vectorComponents=[1,2]
+        if nd==3:
+            variableNames=['p','u','v','w']
+            diffusion ={0:{0:{0:'constant'}},
+                        1:{1:{1:'constant'}},
+                        2:{2:{2:'constant'}},
+                        3:{3:{3:'constant'}}}
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
+                         2:{2:'u'},
+                         3:{3:'u'}}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             useSparseDiffusion=True)
+            self.vectorComponents=[1,2,3]
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.Laplace_2D_Evaluate(c[('u',0)],
+                                     c[('u',1)],
+                                     c[('u',2)],
+                                     c[('a',0,0)],
+                                     c[('a',1,1)],
+                                     c[('a',2,2)])
+        if self.nd==3:
+            self.Laplace_3D_Evaluate(c[('u',0)],
+                                     c[('u',1)],
+                                     c[('u',2)],
+                                     c[('u',3)],
+                                     c[('a',0,0)],
+                                     c[('a',1,1)],
+                                     c[('a',2,2)],
+                                     c[('a',3,3)])
 
 ##\brief Incompressible Stokes equations
 #

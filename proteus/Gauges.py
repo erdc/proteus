@@ -173,11 +173,9 @@ class Gauges(AV_base):
 
     def getLocalNearestNode(self, location):
         # determine local nearest node distance
-        node_distances = norm(self.vertices - location, axis=1)
-        nearest_node = np.argmin(node_distances)
-        nearest_node_distance = node_distances[nearest_node]
+        nearest_node_distance_kdtree, nearest_node_kdtree = self.nodes_kdtree.query(location)
         comm = Comm.get().comm.tompi4py()
-        return comm.rank, nearest_node, nearest_node_distance
+        return comm.rank, nearest_node_kdtree, nearest_node_distance_kdtree
 
     def getLocalElement(self, femSpace, location, node):
         """Given a location and its nearest node, determine if it is on a local element.
@@ -210,7 +208,6 @@ class Gauges(AV_base):
         # no elements found
         return None
 
-
     def findNearestNode(self, femSpace, location):
         """Given a gauge location, attempts to locate the most suitable process for monitoring information about
         this location, as well as the node on the process closest to the location.
@@ -219,13 +216,13 @@ class Gauges(AV_base):
         node and nearest element.
         """
         comm = Comm.get().comm.tompi4py()
-
         comm_rank, nearest_node, nearest_node_distance = self.getLocalNearestNode(location)
         local_element = self.getLocalElement(femSpace, location, nearest_node)
 
         # determine global nearest node
         haveElement = int(local_element is not None)
-        global_have_element, owning_proc = comm.allreduce(haveElement, op=MPI.MAXLOC)
+        global_have_element, owning_proc = comm.allreduce((haveElement, comm.rank),
+                                                          op=MPI.MAXLOC)
         if global_have_element:
             logEvent("Gauges on element at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
                                                                     owning_proc), 3)
@@ -234,7 +231,7 @@ class Gauges(AV_base):
             global_min_distance, owning_proc = comm.allreduce(nearest_node_distance, op=MPI.MINLOC)
             logEvent("Off-element gauge location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
                                                                  owning_proc), 3)
-        if comm_rank != owning_proc:
+        if comm.rank != owning_proc:
             nearest_node = None
 
         assert owning_proc is not None
@@ -603,6 +600,7 @@ class Gauges(AV_base):
     def attachModel(self, model, ar):
         """ Attach this gauge to the given simulation model.
         """
+        from scipy import spatial
         self.model = model
         self.fieldNames = model.levelModelList[-1].coefficients.variableNames
         self.vertexFlags = model.levelModelList[-1].mesh.nodeMaterialTypes
@@ -610,11 +608,10 @@ class Gauges(AV_base):
         self.num_owned_nodes = model.levelModelList[-1].mesh.nNodes_global
         self.u = model.levelModelList[-1].u
         self.timeIntegration = model.levelModelList[-1].timeIntegration
-
         for field in self.fields:
             field_id = self.fieldNames.index(field)
             self.field_ids.append(field_id)
-
+        self.nodes_kdtree = spatial.cKDTree(model.levelModelList[-1].mesh.nodeArray)
         linesSegments = []
         for line in self.lines:
             lineSegments = self.getMeshIntersections(line)

@@ -25,7 +25,7 @@ if sys.platform == 'darwin':
     platform_extra_compile_args = ['-flax-vector-conversions','-DPETSC_SKIP_COMPLEX']
 elif sys.platform == 'linux2':
     platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C', '-DPETSC_SKIP_COMPLEX']
-    platform_extra_link_args = ['-Wl,-rpath,' + PROTEUS_LIB_DIR]
+    platform_extra_link_args = ['-L'+PROTEUS_LIB_DIR,'-Wl,-rpath,' + PROTEUS_LIB_DIR]
     platform_blas_h = r'"proteus_blas.h"'
     platform_lapack_h = r'"proteus_lapack.h"'
 
@@ -52,31 +52,31 @@ def get_flags(package):
         lib_dir = PROTEUS_LIB_DIR
     return include_dir, lib_dir
 
-PROTEUS_EXTRA_LINK_ARGS=['-lblas'] + platform_extra_link_args
+PROTEUS_EXTRA_LINK_ARGS=platform_extra_link_args+['-lopenblas']
 
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
-PROTEUS_EXTRA_FC_LINK_ARGS=['-lblas']
+PROTEUS_EXTRA_FC_LINK_ARGS=['-L'+PROTEUS_LIB_DIR,'-lopenblas']
 
 
 PROTEUS_SUPERLU_INCLUDE_DIR, PROTEUS_SUPERLU_LIB_DIR = get_flags('superlu')
 PROTEUS_SUPERLU_H   = r'"slu_ddefs.h"'
-PROTEUS_SUPERLU_LIB = 'superlu_4.3'
+PROTEUS_SUPERLU_LIB = 'superlu'
 
 PROTEUS_BLAS_INCLUDE_DIR   = '.'
 if platform_blas_h:
     PROTEUS_BLAS_H = platform_blas_h
 else:
     PROTEUS_BLAS_H = r'"cblas.h"'
-PROTEUS_BLAS_LIB_DIR = '.'
-PROTEUS_BLAS_LIB   = 'blas'
+PROTEUS_BLAS_LIB_DIR = PROTEUS_LIB_DIR
+PROTEUS_BLAS_LIB   = 'openblas'
 
 PROTEUS_LAPACK_INCLUDE_DIR = '.'
 if platform_lapack_h:
     PROTEUS_LAPACK_H = platform_lapack_h
 else:
     PROTEUS_LAPACK_H   = r'"clapack.h"'
-PROTEUS_LAPACK_LIB_DIR = '.'
-PROTEUS_LAPACK_LIB = 'lapack'
+PROTEUS_LAPACK_LIB_DIR = PROTEUS_LIB_DIR
+PROTEUS_LAPACK_LIB = 'openblas'
 if platform_lapack_integer:
     PROTEUS_LAPACK_INTEGER = platform_lapack_integer
 else:
@@ -125,12 +125,5 @@ PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = ['-g','-DMESH_INFO']
 if os.getenv('SIM_INCLUDE_DIR') != None:
   PROTEUS_SCOREC_INCLUDE_DIRS = PROTEUS_SCOREC_INCLUDE_DIRS+[pjoin(prefix, 'include'), os.getenv('SIM_INCLUDE_DIR')]
   PROTEUS_SCOREC_LIB_DIRS = PROTEUS_SCOREC_LIB_DIRS+[pjoin(prefix, 'lib'), os.getenv('SIM_LIB_DIR')]
-  PROTEUS_SCOREC_LIBS = PROTEUS_SCOREC_LIBS + ['gmi_sim',
-    'apf_sim',
-    'SimPartitionedMesh-mpi',
-    'SimPartitionedMesh-mpi',
-    'SimMeshing',
-    'SimModel',
-    'SimMeshTools',
-    'SimPartitionWrapper-mpich3']
-  PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = PROTEUS_SCOREC_EXTRA_COMPILE_ARGS + ['-DPROTEUS_USE_SIMMETRIX']
+  PROTEUS_SCOREC_LIBS = PROTEUS_SCOREC_LIBS
+  PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = PROTEUS_SCOREC_EXTRA_COMPILE_ARGS
