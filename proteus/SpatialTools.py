@@ -33,6 +33,7 @@ import sys
 import numpy as np
 from proteus import BoundaryConditions as bc
 from .Profiling import logEvent
+from subprocess import check_call
 
 
 class Shape(object):
@@ -576,7 +577,7 @@ class CustomShape(Shape):
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
         self._checkFlags(boundaryTags.values())
-        self.boundaryTgs = boundaryTags
+        self.boundaryTags = boundaryTags
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)
         if segments:
@@ -869,7 +870,7 @@ def _assembleGeometry(domain, BC_class):
     domain.boundaryTags = {}
     domain.reversed_boundaryTags = {}
     # BC at flag 0
-    domain.bc = [BC_class()]
+    domain.bc = [BC_class(nd=domain.nd)]
     # domain.bc[0].setNonMaterial()
     # barycenter at flag 0
     domain.barycenters = np.array([[0., 0., 0.]])
@@ -885,8 +886,12 @@ def _assembleGeometry(domain, BC_class):
         start_facet = shape.start_facet = len(domain.facets)
         if shape.boundaryTags:
             for tag, value in shape.boundaryTags.iteritems():
-                domain.boundaryTags[shape.name+'_'+str(tag)] = value+start_flag
-                domain.reversed_boundaryTags[value+start_flag] = shape.name+'_'+str(tag)            
+                new_tag = shape.name+'_'+str(tag)
+                new_flag = value+start_flag
+                domain.boundaryTags[new_tag] = new_flag
+                domain.reversed_boundaryTags[new_flag] = new_tag
+                domain.BCbyFlag[new_flag] = shape.BC[tag]
+                domain.BC[new_tag] = shape.BC[tag]
         if domain.regionFlags:
             start_rflag = max(domain.regionFlags)
         else:
@@ -1057,3 +1062,26 @@ def _generateMesh(domain):
     logEvent("""Mesh generated using: tetgen -%s %s"""  %
         (mesh.triangleOptions, domain.polyfile+".poly"))
 
+
+def getGmshPhysicalGroups(geofile):
+    boundaryTags = {}
+    import re
+    # gmsh_cmd = "gmsh {0:s} -0".format(geofile)
+    # check_call(gmsh_cmd, shell=True)
+    with open(geofile, 'r') as f:
+        for line in f:
+            if line.startswith("Physical "):
+                words = line.lstrip().split('=', 1)
+                tagflag = re.search(r'\((.*?)\)', words[0]).group(1).split(',')
+                if len(tagflag) == 2:
+                    tag = str(tagflag[0][2:-2])
+                    boundaryTags[tag] = None  # add empty BC holder
+                    flag = int(tagflag[1])
+                    print tagflag
+                else:
+                    try:
+                        flag = tag = int(tagflag[0])
+                    except:
+                        flag = tag = tagflag[0]
+                boundaryTags[tag] = flag  # add empty BC holder
+    return boundaryTags
