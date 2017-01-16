@@ -27,8 +27,6 @@ def remove_files(filenames):
         else:
             pass
 
-
-
 Profiling.logEvent("Testing WaveTools")
 class TestAuxFunctions(unittest.TestCase):
     def testFastCos(self):
@@ -43,7 +41,6 @@ class TestAuxFunctions(unittest.TestCase):
         RMS = np.sqrt(RMS)
         self.assertTrue(RMS<1e-04)
         self.assertTrue(MaxErr<1e-3)
-         
          
     def testFastCosh(self):
         from proteus.WaveTools import fastcosh_test
@@ -62,8 +59,7 @@ class TestAuxFunctions(unittest.TestCase):
         RMS = np.sqrt(RMS)
         self.assertTrue(RMS<3e-02)
         self.assertTrue(maxErr<4e-2)
-         
-                
+
     def testFastSinh(self):
         from proteus.WaveTools import fastsinh_test
         RMS = 0.
@@ -81,8 +77,6 @@ class TestAuxFunctions(unittest.TestCase):
         RMS = np.sqrt(RMS)
         self.assertTrue(RMS<3e-2)
         self.assertTrue(maxErr<8e-2)
-                  
-
 
     def testVDir(self):
         from proteus.WaveTools import setVertDir
@@ -98,7 +92,6 @@ class TestAuxFunctions(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm:
             dirCheck(np.array([9,9,9]),np.array([4,5,6]))
         self.assertEqual(cm.exception.code, 1)
-                  
 
     def testReduceToIntervals(self):
         from proteus.WaveTools import reduceToIntervals
@@ -109,7 +102,6 @@ class TestAuxFunctions(unittest.TestCase):
         fi_te = np.zeros(len(fi)+1,)
         fi_te[1:] = fi[:]
         self.assertTrue((fr- fi_te == 0).all())
-                  
 
     def testIntegrateRectangles(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
 
@@ -151,7 +143,6 @@ class TestAuxFunctions(unittest.TestCase):
         A  = normIntegral(y,xim)
         A = sum(returnRectangles(A,xim))
         self.assertTrue(round(A,10)== 1)
-                  
 
 
 
@@ -203,8 +194,7 @@ class TestAuxFunctions(unittest.TestCase):
         #Checking that the code does not allow z to be outside (-d,0)
 #Checking vertical coherency
 # U_z = 0 at z = mwl-d
-        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir)[2]==0.)
-                  
+        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir)[2]==0.)                  
 
     def testTophat(self):
         from proteus.WaveTools import tophat
@@ -214,7 +204,7 @@ class TestAuxFunctions(unittest.TestCase):
         a[:10] = 0.
         a[-10:] =0.
         self.assertTrue( a.all() == af.all())
-         
+
     def testcosTap(self):
         from proteus.WaveTools import costap
         a  = np.random.rand(100)
@@ -295,7 +285,7 @@ class TestWaveParameters(unittest.TestCase):
         JON2 = JONSWAP(f,f0,Hs,gamma,TMA=True, depth=h)
         JCOMP = JON2/(TMA*JON)
         self.assertTrue((np.around(JCOMP,10)==1).all())
-                  
+        
     def test_PM(self): #PM tests
         from proteus.WaveTools import PM_mod
         f0 = random.random() + 1.
@@ -306,7 +296,7 @@ class TestWaveParameters(unittest.TestCase):
         S_PM2 =  PM_mod(f,f0,Hs)
         SCOMP = S_PM2/S_PM
         self.assertTrue((np.around(SCOMP,10)==1).all())
-                  
+
     def testCos2s(self):
         from proteus.WaveTools import cos2s
         f0 = random.random() + 1.
@@ -320,7 +310,6 @@ class TestWaveParameters(unittest.TestCase):
         S_PM2 =  cos2s(thetas,f,s)
         SCOMP = S_PM2/S_PM
         self.assertTrue(np.array_equal(S_PM,S_PM2))
-                  
 
     def testMitsuyasu(self):
         from proteus.WaveTools import mitsuyasu
@@ -339,7 +328,6 @@ class TestWaveParameters(unittest.TestCase):
                 S_PM[ii,jj]= np.cos(thetas[ii]/2.)**(2.*ss[jj])
         S_PM2 =  mitsuyasu(thetas,f,f0,s)
         self.assertTrue(np.array_equal(S_PM,S_PM2))
-                  
 
 
 
@@ -377,7 +365,6 @@ class CheckMonochromaticWavesFailures(unittest.TestCase):
   # Success!: Give all parameters in correct form!
         a = MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1.,1.]), Bcoeff =np.array([1.,1.,1.]), Nf = 3, meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)
         self.assertTrue(None == None)
-                  
 
 class VerifyMonoChromaticLinearWaves(unittest.TestCase):
     def testLinear(self):
@@ -429,7 +416,6 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         self.assertTrue((err_x <= 1e-8))
         self.assertTrue((err_y <= 1e-8))
         self.assertTrue((err_z <= 1e-8))
-                  
 
 class VerifyMonoChromaticFentonWaves(unittest.TestCase):
 #Fenton methodology equations at http://johndfenton.com/Papers/Fenton88-The-numerical-solution-of-steady-water-wave-problems.pdf
@@ -495,7 +481,6 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         self.assertTrue((err_x <= 0.01) or (abs(ux/Uo)<1e-2 ))
         self.assertTrue((err_y <= 0.01) or (abs(uy/Uo)<1e-2  ))
         self.assertTrue((err_z <= 0.01) or (abs(uz/Uoz)<1e-2 ))
-                  
         
 #========================================= RANDOM WAVES ======================================
 
@@ -535,7 +520,6 @@ class CheckRandomWavesFailures(unittest.TestCase):
         RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.} )
         RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.}, phi = np.zeros(100, float) )
         self.assertTrue(None == None)
-                  
 
 class VerifyRandomWaves(unittest.TestCase):
 #    @pytest.mark.skip(reason="nosetests vs pytest issue")
@@ -663,7 +647,6 @@ class VerifyRandomWaves(unittest.TestCase):
             self.assertTrue((abs(series[:,1])- abs(etaWrite) <= 1e-10).all())
         filenames = ['randomSeries.txt']
         remove_files(filenames)
-                  
 
 
 
@@ -779,7 +762,6 @@ class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
     )
 
         self.assertTrue(None == None)
-                  
 
 
 
@@ -882,7 +864,6 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
         self.assertTrue(round(5.*ux,8) == round(ux2,8))
         self.assertTrue(round(5.*uy,8) == round(uy2,8))
         self.assertTrue(round(5.*uz,8) == round(uz2,8))
-                  
 
 
 class CheckDirectionalWaveFailures(unittest.TestCase):
@@ -901,7 +882,6 @@ class CheckDirectionalWaveFailures(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm3:
             DirectionalWaves(20,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),10,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"blah":10}, phi = None, phiSymm = False  )
         self.assertEqual(cm3.exception.code, 1 )
-                  
 
 
 
@@ -1032,7 +1012,6 @@ class VerifyDirectionals(unittest.TestCase):
             phi=None,
             phiSymm=False
             )
-                  
 # For plotting a contour showing directional waves
 """
         xi = np.linspace(0,10,101)
@@ -1108,7 +1087,6 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
                 np.array([0,0,-9.81])
             )
         self.assertEqual(cm3.exception.code, 1 )
-                  
 
     def testWindTimeSeriesFailureModes(self):
         from proteus.WaveTools import TimeSeries
@@ -1286,7 +1264,6 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
 
             )
         self.assertEqual(cm6.exception.code, 1 )
-                  
 
 class VerifyTimeSeries(unittest.TestCase):
     def testDirect(self):
@@ -1356,7 +1333,6 @@ class VerifyTimeSeries(unittest.TestCase):
         err = (etaInt - etaTest)**2
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
         self.assertTrue(err<1e-2 )
-                  
 
 
 
@@ -1430,7 +1406,6 @@ class VerifyTimeSeries(unittest.TestCase):
         err = (etaInt - etaTest)**2
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
         self.assertTrue(err<1e-2 )
-                  
 
 
 class CheckRandomWavesFastFailureModes(unittest.TestCase):
@@ -1475,7 +1450,6 @@ class CheckRandomWavesFastFailureModes(unittest.TestCase):
         self.assertEqual(cm2.exception.code, 1 )
         filenames = ['RandomSeries_Hs_0.1_Tp_2.0_depth_1.0']
         remove_files(filenames)
-                  
 
 
 class VerifyRandomWavesFast(unittest.TestCase):
@@ -1842,13 +1816,12 @@ class VerifyRandomNLWaves(unittest.TestCase):
         filenames = ['2ndorderseries.txt']
         remove_files(filenames)
 
-                  
-
 class VerifyRandomNLWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
 #    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandomNLFast(self):
         from proteus.WaveTools import RandomNLWaves,RandomNLWavesFast,TimeSeries
+        import random
         Tp = 1.
         Hs = 0.1
         mwl = 0.47
@@ -1987,7 +1960,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         else:
             rec_d = False
 
-         
         aT_l= TimeSeries(
             fname,
             0,
@@ -2005,7 +1977,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
             )
         #print cutoff,aRF.eta(x0,50.)[8]#, aT_s.eta(x,t)+aT.eta(x,t)#+aT_l.eta(x,t)
 
-         
 #Checking consistency with RandomNLWaves class
         sumerr = 0
         sumabs = 0
@@ -2021,7 +1992,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         self.assertTrue(err < 0.005)
 #        print err
 
-         
 
 
         for aa in range(len(series_s)):
@@ -2033,7 +2003,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         err = err / (sumabs/len(series_s))
         self.assertTrue(err < 0.005)
 #        print err
-         
         for aa in range(len(series_l)):
             Tcut =  0.2*Tp
             if (series_l[aa,0] > Tcut) and (series_l[aa,0] < series_l[-1,0] - Tcut):
@@ -2050,7 +2019,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         x = x0 + Lgen * 0.3
         t = Tend/2.
 
-         
         self.assertTrue( round(aRF.eta(x,t) == aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t),8) )
         self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
 
