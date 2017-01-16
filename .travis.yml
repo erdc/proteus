@@ -30,8 +30,6 @@ install:
 - ./hashdist/bin/hit init-home
 - ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source"
 - ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_ubuntu_14_04 --objects="build"
-- ./hashdist/bin/hit purge chrono/khupjxoxny65
-- chmod u+rwX -R ${HOME}/.hashdist/bld/chrono
 - rm -rf ${HOME}/.hashdist/bld/chrono/*
 - FC=gfortran make install
 - export PATH=$PWD/linux2/bin:$PATH
