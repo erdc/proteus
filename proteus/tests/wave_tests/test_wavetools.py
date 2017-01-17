@@ -636,6 +636,7 @@ class VerifyRandomWaves(unittest.TestCase):
             etaWrite[ii] = a.eta(x0,tlist[ii])
         path =getpath()
         fname = path+"randomSeries.txt"
+        filenames = ['randomSeries.txt']
         if Tlag < 0.:
             with self.assertRaises(SystemExit) as cm1:
                 a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
@@ -643,10 +644,10 @@ class VerifyRandomWaves(unittest.TestCase):
         else:
             a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
             series = np.loadtxt(open(fname,"r"))
+            remove_files(filenames)
             self.assertTrue((abs(series[:,0])- abs(tlist) <= 1e-10  ).all())
             self.assertTrue((abs(series[:,1])- abs(etaWrite) <= 1e-10).all())
-        filenames = ['randomSeries.txt']
-        remove_files(filenames)
+
 
 
 
@@ -1556,14 +1557,14 @@ class VerifyRandomWavesFast(unittest.TestCase):
         """
         #print "\n Max error in fast approximation=%s%%" %round(100*aRF.er1,3)
 
+        filenames = ['RandomSeries_Hs_0.15_Tp_1.0_depth_0.9',
+                     'randomFastSeries.txt',]
+        remove_files(filenames)
         
         self.assertTrue(round(abs(aRF.eta(x,t)/aT.eta(x,t)),8) == 1.)
         self.assertTrue(round(abs(aRF.u(x,t)[0]/aT.u(x,t)[0]),8) == 1.)
         self.assertTrue(round(abs(aRF.u(x,t)[1]/aT.u(x,t)[1]),8) == 1.)
         self.assertTrue(round(abs(aRF.u(x,t)[2]/aT.u(x,t)[2]),8) == 1.)
-        filenames = ['RandomSeries_Hs_0.15_Tp_1.0_depth_0.9',
-                     'randomFastSeries.txt',]
-        remove_files(filenames)
 
         """
         for ii in range(len(series)):
@@ -1760,61 +1761,73 @@ class VerifyRandomNLWaves(unittest.TestCase):
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"all",False)
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
+
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_overall(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_overall(xi,float(ii)),8) )
-        fid.close()
+
 
 
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"all",True)
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_overall(xi,float(ii),True),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_overall(xi,float(ii),True),8) )
-        fid.close()
 
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"linear")
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_linear(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_linear(xi,float(ii)),8) )
-        fid.close()
 
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"short")
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_short(xi,float(ii))+aNL.eta_2ndOrder(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_short(xi,float(ii))+aNL.eta_2ndOrder(xi,float(ii)),8) )
-        fid.close()
 
 
 
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"long")
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_long(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_long(xi,float(ii)),8) )
-        fid.close()
 
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"setup")
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_setUp(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_setUp(xi,float(ii)),8) )
-        fid.close()
-        filenames = ['2ndorderseries.txt']
-        remove_files(filenames)
 
 class VerifyRandomNLWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
@@ -1889,6 +1902,12 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         series = aR.writeEtaSeries(Tstart,Tend,dt,x0,fname,"linear",False,Lgen)
         series_l = aR.writeEtaSeries(Tstart,Tend,dt_l,x0,fname,"long",False,Lgen)
         series_s = aR.writeEtaSeries(Tstart,Tend,dt_s,x0,fname,"short",False ,Lgen)
+
+        filenames = ['RNLWaves.txt']
+        append = ['_linear.csv','_long.csv','_short.csv']
+        filenames.extend(['randomNLWaves'+end for end in append])
+        remove_files(filenames)
+
         Tstart = series_s[0,0]
         Tend = series_s[-1,0]
         cutoff = 0.2*Tp/(Tend-Tstart)
@@ -2019,13 +2038,10 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         x = x0 + Lgen * 0.3
         t = Tend/2.
 
+
         self.assertTrue( round(aRF.eta(x,t) == aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t),8) )
         self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
 
-        filenames = ['RNLWaves.txt']
-        append = ['_linear.csv','_long.csv','_short.csv']
-        filenames.extend(['randomNLWaves'+end for end in append])
-        remove_files(filenames)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
