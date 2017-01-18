@@ -119,6 +119,7 @@ class TC_base:
         and archiving) and a structure defining the sparsity pattern
         of diffusion tensors may also be provided.
         """
+#        import pdb ; pdb.set_trace()
         self.nc = nc
         if variableNames == None:
             self.variableNames = ['u'+`i` for i in range(nc)]
@@ -6539,6 +6540,8 @@ class PoissonEquationCoefficients(TC_base):
             advection[i] = {i : 'constant'} #now include for gravity type terms
             potential[i] = {i : 'u'}
         #end i
+#        import pdb
+#        pdb.set_trace()
         TC_base.__init__(self,
                          nc,
                          mass,
@@ -6546,7 +6549,8 @@ class PoissonEquationCoefficients(TC_base):
                          diffusion,
                          potential,
                          reaction,
-                         hamiltonian)
+                         hamiltonian,
+                         sparseDiffusionTensors={} )
     def initializeElementQuadrature(self,t,cq):
         nd = self.nd
         for ci in range(self.nc):

@@ -785,8 +785,6 @@ class SchurOperatorConstructor:
     def getFp(self,output_matrix=False):
         """ Return the convection-diffusion matrix for the pressure """
         self.Fp = self.getCp()
-        import pdb
-        pdb.set_trace()
 #        self.Fp.scale(-1.)
         Ap = self.getAp()
 #        Ap.scale(1./self.L.pde.coefficients.nu)

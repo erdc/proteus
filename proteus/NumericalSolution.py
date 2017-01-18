@@ -453,6 +453,7 @@ class NS_base:  # (HasTraits):
         self.nlsList=[]
         from collections import OrderedDict
         self.modelSpinUp = OrderedDict()
+#        import pdb ; pdb.set_trace()
         for p in pList:
             p.coefficients.opts = self.opts
             if p.coefficients.sdInfo == {}:
@@ -462,6 +463,7 @@ class NS_base:  # (HasTraits):
                              p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
                                                                numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
                              logEvent("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`p.coefficients.sdInfo[(ci,ck)]`)
+#        import pdb ; pdb.set_trace()
         for p,n,s,mlMesh,index in zip(pList,nList,sList,mlMesh_nList,range(len(pList))):
             if so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True
@@ -480,7 +482,7 @@ class NS_base:  # (HasTraits):
                 tolList.append(n.tolFac*fac)
                 linTolList.append(n.linTolFac*fac)
 
-            logEvent("Setting up MultilevelTransport for "+p.name)
+                logEvent("Setting up MultilevelTransport for "+p.name)
             model = Transport.MultilevelTransport(p,n,mlMesh,OneLevelTransportType=p.LevelModelType)
             self.modelList.append(model)
             model.name = p.name

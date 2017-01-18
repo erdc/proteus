@@ -5,6 +5,22 @@ import sys
 import inspect
 import pickle
 
+def get_include_dir():
+    return os.path.dirname(os.path.realpath(__file__))
+
+def setup_profiling():
+    comm = Comm.get()
+    Profiling.procID = comm.rank()
+    Profiling.logLevel = 10
+    Profiling.logFile = sys.stdout
+    Profiling.logAllProcesses = True
+
+def silent_rm(filename):
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
+
 def addSubFolders(currentframe):
     """Add import_modules and comparison_files to sys.path
 
@@ -22,12 +38,6 @@ def addSubFolders(currentframe):
 
     if cmd_subfolder not in sys.path:
         sys.path.insert(0,cmd_subfolder)
-
-def closeFiles(filelist):
-    """Close a set of files. """
-    for file in filelist:
-        if os.path.isfile(file):
-            os.remove(file)
 
 class NumericResults:
     """Parse and stores numerical data from a Proteus log file.
@@ -295,3 +305,27 @@ class NumericResults:
             self._init_ipython_plot(plot_data,legend,title,axis_inline)
         else:
             self._init_ipython_plot(plot_data,legend,title)
+
+class SimulationTest():
+    """ A base class for simulation based tests. """
+
+    @classmethod
+    def setup_class(cls):
+        pass
+
+    @classmethod
+    def teardown_class(cls):
+        pass
+
+    def setup_method(self,method):
+        pass
+
+    def teardown_method(self,method):
+        pass
+
+    @staticmethod
+    def remove_files(filelist):
+        """Close a set of files. """
+        for file in filelist:
+            if os.path.isfile(file):
+                os.remove(file)

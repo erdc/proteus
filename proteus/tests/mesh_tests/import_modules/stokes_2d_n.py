@@ -5,8 +5,8 @@ from stokes_2d_p import *
 #######################################################
 
 # context variables
-nLevels = 2
-numeric_scheme = "TH"
+nLevels = 3
+numeric_scheme = "THQuads"
 useWeakBoundaryConditions = True
 solveIteratively = True
 solveInParallel = False

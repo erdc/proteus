@@ -1,44 +1,31 @@
 #!/usr/bin/env python
 """
 Test module for 2D Quadrilateral Meshes
+
+ARB -- fix this up...
 """
+from proteus.iproteus import *
+import proteus.test_utils.TestTools # ARB - need to make a descision about this before merge
 
 import os,sys,inspect
-
-cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
-if cmd_folder not in sys.path:
-    sys.path.insert(0,cmd_folder)
-
-cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],
-                                                              "import_modules")))
-if cmd_subfolder not in sys.path:
-    sys.path.insert(0,cmd_subfolder)
-
-from proteus.iproteus import *
-from proteus import Comm
-comm = Comm.get()
-Profiling.logLevel=7
-Profiling.verbose=True
 import numpy
-import numpy.testing as npt
-import laplace_template_TH_2D_8 as L_2d
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
-from nose.tools import set_trace
 
-class TestLaplaceConstruction2D():
-    """ Verify construction of 2D laplace operator with Taylor Hood
-  
-    Test mesh include 8 elements.
+proteus.tests.TestTools.addSubFolders(inspect.currentframe())
+import laplace_template_TH_2D_8 as L_2d
+
+class TestLaplaceConstruction2D(proteus.test_utils.TestTools.SimulationTest):
+    """ 
+    Verify construction of 2D laplace operator with Taylor Hood. Test mesh 
+    include 8 elements. 
     """
-    
-    @classmethod
-    def setup_class(self):
+
+    def setup_method(self,method):
         """ Initialize the test problem """
+        reload(L_2d)
         self.Laplace_object = L_2d.ns
         self._setRelativePath()
-    @classmethod
-    def teardown_class(self):
+        
+    def teardown_method(self):
         """ Tear down function """
         FileList = ['Laplace_matrix_test.xmf',
                     'Laplace_matrix_test.h5',
@@ -48,10 +35,8 @@ class TestLaplaceConstruction2D():
                     "reference_triangle_2d.node",
                     "reference_triangle_2d.face",
                     "reference_triangle_2d.poly"]
-        for file in FileList:
-            if os.path.isfile(file):
-                os.remove(file)
-    @classmethod
+        self.remove_files(FileList)
+
     def _setRelativePath(self):
         self.scriptdir = os.path.dirname(__file__)
 

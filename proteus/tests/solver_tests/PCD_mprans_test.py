@@ -27,6 +27,7 @@ from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 from nose.tools import set_trace
 from petsc4py import PETSc as p4pyPETSc
+import pytest
 
 from scipy.sparse import csr_matrix
 import petsc4py
@@ -67,6 +68,7 @@ class TestTempNSEDrivenCavity():
             if os.path.isfile(file):
                 os.remove(file)
 
+    @pytest.mark.skip(reason="WIP")
     def test_01_FullRun(self):
         self.ns.calculateSolution('test_nse')
         assert(0==1)
