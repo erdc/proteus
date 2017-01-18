@@ -1,8 +1,4 @@
-from math import ceil, sqrt, pow
-
-import os
-import numpy as np
-import numpy.testing as npt
+""" Module for testing Gauges. """
 
 from proteus import (Comm,
                      Domain,
@@ -14,10 +10,13 @@ from proteus import (Comm,
                      NumericalFlux)
 from proteus import default_p as p
 from proteus import default_n as n
-
 from proteus.Gauges import PointGauges, LineGauges, LineIntegralGauges
+from proteus.test_utils.TestTools import silent_rm
 
-from proteus.test_utils.util import setup_profiling, silent_rm
+from math import ceil, sqrt, pow
+
+import numpy as np
+import numpy.testing as npt
 from nose.tools import eq_
 
 def build1DMesh(p, nnx):
@@ -27,6 +26,7 @@ def build1DMesh(p, nnx):
                                         refinementLevels=1,
                                         nLayersOfOverlap=0,
                                         parallelPartitioningType=MeshTools.MeshParallelPartitioningTypes.node)
+
 def build2DMesh(p, nnx, nny):
     return MeshTools.MultilevelTriangularMesh(nnx,nny,1,
                                               p.domain.x[0], p.domain.x[1], 1.0,
@@ -131,7 +131,7 @@ def test_2D_point_gauge_output():
 
     eq_(correct_gauge_names, gauge_names)
     npt.assert_allclose(correct_data, data)
-    delete_file(filename)
+    silent_rm(filename)
 
 def test_point_gauge_output():
     filename = 'test_gauge_output.csv'
@@ -155,8 +155,7 @@ def test_point_gauge_output():
 
     eq_(correct_gauge_names, gauge_names)
     npt.assert_allclose(correct_data, data)
-    delete_file(filename)
-
+    silent_rm(filename)
 
 def test_point_gauge_output_2():
     filename = 'test_gauge_output_2.csv'
@@ -181,7 +180,7 @@ def test_point_gauge_output_2():
 
     eq_(correct_gauge_names, gauge_names)
     npt.assert_allclose(correct_data, data)
-    delete_file(filename)
+    silent_rm(filename)
 
 def test_line_integral_gauge_output():
     filename = 'test_line_integral_gauge_output.csv'
@@ -206,11 +205,10 @@ def test_line_integral_gauge_output():
     gauge_names, data = parse_gauge_output(filename)
     eq_(correct_gauge_names, gauge_names)
     npt.assert_allclose(correct_data, data)
-    delete_file(filename)
+    silent_rm(filename)
 
 def test_2D_line_integral_gauge_output():
     filename = 'test_2D_line_integral_gauge_output.csv'
-    silent_rm(filename)
 
     lines = (((0, 0, 0), (1, 1, 0)),
              ((0, 0, 0), (1, 0, 0)),
@@ -246,11 +244,10 @@ def test_2D_line_integral_gauge_output():
     eq_(correct_gauge_names, gauge_names)
 
     npt.assert_allclose(correct_data, data)
-    delete_file(filename)
+    silent_rm(filename)
 
 def test_line_gauge_output():
     filename = 'test_line_output.csv'
-    silent_rm(filename)
 
     lines = (((0, 0, 0), (1, 1, 1)),)
     fields = ('u0', )
@@ -286,21 +283,7 @@ def test_line_gauge_output():
 
     eq_(correct_gauge_names, gauge_names)
     npt.assert_allclose(correct_data, data)
-    delete_file(filename)
-
-def delete_file(filename):
-    if os.path.exists(filename):
-        try:
-            os.remove(filename)
-        except OSError, e:
-            print ("Error: %s - %s" %(e.filename,e.strerror))
-        else:
-            pass
-    
+    silent_rm(filename)
 
 if __name__ == '__main__':
-    setup_profiling()
-    test_line_gauge_output()
-    test_point_gauge_output()
-    test_point_gauge_output_2()
-    test_line_integral_gauge_output()
+    pass
