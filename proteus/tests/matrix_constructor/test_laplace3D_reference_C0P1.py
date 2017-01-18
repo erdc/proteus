@@ -5,23 +5,16 @@ Test module for Laplace Matrix builder
 
 from proteus.iproteus import *
 from proteus import LinearAlgebraTools
+import proteus.tests.TestTools
 
-import set_paths
-import os.path
+import os.path,sys,inspect
 import numpy
 
+proteus.tests.TestTools.addSubFolders(inspect.currentframe())
 import laplace_template_C0P1_3D as tp_3D
 
-class TestLaplaceConstruction3D():
+class TestLaplaceConstruction3D(proteus.tests.TestTools.SimulationTest):
     """ Run tests to verify the construction of the 3D Laplace operator """
-
-    @classmethod
-    def setup_class(cls):
-        pass
-
-    @classmethod
-    def teardown_class(cls):
-        pass
         
     def setup_method(self,method):
         """ Initialize the test problem """
@@ -38,10 +31,8 @@ class TestLaplaceConstruction3D():
                     "reference_triangle_3d.poly",
                     "proteus.log",
                     "proteus_default.log"]
-        for file in FileList:
-            if os.path.isfile(file):
-                os.remove(file)
-    @classmethod
+        self.remove_files(FileList)
+                
     def _setRelativePath(self):
         self.scriptdir = os.path.dirname(__file__)
 

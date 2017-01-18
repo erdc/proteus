@@ -1,4 +1,7 @@
 """ basic utilities in Proteus
+
+# ARB - I Think this file should be deleted...
+- I've put these functions in test_utils.TestTools.py
 """
 
 import os

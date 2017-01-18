@@ -16,7 +16,7 @@ accuracy of various numerical schemes.
 
 # variables set from context
 name = "poiseulleFlow"
-numeric_scheme = "TH"
+numeric_scheme = "THQuads"
 useWeakBoundaryConditions = True
 
 ######################################################

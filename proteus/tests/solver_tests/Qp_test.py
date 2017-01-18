@@ -4,58 +4,23 @@
 Test module for the pressure mass matrix schur complement
 
 """
-import os,sys,inspect
-cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
-if cmd_folder not in sys.path:
-    sys.path.insert(0,cmd_folder)
-
-cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],
-                                                              "import_modules")))
-cmd_subfolder_0 = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],
-                                                              "comparison_files")))
-if cmd_subfolder not in sys.path:
-    sys.path.insert(0,cmd_subfolder)
-
-import tables
-import numpy as np
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import LinearAlgebraTools
-comm = Comm.get()
-#Profiling.logLevel=7
-#Profiling.verbose=True
-import numpy.testing as npt
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
-from nose.tools import set_trace
-from petsc4py import PETSc as p4pyPETSc
+import proteus.tests.TestTools
 
+import os,sys,inspect
+import tables
+import numpy as np
+from petsc4py import PETSc as p4pyPETSc
 from scipy.sparse import csr_matrix
 
-def _setRelativePath():
-    return os.path.dirname(__file__)
-
-def test_sparse_2_dense():
-    '''
-    This function tests the petsc4py_sparse_2_dense function in the
-    LinearAlgebraTools module.
-    '''
-    from proteus import LinearAlgebraTools
-    vals    = [10.,-2.,3.,9.,3.,7.,8.,7.,3.,8.,7.,5.,8.,9.,9.,13.,4.,2.,-1.]
-    col_idx = [0  , 4 ,0 ,1 ,5 ,1 ,2 ,3 ,0 ,2 ,3 ,4 ,1 ,3 ,4 ,5  ,1 ,4 , 5 ]
-    row_idx = [0, 2, 5, 8, 12, 16, 19]
-    size_n  = len(row_idx)-1 
-    petsc_mat = p4pyPETSc.Mat().createAIJ(size = (size_n,size_n), \
-                                          csr  = (row_idx, col_idx, vals))
-    dense_mat = LinearAlgebraTools.petsc4py_sparse_2_dense \
-                (petsc_mat)
-    rel_path = "comparison_files/sparse_mat_1.txt"
-    comparison_mat = np.loadtxt(os.path.join(_setRelativePath(),rel_path))
-    assert np.allclose(dense_mat,comparison_mat)
+proteus.tests.TestTools.addSubFolders(inspect.currentframe())
+import stokes_2d_p
+import stokes_2d_n
 
 def test_pressure_mass_matrix_shell():
     ''' This function tests pressure mass matrix shells '''
-    from proteus import LinearAlgebraTools
     vals = [1.,3.,1.5,-2.1,4.,3.]
     col_idx = [0, 2, 0, 1, 1, 2]
     row_idx = [0, 2, 4, 6]
@@ -80,12 +45,12 @@ def test_pressure_mass_matrix_shell():
     comparison_vec = np.array([1.02564103, 0.25641026, -0.00854701])
     assert np.allclose(y_vec,comparison_vec)
 
-class TestStokesOperatorConstruction():
-    """ This class tests the operator construction for a 2D Stokes Poiseulle Flow problem """
-    @classmethod
-    def setup_class(self):
-        import stokes_2d_p
-        import stokes_2d_n
+class TestStokesOperatorConstruction(proteus.tests.TestTools.SimulationTest):
+    """ This class tests the operator construction on a 2D Stokes Poiseulle Flow problem """
+
+    def setup_method(self,method):
+        reload(stokes_2d_p)
+        reload(stokes_2d_n)
         pList = [stokes_2d_p]
         nList = [stokes_2d_n]    
         so = default_so
@@ -100,9 +65,7 @@ class TestStokesOperatorConstruction():
         self.ns.modelList[0].par_jacobianList[1].pde.scale_dt = False
         self._setRelativePath()
 
-    @classmethod
-    def teardown_class(self):
-        """ Tear down function """
+    def teardown_method(self,method):
         FileList = ['proteus.log',
                     'poiseulleFlow.h5',
                     'poiseulleFlow.xmf',                    
@@ -111,12 +74,8 @@ class TestStokesOperatorConstruction():
                     'rdomain.neig',
                     'rdomain.node',
                     'rdomain.poly']
+        self.remove_files(FileList)
 
-        for file in FileList:
-            if os.path.isfile(file):
-                os.remove(file)
-
-    @classmethod
     def _setRelativePath(self):
         self.scriptdir = os.path.dirname(__file__)
 
@@ -155,25 +114,6 @@ class TestStokesOperatorConstruction():
         Bt_petsc = self.operator_constructor.getBt()
         Bt_dense = LinearAlgebraTools.petsc4py_sparse_2_dense(Bt_petsc)
         assert np.allclose(-1.0*np.transpose(Bt_dense),B_dense)
-
-    def test_05_FullRun(self):
-        """ Test the Poiseulle Flow runs and produces expected h5 output """
-        self.ns.calculateSolution('test_Qp_mat')
-        expected = tables.openFile(os.path.join(cmd_subfolder_0,
-                                   'poiseulleFlow_expected.h5'),
-                                   'r')
-        actual = tables.openFile('poiseulleFlow.h5','r')
-        assert np.allclose(expected.root.velocity_t1,
-                           actual.root.velocity_t1)
-        expected.close()
-        actual.close()
-        
-
-
+    
 if __name__ == '__main__':
-    from proteus import Comm
-    comm = Comm.init()   
-    test = TestStokesOperatorConstruction()
-    test.setUp()
-    test.test_05_FullRun()
-    test.tearDown()
+    pass
