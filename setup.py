@@ -322,11 +322,12 @@ setup(name='proteus',
                                                 numpy.get_include(),
                                                 PROTEUS_SUPERLU_INCLUDE_DIR,
                                                 PROTEUS_TRIANGLE_INCLUDE_DIR,
-                                                PROTEUS_DAETK_INCLUDE_DIR] + \
+                                                PROTEUS_DAETK_INCLUDE_DIR,
+                                                PROTEUS_HDF5_INCLUDE_DIR] + \
                                       PROTEUS_PETSC_INCLUDE_DIRS + \
                                       PROTEUS_MPI_INCLUDE_DIRS,
-                                  library_dirs=[PROTEUS_DAETK_LIB_DIR]+PROTEUS_PETSC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS,
-                                  libraries=['hdf5','stdc++','m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS,
+                                  library_dirs=[PROTEUS_DAETK_LIB_DIR]+PROTEUS_PETSC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS+PROTEUS_HDF5_LIB_DIRS,
+                                  libraries=['hdf5','stdc++','m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+PROTEUS_HDF5_LIBS,
                                   extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
                                   extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS),
                                   Extension("mprans.cNCLS",["proteus/mprans/cNCLS.pyx"],depends=["proteus/mprans/NCLS.h"], language="c++",
