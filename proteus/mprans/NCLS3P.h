@@ -28,6 +28,20 @@ namespace proteus
     //The base class defining the interface
   public:
     virtual ~cppNCLS3P_base(){}
+    virtual void FCTStep(double dt, 
+			 int NNZ, //number on non-zero entries on sparsity pattern
+			 int numDOFs, //number of DOFs
+			 double* lumped_mass_matrix, //lumped mass matrix (as vector)
+			 double* soln, //DOFs of solution at time tn
+			 double* solH, //DOFs of high order solution at tnp1
+			 double* flux_plus_dLij_times_soln, //operators to construct low order solution
+			 int* csrRowIndeces_DofLoops, //csr row indeces 
+			 int* csrColumnOffsets_DofLoops, //csr column offsets 
+			 double* MassMatrix, //mass matrix
+			 double* dL_minus_dC, //low minus high order dissipative matrices
+			 double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
+			 double* max_u_bc
+			 )=0;
     virtual void calculateResidual(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -329,6 +343,98 @@ namespace proteus
       else
 	{
 	  dflux = -flow_fluid;
+	}
+    }
+
+    void FCTStep(double dt, 
+		 int NNZ, //number on non-zero entries on sparsity pattern
+		 int numDOFs, //number of DOFs
+		 double* lumped_mass_matrix, //lumped mass matrix (as vector)
+		 double* soln, //DOFs of solution at time tn
+		 double* solH, //DOFs of high order solution at tnp1
+		 double* flux_plus_dLij_times_soln, //operators to construct low order solution
+		 int* csrRowIndeces_DofLoops, //csr row indeces 
+		 int* csrColumnOffsets_DofLoops, //csr column offsets 
+		 double* MassMatrix, //mass matrix
+		 double* dL_minus_dC, //low minus high order dissipative matrices
+		 double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
+		 double* max_u_bc)
+    {
+      register double Rpos[numDOFs], Rneg[numDOFs];
+      register double FluxCorrectionMatrix[NNZ];
+      register double solL[numDOFs];
+      //////////////////
+      // LOOP in DOFs //
+      //////////////////
+      int ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  //read some vectors 
+	  double solHi = solH[i];
+	  double solni = soln[i];
+	  double mi = lumped_mass_matrix[i];
+	  // compute low order solution
+	  // mi*(uLi-uni) + dt*sum_j[(Tij+dLij)*unj] = 0
+	  solL[i] = solni-dt/mi*flux_plus_dLij_times_soln[i];
+
+	  double mini=min_u_bc[i], maxi=max_u_bc[i]; // init min/max with value at BCs (NOTE: if no boundary then min=1E10, max=-1E10)
+	  //double mini=1E10, maxi=-1E-10;
+	  double Pposi=0, Pnegi=0;
+
+	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      ////////////////////////
+	      // COMPUTE THE BOUNDS //
+	      ////////////////////////
+	      mini = std::min(mini,soln[j]);
+	      maxi = std::max(maxi,soln[j]);
+	      
+	      // i-th row of flux correction matrix 
+	      FluxCorrectionMatrix[ij] = (((i==j) ? 1 : 0)*mi - MassMatrix[ij])*(solH[j]-soln[j] - (solHi-solni)) + dt*dL_minus_dC[ij]*(soln[j]-solni);
+
+	      ///////////////////////
+	      // COMPUTE P VECTORS //
+	      ///////////////////////
+	      Pposi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] > 0) ? 1. : 0.);
+	      Pnegi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] < 0) ? 1. : 0.);
+
+	      //update ij 
+	      ij+=1;
+	    }
+	  ///////////////////////
+	  // COMPUTE Q VECTORS //
+	  ///////////////////////
+	  double Qposi = mi*(maxi-solL[i]);
+	  double Qnegi = mi*(mini-solL[i]);
+
+	  ///////////////////////
+	  // COMPUTE R VECTORS //
+	  ///////////////////////
+	  Rpos[i] = ((Pposi==0) ? 1. : std::min(1.0,Qposi/Pposi));
+	  Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
+	} // i DOFs
+      
+      //////////////////////
+      // COMPUTE LIMITERS // 
+      //////////////////////
+      ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  double ith_Limiter_times_FluxCorrectionMatrix = 0.;
+	  double Rposi = Rpos[i], Rnegi = Rneg[i];
+	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      ith_Limiter_times_FluxCorrectionMatrix += 
+		((FluxCorrectionMatrix[ij]>0) ? std::min(Rposi,Rneg[j]) : std::min(Rnegi,Rpos[j])) * FluxCorrectionMatrix[ij];
+	      //ith_Limiter_times_FluxCorrectionMatrix += FluxCorrectionMatrix[ij]; //TMP
+	      //update ij
+	      ij+=1;
+	    }
+	  solH[i] = solL[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
 	}
     }
 

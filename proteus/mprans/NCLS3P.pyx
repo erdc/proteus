@@ -19,6 +19,19 @@ from proteus.ShockCapturing import ShockCapturing_base
 
 cdef extern from "mprans/NCLS3P.h" namespace "proteus":
     cdef cppclass cppNCLS3P_base:
+        void FCTStep(double dt, 
+	             int NNZ,
+		     int numDOFs,
+		     double* lumped_mass_matrix, 
+		     double* soln, 
+		     double* solH, 
+		     double* flux_plus_dLij_times_soln, 
+		     int* csrRowIndeces_DofLoops, 
+		     int* csrColumnOffsets_DofLoops, 
+		     double* MassMatrix, 
+		     double* dL_minus_dE,
+                     double* min_u_bc,
+                     double* max_u_bc) 
         void calculateResidual(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -210,7 +223,33 @@ cdef class NCLS3P:
 
     def __dealloc__(self):
         del self.thisptr
-
+    def FCTStep(self, 
+                double dt, 
+                int NNZ,
+                int numDOFs,
+                numpy.ndarray lumped_mass_matrix, 
+                numpy.ndarray soln, 
+                numpy.ndarray solH, 
+                numpy.ndarray flux_plus_dLij_times_soln, 
+                numpy.ndarray csrRowIndeces_DofLoops, 
+                numpy.ndarray csrColumnOffsets_DofLoops, 
+                numpy.ndarray MassMatrix, 
+                numpy.ndarray dL_minus_dE,
+                numpy.ndarray min_u_bc,
+                numpy.ndarray max_u_bc):
+        self.thisptr.FCTStep(dt, 
+                             NNZ,
+                             numDOFs,
+                             <double*> lumped_mass_matrix.data, 
+                             <double*> soln.data, 
+                             <double*> solH.data,
+                             <double*> flux_plus_dLij_times_soln.data,
+                             <int*> csrRowIndeces_DofLoops.data,
+                             <int*> csrColumnOffsets_DofLoops.data,
+                             <double*> MassMatrix.data,
+                             <double*> dL_minus_dE.data,
+                             <double*> min_u_bc.data,
+                             <double*> max_u_bc.data)
     def calculateResidual(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -623,6 +662,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(self,
                  EDGE_VISCOSITY=0,
                  ENTROPY_VISCOSITY=0,                 
+		 FCT=0,
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
@@ -666,6 +706,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # EDGE BASED (AND ENTROPY) VISCOSITY 
         self.EDGE_VISCOSITY=EDGE_VISCOSITY
         self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
+        self.FCT=FCT
 
     def attachModels(self, modelList):
         # the level set model
@@ -769,6 +810,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self, t, firstStep=False):
+        if (self.FCT==1):
+            self.model.FCTStep()
         self.model.q['dV_last'][:] = self.model.q['dV']
         # if self.checkMass:
         #     self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
@@ -1302,6 +1345,22 @@ class LevelModel(OneLevelTransport):
 
         self.waterline_calls = 0
         self.waterline_prints = 0
+
+    def FCTStep(self):
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+        self.ncls3p.FCTStep(self.timeIntegration.dt, 
+                            self.nnz, #number of non zero entries 
+                            len(rowptr)-1, #number of DOFs
+                            self.ML, #Lumped mass matrix
+                            self.coefficients.u_dof_old, #soln
+                            self.u[0].dof, #solH
+                            self.flux_plus_dLij_times_soln, 
+                            rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
+                            colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
+                            MassMatrix, 
+                            self.dL_minus_dE,
+                            self.min_u_bc,
+                            self.max_u_bc)
 
     # mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
