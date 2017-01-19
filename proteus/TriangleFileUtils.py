@@ -76,21 +76,16 @@ def generateDefaultFormatPattern(recInfo,verbose=0):
 
 def findInitialFormatLine(lines,recInfo,formatpattern,
                           commchar='#',nbase=0,verbose=0):
-    """
-    find the line for the Triangle data files, specified in
+    """find the line for the Triangle data files, specified in
     formatpattern.
 
     Generate dataInfo dictionary that should specify
-
-      dataInfo['nEntries']    : number of entries in the file
-      dataInfo['recordSizes'] : size of each record per entry (can be 0)
-      dataInfo['dataStartLineNumber']    : line where actual data entries may
-                                           start
-      dataInfo['recordLocationsPerLine'] : array of indeces saying
-                                           where each record
-                                           should start on a valid entry line
-                                           record I is in entries
-                                           recStart[I]:recStart[I+1]
+    dataInfo['nEntries']    : number of entries in the file
+    dataInfo['recordSizes'] : size of each record per entry (can be 0)
+    dataInfo['dataStartLineNumber']    : line where actual data entries may start
+    dataInfo['recordLocationsPerLine'] : array of indeces saying where
+    each record should start on a valid entry line record I is in
+    entries recStart[I]:recStart[I+1]
 
     """
 
