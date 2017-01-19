@@ -34,6 +34,7 @@ from proteus.mprans import BodyDynamics as bd
 from proteus.SpatialTools import (Shape,
                                   Cuboid,
                                   Rectangle,
+                                  Circle,
                                   CustomShape,
                                   ShapeSTL,
                                   BCContainer,
@@ -316,6 +317,7 @@ Rectangle.__bases__ = (ShapeRANS,)
 Cuboid.__bases__ = (ShapeRANS,)
 CustomShape.__bases__ = (ShapeRANS,)
 ShapeSTL.__bases__ = (ShapeRANS,)
+Circle.__bases__ = (ShapeRANS,)  
 
 # adding extra functionality to predefined shapes
 
