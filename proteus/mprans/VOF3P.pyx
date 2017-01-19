@@ -1681,8 +1681,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     t[0], t[1]], self.timeIntegration.t)
             self.ebqe[('advectiveFlux_bc_flag', 0)][t[0], t[1]] = 1
 
-        # TODO (MQL): Do this in a cleaner way; e.g., do a getInflowDOFs() c++ function
-
+        # MQL: Find out the DOFs that are inflow
         if self.forceStrongConditions:
             self.vof.getInflowDOFs(self.mesh.nodeArray,
                                    self.mesh.elementNodesArray,
