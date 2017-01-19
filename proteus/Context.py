@@ -6,23 +6,24 @@ provides methods for setting and getting such a global user context.
 It also alows declaring input options to the user context that can be
 set from the command line.
 
-Example (set the global context from an object):
+Example (set the global context from an object)::
 
-#create a simple context class
-globalSettings = {"nnx":11, "T":10.0, "g"=9.8}
-MyContext = namedtuple("MyContext",globalSettings.keys())
-#set the global  context  object
-proteus.Context.set(MyContext._make(globalSettings.values())
+  #create a simple context class
+  globalSettings = {"nnx":11, "T":10.0, "g"=9.8}
+  MyContext = namedtuple("MyContext",globalSettings.keys())
+  #set the global  context  object
+  proteus.Context.set(MyContext._make(globalSettings.values())
 
-Example (set the global context from a module):
+Example (set the global context from a module)::
 
-import globalSettingsModule
-proteus.Context.setFromModule(globalSettingsModule)
+  import globalSettingsModule
+  proteus.Context.setFromModule(globalSettingsModule)
 
-Example (use the global context):
+Example (use the global context)::
 
-ct = proteus.Context.get()
-nnx = ct.nnx
+  ct = proteus.Context.get()
+  nnx = ct.nnx
+
 """
 from collections import  namedtuple
 from .Profiling import logEvent
@@ -57,16 +58,18 @@ def Options(optionsList=None):
     """Construct an o
     from proteus.LinearAlgebraToptions object (named tuple)
     
-    :param optionsList: An iteratble of options tuples. Each option is a 3-tuple,
-    with the first entry the option name string, the second entry the default value,
-    and the third entry a help string
+    :param optionsList: An iteratble of options tuples. Each option is
+                        a 3-tuple, with the first entry the option
+                        name string, the second entry the default
+                        value, and the third entry a help string
 
-    Example:
+    Example::
 
-    opts=Context.Options([("nnx", 11, "number of mesh nodes in x-direction"),
-                          ("nny", 21, "number of mesh nodes in y-direction"])
-    nnx = opts.nnx
-    nny = opts.nny
+      opts=Context.Options([("nnx", 11, "number of mesh nodes in x-direction"),
+                            ("nny", 21, "number of mesh nodes in y-direction"])
+      nnx = opts.nnx
+      nny = opts.nny
+
     """
     import ast, sys
     global contextOptionsString
