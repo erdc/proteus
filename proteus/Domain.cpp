@@ -509,7 +509,7 @@ void PiecewiseLinearComplexDomain::writeAsymptote(const char* filename)
 }
 // void PiecewiseLinearComplex::getBoundingBox(vector<double> & v)
 // {}		  
-void PiecewiseLinearComplex::writePoly(const char* filename)
+void PiecewiseLinearComplexDomain::writePoly(const char* filename)
 {
   if(!filename)
     {

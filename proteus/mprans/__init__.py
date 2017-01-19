@@ -2,7 +2,7 @@
 Modules for simulating free surface incompressible flow and fluid/structure interaction
 """
 
-__version__ = '0.9.0'
+__version__ = '1.2.0'
 
 __all__ = ["RANS2PV2",
            "cRANS2PV2",
@@ -37,4 +37,9 @@ __all__ = ["RANS2PV2",
            "ArchiveBeams",
            "RANS2P_IB",
            "cRANS2P_IB",
-           "beamFEM"]
+           "beamFEM",
+           "Pres",
+           "PresInit",
+           "PresInc",
+           "BoundaryConditions",
+           "SpatialTools"]
