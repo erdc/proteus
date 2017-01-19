@@ -5,9 +5,10 @@ A class hierarchy and tools for building domains of PDE's.
    :parts: 1
 """
 
+import sys
 import numpy as np
 from proteus.MeshTools import MeshParallelPartitioningTypes as mpt
-
+from .Profiling import logEvent
 
 class D_base:
     """
@@ -116,6 +117,7 @@ class RectangularDomain(D_base):
                  name="DefaultRectangularDomain",
                  units="m"):
         D_base.__init__(self,len(L),name,units)
+        self.polyfile = None
         self.boundaryTags = {'left':3,
                              'right':5,
                              'front':2,
@@ -134,6 +136,7 @@ class RectangularDomain(D_base):
         """
         Write the RectangularDomain using the poly format.
         """
+        self.polyfile = fileprefix #[temp] see PSLG for better implementation that checks if it already exists
         self.boundaryLegend = self.boundaryTags
         unitesize=4.0/self.L[0]
         f = open(fileprefix+".poly",'w')
@@ -301,6 +304,45 @@ shipout();
     def writeXdmf(self,ar):
         raise UserWarning("Xdmf output not implemented")
 
+def unitSimplex(nd=2):
+    """Builds a 2 or 3 dimension reference element.
+    
+    Parameters
+    ----------
+    nd : int
+        The elements dimension (must be 2 or 3)
+
+    Returns
+    -------
+    reference_element
+    """
+    if nd!=2 and nd!=3:
+        logEvent("ERROR - Reference element must have dimension 2 or 3")
+        sys.exit(1)
+    if nd==2:
+        return PlanarStraightLineGraphDomain(vertices=[[0. , 0.], 
+                                                       [0. , 1.], 
+                                                       [1. , 0.]],
+                                             segments = [[0, 1],
+                                                         [1, 2],
+                                                         [2, 0]],
+                                             name="Reference Triangle")
+    if nd==3:
+       boundaryTags = {'bottom':1,'front':2,'side':3,'back':4}
+       return PiecewiseLinearComplexDomain(vertices=[[0.0 , 0.0 , 0.0], 
+                                                     [0.0 , 0.0 , 1.0], 
+                                                     [0.0 , 1.0 , 0.0], 
+                                                     [1.0 , 0.0 , 0.0]],
+                                           facets = [[[0, 2, 3]],
+                                                     [[0, 1, 2]],
+                                                     [[0, 1, 3]],
+                                                     [[1, 2, 3]]],
+                                           # facetFlags=[boundaryTags['bottom'],
+                                           #             boundaryTags['front'],
+                                           #             boundaryTags['side'],
+                                           #             boundaryTags['back']],                                                       
+                                           name="Reference Simplex")
+
 class GMSH_3D_Domain(D_base):
     """
     A domain described by a gmsh .geo file
@@ -316,11 +358,17 @@ class GMSH_3D_Domain(D_base):
     units : str
             The units of length
     """
-    def __init__(self, geofile, he, name="GMSH_Domain", units="m"):
+    def __init__(self, geofile, he,
+                 name="GMSH_Domain",
+                 units="m",
+                 length_scale=1.0,
+                 permute_dims=[0,1,2]):
         D_base.__init__(self, 2, name, units)
         self.geofile=geofile+".geo"
         self.polyfile=geofile
         self.he = he
+        self.length_scale=length_scale
+        self.permute_dims=permute_dims
 
 class PlanarStraightLineGraphDomain(D_base):
     """

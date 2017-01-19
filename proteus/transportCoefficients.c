@@ -1806,6 +1806,53 @@ void darcySharpInterfaceFlowImEvaluate(int nPoints,
 
 }
 
+void Laplace_Evaluate2D(const int nPoints,
+		      double *mom_p_diff_ten,
+		      double *mom_u_diff_ten,
+		      double *mom_v_diff_ten)
+{
+  int k;
+  for (k=0; k<nPoints; k++)
+    {
+      mom_p_diff_ten[k*2+0] = 1.0;
+      mom_p_diff_ten[k*2+1] = 1.0;
+
+      mom_u_diff_ten[k*2+0] = 1.0;
+      mom_u_diff_ten[k*2+1] = 1.0;
+
+      mom_v_diff_ten[k*2+0] = 1.0;
+      mom_v_diff_ten[k*2+1] = 1.0;
+    } 
+}
+
+void Laplace_Evaluate3D(const int nPoints,
+		      double *mom_p_diff_ten,
+		      double *mom_u_diff_ten,
+		      double *mom_v_diff_ten,
+		      double *mom_w_diff_ten)
+{
+  int k;
+  for (k=0; k<nPoints; k++)
+    {
+      mom_p_diff_ten[k*3+0] = 1.0;
+      mom_p_diff_ten[k*3+1] = 1.0;
+      mom_p_diff_ten[k*3+2] = 1.0;
+
+      mom_u_diff_ten[k*3+0] = 1.0;
+      mom_u_diff_ten[k*3+1] = 1.0;
+      mom_u_diff_ten[k*3+2] = 1.0;
+
+      mom_v_diff_ten[k*3+0] = 1.0;
+      mom_v_diff_ten[k*3+1] = 1.0;
+      mom_v_diff_ten[k*3+2] = 1.0;
+
+      mom_w_diff_ten[k*3+0] = 1.0;
+      mom_w_diff_ten[k*3+1] = 1.0;
+      mom_w_diff_ten[k*3+2] = 1.0;
+    } 
+}
+
+
 void NavierStokes_2D_Evaluate(const int nPoints,
                               const double rho,
                               const double nu,
@@ -5496,7 +5543,7 @@ void conservativeHeadRichardsL2projMualemVanGenuchtenHetEvaluate(const int nSimp
     }
 }
 
-/** Coefficients for the mass conservative total head-based (h=\psi+z) Richards' equation using Mualem-Van Genuchten.
+/** Coefficients for the mass conservative total head-based (\f[ h=\psi+z \f]) Richards' equation using Mualem-Van Genuchten.
  */
 void conservativeTotalHeadRichardsMualemVanGenuchtenHomEvaluate(const int nPoints,
 								const int nSpace,
