@@ -759,8 +759,7 @@ namespace proteus
 		  //compute indeces and declare local storage
 		  register int eN_k = eN*nQuadraturePoints_element+k,
 		    eN_k_nSpace = eN_k*nSpace,
-		    eN_nDOF_trial_element = eN*nDOF_trial_element,
-		    eN_nDOF_vel_trial_element = eN*nDOF_vel_trial_element;
+		    eN_nDOF_trial_element = eN*nDOF_trial_element;
 		  register double 
 		    //for mass matrix contributions
 		    u=0.0, m=0.0, dm=0.0, f[nSpace], df[nSpace], m_t=0.0,dm_t=0.0, 

@@ -3,6 +3,7 @@ import numpy
 from math import fabs
 cimport numpy
 import os
+from proteus import LinearAlgebraTools 
 from proteus import cfemIntegrals, Quadrature, Norms, Comm
 from proteus.NonlinearSolvers import NonlinearEquation
 from proteus.FemTools import (DOFBoundaryConditions,
@@ -46,7 +47,9 @@ cdef extern from "mprans/NCLS3P.h" namespace "proteus":
                                double sc_uref, double sc_alpha,
                                int * u_l2g,
                                double * elementDiameter,
-                               double * u_dof, double * u_dof_old,
+                               double * u_dof, 
+			       double * u_dof_old,
+			       double * u_dof_old_old,
                                double * velocity,
                                double * q_m,
                                double * q_u,
@@ -68,7 +71,20 @@ cdef extern from "mprans/NCLS3P.h" namespace "proteus":
                                int * isDOFBoundary_u,
                                double * ebqe_rd_u_ext,
                                double * ebqe_bc_u_ext,
-                               double * ebqe_u)
+                               double * ebqe_u,
+			       int EDGE_VISCOSITY,
+			       int ENTROPY_VISCOSITY,
+			       int numDOFs,					
+                               int NNZ,		
+                               int* csrRowIndeces_DofLoops,
+                               int* csrColumnOffsets_DofLoops,
+                               int* csrRowIndeces_CellLoops,
+                               int* csrColumnOffsets_CellLoops,
+                               int * csrColumnOffsets_eb_CellLoops,
+   			       double* flux_plus_dLij_times_soln,
+			       double* dL_minus_dE, 
+			       double* min_u_bc,
+			       double* max_u_bc)			       
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -111,7 +127,8 @@ cdef extern from "mprans/NCLS3P.h" namespace "proteus":
                                int * isDOFBoundary_u,
                                double * ebqe_rd_u_ext,
                                double * ebqe_bc_u_ext,
-                               int * csrColumnOffsets_eb_u_u)
+                               int * csrColumnOffsets_eb_u_u,
+			       int EDGE_VISCOSITY)
         void calculateWaterline(
             int * wlc,
             double * waterline,
@@ -225,6 +242,7 @@ cdef class NCLS3P:
                           numpy.ndarray elementDiameter,
                           numpy.ndarray u_dof,
                           numpy.ndarray u_dof_old,
+                          numpy.ndarray u_dof_old_old,
                           numpy.ndarray velocity,
                           numpy.ndarray q_m,
                           numpy.ndarray q_u,
@@ -246,7 +264,20 @@ cdef class NCLS3P:
                           numpy.ndarray isDOFBoundary_u,
                           numpy.ndarray ebqe_rd_u_ext,
                           numpy.ndarray ebqe_bc_u_ext,
-                          numpy.ndarray ebqe_u):
+                          numpy.ndarray ebqe_u,
+			  int EDGE_VISCOSITY,
+			  int ENTROPY_VISCOSITY,
+                          int numDOFs,
+                          int NNZ,
+                          numpy.ndarray csrRowIndeces_DofLoops,
+                          numpy.ndarray csrColumnOffsets_DofLoops,
+                          numpy.ndarray csrRowIndeces_CellLoops,
+                          numpy.ndarray csrColumnOffsets_CellLoops,
+                          numpy.ndarray csrColumnOffsets_eb_CellLoops,
+			  numpy.ndarray flux_plus_dLij_times_soln,
+			  numpy.ndarray dL_minus_dE, 
+			  numpy.ndarray min_u_bc,
+			  numpy.ndarray max_u_bc):
         self.thisptr.calculateResidual( < double*>mesh_trial_ref.data,
                                        < double * >mesh_grad_trial_ref.data,
                                        < double * >mesh_dof.data,
@@ -277,6 +308,7 @@ cdef class NCLS3P:
                                        < double * >elementDiameter.data,
                                        < double * >u_dof.data,
                                        < double * >u_dof_old.data,
+                                       < double * >u_dof_old_old.data,
                                        < double * >velocity.data,
                                        < double * >q_m.data,
                                        < double * >q_u.data,
@@ -299,7 +331,20 @@ cdef class NCLS3P:
                                        < int * >isDOFBoundary_u.data,
                                        < double * >ebqe_rd_u_ext.data,
                                        < double * >ebqe_bc_u_ext.data,
-                                       < double * >ebqe_u.data)
+                                       < double * >ebqe_u.data,
+				       EDGE_VISCOSITY,
+				       ENTROPY_VISCOSITY,
+                                       numDOFs,
+                                       NNZ,
+				       <int*> csrRowIndeces_DofLoops.data,
+				       <int*> csrColumnOffsets_DofLoops.data,
+				       <int*> csrRowIndeces_CellLoops.data,
+				       <int*> csrColumnOffsets_CellLoops.data,
+                                       <int*> csrColumnOffsets_eb_CellLoops.data,
+				       <double*> flux_plus_dLij_times_soln.data,
+				       <double*> dL_minus_dE.data, 
+				       <double*> min_u_bc.data,
+				       <double*> max_u_bc.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -344,7 +389,8 @@ cdef class NCLS3P:
                           numpy.ndarray isDOFBoundary_u,
                           numpy.ndarray ebqe_rd_u_ext,
                           numpy.ndarray ebqe_bc_u_ext,
-                          numpy.ndarray csrColumnOffsets_eb_u_u):
+                          numpy.ndarray csrColumnOffsets_eb_u_u,
+			  int EDGE_VISCOSITY):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian( < double*>mesh_trial_ref.data,
@@ -389,7 +435,8 @@ cdef class NCLS3P:
                                        < int * >isDOFBoundary_u.data,
                                        < double * >ebqe_rd_u_ext.data,
                                        < double * >ebqe_bc_u_ext.data,
-                                       < int * >csrColumnOffsets_eb_u_u.data)
+                                       < int * >csrColumnOffsets_eb_u_u.data,
+				       EDGE_VISCOSITY)
 
     def calculateWaterline(self,
                            numpy.ndarray wlc,
@@ -574,6 +621,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
 
     def __init__(self,
+                 EDGE_VISCOSITY=0,
+                 ENTROPY_VISCOSITY=0,                 
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
@@ -614,13 +663,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
         self.waterline_interval = waterline_interval
+        # EDGE BASED (AND ENTROPY) VISCOSITY 
+        self.EDGE_VISCOSITY=EDGE_VISCOSITY
+        self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
 
     def attachModels(self, modelList):
         # the level set model
         self.model = modelList[self.modelIndex]
 
-        #self.u_old_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
-        self.u_old_dof = self.model.u[0].dof.copy()
+        self.u_dof_old = self.model.u[0].dof.copy()
+        self.u_dof_old_old = self.model.u[0].dof.copy()
         # the velocity
         if self.flowModelIndex >= 0:
             self.flowModel = modelList[self.flowModelIndex]
@@ -694,6 +746,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)', 0)].shape, 'd')
 
     def preStep(self, t, firstStep=False):
+        self.u_dof_old_old = numpy.copy(self.u_dof_old)
+        self.u_dof_old = numpy.copy(self.model.u[0].dof)
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
@@ -715,7 +769,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self, t, firstStep=False):
-        self.u_old_dof[:] = self.model.u[0].dof
         self.model.q['dV_last'][:] = self.model.q['dV']
         # if self.checkMass:
         #     self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
@@ -1143,6 +1196,14 @@ class LevelModel(OneLevelTransport):
 
         self.setupFieldStrides()
 
+	# Mass matrices 
+        self.ML=None #lumped mass matrix
+        self.MC_global=None #consistent mass matrix
+        self.flux_plus_dLij_times_soln=None
+        self.dL_minus_dE=None
+        self.min_u_bc=None
+        self.max_u_bc=None
+
         comm = Comm.get()
         self.comm = comm
         if comm.size() > 1:
@@ -1210,6 +1271,7 @@ class LevelModel(OneLevelTransport):
         if not hasattr(self.numericalFlux, 'ebqe'):
             self.numericalFlux.ebqe = {
                 ('u', 0): numpy.zeros(self.ebqe[('u', 0)].shape, 'd')}
+
         # TODO how to handle redistancing calls for
         # calculateCoefficients,calculateElementResidual etc
         self.globalResidualDummy = None
@@ -1255,6 +1317,77 @@ class LevelModel(OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
+
+	# COMPUTE MASS MATRICES
+        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+        nnz = nzval.shape[-1] #number of non-zero entries in sparse matrix
+        # JACOBIANS (FOR ELEMENT TRANSFORMATION)
+        self.q[('J')] = numpy.zeros((self.mesh.nElements_global,
+                                     self.nQuadraturePoints_element,
+                                     self.nSpace_global,
+                                     self.nSpace_global),
+                                    'd')
+        self.q[('inverse(J)')] = numpy.zeros((self.mesh.nElements_global,
+                                              self.nQuadraturePoints_element,
+                                              self.nSpace_global,
+                                              self.nSpace_global),
+                                             'd')
+        self.q[('det(J)')] = numpy.zeros((self.mesh.nElements_global,
+                                          self.nQuadraturePoints_element),
+                                         'd')
+        self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
+                                                         self.q['J'],
+                                                         self.q['inverse(J)'],
+                                                         self.q['det(J)'])
+        self.q['abs(det(J))'] = numpy.abs(self.q['det(J)'])
+        # SHAPE FUNCTIONS
+        self.q[('w',0)] = numpy.zeros((self.mesh.nElements_global,
+                                       self.nQuadraturePoints_element,
+                                       self.nDOF_test_element[0]),
+                                      'd')
+        self.q[('w*dV_m',0)] = self.q[('w',0)].copy()
+        self.u[0].femSpace.getBasisValues(self.elementQuadraturePoints, self.q[('w',0)])
+        cfemIntegrals.calculateWeightedShape(self.elementQuadratureWeights[('u',0)],
+                                             self.q['abs(det(J))'],
+                                             self.q[('w',0)],
+                                             self.q[('w*dV_m',0)])
+        dm = numpy.ones(self.q[('u',0)].shape,'d')
+        elementMassMatrix = numpy.zeros((self.mesh.nElements_global,
+                                         self.nDOF_test_element[0],
+                                         self.nDOF_trial_element[0]),'d')
+        cfemIntegrals.updateMassJacobian_weak_lowmem(dm,
+                                                     self.q[('w',0)],
+                                                     self.q[('w*dV_m',0)],
+                                                     elementMassMatrix)
+        self.MC_a = nzval.copy()
+        self.MC_global = LinearAlgebraTools.SparseMat(self.nFreeDOF_global[0],
+                                                      self.nFreeDOF_global[0],
+                                                      nnz,
+                                                      self.MC_a,
+                                                      colind,
+                                                      rowptr)
+        cfemIntegrals.zeroJacobian_CSR(self.nnz, self.MC_global)
+        cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                  self.l2g[0]['freeLocal'],
+                                                                  self.l2g[0]['nFreeDOF'],
+                                                                  self.l2g[0]['freeLocal'],
+                                                                  self.csrRowIndeces[(0,0)],
+                                                                  self.csrColumnOffsets[(0,0)],
+                                                                  elementMassMatrix,
+                                                                  self.MC_global)
+        self.ML = numpy.zeros((self.nFreeDOF_global[0],),'d')
+        for i in range(self.nFreeDOF_global[0]):
+            self.ML[i] = self.MC_a[rowptr[i]:rowptr[i+1]].sum()
+        numpy.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
+
+        # This is dummy. I just care about the csr structure of the sparse matrix
+        self.dL_minus_dE = numpy.zeros(self.MC_global.shape,'d')
+        self.min_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
+        self.max_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
+        self.min_u_bc.fill(1E10);
+        self.max_u_bc.fill(-1E10);
+        self.flux_plus_dLij_times_soln = numpy.zeros(self.u[0].dof.shape,'d')
+
         # mwf debug
         # pdb.set_trace()
         r.fill(0.0)
@@ -1266,6 +1399,10 @@ class LevelModel(OneLevelTransport):
         # Dirichlet boundary conditions
         # if hasattr(self.numericalFlux,'setDirichletValues'):
         self.numericalFlux.setDirichletValues(self.ebqe)
+
+	#numpy.min(self.ebqe), numpy.max(self.ebqe)
+        #input("*")
+
         # flux boundary conditions, SHOULDN'T HAVE
         # cNCLS3P.calculateResidual(self.mesh.nElements_global,
         # try to use 1d,2d,3d specific modules
@@ -1309,7 +1446,8 @@ class LevelModel(OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.u[0].dof,
-            self.coefficients.u_old_dof,
+            self.coefficients.u_dof_old,
+            self.coefficients.u_dof_old_old,
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u', 0)],
@@ -1332,7 +1470,21 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u', 0)],
             self.numericalFlux.ebqe[('u', 0)],
-            self.ebqe[('u', 0)])
+            self.ebqe[('u', 0)],
+	    self.coefficients.EDGE_VISCOSITY,
+	    self.coefficients.ENTROPY_VISCOSITY,
+            len(rowptr)-1, #num of DOFs
+            self.nnz,
+            rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
+            colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
+            self.csrRowIndeces[(0,0)], #row indices (convenient for element loops) 
+            self.csrColumnOffsets[(0,0)], #column indices (convenient for element loops)
+            self.csrColumnOffsets_eb[(0, 0)],
+            # FLUX CORRECTED TRANSPORT 
+            self.flux_plus_dLij_times_soln,
+            self.dL_minus_dE, 
+            self.min_u_bc,
+            self.max_u_bc) #indices for boundary terms
 
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -1404,7 +1556,8 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u', 0)],
             self.numericalFlux.ebqe[('u', 0)],
-            self.csrColumnOffsets_eb[(0, 0)])
+            self.csrColumnOffsets_eb[(0, 0)],
+	    self.coefficients.EDGE_VISCOSITY)
 
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
@@ -1539,7 +1692,7 @@ class LevelModel(OneLevelTransport):
                 self.u[0].femSpace.dofMap.l2g,
                 self.mesh.elementDiametersArray,
                 self.u[0].dof,
-                self.coefficients.u_old_dof,
+                self.coefficients.u_dof_old,
                 self.coefficients.q_v,
                 self.timeIntegration.m_tmp[0],
                 self.q[('u', 0)],
