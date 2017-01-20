@@ -261,10 +261,6 @@ check:
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
-	@echo "SCOREC-Gmsh Flow Test"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_gmshLoadAndAdapt/gmshCheck.py
-	@echo "************************"
-
 check_simmetrix:
 	@echo "SCOREC-Serial Simmetrix Error-Estimator and Adapt Test"
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_errorAndSerialAdapt/errorCheck.py
