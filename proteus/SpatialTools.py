@@ -1,31 +1,32 @@
-"""
-Module creating predifined or custom shapes. Each shape needs a Domain as
-argument (from proteus.Domain). A Domain can contain any number of shapes.
-Boundary conditions objects are automatically created for each facet (3D) or
-segment (2D) defining the shape.
+"""Module creating predifined or custom shapes. Each shape needs a
+Domain as argument (from proteus.Domain). A Domain can contain any
+number of shapes.  Boundary conditions objects are automatically
+created for each facet (3D) or segment (2D) defining the shape.
+
 Classes:
- - Shape: super class, regroups functions common to all shapes
- - Cuboid: creates a 3D cuboid
- - Rectangle: creates a 2D rectangle
- - Custom: creates a custom shape from a given set vertices, facets, etc.
+
+  * Shape: super class, regroups functions common to all shapes
+  * Cuboid: creates a 3D cuboid
+  * Rectangle: creates a 2D rectangle
+  * Custom: creates a custom shape from a given set vertices, facets, etc.
 
 
-Example
---------
-from proteus import Domain
-from proteus import SpatialTools as st
-import numpy as np
+Example::
 
-domain = Domain.PlanarStraightLineGraphDomain()
-shape1 = st.Rectangle(domain, dim=[0.5, 0.5], coords=[1., 1.])
-shape2 = st.Rectangle(domain. dim=[0.3, 0.2], coords=[3., 3.])
-shape2.rotate(np.pi/3.)
-shape2.BC_dict["left"].uOfXT = lambda x, t: 0.
+  from proteus import Domain
+  from proteus import SpatialTools as st
+  import numpy as np
+  domain = Domain.PlanarStraightLineGraphDomain()
+  shape1 = st.Rectangle(domain, dim=[0.5, 0.5], coords=[1., 1.])
+  shape2 = st.Rectangle(domain. dim=[0.3, 0.2], coords=[3., 3.])
+  shape2.rotate(np.pi/3.)
+  shape2.BC_dict["left"].uOfXT = lambda x, t: 0.
 
-st.assembleDomain(domain)
+  st.assembleDomain(domain)
 
 .. inheritance-diagram:: proteus.SpatialTools
    :parts: 1
+
 """
 
 from math import cos, sin, sqrt
