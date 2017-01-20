@@ -10,8 +10,8 @@
 //4. Add Riemann solvers for internal flux and DG terms 
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
-#define cMax 1.0
-#define IMPLICIT 1
+#define cMax 0.1
+#define IMPLICIT 0
 
 namespace proteus
 {
@@ -3128,23 +3128,29 @@ namespace proteus
       						  mesh_l2g,
       						  mesh_trial_ref,
       						  xt,yt);
-      	      //xt=0.0;yt=0.0;
-      	      //std::cout<<"xt "<<xt<<'\t'<<yt<<'\t'<<std::endl;
       	      //get the physical integration weight
       	      dV = fabs(jacDet)*dV_ref[k];
       	      //get the trial function gradients
       	      ck.gradTrialFromRef(&h_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,h_grad_trial);
       	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
-      	      //get the solution
+      	      //get the solution at current time
       	      ck.valFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],b);
       	      ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
       	      ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
       	      ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
-      	      //get the solution gradients
+      	      //get the solution at tn (old time)
+      	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_old);
+      	      ck.valFromDOF(u_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u_old);
+      	      ck.valFromDOF(v_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v_old);
+      	      //get the solution gradients at current time
       	      ck.gradFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_b);
       	      ck.gradFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h);
       	      ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
       	      ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
+	      //get the solution gradients at tn (old time)
+      	      ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h_old);
+      	      ck.gradFromDOF(u_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u_old);
+      	      ck.gradFromDOF(v_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v_old);
       	      //precalculate test function products with integration weights
       	      for (int j=0;j<nDOF_trial_element;j++)
       		{
@@ -3209,6 +3215,19 @@ namespace proteus
       				   dmom_u_source_h,
       				   mom_v_source, // y-momentum source
       				   dmom_v_source_h); 
+	      evaluateCoefficientsForExplicitEntropyViscosity( // WITH "STAR" SOLUTION
+							      // ********** INPUT ********** //
+							      g, // gravity
+							      grad_b, // grad of bathymetry
+							      h_star,
+							      u_star,
+							      v_star,
+							      // ********** OUTPUT ********** //
+							      mass_adv_star, // [h*u, h*v] 
+							      mom_u_adv_star, // [h*u^2+0.5*g*h^2, h*u*v]
+							      mom_v_adv_star, // [h*u*v, h*v^2+0.5*g*h^2]
+							      mom_u_source_star, // x-momentum source
+							      mom_v_source_star); // y-momentum source
       	      //
       	      //save momentum for time history and velocity for subgrid error
       	      //
@@ -3268,22 +3287,21 @@ namespace proteus
       		  register int i_nSpace=i*nSpace;
 
       		  elementResidual_h[i] += 
-		    ck.Mass_weak(mass_acc_t,h_test_dV[i]) +
-      		    ck.Advection_weak(mass_adv,&h_grad_test_dV[i_nSpace]) +
-		    //mwf changed stabilization terms
-		    ck.NumericalDiffusion(q_numDiff_h_last[eN_k],grad_h,&h_grad_test_dV[i_nSpace]);
+		    dt*ck.Mass_weak(mass_acc_t,h_test_dV[i]) +
+      		    dt*ck.Advection_weak(mass_adv_star,&h_grad_test_dV[i_nSpace]) +
+		    dt*ck.NumericalDiffusion(q_numDiff_h_last[eN_k],grad_h_star,&h_grad_test_dV[i_nSpace]);
 		  
-      		  elementResidual_u[i] += ck.Mass_weak(mom_u_acc_t,vel_test_dV[i]) +
-      		    ck.Advection_weak(mom_u_adv,&vel_grad_test_dV[i_nSpace]) +
-		    ck.Reaction_weak(mom_u_source,vel_test_dV[i]) +
-		    //mwf changed stabilization terms
-		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]);
+      		  elementResidual_u[i] += 
+		    dt*ck.Mass_weak(mom_u_acc_t,vel_test_dV[i]) +
+      		    dt*ck.Advection_weak(mom_u_adv_star,&vel_grad_test_dV[i_nSpace]) +
+		    dt*ck.Reaction_weak(mom_u_source_star,vel_test_dV[i]) +
+		    dt*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u_star,&vel_grad_test_dV[i_nSpace]);
 		 
-      		  elementResidual_v[i] += ck.Mass_weak(mom_v_acc_t,vel_test_dV[i]) +
-      		    ck.Advection_weak(mom_v_adv,&vel_grad_test_dV[i_nSpace]) +
-      		    ck.Reaction_weak(mom_v_source,vel_test_dV[i]) +
-		    //mwf changed stabilization terms
-		    ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]);
+      		  elementResidual_v[i] += 
+		    dt*ck.Mass_weak(mom_v_acc_t,vel_test_dV[i]) +
+      		    dt*ck.Advection_weak(mom_v_adv_star,&vel_grad_test_dV[i_nSpace]) +
+      		    dt*ck.Reaction_weak(mom_v_source_star,vel_test_dV[i]) +
+		    dt*ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v_star,&vel_grad_test_dV[i_nSpace]);
       		}
       	    }
       	  
@@ -5273,6 +5291,7 @@ namespace proteus
 			       int* csrColumnOffsets_eb_v_u,
 			       int* csrColumnOffsets_eb_v_v)
     {
+      double dt = 1./alphaBDF; // HACKED to work just for BDF1
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
@@ -5376,11 +5395,13 @@ namespace proteus
 	      //get the trial function gradients
 	      ck.gradTrialFromRef(&h_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,h_grad_trial);
 	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
-	      //get the solution 	
+	      //get the solution at current time
 	      ck.valFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],b);
 	      ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
 	      ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
 	      ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
+	      //get h at tn (old time)
+	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_old);
 	      //get the solution gradients
 	      ck.gradFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_b);
 	      ck.gradFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h);
@@ -5463,45 +5484,84 @@ namespace proteus
 		  for(int j=0;j<nDOF_trial_element;j++) 
 		    { 
 		      register int j_nSpace = j*nSpace;
-		      //h
-		      elementJacobian_h_h[i][j] += 
-			ck.MassJacobian_weak(dmass_acc_h_t,h_trial_ref[k*nDOF_trial_element+j],h_test_dV[i]) + 
-			ck.AdvectionJacobian_weak(dmass_adv_h,h_trial_ref[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]) +
-			ck.NumericalDiffusionJacobian(q_numDiff_h_last[eN_k],&h_grad_trial[j_nSpace],&h_grad_test_dV[i_nSpace]);
+		      //////////////////////
+		      // h: h_h, h_u, h_v //
+		      //////////////////////
+		      if (IMPLICIT==1)
+			{
+			  elementJacobian_h_h[i][j] += 
+			    dt*ck.MassJacobian_weak(dmass_acc_h_t,h_trial_ref[k*nDOF_trial_element+j],h_test_dV[i]) + 
+			    dt*ck.AdvectionJacobian_weak(dmass_adv_h,h_trial_ref[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]) +
+			    dt*ck.NumericalDiffusionJacobian(q_numDiff_h_last[eN_k],&h_grad_trial[j_nSpace],&h_grad_test_dV[i_nSpace]);
+			  
+			  elementJacobian_h_u[i][j] += 
+			    dt*ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]);
+			  
+			  elementJacobian_h_v[i][j] += 
+			    dt*ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]);
+			}
+		      else
+			{
+			  // NOTE: dmass_acc_h_t = 1;
+			  elementJacobian_h_h[i][j] += dt*ck.MassJacobian_weak(dmass_acc_h_t,h_trial_ref[k*nDOF_trial_element+j],h_test_dV[i]);
+			  elementJacobian_h_u[i][j] += 0;
+			  elementJacobian_h_v[i][j] += 0;
+			}
 		      
-		      elementJacobian_h_u[i][j] += 
-			ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]);
-			
-		      elementJacobian_h_v[i][j] += 
-			ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]);
-			
-		      //u
-		      elementJacobian_u_h[i][j] += 
-			ck.MassJacobian_weak(dmom_u_acc_h_t,h_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
-			ck.AdvectionJacobian_weak(dmom_u_adv_h,h_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
-			ck.ReactionJacobian_weak(dmom_u_source_h,h_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
-		      
-		      elementJacobian_u_u[i][j] += 
-			ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
-			ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
-			ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]);
+		      //////////////////////
+		      // u: u_h, u_u, u_v //
+		      //////////////////////
+		      if (IMPLICIT==1)
+			{
+			  elementJacobian_u_h[i][j] += 
+			    dt*ck.MassJacobian_weak(dmom_u_acc_h_t,h_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
+			    dt*ck.AdvectionJacobian_weak(dmom_u_adv_h,h_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
+			    dt*ck.ReactionJacobian_weak(dmom_u_source_h,h_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			  
+			  elementJacobian_u_u[i][j] += 
+			    dt*ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
+			    dt*ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
+			    dt*ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]);
+			  
+			  elementJacobian_u_v[i][j] += 
+			    dt*ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);
+			}
+		      else
+			{
+			  //NOTE: dmom_u_acc_u_t = h_old/dt
+			  dmom_u_acc_u_t = h_old/dt; 
+			  elementJacobian_u_h[i][j] += 0;			  
+			  elementJacobian_u_u[i][j] += dt*ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			  elementJacobian_u_v[i][j] += 0;
+			}
 
-		      elementJacobian_u_v[i][j] += 
-			ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);
-		      			      
-		      //v
-		      elementJacobian_v_h[i][j] += 
-			ck.MassJacobian_weak(dmom_v_acc_h_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
-			ck.AdvectionJacobian_weak(dmom_v_adv_h,h_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
-			ck.ReactionJacobian_weak(dmom_v_source_h,h_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
-		      	
-		      elementJacobian_v_u[i][j] += 
-			ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);
-		      	
-		      elementJacobian_v_v[i][j] += 
-			ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
-			ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
-			ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]);
+		      //////////////////////
+		      // v: v_h, v_u, v_v //
+		      //////////////////////
+		      if (IMPLICIT==1)
+			{
+			  elementJacobian_v_h[i][j] += 
+			    dt*ck.MassJacobian_weak(dmom_v_acc_h_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
+			    dt*ck.AdvectionJacobian_weak(dmom_v_adv_h,h_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
+			    dt*ck.ReactionJacobian_weak(dmom_v_source_h,h_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			  
+			  elementJacobian_v_u[i][j] += 
+			    dt*ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);
+			  
+			  elementJacobian_v_v[i][j] += 
+			    dt*ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
+			    dt*ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
+			    dt*ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]);
+			}
+		      else
+			{
+			  //NOTE: dmom_v_acc_v_t = h_old/dt
+			  dmom_v_acc_v_t = h_old/dt; 
+			  elementJacobian_v_h[i][j] += 0;
+			  elementJacobian_v_u[i][j] += 0;
+			  elementJacobian_v_v[i][j] += 
+			    dt*ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			}
 		    }//j
 		}//i
 	    }//k
