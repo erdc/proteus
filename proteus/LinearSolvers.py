@@ -474,7 +474,8 @@ class KSP_petsc4py(LinearSolver):
         if self.pc != None:
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
-            if self.preconditioner:
+            if self.preconditioner.PCType=='schur':
+                # this should probably live somewhere else?!
                 self.preconditioner.setUp(self.ksp)
                 self.pc.getFieldSplitSubKSP()[1].setPCSide(1)
         self.ksp.setUp()
@@ -590,58 +591,65 @@ class KSP_petsc4py(LinearSolver):
     def _setPreconditioner(self,Preconditioner,par_L,prefix):
         """ Sets the preconditioner type used in the KSP object """
         if Preconditioner != None:
-            if Preconditioner == Jacobi:
-                self.pccontext= Preconditioner(L,
-                                               weight=1.0,
-                                               rtol_r=rtol_r,
-                                               atol_r=atol_r,
-                                               maxIts=1,
-                                               norm = l2Norm,
-                                               convergenceTest='its',
-                                               computeRates=False,
-                                               printInfo=False)
-                self.pc = p4pyPETSc.PC().createPython(self.pccontext)
-            elif Preconditioner == GaussSeidel:
-                self.pccontext= Preconditioner(connectionList,
-                                               L,
-                                               weight=1.0,
-                                               sym=False,
-                                               rtol_r=rtol_r,
-                                               atol_r=atol_r,
-                                               maxIts=1,
-                                               norm = l2Norm,
-                                               convergenceTest='its',
-                                               computeRates=False,
-                                               printInfo=False)
-                self.pc = p4pyPETSc.PC().createPython(self.pccontext)
-            elif Preconditioner == LU:
-                self.pccontext= Preconditioner(L)
-                self.pc = p4pyPETSc.PC().createPython(self.pccontext)
-            elif Preconditioner == StarILU:
-                self.pccontext= Preconditioner(connectionList,
-                                               L,
-                                               weight=1.0,
-                                               rtol_r=rtol_r,
-                                               atol_r=atol_r,
-                                               maxIts=1,
-                                               norm = l2Norm,
-                                               convergenceTest='its',
-                                               computeRates=False,
-                                               printInfo=False)
-                self.pc = p4pyPETSc.PC().createPython(self.pccontext)
-            elif Preconditioner == StarBILU:
-                self.pccontext= Preconditioner(connectionList,
-                                               L,
-                                               bs=linearSolverLocalBlockSize,
-                                               weight=1.0,
-                                               rtol_r=rtol_r,
-                                               atol_r=atol_r,
-                                               maxIts=1,
-                                               norm = l2Norm,
-                                               convergenceTest='its',
-                                               computeRates=False,
-                                               printInfo=False)
-                self.pc = p4pyPETSc.PC().createPython(self.pccontext)
+            if Preconditioner == petsc_LU:
+                logEvent("NAHeader Precondtioner LU")
+                self.preconditioner = petsc_LU(par_L)
+                self.pc = self.preconditioner.pc
+            #ARB - something else needs to be done with these commented out preconditioners,
+            #I've not thought of what just yet. 1-19-17.
+            # if Preconditioner == Jacobi:
+            #     self.pccontext= Preconditioner(L,
+            #                                    weight=1.0,
+            #                                    rtol_r=rtol_r,
+            #                                    atol_r=atol_r,
+            #                                    maxIts=1,
+            #                                    norm = l2Norm,
+            #                                    convergenceTest='its',
+            #                                    computeRates=False,
+            #                                    printInfo=False)
+            #     self.pc = p4pyPETSc.PC().createPython(self.pccontext)
+            # elif Preconditioner == GaussSeidel:
+            #     self.pccontext= Preconditioner(connectionList,
+            #                                    L,
+            #                                    weight=1.0,
+            #                                    sym=False,
+            #                                    rtol_r=rtol_r,
+            #                                    atol_r=atol_r,
+            #                                    maxIts=1,
+            #                                    norm = l2Norm,
+            #                                    convergenceTest='its',
+            #                                    computeRates=False,
+            #                                    printInfo=False)
+            #     self.pc = p4pyPETSc.PC().createPython(self.pccontext)
+            # elif Preconditioner == LU:
+            #     #ARB - parallel matrices from PETSc4py don't work here...
+            #     self.pccontext = Preconditioner(L)
+            #     self.pc = p4pyPETSc.PC().createPython(self.pccontext)
+            # elif Preconditioner == StarILU:
+            #     self.pccontext= Preconditioner(connectionList,
+            #                                    L,
+            #                                    weight=1.0,
+            #                                    rtol_r=rtol_r,
+            #                                    atol_r=atol_r,
+            #                                    maxIts=1,
+            #                                    norm = l2Norm,
+            #                                    convergenceTest='its',
+            #                                    computeRates=False,
+            #                                    printInfo=False)
+            #     self.pc = p4pyPETSc.PC().createPython(self.pccontext)
+            # elif Preconditioner == StarBILU:
+            #     self.pccontext= Preconditioner(connectionList,
+            #                                    L,
+            #                                    bs=linearSolverLocalBlockSize,
+            #                                    weight=1.0,
+            #                                    rtol_r=rtol_r,
+            #                                    atol_r=atol_r,
+            #                                    maxIts=1,
+            #                                    norm = l2Norm,
+            #                                    convergenceTest='its',
+            #                                    computeRates=False,
+            #                                    printInfo=False)
+            #     self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
                 logEvent("NAHeader Preconditioner selfp" )
                 self.preconditioner = SimpleNavierStokes3D(par_L,prefix,self.bdyNullSpace)
@@ -1001,10 +1009,47 @@ class SchurOperatorConstructor:
         #running export_name.m will load into matlab  sparse matrix
         #runnig operatorf = full(Mat_...) will get the full matrix
 
+class KSP_Preconditioner:
+    """ Base class for PETSCc KSP precondtioners.
 
+    """
+    def __init__(self):
+        pass
 
-class SchurPrecon:
-    """ Base class for Schur complement preconditioners.
+    def setup(self):
+        pass
+
+class petsc_LU(KSP_Preconditioner):
+    """ LU PETSc preconditioner class.
+    
+    This class provides an LU preconditioner for PETSc4py KSP
+    objects.  Provided the LU decomposition is successful, the KSP
+    iterative will converge in a single step.
+    """
+    def __init__(self,L,prefix=None):
+        """
+        Initializes the LU preconditioner for use with PETSc.
+
+        Parameters
+        ----------
+        L : the global system matrix.
+        """
+        self.PCType = 'lu'
+        self.L = L
+        self._create_preconditioner()
+        self.pc.setFromOptions()
+
+    def _create_preconditioner(self):
+        """ Create the ksp preconditioner object.  """
+        self.pc = p4pyPETSc.PC().create()
+        self.pc.setType('lu')
+
+    def setUp(self,global_ksp=None):
+        pass
+
+    
+class SchurPrecon(KSP_Preconditioner):
+    """ Base class for PETSc Schur complement preconditioners.
 
     Notes
     -----
@@ -1032,6 +1077,10 @@ class SchurPrecon:
     def _initializeIS(self,prefix):
         """ Sets the index set (IP) for the pressure and velocity 
         
+        Parameters
+        ----------
+        prefix : ???
+
         Notes
         -----
         TODO - this needs to set up to run for TH,Q1Q1, dim = 2 or 3 etc.
@@ -1091,6 +1140,7 @@ class NavierStokesSchur(SchurPrecon):
         SchurPrecon.__init__(self,L,prefix)
         self.operator_constructor = SchurOperatorConstructor(self ,'navier_stokes')
         self.bdyNullSpace = bdyNullSpace
+        # ARB Question - I think boundary null space should be moved into SchurPrecon
 
     def setUp(self,global_ksp=None):
         """
@@ -1101,8 +1151,6 @@ class NavierStokesSchur(SchurPrecon):
         """
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
-        import pdb
-        pdb.set_trace()
         self._setSchurlog(global_ksp)
 
     def _setSchurlog(self,global_ksp):
