@@ -125,4 +125,5 @@ linTolFac = 0.0
 l_atol_res = 1.0e-10
 
 #linearSmoother=SimpleNavierStokes3D
-linearSmoother=NavierStokes3D_Qp
+#linearSmoother=NavierStokes3D_Qp
+linearSmoother=petsc_LU
