@@ -135,12 +135,14 @@ namespace proteus
      double fcos = fastcos(phase);
      double fsin = fastcos(Pihalf_ - phase);
      
+     double C = omega / kAbs;
+     double Udrift = 0.125*9.81*(4*amplitude*amplitude)/(C*depth);
      double UH=amplitude*omega*Uhype*fcos;
      double UV=amplitude*omega*Vhype*fsin;
      //Setting wave direction
      for(int ii=0; ii<nDim ; ii++)
        {
-	 U[ii] += UH*waveDir[ii] + UV*vDir[ii];
+	 U[ii] += (UH-Udrift)*waveDir[ii] + UV*vDir[ii];
        }
 
    }
