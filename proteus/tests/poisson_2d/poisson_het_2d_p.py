@@ -1,5 +1,6 @@
 from proteus import *
 from proteus.default_p import *
+reload(default_p)
 """
 Heterogeneous Poisson's equations for one component (uncoupled) in 2D
 """
