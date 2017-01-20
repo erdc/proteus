@@ -158,9 +158,17 @@ class TestAuxFunctions(unittest.TestCase):
         amplitude =0.2
         eta = amplitude*cos(kDir[0]*x+kDir[1]*y+kDir[2]*z - omega*t +phi)
         self.assertTrue((eta - eta_mode([x,y,z],t,kDir,omega,phi,amplitude)==0.))# check eta
-                  
+    
+    def testUdrift(self):
+        from proteus.WaveTools import Udrift
+        amp = 0.1
+        gAbs = 9.81
+        c = 1.
+        height = 2.*amp
+        depth = 1
+        self.assertTrue(gAbs*H**2/c/depth == Udrift(amp,gAbs,c,depth)
     def testVelMode(self): # Checking particle velocities
-        from proteus.WaveTools import vel_mode
+        from proteus.WaveTools import vel_mode, Udrift
 
         kDir = np.array([2*pi,0.0,0.0])# Wavelength == 1
         omega = 2*pi
@@ -175,9 +183,11 @@ class TestAuxFunctions(unittest.TestCase):
         vDir = np.array([0,0,1])
         t= 0.
         kAbs = 2*pi
+        Ud = Udrift(amplitude,abs(g[-1]),omega/kAbs,depth)
         for i in range(4):
             U_x, U_y, U_z = vel_mode([x,y,z],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir)
             x+= 0.25
+            U_x = U_x+Ud
             # Checking velocity signs with quadrants
             if i ==0:
                 #1st Quadrant
@@ -195,7 +205,7 @@ class TestAuxFunctions(unittest.TestCase):
 #Checking vertical coherency
 # U_z = 0 at z = mwl-d
         self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir)[2]==0.)                  
-
+        
     def testTophat(self):
         from proteus.WaveTools import tophat
         a  = np.random.rand(100)
