@@ -77,7 +77,7 @@ class D_base:
             self.L += [xMax-xMin]
 
 
-    def writeGeo(self, fileprefix, group_names=False):
+    def writeGeo(self, fileprefix, group_names=False, he_max=None):
         """
         Write the PSLG using gmsh geo format incomplete write now
         probably run into problems with orientation, no concept of a
@@ -85,9 +85,9 @@ class D_base:
         embedding the 2d geometry in 3d and xref is the constant value
         for that axis
         """
-        self.geofile = fileprefix+'.geo'
+        self.geofile = fileprefix
         self.polyfile = fileprefix
-        geo = open(self.geofile,'w')
+        geo = open(self.geofile+'.geo','w')
         pp = {}  # physical points
         pl = {}  # physical lines
         ps = {}  # physical surfaces
@@ -95,7 +95,6 @@ class D_base:
         sN = len(self.segments)
 
         # Vertices
-        print self.vertices
         geo.write('\n// Points\n')
         z = 0
         for i, v in enumerate(self.vertices):
@@ -213,7 +212,16 @@ class D_base:
                 flag = '"'+inv_bt[flag]+'", '+str(flag)
             geo.write("Physical Volume({0}) = {{{1}}};\n".format(str(flag), str(ind)[1:-1]))
 
+        geo.write('\n// Other Options\n')
+        if he_max is not None:
+            geo.write('Mesh.CharacteristicLengthMax = {0};\n'.format(he_max))
+
+
     def gmsh2proteus(self, geofile, BC_class):
+        """
+        Populates the boundaryTags and BC dictionaries of the domain by importing tag and 
+        flags from .geo file.
+        """
         self.boundaryTags = getGmshPhysicalGroups(geofile)
         self.BC = {}
         self.BCbyFlag = {}
