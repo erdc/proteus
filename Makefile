@@ -261,11 +261,6 @@ check:
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
-	@echo "************************"
-	@echo "SCOREC-Proteus Test"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/meshLoad/meshLoad.py
-	@echo "************************"
-  
 	@echo "SCOREC-Gmsh Flow Test"
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_gmshLoadAndAdapt/gmshCheck.py
 	@echo "************************"
