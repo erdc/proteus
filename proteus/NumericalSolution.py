@@ -240,16 +240,16 @@ class NS_base:  # (HasTraits):
 
             elif isinstance(p.domain,Domain.PlanarStraightLineGraphDomain):
                 if p.domain.MeshOptions.use_gmsh is True:
-                    if comm.isMaster() and(p.genMesh or not (os.path.exists(p.domain.polyfile+".ele") and
-                                                             os.path.exists(p.domain.polyfile+".node") and
-                                                             os.path.exists(p.domain.polyfile+".edge"))):
+                    if comm.isMaster() and (p.genMesh or not (os.path.exists(p.domain.geofile+".ele") and
+                                                              os.path.exists(p.domain.geofile+".node") and
+                                                              os.path.exists(p.domain.geofile+".edge"))):
                         logEvent("Running gmsh to generate 2D mesh for "+p.name,level=1)
-                        gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh -clmax {2:f}".format(p.domain.geofile, p.domain.polyfile+".msh", p.domain.MeshOptions.he)
+                        gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh".format(p.domain.geofile+".geo", p.domain.geofile+".msh")
                         logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
                         check_call(gmsh_cmd, shell=True)
                         logEvent("Done running gmsh; converting to triangle")
                         from proteus.gmsh2triangle import msh2triangle
-                        msh2triangle(p.domain.polyfile)
+                        msh2triangle(p.domain.geofile)
 
                     comm.barrier()
                     mesh = MeshTools.TriangularMesh()
@@ -259,12 +259,12 @@ class NS_base:  # (HasTraits):
                     logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
                     if opts.generatePartitionedMeshFromFiles:
                         logEvent("Generating partitioned mesh from Triangle files")
-                        mlMesh.generatePartitionedMeshFromTetgenFiles(p.domain.polyfile,nbase,mesh,n.nLevels,
+                        mlMesh.generatePartitionedMeshFromTetgenFiles(p.domain.geofile,nbase,mesh,n.nLevels,
                                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                       parallelPartitioningType=n.parallelPartitioningType)
                     else:
                         logEvent("Generating coarse global mesh from Triangle files")
-                        mesh.generateFromTriangleFiles(filebase=p.domain.polyfile,base=1)
+                        mesh.generateFromTriangleFiles(filebase=p.domain.geofile,base=1)
                         logEvent("Generating partitioned %i-level mesh from coarse global Triangle mesh" % (n.nLevels,))
                         mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                               nLayersOfOverlap=n.nLayersOfOverlapForParallel,
