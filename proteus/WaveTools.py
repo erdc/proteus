@@ -35,6 +35,7 @@ __all__ = ['MonochromaticWaves',
            'returnRectangles3D',
            'normIntegral',
            'eta_mode',
+           'Udrift',
            'vel_mode',
            'sigma',
            'JONSWAP',
@@ -313,8 +314,29 @@ def eta_mode(x, t, kDir, omega, phi, amplitude):
     """
     phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
     return amplitude*cos(phase)
+def Udrift(amp,gAbs,c,d):
+    """Calculates the 2nd order Stokes drift for a linear mode 
 
-def  vel_mode(x,  t, kDir, kAbs,  omega,  phi,  amplitude,  mwl, depth, vDir):
+    Parameters
+    ----------
+    amp : float
+        Description: Wave amplitude
+    gAbs : float
+        Magnitude of gravitational acceleration
+    c : float
+        Wave celerity
+    d : float
+        Water depth
+
+
+    Returns
+    --------
+    float
+        Magnitude of the mean velocity drift
+    """
+    return 0.5*amp*amp/c/d
+
+def  vel_mode(x,  t, kDir, kAbs,  omega,  phi,  amplitude,  mwl, depth, vDir, gAbs):
     """Calculates the wave velocity components for a single frequency mode
 
     Parameters
@@ -355,6 +377,7 @@ def  vel_mode(x,  t, kDir, kAbs,  omega,  phi,  amplitude,  mwl, depth, vDir):
     UH=amplitude*omega*cosh(kAbs*(Z + depth))*cos( phase )/sinh(kAbs*depth)
     UV=amplitude*omega*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth)
     waveDir = kDir/kAbs
+    UH = UH - Udrift(amplitude,gAbs,omega/kAbs,depth)
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
     V = np.array([UH*waveDir[0]+UV*vDir[0],
                   UH*waveDir[1]+UV*vDir[1],
@@ -783,7 +806,7 @@ class  MonochromaticWaves:
 
 
     def  uLinear(self, U, x,  t):        
-        __cpp_vel_mode_p(U, x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.tanhL)
+        __cpp_vel_mode_p(U, x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.tanhL, self.gAbs)
 
     def  uFenton(self,  U, x,  t):
         __cpp_uFenton(U,x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_, self.tanhF_)
@@ -1014,7 +1037,7 @@ class RandomWaves:
         return self._cpp_eta(xx,t)
 
     def _cpp_u(self,  U, x,  t):
-        __cpp_uRandom(U, x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.N, self.waveDir_, self.vDir_, self.tanh_)
+        __cpp_uRandom(U, x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.N, self.waveDir_, self.vDir_, self.tanh_, self.gAbs)
 
     def u(self, x, t):
         """Calculates wave velocity vector (RandomWaves class)
@@ -1262,7 +1285,7 @@ class MultiSpectraRandomWaves:
 
     def _cpp_u(self,  U, x,  t):
 
-        __cpp_uDir(U, x,t,self.kDirM_, self.kiM_, self.omegaM_,self.phiM_,self.aiM_,self.mwl,self.depth, self.Nall, self.waveDirM_, self.vDir_, self.tanhM_)
+        __cpp_uDir(U, x,t,self.kDirM_, self.kiM_, self.omegaM_,self.phiM_,self.aiM_,self.mwl,self.depth, self.Nall, self.waveDirM_, self.vDir_, self.tanhM_, self.gAbs)
 
     def u(self, x, t):
         """Calculates wave velocity vector (RandomWaves class)
@@ -1509,7 +1532,7 @@ class DirectionalWaves:
 
     def _cpp_u(self,U,  x,  t):
 
-        __cpp_uDir(U, x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.Nall, self.waveDir_, self.vDir_, self.tanh_)
+        __cpp_uDir(U, x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.Nall, self.waveDir_, self.vDir_, self.tanh_, self.gAbs)
 
     def u(self, x, t):
         """Calculates wave velocity vector (RandomWaves class)
@@ -1925,7 +1948,7 @@ class TimeSeries:
     def _cpp_etaDirect(self,x,t):
         return __cpp_etaDirect(x,self.x0_,t,self.kDir_,self.omega_,self.phi_,self.ai_,self.Nf)
     def _cpp_uDirect(self,U,x,t):
-        __cpp_uDirect(U,x,self.x0_,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,self.waveDir_, self.vDir_, self.tanh_)
+        __cpp_uDirect(U,x,self.x0_,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,self.waveDir_, self.vDir_, self.tanh_, self.gAbs)
 
     def etaDirect(self, x, t):
 
@@ -2001,7 +2024,7 @@ class TimeSeries:
         return __cpp_etaWindow(x,self.x0_,t,self.T0_,self.kDir_,self.omega_,self.phi_,self.ai_,self.Nf,Nw)
     def _cpp_uWindow(self,U, x,t):
         Nw = __cpp_findWindow(t,self.handover, self.t0,self.Twindow,self.Nwindows, self.whand_) #Nw
-        __cpp_uWindow(U,x,self.x0_,t,self.T0_,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,Nw,self.waveDir_, self.vDir_, self.tanh_)
+        __cpp_uWindow(U,x,self.x0_,t,self.T0_,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,Nw,self.waveDir_, self.vDir_, self.tanh_, self.gAbs)
 
     def etaWindow(self, x, t):
         """Calculates free surface elevation(Timeseries class-window method
