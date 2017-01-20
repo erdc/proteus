@@ -59,7 +59,7 @@ class NS_base:  # (HasTraits):
        }
     """
 
-    def __init__(self, so,pList,nList,sList,opts,simFlagsList=None):
+    def __init__(self,so,pList,nList,sList,opts,simFlagsList=None):
         import Comm
         comm=Comm.get()
         self.comm=comm
@@ -344,16 +344,24 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.MeshTetgenDomain):
+                nbase = 1
                 mesh=MeshTools.TetrahedralMesh()
                 logEvent("Reading coarse mesh from tetgen file")
-                mesh.generateFromTetgenFiles(p.domain.meshfile,1)
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                              parallelPartitioningType=n.parallelPartitioningType)
-                logEvent("Generating %i-level mesh from coarse Tetgen mesh" % (n.nLevels,))
-                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
-                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                      parallelPartitioningType=n.parallelPartitioningType)
+                if opts.generatePartitionedMeshFromFiles:
+                    logEvent("Generating partitioned mesh from Tetgen files")
+                    mlMesh.generatePartitionedMeshFromTetgenFiles(p.domain.meshfile,nbase,mesh,n.nLevels,
+                                                                  nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                  parallelPartitioningType=n.parallelPartitioningType)
+                else:
+                    logEvent("Generating coarse global mesh from Tetgen files")
+                    mesh.generateFromTetgenFiles(p.domain.polyfile,nbase,parallel = comm.size() > 1)
+                    logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
+                    mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.Mesh3DMDomain):
                 mesh=MeshTools.TetrahedralMesh()
                 logEvent("Reading coarse mesh from 3DM file")
@@ -479,17 +487,15 @@ class NS_base:  # (HasTraits):
         self.nlsList=[]
         from collections import OrderedDict
         self.modelSpinUp = OrderedDict()
-        #
         for p in pList:
             p.coefficients.opts = self.opts
             if p.coefficients.sdInfo == {}:
-                for ci,ckDict in p.coefficients.diffusion.iteritems():
-                    for ck in ckDict.keys():
-                        if not p.coefficients.sdInfo.has_key((ci,ck)):
-                            p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
-                                                              numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
-                            logEvent("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`p.coefficients.sdInfo[(ci,ck)]`)
-
+                 for ci,ckDict in p.coefficients.diffusion.iteritems():
+                     for ck in ckDict.keys():
+                         if not p.coefficients.sdInfo.has_key((ci,ck)):
+                             p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
+                                                               numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
+                             logEvent("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`p.coefficients.sdInfo[(ci,ck)]`)
         for p,n,s,mlMesh,index in zip(pList,nList,sList,mlMesh_nList,range(len(pList))):
             if so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True
@@ -698,8 +704,17 @@ class NS_base:  # (HasTraits):
         for index,m in self.modelSpinUp.iteritems():
             spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
+            logEvent("Attaching models to model "+p.name)
+            m.attachModels(self.modelList)
             if index not in self.modelSpinUp:
                 spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
+        for m in self.modelList:
+            for lm,lu,lr in zip(m.levelModelList,
+                                m.uList,
+                                m.rList):
+                #calculate the coefficients, any explicit-in-time
+                #terms will be wrong
+                lm.getResidual(lu,lr)
         for p,n,m,simOutput in spinup:
             logEvent("Attaching models to model "+p.name)
             m.attachModels(self.modelList)

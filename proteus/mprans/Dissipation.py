@@ -4,11 +4,16 @@ from proteus.mprans.cDissipation2D import *
 
 """
 NOTES:
-  Hardwired Numerics include: 
-   lagging all terms from Navier-Stokes, Kappa equations
-   same solution space for velocity from Navier-Stokes and Dissipation equations
-     This can be removed by saving gradient calculations in N-S and lagging
-     rather than passing degrees of freedom between models
+
+Hardwired Numerics include:
+
+lagging all terms from Navier-Stokes, Kappa equations
+
+same solution space for velocity from Navier-Stokes and Dissipation
+equations     
+
+This can be removed by saving gradient calculations in N-S and lagging
+rather than passing degrees of freedom between models
 
 """
 
@@ -61,65 +66,69 @@ class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIP
                                                                                         getDiffusiveFluxBoundaryConditions)
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
+    """Basic k-epsilon model for incompressible flow from Hutter etal
+Chaper 11 or k-omega (Wilcox 1998). 
+
     """
-Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
- or k-omega (Wilcox 1998). Solves for just dissipation variable (epsilon, or omega) assuming kappa (intensity) computed independently and lagged in time
+#     Solves for just dissipation variable (epsilon, or omega) assuming
+#     kappa (intensity) computed independently and lagged in time
 
-\bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-\vec v^{'}   = turbulent fluctuation 
-assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
+#     \bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
+#     \vec v^{'}   = turbulent fluctuation 
 
-Reynolds averaged NS equations
+#      assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
 
-\deld \bar{\vec v} = 0
+# Reynolds averaged NS equations
 
-\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right) 
-               -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p  
-               - \frac{1}{rho}\deld \ten{R} = 0
+# \deld \bar{\vec v} = 0
 
-Reynolds stress term
+# \pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right) 
+#                -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p  
+#                - \frac{1}{rho}\deld \ten{R} = 0
 
-\ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
-\frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+# Reynolds stress term
 
-D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
-\ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
+# \ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
+# \frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
 
-
-
-k-epsilon tranport equations
-
-\pd{k}{t} + \deld (k\bar{\vec v}) 
-          - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
-          - 4\nu_t \Pi_{D} + \epsilon = 0
-
-\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v}) 
-          - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
-          - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
+# D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
+# \ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
 
 
-k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
-\varepsilon    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
 
-\nu            -- kinematic viscosity (\mu/\rho)
-\nu_t          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
+# k-epsilon tranport equations
+
+# \pd{k}{t} + \deld (k\bar{\vec v}) 
+#           - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
+#           - 4\nu_t \Pi_{D} + \epsilon = 0
+
+# \pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v}) 
+#           - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
+#           - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
 
 
-\Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
-\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
-                                        1/2 (u_y + v_x)^2 \right]
+# k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
+# \varepsilon    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
+
+# \nu            -- kinematic viscosity (\mu/\rho)
+# \nu_t          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
+
+
+# \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
+# \ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
+#                                         1/2 (u_y + v_x)^2 \right]
    
-4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
-                                1/2 (u_y + v_x)^2 \right]
-          = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
+# 4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
+#                                 1/2 (u_y + v_x)^2 \right]
+#           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
 
-\sigma_k -- Prandtl number \approx 1
-\sigma_e -- c_{\mu}/c_e
+# \sigma_k -- Prandtl number \approx 1
+# \sigma_e -- c_{\mu}/c_e
 
-c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
+# c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
 
 
-    """
+#     """
 
     from proteus.ctransportCoefficients import kEpsilon_k_3D_Evaluate_sd
     from proteus.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
