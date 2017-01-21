@@ -568,13 +568,15 @@ class PCDInv_shell(InvOperatorShell):
 
         Parameters
         ----------
-        A : matrix
+        A : None
             Dummy variable needed to interface with PETSc.
-        x : vector
+        x : petsc4py vector
+            Vector to which operator is being applied.
 
         Returns
         -------
-        y : vector
+        y : petsc4py vector
+            Result of operator acting on x.
         """
         temp1 = p4pyPETSc.Vec().create()
         temp1.setType('seq')
@@ -582,9 +584,9 @@ class PCDInv_shell(InvOperatorShell):
         temp2.setType('seq')
         temp1 = y.copy()
         temp2 = y.copy()
-        self.kspQp.solve(x,temp1)
+        self.kspAp.solve(x,temp1)
         self.Fp.mult(temp1,temp2)
-        self.kspAp.solve(temp2,y)
+        self.kspQp.solve(temp2,y)
 
 
 

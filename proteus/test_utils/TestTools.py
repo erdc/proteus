@@ -306,9 +306,8 @@ class NumericResults:
         else:
             self._init_ipython_plot(plot_data,legend,title)
 
-class SimulationTest():
-    """ A base class for simulation based tests. """
-
+class BasicTest():
+    """ A base class for tests. """
     @classmethod
     def setup_class(cls):
         pass
@@ -322,6 +321,9 @@ class SimulationTest():
 
     def teardown_method(self,method):
         pass
+    
+class SimulationTest(BasicTest):
+    """ A base class for simulation based tests. """
 
     @staticmethod
     def remove_files(filelist):
