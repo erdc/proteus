@@ -86,13 +86,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  sd=True,
                  movingDomain=False,
                  useRBLES=0.0,
-		 useMetrics=0.0):
+		 useMetrics=0.0,
+                 modelIndex=0):
         self.useRBLES=useRBLES
         self.useMetrics=useMetrics
         self.sd=sd
         self.nu = nu
         self.g = g
         self.nd=nd
+        self.modelIndex=modelIndex
         mass={}
         advection={}
         diffusion={}
@@ -141,7 +143,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              movingDomain=movingDomain)
             self.vectorComponents=[1,2]
     def attachModels(self,modelList):
-        pass
+        self.model = modelList[self.modelIndex]
+        #pass
     def initializeMesh(self,mesh):
         pass
     def initializeElementQuadrature(self,t,cq):
@@ -154,6 +157,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
     def evaluate(self,t,c):
         pass
+    def preStep(self,t,firstStep=False):
+        self.model.h_dof_old[:] = self.model.u[0].dof
+        self.model.hu_dof_old[:] = self.model.u[1].dof
+        self.model.hv_dof_old[:] = self.model.u[2].dof
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls=0
@@ -380,6 +387,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global={}
         self.ebqe={}
         self.phi_ip={}
+        # Old DOFs (MQL)
+        self.h_dof_old = self.u[0].dof.copy()
+        self.hu_dof_old = self.u[1].dof.copy()
+        self.hv_dof_old = self.u[2].dof.copy()
         #mesh
         self.h_dof_sge = self.u[0].dof.copy()
         self.hu_dof_sge = self.u[1].dof.copy()
@@ -623,7 +634,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #import pdb
         #pdb.set_trace()
-        self.sw2d.calculateResidual(#element
+        self.sw2d.calculateResidual_invariant_domain_SWEs(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -663,6 +674,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.g,
             self.u[0].femSpace.dofMap.l2g,
             self.u[1].femSpace.dofMap.l2g,
+            self.h_dof_old,
+            self.hu_dof_old,
+            self.hv_dof_old,
             self.coefficients.b.dof,
             self.u[0].dof,
             self.u[1].dof,
@@ -745,7 +759,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getJacobian(self,jacobian):
 	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
 				       jacobian)
-        self.sw2d.calculateJacobian(#element
+        self.sw2d.calculateJacobian_invariant_domain_SWEs(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
