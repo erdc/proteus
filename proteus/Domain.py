@@ -7,7 +7,6 @@ A class hierarchy and tools for building domains of PDE's.
 
 import sys
 import numpy as np
-from proteus.MeshTools import MeshParallelPartitioningTypes as mpt
 from .Profiling import logEvent
 
 class D_base:
@@ -47,16 +46,17 @@ class D_base:
         # needed for gmsh
         self.volumes = []
         self.boundaryTags = {}
-        self.BCbyFlag = {}
         self.BC = {}
-        # attach a MeshOption class
-        self.MeshOptions = MeshOptions(self.nd)
+        self.BCbyFlag = {}
+        # use_gmsh hack
+        self.use_gmsh = False
 
     def writeAsymptote(self, fileprefix):
         """
         Write a representation of the domain to file using the Asymptote vector graphics language.
         """
         raise UserWarning("Asymptote output not implemented")
+
     def writeXdmf(self,ar):
         """
         Store the domain in an Xdmf file.
@@ -76,14 +76,20 @@ class D_base:
             self.x += [xMin]
             self.L += [xMax-xMin]
 
-
     def writeGeo(self, fileprefix, group_names=False, he_max=None):
         """
-        Write the PSLG using gmsh geo format incomplete write now
-        probably run into problems with orientation, no concept of a
-        line loop dummyAxis (0,1,2) is the remaining axis for
-        embedding the 2d geometry in 3d and xref is the constant value
-        for that axis
+        Writes a Gmsh .geo file based on the geometrical information of the
+        Domain.
+
+        Parameters
+        ----------
+        fileprefix: str
+            Name of the file to save (prefix without .geo)
+        group_names: Optional[bool]
+            True to write name of physical groups in .geo (default: False) 
+        he_max: Optional[double]
+            Size of the maximum characteristic element size. Should be set
+            for meshes using a uniform refinement.
         """
         self.geofile = fileprefix
         self.polyfile = fileprefix
@@ -221,6 +227,13 @@ class D_base:
         """
         Populates the boundaryTags and BC dictionaries of the domain by importing tag and 
         flags from .geo file.
+
+        Parameters
+        ----------
+        geofile: str
+            Name of the geofile
+        BC_class: proteus.BoundaryConditions.BC_Base
+            Bounday Conditions class to populate BC dictionaries 
         """
         self.boundaryTags = getGmshPhysicalGroups(geofile)
         self.BC = {}
@@ -228,56 +241,6 @@ class D_base:
         for tag, flag in self.boundaryTags.items():
             self.BC[tag] = BC_class(nd=self.nd)
             self.BCbyFlag[flag] = self.BC[tag]
-
-
-
-
-class MeshOptions:
-    """
-    Mesh options for the domain
-    """
-    def __init__(self, nd):
-        self.nd = nd
-        self.he = None
-        self.genMesh = True
-        self.use_gmsh = False
-        self.outputFiles = {'name': 'mesh',
-                            'poly': True,
-                            'ply': False,
-                            'asymptote': False}
-        self.restrictFineSolutionToAllMeshes = False
-        self.parallelPartitioningType = mpt.node
-        self.nLayersOfOverlapForParallel = 0
-        if self.nd == 2:
-            self.triangle_string = 'VApq30Dena'
-        if self.nd == 3:
-            self.triangle_string = 'VApq1.35q12feena'
-        self.triangleOptions = None  # defined when setTriangleOptions called
-
-    def elementSize(self, he, refinement_lvl=0.):
-        self.he = he*0.5**refinement_lvl
-
-    def parallelPartitioningType(self, type='node', layers_overlap=0):
-        if type == 'element' or 0:
-            self.parallelPartitioningType = mpt.element
-        if type == 'node' or 1:
-            self.parallelPartitioningType = mpt.node
-        self.nLayersOfOverlapForParallel = layers_overlap
-
-    def setTriangleOptions(self):
-        if self.he is None:
-            self.he = 1.
-        if self.nd == 2:
-            self.triangleOptions = self.triangle_string + '%8.8f' \
-                                   % (self.he**2/2.,)
-        elif self.nd == 3:
-            self.triangleOptions = self.triangle_string + '%21.16e' \
-                                   % (self.he**3/6.,)
-    def outputFiles(self, name='mesh', poly=True, ply=False, asymptote=False):
-        self.outputFiles['name'] = name
-        self.outputFiles['poly'] = poly
-        self.outputFiles['ply'] = ply
-        self.outputFiles['asymptote'] = asymptote
 
 
 class RectangularDomain(D_base):
@@ -929,7 +892,6 @@ class PiecewiseLinearComplexDomain(D_base):
             self.regionConstraints = regionConstraints or []
             self.regionLegend = {}
             self.boundaryFlags = {}
-            import numpy as np
             self.update()
 
     def update(self):
