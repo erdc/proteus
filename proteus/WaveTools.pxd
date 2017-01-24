@@ -38,6 +38,7 @@ ctypedef void (*cfvel) (MonochromaticWaves, double*, double* , double )
 cdef class  MonochromaticWaves:
     cdef np.ndarray g,waveDir,vDir,Ycoeff,Bcoeff,kDir,tanhF,mV
     cdef double gAbs,phi,depth,omega,k,phi0,tanhL,amplitude
+    cdef int Nf					
     cdef double* kDir_
     cdef double* waveDir_
     cdef double* vDir_
@@ -92,6 +93,7 @@ cdef class RandomWaves:
 
 
 cdef class MultiSpectraRandomWaves:
+    cdef double gAbs
     cdef int Nall,N
     cdef np.ndarray g,vDir,waveDir,omegaM,phiM,kiM,kDirM,tanhFM,aiM
     cdef double * vDir_
@@ -116,6 +118,7 @@ cdef class MultiSpectraRandomWaves:
     cdef void _cpp_u(self, double* U, double* x, double t)
 
 cdef class DirectionalWaves:
+    cdef double gAbs
     cdef int Nall,Mtot,N
     cdef np.ndarray vDir,omega,tanh,waveDir0,waveDirs,phiDirs,aiDirs,ki,kDirs,tanhF
     cdef double * vDir_
