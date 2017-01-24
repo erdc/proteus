@@ -96,10 +96,16 @@ def fastsinh_test(k,Z):
 
 
 def coshkzd_test(k,Z,d):
-    return fastcosh_test(k,Z) / np.tanh(k*d) + fastsinh_test(k,Z)
+    if (Z > -d/2.):
+        return fastcosh_test(k,Z) / np.tanh(k*d) + fastsinh_test(k,Z)
+    else:
+        return 0. 
 
 def sinhkzd_test(k,Z,d):
-    return fastcosh_test(k,Z) + fastsinh_test(k,Z) / np.tanh(k*d)
+    if (Z> -d/2.):
+        return fastcosh_test(k,Z) + fastsinh_test(k,Z) / np.tanh(k*d)
+    else:
+        return 0. 
 
 def loadExistingFunction(funcName, validFunctions):
     """Checks if a function name is known function and returns it
@@ -334,7 +340,7 @@ def Udrift(amp,gAbs,c,d):
     float
         Magnitude of the mean velocity drift
     """
-    return 0.5*amp*amp/c/d
+    return 0.5*gAbs*amp*amp/c/d
 
 def  vel_mode(x,  t, kDir, kAbs,  omega,  phi,  amplitude,  mwl, depth, vDir, gAbs):
     """Calculates the wave velocity components for a single frequency mode
@@ -438,7 +444,7 @@ def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
     r = np.exp(-(Tp*f-1.)**2/(2.*sigma(f,f0)**2))
     tma = 1.
     if TMA:
-        if (depth == None):
+        if (depth is None):
             logEvent("Wavetools:py. Provide valid depth definition definition for TMA spectrum")
             logEvent("Wavetools:py. Stopping simulation")
             sys.exit(1)
@@ -949,7 +955,7 @@ class RandomWaves:
         self.fi = np.linspace(fmin,fmax,self.N)
         self.omega = 2.*M_PI*self.fi
         self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
-        if phi == None:
+        if phi is None:
             self.phi = 2.0*M_PI*np.random.random(self.fi.shape[0])
             logEvent('INFO Wavetools.py: No phase array is given. Assigning random phases. Outputing the phasing of the random waves')
         else:
@@ -966,7 +972,7 @@ class RandomWaves:
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim = reduceToIntervals(self.fi,self.df)
         self.fim = fim
-        if (spectral_params == None):
+        if (spectral_params is None):
             self.Si_Jm = spec_fun(fim,self.fp,self.Hs)
         else:
             try:
@@ -1193,7 +1199,7 @@ class MultiSpectraRandomWaves:
         self.depth = depth
         self.g = np.array(g)
         self.vDir = setVertDir(g)
-
+        self.gAbs = sqrt(g[0]*g[0]+g[1]*g[1]+g[2]*g[2])
 
         for nn in N:
             self.Nall+=nn
@@ -1425,7 +1431,7 @@ class DirectionalWaves:
         self.waveDirs = np.zeros((2*M+1,3),)
         self.phiDirs = np.zeros((2*M+1,N),)
         self.aiDirs = np.zeros((2*M+1,N),)
-
+        self.gAbs = sqrt(g[0]*g[0]+g[1]*g[1]+g[2]*g[2])
 
         temp_array = np.zeros((1,3),)
         temp_array[0,:] = waveDir0
@@ -1439,7 +1445,7 @@ class DirectionalWaves:
 
 
 # Initialising phasing
-        if phi == None:
+        if phi is None:
             self.phiDirs = 2.0*M_PI*np.random.rand(self.Mtot,RW.fi.shape[0])
         elif np.shape(phi) == (2*M+1,RW.fi.shape[0]):
             self.phiDirs = phi
@@ -1455,7 +1461,7 @@ class DirectionalWaves:
 
 
         theta_m = reduceToIntervals(thetas,dth)
-        if (spread_params == None):
+        if (spread_params is None):
             Si_Sp = spread_fun(theta_m,RW.fim)
         else:
             try:
@@ -1763,7 +1769,7 @@ class TimeSeries:
 
                 # Spectral windowing
         else:
-            if (window_params==None):
+            if (window_params is None):
                 logEvent("ERROR! WaveTools.py: Set parameters for spectral windowing. Argument window_params must be a dictionary")
                 sys.exit(1)
             try:
