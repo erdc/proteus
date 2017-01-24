@@ -22,8 +22,11 @@ __all__ = ['MonochromaticWaves',
            'RandomWavesFast',
            'RandomNLWaves',
            'RandomNLWavesFast',
-           'fastcos',
-           'fastcosh',
+           'fastcos_test',
+           'fastcosh_test',
+           'fastsinh_test',
+           'coshkzd_test',
+           'sinhkzd_test',
            'loadExistingFunction',
            'setVertDir',
            'loadExistingFunction',
@@ -54,10 +57,12 @@ def fastcos_test(phase,sinus=False):
     ----------
     phase : double
             Phase  
-
+    sinus : bool
+            Switch for cosine or sine calculation
+    
     Returns
     --------
-    cos(phi)
+    cos(phi) or sin(phi)
 
     """
     if(sinus):
@@ -67,12 +72,13 @@ def fastcosh_test(k,Z):
     """Fast hyperbolic cosine function with Taylor approximation - TO BE USED FOR TESTING"
     Parameters
     ----------
-    phase : double
-            Phase  
-
+    k : double
+        Wavenumber
+    Z : double
+        Z coordinate
     Returns
     --------
-    cos(phi)
+    cosh(k*z)
 
     """
     cython.declare(xx=cython.double[2])
@@ -82,12 +88,13 @@ def fastsinh_test(k,Z):
     """Fast hyperbolic sine function with Taylor approximation - TO BE USED FOR TESTING"
     Parameters
     ----------
-    phase : double
-            Phase  
-
+    k : double
+        Wavenumber
+    Z : double
+        Z coordinate
     Returns
     --------
-    cos(phi)
+    sinh(k*z)
 
     """
     cython.declare(xx=cython.double[2])
@@ -96,12 +103,45 @@ def fastsinh_test(k,Z):
 
 
 def coshkzd_test(k,Z,d):
+    """Calculation of u horizontal profile cosh(k(d+Z))/sinh(kd) using fast appoximaitons
+    and hyp trig relation cosh(a+b) = cosha*coshb+sinha*sinhb
+    Parameters
+    ----------
+    ----------
+    k : double
+        Wavenumber
+    Z : double
+        Z coordinate
+    d : double
+        depth
+    Returns
+    --------
+    cosh(k*(z+d))/sinh(kd) for Z>-d/2, 0 otherwise
+
+    """
     if (Z > -d/2.):
         return fastcosh_test(k,Z) / np.tanh(k*d) + fastsinh_test(k,Z)
     else:
         return 0. 
 
 def sinhkzd_test(k,Z,d):
+    """Calculation of v vertical profile cosh(k(d+Z))/sinh(kd) using fast appoximaitons
+    and hyp trig relation sinh(a+b) = sinha*coshb+cosha*sinhb
+    Parameters
+    ----------
+    ----------
+    k : double
+        Wavenumber
+    Z : double
+        Z coordinate
+    d : double
+        depth
+    Returns
+    --------
+    sinh(k*(z+d))/sinh(kd) for Z>-d/2, 0 otherwise
+
+    """
+
     if (Z> -d/2.):
         return fastcosh_test(k,Z) + fastsinh_test(k,Z) / np.tanh(k*d)
     else:
