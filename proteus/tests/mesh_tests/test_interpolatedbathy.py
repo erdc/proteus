@@ -24,6 +24,7 @@ class TestInterpolatedBathy():
         filenames = []
         for aux_name in self.aux_names:
             filenames.extend([aux_name+'.'+post for post in ['xmf','h5','2dm']])
+            filenames.extend([aux_name+'0.'+post for post in ['xmf','h5','2dm']])
         filenames.extend(['tetgen'+'.'+post for post in ['ele','node','face']])
         filenames.extend(['proteus_default.log','interpolatedBathySimpleTest.poly'])
         for f in filenames:

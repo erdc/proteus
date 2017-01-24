@@ -479,7 +479,6 @@ class NS_base:  # (HasTraits):
         Profiling.memory("Mesh")
         from collections import OrderedDict
         self.modelSpinUp = OrderedDict()
-        #
         for p in pList:
             p.coefficients.opts = self.opts
             if p.coefficients.sdInfo == {}:

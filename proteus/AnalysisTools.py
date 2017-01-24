@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import signal as sn
-from pylab import *
+#from pylab import *
 import collections as cll
 import csv
 from proteus import WaveTools as WT

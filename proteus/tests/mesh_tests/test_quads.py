@@ -73,7 +73,8 @@ class Test2DStokesOnQuads():
                     "reference_simplex.poly",
                     "proteus.log",
                     "poiseulleFlow.xmf",
-                    "poiseulleFlow.h5"]
+                    "poiseulleFlow.h5",
+                    "poiseulleFlow0.h5"]
         TestTools.closeFiles(Filelist)
        
     def test_01_FullRun(self):

@@ -10,17 +10,22 @@ import pytest
 
 import cython
 
-
 comm = Comm.init()
 Profiling.procID = comm.rank()
 def getpath():
-    path =str(os.getcwd())
-    if "tests" in path[-6:]:
-        path =""
-    else:
-        path = path+"/proteus/tests/"
+    path = sys.path[0]+'/'
     return path
 
+def remove_files(filenames):
+    ''' delete files in filenames list '''
+    for f in filenames:
+        if os.path.exists(f):
+            try:
+                os.remove(f)
+            except OSError, e:
+                print ("Error: %s - %s" %(e.filename,e.strerror))
+        else:
+            pass
 
 Profiling.logEvent("Testing WaveTools")
 class TestAuxFunctions(unittest.TestCase):
@@ -36,6 +41,7 @@ class TestAuxFunctions(unittest.TestCase):
         RMS = np.sqrt(RMS)
         self.assertTrue(RMS<1e-04)
         self.assertTrue(MaxErr<1e-3)
+         
     def testFastCosh(self):
         from proteus.WaveTools import fastcosh_test
         RMS = 0.
@@ -53,6 +59,7 @@ class TestAuxFunctions(unittest.TestCase):
         RMS = np.sqrt(RMS)
         self.assertTrue(RMS<3e-02)
         self.assertTrue(maxErr<4e-2)
+
     def testFastSinh(self):
         from proteus.WaveTools import fastsinh_test
         RMS = 0.
@@ -71,13 +78,14 @@ class TestAuxFunctions(unittest.TestCase):
         self.assertTrue(RMS<3e-2)
         self.assertTrue(maxErr<8e-2)
 
-
     def testVDir(self):
         from proteus.WaveTools import setVertDir
         self.assertTrue(np.array_equal(setVertDir(np.array([0,-9.81,0])), np.array([0,1,0])))
+          
     def testDirVector(self):
         from proteus.WaveTools import setDirVector
         self.assertTrue(all(setDirVector(np.array([2.,2.,1.]))== np.array([2.,2.,1])/3.))
+                  
     def testDirCheck(self):
         from proteus.WaveTools import dirCheck
         dirCheck(np.array([1.,2.,3.]),np.array([7.,4.,-5.]) )# Just loading the function with two vertical vectors
@@ -104,6 +112,7 @@ class TestAuxFunctions(unittest.TestCase):
         y = 2*xim
         A = sum(returnRectangles(y,xim))
         self.assertTrue(round(A,10) == 1.0)
+                  
     def testIntegrateRectangles3D(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
         from proteus.WaveTools import reduceToIntervals,returnRectangles3D
         x = np.linspace(0,1,101)
@@ -121,6 +130,7 @@ class TestAuxFunctions(unittest.TestCase):
         A = sum(sum(returnRectangles3D(y1,xim,zim)))
         # Integrate function z*(2*x) over x[0,1], z[0,1] result == 0.5
         self.assertTrue(round(A,10)== 0.5)
+                  
     def testNormInt(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
         from proteus.WaveTools import normIntegral, reduceToIntervals, returnRectangles
         #pickin
@@ -148,6 +158,7 @@ class TestAuxFunctions(unittest.TestCase):
         amplitude =0.2
         eta = amplitude*cos(kDir[0]*x+kDir[1]*y+kDir[2]*z - omega*t +phi)
         self.assertTrue((eta - eta_mode([x,y,z],t,kDir,omega,phi,amplitude)==0.))# check eta
+                  
     def testVelMode(self): # Checking particle velocities
         from proteus.WaveTools import vel_mode
 
@@ -183,7 +194,7 @@ class TestAuxFunctions(unittest.TestCase):
         #Checking that the code does not allow z to be outside (-d,0)
 #Checking vertical coherency
 # U_z = 0 at z = mwl-d
-        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir)[2]==0.)
+        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir)[2]==0.)                  
 
     def testTophat(self):
         from proteus.WaveTools import tophat
@@ -202,6 +213,7 @@ class TestAuxFunctions(unittest.TestCase):
         a[:10] = 0.5*(1.-np.cos(pi*np.linspace(0,9,10)/10.))
         a[-10:] =0.5*(1.-np.cos(pi*np.linspace(9,0,10)/10.))
         self.assertTrue( a.all() == af.all())
+                  
     def testDecomposeFFT(self):
         from proteus.WaveTools import decompose_tseries
         dt = 0.01
@@ -218,8 +230,7 @@ class TestAuxFunctions(unittest.TestCase):
             rec[:]+=dec[1][ii]*np.cos(dec[0][ii]*time[:]+dec[2][ii])
         rec[:]+=dec[3]
         self.assertTrue( rec.all() == eta.all())
-
-
+         
 class TestWaveParameters(unittest.TestCase):
 #Checking dispersion calculation for a predicted wavelenght of 5.00m
     def test_dispersion(self):
@@ -231,6 +242,7 @@ class TestWaveParameters(unittest.TestCase):
         length-=5.
         length/=5
         self.assertTrue( (all(length) <0.001) or  (all(length) > -0.001))
+                  
 #Check  sigma
     def test_sigma(self):
         from proteus.WaveTools import sigma,JONSWAP
@@ -245,6 +257,7 @@ class TestWaveParameters(unittest.TestCase):
         self.assertTrue((sigma[0] == sigma0).all())
         self.assertTrue((sigma[1] == sigma0).all())
         self.assertTrue((sigma[2] == sigma1).all())
+                  
     def test_Jonswap(self): #JONSWAP tests
 # Test Jonswap spectrum without TMA modification
         from proteus.WaveTools import sigma, JONSWAP, dispersion
@@ -272,6 +285,7 @@ class TestWaveParameters(unittest.TestCase):
         JON2 = JONSWAP(f,f0,Hs,gamma,TMA=True, depth=h)
         JCOMP = JON2/(TMA*JON)
         self.assertTrue((np.around(JCOMP,10)==1).all())
+        
     def test_PM(self): #PM tests
         from proteus.WaveTools import PM_mod
         f0 = random.random() + 1.
@@ -282,6 +296,7 @@ class TestWaveParameters(unittest.TestCase):
         S_PM2 =  PM_mod(f,f0,Hs)
         SCOMP = S_PM2/S_PM
         self.assertTrue((np.around(SCOMP,10)==1).all())
+
     def testCos2s(self):
         from proteus.WaveTools import cos2s
         f0 = random.random() + 1.
@@ -466,7 +481,6 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         self.assertTrue((err_x <= 0.01) or (abs(ux/Uo)<1e-2 ))
         self.assertTrue((err_y <= 0.01) or (abs(uy/Uo)<1e-2  ))
         self.assertTrue((err_z <= 0.01) or (abs(uz/Uoz)<1e-2 ))
-
         
 #========================================= RANDOM WAVES ======================================
 
@@ -508,7 +522,7 @@ class CheckRandomWavesFailures(unittest.TestCase):
         self.assertTrue(None == None)
 
 class VerifyRandomWaves(unittest.TestCase):
-    @pytest.mark.skip(reason="nosetests vs pytest issue")
+#    @pytest.mark.skip(reason="nosetests vs pytest issue")
     def testRandom(self):
         from proteus.WaveTools import RandomWaves
         import random
@@ -622,6 +636,7 @@ class VerifyRandomWaves(unittest.TestCase):
             etaWrite[ii] = a.eta(x0,tlist[ii])
         path =getpath()
         fname = path+"randomSeries.txt"
+        filenames = ['randomSeries.txt']
         if Tlag < 0.:
             with self.assertRaises(SystemExit) as cm1:
                 a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
@@ -629,8 +644,10 @@ class VerifyRandomWaves(unittest.TestCase):
         else:
             a.writeEtaSeries(Tstart,Tend,x0,fname, Lgen)
             series = np.loadtxt(open(fname,"r"))
+            remove_files(filenames)
             self.assertTrue((abs(series[:,0])- abs(tlist) <= 1e-10  ).all())
             self.assertTrue((abs(series[:,1])- abs(etaWrite) <= 1e-10).all())
+
 
 
 
@@ -1432,6 +1449,8 @@ class CheckRandomWavesFastFailureModes(unittest.TestCase):
                          Nfreq = 32
                               )
         self.assertEqual(cm2.exception.code, 1 )
+        filenames = ['RandomSeries_Hs_0.1_Tp_2.0_depth_1.0']
+        remove_files(filenames)
 
 
 class VerifyRandomWavesFast(unittest.TestCase):
@@ -1536,8 +1555,11 @@ class VerifyRandomWavesFast(unittest.TestCase):
         print "End time = ",series[-1,0]
         print "Cutoff = ",cutoff
         """
-        print "\n Max error in fast approximation=%s%%" %round(100*aRF.er1,3)
+        #print "\n Max error in fast approximation=%s%%" %round(100*aRF.er1,3)
 
+        filenames = ['RandomSeries_Hs_0.15_Tp_1.0_depth_0.9',
+                     'randomFastSeries.txt',]
+        remove_files(filenames)
         
         self.assertTrue(round(abs(aRF.eta(x,t)/aT.eta(x,t)),8) == 1.)
         self.assertTrue(round(abs(aRF.u(x,t)[0]/aT.u(x,t)[0]),8) == 1.)
@@ -1654,7 +1676,6 @@ class VerifyRandomNLWaves(unittest.TestCase):
         t =  120.
         xi = np.array([x, y, z])
 #        print aR.eta(xi,t),aNL.eta(xi,t)
-
         self.assertTrue(round(aR.eta(xi,t),8) == round(aNL.eta_linear(xi,t),8))
 
         etaT = 0.
@@ -1740,61 +1761,73 @@ class VerifyRandomNLWaves(unittest.TestCase):
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"all",False)
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
+
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_overall(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_overall(xi,float(ii)),8) )
-        fid.close()
+
 
 
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"all",True)
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_overall(xi,float(ii),True),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_overall(xi,float(ii),True),8) )
-        fid.close()
 
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"linear")
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_linear(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_linear(xi,float(ii)),8) )
-        fid.close()
-
 
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"short")
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_short(xi,float(ii))+aNL.eta_2ndOrder(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_short(xi,float(ii))+aNL.eta_2ndOrder(xi,float(ii)),8) )
-        fid.close()
 
 
 
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"long")
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_long(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_long(xi,float(ii)),8) )
-        fid.close()
-
 
         series = aNL.writeEtaSeries(Tstart,Tend,dt,xi,fname,"setup")
         fid = open(fname,"r")
         seriesFile = np.loadtxt(fid)
+        fid.close()
+        filenames = ['2ndorderseries.txt']
+        remove_files(filenames)
 
         for ii in range(3):
             self.assertTrue(round(series[ii,1],8) ==     round(aNL.eta_setUp(xi,float(ii)),8) )
             self.assertTrue( round(seriesFile[ii,1],8) == round(aNL.eta_setUp(xi,float(ii)),8) )
-        fid.close()
 
 class VerifyRandomNLWavesFast(unittest.TestCase):
 # RandomWavesFast will be tested to the point that it gives the same answer as TimeSeriesClass
@@ -1826,7 +1859,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         Tend = tnlist[-1]
         NLongW = 10.
         fname ="RNLWaves.txt"
-
 
         aR = RandomNLWaves(tnlist[0],
                             tnlist[-1],
@@ -1870,10 +1902,15 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         series = aR.writeEtaSeries(Tstart,Tend,dt,x0,fname,"linear",False,Lgen)
         series_l = aR.writeEtaSeries(Tstart,Tend,dt_l,x0,fname,"long",False,Lgen)
         series_s = aR.writeEtaSeries(Tstart,Tend,dt_s,x0,fname,"short",False ,Lgen)
+
+        filenames = ['RNLWaves.txt']
+        append = ['_linear.csv','_long.csv','_short.csv']
+        filenames.extend(['randomNLWaves'+end for end in append])
+        remove_files(filenames)
+
         Tstart = series_s[0,0]
         Tend = series_s[-1,0]
         cutoff = 0.2*Tp/(Tend-Tstart)
-
 
 
 
@@ -1905,7 +1942,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         Tstart = series[0,0]
         Tend = series[-1,0]
         cutoff = 0.2*Ts/(Tend-Tstart)
-
 
         Nw = int((Tend-Tstart)/Tm)
         Nw1 = min(15,Nw)
@@ -1943,7 +1979,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         else:
             rec_d = False
 
-
         aT_l= TimeSeries(
             fname,
             0,
@@ -1960,7 +1995,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
             series_l
             )
         #print cutoff,aRF.eta(x0,50.)[8]#, aT_s.eta(x,t)+aT.eta(x,t)#+aT_l.eta(x,t)
-
 
 #Checking consistency with RandomNLWaves class
         sumerr = 0
@@ -1979,7 +2013,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
 
 
 
-
         for aa in range(len(series_s)):
             Tcut =  0.2*Tp
             if (series_s[aa,0] > Tcut) and (series_s[aa,0] < series_s[-1,0] - Tcut):
@@ -1989,7 +2022,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
         err = err / (sumabs/len(series_s))
         self.assertTrue(err < 0.005)
 #        print err
-
         for aa in range(len(series_l)):
             Tcut =  0.2*Tp
             if (series_l[aa,0] > Tcut) and (series_l[aa,0] < series_l[-1,0] - Tcut):
@@ -2009,7 +2041,6 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
 
         self.assertTrue( round(aRF.eta(x,t) == aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t),8) )
         self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
-
 
 
 if __name__ == '__main__':

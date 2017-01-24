@@ -1253,6 +1253,7 @@ class Mesh:
           p is the vertex or point matrix
           e is the edge matrix, and
           t is the element matrix
+
         e will be the elementBoundary matrix in 1d and 3d, but perhaps
         should remain the edge array?
 
@@ -3918,12 +3919,6 @@ class TriangularMesh(Mesh):
         wrapper function for making a triangular mesh on the rectangle
         [0,Lx] x [0,Ly].
 
-        viewMesh is a flag to allow printing mesh when constructed
-        viewMesh -- 0 no visualization
-                    1 gnuplot
-                    2 matlab
-
-        mwf
         """
         nz = 1
         Lz = 1.0
@@ -5579,11 +5574,9 @@ def readUniformElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topolog
 
     nElements_global  -- the number of elements in the mesh
     nNodes_element    -- number of nodes per element
-    elementNodesArray -- element --> node connectivity
-                         stored as flattened array accessed using elementNodes_offset
-    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity
-                        -- element eN nodes are in
-                           elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
+    elementNodesArray -- element --> node connectivity stored as flattened array accessed using elementNodes_offset
+    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity, 
+    element eN nodes are in elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
 
     """
 
@@ -5609,12 +5602,12 @@ def readMixedElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyi
     returns
 
     nElements_global  -- the number of elements in the mesh
-    elementNodesArray -- element --> node connectivity
-                         stored as flattened array accessed using elementNodes_offset
-    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity
-                        -- element eN nodes are in
-                           elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
-
+    elementNodesArray -- element --> node connectivity stored as flattened 
+    array accessed using elementNodes_offset
+    elementNodes_offset -- offsets into the elementNodesArray storage for element 
+    connectivity, element eN nodes are 
+    inelementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
+ 
     """
     assert elementTopologyName == 'Mixed'
 
@@ -5648,30 +5641,31 @@ def readMixedElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyi
     return nElements_global, elementNodesArray, elementNodes_offset
 
 def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHDF5=True,verbose=0):
-    """
-    start trying to read an xdmf archive with name xmf_archive_base.xmf
-    assumes heavy_file_base.h5 has heavy data
-    root Element is Xdmf
-      last child of Xdmf which should be a Domain Element
-         find child of Domain that is a Temporal Grid Collection with a name containing MeshTag, if None use first collection
-            last child of Temporal Grid Collection should be a Uniform Grid at final time
-               Attribute (usually 1) of child is  Topology
-                  set elementTopologyName to Type
-                  if Type != Mixed
-                    get text attribute and read this entry from  hdf5 file
-                    set nNodes_element based on Type, nElements_global from leading dimension of elementNodesArray
-                    create elementNodes_offset from Type and flatten elementNodesArray
-                  else
-                    get text attribute and read this entry from  hdf5 file to place in into xdmf_topology
-                    generate elementNodesArray from xdmf_topology, calculating the number of elements using
-                      walk through xdmf_topology
-               Attribute (usually 2) of child is Geometry  --> load data into nodeArray
-                   set nNodes_global from nodeArray
-               If has Attribute nodeMaterials read this from hdf file, else set to default of all zeros
-               If has Attribute elementMaterialTypes, read this from hdf file, else set to default of all zeros
+    """Read in a mesh from XDMF, assuming heavy data is in hdf5
 
-    returns a BasicMeshInfo object with the minimal information read
-    """
+    :return: a BasicMeshInfo object with the minimal information read
+    
+    """    
+    # start trying to read an xdmf archive with name xmf_archive_base.xmf
+    # assumes heavy_file_base.h5 has heavy data
+    # root Element is Xdmf
+    #   last child of Xdmf which should be a Domain Element
+    #      find child of Domain that is a Temporal Grid Collection with a name containing MeshTag, if None use first collection
+    #         last child of Temporal Grid Collection should be a Uniform Grid at final time
+    #            Attribute (usually 1) of child is  Topology
+    #               set elementTopologyName to Type
+    #               if Type != Mixed
+    #                 get text attribute and read this entry from  hdf5 file
+    #                 set nNodes_element based on Type, nElements_global from leading dimension of elementNodesArray
+    #                 create elementNodes_offset from Type and flatten elementNodesArray
+    #               else
+    #                 get text attribute and read this entry from  hdf5 file to place in into xdmf_topology
+    #                 generate elementNodesArray from xdmf_topology, calculating the number of elements using
+    #                   walk through xdmf_topology
+    #            Attribute (usually 2) of child is Geometry  --> load data into nodeArray
+    #                set nNodes_global from nodeArray
+    #            If has Attribute nodeMaterials read this from hdf file, else set to default of all zeros
+    #            If has Attribute elementMaterialTypes, read this from hdf file, else set to default of all zeros
     assert os.path.isfile(xmf_archive_base+'.xmf')
     assert os.path.isfile(heavy_file_base+'.h5')
 
