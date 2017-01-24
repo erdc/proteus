@@ -44,8 +44,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                                int* h_l2g, 
                                int* vel_l2g, 
                                double* h_dof_old, 
-                               double* u_dof_old, 
-                               double* v_dof_old,
+                               double* hu_dof_old, 
+                               double* hv_dof_old,
                                double* b_dof,
                                double* h_dof, 
                                double* u_dof, 
@@ -146,8 +146,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                                int* h_l2g, 
                                int* vel_l2g, 
                                double* h_dof_old, 
-                               double* u_dof_old, 
-                               double* v_dof_old,
+                               double* hu_dof_old, 
+                               double* hv_dof_old,
                                double* b_dof,
                                double* h_dof, 
                                double* u_dof, 
@@ -249,8 +249,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                                int* vel_l2g,
                                double* b_dof,
                                double* h_dof, 
-                               double* u_dof, 
-                               double* v_dof,
+                               double* hu_dof, 
+                               double* hv_dof,
                                double* h_dof_sge, 
                                double* u_dof_sge, 
                                double* v_dof_sge,
@@ -456,7 +456,7 @@ cdef class cSW2DCV_base:
    def __dealloc__(self):
        del self.thisptr
    def calculateResidual(self,
-                         numpy.ndarray mesh_trial_ref,
+			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
                          numpy.ndarray mesh_velocity_dof,
@@ -494,8 +494,8 @@ cdef class cSW2DCV_base:
                          numpy.ndarray h_l2g, 
                          numpy.ndarray vel_l2g, 
                          numpy.ndarray h_dof_old, 
-                         numpy.ndarray u_dof_old, 
-                         numpy.ndarray v_dof_old, 
+                         numpy.ndarray hu_dof_old, 
+                         numpy.ndarray hv_dof_old, 
                          numpy.ndarray b_dof, 
                          numpy.ndarray h_dof, 
                          numpy.ndarray u_dof, 
@@ -599,8 +599,8 @@ cdef class cSW2DCV_base:
             <int*> h_l2g.data, 
             <int*> vel_l2g.data, 
             <double*> h_dof_old.data, 
-            <double*> u_dof_old.data, 
-            <double*> v_dof_old.data, 
+            <double*> hu_dof_old.data, 
+            <double*> hv_dof_old.data, 
             <double*> b_dof.data, 
             <double*> h_dof.data, 
             <double*> u_dof.data, 
@@ -664,7 +664,7 @@ cdef class cSW2DCV_base:
             <double*> flux.data,
             <double*> elementResidual_h.data)		       
    def calculateResidual_invariant_domain_SWEs(self,
-                         numpy.ndarray mesh_trial_ref,
+			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
                          numpy.ndarray mesh_velocity_dof,
@@ -702,8 +702,8 @@ cdef class cSW2DCV_base:
                          numpy.ndarray h_l2g, 
                          numpy.ndarray vel_l2g, 
                          numpy.ndarray h_dof_old, 
-                         numpy.ndarray u_dof_old, 
-                         numpy.ndarray v_dof_old, 
+                         numpy.ndarray hu_dof_old, 
+                         numpy.ndarray hv_dof_old, 
                          numpy.ndarray b_dof, 
                          numpy.ndarray h_dof, 
                          numpy.ndarray u_dof, 
@@ -807,8 +807,8 @@ cdef class cSW2DCV_base:
             <int*> h_l2g.data, 
             <int*> vel_l2g.data, 
             <double*> h_dof_old.data, 
-            <double*> u_dof_old.data, 
-            <double*> v_dof_old.data, 
+            <double*> hu_dof_old.data, 
+            <double*> hv_dof_old.data, 
             <double*> b_dof.data, 
             <double*> h_dof.data, 
             <double*> u_dof.data, 
@@ -983,7 +983,6 @@ cdef class cSW2DCV_base:
                          numpy.ndarray csrColumnOffsets_eb_v_v):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
-       print "about to call jacobian"
        self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -1205,7 +1204,6 @@ cdef class cSW2DCV_base:
                          numpy.ndarray csrColumnOffsets_eb_v_v):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
-       print "about to call jacobian"
        self.thisptr.calculateJacobian_invariant_domain_SWEs(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,

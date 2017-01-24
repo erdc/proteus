@@ -158,9 +158,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def evaluate(self,t,c):
         pass
     def preStep(self,t,firstStep=False):
-        self.model.h_dof_old[:] = self.model.u[0].dof
-        self.model.hu_dof_old[:] = self.model.u[1].dof
-        self.model.hv_dof_old[:] = self.model.u[2].dof
+        self.model.h_dof_old = numpy.copy(self.model.u[0].dof)
+        self.model.hu_dof_old = numpy.copy(self.model.u[1].dof)
+        self.model.hv_dof_old = numpy.copy(self.model.u[2].dof)
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls=0
@@ -387,7 +387,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global={}
         self.ebqe={}
         self.phi_ip={}
-        # Old DOFs (MQL)
+        #Old DOFs (mql)
         self.h_dof_old = self.u[0].dof.copy()
         self.hu_dof_old = self.u[1].dof.copy()
         self.hv_dof_old = self.u[2].dof.copy()
@@ -739,6 +739,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('velocity',0)],
             self.ebq_global[('totalFlux',0)],
             self.elementResidual[0])
+
         #import pdb
         #pdb.set_trace()
 	if self.forceStrongConditions:#
