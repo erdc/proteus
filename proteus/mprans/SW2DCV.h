@@ -12,6 +12,7 @@
 
 #define cMax 0.1
 #define IMPLICIT 0
+#define LUMPED_MASS_MATRIX 1
 
 namespace proteus
 {
@@ -2539,20 +2540,35 @@ namespace proteus
       	      for(int i=0;i<nDOF_test_element;i++)
       		{
       		  register int i_nSpace=i*nSpace;
+		  int eN_i=eN*nDOF_test_element+i;
+		  int h_gi = h_l2g[eN_i]; //global i-th index for h variable
+		  int vel_gi = vel_l2g[eN_i]; //global i-th index for velocity variables
 
       		  elementResidual_h[i] += 
+#if LUMPED_MASS_MATRIX
+		    h_test_dV[i]*(h_dof[h_gi] - h_dof_old[h_gi]) + 
+#else
 		    dt*ck.Mass_weak(mass_acc_t,h_test_dV[i]) +
+#endif
       		    dt*ck.Advection_weak(mass_adv_star,&h_grad_test_dV[i_nSpace]) +
 		    dt*ck.NumericalDiffusion(q_numDiff_h_last[eN_k],grad_h_star,&h_grad_test_dV[i_nSpace]);
 		  
       		  elementResidual_hu[i] += 
+#if LUMPED_MASS_MATRIX
+		    vel_test_dV[i]*(hu_dof[vel_gi] - hu_dof_old[vel_gi]) + 
+#else
 		    dt*ck.Mass_weak(mom_hu_acc_t,vel_test_dV[i]) +
+#endif
       		    dt*ck.Advection_weak(mom_hu_adv_star,&vel_grad_test_dV[i_nSpace]) +
 		    dt*ck.Reaction_weak(mom_hu_source_star,vel_test_dV[i]) +
 		    dt*ck.NumericalDiffusion(q_numDiff_hu_last[eN_k],grad_hu_star,&vel_grad_test_dV[i_nSpace]);
 		 
       		  elementResidual_hv[i] += 
+#if LUMPED_MASS_MATRIX
+		    vel_test_dV[i]*(hv_dof[vel_gi] - hv_dof_old[vel_gi]) + 
+#else
 		    dt*ck.Mass_weak(mom_hv_acc_t,vel_test_dV[i]) +
+#endif
       		    dt*ck.Advection_weak(mom_hv_adv_star,&vel_grad_test_dV[i_nSpace]) +
 		    dt*ck.Reaction_weak(mom_hv_source_star,vel_test_dV[i]) +
 		    dt*ck.NumericalDiffusion(q_numDiff_hv_last[eN_k],grad_hv_star,&vel_grad_test_dV[i_nSpace]);
@@ -2564,12 +2580,14 @@ namespace proteus
       	  for(int i=0;i<nDOF_test_element;i++)
       	    {
       	      register int eN_i=eN*nDOF_test_element+i;
-
-      	      elementResidual_h_save[eN_i] +=  elementResidual_h[i];
-	  
-      	      globalResidual[offset_h+stride_h*h_l2g[eN_i]]+=elementResidual_h[i];
-      	      globalResidual[offset_hu+stride_hu*vel_l2g[eN_i]]+=elementResidual_hu[i];
-      	      globalResidual[offset_hv+stride_hv*vel_l2g[eN_i]]+=elementResidual_hv[i];
+	      int h_gi = h_l2g[eN_i]; //global i-th index for h
+	      int vel_gi = vel_l2g[eN_i]; //global i-th index for velocities 
+		
+	      elementResidual_h_save[eN_i] +=  elementResidual_h[i]* (h_dof[h_gi] - h_dof_old[h_gi]);
+	        	      
+      	      globalResidual[offset_h+stride_h*h_gi]  += elementResidual_h[i];
+      	      globalResidual[offset_hu+stride_hu*vel_gi] += elementResidual_hu[i];
+      	      globalResidual[offset_hv+stride_hv*vel_gi] += elementResidual_hv[i];
       	    }
       	}
     }
@@ -4137,10 +4155,12 @@ namespace proteus
 			  elementJacobian_h_hv[i][j] += 
 			    dt*ck.AdvectionJacobian_weak(dmass_adv_hv,vel_trial_ref[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]);
 			}
-		      else
+		      else //EXPLICIT
 			{
-			  // NOTE: dmass_acc_h_t = 1;
-			  elementJacobian_h_h[i][j] += dt*ck.MassJacobian_weak(dmass_acc_h_t,h_trial_ref[k*nDOF_trial_element+j],h_test_dV[i]);
+			  if (LUMPED_MASS_MATRIX==1)
+			    elementJacobian_h_h[i][j] += (i==j ? 1.0 : 0.0)*h_test_dV[i];
+			  else
+			    elementJacobian_h_h[i][j] += dt*ck.MassJacobian_weak(dmass_acc_h_t,h_trial_ref[k*nDOF_trial_element+j],h_test_dV[i]);
 			  elementJacobian_h_hu[i][j] += 0;
 			  elementJacobian_h_hv[i][j] += 0;
 			}
@@ -4162,12 +4182,14 @@ namespace proteus
 			  elementJacobian_hu_hv[i][j] += 
 			    dt*ck.AdvectionJacobian_weak(dmom_hu_adv_hv,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);
 			}
-		      else
+		      else //EXPLICIT
 			{
 			  elementJacobian_hu_h[i][j] += 0;			  
-			  elementJacobian_hu_hu[i][j] += dt*ck.MassJacobian_weak(dmom_hu_acc_hu_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			  if (LUMPED_MASS_MATRIX==1)
+			    elementJacobian_hu_hu[i][j] += (i==j ? 1.0 : 0.0)*vel_test_dV[i];
+			  else
+			    elementJacobian_hu_hu[i][j] += dt*ck.MassJacobian_weak(dmom_hu_acc_hu_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
 			  elementJacobian_hu_hv[i][j] += 0;
-
 			}
 
 		      //////////////////////
@@ -4187,11 +4209,14 @@ namespace proteus
 			    dt*ck.AdvectionJacobian_weak(dmom_hv_adv_hv,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 			    dt*ck.NumericalDiffusionJacobian(q_numDiff_hv_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]);
 			}
-		      else
+		      else //EXPLICIT
 			{
 			  elementJacobian_hv_h[i][j] += 0;
 			  elementJacobian_hv_hu[i][j] += 0;
-			  elementJacobian_hv_hv[i][j] += dt*ck.MassJacobian_weak(dmom_hv_acc_hv_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			  if (LUMPED_MASS_MATRIX==1)
+			    elementJacobian_hv_hv[i][j] += (i==j ? 1.0 : 0.0)*vel_test_dV[i];
+			  else
+			    elementJacobian_hv_hv[i][j] += dt*ck.MassJacobian_weak(dmom_hv_acc_hv_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
 			}
 		      
 		    }//j
