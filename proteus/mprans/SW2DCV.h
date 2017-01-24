@@ -592,36 +592,71 @@ namespace proteus
     }
 
     inline
-      void evaluateCoefficients_invariant_domain(const double nu,
-						 const double g,
-						 const double grad_b[nSpace],
-						 const double& h,
-						 const double& hu,
-						 const double& hv,
-						 double& mass_acc,
-						 double& dmass_acc_h,
-						 double& mom_hu_acc,
-						 double& dmom_hu_acc_h,
-						 double& dmom_hu_acc_hu,
-						 double& mom_hv_acc,
-						 double& dmom_hv_acc_h,
-						 double& dmom_hv_acc_hv,
-						 double mass_adv[nSpace],
-						 double dmass_adv_h[nSpace],
-						 double dmass_adv_hu[nSpace],
-						 double dmass_adv_hv[nSpace],
-						 double mom_hu_adv[nSpace],
-						 double dmom_hu_adv_h[nSpace],
-						 double dmom_hu_adv_hu[nSpace],
-						 double dmom_hu_adv_hv[nSpace],
-						 double mom_hv_adv[nSpace],
-						 double dmom_hv_adv_h[nSpace],
-						 double dmom_hv_adv_hu[nSpace],
-						 double dmom_hv_adv_hv[nSpace],
-						 double& mom_hu_source,
-						 double& dmom_hu_source_h,
-						 double& mom_hv_source,
-						 double& dmom_hv_source_h)
+      void evaluateCoefficientsForResidual(const double g,
+					   const double grad_b[nSpace],
+					   const double& h,
+					   const double& hu,
+					   const double& hv,
+					   double& mass_acc,
+					   double& mom_hu_acc,
+					   double& mom_hv_acc,
+					   double mass_adv[nSpace],
+					   double mom_hu_adv[nSpace],
+					   double mom_hv_adv[nSpace],
+					   double& mom_hu_source,
+					   double& mom_hv_source)					   
+    {
+      double hStar = fmax(1.0e-8,h);
+      //mass accumulation
+      mass_acc = h;      
+      //u momentum accumulation
+      mom_hu_acc=hu;
+      //v momentum accumulation
+      mom_hv_acc=hv;
+      //mass advective flux
+      mass_adv[0]=hu;
+      mass_adv[1]=hv;
+      //u momentum advective flux
+      mom_hu_adv[0]=hu*hu/hStar  + 0.5*g*h*h;
+      mom_hu_adv[1]=hu*hv/hStar;
+      //v momentum advective_flux
+      mom_hv_adv[0]=hv*hu/hStar;
+      mom_hv_adv[1]=hv*hv/hStar + 0.5*g*h*h;
+      //momentum sources
+      mom_hu_source = g*h*grad_b[0];
+      mom_hv_source = g*h*grad_b[1];
+    }
+
+    inline
+      void evaluateCoefficientsForJacobian(const double g,
+					   const double grad_b[nSpace],
+					   const double& h,
+					   const double& hu,
+					   const double& hv,
+					   double& mass_acc,
+					   double& dmass_acc_h,
+					   double& mom_hu_acc,
+					   double& dmom_hu_acc_h,
+					   double& dmom_hu_acc_hu,
+					   double& mom_hv_acc,
+					   double& dmom_hv_acc_h,
+					   double& dmom_hv_acc_hv,
+					   double mass_adv[nSpace],
+					   double dmass_adv_h[nSpace],
+					   double dmass_adv_hu[nSpace],
+					   double dmass_adv_hv[nSpace],
+					   double mom_hu_adv[nSpace],
+					   double dmom_hu_adv_h[nSpace],
+					   double dmom_hu_adv_hu[nSpace],
+					   double dmom_hu_adv_hv[nSpace],
+					   double mom_hv_adv[nSpace],
+					   double dmom_hv_adv_h[nSpace],
+					   double dmom_hv_adv_hu[nSpace],
+					   double dmom_hv_adv_hv[nSpace],
+					   double& mom_hu_source,
+					   double& dmom_hu_source_h,
+					   double& mom_hv_source,
+					   double& dmom_hv_source_h)
     {
       double hStar = fmax(1.0e-8,h);
       //mass accumulation
@@ -2330,48 +2365,32 @@ namespace proteus
       	      register int eN_k = eN*nQuadraturePoints_element+k,
       		eN_k_nSpace = eN_k*nSpace,
       		eN_nDOF_trial_element = eN*nDOF_trial_element;
-      	      register double b=0.0,h=0.0,hu=0.0,hv=0.0,
-		h_tn=0.0, hu_tn=0.0, hv_tn=0.0,
-      		grad_b[nSpace],grad_h[nSpace],grad_hu[nSpace],grad_hv[nSpace],
-      		mass_acc=0.0,
-      		dmass_acc_h=0.0,
-      		mom_hu_acc=0.0,
-      		dmom_hu_acc_h=0.0,
-      		dmom_hu_acc_hu=0.0,
-      		mom_hv_acc=0.0,
-      		dmom_hv_acc_h=0.0,
-      		dmom_hv_acc_hv=0.0,
-      		mass_adv[nSpace],
-      		dmass_adv_h[nSpace],
-      		dmass_adv_hu[nSpace],
-      		dmass_adv_hv[nSpace],
-		mom_hu_adv[nSpace],
-      		dmom_hu_adv_h[nSpace],
-      		dmom_hu_adv_hu[nSpace],
-      		dmom_hu_adv_hv[nSpace],
-		mom_hv_adv[nSpace],
-      		dmom_hv_adv_h[nSpace],
-      		dmom_hv_adv_hu[nSpace],
-      		dmom_hv_adv_hv[nSpace],
-		mom_hu_source=0.0,
-      		dmom_hu_source_h=0.0,
-      		mom_hv_source=0.0,
-      		dmom_hv_source_h=0.0,
-      		mass_acc_t=0.0,
-      		dmass_acc_h_t=0.0,
-      		mom_hu_acc_t=0.0,
-      		dmom_hu_acc_h_t=0.0,
-      		dmom_hu_acc_hu_t=0.0,
-      		mom_hv_acc_t=0.0,
-      		dmom_hv_acc_h_t=0.0,
-      		dmom_hv_acc_hv_t=0.0,
-		jac[nSpace*nSpace],
-      		jacDet,
-      		jacInv[nSpace*nSpace],
+      	      register double 
+		b=0.0,h=0.0,hu=0.0,hv=0.0, // solution at current time
+		h_tn=0.0, hu_tn=0.0, hv_tn=0.0, // solution at tn
+		h_star=0.0, hu_star=0.0, hv_star=0.0, // solution at t star
+      		grad_b[nSpace],grad_h[nSpace],grad_hu[nSpace],grad_hv[nSpace], //grad at current time
+		grad_h_tn[nSpace],grad_hu_tn[nSpace],grad_hv_tn[nSpace], //grad at tn
+		grad_h_star[nSpace],grad_hu_star[nSpace],grad_hv_star[nSpace], //grad at t star
+      		mass_acc=0.0,mom_hu_acc=0.0,mom_hv_acc=0.0, //accumulation variables 
+      		dmass_acc_h=0.0, dmom_hu_acc_hu=0.0, dmom_hv_acc_hv=0.0,
+		mass_adv[nSpace], mom_hu_adv[nSpace], mom_hv_adv[nSpace], //adv terms at current time
+		mom_hu_source=0.0, mom_hv_source=0.0, //source terms at current time
+		mass_acc_t=0.0, dmass_acc_h_t=0.0, //dt of mass accumulation
+      		mom_hu_acc_t=0.0, dmom_hu_acc_h_t=0.0, dmom_hu_acc_hu_t=0.0, //dt of x-mom accumulation 
+      		mom_hv_acc_t=0.0, dmom_hv_acc_h_t=0.0, dmom_hv_acc_hv_t=0.0, //dt of y-mom accumulation 
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
       		h_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],
       		h_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
       		h_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
       		dV,x,y,xt,yt;
+
+	      // FOR EXPLICIT TIME INTEGRATION 
+	      register double 
+		mass_acc_star, mom_hu_acc_star, mom_hv_acc_star,
+		mass_adv_star[nSpace], mom_hu_adv_star[nSpace], mom_hv_adv_star[nSpace], 
+      		mom_hu_source_star=0.0, mom_hv_source_star=0.0; 
+
       	      //get jacobian, etc for mapping reference element
       	      ck.calculateMapping_element(eN,
       					  k,
@@ -2383,12 +2402,6 @@ namespace proteus
       					  jacDet,
       					  jacInv,
       					  x,y);
-      	      //ck.calculateMappingVelocity_element(eN,
-	      //				  k,
-	      //				  mesh_velocity_dof,
-	      //				  mesh_l2g,
-	      //				  mesh_trial_ref,
-	      //				  xt,yt);
 	      //get the physical integration weight
       	      dV = fabs(jacDet)*dV_ref[k];
       	      //get the trial function gradients
@@ -2403,11 +2416,15 @@ namespace proteus
 	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_tn);
       	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_tn);
       	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_tn);
-	      //get the solution gradients
+	      //get the solution gradients at current time
       	      ck.gradFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_b);
       	      ck.gradFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h);
       	      ck.gradFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hu);
       	      ck.gradFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hv);
+	      //get the solution gradients at tn (old time)
+      	      ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h_tn);
+      	      ck.gradFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hu_tn);
+      	      ck.gradFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hv_tn);
       	      //precalculate test function products with integration weights
       	      for (int j=0;j<nDOF_trial_element;j++)
       		{
@@ -2419,42 +2436,55 @@ namespace proteus
       		      vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
       		    }
       		}
+	      // COMPUTE solution "star" to allow quick change between implicit or explicit time integration
+	      h_star = IMPLICIT*h+(1-IMPLICIT)*h_tn;
+	      hu_star = IMPLICIT*hu+(1-IMPLICIT)*hu_tn;
+	      hv_star = IMPLICIT*hv+(1-IMPLICIT)*hv_tn;
+	      for (int I=0; I<nSpace; I++)
+		{
+		  grad_h_star[I] = IMPLICIT*grad_h[I]+(1-IMPLICIT)*grad_h_tn[I];
+		  grad_hu_star[I] = IMPLICIT*grad_hu[I]+(1-IMPLICIT)*grad_hu_tn[I];
+		  grad_hv_star[I] = IMPLICIT*grad_hv[I]+(1-IMPLICIT)*grad_hv_tn[I];
+		}
       	      //save velocity at quadrature points for other models to use
       	      q_velocity[eN_k_nSpace+0]=hu/h;
       	      q_velocity[eN_k_nSpace+1]=hv/h;
       	      //
       	      //calculate pde coefficients at quadrature points
       	      //
-      	      evaluateCoefficients_invariant_domain(nu,
-						    g,
-						    grad_b,
-						    h,
-						    hu,
-						    hv,
-						    mass_acc,
-						    dmass_acc_h,
-						    mom_hu_acc,
-						    dmom_hu_acc_h,
-						    dmom_hu_acc_hu,
-						    mom_hv_acc,
-						    dmom_hv_acc_h,
-						    dmom_hv_acc_hv,
-						    mass_adv,
-						    dmass_adv_h,
-						    dmass_adv_hu,
-						    dmass_adv_hv,
-						    mom_hu_adv,
-						    dmom_hu_adv_h,
-						    dmom_hu_adv_hu,
-						    dmom_hu_adv_hv,
-						    mom_hv_adv,
-						    dmom_hv_adv_h,
-						    dmom_hv_adv_hu,
-						    dmom_hv_adv_hv,
-						    mom_hu_source,
-						    dmom_hu_source_h,
-						    mom_hv_source,
-						    dmom_hv_source_h);
+      	      
+	      evaluateCoefficientsForResidual( // WITH "CURRENT" SOLUTION
+					      // ********** INPUT ********** //
+					      g, // gravity
+					      grad_b, // grad of bathymetry
+					      h,
+					      hu,
+					      hv,
+					      // ********** OUTPUT ********** //
+					      mass_acc, 
+					      mom_hu_acc,
+					      mom_hv_acc,
+					      mass_adv, // [h*u, h*v] 
+					      mom_hu_adv, // [h*u^2+0.5*g*h^2, h*u*v]
+					      mom_hv_adv, // [h*u*v, h*v^2+0.5*g*h^2]
+					      mom_hu_source, // x-momentum source
+					      mom_hv_source); // y-momentum source
+	      evaluateCoefficientsForResidual( // WITH "STAR" SOLUTION
+					      // ********** INPUT ********** //
+					      g, // gravity
+					      grad_b, // grad of bathymetry
+					      h_star,
+					      hu_star,
+					      hv_star,
+					      // ********** OUTPUT ********** //
+					      mass_acc_star, //dummy
+					      mom_hu_acc_star, //dummy
+					      mom_hv_acc_star, //dummy
+					      mass_adv_star, // [h*u, h*v] 
+					      mom_hu_adv_star, // [h*u^2+0.5*g*h^2, h*u*v]
+					      mom_hv_adv_star, // [h*u*v, h*v^2+0.5*g*h^2]
+					      mom_hu_source_star, // x-momentum source
+					      mom_hv_source_star); // y-momentum source
       	      //
       	      //save momentum for time history and velocity for subgrid error
       	      //
@@ -2510,19 +2540,22 @@ namespace proteus
       		{
       		  register int i_nSpace=i*nSpace;
 
-      		  elementResidual_h[i] += ck.Mass_weak(mass_acc_t,h_test_dV[i]) +
-      		    ck.Advection_weak(mass_adv,&h_grad_test_dV[i_nSpace]) +
-		    ck.NumericalDiffusion(q_numDiff_h_last[eN_k],grad_h,&h_grad_test_dV[i_nSpace]);
+      		  elementResidual_h[i] += 
+		    dt*ck.Mass_weak(mass_acc_t,h_test_dV[i]) +
+      		    dt*ck.Advection_weak(mass_adv_star,&h_grad_test_dV[i_nSpace]) +
+		    dt*ck.NumericalDiffusion(q_numDiff_h_last[eN_k],grad_h_star,&h_grad_test_dV[i_nSpace]);
 		  
-      		  elementResidual_hu[i] += ck.Mass_weak(mom_hu_acc_t,vel_test_dV[i]) +
-      		    ck.Advection_weak(mom_hu_adv,&vel_grad_test_dV[i_nSpace]) +
-		    ck.Reaction_weak(mom_hu_source,vel_test_dV[i]) +
-		    ck.NumericalDiffusion(q_numDiff_hu_last[eN_k],grad_hu,&vel_grad_test_dV[i_nSpace]);
+      		  elementResidual_hu[i] += 
+		    dt*ck.Mass_weak(mom_hu_acc_t,vel_test_dV[i]) +
+      		    dt*ck.Advection_weak(mom_hu_adv_star,&vel_grad_test_dV[i_nSpace]) +
+		    dt*ck.Reaction_weak(mom_hu_source_star,vel_test_dV[i]) +
+		    dt*ck.NumericalDiffusion(q_numDiff_hu_last[eN_k],grad_hu_star,&vel_grad_test_dV[i_nSpace]);
 		 
-      		  elementResidual_hv[i] += ck.Mass_weak(mom_hv_acc_t,vel_test_dV[i]) +
-      		    ck.Advection_weak(mom_hv_adv,&vel_grad_test_dV[i_nSpace]) +
-		    ck.Reaction_weak(mom_hv_source,vel_test_dV[i]) +
-		    ck.NumericalDiffusion(q_numDiff_hv_last[eN_k],grad_hv,&vel_grad_test_dV[i_nSpace]);
+      		  elementResidual_hv[i] += 
+		    dt*ck.Mass_weak(mom_hv_acc_t,vel_test_dV[i]) +
+      		    dt*ck.Advection_weak(mom_hv_adv_star,&vel_grad_test_dV[i_nSpace]) +
+		    dt*ck.Reaction_weak(mom_hv_source_star,vel_test_dV[i]) +
+		    dt*ck.NumericalDiffusion(q_numDiff_hv_last[eN_k],grad_hv_star,&vel_grad_test_dV[i_nSpace]);
       		}
       	    }
       	  
@@ -3900,6 +3933,7 @@ namespace proteus
 						 int* csrColumnOffsets_eb_hv_hu,
 						 int* csrColumnOffsets_eb_hv_hv)
     {
+      double dt = 1./alphaBDF; // HACKED to work just for BDF1
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
@@ -4028,36 +4062,35 @@ namespace proteus
 		      vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin}
 		    }
 		}
-	      evaluateCoefficients_invariant_domain(nu,
-						    g,
-						    grad_b,
-						    h,
-						    hu,
-						    hv,
-						    mass_acc,
-						    dmass_acc_h,
-						    mom_hu_acc,
-						    dmom_hu_acc_h,
-						    dmom_hu_acc_hu,
-						    mom_hv_acc,
-						    dmom_hv_acc_h,
-						    dmom_hv_acc_hv,
-						    mass_adv,
-						    dmass_adv_h,
-						    dmass_adv_hu,
-						    dmass_adv_hv,
-						    mom_hu_adv,
-						    dmom_hu_adv_h,
-						    dmom_hu_adv_hu,
-						    dmom_hu_adv_hv,
-						    mom_hv_adv,
-						    dmom_hv_adv_h,
-						    dmom_hv_adv_hu,
-						    dmom_hv_adv_hv,
-						    mom_hu_source,
-						    dmom_hu_source_h,
-						    mom_hv_source,
-						    dmom_hv_source_h);
+	      evaluateCoefficientsForJacobian(g,
+					      grad_b,
+					      h,
+					      hu,
+					      hv,
+					      mass_acc,
+					      dmass_acc_h,
+					      mom_hu_acc,
+					      dmom_hu_acc_h,
+					      dmom_hu_acc_hu,
+					      mom_hv_acc,
+					      dmom_hv_acc_h,
+					      dmom_hv_acc_hv,
+					      mass_adv,
+					      dmass_adv_h,
+					      dmass_adv_hu,
+					      dmass_adv_hv,
+					      mom_hu_adv,
+					      dmom_hu_adv_h,
+					      dmom_hu_adv_hu,
+					      dmom_hu_adv_hv,
+					      mom_hv_adv,
+					      dmom_hv_adv_h,
+					      dmom_hv_adv_hu,
+					      dmom_hv_adv_hv,
+					      mom_hu_source,
+					      dmom_hu_source_h,
+					      mom_hv_source,
+					      dmom_hv_source_h);
 	      //
 	      //moving mesh (TODO)
 	      //
@@ -4089,42 +4122,78 @@ namespace proteus
 		  for(int j=0;j<nDOF_trial_element;j++) 
 		    { 
 		      register int j_nSpace = j*nSpace;
-		      //h
-		      elementJacobian_h_h[i][j] += 
-			ck.MassJacobian_weak(dmass_acc_h_t,h_trial_ref[k*nDOF_trial_element+j],h_test_dV[i]) + 
-			ck.NumericalDiffusionJacobian(q_numDiff_h_last[eN_k],&h_grad_trial[j_nSpace],&h_grad_test_dV[i_nSpace]);
+		      //////////////////////
+		      // h: h_h, h_u, h_v //
+		      //////////////////////
+		      if (IMPLICIT==1)
+			{
+			  elementJacobian_h_h[i][j] += 
+			    dt*ck.MassJacobian_weak(dmass_acc_h_t,h_trial_ref[k*nDOF_trial_element+j],h_test_dV[i]) + 
+			    dt*ck.NumericalDiffusionJacobian(q_numDiff_h_last[eN_k],&h_grad_trial[j_nSpace],&h_grad_test_dV[i_nSpace]);
+			  
+			  elementJacobian_h_hu[i][j] += 
+			    dt*ck.AdvectionJacobian_weak(dmass_adv_hu,vel_trial_ref[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]);
+			  
+			  elementJacobian_h_hv[i][j] += 
+			    dt*ck.AdvectionJacobian_weak(dmass_adv_hv,vel_trial_ref[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]);
+			}
+		      else
+			{
+			  // NOTE: dmass_acc_h_t = 1;
+			  elementJacobian_h_h[i][j] += dt*ck.MassJacobian_weak(dmass_acc_h_t,h_trial_ref[k*nDOF_trial_element+j],h_test_dV[i]);
+			  elementJacobian_h_hu[i][j] += 0;
+			  elementJacobian_h_hv[i][j] += 0;
+			}
+
+		      //////////////////////
+		      // u: u_h, u_u, u_v //
+		      //////////////////////
+		      if (IMPLICIT==1)
+			{		      
+			  elementJacobian_hu_h[i][j] += 
+			    dt*ck.AdvectionJacobian_weak(dmom_hu_adv_h,h_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
+			    dt*ck.ReactionJacobian_weak(dmom_hu_source_h,h_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			  
+			  elementJacobian_hu_hu[i][j] += 
+			    dt*ck.MassJacobian_weak(dmom_hu_acc_hu_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
+			    dt*ck.AdvectionJacobian_weak(dmom_hu_adv_hu,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
+			    dt*ck.NumericalDiffusionJacobian(q_numDiff_hu_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]);
+			  
+			  elementJacobian_hu_hv[i][j] += 
+			    dt*ck.AdvectionJacobian_weak(dmom_hu_adv_hv,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);
+			}
+		      else
+			{
+			  elementJacobian_hu_h[i][j] += 0;			  
+			  elementJacobian_hu_hu[i][j] += dt*ck.MassJacobian_weak(dmom_hu_acc_hu_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			  elementJacobian_hu_hv[i][j] += 0;
+
+			}
+
+		      //////////////////////
+		      // v: v_h, v_u, v_v //
+		      //////////////////////
+		      if (IMPLICIT==1)
+			{
+			  elementJacobian_hv_h[i][j] += 
+			    dt*ck.AdvectionJacobian_weak(dmom_hv_adv_h,h_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
+			    dt*ck.ReactionJacobian_weak(dmom_hv_source_h,h_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			  
+			  elementJacobian_hv_hu[i][j] += 
+			    dt*ck.AdvectionJacobian_weak(dmom_hv_adv_hu,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);
+			  
+			  elementJacobian_hv_hv[i][j] += 
+			    dt*ck.MassJacobian_weak(dmom_hv_acc_hv_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
+			    dt*ck.AdvectionJacobian_weak(dmom_hv_adv_hv,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
+			    dt*ck.NumericalDiffusionJacobian(q_numDiff_hv_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]);
+			}
+		      else
+			{
+			  elementJacobian_hv_h[i][j] += 0;
+			  elementJacobian_hv_hu[i][j] += 0;
+			  elementJacobian_hv_hv[i][j] += dt*ck.MassJacobian_weak(dmom_hv_acc_hv_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			}
 		      
-		      elementJacobian_h_hu[i][j] += 
-			ck.AdvectionJacobian_weak(dmass_adv_hu,vel_trial_ref[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]);
-		      	
-		      elementJacobian_h_hv[i][j] += 
-			ck.AdvectionJacobian_weak(dmass_adv_hv,vel_trial_ref[k*nDOF_trial_element+j],&h_grad_test_dV[i_nSpace]);
-		      	
-		      //hu
-		      elementJacobian_hu_h[i][j] += 
-			ck.AdvectionJacobian_weak(dmom_hu_adv_h,h_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
-			ck.ReactionJacobian_weak(dmom_hu_source_h,h_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
-		      	
-		      elementJacobian_hu_hu[i][j] += 
-			ck.MassJacobian_weak(dmom_hu_acc_hu_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
-			ck.AdvectionJacobian_weak(dmom_hu_adv_hu,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
-			ck.NumericalDiffusionJacobian(q_numDiff_hu_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]);
-
-		      elementJacobian_hu_hv[i][j] += 
-			ck.AdvectionJacobian_weak(dmom_hu_adv_hv,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);
-		      
-		      //hv
-		      elementJacobian_hv_h[i][j] += 
-			ck.AdvectionJacobian_weak(dmom_hv_adv_h,h_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
-			ck.ReactionJacobian_weak(dmom_hv_source_h,h_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
-
-		      elementJacobian_hv_hu[i][j] += 
-			ck.AdvectionJacobian_weak(dmom_hv_adv_hu,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);
-
-		      elementJacobian_hv_hv[i][j] += 
-			ck.MassJacobian_weak(dmom_hv_acc_hv_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
-			ck.AdvectionJacobian_weak(dmom_hv_adv_hv,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
-			ck.NumericalDiffusionJacobian(q_numDiff_hv_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]);
 		    }//j
 		}//i
 	    }//k
