@@ -78,6 +78,47 @@ class TestAuxFunctions(unittest.TestCase):
         self.assertTrue(RMS<3e-2)
         self.assertTrue(maxErr<8e-2)
 
+    def testFastProfileCosh(self):
+        from proteus.WaveTools import coshkzd_test
+        RMS = 0.
+        maxErr = 0.
+        ll = 5.
+        k = 2*pi/ll
+        d = 5.
+        mwl = 0.
+        for ii in range(0,1001):
+            Z  = -float(ii)/1000.*d
+            err = (cosh(k*(Z+d))/sinh(k*d))
+            fcos = coshkzd_test(k,Z,d)
+            err = (err - fcos)#/sinh(k*d)
+            RMS += err**2
+            maxErr = max(maxErr, abs(err))
+        RMS /=1000.
+        RMS = np.sqrt(RMS)
+        self.assertTrue(RMS<3e-02)
+        self.assertTrue(maxErr<4.5e-2)
+
+    def testFastProfileSinh(self):
+        from proteus.WaveTools import sinhkzd_test
+        depth = 1.
+        RMS = 0.
+        maxErr = 0.
+        ll = 5.
+        k = 2*pi/ll
+        d = 5.
+        mwl = 0.
+        for ii in range(0,1001):
+            Z  = -float(ii)/1000.*d
+            err = (sinh(k*(Z+d))/sinh(k*d))
+            err = err- sinhkzd_test(k,Z,d)
+            RMS += err**2
+            maxErr = max(maxErr, abs(err))
+        RMS /=1000.
+        RMS = np.sqrt(RMS)
+        self.assertTrue(RMS<3e-02)
+        self.assertTrue(maxErr<4.5e-2)
+
+
     def testVDir(self):
         from proteus.WaveTools import setVertDir
         self.assertTrue(np.array_equal(setVertDir(np.array([0,-9.81,0])), np.array([0,1,0])))
@@ -166,7 +207,7 @@ class TestAuxFunctions(unittest.TestCase):
         c = 1.
         height = 2.*amp
         depth = 1
-        self.assertTrue(gAbs*H**2/c/depth == Udrift(amp,gAbs,c,depth)
+        self.assertTrue(0.125*gAbs*height**2/c/depth == Udrift(amp,gAbs,c,depth))
     def testVelMode(self): # Checking particle velocities
         from proteus.WaveTools import vel_mode, Udrift
 
@@ -175,6 +216,7 @@ class TestAuxFunctions(unittest.TestCase):
         phi =0.
         amplitude = 1.
         g = np.array( [0,0.,-9.81])
+	gAbs = 9.81
         depth = 2.
         mwl =3.
         x=  pi/4./kDir[0]
@@ -185,7 +227,7 @@ class TestAuxFunctions(unittest.TestCase):
         kAbs = 2*pi
         Ud = Udrift(amplitude,abs(g[-1]),omega/kAbs,depth)
         for i in range(4):
-            U_x, U_y, U_z = vel_mode([x,y,z],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir)
+            U_x, U_y, U_z = vel_mode([x,y,z],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir,gAbs)
             x+= 0.25
             U_x = U_x+Ud
             # Checking velocity signs with quadrants
@@ -204,7 +246,7 @@ class TestAuxFunctions(unittest.TestCase):
         #Checking that the code does not allow z to be outside (-d,0)
 #Checking vertical coherency
 # U_z = 0 at z = mwl-d
-        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir)[2]==0.)                  
+        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,vDir,gAbs)[2]==0.)                  
         
     def testTophat(self):
         from proteus.WaveTools import tophat
@@ -382,6 +424,7 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         from proteus.WaveTools import fastcos_test as fcos
         from proteus.WaveTools import coshkzd_test as fcosh
         from proteus.WaveTools import sinhkzd_test as fsinh
+        from proteus.WaveTools import Udrift as Ud
         
 # Wave direction, random in x,y plane
         period = 2.
@@ -413,8 +456,8 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         etaRef = amp*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
         z0 = z - mwl
         
-        uxRef = normDir[0]*amp*omega*fcosh(kw,z0,depth)*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
-        uyRef = normDir[1]*amp*omega*fcosh(kw,z0,depth)*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
+        uxRef = normDir[0]*(amp*omega*fcosh(kw,z0,depth)*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,omega/kw,depth))
+        uyRef = normDir[1]*(amp*omega*fcosh(kw,z0,depth)*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,omega/kw,depth))
         uzRef = amp*omega*fsinh(kw,z0,depth)*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0,True)
         
 
@@ -433,6 +476,10 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
 
     def testFenton(self):
         from proteus.WaveTools import MonochromaticWaves
+        from proteus.WaveTools import fastcos_test as fcos
+        from proteus.WaveTools import coshkzd_test as fcosh
+        from proteus.WaveTools import sinhkzd_test as fsinh
+        from proteus.WaveTools import Udrift as Ud
         period = 1.
         waveHeight = 0.15
         mwl = 4.5
@@ -473,11 +520,12 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         
         for ii in range(len(YC)):
             jj+=1
-            etaRef+=YC[ii]*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t + jj*phi0)/kw
-            uxRef += normDir[0]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
-            uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
-            uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)/cosh(jj*kw*depth)
-
+            etaRef+=YC[ii]*fcos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t + jj*phi0)/kw
+            amp = tanh(kw*jj*depth)*np.sqrt(gAbs/kw)*BC[ii]/omega
+            c = omega/kw
+            uxRef += normDir[0]*( np.sqrt(gAbs/kw)*jj*BC[ii]*fcosh(jj*kw,z0,depth) *fcos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)*tanh(jj*kw*depth)-Ud(amp,gAbs,c,depth))
+            uyRef += normDir[1]* (np.sqrt(gAbs/kw)*jj*BC[ii]*fcosh(jj*kw,z0,depth) *fcos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0)*tanh(jj*kw*depth)-Ud(amp,gAbs,c,depth))
+            uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*fsinh(jj*kw,z0,depth) *fcos(0.5*pi -( jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +jj*phi0))*tanh(jj*kw*depth)
 
         err = abs(eta/etaRef - 1.)
         err_x = abs(ux/uxRef - 1.)
@@ -487,10 +535,10 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         Uoz = waveHeight * omega
 
 
-        self.assertTrue((err <= 0.01) or ( abs(eta/Hs)<1e-2  ))
-        self.assertTrue((err_x <= 0.01) or (abs(ux/Uo)<1e-2 ))
-        self.assertTrue((err_y <= 0.01) or (abs(uy/Uo)<1e-2  ))
-        self.assertTrue((err_z <= 0.01) or (abs(uz/Uoz)<1e-2 ))
+        self.assertTrue((err <= 1e-8))
+        self.assertTrue((err_x <= 1e-08))
+        self.assertTrue((err_y <= 1e-08))
+        self.assertTrue((err_z <= 1e-08))
         
 #========================================= RANDOM WAVES ======================================
 
@@ -593,7 +641,7 @@ class VerifyRandomWaves(unittest.TestCase):
 
 
         # setDirVector are tested above
-        from proteus.WaveTools import setDirVector, dispersion, reduceToIntervals, returnRectangles, JONSWAP
+        from proteus.WaveTools import setDirVector, dispersion, reduceToIntervals, returnRectangles, JONSWAP,Udrift
         fmin = 1./(Tp * bandFactor)
         fmax = bandFactor/(Tp)
         fi = np.linspace(fmin,fmax,N)
@@ -613,8 +661,8 @@ class VerifyRandomWaves(unittest.TestCase):
 
         for ii in range(N):
             etaRef+=ai[ii]*fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])
-            uxRef += normDir[0]*ai[ii]*omega[ii] *fcosh(ki[ii],z0,depth) *fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])
-            uyRef += normDir[1]*ai[ii]*omega[ii] *fcosh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])
+            uxRef += normDir[0]*ai[ii]*omega[ii] *fcosh(ki[ii],z0,depth) *fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])-normDir[0]*Udrift(ai[ii],gAbs,omega[ii]/ki[ii],depth)
+            uyRef += normDir[1]*ai[ii]*omega[ii] *fcosh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])-normDir[1]*Udrift(ai[ii],gAbs,omega[ii]/ki[ii],depth)
             uzRef +=  ai[ii]*omega[ii] *fsinh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii],True)
 
         err = abs(eta/etaRef - 1.)
@@ -687,7 +735,7 @@ class VerifyRandomWaves(unittest.TestCase):
 class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
     def testFailureModes(self):
 
-        from proteus.WaveTools import MultiSpectraRandomWaves
+        from proteus.WaveTools import MultiSpectraRandomWaves,Udrift
 #Failure 1: Give parameters as float rather than list
         Tp = 1.
         Hs = 0.15
@@ -778,7 +826,7 @@ class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
 
 class VerifyMultiSpectraRandomWaves(unittest.TestCase):
     def testMultiSpectraDoubleExact(self):
-        from proteus.WaveTools import MultiSpectraRandomWaves, RandomWaves
+        from proteus.WaveTools import MultiSpectraRandomWaves, RandomWaves,Udrift
         Tp = 1.
         Hs = 0.15
         mwl = 4.5
@@ -901,7 +949,7 @@ class VerifyDirectionals(unittest.TestCase):
         from proteus.WaveTools import fastcos_test as fcos
         from proteus.WaveTools import coshkzd_test as fcosh
         from proteus.WaveTools import sinhkzd_test as fsinh
-        from proteus.WaveTools import DirectionalWaves
+        from proteus.WaveTools import DirectionalWaves,Udrift
         import random
         # Assinging a random value at a field and getting the expected output
         Tp = 2.
@@ -989,8 +1037,8 @@ class VerifyDirectionals(unittest.TestCase):
             for jj in range(2*M+1):
                 normDir = waveDirs[jj,:]
                 etaRef+=ai[jj,ii]*fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])
-                uxRef += normDir[0]*ai[jj,ii]*omega[ii] *fcosh(ki[ii],z0,depth) *fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])
-                uyRef += normDir[1]*ai[jj,ii]*omega[ii] *fcosh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])
+                uxRef += normDir[0]*ai[jj,ii]*omega[ii] *fcosh(ki[ii],z0,depth) *fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])-normDir[0]*Udrift(ai[jj,ii],gAbs,omega[ii]/ki[ii],depth)
+                uyRef += normDir[1]*ai[jj,ii]*omega[ii] *fcosh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])-normDir[1]*Udrift(ai[jj,ii],gAbs,omega[ii]/ki[ii],depth)
                 uzRef +=  ai[jj,ii]*omega[ii] *fsinh(ki[ii],z0,depth) * fcos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii],True)
 
         err = abs(eta/etaRef - 1.)
