@@ -124,7 +124,12 @@ namespace proteus
 				   double* q_velocity,
 				   double* ebqe_velocity,
 				   double* flux,
-				   double* elementResidual_h)=0;
+				   double* elementResidual_h,
+				   // C matrices
+				   double* Cx, 
+				   double* Cy,
+				   double* CTx,
+				   double* CTy)=0;
     virtual void calculateResidual_invariant_domain_SWEs(//element
 							 double* mesh_trial_ref,
 							 double* mesh_grad_trial_ref,
@@ -229,7 +234,12 @@ namespace proteus
 							 double* q_velocity,
 							 double* ebqe_velocity,
 							 double* flux,
-							 double* elementResidual_h)=0;
+							 double* elementResidual_h,
+							 // C matrices
+							 double* Cx, 
+							 double* Cy,
+							 double* CTx,
+							 double* CTy)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -1355,7 +1365,12 @@ namespace proteus
 			   double* q_velocity,
 			   double* ebqe_velocity,
 			   double* flux,
-			   double* elementResidual_h_save)
+			   double* elementResidual_h_save,
+			   // C matrices
+			   double* Cx, 
+			   double* Cy,
+			   double* CTx,
+			   double* CTy)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -2293,7 +2308,12 @@ namespace proteus
 						 double* q_velocity,
 						 double* ebqe_velocity,
 						 double* flux,
-						 double* elementResidual_h_save)
+						 double* elementResidual_h_save,
+						 // C matrices
+						 double* Cx, 
+						 double* Cy,
+						 double* CTx,
+						 double* CTy)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
       // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
