@@ -239,7 +239,7 @@ class NS_base:  # (HasTraits):
                                                                      parallelPartitioningType=n.parallelPartitioningType)
 
             elif isinstance(p.domain,Domain.PlanarStraightLineGraphDomain):
-                if p.domain.MeshOptions.use_gmsh is True:
+                if p.domain.use_gmsh is True:
                     if comm.isMaster() and (p.genMesh or not (os.path.exists(p.domain.geofile+".ele") and
                                                               os.path.exists(p.domain.geofile+".node") and
                                                               os.path.exists(p.domain.geofile+".edge"))):
