@@ -8,7 +8,6 @@ import set_paths
 import numpy
 
 import laplace_template_TH_2D as L_2d
-L_2d.ns.ar[0].hdfFile.close()
 
 class TestMassConstruction2D():
     """ Verify construction of 2D Laplce using transport coefficients """
@@ -58,7 +57,6 @@ class TestMassConstruction2D():
         expected_output = os.path.dirname(os.path.abspath(__file__)) + '/comparison_files/Laplace_mat_reference_element_1.npy'
         comparison_mat = numpy.load(expected_output)
         assert numpy.allclose(Laplace_mat,comparison_mat)
-        L_2d.ns.ar[0].hdfFile.close()
 
     def test_2(self):
         """ Tests the attachMassOperator function in one-level-transport """
@@ -68,7 +66,6 @@ class TestMassConstruction2D():
         expected_output = os.path.dirname(os.path.abspath(__file__)) + '/comparison_files/Laplace_mat_reference_element_1.npy'
         comparison_mat = numpy.load(expected_output)
         assert numpy.allclose(Laplace_mat,comparison_mat)
-        L_2d.ns.ar[0].hdfFile.close()
 
 if __name__ == '__main__':
     pass
