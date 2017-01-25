@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from ctypes import *
 from proteus import MeshTools
 from proteus import cmeshTools
@@ -21,3 +22,8 @@ def test_meshLoadPUMI(verbose=0):
     eq(mesh.nNodes_global,190)
     eq(mesh.nEdges_global,977)
     eq(mesh.nElementBoundaries_global,1458)
+
+if __name__ == '__main__':
+    import nose
+    nose.main(defaultTest='test_meshLoad:test_meshLoadPUMI')
+

@@ -71,3 +71,8 @@ def test_gmshLoadAndAdapt(verbose=0):
                      dim = domain.nd)
     nElements_final = mesh.nElements_global
     ok(nElements_final>nElements_initial)
+
+if __name__ == '__main__':
+    import nose
+    nose.main(defaultTest='test_gmshCheck:test_gmshLoadAndAdapt')
+
