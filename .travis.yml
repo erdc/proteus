@@ -38,8 +38,7 @@ install:
 - ./hashdist/bin/hit init-home
 - ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source"
 - ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_ubuntu_14_04 --objects="build"
-- rm -rf ${HOME}/.hashdist/bld/chrono/*
-- FC=gfortran make install
+- PATH=/usr/bin:${PATH} FC=gfortran make install
 - export PATH=$PWD/linux2/bin:$PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
