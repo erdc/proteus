@@ -1,5 +1,5 @@
 dist: trusty
-sudo: required
+sudo: false
 
 language: python
 
@@ -18,11 +18,14 @@ addons:
     - libssl-dev
 
 before_install:
-- pip install pyliblzma
+- pip install pyliblzma --user
 
 install:
-- curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
-- sudo apt-get install git-lfs
+- wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
+- tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
+- cd git-lfs-1.5.5
+- PREFIX=${HOME} ./install.sh
+- export PATH=${HOME}/bin:${PATH}
 - git lfs checkout
 - make hashdist
 - make stack
