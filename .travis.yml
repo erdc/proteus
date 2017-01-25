@@ -18,14 +18,13 @@ addons:
     - libssl-dev
 
 before_install:
-- pip install pyliblzma --user
-
-install:
 - wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
 - tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
 - cd git-lfs-1.5.5
 - PREFIX=${HOME} ./install.sh
 - export PATH=${HOME}/bin:${PATH}
+
+install:
 - git lfs checkout
 - make hashdist
 - make stack
