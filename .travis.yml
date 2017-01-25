@@ -23,9 +23,10 @@ before_install:
 - cd git-lfs-1.5.5
 - PREFIX=${HOME} ./install.sh
 - export PATH=${HOME}/bin:${PATH}
+- cd ..
 
 install:
-- git lfs checkout
+- git lfs fetch
 - make hashdist
 - make stack
 - make stack/default.yaml
