@@ -15,6 +15,7 @@ addons:
     - gfortran
     - libffi-dev
     - libssl-dev
+    - liblzma5
 
 before_install:
 - pip install pyliblzma
