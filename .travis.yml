@@ -22,6 +22,7 @@ addons:
     - libssl-dev
 
 before_install:
+- pip install pyliblzma
 - python -c "import lzma; print lzma.__version__"
 - wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
 - tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
