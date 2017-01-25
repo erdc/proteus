@@ -14,7 +14,8 @@ addons:
     packages:
     - gfortran
     - libffi-dev
-    - lzma-dev
+    - liblzma5
+    - liblzma-dev
     - python-lzma
     - python-lzma-dbg
     - libssl-dev
