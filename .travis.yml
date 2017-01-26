@@ -28,6 +28,7 @@ before_install:
 
 install:
 - git lfs fetch
+- git lfs checkout
 - make hashdist
 - make stack
 - make stack/default.yaml
