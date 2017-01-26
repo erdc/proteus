@@ -129,33 +129,49 @@ class RKEV(proteus.TimeIntegration.SSP33):
             elif self.lstage == 2:
                 for ci in range(self.nc):
                     self.m_stage[ci][self.lstage][:] = self.transport.q[('m',ci)][:]
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
                     self.m_stage[ci][self.lstage] *= 0.25
                     self.m_stage[ci][self.lstage] += 0.75*self.m_last[ci]
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
                     self.u_dof_stage[ci][self.lstage] *= 0.25
                     self.u_dof_stage[ci][self.lstage] += 0.75*self.u_dof_last[ci]
             elif self.lstage == 3:
                 for ci in range(self.nc):
                     self.m_stage[ci][self.lstage][:] = self.transport.q[('m',ci)][:]
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
                     self.m_stage[ci][self.lstage] *= 2.0/3.0
                     self.m_stage[ci][self.lstage] += 1.0/3.0*self.m_last[ci]
+                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
                     self.u_dof_stage[ci][self.lstage] *= 2.0/3.0
                     self.u_dof_stage[ci][self.lstage] += 2.0/3.0*self.u_dof_last[ci]
                     #update transport model and re-evaluate residual
                     self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage][:]
                     self.transport.q[('m',ci)][:] = self.m_stage[ci][self.lstage][:]
+                    self.transport.getResidual(self.u_dof_stage[ci][self.lstage],
+                                               self.transport.globalResidualDummy)
+ 
         else:
             assert self.lstage == 1
             for ci in range(self.nc):
                 self.m_stage[ci][self.lstage][:]=self.transport.q[('m',ci)][:]
                 self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
- 
-        
+        #mwf hack
+        #self.transport.coefficients.u_dof_old[:] = self.u_dof_stage[0][self.lstage][:]
+
+    def initializeTimeHistory(self,resetFromDOF=True):
+        """
+        Push necessary information into time history arrays
+        """
+        for ci in range(self.nc):
+            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+  
     def updateTimeHistory(self,resetFromDOF=False):
         """
         assumes successful step has been taken
         """
+        #mwf
+        #import pdb;
+        #pdb.set_trace()
+        
         self.t = self.tLast + self.dt
         for ci in range(self.nc):
             self.m_last[ci][:] = self.transport.q[('m',ci)][:]
@@ -833,12 +849,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.mesh.nodeVelocityArray==None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
     def FCTStep(self,t):
+        #mwf debug
+        import pdb
+        #pdb.set_trac()
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         self.vof.FCTStep(self.timeIntegration.dt,
                          self.nnz, #number of non zero entries
                          len(rowptr)-1, #number of DOFs
                          self.ML, #Lumped mass matrix
-                         self.coefficients.u_dof_old, #soln
+                         self.timeIntegration.u_dof_last[0],# mwf hack self.coefficients.u_dof_old, #soln
                          self.u[0].dof, #solH
                          self.coefficients.flux_plus_dLij_times_soln,
                          rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
@@ -1091,8 +1110,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementDiametersArray,
             self.u[0].dof,
             # mwf will need to have a separate hook for u_old (last time step) and last stage
+            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage], #
             #self.coefficients.u_dof_old,
-            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],
             self.coefficients.u_dof_old_old,
             self.coefficients.velx_tn_dof,
             self.coefficients.vely_tn_dof, # HACKED TO 2D FOR NOW (MQL)
