@@ -75,16 +75,12 @@ extern "C"
     
     int *elementOffsets_subdomain_owned,
       *elementNumbering_subdomain2global,
-      *elementNumbering_global2original,
       *nodeOffsets_subdomain_owned,
       *nodeNumbering_subdomain2global,
-      *nodeNumbering_global2original,
       *elementBoundaryOffsets_subdomain_owned,
       *elementBoundaryNumbering_subdomain2global,
-      *elementBoundaryNumbering_global2original,
       *edgeOffsets_subdomain_owned,
-      *edgeNumbering_subdomain2global,
-      *edgeNumbering_global2original;
+      *edgeNumbering_subdomain2global;
     Mesh* subdomainp;
   };
   
@@ -128,16 +124,12 @@ extern "C"
     //parallel
     mesh.elementOffsets_subdomain_owned=NULL;
     mesh.elementNumbering_subdomain2global=NULL;
-    mesh.elementNumbering_global2original=NULL;
     mesh.nodeOffsets_subdomain_owned=NULL;
     mesh.nodeNumbering_subdomain2global=NULL;
-    mesh.nodeNumbering_global2original=NULL;
     mesh.elementBoundaryOffsets_subdomain_owned=NULL;
     mesh.elementBoundaryNumbering_subdomain2global=NULL;
-    mesh.elementBoundaryNumbering_global2original=NULL;
     mesh.edgeOffsets_subdomain_owned=NULL;
     mesh.edgeNumbering_subdomain2global=NULL;
-    mesh.edgeNumbering_global2original=NULL;
 
     // NURBS
     mesh.nx=mesh.ny=mesh.nz=0;
@@ -159,16 +151,12 @@ extern "C"
     //parallel
     mesh.elementOffsets_subdomain_owned=NULL;
     mesh.elementNumbering_subdomain2global=NULL;
-    mesh.elementNumbering_global2original=NULL;
     mesh.nodeOffsets_subdomain_owned=NULL;
     mesh.nodeNumbering_subdomain2global=NULL;
-    mesh.nodeNumbering_global2original=NULL;
     mesh.elementBoundaryOffsets_subdomain_owned=NULL;
     mesh.elementBoundaryNumbering_subdomain2global=NULL;
-    mesh.elementBoundaryNumbering_global2original=NULL;
     mesh.edgeOffsets_subdomain_owned=NULL;
     mesh.edgeNumbering_subdomain2global=NULL;
-    mesh.edgeNumbering_global2original=NULL;
     mesh.subdomainp=NULL;
 
   }
@@ -226,16 +214,12 @@ extern "C"
     //parallel
     if(mesh.elementOffsets_subdomain_owned!=NULL) delete [] mesh.elementOffsets_subdomain_owned;
     if(mesh.elementNumbering_subdomain2global!=NULL) delete [] mesh.elementNumbering_subdomain2global;
-    if(mesh.elementNumbering_global2original!=NULL) delete [] mesh.elementNumbering_global2original; 
     if(mesh.nodeOffsets_subdomain_owned!=NULL) delete [] mesh.nodeOffsets_subdomain_owned;
     if(mesh.nodeNumbering_subdomain2global!=NULL) delete [] mesh.nodeNumbering_subdomain2global;
-    if(mesh.nodeNumbering_global2original!=NULL) delete [] mesh.nodeNumbering_global2original;
     if(mesh.elementBoundaryOffsets_subdomain_owned!=NULL) delete [] mesh.elementBoundaryOffsets_subdomain_owned;
     if(mesh.elementBoundaryNumbering_subdomain2global!=NULL) delete [] mesh.elementBoundaryNumbering_subdomain2global;
-    if(mesh.elementBoundaryNumbering_global2original!=NULL) delete [] mesh.elementBoundaryNumbering_global2original;
     if(mesh.edgeOffsets_subdomain_owned!=NULL) delete [] mesh.edgeOffsets_subdomain_owned;
     if(mesh.edgeNumbering_subdomain2global!=NULL) delete [] mesh.edgeNumbering_subdomain2global; 
-    if(mesh.edgeNumbering_global2original!=NULL) delete [] mesh.edgeNumbering_global2original;
     
     mesh.elementNodesArray=NULL;
     mesh.nodeElementsArray=NULL;
@@ -260,16 +244,12 @@ extern "C"
     //parallel
     mesh.elementOffsets_subdomain_owned=NULL;
     mesh.elementNumbering_subdomain2global=NULL;
-    mesh.elementNumbering_global2original=NULL;
     mesh.nodeOffsets_subdomain_owned=NULL;
     mesh.nodeNumbering_subdomain2global=NULL;
-    mesh.nodeNumbering_global2original=NULL;
     mesh.elementBoundaryOffsets_subdomain_owned=NULL;
     mesh.elementBoundaryNumbering_subdomain2global=NULL;
-    mesh.elementBoundaryNumbering_global2original=NULL;    
     mesh.edgeOffsets_subdomain_owned=NULL;
     mesh.edgeNumbering_subdomain2global=NULL;
-    mesh.edgeNumbering_global2original=NULL;
     mesh.subdomainp=NULL;
     
   }
