@@ -35,7 +35,7 @@ install:
 - ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source"
 - ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_ubuntu_14_04 --objects="build"
 - cd stack
-- ./hashdist/bin/hit build default.yaml -v
+- ../hashdist/bin/hit build default.yaml -v
 - cd ..
 - make profile
 - FC=gfortran CC=mpicc CXX=mpicxx make install
