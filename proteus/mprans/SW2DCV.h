@@ -899,6 +899,28 @@ namespace proteus
       /* 	} */
     }
 
+    inline 
+      double maxWaveSpeed(double g, double nx, double ny,
+			  double hL, double huL, double hvL, 
+			  double hR, double huR, double hvR) 
+    {
+      //1-eigenvalue: uL-sqrt(g*hL)
+      //3-eigenvalue: uR+sqrt(g*hR) 
+
+      // TEMPORAL MAX WAVE SPEED (This is wrong)
+      double uL = huL/(hL+1E-10), uR = huR/(hR+1E-10);
+      double vL = hvL/(hL+1E-10), vR = hvR/(hR+1E-10);
+
+      double velL = uL*nx + vL*ny, velR = uR*nx + vR*ny;
+
+      double lambda1 = velL - sqrt(g*hL);
+      double lambda3 = velR + sqrt(g*hR);
+      
+      //std::cout << hi << "\t" << hj << std::endl;
+      //std::cout << lambda1 << "\t" << lambda3 << std::endl;
+      return fmax(lambda1,lambda3);
+    }
+
     inline
       void calculateCFL(const double& elementDiameter,
 			const double& g,
@@ -2587,7 +2609,7 @@ namespace proteus
 		    dt*ck.Mass_weak(mass_acc_t,h_test_dV[i]) +
 #endif
       		    0*dt*ck.Advection_weak(mass_adv_star,&h_grad_test_dV[i_nSpace]) +
-		    dt*ck.NumericalDiffusion(q_numDiff_h_last[eN_k],grad_h_star,&h_grad_test_dV[i_nSpace]);
+		    0*dt*ck.NumericalDiffusion(q_numDiff_h_last[eN_k],grad_h_star,&h_grad_test_dV[i_nSpace]);
 		  
       		  elementResidual_hu[i] += 
 #if LUMPED_MASS_MATRIX
@@ -2597,7 +2619,7 @@ namespace proteus
 #endif
       		    0*dt*ck.Advection_weak(mom_hu_adv_star,&vel_grad_test_dV[i_nSpace]) +
 		    //dt*ck.Reaction_weak(mom_hu_source_star,vel_test_dV[i]) +
-		    dt*ck.NumericalDiffusion(q_numDiff_hu_last[eN_k],grad_hu_star,&vel_grad_test_dV[i_nSpace]);
+		    0*dt*ck.NumericalDiffusion(q_numDiff_hu_last[eN_k],grad_hu_star,&vel_grad_test_dV[i_nSpace]);
 		 
       		  elementResidual_hv[i] += 
 #if LUMPED_MASS_MATRIX
@@ -2607,7 +2629,7 @@ namespace proteus
 #endif
       		    0*dt*ck.Advection_weak(mom_hv_adv_star,&vel_grad_test_dV[i_nSpace]) +
 		    //dt*ck.Reaction_weak(mom_hv_source_star,vel_test_dV[i]) +
-		    dt*ck.NumericalDiffusion(q_numDiff_hv_last[eN_k],grad_hv_star,&vel_grad_test_dV[i_nSpace]);
+		    0*dt*ck.NumericalDiffusion(q_numDiff_hv_last[eN_k],grad_hv_star,&vel_grad_test_dV[i_nSpace]);
       		}
       	    }
       	  
@@ -2632,11 +2654,13 @@ namespace proteus
       int ij = 0;
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  //double hi = h_dof_old[i];
-	  //double hui = hu_dof_old[i];
-	  //double hvi = hv_dof_old[i];
+	  double hi = h_dof_old[i];
+	  double hui = hu_dof_old[i];
+	  double hvi = hv_dof_old[i];
 
 	  double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
+	  double ith_dissipative_term1=0., ith_dissipative_term2=0., ith_dissipative_term3=0.;
+
 	  // loop over the sparsity pattern of the i-th DOF
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
@@ -2644,18 +2668,39 @@ namespace proteus
 	      double hj = h_dof_old[j];
 	      double huj = hu_dof_old[j];
 	      double hvj = hv_dof_old[j];
-	      
+
+	      // Nodal projection of fluxes
 	      ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
 	      ith_flux_term2 += (huj*huj/hj + 0.5*g*hj*hj)*Cx[ij] + huj*hvj/hj*Cy[ij]; // f2*C
 	      ith_flux_term3 += huj*hvj/hj*Cx[ij] + (hvj*hvj/hj + 0.5*g*hj*hj)*Cy[ij]; // f3*C
 
+	      // Dissipative term
+	      double dLij = 0;
+	      if (i != j) // This is not necessary. See formula for ith_dissipative_terms
+		{
+		  // norm of the C and C transpose matrices
+		  double cij_norm = sqrt(Cx[ij]*Cx[ij] + Cy[ij]*Cy[ij]);
+		  double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
+
+		  double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
+		  double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
+
+		  dLij =  fmax(maxWaveSpeed(g,nxij,nyij,
+					    hi,hui,hvi,hj,huj,hvj)*cij_norm,
+			       maxWaveSpeed(g,nxji,nyji,
+					    hj,huj,hvj,hi,hui,hvi)*cji_norm);
+		    
+		  ith_dissipative_term1 += dLij*(hj-hi);
+		  ith_dissipative_term2 += dLij*(huj-hui);
+		  ith_dissipative_term3 += dLij*(hvj-hvi);
+		}
 	      // update ij
 	      ij+=1;
 	    }
 	  // update global residual
-	  globalResidual[offset_h+stride_h*i] += dt*ith_flux_term1;
-	  globalResidual[offset_hu+stride_hu*i] += dt*ith_flux_term2;
-	  globalResidual[offset_hv+stride_hv*i] += dt*ith_flux_term3;
+	  globalResidual[offset_h+stride_h*i]   += dt*(ith_flux_term1 - ith_dissipative_term1);
+	  globalResidual[offset_hu+stride_hu*i] += dt*(ith_flux_term2 - ith_dissipative_term2);
+	  globalResidual[offset_hv+stride_hv*i] += dt*(ith_flux_term3 - ith_dissipative_term3);
 	}
     }
  
