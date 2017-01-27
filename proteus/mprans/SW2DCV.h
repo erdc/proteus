@@ -3932,7 +3932,7 @@ namespace proteus
 						 double* vel_trial_trace_ref,
 						 double* vel_grad_trial_trace_ref,
 						 double* vel_test_trace_ref,
-						 double* vel_grad_test_trace_ref,					 
+						 double* vel_grad_test_trace_ref,
 						 double* normal_ref,
 						 double* boundaryJac_ref,
 						 //physics
