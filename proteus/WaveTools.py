@@ -68,7 +68,7 @@ def fastcos_test(phase,sinus=False):
     if(sinus):
         phase = np.pi/2. - phase
     return fastcos(phase,True)
-def fastcosh_test(k,Z):
+def fastcosh_test(k,Z,fast=True):
     """Fast hyperbolic cosine function with Taylor approximation - TO BE USED FOR TESTING"
     Parameters
     ----------
@@ -82,9 +82,9 @@ def fastcosh_test(k,Z):
 
     """
     cython.declare(xx=cython.double[2])
-    fastcosh(xx,k,Z,True)
+    fastcosh(xx,k,Z,fast)
     return xx[0]
-def fastsinh_test(k,Z):
+def fastsinh_test(k,Z,fast=True):
     """Fast hyperbolic sine function with Taylor approximation - TO BE USED FOR TESTING"
     Parameters
     ----------
@@ -98,11 +98,11 @@ def fastsinh_test(k,Z):
 
     """
     cython.declare(xx=cython.double[2])
-    fastcosh(xx,k,Z,True)
+    fastcosh(xx,k,Z,fast)
     return xx[1]
 
 
-def coshkzd_test(k,Z,d):
+def coshkzd_test(k,Z,d, fast=True):
     """Calculation of u horizontal profile cosh(k(d+Z))/sinh(kd) using fast appoximaitons
     and hyp trig relation cosh(a+b) = cosha*coshb+sinha*sinhb
     Parameters
@@ -120,11 +120,11 @@ def coshkzd_test(k,Z,d):
 
     """
     if (Z > -d/2.):
-        return fastcosh_test(k,Z) / np.tanh(k*d) + fastsinh_test(k,Z)
+        return fastcosh_test(k,Z,fast) / np.tanh(k*d) + fastsinh_test(k,Z,fast)
     else:
         return 0. 
 
-def sinhkzd_test(k,Z,d):
+def sinhkzd_test(k,Z,d,fast=True):
     """Calculation of v vertical profile cosh(k(d+Z))/sinh(kd) using fast appoximaitons
     and hyp trig relation sinh(a+b) = sinha*coshb+cosha*sinhb
     Parameters
@@ -143,7 +143,7 @@ def sinhkzd_test(k,Z,d):
     """
 
     if (Z> -d/2.):
-        return fastcosh_test(k,Z) + fastsinh_test(k,Z) / np.tanh(k*d)
+        return fastcosh_test(k,Z,fast) + fastsinh_test(k,Z,fast) / np.tanh(k*d)
     else:
         return 0. 
 
