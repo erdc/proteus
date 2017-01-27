@@ -39,13 +39,13 @@ install:
 - ../hashdist/bin/hit build default.yaml
 - cd ..
 - make profile
+- python -c "import numpy; numpy.test()"
 - FC=gfortran CC=mpicc CXX=mpicxx make install
 - export PATH=$PWD/linux2/bin:$PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
 
 script:
-- python -c "import numpy; numpy.test()"
 - py.test --boxed -v linux2/lib/python2.7/site-packages/proteus-$(python -c "import proteus; print proteus.__version__")-py2.7-linux-x86_64.egg/proteus/tests
 
 notifications:
