@@ -67,7 +67,7 @@ def fastcos_test(phase,sinus=False):
     """
     if(sinus):
         phase = np.pi/2. - phase
-    return fastcos(phase)
+    return fastcos(phase,True)
 def fastcosh_test(k,Z):
     """Fast hyperbolic cosine function with Taylor approximation - TO BE USED FOR TESTING"
     Parameters
@@ -82,7 +82,7 @@ def fastcosh_test(k,Z):
 
     """
     cython.declare(xx=cython.double[2])
-    fastcosh(xx,k,Z)
+    fastcosh(xx,k,Z,True)
     return xx[0]
 def fastsinh_test(k,Z):
     """Fast hyperbolic sine function with Taylor approximation - TO BE USED FOR TESTING"
@@ -98,7 +98,7 @@ def fastsinh_test(k,Z):
 
     """
     cython.declare(xx=cython.double[2])
-    fastcosh(xx,k,Z)
+    fastcosh(xx,k,Z,True)
     return xx[1]
 
 
@@ -732,6 +732,9 @@ class  MonochromaticWaves:
     param : phi0
             Description: Regular wave phase (0 by default)
             Type: float
+    param : fast
+            Description: switch for optimised functions
+            Type: bool
 
             """
     def __init__(self,
@@ -747,9 +750,10 @@ class  MonochromaticWaves:
                  Bcoeff =np.zeros(1000,), 
                  Nf = 1000,
                  meanVelocity = np.array([0.,0,0.]),
-                 phi0 = 0.):
+                 phi0 = 0.,
+                 fast = True):
         
-        
+        self.fast = fast
         knownWaveTypes = ["Linear","Fenton"]
         self.waveType = waveType
         if waveType not in knownWaveTypes:
@@ -841,21 +845,21 @@ class  MonochromaticWaves:
             self._cpp_eta = self.etaFenton
             self._cpp_u = self.uFenton
 
-
+            
     def  etaLinear(self,  x,  t):    
  
-        return __cpp_eta_mode(x ,t, self.kDir_,self.omega,self.phi0,self.amplitude)
+        return __cpp_eta_mode(x ,t, self.kDir_,self.omega,self.phi0,self.amplitude, self.fast)
 
     def etaFenton(self,  x,  t):
 
-        return __cpp_etaFenton(x,t,self.kDir_, self.k, self.omega,self.phi0,self.amplitude, self.Nf, self.Ycoeff_)
+        return __cpp_etaFenton(x,t,self.kDir_, self.k, self.omega,self.phi0,self.amplitude, self.Nf, self.Ycoeff_, self.fast)
 
 
     def  uLinear(self, U, x,  t):        
-        __cpp_vel_mode_p(U, x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.tanhL, self.gAbs)
+        __cpp_vel_mode_p(U, x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.waveDir_,self.vDir_, self.tanhL, self.gAbs, self.fast)
 
     def  uFenton(self,  U, x,  t):
-        __cpp_uFenton(U,x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_, self.tanhF_)
+        __cpp_uFenton(U,x, t, self.kDir_,self.k,self.omega,self.phi0,self.amplitude,self.mwl, self.depth, self.gAbs,self.Nf, self.Bcoeff_, self.mV_,self.waveDir_,self.vDir_, self.tanhF_, self.fast)
 
     def eta(self,x,t):
         """Calculates free surface elevation (MonochromaticWaves class)
@@ -959,6 +963,9 @@ class RandomWaves:
     param : phi
             Description: Component phases (if set to None, phases are picked at random)
             Type: numpy array
+    param : fast
+            Description: switch for optimised functions
+            Type: bool
 
     """
     def __cinit__(self,
@@ -971,9 +978,11 @@ class RandomWaves:
                  N,
                  bandFactor,         #accelerationof gravity
                  spectName ,# random words will result in error and return the available spectra
-                 spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
-                 phi=None
+                  spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
+                  phi=None, 
+                  fast = True
                  ):
+        self.fast= fast
         validSpectra = [JONSWAP,PM_mod]
         spec_fun =loadExistingFunction(spectName, validSpectra)
         self.g = np.array(g)
@@ -1059,7 +1068,7 @@ class RandomWaves:
 
     def _cpp_eta(self,  x,  t):
 
-        return __cpp_etaRandom(x,t,self.kDir_, self.omega_,self.phi_,self.ai_, self.N)
+        return __cpp_etaRandom(x,t,self.kDir_, self.omega_,self.phi_,self.ai_, self.N, self.fast)
 
     def eta(self, x, t):
         """Calculates free surface elevation (RandomWaves class)
@@ -1083,7 +1092,7 @@ class RandomWaves:
         return self._cpp_eta(xx,t)
 
     def _cpp_u(self,  U, x,  t):
-        __cpp_uRandom(U, x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.N, self.waveDir_, self.vDir_, self.tanh_, self.gAbs)
+        __cpp_uRandom(U, x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.N, self.waveDir_, self.vDir_, self.tanh_, self.gAbs, self.fast)
 
     def u(self, x, t):
         """Calculates wave velocity vector (RandomWaves class)
@@ -1205,6 +1214,9 @@ class MultiSpectraRandomWaves:
         param : phi
                 Description: List of component phases
                 Type: list
+        param : fast
+                Description: switch for optimised functions
+                Type: bool
 
     """
     def __cinit__(self,
@@ -1219,9 +1231,11 @@ class MultiSpectraRandomWaves:
                  bandFactor,         #accelerationof gravity
                  spectName ,# random words will result in error and return the available spectra
                  spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
-                 phi
+                 phi,
+                 fast=True
                  ):
 # Checking length of arrays / lists to be equal to NSpectra
+        self.fast = fast
         try:
             if (len(Tp) != Nspectra) or (len(Hs) != Nspectra) or (len(waveDir) != Nspectra) or \
                (len(N) != Nspectra) or (len(bandFactor) != Nspectra) or \
@@ -1272,7 +1286,8 @@ class MultiSpectraRandomWaves:
                 bandFactor[kk],         #accelerationof gravity
                 spectName[kk],# random words will result in error and return the available spectra
                 spectral_params[kk], #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
-                phi[kk]
+                phi[kk],
+                self.fast
                 )
             self.tanhFM[NN1:NN] = RW.tanhF
             self.omegaM[NN1:NN] = RW.omega
@@ -1306,7 +1321,7 @@ class MultiSpectraRandomWaves:
 
     def _cpp_eta(self,  x,  t):
 
-        return __cpp_etaRandom(x,t,self.kDirM_, self.omegaM_,self.phiM_,self.aiM_, self.Nall)
+        return __cpp_etaRandom(x,t,self.kDirM_, self.omegaM_,self.phiM_,self.aiM_, self.Nall,self.fast)
 
     def eta(self, x, t):
         """Calculates free surface elevation (RandomWaves class)
@@ -1331,7 +1346,7 @@ class MultiSpectraRandomWaves:
 
     def _cpp_u(self,  U, x,  t):
 
-        __cpp_uDir(U, x,t,self.kDirM_, self.kiM_, self.omegaM_,self.phiM_,self.aiM_,self.mwl,self.depth, self.Nall, self.waveDirM_, self.vDir_, self.tanhM_, self.gAbs)
+        __cpp_uDir(U, x,t,self.kDirM_, self.kiM_, self.omegaM_,self.phiM_,self.aiM_,self.mwl,self.depth, self.Nall, self.waveDirM_, self.vDir_, self.tanhM_, self.gAbs, self.fast)
 
     def u(self, x, t):
         """Calculates wave velocity vector (RandomWaves class)
@@ -1416,6 +1431,9 @@ class DirectionalWaves:
     param : phiSymm
             Description: Switch for enabling a symmetric phase allocation across directional components
             Type: boolean
+    param : fast
+            Description: Switch for enabling optimised functions 
+            Type: boolean
 
     """
     def __cinit__(self,
@@ -1433,8 +1451,9 @@ class DirectionalWaves:
                  spectral_params = None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  spread_params = None,
                  phi=None, # phi must be an (2*M+1)*N numpy array
-                 phiSymm = False # When true, phi[-pi/2,0] is symmetric to phi[0,pi/2]
-                 ):
+                 phiSymm = False, # When true, phi[-pi/2,0] is symmetric to phi[0,pi/2]
+                  fast = True ):
+        self.fast = fast
         validSpread = [cos2s,mitsuyasu]
         spread_fun =  loadExistingFunction(spreadName, validSpread)
         self.Mtot = 2*M+1
@@ -1553,7 +1572,7 @@ class DirectionalWaves:
         
     def _cpp_eta(self,  x,  t):
 
-        return __cpp_etaRandom(x,t,self.kDir_, self.omega_,self.phi_,self.ai_, self.Nall)
+        return __cpp_etaRandom(x,t,self.kDir_, self.omega_,self.phi_,self.ai_, self.Nall, self.fast)
 
     def eta(self, x, t):
         """Calculates free surface elevation (RandomWaves class)
@@ -1578,7 +1597,7 @@ class DirectionalWaves:
 
     def _cpp_u(self,U,  x,  t):
 
-        __cpp_uDir(U, x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.Nall, self.waveDir_, self.vDir_, self.tanh_, self.gAbs)
+        __cpp_uDir(U, x,t,self.kDir_, self.ki_, self.omega_,self.phi_,self.ai_,self.mwl,self.depth, self.Nall, self.waveDir_, self.vDir_, self.tanh_, self.gAbs, self.fast)
 
     def u(self, x, t):
         """Calculates wave velocity vector (RandomWaves class)
@@ -1661,6 +1680,9 @@ class TimeSeries:
     param : seriesArray
             Description: Free surface elevation time series given in an array format (None by default)
             Type: numpy array
+    param : fast
+            Description: Switch for enabling optimised functions 
+            Type: boolean
 
     """
     def __init__(self,
@@ -1677,9 +1699,10 @@ class TimeSeries:
                  window_params = None, #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Tm":Tm,"Window":wind_filt,"Overlap":overlap,"Cutoff":cutoff}
                  arrayData = False,
                  seriesArray = None,
-                 Lgen = np.array([0.,0.,0])
+                 Lgen = np.array([0.,0.,0]),
+                 fast = True
                  ):
-
+        self.fast = fast
         self.rec_direct = rec_direct
         # Setting the depth
         self.depth = depth
@@ -1992,9 +2015,9 @@ class TimeSeries:
 
 
     def _cpp_etaDirect(self,x,t):
-        return __cpp_etaDirect(x,self.x0_,t,self.kDir_,self.omega_,self.phi_,self.ai_,self.Nf)
+        return __cpp_etaDirect(x,self.x0_,t,self.kDir_,self.omega_,self.phi_,self.ai_,self.Nf, self.fast)
     def _cpp_uDirect(self,U,x,t):
-        __cpp_uDirect(U,x,self.x0_,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,self.waveDir_, self.vDir_, self.tanh_, self.gAbs)
+        __cpp_uDirect(U,x,self.x0_,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,self.waveDir_, self.vDir_, self.tanh_, self.gAbs, self.fast)
 
     def etaDirect(self, x, t):
 
@@ -2067,10 +2090,10 @@ class TimeSeries:
     def _cpp_etaWindow(self,x,t):
         Nw = __cpp_findWindow(t,self.handover, self.t0,self.Twindow,self.Nwindows, self.whand_) #Nw
         
-        return __cpp_etaWindow(x,self.x0_,t,self.T0_,self.kDir_,self.omega_,self.phi_,self.ai_,self.Nf,Nw)
+        return __cpp_etaWindow(x,self.x0_,t,self.T0_,self.kDir_,self.omega_,self.phi_,self.ai_,self.Nf,Nw, self.fast)
     def _cpp_uWindow(self,U, x,t):
         Nw = __cpp_findWindow(t,self.handover, self.t0,self.Twindow,self.Nwindows, self.whand_) #Nw
-        __cpp_uWindow(U,x,self.x0_,t,self.T0_,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,Nw,self.waveDir_, self.vDir_, self.tanh_, self.gAbs)
+        __cpp_uWindow(U,x,self.x0_,t,self.T0_,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,Nw,self.waveDir_, self.vDir_, self.tanh_, self.gAbs, self.fast)
 
     def etaWindow(self, x, t):
         """Calculates free surface elevation(Timeseries class-window method
@@ -2178,6 +2201,10 @@ class RandomWavesFast:
     param : Lgen
             Description: Length of the generation zone (np.array([0., 0., 0.]) by default
             Type: numpy array
+       param : fast
+            Description: Switch for enabling optimised functions 
+            Type: boolean
+
     """
 
     def __init__(self,
@@ -2198,8 +2225,8 @@ class RandomWavesFast:
                  Lgen = np.array([0., 0. ,0. ]),
                  Nwaves = 15,
                  Nfreq = 32,
-                 checkAcc = True
-                 ):
+                 checkAcc = True,
+                 fast= True):
         RW  =         RandomWaves(
                                  Tp, # np array with
                                  Hs,
@@ -2237,7 +2264,7 @@ class RandomWavesFast:
 
 
 
-
+        self.fast = fast
         TS = TimeSeries(
                  fname, # e.g.= "Timeseries.txt",
                  0,
@@ -2252,7 +2279,8 @@ class RandomWavesFast:
                  window_params = {"Nwaves":Nwaves ,"Tm":Tm,"Window":"costap","Overlap":overl,"Cutoff":cutoff_win},
                  arrayData = True,
                  seriesArray = self.series,
-                 Lgen = Lgen
+                 Lgen = Lgen,
+            fast=self.fast
                  )
 
             #Checking accuracy of the approximation
@@ -2332,6 +2360,10 @@ class RandomNLWaves:
     param : phi
             Description: Component phases (if set to None, phases are picked at random)
             Type: numpy array
+    param : fast
+            Description: Switch for enabling optimised functions 
+            Type: boolean
+
     """
     def __init__(self,
                  Tstart,
@@ -2346,9 +2378,10 @@ class RandomNLWaves:
                  bandFactor,              #width factor for band around peak frequency fp
                  spectName,               #random words will result in error and return the available spectra
                  spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
-                 phi=None                 #array of component phases
-                 ):
-        RW = RandomWaves(Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
+                 phi=None,                 #array of component phases
+                 fast = True                 ):
+        self.fast= fast
+        RW = RandomWaves(Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi,fast = self.fast )
 
         self.gAbs = RW.gAbs
         self.eta_linear = RW.eta
@@ -2389,7 +2422,7 @@ class RandomNLWaves:
         #c++ declarations
 
     def _cpp_eta_2ndOrder(self,x,t):
-        return __cpp_eta2nd(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_)
+        return __cpp_eta2nd(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_, self.fast)
     def eta_2ndOrder(self,x,t):
         """Calculates the free surface elevation for 2nd-order terms
 
@@ -2424,7 +2457,7 @@ class RandomNLWaves:
         '''
 
     def _cpp_eta_short(self,x,t):
-        return __cpp_eta_short(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs)
+        return __cpp_eta_short(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
 
     
     #higher harmonics
@@ -2466,7 +2499,7 @@ class RandomNLWaves:
         '''
 
     def _cpp_eta_long(self,x,t):
-        return __cpp_eta_long(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs)
+        return __cpp_eta_long(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
 
     #lower harmonics
     def eta_long(self,x,t):
@@ -2712,6 +2745,10 @@ class RandomNLWavesFast:
     param : Vgen
             Description: Length of the generation zone (np.array([0., 0., 0.]) by default
             Type: numpy array
+    param : fast
+            Description: Switch for enabling optimised functions 
+            Type: boolean
+
     """
     def __init__(self,
                  Tstart,
@@ -2731,10 +2768,12 @@ class RandomNLWavesFast:
                  Vgen = np.array([0.,0.,0.]),    #array of component phases
                  Nwaves = 15,
                  Nfreq = 32,
-                 NLongW = 10.
+                 NLongW = 10.,
+                 fast = True
                  ):
-        aR = RandomWaves(Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
-        aRN = RandomNLWaves(Tstart,Tend,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi)
+        self.fast = fast
+        aR = RandomWaves(Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi,fast = self.fast)
+        aRN = RandomNLWaves(Tstart,Tend,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi, fast = self.fast)
         self.omega = aR.omega
         self.mwl = mwl
 
@@ -2774,7 +2813,8 @@ class RandomNLWavesFast:
                     rec_direct = rec_d,
                     window_params = {"Nwaves":Nwaves ,"Tm":periods[ii],"Window":"costap"},
                     arrayData = True,
-                    seriesArray = series)
+                    seriesArray = series,
+                fast = self.fast)
                            )
 
 
