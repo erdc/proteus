@@ -52,7 +52,49 @@ class TestVOFrotationEV():
                     print ("Error: %s - %s." %(e.filename, e.strerror ))
             else:
                 pass
-    def test_vof_total_mass_T1m1(self):
+    def notest_vof_total_mass_T1m1_FE(self):
+        """
+        Test total mass for Forward Euler Integration running for final time T=0.1
+
+        These are the flags used for VOF.h in this benchmark for now
+        #define EDGE_VISCOSITY 1
+        #define USE_EDGE_BASED_EV 1 // if not then dissipative matrix is based purely on smoothness indicator of the solution
+        #define POWER_SMOOTHNESS_INDICATOR 2
+        #define LUMPED_MASS_MATRIX 0
+
+        """
+        run_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        #set the time step
+        vf.p.T = 0.1
+        vf.n.nDTout = 10
+        vf.n.DT = vf.p.T/float(vf.n.nDTout)
+        vf.so.DT = vf.n.DT
+        vf.so.tnList = [i*vf.n.DT for i  in range(vf.n.nDTout+1)]
+
+        #force ForwardEuler
+        vf.timeIntegration_vof="FE"
+        vf.n.timeOrder = 1
+        vf.n.nStagesTime = 1
+        vf.rot2D.soname=vf.rot2D.soname.replace("SSP33","FE")
+        vf.p.name = vf.p.name.replace("SSP33","FE")
+        vf.so.name = vf.rot2D.soname
+        
+        ns = proteus.NumericalSolution.NS_base(vf.so,[vf.p],[vf.n],vf.so.sList,opts)
+        sim_name = ns.modelList[0].name
+        aux = ns.auxiliaryVariables[ns.modelList[0].name][0]
+        self.sim_names.append(sim_name)
+        self.aux_names.append(aux.ofile.name)
+
+        ns.calculateSolution('test_vof_total_mass_T1m1')
+        aux.ofile.close() #have to close manually for now, would be good to have a hook for this
+        ref_total_mass = np.loadtxt(os.path.join(run_dir,'comparison_files','total_mass_comp_0_T1m1_'+sim_name+'.txt'))
+        sim_total_mass = np.loadtxt('total_mass_comp_0_'+sim_name+'.txt')
+
+        failed = np.allclose(ref_total_mass, sim_total_mass,
+                             rtol=1e-05, atol=1e-07, equal_nan=True)
+
+    def test_vof_total_mass_T1m1_SSP33(self):
 
         run_dir = os.path.dirname(os.path.abspath(__file__))
         
@@ -63,24 +105,33 @@ class TestVOFrotationEV():
         vf.so.DT = vf.n.DT
         vf.so.tnList = [i*vf.n.DT for i  in range(vf.n.nDTout+1)]
 
+        #force SSP33
+        vf.timeIntegration_vof="SSP33"
+        vf.n.timeOrder = 3
+        vf.n.nStagesTime = 3
+        vf.rot2D.soname=vf.rot2D.soname.replace("FE","SSP33")
+        vf.p.name = vf.p.name.replace("FE","SSP33")
+        vf.so.name = vf.rot2D.soname
+        
         ns = proteus.NumericalSolution.NS_base(vf.so,[vf.p],[vf.n],vf.so.sList,opts)
         sim_name = ns.modelList[0].name
         aux = ns.auxiliaryVariables[ns.modelList[0].name][0]
         self.sim_names.append(sim_name)
         self.aux_names.append(aux.ofile.name)
 
-        ns.calculateSolution('test_vof_total_mass_T1')
+        ns.calculateSolution('test_vof_total_mass_T1m1')
         aux.ofile.close() #have to close manually for now, would be good to have a hook for this
         ref_total_mass = np.loadtxt(os.path.join(run_dir,'comparison_files','total_mass_comp_0_T1m1_'+sim_name+'.txt'))
         sim_total_mass = np.loadtxt('total_mass_comp_0_'+sim_name+'.txt')
 
         failed = np.allclose(ref_total_mass, sim_total_mass,
                              rtol=1e-05, atol=1e-07, equal_nan=True)
-        #return ref_total_mass,sim_total_mass
 
-    def no_test_vof_total_mass_T1(self):
+
+    def notest_vof_total_mass_T1_FE(self):
+
         run_dir = os.path.dirname(os.path.abspath(__file__))
-
+        
         #set the time step
         vf.p.T = 1.0
         vf.n.nDTout = 10
@@ -88,6 +139,14 @@ class TestVOFrotationEV():
         vf.so.DT = vf.n.DT
         vf.so.tnList = [i*vf.n.DT for i  in range(vf.n.nDTout+1)]
 
+        #force ForwardEuler
+        vf.timeIntegration_vof="FE"
+        vf.n.timeOrder = 1
+        vf.n.nStagesTime = 1
+        vf.rot2D.soname=vf.rot2D.soname.replace("SSP33","FE")
+        vf.p.name = vf.p.name.replace("SSP33","FE")
+        vf.so.name = vf.rot2D.soname
+        
         ns = proteus.NumericalSolution.NS_base(vf.so,[vf.p],[vf.n],vf.so.sList,opts)
         sim_name = ns.modelList[0].name
         aux = ns.auxiliaryVariables[ns.modelList[0].name][0]
@@ -101,7 +160,39 @@ class TestVOFrotationEV():
 
         failed = np.allclose(ref_total_mass, sim_total_mass,
                              rtol=1e-05, atol=1e-07, equal_nan=True)
-        #return ref_total_mass,sim_total_mass
+        
+    def notest_vof_total_mass_T1_SSP33(self):
+
+        run_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        #set the time step
+        vf.p.T = 1.0
+        vf.n.nDTout = 10
+        vf.n.DT = vf.p.T/float(vf.n.nDTout)
+        vf.so.DT = vf.n.DT
+        vf.so.tnList = [i*vf.n.DT for i  in range(vf.n.nDTout+1)]
+
+        #force ForwardEuler
+        vf.timeIntegration_vof="SSP33"
+        vf.n.timeOrder = 3
+        vf.n.nStagesTime = 3
+        vf.rot2D.soname=vf.rot2D.soname.replace("FE","SSP33")
+        vf.p.name = vf.p.name.replace("FE","SSP33")
+        vf.so.name = vf.rot2D.soname
+        
+        ns = proteus.NumericalSolution.NS_base(vf.so,[vf.p],[vf.n],vf.so.sList,opts)
+        sim_name = ns.modelList[0].name
+        aux = ns.auxiliaryVariables[ns.modelList[0].name][0]
+        self.sim_names.append(sim_name)
+        self.aux_names.append(aux.ofile.name)
+
+        ns.calculateSolution('test_vof_total_mass_T1')
+        aux.ofile.close() #have to close manually for now, would be good to have a hook for this
+        ref_total_mass = np.loadtxt(os.path.join(run_dir,'comparison_files','total_mass_comp_0_T1_'+sim_name+'.txt'))
+        sim_total_mass = np.loadtxt('total_mass_comp_0_'+sim_name+'.txt')
+
+        failed = np.allclose(ref_total_mass, sim_total_mass,
+                             rtol=1e-05, atol=1e-07, equal_nan=True)
 
 if __name__ == '__main__':
     pass
