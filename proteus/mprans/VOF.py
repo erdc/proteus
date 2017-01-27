@@ -799,6 +799,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                           self.nDOF_test_element[0],
                                           self.nDOF_trial_element[0]),'d')
                 self.cterm_a[d] = nzval.copy()
+                #self.cterm_a[d] = numpy.zeros(nzval.size)
                 self.cterm_global[d] = SparseMat(self.nFreeDOF_global[0],
                                                  self.nFreeDOF_global[0],
                                                  nnz,
