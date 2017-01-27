@@ -618,8 +618,37 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.cterm_transpose={}
             self.cterm_a_transpose={}
             self.cterm_global_transpose={}
+            #Sparsity pattern for Jacobian
             rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
             nnz = nzval.shape[-1] #number of non-zero entries in sparse matrix
+
+            ###########################################
+            ##### SPARSITY PATTERN FOR C MATRICES #####
+            ###########################################
+            #construct nnz_cMatrix, czval_cMatrix, rowptr_cMatrix, colind_cMatrix C matrix
+            nnz_cMatrix = nnz/3/3 #This is always true for the SWEs in 2D
+            nzval_cMatrix = numpy.zeros(nnz_cMatrix) #This is enough since the values are filled later
+            rowptr_cMatrix = numpy.zeros(self.u[0].dof.size+1,'i') #NOTE that in particular rowptr_cMatrix[0]=0
+            colind_cMatrix = numpy.zeros(nnz_cMatrix,'i')
+            #fill vector rowptr_cMatrix 
+            for i in range(1,rowptr_cMatrix.size):
+                rowptr_cMatrix[i] = rowptr_cMatrix[i-1]+(rowptr[3*(i-1)+1]-rowptr[3*(i-1)])/3 
+                # = rowptr_cMatrix[i-1] + 1/3*(Number of columns of Jacobian's row 3*(i-1)=0, 3, 6, 9, 12, ... 3*(i-1), ..., 3*n-3)            
+
+            #fill vector colind_cMatrix
+            i_cMatrix=0 #ith row of cMatrix
+            for i in range(rowptr.size-1): #0 to total num of DOFs (i.e. num of rows of jacobian)
+                if (i%3 == 0): # Just consider the rows related to the h variable
+                    for j,offset in enumerate(range(rowptr[i],rowptr[i+1])):
+                        offset_cMatrix = range(rowptr_cMatrix[i_cMatrix],rowptr_cMatrix[i_cMatrix+1])
+                        if (j%3 == 0):
+                            colind_cMatrix[offset_cMatrix[j/3]] = colind[offset]/3 
+                    i_cMatrix+=1
+            # END OF SPARSITY PATTERN FOR C MATRICES 
+            # Temporal testing of sparsity pattern
+            #print rowptr_cMatrix
+            #print colind_cMatrix
+            #input("STOP")
             di = numpy.zeros((self.mesh.nElements_global,
                               self.nQuadraturePoints_element,
                               self.nSpace_global),
@@ -678,14 +707,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.cterm[d] = numpy.zeros((self.mesh.nElements_global,
                                              self.nDOF_test_element[0],
                                              self.nDOF_trial_element[0]),'d')
-                self.cterm_a[d] = nzval.copy()
+                self.cterm_a[d] = nzval_cMatrix.copy()
                 self.cterm_global[d] = LinearAlgebraTools.SparseMat(self.nFreeDOF_global[0],
                                                                     self.nFreeDOF_global[0],
                                                                     nnz,
                                                                     self.cterm_a[d],
-                                                                    colind,
-                                                                    rowptr)
-                cfemIntegrals.zeroJacobian_CSR(self.nnz, self.cterm_global[d])
+                                                                    colind_cMatrix,
+                                                                    rowptr_cMatrix)
+
+                
+
+
+                cfemIntegrals.zeroJacobian_CSR(nnz_cMatrix, self.cterm_global[d])
                 di[:] = 0.0
                 di[...,d] = 1.0
                 cfemIntegrals.updateHamiltonianJacobian_weak_lowmem(di,
@@ -700,6 +733,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.csrColumnOffsets[(0,0)],
                                                                           self.cterm[d],
                                                                           self.cterm_global[d])
+                #print self.nFreeDOF_global[0]
+                #print nnz_cMatrix
+                #print self.cterm_a[d]
+                #print colind_cMatrix
+                #print rowptr_cMatrix 
+                #input("")
+                #rowptr, colind, nzval = self.cterm_global[d].getCSRrepresentation()
+                #print rowptr_cMatrix
+                #print colind_cMatrix
+                #print nzval
+                #input("***** checking C Matrix *****")
                 #C Transpose matrices
                 self.cterm_transpose[d] = numpy.zeros((self.mesh.nElements_global,
                                                        self.nDOF_test_element[0],
@@ -731,7 +775,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()        
         rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
+        numDOFsPerEqn = self.u[0].dof.size #(mql): I am assuming all variables live on the same FE space
 
+        #print rowptr.size - 1, self.h_dof_old.size
+        #print self.nnz, Cx.size, nnz
+        #input ("***")
+        
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -869,7 +918,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             Cx, 
             Cy, 
             CTx, 
-            CTy)
+            CTy,
+            numDOFsPerEqn,
+            rowptr,
+            colind)
 
         #import pdb
         #pdb.set_trace()

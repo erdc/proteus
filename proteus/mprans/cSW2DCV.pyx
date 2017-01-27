@@ -111,7 +111,10 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* Cx, 
 			       double* Cy,
 			       double* CTx,
-			       double* CTy)
+			       double* CTy,
+			       int numDOFsPerEqn,
+			       int* csrRowIndeces_DofLoops,   
+			       int* csrColumnOffsets_DofLoops)
         void calculateResidual_invariant_domain_SWEs(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -217,7 +220,10 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* Cx, 
 			       double* Cy,
 			       double* CTx,
-			       double* CTy)
+			       double* CTy,
+			       int numDOFsPerEqn,
+			       int* csrRowIndeces_DofLoops,   
+			       int* csrColumnOffsets_DofLoops)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -569,7 +575,10 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray Cx, 
 			 numpy.ndarray Cy, 
 			 numpy.ndarray CTx, 
-			 numpy.ndarray CTy): 
+			 numpy.ndarray CTy,
+			 int numDOFsPerEqn,
+			 numpy.ndarray csrRowIndeces_DofLoops,   
+			 numpy.ndarray csrColumnOffsets_DofLoops):
        self.thisptr.calculateResidual(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -678,7 +687,10 @@ cdef class cSW2DCV_base:
             <double*> Cx.data,
             <double*> Cy.data,
             <double*> CTx.data,
-            <double*> CTy.data)		       
+            <double*> CTy.data,
+	    numDOFsPerEqn,
+            <int*> csrRowIndeces_DofLoops.data,   
+	    <int*> csrColumnOffsets_DofLoops.data)		       
    def calculateResidual_invariant_domain_SWEs(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -785,7 +797,10 @@ cdef class cSW2DCV_base:
                          numpy.ndarray Cx,
                          numpy.ndarray Cy,
                          numpy.ndarray CTx,
-                         numpy.ndarray CTy):
+                         numpy.ndarray CTy,
+			 int numDOFsPerEqn,
+			 numpy.ndarray csrRowIndeces_DofLoops,
+			 numpy.ndarray csrColumnOffsets_DofLoops):
        self.thisptr.calculateResidual_invariant_domain_SWEs(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -894,7 +909,10 @@ cdef class cSW2DCV_base:
             <double*> Cx.data,
             <double*> Cy.data,
             <double*> CTx.data,
-            <double*> CTy.data)		       
+            <double*> CTy.data,
+	    numDOFsPerEqn,
+	    <int*> csrRowIndeces_DofLoops.data,
+	    <int*> csrColumnOffsets_DofLoops.data)  
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
