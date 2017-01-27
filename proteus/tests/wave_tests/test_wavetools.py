@@ -437,7 +437,7 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         dir2 = 0.5
         waveDir = np.array([dir1,dir2, 0])
         phi0 = 0.
-        a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = np.array([0.]), Bcoeff  = np.array([0.]), meanVelocity = np.array([0.,0,0.]),phi0 = phi0)
+        a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = np.array([0.]), Bcoeff  = np.array([0.]), meanVelocity = np.array([0.,0,0.]),phi0 = phi0, fast = False)
         x = 150.
         y = 130.
         z = mwl 
@@ -453,14 +453,14 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         normDir = setDirVector(waveDir)
         amp = 0.5 * waveHeight
 # Flow equation from Wikipedia, Airy wave theory https://en.wikipedia.org/wiki/Airy_wave_theoryhttps://en.wikipedia.org/wiki/Airy_wave_theory
-        etaRef = amp*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
+        etaRef = amp*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
         z0 = z - mwl
         
-        uxRef = normDir[0]*(amp*omega*fcosh(kw,z0,depth)*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,omega/kw,depth))
-        uyRef = normDir[1]*(amp*omega*fcosh(kw,z0,depth)*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,omega/kw,depth))
-        uzRef = amp*omega*fsinh(kw,z0,depth)*fcos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0,True)
+        uxRef = normDir[0]*(amp*omega*fcosh(kw,z0,depth,fast=False)*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,omega/kw,depth))
+        uyRef = normDir[1]*(amp*omega*fcosh(kw,z0,depth,fast=False)*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)-Ud(amp,gAbs,omega/kw,depth))
+        uzRef = amp*omega*fsinh(kw,z0,depth,fast=False)*sin(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
         
-
+        print ux,uxRef
         err = abs(eta/etaRef - 1.)
         err_x = abs(ux/uxRef - 1.)
         err_y = abs(uy/uyRef - 1.)
