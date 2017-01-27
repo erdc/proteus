@@ -129,7 +129,11 @@ namespace proteus
 				   double* Cx, 
 				   double* Cy,
 				   double* CTx,
-				   double* CTy)=0;
+				   double* CTy,
+				   // PARAMETERS FOR EDGE BASED STABILIZATION 
+				   int numDOFsPerEqn,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops)=0;
     virtual void calculateResidual_invariant_domain_SWEs(//element
 							 double* mesh_trial_ref,
 							 double* mesh_grad_trial_ref,
@@ -239,7 +243,11 @@ namespace proteus
 							 double* Cx, 
 							 double* Cy,
 							 double* CTx,
-							 double* CTy)=0;
+							 double* CTy,
+							 // PARAMETERS FOR EDGE BASED STABILIZATION
+							 int numDOFsPerEqn,
+							 int* csrRowIndeces_DofLoops,
+							 int* csrColumnOffsets_DofLoops)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -1370,7 +1378,11 @@ namespace proteus
 			   double* Cx, 
 			   double* Cy,
 			   double* CTx,
-			   double* CTy)
+			   double* CTy,
+			   // PARAMETERS FOR EDGE BASED STABILIZATION 
+			   int numDOFsPerEqn,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -2313,7 +2325,11 @@ namespace proteus
 						 double* Cx, 
 						 double* Cy,
 						 double* CTx,
-						 double* CTy)
+						 double* CTy,
+						 // PARAMETERS FOR EDGE BASED STABILIZATION 
+						 int numDOFsPerEqn,
+						 int* csrRowIndeces_DofLoops,
+						 int* csrColumnOffsets_DofLoops)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
       // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
@@ -2570,7 +2586,7 @@ namespace proteus
 #else
 		    dt*ck.Mass_weak(mass_acc_t,h_test_dV[i]) +
 #endif
-      		    dt*ck.Advection_weak(mass_adv_star,&h_grad_test_dV[i_nSpace]) +
+      		    0*dt*ck.Advection_weak(mass_adv_star,&h_grad_test_dV[i_nSpace]) +
 		    dt*ck.NumericalDiffusion(q_numDiff_h_last[eN_k],grad_h_star,&h_grad_test_dV[i_nSpace]);
 		  
       		  elementResidual_hu[i] += 
@@ -2579,8 +2595,8 @@ namespace proteus
 #else
 		    dt*ck.Mass_weak(mom_hu_acc_t,vel_test_dV[i]) +
 #endif
-      		    dt*ck.Advection_weak(mom_hu_adv_star,&vel_grad_test_dV[i_nSpace]) +
-		    dt*ck.Reaction_weak(mom_hu_source_star,vel_test_dV[i]) +
+      		    0*dt*ck.Advection_weak(mom_hu_adv_star,&vel_grad_test_dV[i_nSpace]) +
+		    //dt*ck.Reaction_weak(mom_hu_source_star,vel_test_dV[i]) +
 		    dt*ck.NumericalDiffusion(q_numDiff_hu_last[eN_k],grad_hu_star,&vel_grad_test_dV[i_nSpace]);
 		 
       		  elementResidual_hv[i] += 
@@ -2589,8 +2605,8 @@ namespace proteus
 #else
 		    dt*ck.Mass_weak(mom_hv_acc_t,vel_test_dV[i]) +
 #endif
-      		    dt*ck.Advection_weak(mom_hv_adv_star,&vel_grad_test_dV[i_nSpace]) +
-		    dt*ck.Reaction_weak(mom_hv_source_star,vel_test_dV[i]) +
+      		    0*dt*ck.Advection_weak(mom_hv_adv_star,&vel_grad_test_dV[i_nSpace]) +
+		    //dt*ck.Reaction_weak(mom_hv_source_star,vel_test_dV[i]) +
 		    dt*ck.NumericalDiffusion(q_numDiff_hv_last[eN_k],grad_hv_star,&vel_grad_test_dV[i_nSpace]);
       		}
       	    }
@@ -2610,6 +2626,37 @@ namespace proteus
       	      globalResidual[offset_hv+stride_hv*vel_gi] += elementResidual_hv[i];
       	    }
       	}
+      //////////////////
+      // Loop on DOFs //
+      //////////////////
+      int ij = 0;
+      for (int i=0; i<numDOFsPerEqn; i++)
+	{
+	  //double hi = h_dof_old[i];
+	  //double hui = hu_dof_old[i];
+	  //double hvi = hv_dof_old[i];
+
+	  double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
+	  // loop over the sparsity pattern of the i-th DOF
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double hj = h_dof_old[j];
+	      double huj = hu_dof_old[j];
+	      double hvj = hv_dof_old[j];
+	      
+	      ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
+	      ith_flux_term2 += (huj*huj/hj + 0.5*g*hj*hj)*Cx[ij] + huj*hvj/hj*Cy[ij]; // f2*C
+	      ith_flux_term3 += huj*hvj/hj*Cx[ij] + (hvj*hvj/hj + 0.5*g*hj*hj)*Cy[ij]; // f3*C
+
+	      // update ij
+	      ij+=1;
+	    }
+	  // update global residual
+	  globalResidual[offset_h+stride_h*i] += dt*ith_flux_term1;
+	  globalResidual[offset_hu+stride_hu*i] += dt*ith_flux_term2;
+	  globalResidual[offset_hv+stride_hv*i] += dt*ith_flux_term3;
+	}
     }
  
     void calculateJacobian(//element
