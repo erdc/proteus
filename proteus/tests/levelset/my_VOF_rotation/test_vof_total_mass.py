@@ -52,7 +52,7 @@ class TestVOFrotationEV():
                     print ("Error: %s - %s." %(e.filename, e.strerror ))
             else:
                 pass
-    def notest_vof_total_mass_T1m1_FE(self):
+    def test_vof_total_mass_T1m1_FE(self):
         """
         Test total mass for Forward Euler Integration running for final time T=0.1
 
@@ -61,7 +61,6 @@ class TestVOFrotationEV():
         #define USE_EDGE_BASED_EV 1 // if not then dissipative matrix is based purely on smoothness indicator of the solution
         #define POWER_SMOOTHNESS_INDICATOR 2
         #define LUMPED_MASS_MATRIX 0
-
         """
         run_dir = os.path.dirname(os.path.abspath(__file__))
         
@@ -95,7 +94,16 @@ class TestVOFrotationEV():
                              rtol=1e-05, atol=1e-07, equal_nan=True)
 
     def test_vof_total_mass_T1m1_SSP33(self):
+        """
+        Test total mass for SSP33 Integration running for final time T=0.1
 
+        These are the flags used for VOF.h in this benchmark for now
+        #define EDGE_VISCOSITY 1
+        #define USE_EDGE_BASED_EV 1 // if not then dissipative matrix is based purely on smoothness indicator of the solution
+        #define POWER_SMOOTHNESS_INDICATOR 2
+        #define LUMPED_MASS_MATRIX 0
+
+        """
         run_dir = os.path.dirname(os.path.abspath(__file__))
         
         #set the time step
@@ -161,7 +169,7 @@ class TestVOFrotationEV():
         failed = np.allclose(ref_total_mass, sim_total_mass,
                              rtol=1e-05, atol=1e-07, equal_nan=True)
         
-    def notest_vof_total_mass_T1_SSP33(self):
+    def test_vof_total_mass_T1_SSP33(self):
 
         run_dir = os.path.dirname(os.path.abspath(__file__))
         

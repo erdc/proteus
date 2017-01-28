@@ -172,52 +172,6 @@ class RKEV(proteus.TimeIntegration.SSP33):
                 self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
  
             
-    def updateStage_orig(self):
-        """
-        Need to switch to use coefficients
-        """
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
-        self.lstage += 1
-        #mwf just Forward Euler for start
-        self.t = self.tLast + self.dt
-        #need to put in the correct formulas
-        assert self.timeOrder in [1,3]
-        if self.timeOrder == 3:
-            if self.lstage == 1:
-                for ci in range(self.nc):
-                    self.m_stage[ci][self.lstage][:] = self.transport.q[('m',ci)][:]
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
-            elif self.lstage == 2:
-                for ci in range(self.nc):
-                    self.m_stage[ci][self.lstage][:] = self.transport.q[('m',ci)][:]
-                    self.m_stage[ci][self.lstage] *= 0.25
-                    self.m_stage[ci][self.lstage] += 0.75*self.m_last[ci]
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
-                    self.u_dof_stage[ci][self.lstage] *= 0.25
-                    self.u_dof_stage[ci][self.lstage] += 0.75*self.u_dof_last[ci]
-            elif self.lstage == 3:
-                for ci in range(self.nc):
-                    self.m_stage[ci][self.lstage][:] = self.transport.q[('m',ci)][:]
-                    self.m_stage[ci][self.lstage] *= 2.0/3.0
-                    self.m_stage[ci][self.lstage] += 1.0/3.0*self.m_last[ci]
-                    self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
-                    self.u_dof_stage[ci][self.lstage] *= 2.0/3.0
-                    self.u_dof_stage[ci][self.lstage] += 2.0/3.0*self.u_dof_last[ci]
-                    #update transport model and re-evaluate residual
-                    self.transport.u[ci].dof[:] = self.u_dof_stage[ci][self.lstage][:]
-                    self.transport.q[('m',ci)][:] = self.m_stage[ci][self.lstage][:]
-                    self.transport.getResidual(self.u_dof_stage[ci][self.lstage],
-                                               self.transport.globalResidualDummy)
- 
-        else:
-            assert self.lstage == 1
-            for ci in range(self.nc):
-                self.m_stage[ci][self.lstage][:]=self.transport.q[('m',ci)][:]
-                self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
-        #mwf hack
-        #self.transport.coefficients.u_dof_old[:] = self.u_dof_stage[0][self.lstage][:]
 
     def initializeTimeHistory(self,resetFromDOF=True):
         """
