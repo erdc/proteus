@@ -699,9 +699,8 @@ class  MonochromaticWaves:
 
     Parameters
     ----------
-    param : period
-            Description: Regular wave period
-            Type: Float
+    period : float
+             Regular wave period
     param : waveHeight
             Description: Regular wave height
             Type: float
