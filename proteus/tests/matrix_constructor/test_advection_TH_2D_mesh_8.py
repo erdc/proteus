@@ -2,42 +2,27 @@
 """
 Test module for 2D Quadrilateral Meshes
 """
-
-import os,sys,inspect
-
-cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
-if cmd_folder not in sys.path:
-    sys.path.insert(0,cmd_folder)
-
-cmd_subfolder = os.path.realpath(os.path.abspath(os.path.join(os.path.split(inspect.getfile( inspect.currentframe() ))[0],
-                                                              "import_modules")))
-if cmd_subfolder not in sys.path:
-    sys.path.insert(0,cmd_subfolder)
-
+import proteus.test_utils.TestTools
 from proteus.iproteus import *
 from proteus import Comm
-comm = Comm.get()
-Profiling.logLevel=7
-Profiling.verbose=True
+
+import os
+import sys
+import inspect
 import numpy
-import numpy.testing as npt
 
-from nose.tools import ok_ as ok
-from nose.tools import eq_ as eq
-from nose.tools import set_trace
+proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
+import advection_template_pressure_8 as AP_2d
 
-class TestAdvectionConstruction2D_mesh8():
+class TestAdvectionConstruction2D_mesh8(proteus.test_utils.TestTools.SimulationTest):
     """ Verify construction of 2D Mass Matrix using transport coefficients """
 
-    @classmethod
-    def setup_class(self):
-        """ Initialize the test problem """
-        import advection_template_pressure_8 as AP_2d
+    def setup_method(self):
+        reload(AP_2d)
         self.Advection_object = AP_2d.ns
         self._setRelativePath()
 
-    @classmethod
-    def teardown_class(self):
+    def teardown_method(self):
         """ Tear down function """
         FileList = ['Advection_matrix_test.xmf',
                     'Advection_matrix_test.h5',
@@ -47,10 +32,8 @@ class TestAdvectionConstruction2D_mesh8():
                     "reference_triangle_2d.face",
                     "reference_triangle_2d.poly",
                     "rdomain.poly"]
-        for file in FileList:
-            if os.path.isfile(file):
-                os.remove(file)
-    @classmethod
+        self.remove_files(FileList)
+
     def _setRelativePath(self):
         self.scriptdir = os.path.dirname(__file__)
 

@@ -27,6 +27,27 @@ def petsc_view(obj, filename):
     viewer2(obj)
     viewer2.popFormat()
 
+def petsc_load(filename):
+    """ This function loads a PETSc matrix from a binary format.
+    (Eg. what is saved using the petsc_view function).
+
+    Parameters
+    ----------
+    filename : str
+        This is the name of the binary with the file stored.
+
+    Returns
+    -------
+    matrix : petsc4py matrix
+        The matrix that is stored in the binary file.
+    """
+    try:
+        viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
+        matrix = p4pyPETSc.Mat().load(viewer)
+    except:
+        print('invalid file name')
+    return matrix
+    
 def _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output=False):
     """ Takes python CSR datatypes and makes a dense matrix """
     dense_matrix = numpy.zeros(shape = (nr,nc), dtype='float')
@@ -391,6 +412,54 @@ class InvOperatorShell(OperatorShell):
         raise NotImplementedError('You need to define an apply' \
                                   'function for your shell')
 
+    def _create_tmp_vec(self,size):
+        """ Creates an empty vector of given size. 
+        
+        Arguments
+        ---------
+        size : int
+            Size of the temporary vector.
+
+        Returns
+        -------
+        vec : PETSc vector
+        """
+        tmp = p4pyPETSc.Vec().create()
+        tmp.setType('seq')
+        tmp.setSizes(size)
+        return tmp
+
+    def _converged_trueRes(self,ksp,its,rnorm):
+        """ Function handle to feed to ksp's setConvergenceTest  """
+        ksp.buildResidual(self.r_work)
+        truenorm = self.r_work.norm()
+        if its == 0:
+            self.rnorm0 = truenorm
+            # ARB - Leaving these log events in for future debugging purposes.
+            # logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual: %12.5e" %(truenorm) )
+            # logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+            # logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
+            #                                                                                   truenorm,
+            #                                                                                   (truenorm/ self.rnorm0),
+            #                                                                                   ksp.atol,
+            #                                                                                   ksp.rtol))
+            return False
+        else:
+            # ARB - Leaving these log events in for future debugging purposes.
+            # logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual: %12.5e" %(truenorm) )
+            # logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+            # logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
+            #                                                                                   truenorm,
+            #                                                                                   (truenorm/ self.rnorm0),
+            #                                                                                   ksp.atol,
+            #                                                                                   ksp.rtol))
+            if truenorm < self.rnorm0*ksp.rtol:
+                return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
+            if truenorm < ksp.atol:
+                return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
+        return False
+
+
 class SparseMatShell:
     """ Build a parallel matrix shell from CSR data structures.
 
@@ -458,7 +527,7 @@ class B_Ainv_Bt_shell(ProductOperatorShell):
         A : petsc4py matrix object
             A must be a full rank square matrix.
         B : petsc4py matrix object
-        
+
         Note
         ----
         This shell is of limited use as a context matrix for use in an 
@@ -552,8 +621,8 @@ class PCDInv_shell(InvOperatorShell):
         # initialize kspAp
         self.kspAp = p4pyPETSc.KSP().create()
         self.kspAp.setOperators(self.Ap,self.Ap)
-        self.kspAp.setType('preonly')
-        self.kspAp.pc.setType('lu')
+        self.kspAp.setType('fgmres')
+        self.kspAp.pc.setType('ilu')
         self.kspAp.setUp()
         # initialize kspQp
         self.kspQp = p4pyPETSc.KSP().create()
@@ -618,40 +687,63 @@ class LSCInv_shell(InvOperatorShell):
         # FOR NOW - assume Qv is diagonal.
 
         # TODO - Add an assert testing that Qv is diagonal.
+        # *** - I can't find a PETSc function that does this :-(
+        
         self.Qv = Qv
         self.B = B
         self.F = F
+    
+        # The commented code below creates a shell for the BQvBt
+        # operator.  I don't think this is the best approach but
+        # in case I want to explore this in the future I've
+        # left it in.
+
+        # L_size = self.B.size[0]
+        # L_sizes = (L_size,L_size)
+        # self.BQinvBt = p4pyPETSc.Mat().create()
+        # self.BQinvBt.setSizes(L_sizes)
+        # self.BQinvBt.setType('python')
+        # self.matcontext = B_Ainv_Bt_shell(self.Qv,self.B)
+        # self.BQinvBt.setPythonContext(self.matcontext)
+        # self.BQinvBt.setUp()
+        
         # initialize (B Q_hat B')
         self.__constructBQinvBt()
+        
         # initialize (B Q_hat B') solver
         self.kspBQinvBt = p4pyPETSc.KSP().create()
-        self.kspBQinvBt.setOperators(self.BQinvBt,
-                                     self.BQinvBt)
-        self.kspBQinvBt.setType('preonly')
-        self.kspBQinvBt.pc.setType('lu')
+        self.kspBQinvBt.setOperators(self.BQinvBt,self.BQinvBt)
+        self.kspBQinvBt.setType('gmres')
+        self.kspBQinvBt.pc.setType('asm')
+
+        # initialize solver for Qv
+        self.kspQv = p4pyPETSc.KSP().create()
+        self.kspQv.setOperators(self.Qv,self.Qv)
+        self.kspQv.setType('preonly')
+        self.kspQv.pc.setType('lu')
+        
+        convergenceTest = 'r-true'
+        if convergenceTest == 'r-true':
+            self.r_work = self.BQinvBt.getVecLeft()
+            self.rnorm0 = None
+            self.kspBQinvBt.setConvergenceTest(self._converged_trueRes)
+        else:
+            self.r_work = None        
         self.kspBQinvBt.setUp()
 
     def apply(self,A,x,y):
         """ Apply the LSC inverse operator """
-        import pdb
-        # TODO - write a routine in the base class
-        #        that provides a method to create tmp vectors.
+        # create temporary vectors
         B_sizes = self.B.getSizes()
-        tmp1 = p4pyPETSc.Vec().create()
-        tmp2 = p4pyPETSc.Vec().create()
-        tmp3 = p4pyPETSc.Vec().create()
-        tmp1.setType('seq')
-        tmp2.setType('seq')
-        tmp3.setType('seq')
-        tmp1.setSizes(B_sizes[0])
-        tmp2.setSizes(B_sizes[1])
-        tmp3.setSizes(B_sizes[1])
-        # Apply the first BQinvB' operator
+        tmp1 = self._create_tmp_vec(B_sizes[0])
+        tmp2 = self._create_tmp_vec(B_sizes[1])
+        tmp3 = self._create_tmp_vec(B_sizes[1])
+        # apply LSC operator
         self.kspBQinvBt.solve(x,tmp1)
         self.B.multTranspose(tmp1,tmp2)
-        self.Qv_inv.mult(tmp2,tmp3)
+        self.kspQv.solve(tmp2,tmp3)
         self.F.mult(tmp3,tmp2)
-        self.Qv_inv.mult(tmp2,tmp3)
+        self.kspQv.solve(tmp2,tmp3)
         self.B.mult(tmp3,tmp1)
         self.kspBQinvBt.solve(tmp1,y)
     

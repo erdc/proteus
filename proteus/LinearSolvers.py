@@ -386,8 +386,8 @@ class KSP_petsc4py(LinearSolver):
         computeRates: bool
         printInfo : bool
         prefix : bool
-        Preconditioner : preconditioner type
-        connection List : 
+        Preconditioner : :class: `.LinearSolvers.KSP_Preconditioner`
+        connectionList : 
         linearSolverLocalBlockSize : int
         """
         LinearSolver.__init__(self,
@@ -403,6 +403,9 @@ class KSP_petsc4py(LinearSolver):
 
         assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
         assert isinstance(par_L,ParMat_petsc4py)
+
+        # ARB - WIP: this self.pc and self.preconditioner stuff is confusing to read
+        # and not necessary.  This should be refactored before merging. 1/21/2017.  
 
         # initialize some class attributes
         self.pccontext = None
@@ -435,7 +438,6 @@ class KSP_petsc4py(LinearSolver):
         ### DO NOT MERGE - THIS NEEDS TO BE FIXED!!!!
 #        if prefix != None:
 #            self.ksp.setOptionsPrefix(prefix)
-
         # set ksp preconditioner
         if Preconditioner != None:
             self._setPreconditioner(Preconditioner,par_L,prefix)
@@ -471,6 +473,8 @@ class KSP_petsc4py(LinearSolver):
         self.petsc_L.assemblyEnd()
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
+        # ARB - WIP: this self.pc and self.preconditioner stuff is confusing to read
+        # and not necessary.  This should be refactored before merging. 1/21/2017.  
         if self.pc != None:
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
@@ -747,6 +751,7 @@ class SchurOperatorConstructor:
                                              self.linear_smoother.isv)
         if output_matrix==True:
             self._exportmatrix(self.Qv,'Qv')
+
         return self.Qv
 
     def getAp(self,output_matrix=False):
@@ -788,21 +793,14 @@ class SchurOperatorConstructor:
         if output_matrix==True:
             self._exportMatrix(self.Av,'Av')
         return self.Av
-
         
     def getFp(self,output_matrix=False):
         """ Return the convection-diffusion matrix for the pressure """
+        # TODO - The pressure mass matrix should be scaled by the viscosity.
         self.Fp = self.getCp()
-#        self.Fp.scale(-1.)
         Ap = self.getAp()
-#        Ap.scale(1./self.L.pde.coefficients.nu)
-        if self.L.pde.timeTerm:
-            del_t = (self.L.pde.timeIntegration.t -
-                     self.L.pde.timeIntegration.tLast)
-            Mp = self.getQp()
-            Mp.scale(1./del_t)
-            self.Fp.axpy(1.0,Mp)
-        self.Fp.axpy(1.0,Ap)
+        viscosity = self.opBuilder.OLT.coefficients.nu
+        self.Fp.axpy(viscosity,Ap)
         return self.Fp
 
     def getCp(self,output_matrix=True):
@@ -879,7 +877,7 @@ class SchurOperatorConstructor:
         return self.Bt
 
     def getF(self,output_matrix=False):
-        """ Return the A-block of the NSE """
+        """ Return the A-block of a saddle-point system """
         rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
         self.F_rowptr = rowptr.copy()
         self.F_colind = colind.copy()
@@ -1010,9 +1008,7 @@ class SchurOperatorConstructor:
         #runnig operatorf = full(Mat_...) will get the full matrix
 
 class KSP_Preconditioner:
-    """ Base class for PETSCc KSP precondtioners.
-
-    """
+    """ Base class for PETSCc KSP precondtioners. """
     def __init__(self):
         pass
 
@@ -1275,13 +1271,17 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         NavierStokes3D.__init__(self,L,prefix,bdyNullSpace)
 
     def setUp(self,global_ksp):
-        # Step-1: get the pressure mass matrix
+        # Step-1: build the necessary operators
         self.Qp = self.operator_constructor.getQp()
         self.Fp = self.operator_constructor.getFp()
         self.Ap = self.operator_constructor.getAp()
-        petsc_view(self.Qp,'Qp')
-        petsc_view(self.Fp,'Fp')
-        petsc_view(self.Ap,'Ap')
+
+        # The lines below can be uncommented to output the petsc matrices
+        # This can be helpful for debuggin.
+#        petsc_view(self.Qp,'Qp')
+#        petsc_view(self.Fp,'Fp')
+#        petsc_view(self.Ap,'Ap')
+        
         # Step-2: Set up the Shell for the  PETSc operator
         # Qp
         L_sizes = self.Qp.size
@@ -1296,8 +1296,6 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
-#        import pdb
-#        pdb.set_trace()
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
@@ -1314,7 +1312,6 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         NavierStokesSchur.__init__(self,L,prefix,bdyNullSpace)
 
     def setUp(self,global_ksp):
-        import pdb
         # initialize the Qv_diagonal operator
         self.Qv = self.operator_constructor.getQv()
         self.Qv_hat = p4pyPETSc.Mat().create()
@@ -1323,26 +1320,17 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         self.Qv_hat.setUp()
         self.Qv_hat.setDiagonal(self.Qv.getDiagonal())
         # initialize the B and F operators
-        self.B = self.operator_constructor.getB()
-        self.F = self.operator_constructor.getF()
-#        pdb.set_trace()
-        L_size = self.B.size[0]
-        L_sizes = (L_size,L_size)
-        self.LSCInv_shell = p4pyPETSc.Mat().create()
-        self.LSCInv_shell.setSizes(L_sizes)
-        self.LSCInv_shell.setType('python')
-        # ***
+        # ARB Note - There are two ways this can be done...first pull the
+        # F and B operators from the global system.  I think this is most
+        # direct and cleanest, but one could also call the operator constructors.
+        self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
+        self.F = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
+#        self.B = self.operator_constructor.getB()
+#        self.F = self.operator_constructor.getF()
         self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.F)
-        self.LSCInv_shell.setPythonContext(self.matcontext_inv)
-        self.LSCInv_shell.setUp()
-#        import pdb
-#        pdb.set_trace()
-#        global_ksp.pc.getFieldSplitSubKSP()[1].setType('preonly')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
-        import pdb
-        pdb.set_trace()
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
@@ -2434,6 +2422,7 @@ class OperatorConstructor:
         self.OLT = OLT
         self._initializeOperatorConstruction()
         self.massOperatorAttached = False
+        self.Qv_constructed = False
         self.laplaceOperatorAttached = False
         self.advectionOperatorAttached = False
         self.BOperatorAttached = False
@@ -2463,7 +2452,7 @@ class OperatorConstructor:
         Mass_Jacobian = {}
         self._allocateMatrixSpace(self.MassOperatorCoeff,
                                   Mass_Jacobian)
-   
+
         for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
             for cj in cjDict:
                 cfemIntegrals.updateMassJacobian_weak(Mass_q[('dm',ci,cj)],
@@ -2555,7 +2544,6 @@ class OperatorConstructor:
         self._allocateMatrixSpace(self.AdvectionOperatorCoeff,
                                   Advection_Jacobian)
         
-
         for ci,ckDict in self.AdvectionOperatorCoeff.advection.iteritems():
             for ck in ckDict:
                 cfemIntegrals.updateAdvectionJacobian_weak_lowmem(Advection_q[('df',ci,ck)],
@@ -2769,7 +2757,6 @@ class OperatorConstructor:
                                                                           self.OLT.csrColumnOffsets[(ci,cj)],
                                                                           matrixDict[ci][cj],
                                                                           A)
-
 
     def _initializeLaplacePhiFunctions(self,Laplace_phi,Laplace_dphi):
         """ Initialize the phi functions for the Laplace operator """
