@@ -1,5 +1,5 @@
 dist: trusty
-sudo: false
+sudo: true
 
 language: python
 
@@ -36,12 +36,12 @@ install:
 - ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source"
 - ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_ubuntu_14_04 --objects="build"
 - cd stack
-- ../hashdist/bin/hit build default.yaml
+- ../hashdist/bin/hit build -v default.yaml
 - cd ..
 - make profile
-- python -c "import numpy; numpy.test()"
 - FC=gfortran CC=mpicc CXX=mpicxx make install
 - export PATH=$PWD/linux2/bin:$PATH
+- export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
 
