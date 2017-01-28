@@ -249,7 +249,7 @@ class Quadrilateral(Polygon):
             if zMax < node.p[Z]:
                 zMax = node.p[Z]
 
-        # indentity degenerate coordinate space.
+        # indentify degenerate coordinate space.
         # NOTE - this is not entirely accurate, but assumes
         # 2D quadrilateral objects are orthogonal to one of
         # the cononical coordinate axes
@@ -1858,15 +1858,15 @@ class RectangularGrid(Mesh):
 
         #dimensions of hexahedra
         if self.nHx>0:
-            hx = Lx/(nx-1)
+            hx = float(Lx)/(nx-1)
         else:
             hx = 1.0
         if self.nHy>0:
-            hy = Ly/(ny-1)
+            hy = float(Ly)/(ny-1)
         else:
             hy=1.0
         if self.nHz>0:
-            hz = Lz/(nz-1)
+            hz = float(Lz)/(nz-1)
         else:
             hz=1.0
         self.nodeDict={}
@@ -4468,8 +4468,6 @@ Number of nodes : %d\n""" % (self.nElements_global,
 
     def refine(self,oldMesh):
         logEvent("Refining Using Standard Quadrilateral Refinement")
-        import pdb
-#        pdb.set_trace()
         childrenDict={}
         for q in oldMesh.quadDict.values():
             qNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z]) for nN,n in enumerate(q.nodes)]

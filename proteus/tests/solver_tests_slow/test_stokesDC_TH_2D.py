@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """ Test modules for Driven Cavity Stokes preconditioners. """
 
-import proteus.tests.TestTools
+import proteus.test_utils.TestTools
 from proteus.iproteus import *
 
 Profiling.logLevel = 7
@@ -16,11 +16,11 @@ import pickle
 import petsc4py
 import pytest
 
-proteus.tests.TestTools.addSubFolders( inspect.currentframe() )
+proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 import stokesDrivenCavity_2d_p
 import stokesDrivenCavity_2d_n        
 
-class TestStokes(proteus.tests.TestTools.SimulationTest):
+class TestStokes(proteus.test_utils.TestTools.SimulationTest):
     """Run a Stokes test with mumps LU factorization """
 
     def setup_method(self):
@@ -74,15 +74,16 @@ class TestStokes(proteus.tests.TestTools.SimulationTest):
         self.ns.calculateSolution('stokes')
         relpath = 'comparison_files/drivenCavityStokes_expected.h5'
         expected = tables.openFile(os.path.join(self._scriptdir,relpath))
-        actual = tables.openFile('./drivenCavityStokesTrial.h5','r')
+        actual = tables.openFile(os.path.join(self._scriptdir,relpath),
+                                 '/drivenCavityStokesTrial.h5','r')
         assert numpy.allclose(expected.root.velocity_t1,
                               actual.root.velocity_t1,
                               atol=1e-2)
         expected.close()
         actual.close()        
         
-    @pytest.mark.skip(reason="in development")
     def test_01_FullRun(self):
+        stokesDrivenCavity_2d_n.linearSmoother = proteus.LinearSolvers.NavierStokes3D_Qp
         self._setPETSc()
         self._runTest()
 

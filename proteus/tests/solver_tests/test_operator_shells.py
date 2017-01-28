@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 
-Test module for the convection-diffusion operator.
+Test module for solver shell operator.
 
 """
 import proteus.test_utils.TestTools

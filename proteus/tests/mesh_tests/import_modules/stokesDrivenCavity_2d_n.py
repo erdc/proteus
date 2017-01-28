@@ -10,6 +10,7 @@ numeric_scheme = ct.numeric_scheme
 useWeakBoundaryConditions = ct.useWeakBoundaryConditions
 solveIteratively = ct.solveIteratively
 solveInParallel = ct.solveInParallel
+schur_solver = ct.schur_solver
 
 # TODO - this parallel flag needs work
 
@@ -54,6 +55,7 @@ if (numeric_scheme=="C0Q1C0Q1" or numeric_scheme=="THQuads"):
     # numerical quadrature choice
     elementQuadrature = CubeGaussQuadrature(nd,2)
     elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,1)
+    nnx = 41 ; nny = 41
 else:
     # use a simplex grid
     elementQuadrature = SimplexGaussQuadrature(nd,4)
@@ -125,5 +127,16 @@ linTolFac = 0.0
 l_atol_res = 1.0e-10
 
 #linearSmoother=SimpleNavierStokes3D
-#linearSmoother=NavierStokes3D_Qp
-linearSmoother = petsc_LU
+
+if schur_solver == 'Qp':
+    linearSmoother=NavierStokes3D_Qp
+elif schur_solver == 'pcd':
+    linearSmoother=NavierStokes3D_PCD
+elif schur_solver == 'selfp':
+    linearSmoother=SimpleNavierStokes3D
+elif schur_solver == 'LSC' :
+    linearSmoother=NavierStokes3D_LSC
+elif schur_solver == 'petsc_LU':
+    linearSmoother=petsc_LU
+else:
+    raise Exception, 'invalid solver type'

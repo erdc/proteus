@@ -1,4 +1,5 @@
 from proteus.iproteus import *
+from proteus import *
 reload(default_p)
 reload(default_n)
 reload(default_so)
@@ -6,8 +7,9 @@ from proteus import iproteus as ip
 from proteus import default_p as p
 from proteus import default_n as n
 from proteus import default_s,default_so
-import numpy
 import proteus as pr
+
+import numpy
 
 p.nd = 2
 p.name = "Advection_matrix_test"
@@ -36,7 +38,7 @@ _u = numpy.ones((8,6))
 _v = numpy.ones((8,6))
 _vec = [_u,_v]
 
-p.coefficients = pr.TransportCoefficients.NavierStokes(_vec,p.nd)
+p.coefficients = pr.TransportCoefficients.NavierStokes()
 
 ############################
 
@@ -74,6 +76,5 @@ so.name = p.name
 so.sList=[default_s]
 
 ########################################################################
-from proteus import *
 opts = None
 ns = NumericalSolution.NS_base(so,[p],[n],so.sList,ip.opts)
