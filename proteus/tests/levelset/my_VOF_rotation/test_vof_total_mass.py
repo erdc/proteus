@@ -169,7 +169,7 @@ class TestVOFrotationEV():
         failed = np.allclose(ref_total_mass, sim_total_mass,
                              rtol=1e-05, atol=1e-07, equal_nan=True)
         
-    def test_vof_total_mass_T1_SSP33(self):
+    def notest_vof_total_mass_T1_SSP33(self):
 
         run_dir = os.path.dirname(os.path.abspath(__file__))
         
