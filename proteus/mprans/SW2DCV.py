@@ -786,8 +786,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #import pdb
         #pdb.set_trace()
-        #self.sw2d.calculateResidual_invariant_domain_SWEs(#element
-        self.sw2d.calculateResidual_cell_based_entropy_viscosity(#element
+        self.sw2d.calculateResidual_invariant_domain_SWEs(#element
+        #self.sw2d.calculateResidual_cell_based_entropy_viscosity(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
