@@ -2844,8 +2844,8 @@ namespace proteus
 #else
 		    dt*ck.Mass_weak(mass_acc_t,h_test_dV[i]) +
 #endif
-      		    0*dt*ck.Advection_weak(mass_adv_star,&h_grad_test_dV[i_nSpace]) +
-		    0*dt*ck.NumericalDiffusion(q_numDiff_h_last[eN_k],grad_h_star,&h_grad_test_dV[i_nSpace]);
+      		    dt*ck.Advection_weak(mass_adv_star,&h_grad_test_dV[i_nSpace]) +
+		    dt*ck.NumericalDiffusion(q_numDiff_h_last[eN_k],grad_h_star,&h_grad_test_dV[i_nSpace]);
 		  
       		  elementResidual_hu[i] += 
 #if LUMPED_MASS_MATRIX
@@ -2877,7 +2877,7 @@ namespace proteus
 	      int h_gi = h_l2g[eN_i]; //global i-th index for h
 	      int vel_gi = vel_l2g[eN_i]; //global i-th index for velocities 
 		
-	      elementResidual_h_save[eN_i] +=  elementResidual_h[i]* (h_dof[h_gi] - h_dof_old[h_gi]);
+	      elementResidual_h_save[eN_i] +=  elementResidual_h[i];//* (h_dof[h_gi] - h_dof_old[h_gi]);
 	        	      
       	      globalResidual[offset_h+stride_h*h_gi]  += elementResidual_h[i];
       	      globalResidual[offset_hu+stride_hu*vel_gi] += elementResidual_hu[i];
@@ -3002,49 +3002,6 @@ namespace proteus
 						 int* csrColumnOffsets_DofLoops)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
-      // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
-      // for linear viscosity //
-      double max_speed_per_cell[nElements_global];
-      double max_speed = 0, cell_max_speed;
-      // loop over cells
-      for(int eN=0;eN<nElements_global;eN++)
-	{
-	  cell_max_speed = 0;
-	  // loop over quadrature points
-	  for(int k=0;k<nQuadraturePoints_element;k++)
-	    {
-	      //get the physical integration weight
-	      register double dV,x,y,jac[nSpace*nSpace],jacDet,jacInv[nSpace*nSpace];
-      	      //get jacobian, etc for mapping reference element
-      	      ck.calculateMapping_element(eN,
-					  k,
-					  mesh_dof,
-					  mesh_l2g,
-					  mesh_trial_ref,
-					  mesh_grad_trial_ref,
-					  jac,
-					  jacDet,
-					  jacInv,
-					  x,y);
-      	      dV = fabs(jacDet)*dV_ref[k];
-	      // SOLUTION AT QUADRATURE POINTS
-	      register double h_tn=0.0, hu_tn=0.0, hv_tn=0.0;
-	      register int eN_nDOF_trial_element = eN*nDOF_trial_element;
-	      // calculate solution at tn at quadrature points
-	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_tn);
-	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_tn);
-	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_tn);
-	      ///////////////
-	      // MAX SPEED //
-	      ///////////////
-	      double u_tn = hu_tn/h_tn;
-	      double v_tn = hv_tn/h_tn;
-	      cell_max_speed = std::max(cell_max_speed,
-					std::max(std::abs(u_tn)+std::sqrt(g*h_tn),std::abs(v_tn)+std::sqrt(g*h_tn)));
-	    }
-	  max_speed_per_cell[eN] = cell_max_speed;
-	  max_speed = std::max(max_speed,cell_max_speed);
-	}
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -3075,29 +3032,9 @@ namespace proteus
       	      register double 
 		b=0.0,h=0.0,hu=0.0,hv=0.0, // solution at current time
 		h_tn=0.0, hu_tn=0.0, hv_tn=0.0, // solution at tn
-		h_star=0.0, hu_star=0.0, hv_star=0.0, // solution at t star
-      		grad_b[nSpace],grad_h[nSpace],grad_hu[nSpace],grad_hv[nSpace], //grad at current time
-		grad_h_tn[nSpace],grad_hu_tn[nSpace],grad_hv_tn[nSpace], //grad at tn
-		grad_h_star[nSpace],grad_hu_star[nSpace],grad_hv_star[nSpace], //grad at t star
-      		mass_acc=0.0,mom_hu_acc=0.0,mom_hv_acc=0.0, //accumulation variables 
-      		dmass_acc_h=0.0, dmom_hu_acc_hu=0.0, dmom_hv_acc_hv=0.0,
-		mass_adv[nSpace], mom_hu_adv[nSpace], mom_hv_adv[nSpace], //adv terms at current time
-		mom_hu_source=0.0, mom_hv_source=0.0, //source terms at current time
-		mass_acc_t=0.0, dmass_acc_h_t=0.0, //dt of mass accumulation
-      		mom_hu_acc_t=0.0, dmom_hu_acc_h_t=0.0, dmom_hu_acc_hu_t=0.0, //dt of x-mom accumulation 
-      		mom_hv_acc_t=0.0, dmom_hv_acc_h_t=0.0, dmom_hv_acc_hv_t=0.0, //dt of y-mom accumulation 
 		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
-      		h_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],
-      		h_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
-      		h_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
-      		dV,x,y,xt,yt;
-
-	      // FOR EXPLICIT TIME INTEGRATION 
-	      register double 
-		mass_acc_star, mom_hu_acc_star, mom_hv_acc_star,
-		mass_adv_star[nSpace], mom_hu_adv_star[nSpace], mom_hv_adv_star[nSpace], 
-      		mom_hu_source_star=0.0, mom_hv_source_star=0.0; 
-
+		h_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
+		dV,x,y,xt,yt;
       	      //get jacobian, etc for mapping reference element
       	      ck.calculateMapping_element(eN,
       					  k,
@@ -3111,138 +3048,32 @@ namespace proteus
       					  x,y);
 	      //get the physical integration weight
       	      dV = fabs(jacDet)*dV_ref[k];
-      	      //get the trial function gradients
-      	      ck.gradTrialFromRef(&h_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,h_grad_trial);
-      	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
-      	      //get the solution at current time
+      	      //get the solution at current time. This is to compute velocity for other models
       	      ck.valFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],b);
       	      ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
       	      ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
       	      ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
-	      //get the solution at time tn (old time)
+	      //get the solution at time tn (old time). This is needed to compute the CFL
 	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_tn);
       	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_tn);
       	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_tn);
-	      //get the solution gradients at current time
-      	      ck.gradFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_b);
-      	      ck.gradFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h);
-      	      ck.gradFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hu);
-      	      ck.gradFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hv);
-	      //get the solution gradients at tn (old time)
-      	      ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h_tn);
-      	      ck.gradFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hu_tn);
-      	      ck.gradFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hv_tn);
       	      //precalculate test function products with integration weights
       	      for (int j=0;j<nDOF_trial_element;j++)
       		{
       		  h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
       		  vel_test_dV[j] = vel_test_ref[k*nDOF_trial_element+j]*dV;
-      		  for (int I=0;I<nSpace;I++)
-      		    {
-      		      h_grad_test_dV[j*nSpace+I]   = h_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
-      		      vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
-      		    }
       		}
-	      // COMPUTE solution "star" to allow quick change between implicit or explicit time integration
-	      h_star = IMPLICIT*h+(1-IMPLICIT)*h_tn;
-	      hu_star = IMPLICIT*hu+(1-IMPLICIT)*hu_tn;
-	      hv_star = IMPLICIT*hv+(1-IMPLICIT)*hv_tn;
-	      for (int I=0; I<nSpace; I++)
-		{
-		  grad_h_star[I] = IMPLICIT*grad_h[I]+(1-IMPLICIT)*grad_h_tn[I];
-		  grad_hu_star[I] = IMPLICIT*grad_hu[I]+(1-IMPLICIT)*grad_hu_tn[I];
-		  grad_hv_star[I] = IMPLICIT*grad_hv[I]+(1-IMPLICIT)*grad_hv_tn[I];
-		}
       	      //save velocity at quadrature points for other models to use
       	      q_velocity[eN_k_nSpace+0]=hu/h;
       	      q_velocity[eN_k_nSpace+1]=hv/h;
-      	      //
-      	      //calculate pde coefficients at quadrature points
-      	      //
-      	      
-	      evaluateCoefficientsForResidual( // WITH "CURRENT" SOLUTION
-					      // ********** INPUT ********** //
-					      g, // gravity
-					      grad_b, // grad of bathymetry
-					      h,
-					      hu,
-					      hv,
-					      // ********** OUTPUT ********** //
-					      mass_acc, 
-					      mom_hu_acc,
-					      mom_hv_acc,
-					      mass_adv, // [h*u, h*v] 
-					      mom_hu_adv, // [h*u^2+0.5*g*h^2, h*u*v]
-					      mom_hv_adv, // [h*u*v, h*v^2+0.5*g*h^2]
-					      mom_hu_source, // x-momentum source
-					      mom_hv_source); // y-momentum source
-	      evaluateCoefficientsForResidual( // WITH "STAR" SOLUTION
-					      // ********** INPUT ********** //
-					      g, // gravity
-					      grad_b, // grad of bathymetry
-					      h_star,
-					      hu_star,
-					      hv_star,
-					      // ********** OUTPUT ********** //
-					      mass_acc_star, //dummy
-					      mom_hu_acc_star, //dummy
-					      mom_hv_acc_star, //dummy
-					      mass_adv_star, // [h*u, h*v] 
-					      mom_hu_adv_star, // [h*u^2+0.5*g*h^2, h*u*v]
-					      mom_hv_adv_star, // [h*u*v, h*v^2+0.5*g*h^2]
-					      mom_hu_source_star, // x-momentum source
-					      mom_hv_source_star); // y-momentum source
-      	      //
-      	      //save momentum for time history and velocity for subgrid error
-      	      //
-      	      q_mass_acc[eN_k] = mass_acc;
-      	      q_mom_hu_acc[eN_k] = mom_hu_acc;
-      	      q_mom_hv_acc[eN_k] = mom_hv_acc;
-      	      //subgrid error uses grid scale discharge
-      	      q_mass_adv[eN_k_nSpace+0] = hu;
-      	      q_mass_adv[eN_k_nSpace+1] = hv;
-      	      //
-      	      //moving mesh (TODO)
-      	      //
-      	      //
-      	      //calculate time derivative at quadrature points
-      	      //
-      	      ck.bdf(alphaBDF,
-      		     q_mass_acc_beta_bdf[eN_k],
-      		     mass_acc,
-      		     dmass_acc_h,
-      		     mass_acc_t,
-      		     dmass_acc_h_t);
-      	      ck.bdf(alphaBDF,
-		     q_mom_hu_acc_beta_bdf[eN_k],
-		     mom_hu_acc,
-		     dmom_hu_acc_hu,
-		     mom_hu_acc_t,
-		     dmom_hu_acc_hu_t);
-      	      ck.bdf(alphaBDF,
-		     q_mom_hv_acc_beta_bdf[eN_k],
-		     mom_hv_acc,
-		     dmom_hv_acc_hv,
-		     mom_hv_acc_t,
-		     dmom_hv_acc_hv_t);
-
+	      // calculatte CFL
 	      calculateCFL(elementDiameter[eN],
 			   g,
 			   h_tn,
 			   hu_tn,
 			   hv_tn,
 			   q_cfl[eN_k]);
-
-	      /////////////////////////////////
-	      // COMPUTE NUMERICAL DIFFUSION //
-	      /////////////////////////////////
-	      // LINEAR VISCOSITY //
-	      double linear_viscosity = cMax*elementDiameter[eN]*max_speed_per_cell[eN];
-	      q_numDiff_h[eN_k] = linear_viscosity;
-	      q_numDiff_hu[eN_k] = linear_viscosity;
-	      q_numDiff_hv[eN_k] = linear_viscosity;
-
-      	      //update element residual
+      	      //update element residual. Part about the lumped mass matrix 
       	      for(int i=0;i<nDOF_test_element;i++)
       		{
       		  register int i_nSpace=i*nSpace;
@@ -3250,52 +3081,27 @@ namespace proteus
 		  int h_gi = h_l2g[eN_i]; //global i-th index for h variable
 		  int vel_gi = vel_l2g[eN_i]; //global i-th index for velocity variables
 
-      		  elementResidual_h[i] += 
-#if LUMPED_MASS_MATRIX
-		    h_test_dV[i]*(h_dof[h_gi] - h_dof_old[h_gi]) + 
-#else
-		    dt*ck.Mass_weak(mass_acc_t,h_test_dV[i]) +
-#endif
-      		    0*dt*ck.Advection_weak(mass_adv_star,&h_grad_test_dV[i_nSpace]) +
-		    0*dt*ck.NumericalDiffusion(q_numDiff_h_last[eN_k],grad_h_star,&h_grad_test_dV[i_nSpace]);
-		  
-      		  elementResidual_hu[i] += 
-#if LUMPED_MASS_MATRIX
-		    vel_test_dV[i]*(hu_dof[vel_gi] - hu_dof_old[vel_gi]) + 
-#else
-		    dt*ck.Mass_weak(mom_hu_acc_t,vel_test_dV[i]) +
-#endif
-      		    0*dt*ck.Advection_weak(mom_hu_adv_star,&vel_grad_test_dV[i_nSpace]) +
-		    //dt*ck.Reaction_weak(mom_hu_source_star,vel_test_dV[i]) +
-		    0*dt*ck.NumericalDiffusion(q_numDiff_hu_last[eN_k],grad_hu_star,&vel_grad_test_dV[i_nSpace]);
-		 
-      		  elementResidual_hv[i] += 
-#if LUMPED_MASS_MATRIX
-		    vel_test_dV[i]*(hv_dof[vel_gi] - hv_dof_old[vel_gi]) + 
-#else
-		    dt*ck.Mass_weak(mom_hv_acc_t,vel_test_dV[i]) +
-#endif
-      		    0*dt*ck.Advection_weak(mom_hv_adv_star,&vel_grad_test_dV[i_nSpace]) +
-		    //dt*ck.Reaction_weak(mom_hv_source_star,vel_test_dV[i]) +
-		    0*dt*ck.NumericalDiffusion(q_numDiff_hv_last[eN_k],grad_hv_star,&vel_grad_test_dV[i_nSpace]);
+		  // MASS MATRIX IS LUMPED
+      		  elementResidual_h[i] += h_test_dV[i]*(h_dof[h_gi] - h_dof_old[h_gi]);		  
+      		  elementResidual_hu[i] += vel_test_dV[i]*(hu_dof[vel_gi] - hu_dof_old[vel_gi]);		 
+      		  elementResidual_hv[i] += vel_test_dV[i]*(hv_dof[vel_gi] - hv_dof_old[vel_gi]);
       		}
       	    }
       	  
-      	  //load element into global residual and save element residual
-	    
+      	  //load element into global residual and save element residual	    
       	  for(int i=0;i<nDOF_test_element;i++)
       	    {
       	      register int eN_i=eN*nDOF_test_element+i;
 	      int h_gi = h_l2g[eN_i]; //global i-th index for h
 	      int vel_gi = vel_l2g[eN_i]; //global i-th index for velocities 
 		
-	      elementResidual_h_save[eN_i] +=  elementResidual_h[i]* (h_dof[h_gi] - h_dof_old[h_gi]);
-	        	      
+	      elementResidual_h_save[eN_i] +=  elementResidual_h[i]; //* (h_dof[h_gi] - h_dof_old[h_gi]);
       	      globalResidual[offset_h+stride_h*h_gi]  += elementResidual_h[i];
       	      globalResidual[offset_hu+stride_hu*vel_gi] += elementResidual_hu[i];
       	      globalResidual[offset_hv+stride_hv*vel_gi] += elementResidual_hv[i];
       	    }
       	}
+
       //////////////////
       // Loop on DOFs //
       //////////////////
