@@ -14,6 +14,22 @@
 #define IMPLICIT 0
 #define LUMPED_MASS_MATRIX 1
 
+#define f(g,h,hZ) ( (h <= hZ) ? 2*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) )
+#define phi(g,h,hL,hR,uL,uR) ( f(g,h,hL) + f(g,h,hR) + uR - uL )
+
+#define fp(g,h,hZ) ( (h <= hZ) ? sqrt(g/h) : g*(2*h*h+h*hZ+hZ*hZ)/(2*sqrt(2*g)*h*h*hZ*sqrt(1/h+1/hZ)) )
+#define phip(g,h,hL,hR) ( fp(g,h,hL) + fp(g,h,hR) )
+
+#define nu1(g,hStar,hL,uL) ( uL - sqrt(g*hL)*sqrt( (1+fmax((hStar-hL)/2/hL,0)) * (1+fmax((hStar-hL)/hL,0)) ) )
+#define nu3(g,hStar,hR,uR) ( uR + sqrt(g*hR)*sqrt( (1+fmax((hStar-hR)/2/hR,0)) * (1+fmax((hStar-hR)/hR,0)) ) )
+
+#define phiDiff(g,h1k,h2k,hL,hR,uL,uR)   ( (phi(g,h2k,hL,hR,uL,uR) - phi(g,h1k,hL,hR,uL,uR))/(h2k-h1k)    )
+#define phiDDiff1(g,h1k,h2k,hL,hR,uL,uR) ( (phiDiff(g,h1k,h2k,hL,hR,uL,uR) - phip(g,h1k,hL,hR))/(h2k-h1k) )
+#define phiDDiff2(g,h1k,h2k,hL,hR,uL,uR) ( (phip(g,h2k,hL,hR) - phiDiff(g,h1k,h2k,hL,hR,uL,uR))/(h2k-h1k) )
+
+#define hd(g,h1k,h2k,hL,hR,uL,uR) ( h1k-2*phi(g,h1k,hL,hR,uL,uR)/(phip(g,h1k,hL,hR)+sqrt(std::pow(phip(g,h1k,hL,hR),2)-4*phi(g,h1k,hL,hR,uL,uR)*phiDDiff1(g,h1k,h2k,hL,hR,uL,uR))) )
+#define hu(g,h1k,h2k,hL,hR,uL,uR) ( h2k-2*phi(g,h2k,hL,hR,uL,uR)/(phip(g,h2k,hL,hR)+sqrt(std::pow(phip(g,h2k,hL,hR),2)-4*phi(g,h2k,hL,hR,uL,uR)*phiDDiff2(g,h1k,h2k,hL,hR,uL,uR))) )
+
 namespace proteus
 {
   class SW2DCV_base
@@ -899,15 +915,16 @@ namespace proteus
       /* 	} */
     }
 
+
     inline 
-      double maxWaveSpeed(double g, double nx, double ny,
-			  double hL, double huL, double hvL, 
-			  double hR, double huR, double hvR) 
+      double maxWaveSpeedTwoRarefactions(double g, double nx, double ny,
+					 double hL, double huL, double hvL, 
+					 double hR, double huR, double hvR) 
     {
       //1-eigenvalue: uL-sqrt(g*hL)
       //3-eigenvalue: uR+sqrt(g*hR) 
 
-      // TEMPORAL MAX WAVE SPEED (This is wrong)
+      // Start computing lambda1 and lambda3 as if we have a 1- and 3-rarefactions 
       double uL = huL/(hL+1E-10), uR = huR/(hR+1E-10);
       double vL = hvL/(hL+1E-10), vR = hvR/(hR+1E-10);
 
@@ -916,9 +933,114 @@ namespace proteus
       double lambda1 = velL - sqrt(g*hL);
       double lambda3 = velR + sqrt(g*hR);
       
-      //std::cout << hi << "\t" << hj << std::endl;
-      //std::cout << lambda1 << "\t" << lambda3 << std::endl;
-      return fmax(lambda1,lambda3);
+      return fmax(fabs(lambda1),fabs(lambda3));
+    }    
+
+    inline 
+      double maxWaveSpeed(double g, double nx, double ny,
+			  double hL, double huL, double hvL, 
+			  double hR, double huR, double hvR) 
+    {
+      double tol = 1E-15;
+      //1-eigenvalue: uL-sqrt(g*hL)
+      //3-eigenvalue: uR+sqrt(g*hR) 
+
+      // Start computing lambda1 and lambda3 as if we have a 1- and 3-rarefactions 
+      double uL = huL/(hL+1E-10), uR = huR/(hR+1E-10);
+      double vL = hvL/(hL+1E-10), vR = hvR/(hR+1E-10);
+
+      double velL = uL*nx + vL*ny, velR = uR*nx + vR*ny;
+
+      double lambda1 = velL - sqrt(g*hL);
+      double lambda3 = velR + sqrt(g*hR);
+      
+      ////////////////////
+      // ESTIMATE hStar //
+      ////////////////////
+      // Initial estimate of hStar0 from above. 
+      // This is computed via phiR(h) >= phi(h) ---> hStar0 >= hStar
+      // See equation (17) in notes
+      double hStar0 = std::pow(velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR)),2)/4/g;
+      double hStar = hStar0;
+
+      /////////////////////////////////
+      // ALGORITHM 1: Initialization // 
+      /////////////////////////////////
+      // Requires: tol
+      // Ensures: h10, h20
+      double h1k, h2k;
+      double hMin = fmin(hL,hR);
+      double phi_min = phi(g,hMin,hL,hR,uL,uR);
+      if (phi_min >= 0) // This is a 1- and 3-rarefactions situation 
+	return fmax(fabs(lambda1),fabs(lambda3));
+
+      double hMax = fmax(hL,hR); 
+      double phi_max = phi(g,hMax,hL,hR,uL,uR);
+      if (phi_max == 0) // if hMax "hits" hStar (very unlikely)
+	{
+	  hStar = hMax;	 	  
+	  lambda1 = nu1(g,hStar,hL,velL);
+	  lambda3 = nu3(g,hStar,hR,velR);
+	  return fmax(fabs(lambda1),fabs(lambda3));
+	}
+      if (phi_max < 0) // This is a 1- and 3-shock situation 
+	{
+	  h1k = hMax;
+	  h2k = hStar0;
+	}
+      else // Here we have one shock and one rarefaction 
+	{
+	  h1k = hMin;
+	  h2k = fmin(hMax,hStar0);
+	}      
+      // improve estimate from below via one newton step (not required)
+      h1k = fmax(h1k,h2k-phi(g,h2k,hL,hR,uL,uR)/phip(g,h2k,hL,hR));
+      //std::cout << "h10: " << h1k << "\t" << "h20: " << h2k << std::endl;
+
+      // COMPUTE lambdaMin0 and lambdaMax0
+      double nu11 = nu1(g,h2k,hL,velL);
+      double nu12 = nu1(g,h1k,hL,velL);
+      double nu31 = nu3(g,h1k,hR,velR);
+      double nu32 = nu3(g,h2k,hR,velR);
+
+      double lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
+      double lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
+      
+      if (lambdaMin > 0 && lambdaMax/lambdaMin - 1 <= tol)
+	return lambdaMax;
+      else // Proceed to algorithm 2
+	{
+	  ///////////////////////////////////////////
+	  // ALGORITHM 2: ESTIMATION OF LAMBDA MAX //
+	  ///////////////////////////////////////////
+	  // Requires: h10, h20
+	  // Ensures: lambdaMax
+	  //int aux_counter = 0;
+	  while (true)
+	    {
+	      //aux_counter++;
+	      // Start having lambdaMin and lambdaMax
+	      // Check if current lambdaMin and lambdaMax satisfy the tolerance
+	      if (lambdaMin > 0 && lambdaMax/lambdaMin - 1 <= tol)
+		return lambdaMax;
+	      // Check for round off error
+	      if (phi(g,h1k,hL,hR,velL,velR) > 0 || phi(g,h2k,hL,hR,velL,velR) < 0)
+		return lambdaMax;
+	      // Compute new estimates on h1k and h2k
+	      h1k = hd(g,h1k,h2k,hL,hR,uL,uR);
+	      h2k = hu(g,h1k,h2k,hL,hR,uL,uR);
+
+	      // Compute lambdaMax and lambdaMin
+	      nu11 = nu1(g,h2k,hL,velL);
+	      nu12 = nu1(g,h1k,hL,velL);
+	      nu31 = nu3(g,h1k,hR,velR);
+	      nu32 = nu3(g,h2k,hR,velR);
+
+	      lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
+	      lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
+	    }
+	  //std::cout << "*****... AUX COUNTER: " << aux_counter << std::endl; //TMP
+	}
     }
 
     inline
@@ -2689,7 +2811,7 @@ namespace proteus
 					    hi,hui,hvi,hj,huj,hvj)*cij_norm,
 			       maxWaveSpeed(g,nxji,nyji,
 					    hj,huj,hvj,hi,hui,hvi)*cji_norm);
-		    
+
 		  ith_dissipative_term1 += dLij*(hj-hi);
 		  ith_dissipative_term2 += dLij*(huj-hui);
 		  ith_dissipative_term3 += dLij*(hvj-hvi);
