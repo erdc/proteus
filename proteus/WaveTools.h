@@ -38,7 +38,7 @@ namespace proteus
        else
 	 {
 	   hype[0] = cosh(Kd);
-	   hype[1] = cosh(Kd);
+	   hype[1] = sinh(Kd);
 	 }
        
  }
@@ -141,13 +141,23 @@ namespace proteus
      double Vhype =0.;
      double hype[2] = {0};
       
-     if(kAbs*Z > -PI_)
-       {
-	 fastcosh(hype,kAbs, Z, fast); 
+     if(fast)
+	{
+	if(kAbs*Z > -PI_ || fast)
+     	  {
+		 fastcosh(hype,kAbs, Z, fast); 
 
 	 Uhype = hype[0] / tanhkd + hype[1]; 
 	 Vhype = hype[1]/ tanhkd + hype[0]; 
-       }
+      	 }	
+	}
+     else
+	{   fastcosh(hype,kAbs, Z, fast);
+
+         Uhype = hype[0] / tanhkd + hype[1];
+         Vhype = hype[1]/ tanhkd + hype[0];
+
+	}	
      double fcos = fastcos(phase,fast);
      double fsin = fastcos(Pihalf_ - phase,fast);
      
