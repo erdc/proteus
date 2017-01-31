@@ -158,6 +158,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def evaluate(self,t,c):
         pass
     def preStep(self,t,firstStep=False):
+        self.model.h_dof_old_old = numpy.copy(self.model.h_dof_old)
+        self.model.hu_dof_old_old = numpy.copy(self.model.hu_dof_old)
+        self.model.hv_dof_old_old = numpy.copy(self.model.hv_dof_old)
         self.model.h_dof_old = numpy.copy(self.model.u[0].dof)
         self.model.hu_dof_old = numpy.copy(self.model.u[1].dof)
         self.model.hv_dof_old = numpy.copy(self.model.u[2].dof)
@@ -388,6 +391,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe={}
         self.phi_ip={}
         #Old DOFs (mql)
+        self.h_dof_old_old = self.u[0].dof.copy()
+        self.hu_dof_old_old = self.u[1].dof.copy()
+        self.hv_dof_old_old = self.u[2].dof.copy()
         self.h_dof_old = self.u[0].dof.copy()
         self.hu_dof_old = self.u[1].dof.copy()
         self.hv_dof_old = self.u[2].dof.copy()
@@ -604,6 +610,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                    self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
                                    compKernelFlag)
+
+        if 'use_invariant_domain_stabilization' in dir(options):
+            self.calculateResidual = self.sw2d.calculateResidual_invariant_domain_SWEs
+            self.calculateJacobian = self.sw2d.calculateJacobian_invariant_domain_SWEs
+        elif 'use_EV_stabilization' in dir(options):
+            self.calculateResidual = self.sw2d.calculateResidual_cell_based_entropy_viscosity
+            self.calculateJacobian = self.sw2d.calculateJacobian_cell_based_entropy_viscosity
+        else:
+            self.calculateResidual = self.sw2d.calculateResidual
+            self.calculateJacobian = self.sw2d.calculateJacobian
+
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -786,8 +803,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #import pdb
         #pdb.set_trace()
-        self.sw2d.calculateResidual_invariant_domain_SWEs(#element
-        #self.sw2d.calculateResidual_cell_based_entropy_viscosity(#element
+        self.calculateResidual(
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -827,6 +843,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.g,
             self.u[0].femSpace.dofMap.l2g,
             self.u[1].femSpace.dofMap.l2g,
+            self.h_dof_old_old,
+            self.hu_dof_old_old,
+            self.hv_dof_old_old,
             self.h_dof_old,
             self.hu_dof_old,
             self.hv_dof_old,
@@ -920,7 +939,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getJacobian(self,jacobian):
 	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
 				       jacobian)
-        self.sw2d.calculateJacobian_invariant_domain_SWEs(#element
+        self.calculateJacobian(
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
