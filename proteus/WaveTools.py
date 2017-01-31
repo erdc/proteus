@@ -294,7 +294,6 @@ def returnRectangles3D(a,x,y):
     ----------
     a : numpy.ndarray
         2D Array of y(x,y) function with (N+1)x(M+1)elements
-            Type: Numpy array or list
     x : numpy.ndarray
         Description: x- coordinate array with N+1 elements
     y : numpy.ndarray
@@ -469,7 +468,6 @@ def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
         Peak enhancement factor
     TMA : bool
             Description: TMA switch
-        Type: boolean
     depth : Optional[float]
         Water depth
 
@@ -701,39 +699,30 @@ class  MonochromaticWaves:
     ----------
     period : float
              Regular wave period
-    param : waveHeight
-            Description: Regular wave height
-            Type: float
-    param : mwl
-            Description: Still water level
-            Type: float
-    param : depth
-            Description: Water depth
-            Type: float
-    param : g
-            Description: Gravitational acceleration vector
-            Type: Numpy array
-    param : wavelength
-            Description: Regular wave lenght, calculated from linear dispersion if set to None
-            Type: float
-    param : waveType
-            Description: Set to "Linear" for linear wave theory and "Fenton" for using Fenton Fourier appoximation
-            Type: string
-    param : Ycoeff
-            Description: Fenton Fourier coefficients for free-surface elevation (set to None for linear wave theory)
-            Type: Numpy array
-    param : Bcoeff
-            Description: Fenton Fourier coefficients for velocity (set to None for linear wave theory)
-            Type: Numpy array
-    param : meanVelocity
-            Description: Mean velocity for Fenton Fourier approximation
-            Type: Numpy array
-    param : phi0
-            Description: Regular wave phase (0 by default)
-            Type: float
-    param : fast
-            Description: switch for optimised functions
-            Type: bool
+    waveHeight: float
+            Regular wave height
+    mwl : float
+            Still water level
+    depth : float
+            Water depth
+    g : numpy.ndarray
+             Gravitational acceleration vector
+    waveDir : numpy.ndarray
+             Wave direction in vector form
+    wavelength : float
+             Regular wave lenght, calculated from linear dispersion if set to None
+    waveType : string
+             Defines regular wave theory ("Linear" or "Fenton")
+    Ycoeff : numpy.ndarray
+             Fenton Fourier coefficients for free-surface elevation             
+    Bcoeff : numpy.ndarray
+             Fenton Fourier coefficients for velocity (set to None for linear wave theory)  
+    meanVelocity : numpy.ndarray
+             Mean velocity for Fenton Fourier approximation            
+    phi0 : float
+            Regular wave phase (0 by default)            
+    fast : bool
+            Switch for optimised functions
 
             """
     def __init__(self,
@@ -927,45 +916,32 @@ class RandomWaves:
 
     Parameters
     ----------
-    param : Tp
-            Description: Peak wave period
-            Type: Float
-    param : Hs
-            Description: Significant wave height
-            Type: float
-    param : mwl
-            Description: Still water level
-            Type: float
-    param : depth
-            Description: Water depth
-            Type: float
-    param : waveDir
-            Description: Wave direction vector
-            Type: numpy array
-    param : g
-            Description: Gravitational acceleration vector
-            Type: numpy array
-    param : N
-            Description: Number of frequency components
-            Type: integer
-    param : bandfactor
-            Description: Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)
-            Type: float
-    param : spectName
-            Description: Name of spectral distribution
-            Type: string
-    param : spectral_params
-            Description: Dictionary of arguments specific to the spectral distribution
+    Tp : float
+            Peak wave period            
+    Hs : float
+             Significant wave height            
+    mwl : float
+             Still water level            
+    depth : float
+             Water depth            
+    waveDir : numpy.ndarray
+             Wave direction vector            
+    g : Numpy array
+             Gravitational acceleration vector            
+    N : int
+             Number of frequency components
+    bandFactor : float
+             Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)           
+    spectName : string
+             Name of spectral distribution
+    spectral_params : dict
+             Dictionary of arguments specific to the spectral distribution
             Example for JONSWAP = {"gamma": 3.3, "TMA":True,"depth": depth}
-            TMA=True activates the TMA modification, which in turn needs the depth as a parameter
-            Type: Dictionary
-    param : phi
-            Description: Component phases (if set to None, phases are picked at random)
-            Type: numpy array
-    param : fast
-            Description: switch for optimised functions
-            Type: bool
-
+            TMA=True activates the TMA modification, which in turn needs the depth as a parameter            
+    phi : numpy.ndarray
+             Component phases (if set to None, phases are picked at random)            
+    fast : bool
+             Switch for optimised functions            
     """
     def __cinit__(self,
                  Tp,
@@ -1177,46 +1153,35 @@ class MultiSpectraRandomWaves:
     Parameters
     ----------
 
-        param : Nspectra
-                Description: Total number of spectra
-                Type: integer
-        param : Tp
-                Description: List of peak wave periods
-                Type: list
-        param : Hs
-                Description: List of significant wave heights
-                Type: list
-        param : mwl
-                Description: Still water level
-                Type: float
-        param : depth
-                Description: Water depth
-                Type: float
-        param : waveDir
-                Description: Lsit of wave direction vector
-                Type: numpy array
-        param : g
-                Description: Gravitational acceleration vector
-                Type: Numpy array
-        param : N
-                Description: List of numbers of frequency components
-                Type: list
-        param : bandfactor
-                Description: List of spectral band factors
-                Type: list
-        param : spectName
-                Description: List of names of spectral distribution
-                Type: list
-        param : spectral_params
-                Description: List of names of spectral distribution (see RandomWaves class)
-                Type: list
-        param : phi
-                Description: List of component phases
-                Type: list
-        param : fast
-                Description: switch for optimised functions
-                Type: bool
-
+        Nspectra : int
+                 Total number of spectra
+        Tp : list
+                 List of peak wave periods
+        Hs : list
+                 List of significant wave heights
+        mwl : float
+                 Still water level
+                
+        depth : float
+                 Water depth
+                
+        waveDir : list
+                 List of wave direction vector
+                
+        g : Numpy array
+                 Gravitational acceleration vector
+        N : list
+                 List of numbers of frequency components
+        bandFactor : list
+                 List of spectral band factors
+        spectName : list
+                 List of names of spectral distribution
+        spectral_params : list
+                 List of names of spectral distribution (see RandomWaves class)
+        phi : list
+                 List of component phases
+        fast : bool
+                 Switch for optimised functions              
     """
     def __cinit__(self,
                  Nspectra,
@@ -1383,56 +1348,42 @@ class DirectionalWaves:
 
     Parameters
     ----------
-    param : M
-            Description: Number of directional components
-            Type: integer
-    param : Tp
-            Description: Peak wave period
-            Type: Float
-    param : Hs
-            Description: Significant wave height
-            Type: float
-    param : mwl
-            Description: Still water level
-            Type: float
-    param : depth
-            Description: Water depth
-            Type: float
-    param : waveDir0
-            Description: Leading wave direction vector
-            Type: numpy array
-    param : g
-            Description: Gravitational acceleration vector
-            Type: numpy array
-    param : N
-            Description: Number of frequency components
-            Type: integer
-    param : bandfactor
-            Description: Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)
-            Type: float
-    param : spectName
-            Description: Name of spectral distribution
-            Type: string
-    param : spreadName
-            Description: Name of spreading distribution
-            Type: string
-    param : spectral_params
-            Description: Dictionary of arguments specific to the spectral distribution (see RandomWaves class)
-            Type: Dictionary
-    param : spread_params
-            Description: Dictionary of arguments specific to the spreading distribution
+    M : int
+             Number of directional components
+    Tp : float
+             Peak wave period
+    Hs : float
+             Significant wave height
+    mwl : float
+             Still water level
+    depth : float
+             Water depth
+    waveDir0 : numpy.ndarray
+             Leading wave direction vector
+    g : Numpy array
+             Gravitational acceleration vector
+    N : int
+             Number of frequency components
+    bandFactor : float
+             Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)           
+    spectName : string
+             Name of spectral distribution
+    spreadName : string
+             Name of spreading distribution
+    spectral_params : dict
+             Dictionary of arguments specific to the spectral distribution (see RandomWaves class)            
+    spread_params : dict
+             Dictionary of arguments specific to the spreading distribution
             Example for Cos-2s = {"s": 10}
             Example for Mitsuyashu-type = {"fp": 1/Tp, "smax":10}
-            Type: Dictionary
-    param : phi
-            Description: Component phases (if set to None, phases are picked at random)
-            Type: numpy array
-    param : phiSymm
-            Description: Switch for enabling a symmetric phase allocation across directional components
-            Type: boolean
-    param : fast
-            Description: Switch for enabling optimised functions 
-            Type: boolean
+            
+    phi : numpy.ndarray
+             Component phases (if set to None, phases are picked at random)
+            
+    phiSymm : bool
+             Switch for enabling a symmetric phase allocation across directional components
+    fast : bool
+             Switch for enabling optimised functions 
 
     """
     def __cinit__(self,
@@ -1638,50 +1589,37 @@ class TimeSeries:
 
     Parameters
     ----------
-    param : timeSeriesFile
-            Description: Time series file name (csv or txt)
-            Type: string
-    param : skiprows
-            Description: Number of header rows
-            Type: float
-    param : timeSeriesPosition
-            Description: Coordinates of the gauge / signal location
-            Type: float
-    param : depth
-            Description: Water depth
-            Type: float
-    param : N
-            Description: Number of frequency components
-            Type: integer
-    param : mwl
-            Description: Still water level
-            Type: float
-    param : waveDir
-            Description: Leading wave direction vector
-            Type: numpy array
-    param : g
-            Description: Gravitational acceleration vector
-            Type: numpy array
-    param : cutoffTotal
-            Description: Cut off fraction, applied both at the leading and tailing parts of the series
-            Type: float
-    param : rec_direct
-            Description: Switch for activating direct decomposition
-            Type: string
-    param : window_params
-            Description: Dictionary of parameters for window method
+    timeSeriesFile : string
+             Time series file name (csv or txt)
+    skiprows : int
+             Number of header rows in time series file            
+    timeSeriesPosition : numpy.ndarrat
+             Coordinates of the gauge / signal location            
+    depth : float
+             Water depth            
+    N : int
+             Number of frequency components
+    mwl : float
+             Still water level            
+    waveDir : numpy.ndarray
+             Leading wave direction vector            
+    g : Numpy array
+             Gravitational acceleration vector            
+    cutoffTotal : float
+             Cut off fraction, applied both at the leading and tailing parts of the series 
+    rec_direct : bool
+             Switch for activating direct decomposition
+    window_params : dict
+             Dictionary of parameters for window method
             e.g.  window_params = {"Nwaves":15, "Tm": Tp/1.1, "Window":"costap"} (minimum parameters required)
             e.g.  window_params = {"Nwaves":15, "Tm": Tp/1.1, "Window":"costap", "Overlap":0.5, "Cutoff":0.2} (full range of parameters)
-            Type: Dictionary
-    param : arrayData
-            Description: Switch for passing the time series as an array (False by default)
-            Type: boolean
-    param : seriesArray
-            Description: Free surface elevation time series given in an array format (None by default)
-            Type: numpy array
-    param : fast
-            Description: Switch for enabling optimised functions 
-            Type: boolean
+            
+    arrayData : bool
+             Switch for passing the time series as an array (False by default)
+    seriesArray : numpy.ndarray
+             Free surface elevation time series given in an array format (None by default) 
+    fast : bool
+             Switch for enabling optimised functions 
 
     """
     def __init__(self,
@@ -2153,56 +2091,41 @@ class RandomWavesFast:
 
     Parameters
     ----------
-    param : Tstart
-            Description: Start time
-            Type: Float
-    param : Tend
-            Description: End time
-            Type: Float
-    param : x0
-            Description: Position vector for the time series
-            Type: Numpy array
-    param : Tp
-            Description: Peak wave period
-            Type: Float
-    param : Hs
-            Description: Significant wave height
-            Type: float
-    param : mwl
-            Description: Still water level
-            Type: float
-    param : depth
-            Description: Water depth
-            Type: float
-    param : waveDir
-            Description: Wave direction vector
-            Type: numpy array
-    param : g
-            Description: Gravitational acceleration vector
-            Type: numpy array
-    param : N
-            Description: Number of frequency components
-            Type: integer
-    param : bandfactor
-            Description: Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)
-            Type: float
-    param : spectName
-            Description: Name of spectral distribution
-            Type: string
-    param : spectral_params
-            Description: Dictionary of arguments specific to the spectral distribution
+    Tstart : float
+             Start time            
+    Tend : float
+             End time            
+    x0 : numpy.ndarray
+             Position vector for the time series            
+    Tp : float
+             Peak wave period
+    Hs : float
+             Significant wave height
+    mwl : float
+             Still water level
+    depth : float
+             Water depth
+    waveDir : numpy.ndarray
+             Wave direction vector
+    g : Numpy array
+             Gravitational acceleration vector
+    N : int
+             Number of frequency components
+    bandFactor : float
+             Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)           
+    spectName : string
+             Name of spectral distribution
+    spectral_params : dict
+             Dictionary of arguments specific to the spectral distribution
             Example for JONSWAP = {"gamma": 3.3, "TMA":True,"depth": depth}
             TMA=True activates the TMA modification, which in turn needs the depth as a parameter
-            Type: Dictionary
-    param : phi
-            Description: Component phases (if set to None, phases are picked at random)
-            Type: numpy array
-    param : Lgen
-            Description: Length of the generation zone (np.array([0., 0., 0.]) by default
-            Type: numpy array
-       param : fast
-            Description: Switch for enabling optimised functions 
-            Type: boolean
+    phi : numpy.ndarray
+             Component phases (if set to None, phases are picked at random)
+    Lgen : numpy.ndarray
+             Length of the generation zone (np.array([0., 0., 0.]) by default
+    fast : bool
+             Switch for enabling optimised functions 
+    
 
     """
 
@@ -2318,51 +2241,36 @@ class RandomNLWaves:
 
     Parameters
     ----------
-    param : Tstart
-            Description: Start time
-            Type: Float
-    param : Tend
-            Description: End time
-            Type: Float
-    param : Tp
-            Description: Peak wave period
-            Type: Float
-    param : Hs
-            Description: Significant wave height
-            Type: float
-    param : mwl
-            Description: Still water level
-            Type: float
-    param : depth
-            Description: Water depth
-            Type: float
-    param : waveDir
-            Description: Wave direction vector
-            Type: numpy array
-    param : g
-            Description: Gravitational acceleration vector
-            Type: numpy array
-    param : N
-            Description: Number of frequency components
-            Type: integer
-    param : bandfactor
-            Description: Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)
-            Type: float
-    param : spectName
-            Description: Name of spectral distribution
-            Type: string
-    param : spectral_params
-            Description: Dictionary of arguments specific to the spectral distribution
+    Tstart : float
+             Start time
+    Tend : float
+             End time
+    Tp : float
+             Peak wave period
+    Hs : float
+             Significant wave height
+    mwl : float
+             Still water level
+    depth : float
+             Water depth
+    waveDir : numpy.ndarray
+             Wave direction vector
+    g : Numpy array
+             Gravitational acceleration vector
+    N : int
+             Number of frequency components
+    bandFactor : float
+             Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)
+    spectName : string
+             Name of spectral distribution
+    spectral_params : dict
+             Dictionary of arguments specific to the spectral distribution
             Example for JONSWAP = {"gamma": 3.3, "TMA":True,"depth": depth}
-            TMA=True activates the TMA modification, which in turn needs the depth as a parameter
-            Type: Dictionary
-    param : phi
-            Description: Component phases (if set to None, phases are picked at random)
-            Type: numpy array
-    param : fast
-            Description: Switch for enabling optimised functions 
-            Type: boolean
-
+            TMA=True activates the TMA modification, which in turn needs the depth as a parameter            
+    phi : numpy.ndarray
+             Component phases (if set to None, phases are picked at random)            
+    fast : bool
+           Switch for enabling optimised functions             
     """
     def __init__(self,
                  Tstart,
@@ -2697,57 +2605,42 @@ class RandomNLWavesFast:
 
     Parameters
     ----------
-    param : Tstart
-            Description: Start time
-            Type: Float
-    param : Tend
-            Description: End time
-            Type: Float
-    param : x0
-            Description: Position vector for the time series
-            Type: Numpy array
-    param : Tp
-            Description: Peak wave period
-            Type: Float
-    param : Hs
-            Description: Significant wave height
-            Type: float
-    param : mwl
-            Description: Still water level
-            Type: float
-    param : depth
-            Description: Water depth
-            Type: float
-    param : waveDir
-            Description: Wave direction vector
-            Type: numpy array
-    param : g
-            Description: Gravitational acceleration vector
-            Type: numpy array
-    param : N
-            Description: Number of frequency components
-            Type: integer
-    param : bandfactor
-            Description: Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)
-            Type: float
-    param : spectName
-            Description: Name of spectral distribution
-            Type: string
-    param : spectral_params
-            Description: Dictionary of arguments specific to the spectral distribution
+    Tstart : float
+             Start time            
+    Tend : float
+             End time            
+    x0 : numpy.ndarray
+             Position vector for the time series            
+    Tp : float
+             Peak wave period            
+    Hs : float
+             Significant wave height            
+    mwl : float
+             Still water level            
+    depth : float
+             Water depth            
+    waveDir : np.ndarray
+             Wave direction vector            
+    g : Numpy array
+             Gravitational acceleration vector            
+    N : int
+             Number of frequency components
+    bandFactor : float
+             Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)           
+    spectName : string
+             Name of spectral distribution
+    spectral_params : dict
+             Dictionary of arguments specific to the spectral distribution
             Example for JONSWAP = {"gamma": 3.3, "TMA":True,"depth": depth}
-            TMA=True activates the TMA modification, which in turn needs the depth as a parameter
-            Type: Dictionary
-    param : phi
-            Description: Component phases (if set to None, phases are picked at random)
-            Type: numpy array
-    param : Vgen
-            Description: Length of the generation zone (np.array([0., 0., 0.]) by default
-            Type: numpy array
-    param : fast
-            Description: Switch for enabling optimised functions 
-            Type: boolean
-
+            TMA=True activates the TMA modification, which in turn needs the depth as a parameter            
+    phi : numpy.ndarray
+             Component phases (if set to None, phases are picked at random)
+            
+    Vgen : numpy.ndarray
+             Length of the generation zone (np.array([0., 0., 0.]) by default
+            
+    fast : bool
+             Switch for enabling optimised functions 
     """
     def __init__(self,
                  Tstart,
