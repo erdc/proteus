@@ -58,7 +58,8 @@ def test_gmshLoadAndAdapt(verbose=0):
     scalar = numpy.zeros((mesh.nNodes_global,1),'d')+1.0
     domain.PUMIMesh.transferFieldToPUMI("vof", scalar)
 
-    domain.PUMIMesh.get_local_error()
+    errorTotal=domain.PUMIMesh.get_local_error()
+    ok(errorTotal<1e-14)
 
     ok(domain.PUMIMesh.willAdapt(),1)
 
