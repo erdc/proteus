@@ -864,6 +864,78 @@ namespace proteus
       dmom_w_source[1] = 0.0;
       dmom_w_source[2] = (1.0 - phi_s)*new_beta;
     }
+    
+    inline
+      void updateSolidParticleTerms(const int nParticles,
+				    double* particle_signed_distance,
+				    double* particle_velocitiy,
+				    double* particle_angular_velocitiy,
+				    double* particle_centroid,
+				    const double alpha,
+				    const double beta,
+				    const double eps_rho,
+				    const double eps_mu,
+				    const double rho_0,
+				    const double nu_0,
+				    const double rho_1,
+				    const double nu_1,
+				    const double useVF,
+				    const double vf,
+				    const double phi,
+				    const double u,
+				    const double v,
+				    const double w,
+				    const double uStar,
+				    const double vStar,
+				    const double wStar,
+				    const double eps_s,
+				    const double phi_s,
+				    const double u_s,
+				    const double v_s,
+				    const double w_s,
+				    double& mom_u_source,
+				    double& mom_v_source,
+				    double& mom_w_source,
+				    double dmom_u_source[nSpace],
+				    double dmom_v_source[nSpace],
+				    double dmom_w_source[nSpace])
+    {
+      double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s;
+      H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
+      nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+      rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
+      mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+      for (int i=0;i<nParticles;i++)
+	{
+      uc = sqrt(u*u+v*v*+w*w); 
+      duc_du = u/(uc+1.0e-12);
+      duc_dv = v/(uc+1.0e-12);
+      duc_dw = w/(uc+1.0e-12);
+      H_p = smoothedHeaviside(eps_p,particle_signed_distance);
+      double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
+      double new_beta = closure.betaCoeff(1.0-phi_s,
+                                          rho,
+                                          fluid_velocity,
+                                          solid_velocity,
+                                          viscosity);
+      new_beta/=rho;
+
+      mom_u_source += (1.0 - phi_s)*new_beta*(u-u_s);
+      mom_v_source += (1.0 - phi_s)*new_beta*(v-v_s);
+      /* mom_w_source += phi_s*new_beta*(w-w_s); */
+
+      dmom_u_source[0] = (1.0 - phi_s)*new_beta;
+      dmom_u_source[1] = 0.0;
+      /* dmom_u_source[2] = 0.0; */
+      
+      dmom_v_source[0] = 0.0;
+      dmom_v_source[1] = (1.0 - phi_s)*new_beta;
+      dmom_v_source[2] = 0.0;
+
+      dmom_w_source[0] = 0.0;
+      dmom_w_source[1] = 0.0;
+      dmom_w_source[2] = (1.0 - phi_s)*new_beta;
+    }
 
     inline
       void updateTurbulenceClosure(const int turbulenceClosureModel,
