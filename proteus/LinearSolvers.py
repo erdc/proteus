@@ -1183,10 +1183,10 @@ class NavierStokesSchur(SchurPrecon):
         return False
 
     def _setConstantPressureNullSpace(self,global_ksp):
-        self.global_nsp = p4pyPETSc.NullSpace().create(vectors=self.global_null_space)
+#        self.global_nsp = p4pyPETSc.NullSpace().create(vectors=self.global_null_space)
 #        self.nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,constant=True)
-#        nsp = global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].getNullSpace()
-#        global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
+        nsp = global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].getNullSpace()
+        global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
 
 SimpleNavierStokes3D = NavierStokesSchur
 NavierStokes3D = NavierStokesSchur
@@ -1323,9 +1323,9 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         # ARB Note - There are two ways this can be done...first pull the
         # F and B operators from the global system.  I think this is most
         # direct and cleanest, but one could also call the operator constructors.
-        self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
+#        self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
         self.F = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
-#        self.B = self.operator_constructor.getB()
+        self.B = self.operator_constructor.getB()
 #        self.F = self.operator_constructor.getF()
         self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.F)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')

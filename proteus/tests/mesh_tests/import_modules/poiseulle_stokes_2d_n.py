@@ -1,6 +1,6 @@
 from proteus import *
 from proteus.default_n import *
-from stokes_2d_p import *
+from poiseulle_stokes_2d_p import *
 
 #######################################################
 
@@ -8,7 +8,7 @@ from stokes_2d_p import *
 nLevels = 3
 numeric_scheme = "THQuads"
 useWeakBoundaryConditions = True
-solveIteratively = True
+solveIteratively = False
 solveInParallel = False
 
 #######################################################

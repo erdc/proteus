@@ -6202,8 +6202,6 @@ class MultilevelTransport:
         self.strideListList=[]
         self.matType = matType
         #mwf debug
-        #import pdb
-        #pdb.set_trace()
         if PhiSpaceTypeDict == None: #by default phi in same space as u
             PhiSpaceTypeDict = TrialSpaceTypeDict
         self.phiSpaceDictList = []
