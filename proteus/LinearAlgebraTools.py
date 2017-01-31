@@ -433,6 +433,15 @@ class InvOperatorShell(OperatorShell):
         """ Function handle to feed to ksp's setConvergenceTest  """
         ksp.buildResidual(self.r_work)
         truenorm = self.r_work.norm()
+        # if its >= 100:
+        #     logEvent("!!! KSP_LACPLACE_ : %i !!!" % its)
+        #     logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual: %12.5e" %(truenorm) )
+        #     logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+        #     logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
+        #                                                                                       truenorm,
+        #                                                                                       (truenorm/ self.rnorm0),
+        #                                                                                       ksp.atol,
+        #                                                                                       ksp.rtol))
         if its == 0:
             self.rnorm0 = truenorm
             # ARB - Leaving these log events in for future debugging purposes.
@@ -615,14 +624,21 @@ class PCDInv_shell(InvOperatorShell):
         Ap_matrix : petsc4py matrix object
                     The pressure Laplacian operator.
         """
+        # ARB - Chebyshev semi-iteration...
         self.Qp = Qp_matrix
         self.Fp = Fp_matrix
         self.Ap = Ap_matrix
         # initialize kspAp
+        prefix = p4pyPETSc.Options()
+        prefix.setValue('ksp_max_it','70')
         self.kspAp = p4pyPETSc.KSP().create()
         self.kspAp.setOperators(self.Ap,self.Ap)
         self.kspAp.setType('fgmres')
         self.kspAp.pc.setType('ilu')
+        self.kspAp.pc.setUp()
+        self.kspAp.setUp()
+        self.kspAp.setFromOptions()
+        # ARB - Add null space here..
         self.kspAp.setUp()
         # initialize kspQp
         self.kspQp = p4pyPETSc.KSP().create()
@@ -648,6 +664,7 @@ class PCDInv_shell(InvOperatorShell):
             Result of operator acting on x.
         """
         temp1 = p4pyPETSc.Vec().create()
+        # create a copy / duplicate of the vector x ...
         temp1.setType('seq')
         temp2 = p4pyPETSc.Vec().create()
         temp2.setType('seq')
@@ -711,10 +728,25 @@ class LSCInv_shell(InvOperatorShell):
         self.__constructBQinvBt()
         
         # initialize (B Q_hat B') solver
+        # ARB - Adding a null space ...
+        nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                           vectors = (),
+                                           constant = True)
+        self.BQinvBt.setNullSpace(nsp)
+
+        prefix = p4pyPETSc.Options()
+        prefix.setValue('ksp_max_it','70')
+        
         self.kspBQinvBt = p4pyPETSc.KSP().create()
         self.kspBQinvBt.setOperators(self.BQinvBt,self.BQinvBt)
-        self.kspBQinvBt.setType('gmres')
-        self.kspBQinvBt.pc.setType('asm')
+        
+        self.kspBQinvBt.setType('fgmres')
+        self.kspBQinvBt.pc.setType('ilu')
+        # self.kspBQinvBt.pc.setType('hypre')
+        # self.kspBQinvBt.pc.setHYPREType('boomeramg')
+        self.kspBQinvBt.pc.setUp()
+        self.kspBQinvBt.setUp()
+        self.kspBQinvBt.setFromOptions()
 
         # initialize solver for Qv
         self.kspQv = p4pyPETSc.KSP().create()
@@ -739,6 +771,7 @@ class LSCInv_shell(InvOperatorShell):
         tmp2 = self._create_tmp_vec(B_sizes[1])
         tmp3 = self._create_tmp_vec(B_sizes[1])
         # apply LSC operator
+
         self.kspBQinvBt.solve(x,tmp1)
         self.B.multTranspose(tmp1,tmp2)
         self.kspQv.solve(tmp2,tmp3)
@@ -746,12 +779,14 @@ class LSCInv_shell(InvOperatorShell):
         self.kspQv.solve(tmp2,tmp3)
         self.B.mult(tmp3,tmp1)
         self.kspBQinvBt.solve(tmp1,y)
+#        import pdb ; pdb.set_trace()
     
     def __constructBQinvBt(self):
         """ Private method repsonsible for building BQinvBt """
         # Create \hat{Q}^{-1}
         self.Qv_inv = p4pyPETSc.Mat().create()
         self.Qv_inv.setSizes(self.Qv.getSizes())
+        # ARB - think about correct way to initialize the matrix. (matduplicate)
         self.Qv_inv.setType('aij')
         self.Qv_inv.setUp()
         self.Qv_inv.setDiagonal(1./self.Qv.getDiagonal())
