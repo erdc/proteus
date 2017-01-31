@@ -37,7 +37,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         double getMinimumQuality()
         double getTotalMass()
         double getMPvalue(double,double, double)
-        void get_local_error()
+        void get_local_error(double)
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
@@ -97,4 +97,6 @@ cdef class MeshAdaptPUMI:
     def willAdapt(self):
         return self.thisptr.willAdapt()
     def get_local_error(self):
-        return self.thisptr.get_local_error()
+        errTotal=0.0;
+        self.thisptr.get_local_error(errTotal)
+        return errTotal

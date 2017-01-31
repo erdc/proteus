@@ -1032,7 +1032,8 @@ class NS_base:  # (HasTraits):
                     logEvent("Estimate Error")
                     sfConfig = p0.domain.PUMIMesh.size_field_config()
                     if(sfConfig=="ERM"):
-                      p0.domain.PUMIMesh.get_local_error()
+                      errorTotal= p0.domain.PUMIMesh.get_local_error()
+                      
                       if(p0.domain.PUMIMesh.willAdapt()):
                         adaptMeshNow=True
                         logEvent("Need to Adapt")

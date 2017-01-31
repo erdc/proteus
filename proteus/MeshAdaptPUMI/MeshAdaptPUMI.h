@@ -57,7 +57,7 @@ class MeshAdaptPUMIDrvr{
   std::string logging_config; // Logging on or off
 
   //Element Residual Method
-  void get_local_error();
+  void get_local_error(double& total_error);
   void computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
   void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, double * endflux);
   int getSimmetrixBC();

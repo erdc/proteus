@@ -567,7 +567,7 @@ void MeshAdaptPUMIDrvr::removeBCData()
   if(comm_rank==0) std::cerr<<"Destroyed BC and flux tags"<<std::endl;
 }
 
-void MeshAdaptPUMIDrvr::get_local_error() 
+void MeshAdaptPUMIDrvr::get_local_error(double &total_error) 
 //This function aims to compute error at each element via an Error Residual Method.
 //See Oden, J. Tinsley, Weihan Wu, and Mark Ainsworth. "An a posteriori error estimate for finite element approximations of the Navier-Stokes equations." Computer Methods in Applied Mechanics and Engineering 111.1 (1994): 185-202.
 //Effectively, it projects the weak residual onto a higher order space.
