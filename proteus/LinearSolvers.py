@@ -94,13 +94,13 @@ class LinearSolver:
             r-=b
     def solveInitialize(self,u,r,b,initialGuessIsZero=True):
         if r == None:
-            if self.r == None:
+            if self.r is None:
                 self.r = Vec(self.n)
             r=self.r
         else:
             self.r=r
-        if b == None:
-            if self.b == None:
+        if b is None:
+            if self.b is None:
                 self.b = Vec(self.n)
             b=self.b
         else:

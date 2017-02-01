@@ -451,17 +451,20 @@ class SimulationProcessor:
     #end preproc
 
     def processTimeLevel(self,mlvt,tsim=None,plotOffSet=None):
-        """
-        calculate desired quantities after each macro time step
-        input :
-          p    --- problem definition
-          n    --- numerics definition
-          mlvt --- multilevel vector transport that holds the quantities to measure
-          tsim --- simulation time
+        """calculate desired quantities after each macro time step
 
-        TO DO:
+        Parameters
+        ----------
 
+        mlvt : multilevel vector transport that holds the quantities to measure
+        tsim : simulation time
+        
         """
+        
+#        input :
+#          p    --- problem definition
+#          n    --- numerics definition
+#
         p = self.pFile; n = self.nFile
         if tsim == None:
             mlvt.levelModelList[-1].timeIntegration.t
@@ -477,13 +480,12 @@ class SimulationProcessor:
     def postprocess(self,mlvt,tsim):
         """
         calculate desired quantities after simulation ends
-        input :
-          p    --- problem definition
-          n    --- numerics definition
-          mlvt --- multilevel vector transport that holds the quantities to measure
-          tsim --- simulation time
 
-        TO DO:
+        Parameters
+        ----------
+
+          mlvt : multilevel vector transport that holds the quantities to measure
+          tsim : simulation time
 
         """
         p = self.pFile; n = self.nFile
@@ -652,18 +654,18 @@ class SimulationProcessor:
     #end def
 
     def stepProcessError(self,mlvt,tsim):
-        """
-        calculate desired error quantities for a single step
-        input :
-          p    --- problem definition
-          n    --- numerics definition
-          mlvt --- multilevel vector transport that holds the quantities to measure
-          tsim --- simulation time
+        """ calculate desired error quantities for a single step
 
-        TO DO:
-          synchronize Norms L*error*AF[,2] functions used to calculate error
-          setup to work in parallel
+        Parameters
+        ----------
+
+          mlvt : multilevel vector transport that holds the quantities to measure
+          tsim : simulation time
+        
         """
+#        TO DO:
+#          synchronize Norms L*error*AF[,2] functions used to calculate error
+#          setup to work in parallel
         p = self.pFile; n = self.nFile
         for il,m in enumerate(mlvt.levelModelList):
             self.simulationData['spatialMesh'][il]['nNodes_global'].append(m.mesh.nNodes_global)
@@ -1796,16 +1798,15 @@ class SimulationProcessor:
 ########################################################################
 
 def projectToFinestLevel(mlTransport,level,tsim=0.0,verbose=0):
-    """
-    use multilevel transport prolongation to get fine grid information
+    """use multilevel transport prolongation to get fine grid information
     starting at level.
 
     returns quadrature dictionary of projected values on fine grid
-    TODO
-       appears broken (error values not consistent) 1/13/10
-       set uproj to be size of level down to mfine rather than full hiearachy
 
     """
+#TODO
+#       appears broken (error values not consistent) 1/13/10
+#       set uproj to be size of level down to mfine rather than full hiearachy
     import numpy
     nLevels = len(mlTransport.uList)
     assert 0 <= level and level <= nLevels, "projectToFinestLevel range= [0,%d]" % nLevels-1

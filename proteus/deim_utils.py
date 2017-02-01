@@ -89,20 +89,17 @@ def calculate_deim_indices(Uin):
     return rho
 
 def deim_alg(Uin,m):
-    """
-    Basic procedure
+    # """dem_alg
 
-    - given $m$, dimension for $F$ reduced basis $\mathbf{U}_m$
-    - call DEIM algorithm to determine $\vec \rho$. 
-    - build $\mathbf{P}$ from $\rho$ as 
-      $$
-      \mathbf{P} = [\vec e_{\rho_1},\vec e_{\rho_2},\dots,\vec e_{\rho_m}]
-      $$
-    - invert $\mathbf{P}^T\mathbf{U}_m$
-    - return \rho and $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
+    # Basic procedure:
 
-    
-    """
+    #     * given :math:`m`, dimension for :math:`F` reduced basis :math:`\mathbf{U}_m`
+    #     * call DEIM algorithm to determine :math:`\vec \rho`. 
+    #     * build :math:`\mathbf{P}` from :math:`\rho` as :math:`\mathbf{P} = [\vec e_{\rho_1},\vec e_{\rho_2},\dots,\vec e_{\rho_m}]`
+    #     * invert :math:`\mathbf{P}^T\mathbf{U}_m`
+    #     * return :math:`\rho` and :math:`\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}`
+
+    # """
     assert m <= Uin.shape[1]
     Um = Uin[:,0:m]
     rho = calculate_deim_indices(Um)
