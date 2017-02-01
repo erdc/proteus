@@ -7,7 +7,8 @@ A class hierarchy and tools for building domains of PDE's.
 
 import sys
 import numpy as np
-from .Profiling import logEvent
+from proteus.Profiling import logEvent
+from proteus import MeshTools
 
 class D_base:
     """
@@ -50,6 +51,7 @@ class D_base:
         self.BCbyFlag = {}
         # use_gmsh hack
         self.use_gmsh = False
+        self.MeshOptions = MeshTools.MeshOptions(self)
 
     def writeAsymptote(self, fileprefix):
         """
