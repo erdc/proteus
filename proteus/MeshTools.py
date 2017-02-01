@@ -6001,3 +6001,63 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
                 continue
             intersections.update(((tuple(elementIntersections[0]), tuple(elementIntersections[1])),),)
     return intersections
+
+
+from proteus import default_n as dn
+from proteus import default_p as dp
+
+class MeshOptions:
+    """
+    Mesh options for the domain
+    """
+    def __init__(self, domain=None):
+        self.Domain = domain
+        self.he = None
+        self.use_gmsh = False
+        self.genMesh = dp.genMesh
+        self.restrictFineSolutionToAllMeshes = dn.restrictFineSolutionToAllMeshes
+        self.parallelPartitioningType = dn.parallelPartitioningType
+        self.nLayersOfOverlapForParallel = dn.parallelPartitioningType
+        if domain is not None:
+            self.nd = domain.nd
+            if self.nd == 2:
+                self.generator = 'triangle'
+                self.triangle_string = 'VApq30Dena'
+            if self.nd == 3:
+                self.generator = 'tetgen'
+                self.triangle_string = 'VApq1.35q12feena'
+        else:
+            self.generator = None
+            self.triangle_string = None
+        self.triangleOptions = dn.triangleOptions  # defined when setTriangleOptions called
+        self.nLevels = dn.nLevels
+
+    def setElementSize(self, he, refinement_lvl=0.):
+        self.he = he*0.5**refinement_lvl
+
+    def setParallelPartitioningType(self, partitioning_type='node', layers_overlap=0):
+        if partitioning_type == 'element' or partitioning_type == 0:
+            self.parallelPartitioningType = mpt.element
+        if partitioning_type == 'node' or partitioning_type == 1:
+            self.parallelPartitioningType = mpt.node
+        self.nLayersOfOverlapForParallel = layers_overlap
+
+    def setTriangleOptions(self, triangle_options=None):
+        if triangle_options is not None:
+            self.triangleOptions = triangle_options
+        else:
+            assert self.he is not None, 'Element size (he) must be set before setting triangle options'
+            assert self.triangle_string is not None, 'triangle_string must be set before setting triangle options'
+            if self.nd == 2:
+                self.triangleOptions = self.triangle_string + '%8.8f' \
+                                       % (self.he**2/2.,)
+            elif self.nd == 3:
+                self.triangleOptions = self.triangle_string + '%21.16e' \
+                                       % (self.he**3/6.,)
+
+    def setMeshGenerator(self, generator):
+        generators = ['gmsh', 'triangle', 'tetgen']
+        assert generator in generators, 'Unknown mesh generator'
+        if generator == 'gmsh':
+            if self.Domain is not None:
+                self.Domain.use_gmsh = True
