@@ -629,7 +629,6 @@ class __cppClass_WavesCharacteristics:
         xx[1] = x[1]
         xx[2] = x[2]
         phi = self.__cpp_calculate_phi(x, t)
-        phi = self.__cpp_calculate_phi(x, t)
         if phi <= 0.:
             # no smoothing below mwl, or wave peak could get chopped off
             H = 0
