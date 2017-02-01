@@ -6012,9 +6012,14 @@ class MeshOptions:
     """
     def __init__(self, domain=None):
         self.Domain = domain
-        self.he = None
+        self.he = 1.
         self.use_gmsh = False
         self.genMesh = dp.genMesh
+        self.outputFiles = {'name': 'mesh',        
+                            'poly': True,     
+                            'ply': False,        
+                            'asymptote': False,
+                            'geo': False}
         self.restrictFineSolutionToAllMeshes = dn.restrictFineSolutionToAllMeshes
         self.parallelPartitioningType = dn.parallelPartitioningType
         self.nLayersOfOverlapForParallel = dn.parallelPartitioningType
@@ -6061,3 +6066,10 @@ class MeshOptions:
         if generator == 'gmsh':
             if self.Domain is not None:
                 self.Domain.use_gmsh = True
+
+    def setOutputFiles(self, name='mesh', poly=True, ply=False, asymptote=False, geo=False):
+            self.outputFiles['name'] = name       
+            self.outputFiles['poly'] = poly      
+            self.outputFiles['ply'] = ply       
+            self.outputFiles['asymptote'] = asymptote
+            self.outputFiles['geo'] = gmsh
