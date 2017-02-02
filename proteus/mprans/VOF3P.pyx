@@ -651,7 +651,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             # FOR IMPOSING DIRICHLET BCs STRONGLY
             forceStrongConditions=0,
             # FOR ELEMENT BASED ENTROPY VISCOSITY
-            cMax=1.0,
+            cMax=0.1,
             cE=1.0,
             LS_model=None,
             V_model=0,

@@ -9,7 +9,7 @@
 #define LUMPED_MASS_MATRIX 0
 #define KUZMINS_METHOD 1
 #define INTEGRATE_BY_PARTS 1
-#define QUANTITIES_OF_INTEREST 1
+#define QUANTITIES_OF_INTEREST 0
 #define FIX_BOUNDARY_KUZMINS 1
 
 /////////////////////

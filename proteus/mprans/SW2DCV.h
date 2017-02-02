@@ -4,6 +4,7 @@
 #include <iostream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
+
 //cek todo
 //2. Get stabilization right
 //3. Add Riemann solvers for external flux
@@ -34,6 +35,9 @@
 
 #define hd(g,h1k,h2k,hL,hR,uL,uR) ( h1k-2*phi(g,h1k,hL,hR,uL,uR)/(phip(g,h1k,hL,hR)+sqrt(std::pow(phip(g,h1k,hL,hR),2)-4*phi(g,h1k,hL,hR,uL,uR)*phiDDiff1(g,h1k,h2k,hL,hR,uL,uR))) )
 #define hu(g,h1k,h2k,hL,hR,uL,uR) ( h2k-2*phi(g,h2k,hL,hR,uL,uR)/(phip(g,h2k,hL,hR)+sqrt(std::pow(phip(g,h2k,hL,hR),2)-4*phi(g,h2k,hL,hR,uL,uR)*phiDDiff2(g,h1k,h2k,hL,hR,uL,uR))) )
+
+//#define hd(g,h1k,h2k,hL,hR,uL,uR) ( h1k-2*phi(g,h1k,hL,hR,uL,uR))
+
 
 namespace proteus
 {
@@ -1160,16 +1164,16 @@ namespace proteus
       double maxWaveSpeedTwoRarefactions(double g, double nx, double ny,
 					 double hL, double huL, double hvL, 
 					 double hR, double huR, double hvR) 
-    {
+    {	
       //1-eigenvalue: uL-sqrt(g*hL)
       //3-eigenvalue: uR+sqrt(g*hR) 
 
+      double hVelL = nx*huL + ny*hvL;
+      double hVelR = nx*huR + ny*hvR;
+      double velL = hVelL/hL;
+      double velR = hVelR/hR;
+
       // Start computing lambda1 and lambda3 as if we have a 1- and 3-rarefactions 
-      double uL = huL/(hL+1E-10), uR = huR/(hR+1E-10);
-      double vL = hvL/(hL+1E-10), vR = hvR/(hR+1E-10);
-
-      double velL = uL*nx + vL*ny, velR = uR*nx + vR*ny;
-
       double lambda1 = velL - sqrt(g*hL);
       double lambda3 = velR + sqrt(g*hR);
       
@@ -1185,24 +1189,35 @@ namespace proteus
       //1-eigenvalue: uL-sqrt(g*hL)
       //3-eigenvalue: uR+sqrt(g*hR) 
 
+      double hVelL = nx*huL + ny*hvL;
+      double hVelR = nx*huR + ny*hvR;
+      double velL = hVelL/hL;
+      double velR = hVelR/hR;
+
       // Start computing lambda1 and lambda3 as if we have a 1- and 3-rarefactions 
-      double uL = huL/(hL+1E-10), uR = huR/(hR+1E-10);
-      double vL = hvL/(hL+1E-10), vR = hvR/(hR+1E-10);
-
-      double velL = uL*nx + vL*ny, velR = uR*nx + vR*ny;
-
       double lambda1 = velL - sqrt(g*hL);
       double lambda3 = velR + sqrt(g*hR);
-      
+
       ////////////////////
       // ESTIMATE hStar //
       ////////////////////
       // Initial estimate of hStar0 from above. 
       // This is computed via phiR(h) >= phi(h) ---> hStar0 >= hStar
       // See equation (17) in notes
-      double hStar0 = std::pow(velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR)),2)/4/g;
+      double hStar0 = std::pow(velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR)),2)/16/g;
       double hStar = hStar0;
 
+      //if (std::isnan(hStar0))
+      //{
+      //  std::cout << "*********..." 
+      //	    << velL << "\t"
+      //	    << velR << "\t"
+      //	    << hL << "\t"
+      //	    << hR << "\t"
+      //	    << std::pow(velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR)),2)/16/g << "\t"
+      //	    << hStar0 << std::endl;
+      //  abort();
+      //}
       /////////////////////////////////
       // ALGORITHM 1: Initialization // 
       /////////////////////////////////
@@ -1210,12 +1225,12 @@ namespace proteus
       // Ensures: h10, h20
       double h1k, h2k;
       double hMin = fmin(hL,hR);
-      double phi_min = phi(g,hMin,hL,hR,uL,uR);
+      double phi_min = phi(g,hMin,hL,hR,velL,velR);
       if (phi_min >= 0) // This is a 1- and 3-rarefactions situation 
 	return fmax(fabs(lambda1),fabs(lambda3));
 
       double hMax = fmax(hL,hR); 
-      double phi_max = phi(g,hMax,hL,hR,uL,uR);
+      double phi_max = phi(g,hMax,hL,hR,velL,velR);
       if (phi_max == 0) // if hMax "hits" hStar (very unlikely)
 	{
 	  hStar = hMax;	 	  
@@ -1233,10 +1248,9 @@ namespace proteus
 	  h1k = hMin;
 	  h2k = fmin(hMax,hStar0);
 	}      
-      // improve estimate from below via one newton step (not required)
-      h1k = fmax(h1k,h2k-phi(g,h2k,hL,hR,uL,uR)/phip(g,h2k,hL,hR));
-      //std::cout << "h10: " << h1k << "\t" << "h20: " << h2k << std::endl;
 
+      // improve estimate from below via one newton step (not required)
+      h1k = fmax(h1k,h2k-phi(g,h2k,hL,hR,velL,velR)/phip(g,h2k,hL,hR));
       // COMPUTE lambdaMin0 and lambdaMax0
       double nu11 = nu1(g,h2k,hL,velL);
       double nu12 = nu1(g,h1k,hL,velL);
@@ -1246,6 +1260,7 @@ namespace proteus
       double lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
       double lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
       
+      int aux_counter = 0;
       if (lambdaMin > 0 && lambdaMax/lambdaMin - 1 <= tol)
 	return lambdaMax;
       else // Proceed to algorithm 2
@@ -1255,10 +1270,9 @@ namespace proteus
 	  ///////////////////////////////////////////
 	  // Requires: h10, h20
 	  // Ensures: lambdaMax
-	  //int aux_counter = 0;
 	  while (true)
 	    {
-	      //aux_counter++;
+	      aux_counter++;
 	      // Start having lambdaMin and lambdaMax
 	      // Check if current lambdaMin and lambdaMax satisfy the tolerance
 	      if (lambdaMin > 0 && lambdaMax/lambdaMin - 1 <= tol)
@@ -1266,10 +1280,23 @@ namespace proteus
 	      // Check for round off error
 	      if (phi(g,h1k,hL,hR,velL,velR) > 0 || phi(g,h2k,hL,hR,velL,velR) < 0)
 		return lambdaMax;
-	      // Compute new estimates on h1k and h2k
-	      h1k = hd(g,h1k,h2k,hL,hR,uL,uR);
-	      h2k = hu(g,h1k,h2k,hL,hR,uL,uR);
 
+	      // Compute new estimates on h1k and h2k
+	      // NOTE (MQL): h1k and h2k must be computed using the old values of h1k and h2k. 
+	      // So don't change the order to compute h1k and h2k or define h2k_old
+	      double h1k_old = h1k;
+	      h1k = hd(g,h1k_old,h2k,hL,hR,velL,velR);
+	      h2k = hu(g,h1k_old,h2k,hL,hR,velL,velR);
+	      	      
+	      //if (std::isnan(h2k))
+	      //{
+	      //  std::cout << "...*******... " 
+	      //	    << h1k << "\t"
+	      //	    << h2k << "\t"
+	      //	    << hStar0
+	      //	    << std::endl;
+	      //  abort();
+	      //}
 	      // Compute lambdaMax and lambdaMin
 	      nu11 = nu1(g,h2k,hL,velL);
 	      nu12 = nu1(g,h1k,hL,velL);
@@ -1278,8 +1305,12 @@ namespace proteus
 
 	      lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
 	      lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
+
+	      //if (aux_counter>10)
+	      //abort();
+	      //std::cout << "h10: " << h1k << "\t" << "h20: " << h2k << std::endl;
+	      //std::cout << "*****... AUX COUNTER: " << aux_counter << std::endl; //TMP
 	    }
-	  //std::cout << "*****... AUX COUNTER: " << aux_counter << std::endl; //TMP
 	}
     }
 
@@ -3313,11 +3344,15 @@ namespace proteus
 		  double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
 		  double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
 
+		  //dLij =  fmax(maxWaveSpeedTwoRarefactions(g,nxij,nyij,
+		  //				   hi,hui,hvi,hj,huj,hvj)*cij_norm,
+		  //       maxWaveSpeedTwoRarefactions(g,nxji,nyji,
+		  //				   hj,huj,hvj,hi,hui,hvi)*cji_norm);
 		  dLij =  fmax(maxWaveSpeed(g,nxij,nyij,
 					    hi,hui,hvi,hj,huj,hvj)*cij_norm,
 			       maxWaveSpeed(g,nxji,nyji,
 					    hj,huj,hvj,hi,hui,hvi)*cji_norm);
-
+		  
 		  ith_dissipative_term1 += dLij*(hj-hi);
 		  ith_dissipative_term2 += dLij*(huj-hui);
 		  ith_dissipative_term3 += dLij*(hvj-hvi);

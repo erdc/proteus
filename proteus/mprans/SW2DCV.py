@@ -390,13 +390,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global={}
         self.ebqe={}
         self.phi_ip={}
-        #Old DOFs (mql)
-        self.h_dof_old_old = self.u[0].dof.copy()
-        self.hu_dof_old_old = self.u[1].dof.copy()
-        self.hv_dof_old_old = self.u[2].dof.copy()
-        self.h_dof_old = self.u[0].dof.copy()
-        self.hu_dof_old = self.u[1].dof.copy()
-        self.hv_dof_old = self.u[2].dof.copy()
+        #Old DOFs
+        #NOTE (Mql): It is important to link h_dof_old by reference with u[0].dof (and so on).
+        # This is because  I need the initial condition to be passed to them as well (before calling calculateResidual). 
+        # During preStep I change this and copy the values instead of keeping the reference. 
+        self.h_dof_old_old = self.u[0].dof
+        self.hu_dof_old_old = self.u[1].dof
+        self.hv_dof_old_old = self.u[2].dof
+        self.h_dof_old = self.u[0].dof
+        self.hu_dof_old = self.u[1].dof
+        self.hv_dof_old = self.u[2].dof
         #mesh
         self.h_dof_sge = self.u[0].dof.copy()
         self.hu_dof_sge = self.u[1].dof.copy()
