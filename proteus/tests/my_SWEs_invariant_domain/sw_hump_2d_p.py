@@ -5,11 +5,11 @@ from proteus.mprans import SW2DCV
 from proteus.Domain import RectangularDomain
 nd=2
 
-T=1.0
+T=2.0
 L=(2.0,2.0)
 g = 1.0
 nu= 1.0e-8#1.0e-3#0.1
-H0=1.0
+H0=1.0E-11
 HH=2.0
 shock=True
 domain = RectangularDomain(L=L)
@@ -18,7 +18,7 @@ bt['front'] = bt['bottom']
 bt['back'] = bt['top']
 domain.writePoly("tank2d")
 
-useCV=False
+useCV=True
 if useCV:
     LevelModelType = SW2DCV.LevelModel
     coefficients = SW2DCV.Coefficients(nu=nu,g=g)
@@ -54,8 +54,13 @@ class ZeroIC:
     def uOfXT(self,x,t):
         return 0.0
 
+class ConstIC:
+    def uOfXT(self,x,t):
+        return 1.0
+
 initialConditions = {0:HumpIC(L[0],L[1],0.25*L[0],HH,H0),
                      1:ZeroIC(),
+                     #1:ConstIC(),
                      2:ZeroIC()}
 
 def getDBC_h(x,flag):

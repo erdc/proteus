@@ -2,7 +2,8 @@ from proteus import *
 from proteus.default_n import *
 from sw_hump_2d_p import *
 
-try_invariant_domain_stabilization = True
+#use_EV_stabilization=True
+use_invariant_domain_stabilization=True
 #timeIntegration = SSP33
 timeIntegration = BackwardEuler_cfl
 stepController = Min_dt_controller
@@ -24,7 +25,7 @@ multilevelNonlinearSolver  = Newton
 
 levelNonlinearSolver = Newton
 
-fullNewtonFlag = True
+fullNewtonFlag = False #NOTE: False just if the method is explicit
 nDTout=100
 
 nnx=51
