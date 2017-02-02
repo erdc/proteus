@@ -406,7 +406,6 @@ class KSP_petsc4py(LinearSolver):
 
         # ARB - WIP: this self.pc and self.preconditioner stuff is confusing to read
         # and not necessary.  This should be refactored before merging. 1/21/2017.  
-
         # initialize some class attributes
         self.pccontext = None
         self.preconditioner = None
@@ -481,7 +480,7 @@ class KSP_petsc4py(LinearSolver):
             if self.preconditioner.PCType=='schur':
                 # this should probably live somewhere else?!
                 self.preconditioner.setUp(self.ksp)
-                self.pc.getFieldSplitSubKSP()[1].setPCSide(1)
+                self.pc.getFieldSplitSubKSP()[1].setPCSide(0)
         self.ksp.setUp()
         self.ksp.pc.setUp()
 #        self.ksp.pc.getFieldSplitSubKSP()[1].setConvergenceTest(self.preconditioner._converged_trueRes)
@@ -506,7 +505,7 @@ class KSP_petsc4py(LinearSolver):
             self.pccontext.par_u = par_u
         if self.matcontext != None:
             self.matcontext.par_b = par_b
-        self.bdyNullSpace=False
+        self.bdyNullSpace=True
         if self.bdyNullSpace==True:
             # is there a reason par_b should not be owned by self?
             self.__setNullSpace(par_b)
@@ -541,17 +540,12 @@ class KSP_petsc4py(LinearSolver):
         par_b : proteus.LinearAlgebraTools.ParVec_petsc4py
             The problem's RHS vector.
         """
-        pressure_null_space = p4pyPETSc.NullSpace().create(constant=True)
-        if self.ksp.getOperators()[0].isNullSpace(self.preconditioner.global_nsp):
-            pass
-#            self.ksp.getOperators()[1].setNullSpace(self.preconditioner.global_nsp)
-#            par_b.remove_null_space(self.preconditioner.global_nsp)
-        else:
-            raise Exception('The nullspace assigned to the ksp operator is not correct.')
-        if self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].isNullSpace(pressure_null_space):
-            self.ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(pressure_null_space)
-        else:
-            raise Exception('The nullspace assigned to the ksp operator is not correct.')
+        vecs = self.preconditioner.global_null_space
+        pressure_null_space = p4pyPETSc.NullSpace().create(constant = False,
+                                                         vectors = vecs,
+                                                           comm = p4pyPETSc.COMM_WORLD)
+        self.ksp.getOperators()[0].setNullSpace(pressure_null_space)
+        pressure_null_space.remove(par_b)
         
 
     def _setMatOperators(self):
@@ -586,6 +580,7 @@ class KSP_petsc4py(LinearSolver):
                                                                                               (truenorm/ self.rnorm0),
                                                                                               ksp.atol,
                                                                                               ksp.rtol))
+#            import pdb ; pdb.set_trace()
             if truenorm < self.rnorm0*ksp.rtol:
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
             if truenorm < ksp.atol:
@@ -1125,6 +1120,7 @@ class SchurPrecon(KSP_Preconditioner):
         null_space_basis = p4pyPETSc.Vec().createWithArray(temp_array)
         self.global_null_space = [null_space_basis]
         
+        
 class NavierStokesSchur(SchurPrecon):
     """ Schur complement preconditioners for Navier-Stokes problems.
 
@@ -1298,7 +1294,13 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
-            self._setConstantPressureNullSpace(global_ksp)
+            nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                               vectors = (),
+                                               constant = True)
+#            import pdb ; pdb.set_trace()
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
+#            self._setConstantPressureNullSpace(global_ksp)
 
 class NavierStokes3D_LSC(NavierStokesSchur) :
     def __init__(self,L,prefix=None,bdyNullSpace=False):
@@ -1333,6 +1335,9 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
+            nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                               vectors = (),
+                                               constant = True)
             self._setConstantPressureNullSpace(global_ksp)
 
 class NavierStokes_Yosida(NavierStokesSchur):

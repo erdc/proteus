@@ -433,7 +433,8 @@ class InvOperatorShell(OperatorShell):
         """ Function handle to feed to ksp's setConvergenceTest  """
         ksp.buildResidual(self.r_work)
         truenorm = self.r_work.norm()
-        # if its >= 100:
+#        if its >= 100:
+#            import pdb ; pdb.set_trace()
         #     logEvent("!!! KSP_LACPLACE_ : %i !!!" % its)
         #     logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual: %12.5e" %(truenorm) )
         #     logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
@@ -629,23 +630,41 @@ class PCDInv_shell(InvOperatorShell):
         self.Fp = Fp_matrix
         self.Ap = Ap_matrix
         # initialize kspAp
+        self.nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                           vectors = (),
+                                           constant = True)
+        self.Ap.setNullSpace(self.nsp)
         prefix = p4pyPETSc.Options()
-        prefix.setValue('ksp_max_it','70')
+#        prefix.setValue('ksp_max_it','70')
         self.kspAp = p4pyPETSc.KSP().create()
         self.kspAp.setOperators(self.Ap,self.Ap)
-        self.kspAp.setType('fgmres')
-        self.kspAp.pc.setType('ilu')
+        self.kspAp.setOptionsPrefix('innerPCDsolver_Ap_')
+#        self.kspAp.setType('fgmres')
+#        self.kspAp.pc.setType('ilu')
+#        self.kspAp.pc.setType('hypre')
+ #       self.kspAp.pc.setHYPREType('boomeramg')
         self.kspAp.pc.setUp()
-        self.kspAp.setUp()
         self.kspAp.setFromOptions()
         # ARB - Add null space here..
         self.kspAp.setUp()
         # initialize kspQp
         self.kspQp = p4pyPETSc.KSP().create()
         self.kspQp.setOperators(self.Qp,self.Qp)
-        self.kspQp.setType('preonly')
-        self.kspQp.pc.setType('lu')
+        self.kspQp.setOptionsPrefix('innerPCDsolver_Qp_')
+#        self.kspQp.setType('preonly')
+#        self.kspQp.pc.setType('lu')
+        self.kspQp.setFromOptions()
         self.kspQp.setUp()
+        #
+        convergenceTest = 'r-true'
+        if convergenceTest == 'r-true':
+            self.r_work = self.Ap.getVecLeft()
+            self.rnorm0 = None
+            self.kspAp.setConvergenceTest(self._converged_trueRes)
+        else:
+            self.r_work = None        
+        self.kspAp.setUp()
+
 
     def apply(self,A,x,y):
         """  
@@ -663,6 +682,9 @@ class PCDInv_shell(InvOperatorShell):
         y : petsc4py vector
             Result of operator acting on x.
         """
+        x_tmp = p4pyPETSc.Vec().create()
+        x_tmp = x.copy()
+        self.nsp.remove(x_tmp)
         temp1 = p4pyPETSc.Vec().create()
         # create a copy / duplicate of the vector x ...
         temp1.setType('seq')
@@ -670,7 +692,8 @@ class PCDInv_shell(InvOperatorShell):
         temp2.setType('seq')
         temp1 = y.copy()
         temp2 = y.copy()
-        self.kspAp.solve(x,temp1)
+        self.kspAp.solve(x_tmp,temp1)
+#        import pdb ; pdb.set_trace()
         self.Fp.mult(temp1,temp2)
         self.kspQp.solve(temp2,y)
 
@@ -729,21 +752,22 @@ class LSCInv_shell(InvOperatorShell):
         
         # initialize (B Q_hat B') solver
         # ARB - Adding a null space ...
-        nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
-                                           vectors = (),
-                                           constant = True)
-        self.BQinvBt.setNullSpace(nsp)
+        self.nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                                vectors = (),
+                                                constant = True)
+        self.BQinvBt.setNullSpace(self.nsp)
 
-        prefix = p4pyPETSc.Options()
-        prefix.setValue('ksp_max_it','70')
-        
+#        prefix = p4pyPETSc.Options()
+        import pdb ; pdb.set_trace()
+
         self.kspBQinvBt = p4pyPETSc.KSP().create()
         self.kspBQinvBt.setOperators(self.BQinvBt,self.BQinvBt)
-        
-        self.kspBQinvBt.setType('fgmres')
-        self.kspBQinvBt.pc.setType('ilu')
-        # self.kspBQinvBt.pc.setType('hypre')
-        # self.kspBQinvBt.pc.setHYPREType('boomeramg')
+        self.kspBQinvBt.setOptionsPrefix('innerLSCsolver_BTinvBt_')
+#        import pdb ; pdb.set_trace()
+#        self.kspBQinvBt.setType('gmres')
+#        self.kspBQinvBt.pc.setType('ilu')
+#        self.kspBQinvBt.pc.setType('hypre')
+#        self.kspBQinvBt.pc.setHYPREType('boomeramg')
         self.kspBQinvBt.pc.setUp()
         self.kspBQinvBt.setUp()
         self.kspBQinvBt.setFromOptions()
@@ -751,8 +775,9 @@ class LSCInv_shell(InvOperatorShell):
         # initialize solver for Qv
         self.kspQv = p4pyPETSc.KSP().create()
         self.kspQv.setOperators(self.Qv,self.Qv)
-        self.kspQv.setType('preonly')
-        self.kspQv.pc.setType('lu')
+        self.kspQv.setOptionsPrefix('innerLSCsolver_T_')
+        import pdb ; pdb.set_trace()
+        self.kspQv.setFromOptions()
         
         convergenceTest = 'r-true'
         if convergenceTest == 'r-true':
@@ -767,19 +792,22 @@ class LSCInv_shell(InvOperatorShell):
         """ Apply the LSC inverse operator """
         # create temporary vectors
         B_sizes = self.B.getSizes()
+        x_tmp = p4pyPETSc.Vec().create()
+        x_tmp = x.copy()
+        self.nsp.remove(x_tmp)
         tmp1 = self._create_tmp_vec(B_sizes[0])
         tmp2 = self._create_tmp_vec(B_sizes[1])
         tmp3 = self._create_tmp_vec(B_sizes[1])
         # apply LSC operator
-
-        self.kspBQinvBt.solve(x,tmp1)
+        self.kspBQinvBt.solve(x_tmp,tmp1)
+#        import pdb ; pdb.set_trace()
         self.B.multTranspose(tmp1,tmp2)
         self.kspQv.solve(tmp2,tmp3)
         self.F.mult(tmp3,tmp2)
         self.kspQv.solve(tmp2,tmp3)
         self.B.mult(tmp3,tmp1)
+        self.nsp.remove(tmp1)
         self.kspBQinvBt.solve(tmp1,y)
-#        import pdb ; pdb.set_trace()
     
     def __constructBQinvBt(self):
         """ Private method repsonsible for building BQinvBt """
