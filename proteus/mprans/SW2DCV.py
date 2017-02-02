@@ -400,6 +400,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.h_dof_old = self.u[0].dof
         self.hu_dof_old = self.u[1].dof
         self.hv_dof_old = self.u[2].dof
+        #Vector for mass matrix
+        self.lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d')
         #mesh
         self.h_dof_sge = self.u[0].dof.copy()
         self.hu_dof_sge = self.u[1].dof.copy()
@@ -920,7 +922,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             CTy,
             numDOFsPerEqn,
             rowptr_cMatrix,
-            colind_cMatrix)
+            colind_cMatrix, 
+            self.lumped_mass_matrix)
 
         #import pdb
         #pdb.set_trace()
