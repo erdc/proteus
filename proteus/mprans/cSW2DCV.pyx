@@ -117,7 +117,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* CTy,
 			       int numDOFsPerEqn,
 			       int* csrRowIndeces_DofLoops,   
-			       int* csrColumnOffsets_DofLoops)
+			       int* csrColumnOffsets_DofLoops,
+			       double* lumped_mass_matrix)
         void calculateResidual_cell_based_entropy_viscosity(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -229,7 +230,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* CTy,
 			       int numDOFsPerEqn,
 			       int* csrRowIndeces_DofLoops,   
-			       int* csrColumnOffsets_DofLoops)
+			       int* csrColumnOffsets_DofLoops,
+			       double* lumped_mass_matrix)
         void calculateResidual_invariant_domain_SWEs(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -341,7 +343,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* CTy,
 			       int numDOFsPerEqn,
 			       int* csrRowIndeces_DofLoops,   
-			       int* csrColumnOffsets_DofLoops)
+			       int* csrColumnOffsets_DofLoops,
+			       double* lumped_mass_matrix)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -808,7 +811,8 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray CTy,
 			 int numDOFsPerEqn,
 			 numpy.ndarray csrRowIndeces_DofLoops,   
-			 numpy.ndarray csrColumnOffsets_DofLoops):
+			 numpy.ndarray csrColumnOffsets_DofLoops,
+			 numpy.ndarray lumped_mass_matrix):
        self.thisptr.calculateResidual(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -923,7 +927,8 @@ cdef class cSW2DCV_base:
             <double*> CTy.data,
 	    numDOFsPerEqn,
             <int*> csrRowIndeces_DofLoops.data,   
-	    <int*> csrColumnOffsets_DofLoops.data)		       
+	    <int*> csrColumnOffsets_DofLoops.data,
+	    <double*> lumped_mass_matrix.data)		       
    def calculateResidual_cell_based_entropy_viscosity(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -1036,7 +1041,8 @@ cdef class cSW2DCV_base:
                          numpy.ndarray CTy,
 			 int numDOFsPerEqn,
 			 numpy.ndarray csrRowIndeces_DofLoops,
-			 numpy.ndarray csrColumnOffsets_DofLoops):
+			 numpy.ndarray csrColumnOffsets_DofLoops,
+			 numpy.ndarray lumped_mass_matrix):
        self.thisptr.calculateResidual_cell_based_entropy_viscosity(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1151,7 +1157,8 @@ cdef class cSW2DCV_base:
             <double*> CTy.data,
 	    numDOFsPerEqn,
 	    <int*> csrRowIndeces_DofLoops.data,
-	    <int*> csrColumnOffsets_DofLoops.data)  
+	    <int*> csrColumnOffsets_DofLoops.data,
+	    <double*> lumped_mass_matrix.data)  
    def calculateResidual_invariant_domain_SWEs(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -1264,7 +1271,8 @@ cdef class cSW2DCV_base:
                          numpy.ndarray CTy,
 			 int numDOFsPerEqn,
 			 numpy.ndarray csrRowIndeces_DofLoops,
-			 numpy.ndarray csrColumnOffsets_DofLoops):
+			 numpy.ndarray csrColumnOffsets_DofLoops,
+			 numpy.ndarray lumped_mass_matrix):
        self.thisptr.calculateResidual_invariant_domain_SWEs(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1379,7 +1387,8 @@ cdef class cSW2DCV_base:
             <double*> CTy.data,
 	    numDOFsPerEqn,
 	    <int*> csrRowIndeces_DofLoops.data,
-	    <int*> csrColumnOffsets_DofLoops.data)  
+	    <int*> csrColumnOffsets_DofLoops.data,
+	    <double*> lumped_mass_matrix.data)  
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,

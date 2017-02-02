@@ -161,7 +161,9 @@ namespace proteus
 				   // PARAMETERS FOR EDGE BASED STABILIZATION 
 				   int numDOFsPerEqn,
 				   int* csrRowIndeces_DofLoops,
-				   int* csrColumnOffsets_DofLoops)=0;
+				   int* csrColumnOffsets_DofLoops,
+				   // LUMPED MASS MATRIX
+				   double* lumped_mass_matrix)=0;
     virtual void calculateResidual_cell_based_entropy_viscosity(//element
 								double* mesh_trial_ref,
 								double* mesh_grad_trial_ref,
@@ -278,7 +280,9 @@ namespace proteus
 								// PARAMETERS FOR EDGE BASED STABILIZATION
 								int numDOFsPerEqn,
 								int* csrRowIndeces_DofLoops,
-								int* csrColumnOffsets_DofLoops)=0;
+								int* csrColumnOffsets_DofLoops,
+								// LUMPED MASS MATRIX
+								double* lumped_mass_matrix)=0;
     virtual void calculateResidual_invariant_domain_SWEs(//element
 							 double* mesh_trial_ref,
 							 double* mesh_grad_trial_ref,
@@ -395,7 +399,9 @@ namespace proteus
 							 // PARAMETERS FOR EDGE BASED STABILIZATION
 							 int numDOFsPerEqn,
 							 int* csrRowIndeces_DofLoops,
-							 int* csrColumnOffsets_DofLoops)=0;
+							 int* csrColumnOffsets_DofLoops,
+							 // LUMPED MASS MATRIX
+							 double* lumped_mass_matrix)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -1209,14 +1215,14 @@ namespace proteus
 
       //if (std::isnan(hStar0))
       //{
-      //  std::cout << "*********..." 
-      //	    << velL << "\t"
-      //	    << velR << "\t"
-      //	    << hL << "\t"
-      //	    << hR << "\t"
-      //	    << std::pow(velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR)),2)/16/g << "\t"
-      //	    << hStar0 << std::endl;
-      //  abort();
+      //std::cout << "*********..." 
+      //    << velL << "\t"
+      //    << velR << "\t"
+      //    << hL << "\t"
+      //    << hR << "\t"
+      //    << std::pow(velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR)),2)/16/g << "\t"
+      //    << hStar0 << std::endl;
+      //abort();
       //}
       /////////////////////////////////
       // ALGORITHM 1: Initialization // 
@@ -1322,7 +1328,7 @@ namespace proteus
 			const double& hv,
 			double& cfl)
     {
-      double cflx, cfly, c=sqrt(fmax(g*1.0e-8,g*h)), hStar=fmax(1.0e-8,h);
+      double cflx, cfly, c=sqrt(fmax(g*1.0e-15,g*h)), hStar=h; //hStar=fmax(1.0e-15,h);
       double u = hu/hStar;
       double v = hv/hStar;
       if (u > 0.0)
@@ -1800,7 +1806,9 @@ namespace proteus
 			   // PARAMETERS FOR EDGE BASED STABILIZATION 
 			   int numDOFsPerEqn,
 			   int* csrRowIndeces_DofLoops,
-			   int* csrColumnOffsets_DofLoops)
+			   int* csrColumnOffsets_DofLoops,
+			   // LUMPED MASS MATRIX
+			   double* lumped_mass_matrix)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -2750,7 +2758,9 @@ namespace proteus
 							// PARAMETERS FOR EDGE BASED STABILIZATION 
 							int numDOFsPerEqn,
 							int* csrRowIndeces_DofLoops,
-							int* csrColumnOffsets_DofLoops)
+							int* csrColumnOffsets_DofLoops,
+							// LUMPED MASS MATRIX
+							double* lumped_mass_matrix)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
       // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
@@ -3087,7 +3097,7 @@ namespace proteus
       	    }
       	}
     }
-
+    
     void calculateResidual_invariant_domain_SWEs(//element
 						 double* mesh_trial_ref,
 						 double* mesh_grad_trial_ref,
@@ -3204,7 +3214,9 @@ namespace proteus
 						 // PARAMETERS FOR EDGE BASED STABILIZATION 
 						 int numDOFsPerEqn,
 						 int* csrRowIndeces_DofLoops,
-						 int* csrColumnOffsets_DofLoops)
+						 int* csrColumnOffsets_DofLoops,
+						 // LUMPED MASS MATRIX
+						 double* lumped_mass_matrix)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
       //
@@ -3214,13 +3226,16 @@ namespace proteus
       for(int eN=0;eN<nElements_global;eN++)
       	{
       	  //declare local storage for element residual and initialize
-      	  register double elementResidual_h[nDOF_test_element],
+      	  register double 
+	    element_lumped_mass_matrix[nDOF_test_element],
+	    elementResidual_h[nDOF_test_element],
       	    elementResidual_hu[nDOF_test_element],
       	    elementResidual_hv[nDOF_test_element];
       	  for (int i=0;i<nDOF_test_element;i++)
       	    {
       	      int eN_i = eN*nDOF_test_element+i;
       	      elementResidual_h_save[eN_i]=0.0;
+	      element_lumped_mass_matrix[i]=0.0;
       	      elementResidual_h[i]=0.0;
       	      elementResidual_hu[i]=0.0;
       	      elementResidual_hv[i]=0.0;
@@ -3286,6 +3301,7 @@ namespace proteus
 		  int h_gi = h_l2g[eN_i]; //global i-th index for h variable
 		  int vel_gi = vel_l2g[eN_i]; //global i-th index for velocity variables
 
+		  element_lumped_mass_matrix[i] += h_test_dV[i];
 		  // MASS MATRIX IS LUMPED
       		  elementResidual_h[i] += h_test_dV[i]*(h_dof[h_gi] - h_dof_old[h_gi]);		  
       		  elementResidual_hu[i] += vel_test_dV[i]*(hu_dof[vel_gi] - hu_dof_old[vel_gi]);		 
@@ -3299,7 +3315,10 @@ namespace proteus
       	      register int eN_i=eN*nDOF_test_element+i;
 	      int h_gi = h_l2g[eN_i]; //global i-th index for h
 	      int vel_gi = vel_l2g[eN_i]; //global i-th index for velocities 
-		
+
+	      // distribute lumped mass matrix 
+	      lumped_mass_matrix[h_gi] += element_lumped_mass_matrix[i];
+
 	      elementResidual_h_save[eN_i] +=  elementResidual_h[i]; //* (h_dof[h_gi] - h_dof_old[h_gi]);
       	      globalResidual[offset_h+stride_h*h_gi]  += elementResidual_h[i];
       	      globalResidual[offset_hu+stride_hu*vel_gi] += elementResidual_hu[i];
@@ -3320,6 +3339,7 @@ namespace proteus
 	  double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
 	  double ith_dissipative_term1=0., ith_dissipative_term2=0., ith_dissipative_term3=0.;
 
+	  double dLii = 0;
 	  // loop over the sparsity pattern of the i-th DOF
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
@@ -3356,6 +3376,9 @@ namespace proteus
 		  ith_dissipative_term1 += dLij*(hj-hi);
 		  ith_dissipative_term2 += dLij*(huj-hui);
 		  ith_dissipative_term3 += dLij*(hvj-hvi);
+
+		  // compute dLii (for debugging) 
+		  dLii -= dLij;
 		}
 	      // update ij
 	      ij+=1;
@@ -3364,6 +3387,19 @@ namespace proteus
 	  globalResidual[offset_h+stride_h*i]   += dt*(ith_flux_term1 - ith_dissipative_term1);
 	  globalResidual[offset_hu+stride_hu*i] += dt*(ith_flux_term2 - ith_dissipative_term2);
 	  globalResidual[offset_hv+stride_hv*i] += dt*(ith_flux_term3 - ith_dissipative_term3);
+
+
+	  // Check (1-\sum_j (2*dt*dLij/mi)) >= 0 for j in I(i) and j!=i. That quantity is equal to 1 + 2*dt*dLii/mi
+	  //double mi = lumped_mass_matrix[i];
+	  //double aux1 = 1+2*dt*dLii/mi;
+	  //if (aux1<=0)
+	  //{
+	  //  std::cout << "**************... "
+	  //	<< dLii << "\t"
+	  //	<< mi << "\t"
+	  //	<< 2*dt*dLii/mi
+	  //	<< std::endl;
+	  //}
 	}
     }
  
