@@ -224,7 +224,7 @@ class NumericResults:
             plt.xlim(axis[0],axis[1])
         plt.show() 
 
-    def ipython_plot_newton_it(self,time_level):
+    def ipython_plot_newton_it(self,time_level,axis=False):
         """ Plot the Newton iteration residual in a jupyter notebook.
 
         Parameters
@@ -235,7 +235,8 @@ class NumericResults:
         plot_data = []
         legend = []
         title = 'Residual From Newton Iterations'
-
+        axis_inline = axis
+        
         for data_set in time_level:
             if data_set[0] in self.data_dictionary.keys():
                 if data_set[1] in self.data_dictionary[data_set[0]].keys():
@@ -245,10 +246,13 @@ class NumericResults:
                     print 'The second key ' + `data_set[1]` + ' is not valid.'
             else:
                 print 'The first key ' + `data_set[1]` + ' is not valid.'
-    
-        self._init_ipython_plot(plot_data,legend,title)
 
-    def ipython_plot_ksp_residual(self,time_level_it):
+        if axis!=False:
+            self._init_ipython_plot(plot_data,legend,title,axis_inline)
+        else:
+            self._init_ipython_plot(plot_data,legend,title)
+
+    def ipython_plot_ksp_residual(self,time_level_it,axis=False):
         """ Plot the outer KSP residual in a jupyter notebook.
         
         Parameters
@@ -258,7 +262,7 @@ class NumericResults:
         plot_data = []
         legend = []
         title = 'Residuals of Outer Most KSP Solve.'
-        axis = [0,8]
+        axis_inline = axis
 
         for data_set in time_level_it:
             if data_set[0] in self.data_dictionary.keys():
@@ -272,8 +276,11 @@ class NumericResults:
                     print 'The second key ' + `data_set[1]` + ' is not valid.'
             else:
                 print 'The first key ' + `data_set[1]` + ' is not valid.'
-                
-        self._init_ipython_plot(plot_data,legend,title,axis)
+
+        if axis!=False:
+            self._init_ipython_plot(plot_data,legend,title,axis)
+        else:
+            self._init_ipython_plot(plot_data,legend,title)
 
     def ipython_plot_ksp_schur_residual(self,time_level_it,axis=False):
         """ Plot the inner KSP residual in a jupyter notebook.
