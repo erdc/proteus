@@ -86,15 +86,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  sd=True,
                  movingDomain=False,
                  useRBLES=0.0,
-		 useMetrics=0.0,
-                 modelIndex=0):
+		 useMetrics=0.0):
         self.useRBLES=useRBLES
         self.useMetrics=useMetrics
         self.sd=sd
         self.nu = nu
         self.g = g
         self.nd=nd
-        self.modelIndex=modelIndex
         mass={}
         advection={}
         diffusion={}
@@ -143,9 +141,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              movingDomain=movingDomain)
             self.vectorComponents=[1,2]
     def attachModels(self,modelList):
-        self.model = modelList[self.modelIndex]
-        #pass
-
+        pass
     def initializeMesh(self,mesh):
         pass
     def initializeElementQuadrature(self,t,cq):
@@ -158,10 +154,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
     def evaluate(self,t,c):
         pass
-    def preStep(self,t,firstStep=False):
-        self.model.h_dof_old[:] = self.model.u[0].dof
-        self.model.u_dof_old[:] = self.model.u[1].dof
-        self.model.v_dof_old[:] = self.model.u[2].dof
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls=0
@@ -388,10 +380,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global={}
         self.ebqe={}
         self.phi_ip={}
-        # Old DOFs (MQL)
-        self.h_dof_old = self.u[0].dof.copy()
-        self.u_dof_old = self.u[1].dof.copy()
-        self.v_dof_old = self.u[2].dof.copy()
         #mesh
         self.h_dof_sge = self.u[0].dof.copy()
         self.u_dof_sge = self.u[1].dof.copy()
@@ -602,23 +590,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
                                    compKernelFlag)
         try_supg = False
-        try_entropy_viscosity = False
         if options != None and 'try_supg_stabilization' in dir(options):
             try_supg = options.try_supg_stabilization
             logEvent("setting try_supg_stabilization from options= {0}".format(try_supg),level=1)
-        if options != None and 'try_invariant_domain_stabilization' in dir(options):
-            try_invariant_domain = options.try_invariant_domain_stabilization
-            logEvent("setting try_invariant_domain_stabilization from options= {0}".format(try_invariant_domain),level=1)
         if try_supg:
             self.calculateResidual = self.sw2d.calculateResidual_supg
             self.calculateJacobian = self.sw2d.calculateJacobian_supg
         else:
             self.calculateResidual =  self.sw2d.calculateResidual
             self.calculateJacobian = self.sw2d.calculateJacobian
-        if try_invariant_domain:
-            self.calculateResidual = self.sw2d.calculateResidual_mql
-            self.calculateJacobian = self.sw2d.calculateJacobian_mql
-        
+
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -696,9 +677,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.u[1].femSpace.dofMap.l2g,
             self.coefficients.b.dof,
-            self.h_dof_old,
-            self.u_dof_old,
-            self.v_dof_old,
             self.u[0].dof,
             self.u[1].dof,
             self.u[2].dof,
@@ -820,7 +798,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.u[1].femSpace.dofMap.l2g,
             self.coefficients.b.dof,
-            self.h_dof_old,
             self.u[0].dof,
             self.u[1].dof,
             self.u[2].dof,
