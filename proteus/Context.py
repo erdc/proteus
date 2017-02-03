@@ -99,3 +99,18 @@ def Options(optionsList=None):
     #now set named tuple merging optionsList and opts_cli_dihelpct
     ContextOptions = namedtuple("ContextOptions", contextOptionsDict.keys(), verbose=False)
     return ContextOptions._make(contextOptionsDict.values())
+
+def OptionsFromFile(filename):
+    from ast import literal_eval
+    options = []
+    with open(filename, 'r') as context:
+        for line in context:
+            words = line.split()
+            comment = (line.split('#'))
+            if words and not line.startswith('#'):
+                if len(comment) == 1:
+                    comment = ''
+                else:
+                    comment = comment[1].rstrip()
+                options += [(words[0].strip(':'), literal_eval(words[1]), comment)]
+    return Options(options)
