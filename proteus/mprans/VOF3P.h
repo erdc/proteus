@@ -1568,10 +1568,6 @@ namespace proteus
 	      entropy_normalization_factor = std::max(std::abs(entropy_max-entropy_mean),
 						      std::abs(entropy_min-entropy_mean));
 	    } //ENTROPY_VISCOSITY==1
-	      //std::cout<<"numDiff address "<<q_numDiff_u<<std::endl
-	      //       <<"ndlast  address "<<q_numDiff_u_last<<std::endl;
-	      
-	      //cek should this be read in?
 	  double Ct_sge = 4.0;
 	      
 	  //loop over elements to compute volume integrals and load them into element and global residual
