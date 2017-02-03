@@ -1269,10 +1269,10 @@ namespace proteus
       double lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
       double lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
 
-      if (h1k>h2k)
-	{
-	  std::cout << "********...."  << h1k << "/t" << std::endl;
-	}
+      //if (h1k>h2k)
+      //{
+      //  std::cout << "********...."  << h1k << "\t" << std::endl;
+      //}
       
       int aux_counter = 0;
       if (lambdaMin > 0 && lambdaMax/lambdaMin - 1 <= tol)
