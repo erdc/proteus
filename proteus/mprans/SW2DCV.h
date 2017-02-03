@@ -26,8 +26,11 @@
 #define fp(g,h,hZ) ( (h <= hZ) ? sqrt(g/h) : g*(2*h*h+h*hZ+hZ*hZ)/(2*sqrt(2*g)*h*h*hZ*sqrt(1/h+1/hZ)) )
 #define phip(g,h,hL,hR) ( fp(g,h,hL) + fp(g,h,hR) )
 
-#define nu1(g,hStar,hL,uL) ( uL - sqrt(g*hL)*sqrt( (1+fmax((hStar-hL)/2/hL,0)) * (1+fmax((hStar-hL)/hL,0)) ) )
-#define nu3(g,hStar,hR,uR) ( uR + sqrt(g*hR)*sqrt( (1+fmax((hStar-hR)/2/hR,0)) * (1+fmax((hStar-hR)/hR,0)) ) )
+//#define nu1(g,hStar,hL,uL) ( uL - sqrt(g*hL)*sqrt( (1+fmax((hStar-hL)/2/hL,0)) * (1+fmax((hStar-hL)/hL,0)) ) )
+//#define nu3(g,hStar,hR,uR) ( uR + sqrt(g*hR)*sqrt( (1+fmax((hStar-hR)/2/hR,0)) * (1+fmax((hStar-hR)/hR,0)) ) )
+
+#define nu1(g,hStar,hL,uL) ( uL - sqrt(g*hL)*sqrt( (1+fmax((hStar-hL)/2/hL,0.0)) * (1+fmax((hStar-hL)/hL,0.)) ) )
+#define nu3(g,hStar,hR,uR) ( uR + sqrt(g*hR)*sqrt( (1+fmax((hStar-hR)/2/hR,0.0)) * (1+fmax((hStar-hR)/hR,0.)) ) )
 
 #define phiDiff(g,h1k,h2k,hL,hR,uL,uR)   ( (phi(g,h2k,hL,hR,uL,uR) - phi(g,h1k,hL,hR,uL,uR))/(h2k-h1k)    )
 #define phiDDiff1(g,h1k,h2k,hL,hR,uL,uR) ( (phiDiff(g,h1k,h2k,hL,hR,uL,uR) - phip(g,h1k,hL,hR))/(h2k-h1k) )
@@ -1256,7 +1259,7 @@ namespace proteus
 	}      
 
       // improve estimate from below via one newton step (not required)
-      h1k = fmax(h1k,h2k-phi(g,h2k,hL,hR,velL,velR)/phip(g,h2k,hL,hR));
+      //h1k = fmax(h1k,h2k-phi(g,h2k,hL,hR,velL,velR)/phip(g,h2k,hL,hR));
       // COMPUTE lambdaMin0 and lambdaMax0
       double nu11 = nu1(g,h2k,hL,velL);
       double nu12 = nu1(g,h1k,hL,velL);
@@ -1265,6 +1268,11 @@ namespace proteus
 
       double lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
       double lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
+
+      if (h1k>h2k)
+	{
+	  std::cout << "********...."  << h1k << "/t" << std::endl;
+	}
       
       int aux_counter = 0;
       if (lambdaMin > 0 && lambdaMax/lambdaMin - 1 <= tol)
@@ -3365,9 +3373,9 @@ namespace proteus
 		  double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
 
 		  //dLij =  fmax(maxWaveSpeedTwoRarefactions(g,nxij,nyij,
-		  //				   hi,hui,hvi,hj,huj,hvj)*cij_norm,
-		  //       maxWaveSpeedTwoRarefactions(g,nxji,nyji,
-		  //				   hj,huj,hvj,hi,hui,hvi)*cji_norm);
+		  //			   hi,hui,hvi,hj,huj,hvj)*cij_norm,
+		  //     maxWaveSpeedTwoRarefactions(g,nxji,nyji,
+		  //			   hj,huj,hvj,hi,hui,hvi)*cji_norm);
 		  dLij =  fmax(maxWaveSpeed(g,nxij,nyij,
 					    hi,hui,hvi,hj,huj,hvj)*cij_norm,
 			       maxWaveSpeed(g,nxji,nyji,
