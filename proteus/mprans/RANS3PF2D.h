@@ -617,7 +617,6 @@ namespace proteus
       d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
       d_mu = (1.0-useVF)*smoothedDirac(eps_mu,phi);
-  
       //calculate eddy viscosity
       switch (turbulenceClosureModel)
 	{
@@ -1196,20 +1195,20 @@ namespace proteus
       /*     if (flowSpeedNormal < 0.0) */
       /*       flux_wmom+=bc_speed*(bc_w - w); */
       /*   } */
-      if (isDOFBoundary_p == 1)
-        {
-          flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho);
-          flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho);
-          /* flux_wmom+= n[2]*(bc_p*bc_oneByRho-p*oneByRho); */
-        }
-      if (isFluxBoundary_p == 1)
-        {
-          //correct velocity field to match mass flux BC
-          velocity[0] += (bc_flux_mass - flux_mass)*n[0];
-          velocity[1] += (bc_flux_mass - flux_mass)*n[1];
-          /* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; */
-          flux_mass = bc_flux_mass;
-        }
+      /* if (isDOFBoundary_p == 1) */
+      /*   { */
+      /*     flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho); */
+      /*     flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho); */
+      /*     /\* flux_wmom+= n[2]*(bc_p*bc_oneByRho-p*oneByRho); *\/ */
+      /*   } */
+      /* if (isFluxBoundary_p == 1) */
+      /*   { */
+      /*     //correct velocity field to match mass flux BC */
+      /*     velocity[0] += (bc_flux_mass - flux_mass)*n[0]; */
+      /*     velocity[1] += (bc_flux_mass - flux_mass)*n[1]; */
+      /*     /\* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; *\/ */
+      /*     flux_mass = bc_flux_mass; */
+      /*   } */
       if (isFluxBoundary_u == 1)
 	{
 	  flux_umom = bc_flux_umom;
@@ -1657,7 +1656,7 @@ namespace proteus
 	  for  (int k=0;k<nQuadraturePoints_element;k++)
 	    {
 	      register int eN_nDOF_trial_element = eN*nDOF_trial_element, eN_k = eN*nQuadraturePoints_element+k, eN_k_nSpace = eN_k*nSpace;
-	      register double un=0.0, vn=0.0, unm1=0.0, vnm1=0.0, grad_un[nSpace], grad_vn[nSpace], grad_pn[nSpace], hess_un[nSpace2],hess_vn[nSpace2];
+	      register double un=0.0, vn=0.0, unm1=0.0, vnm1=0.0, grad_un[nSpace], grad_vn[nSpace], grad_pn[nSpace], hess_un[nSpace2],hess_vn[nSpace2],h_phi;
 	      register double p_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],vel_hess_trial[nDOF_trial_element*nSpace2];
 	      register double jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace], x,y,z,dV;
 
@@ -1672,6 +1671,12 @@ namespace proteus
 					  jacDet,
 					  jacInv,
 					  x,y,z);
+	      ck.calculateH_element(eN,
+				    k,
+				    nodeDiametersArray,
+				    mesh_l2g,
+				    mesh_trial_ref,
+				    h_phi);
 	      // calculate integration weight
 	      dV = fabs(jacDet)*dV_ref[k];
 	      // get the trial function gradient and hessian 
@@ -1695,11 +1700,11 @@ namespace proteus
 	      // COMPUTE RHO AND NU //
 	      ////////////////////////
 	      // compute rho 
-	      double eps_rho = epsFact_rho*elementDiameter[eN];
+	      double eps_rho = epsFact_rho*h_phi;
+	      double eps_mu  = epsFact_mu*h_phi;
 	      double H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
 	      double rho = rho_0*(1.0-H_rho)+rho_1*H_rho;
-	      // compute nu      
-	      double eps_mu = epsFact_rho*elementDiameter[eN];
+	      // compute nu
 	      double H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi[eN_k]) + useVF*fmin(1.0,fmax(0.0,vf[eN_k]));
 	      double nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
 	      /////////////////////////////
@@ -1883,10 +1888,9 @@ namespace proteus
 	      //get the physical integration weight
 	      dV = fabs(jacDet)*dV_ref[k];
 	      ck.calculateG(jacInv,G,G_dd_G,tr_G);
-	      //ck.calculateGScale(G,&normal_phi[eN_k_nSpace],h_phi);
 	      
-	      eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-	      eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	      eps_rho = epsFact_rho*h_phi;
+	      eps_mu  = epsFact_mu *h_phi;
 	     
 	      //get the trial function gradients
 	      /* ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial); */
@@ -2510,7 +2514,7 @@ namespace proteus
 		//VRANS
 		porosity_ext,
 		//
-		G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty,
+		G[nSpace*nSpace],G_dd_G,tr_G,h_penalty,penalty,
 		force_x,force_y,force_z,force_p_x,force_p_y,force_p_z,force_v_x,force_v_y,force_v_z,r_x,r_y,r_z;
 	      //compute information about mapping from reference element to physical element
 	      ck.calculateMapping_elementBoundary(eN,
@@ -2554,10 +2558,9 @@ namespace proteus
 	      //get the metric tensor
 	      //cek todo use symmetry
 	      ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
-	      ck.calculateGScale(G,&ebqe_normal_phi_ext[ebNE_kb_nSpace],h_phi);
 	      
-	      eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-	      eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	      eps_rho = epsFact_rho*elementDiameter[eN];
+	      eps_mu  = epsFact_mu *elementDiameter[eN];
 	      
 	      //compute shape and solution information
 	      //shape
@@ -2683,8 +2686,8 @@ namespace proteus
 				   turbulenceClosureModel,
 				   g,
 				   useVF,
-				   bc_ebqe_vf_ext[ebNE_kb],
-				   bc_ebqe_phi_ext[ebNE_kb],
+				   ebqe_vf_ext[ebNE_kb],//vf upwind bc's should be in this array
+				   ebqe_phi_ext[ebNE_kb],//phi upwind bc's should be in this array
 				   &ebqe_normal_phi_ext[ebNE_kb_nSpace],
 				   ebqe_kappa_phi_ext[ebNE_kb],
 				   //VRANS
@@ -3572,10 +3575,9 @@ namespace proteus
 	      //get the physical integration weight
 	      dV = fabs(jacDet)*dV_ref[k];
 	      ck.calculateG(jacInv,G,G_dd_G,tr_G);
-	      //ck.calculateGScale(G,&normal_phi[eN_k_nSpace],h_phi);
 	
-	      eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-	      eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	      eps_rho = epsFact_rho*h_phi;
+	      eps_mu  = epsFact_mu *h_phi;
 	      
 	      //get the trial function gradients
 	      /* ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial); */
@@ -4269,7 +4271,7 @@ namespace proteus
 		//VRANS
 		porosity_ext,
 		//
-		G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty,penalty;
+		G[nSpace*nSpace],G_dd_G,tr_G,h_penalty,penalty;
 	      ck.calculateMapping_elementBoundary(eN,
 						  ebN_local,
 						  kb,
@@ -4303,10 +4305,9 @@ namespace proteus
 	      //dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
 	      dS = metricTensorDetSqrt*dS_ref[kb];
 	      ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
-	      ck.calculateGScale(G,&ebqe_normal_phi_ext[ebNE_kb_nSpace],h_phi);
 
-	      eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-	      eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	      eps_rho = epsFact_rho*elementDiameter[eN];
+	      eps_mu  = epsFact_mu *elementDiameter[eN];
 
 	      //compute shape and solution information
 	      //shape
@@ -4434,8 +4435,8 @@ namespace proteus
 				   turbulenceClosureModel,
 				   g,
 				   useVF,
-				   bc_ebqe_vf_ext[ebNE_kb],
-				   bc_ebqe_phi_ext[ebNE_kb],
+				   ebqe_vf_ext[ebNE_kb],//vf upwind bc's should be in here already
+				   ebqe_phi_ext[ebNE_kb],//phi upwind bc's should be in here already
 				   &ebqe_normal_phi_ext[ebNE_kb_nSpace],
 				   ebqe_kappa_phi_ext[ebNE_kb],
 				   //VRANS

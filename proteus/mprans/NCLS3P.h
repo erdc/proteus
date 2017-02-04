@@ -776,6 +776,7 @@ namespace proteus
 		      //load the boundary values
 		      //
 		      bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*ebqe_rd_u_ext[ebNE_kb];
+		      ebqe_u[ebNE_kb] = bc_u_ext;
 		      // TODO (MQL). Consider porosity and consider the possibility of having moving meshes 
 		      //VRANS
 		      porosity_ext = 1.0; // - ebqe_vos_ext[ebNE_kb]; //TMP
@@ -1405,7 +1406,6 @@ namespace proteus
 		  //load the boundary values
 		  //
 		  bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*ebqe_rd_u_ext[ebNE_kb];
-
 		  // 
 		  //calculate the pde coefficients using the solution and the boundary values for the solution 
 		  // 

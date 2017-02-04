@@ -655,12 +655,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if self.applyRedistancing:
                 log("resetting level set to signed distance")
                 self.nModel.u[0].dof.flat[:] = self.rdModel.u[0].dof.flat[:]
-                self.nModel.calculateCoefficients()
-                self.nModel.calculateElementResidual()
-                # save the boundary level set in the numerical flux to use for
-                self.nModel.numericalFlux.ebqe[
-                    ('u', 0)][:] = self.rdModel.ebqe[
-                    ('u', 0)]
+                self.nModel.q[('u',0)][:] = self.rdModel.q[('u',0)]
+                self.nModel.ebqe[('u',0)][:] = self.rdModel.ebqe[('u',0)]
+                self.nModel.numericalFlux.ebqe[('u', 0)][:] = self.rdModel.ebqe[('u', 0)]
             copyInstructions = {}
             return copyInstructions
         else:

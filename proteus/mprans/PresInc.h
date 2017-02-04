@@ -181,6 +181,8 @@ namespace proteus
       if(isFluxBoundary == 1)
 	{
 	  flux = bc_flux;
+	  for(int I=0;I<nSpace;I++)
+	    vtCorr[I] += bc_flux*n[I];
 	}
       else if(isDOFBoundary == 1)
 	{
@@ -633,14 +635,12 @@ namespace proteus
 		{
 		  adv_flux_ext = 0.0;
 		  diff_flux_ext = 0.0;
-		  ebqe_vtCorr[ebNE_kb_nSpace+0]=0;
-		  ebqe_vtCorr[ebNE_kb_nSpace+1]=0;
+		  ebqe_vtCorr[ebNE_kb_nSpace+0]=0.0;
+		  ebqe_vtCorr[ebNE_kb_nSpace+1]=0.0;
 		}
 	      ebqe_adv_flux[ebNE_kb] = adv_flux_ext;
 	      ebqe_diff_flux[ebNE_kb] = diff_flux_ext;
 
-	      for (int I=0;I<nSpace;I++)
-		ebqe_vtCorr[ebNE_kb_nSpace+I] = (adv_flux_ext + diff_flux_ext)*normal[I]; 
 	      //
 	      //update residuals
 	      //

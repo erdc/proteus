@@ -4169,7 +4169,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.netForces_p[:, :] = 0.0
         self.coefficients.netForces_v[:, :] = 0.0
         self.coefficients.netMoments[:, :] = 0.0
-
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[
