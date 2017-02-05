@@ -5,9 +5,10 @@ A class hierarchy and tools for building domains of PDE's.
    :parts: 1
 """
 
+import sys
 import numpy as np
 from proteus.MeshTools import MeshParallelPartitioningTypes as mpt
-
+from .Profiling import logEvent
 
 class D_base:
     """
@@ -302,6 +303,45 @@ shipout();
         f.close()
     def writeXdmf(self,ar):
         raise UserWarning("Xdmf output not implemented")
+
+def unitSimplex(nd=2):
+    """Builds a 2 or 3 dimension reference element.
+    
+    Parameters
+    ----------
+    nd : int
+        The elements dimension (must be 2 or 3)
+
+    Returns
+    -------
+    reference_element
+    """
+    if nd!=2 and nd!=3:
+        logEvent("ERROR - Reference element must have dimension 2 or 3")
+        sys.exit(1)
+    if nd==2:
+        return PlanarStraightLineGraphDomain(vertices=[[0. , 0.], 
+                                                       [0. , 1.], 
+                                                       [1. , 0.]],
+                                             segments = [[0, 1],
+                                                         [1, 2],
+                                                         [2, 0]],
+                                             name="Reference Triangle")
+    if nd==3:
+       boundaryTags = {'bottom':1,'front':2,'side':3,'back':4}
+       return PiecewiseLinearComplexDomain(vertices=[[0.0 , 0.0 , 0.0], 
+                                                     [0.0 , 0.0 , 1.0], 
+                                                     [0.0 , 1.0 , 0.0], 
+                                                     [1.0 , 0.0 , 0.0]],
+                                           facets = [[[0, 2, 3]],
+                                                     [[0, 1, 2]],
+                                                     [[0, 1, 3]],
+                                                     [[1, 2, 3]]],
+                                           # facetFlags=[boundaryTags['bottom'],
+                                           #             boundaryTags['front'],
+                                           #             boundaryTags['side'],
+                                           #             boundaryTags['back']],                                                       
+                                           name="Reference Simplex")
 
 class GMSH_3D_Domain(D_base):
     """

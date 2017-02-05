@@ -1197,6 +1197,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.lsModel.u[0].dof += self.massCorrModel.u[0].dof
             self.lsModel.q[('u', 0)] += self.massCorrModel.q[('u', 0)]
             self.lsModel.ebqe[('u', 0)] += self.massCorrModel.ebqe[('u', 0)]
+            self.lsModel.numericalFlux.ebqe[('u', 0)][:] = self.lsModel.ebqe[('u', 0)]
             self.lsModel.q[
                 ('grad(u)', 0)] += self.massCorrModel.q[('grad(u)', 0)]
             self.lsModel.ebqe[

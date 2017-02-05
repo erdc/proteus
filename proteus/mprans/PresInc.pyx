@@ -455,6 +455,7 @@ class Coefficients(TC_base):
             #cek hack: for three-phase flow we'll have to do this differently
             self.fluidModel.q[('velocity',0)][:] = self.model.q[('velocity',0)]
             self.fluidModel.ebqe[('velocity',0)][:] = self.model.ebqe[('velocity',0)]
+            print "max vel on boundary",self.fluidModel.ebqe[('velocity',0)].min(),self.fluidModel.ebqe[('velocity',0)].max()
             #old
             #self.fluidModel.q[('velocity',0)][...,i] -= self.model.q[('grad(u)',0)][...,i]/(self.rho_f_min*alphaBDF)
             #cek hack, need to do scale this right for 3p flow

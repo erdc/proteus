@@ -1111,6 +1111,7 @@ namespace proteus
 			ebN_local_kb_nSpace = ebN_local_kb*nSpace;		      
 		      register double
 			flux_ext=0.0,
+			u_ext=0.0,
 			bc_u_ext=0.0,
 			jac_ext[nSpace*nSpace],
 			jacDet_ext,
@@ -1146,6 +1147,7 @@ namespace proteus
 							  normal,
 							  x_ext,y_ext,z_ext);
 		      dS = metricTensorDetSqrt*dS_ref[kb];
+		      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
 		      //precalculate test function products with integration weights
 		      // compute flow = v.n
 		      double flow=0.0;
@@ -1157,9 +1159,15 @@ namespace proteus
 		      bc_u_ext = ebqe_bc_u_ext[ebNE_kb];
 		      // compute flux = flow*bc_u
 		      if (flow < 0)
-			flux_ext = bc_u_ext*flow;
-		      else 
-			flux_ext = 0;
+			{
+			  flux_ext = bc_u_ext*flow;
+			  ebqe_u[ebNE_kb] = bc_u_ext;
+			}
+		      else
+			{
+			  flux_ext = 0;
+			  ebqe_u[ebNE_kb] = u_ext;
+			}
 		      for (int i=0;i<nDOF_test_element;i++)
 			elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]); 
 		    }//kb
@@ -1265,7 +1273,7 @@ namespace proteus
 		    //compute shape and solution information
 		    //shape
 		    ck.gradTrialFromRef(&u_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,u_grad_trial_trace);
-		    //solution and gradients	
+		    //solution and gradients
 		    ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
 		    ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial_trace,grad_u_ext);
 		    //precalculate test function products with integration weights
