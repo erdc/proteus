@@ -296,7 +296,7 @@ class TestBC(unittest.TestCase):
             if wavePhi <= 0:
                 H = 0.
                 wave_u = waves.u(x, t)
-            elif smoothing > 0 and 0 < wavePhi < smoothing/2.:
+            elif smoothing > 0 and 0 < wavePhi <= smoothing:
                 H = smoothedHeaviside(0.5*smoothing, wavePhi-0.5*smoothing)
                 x_max = list(x)
                 x_max[1] = waveHeight
