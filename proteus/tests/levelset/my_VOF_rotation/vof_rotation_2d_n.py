@@ -8,34 +8,15 @@ levelNonlinearSolver = Newton
 fullNewtonFlag = fullNewton
 updateJacobian = False
 
-if timeIntegration_vof == "SSP33":
-    timeIntegration = SSP33
-    stepController = Min_dt_controller
-elif timeIntegration_vof == "fe":
-    timeIntegration = ForwardEuler
-    stepController = Min_dt_controller
-elif timeIntegration_vof == "be":
-    timeIntegration = BackwardEuler_cfl
-    stepController = Min_dt_controller
-elif timeIntegration_vof == "vbdf":
-    timeIntegration = VBDF
-    stepController = Min_dt_cfl_controller
-elif timeIntegration_vof == "flcbdf":
-    timeIntegration = FLCBDF
-    stepController = FLCBDF_controller_sys
-elif timeIntegration_vof == "rk":
-    if cDegree_vof == -1:
-        timeIntegration = LinearSSPRKPIintegration
-    else:
-        timeIntegration = LinearSSPRKintegration        
-    stepController=Min_dt_RKcontroller
-    #timeIntegration = ForwardEuler
-    #stepController=Min_dt_controller
-    timeOrder = pDegree_vof+1
-    nStagesTime = timeOrder
-    limiterType =   {0:TimeIntegration.DGlimiterPkMonomial2d}
+timeIntegration = VOF.RKEV # SSP33 #mwf right now need timeIntegration to be SSP33 to run
+stepController = Min_dt_controller#Min_dt_RKcontroller#Min_dt_controller #mwf we should probably    
+if timeIntegration_vof == "SSP33": #mwf hack
+    timeOrder = 3
+    nStagesTime = 3
 else:
-    raise RuntimeError
+    timeOrder = 1
+    nStagesTime = 1
+
 
 if cDegree_vof==0:
     if useHex:
@@ -95,3 +76,5 @@ else:
     levelLinearSolver = LU
 
 conservativeFlux = {}
+if checkMass:
+    auxiliaryVariables = [MassOverRegion()]
