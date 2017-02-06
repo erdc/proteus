@@ -7,7 +7,6 @@ A hierarchy of classes for managing comlete numerical solution implementations
 
 import os
 import numpy
-numpy.set_printoptions(threshold='nan')
 from subprocess import check_call
 
 import LinearSolvers
@@ -1250,11 +1249,6 @@ class NS_base:  # (HasTraits):
             self.finalizeViewSolution(model)
             self.closeArchive(model,index)
 
-        #Destroy the mesh data structures in C because garbage collection doesnt take care of it
-        #import cmeshTools
-        #m = self.modelList[0]
-        #lm = m.levelModelList[0]
-        #cmeshTools.deleteMeshDataStructures(lm.mesh.cmesh)
         return systemStepFailed
     #
     #try to make preStep and postStep just manipulate "current values" and let the step controllers manage the history setting
