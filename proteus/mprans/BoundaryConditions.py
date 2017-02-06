@@ -656,21 +656,25 @@ class __cppClass_WavesCharacteristics:
         xx[1] = x[1]
         xx[2] = x[2]
         phi = self.__cpp_calculate_phi(x, t)
-        H = self.__cpp_calculate_smoothing_H(phi)
-        if 0 <= H < 0.5:
+        if phi <= 0.:
+            # no smoothing below mwl, or wave peak could get chopped off
+            H = 0
             waterSpeed = self.WT.u(xx, t)
-        elif 0.5 < H < 1.:
+        elif 0 < phi <= self.smoothing:
+            # smoothing on half the range of VOF (above wave crest)
+            H = smoothedHeaviside(self.smoothing/2.,phi-self.smoothing/2.)
+            # use max velocity of wave for water
             x_max[0] = x[0]
             x_max[1] = x[1]
             x_max[2] = x[2]
             x_max[self.vert_axis] = x[self.vert_axis]-phi
             waterSpeed = self.WT.u(x_max, t)
         else:
+            H = 1.
             waterSpeed = self.zero_vel
         u[0] = H*self.wind_speed[0] + (1-H)*waterSpeed[0]
         u[1] = H*self.wind_speed[1] + (1-H)*waterSpeed[1]
         u[2] = H*self.wind_speed[2] + (1-H)*waterSpeed[2]
-        # print('u: ', u[0], u[1], u[2])
         return u
 
     def __cpp_calculate_pressure(self, x, t):
