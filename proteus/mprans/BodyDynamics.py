@@ -129,6 +129,8 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         if self.record_dict:
             self._recordValues()
         # print in proteus log file
+        print self.h, self.ang_disp, self.Shape.barycenter, self.pivot
+        print self.F, self.M
         self._logTrace()
 
     def _store_last_values(self):
@@ -381,8 +383,69 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         scheme: string
             If Runge_Kutta, runge kutta scheme is applied.
 	    If Forward_Euler, forward euler scheme is applied.
-	"""
+	    """
         self.scheme = scheme
+
+
+    def inputMotion(self, InputMotion=False, pivot=None, 
+                          At=[0., 0., 0], Tt=[0., 0., 0],
+                          Ar=[0., 0., 0], Tr=[0., 0., 0]):
+        """
+        Sets motion as an input. It's imposed rather than calculated.
+
+        Parameters
+        ----------
+        InputMotion: bool
+            If True, motion as input is applied.
+        pivot: list
+            Centre of rotation. If only translation, write barycenter's coordinates
+        At: list
+            Amplitude of translational motion
+        Tt: list
+            Period of translational motion
+        Ar: list
+            Amplitude of rotational motion
+        Tr: list
+            Period of rotational motion
+	    """     
+        self.InputMotion = InputMotion
+        if pivot == None:
+            self.pivot = self.Shape.barycenter
+        else:
+            self.pivot = np.array(pivot)
+        self.At = np.array(At)
+        self.Tt = np.array(Tt)
+        self.Ar = np.array(Ar)
+        self.Tr = np.array(Tr)
+
+
+    def imposeSinusoidalMotion(self):
+        """
+        Motion is imposed rather than calculated.
+	    """   
+        
+        t = self.model.stepController.t_model_last
+        Tra = np.array([0.,0.,0.])
+        Rot = np.array([0.,0.,0.])
+        for ii in [0,1,2]:
+            At, Tt = self.At[ii], self.Tt[ii]
+            Ar, Tr = self.Ar[ii], self.Tr[ii]
+            if Tt == 0.0:
+                Wt = 0.0
+            else:
+                Wt = 2.*3.14/Tt
+
+            if Tr == 0.0:
+                Wr = 0.0
+            else:
+                Wr = 2.*3.14/Tr
+            Dt = At*sin(Wt*t)
+            Dr = Ar*sin(Wr*t)            
+        # motion update
+            Tra[ii] = Dt - (self.last_position[ii] - self.init_barycenter[ii])
+            Rot[ii] = Dr - (self.last_rotation_euler[ii])
+
+        return Tra, Rot
 
 
     def step(self, dt):
@@ -398,11 +461,16 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         self.h[:] = np.zeros(3)
         self.ang_disp[:] = np.zeros(3)
 
-        # Translational motion calculation
-        h = self.getDisplacement(dt)
-        # Rotational motion calculation
-        ang_disp = self.getAngularDisplacement(dt)
-
+        # Calculate or impose motion of the rigid body
+        if self.InputMotion == True:
+            # sinusoidal motion imposed
+            self.h[:], self.ang_disp[:] = self.imposeSinusoidalMotion()
+        else:
+            # Translational motion calculation
+            h = self.getDisplacement(dt)
+            # Rotational motion calculation
+            ang_disp = self.getAngularDisplacement(dt)
+            
         # translate
         self.Shape.translate(self.h[:nd])
         # rotate
@@ -419,6 +487,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             self.rotation_matrix[:] = np.eye(3)
         self.barycenter[:] = self.Shape.barycenter
         self.position[:] = self.Shape.barycenter
+        
 
     def setConstraints(self, free_x, free_r):
         """
@@ -919,7 +988,7 @@ class CaissonBody(RigidBody):
         scheme: string
             If Runge_Kutta, runge kutta scheme is applied.
 	    If Central_Difference, central difference scheme is applied.
-	"""
+	    """
         self.scheme = scheme
 
 
@@ -950,7 +1019,7 @@ class CaissonBody(RigidBody):
         self.acceleration = np.zeros(3)
 
         #---------------------------------------------------------------
-        def static_case(self, sign, Fx, Fv, mass, m, uplift):
+        def static_case(self, sign, Fx, Fv, mass, m):
             """
             Set a static friction.
             Parameters
@@ -968,11 +1037,11 @@ class CaissonBody(RigidBody):
                 self.velocity = np.zeros(3)
                 self.h[:] = np.zeros(3)
             else:
-                dynamic_case(self, sign_static, Fx, Fv, mass, m=self.m_dynamic, uplift=uplift)
+                dynamic_case(self, sign_static, Fx, Fv, mass, m=self.m_dynamic)
             self.fromDynamic_toStatic = False
 
         #---------------------------------------------------------------
-        def dynamic_case(self, sign, Fx, Fv, mass, m, uplift):
+        def dynamic_case(self, sign, Fx, Fv, mass, m):
             """
             Set a dynamic friction.
             Parameters
@@ -985,36 +1054,45 @@ class CaissonBody(RigidBody):
             m : dynamic friction factor.
             """
 
+            # Springs
             Kx = self.Kx
             Ky = self.Ky
             Cx = self.Cx
             Cy = self.Cy
-
+            # Frictional force
             Ftan = -sign*m*abs(Fv)
-            Fh = Fx+Ftan
-	    if uplift == False:
-                Fv = 0.0	
+            Fh=Fx+Ftan
+            # Motion in y-axis only in case of Fy>0 (Caisson cannot break the mound!)
+            if Fv < 0.0:
+                Fv = 0.0
+                Cy = 0.0
+                Ky = 0.0
 
             # initial condition
             ux0 = self.last_position[0] - self.init_barycenter[0]      # x-axis displacement
-            uy0 = self.last_position[1] - self.init_barycenter[1]      # y-axis displacement
+            uy0 = self.last_position[1] - self.init_barycenter[1]      # y-axis displacement            
             vx0 = self.last_velocity[0]                                # x-axis velocity
             vy0 = self.last_velocity[1]                                # y-axis velocity
+
+            if Kx*ux0 < Ftan :
+                Fh=Fx
+            else:
+                Fh=Fx+Ftan
+                Kx=0.0
+                Cx=0.0
+            
             ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass                        # x-axis acceleration
             ay0 = (Fv - Cy*vy0 - Ky*uy0) / mass                        # y-axis acceleration
 
-	    # solving numerical scheme
-	    if self.scheme == 'Runge_Kutta':
+	        # solving numerical scheme
+            if self.scheme == 'Runge_Kutta':
                 for ii in range(substeps):
                     ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0, dt=dt_sub, substeps=substeps, F=Fh, K=Kx, C=Cx, m=mass, velCheck=True)
                     uy, vy, ay = runge_kutta(u0=uy0, v0=vy0, a0=ay0, dt=dt_sub, substeps=substeps, F=Fv, K=Ky, C=Cy, m=mass, velCheck=False)
-	    if self.scheme == 'Central_Difference':
-                ux, vx, ax = central_difference(uc=ux0, vc=vx0, ac=ax0, dt=dt_sub, substeps=substeps, F=Fh, K=Kx, C=Cx, m=mass, velCheck=True)
-                uy, vy, ay = central_difference(uc=uy0, vc=vy0, ac=ay0, dt=dt_sub, substeps=substeps, F=Fv, K=Ky, C=Cy, m=mass, velCheck=False)
-
+	        
             # When horizontal velocity changes sign, 0-condition is passed
             # Loop must start from static case again
-	    self.fromDynamic_toStatic = False
+	        self.fromDynamic_toStatic = False
             if (self.velocity[0]*vx) < 0.0:
                 self.fromDynamic_toStatic = True
 
@@ -1036,18 +1114,18 @@ class CaissonBody(RigidBody):
         if (Fv*gv)>0:
         #--- Friction module, static case
             if self.last_velocity[0] == 0.0 or self.last_fromDynamic_toStatic ==True:
-                static_case(self, sign_static, Fx, Fv, mass, m=self.m_static, uplift=False)
+                static_case(self, sign_static, Fx, Fv, mass, m=self.m_static)
         #--- Friction module, dynamic case
             else :
-                dynamic_case(self, sign_dynamic, Fx, Fv, mass, m=self.m_dynamic, uplift=False)
+                dynamic_case(self, sign_dynamic, Fx, Fv, mass, m=self.m_dynamic)
 
         if (Fv*gv)<0:
         #--- Floating module, static case
             if self.last_velocity[0] == 0.0  or self.last_fromDynamic_toStatic ==True:
-                static_case(self, sign_static, Fx, Fv, mass, m=0.0, uplift=True)
+                static_case(self, sign_static, Fx, Fv, mass, m=0.0)
         #--- Floating module, dynamic case
             else :
-                dynamic_case(self, sign_dynamic, Fx, Fv, mass, m=0.0, uplift=True)
+                dynamic_case(self, sign_dynamic, Fx, Fv, mass, m=0.0)
 
 
     def overturning_module(self,dt):
@@ -1109,14 +1187,12 @@ class CaissonBody(RigidBody):
             vrz0 = self.last_ang_vel[2]                             # angular velocity
             arz0 = (Mp[2] - Crot*vrz0 - Krot*rz0) / inertia         # angular acceleration
 
-	    # solving numerical scheme
+	        # solving numerical scheme
             if self.scheme == 'Runge_Kutta':
                 rz, vrz, arz = runge_kutta(u0=rz0, v0=vrz0, a0=arz0, dt=dt_sub, substeps=substeps, F=Mp[2], K=Krot, C=Crot, m=inertia, velCheck=False)
-            if self.scheme == 'Central_Difference':
-                rz, vrz, arz = central_difference(uc=rz0, vc=vrz0, ac=arz0, dt=dt_sub, substeps=substeps, F=Mp[2], K=Krot, C=Crot, m=inertia, velCheck=False)
-
+            
             # final values
-	    self.ang_disp[2] = rz - atan2(self.last_rotation[0, 1], self.last_rotation[0, 0])
+	        self.ang_disp[2] = rz - atan2(self.last_rotation[0, 1], self.last_rotation[0, 0])
             self.ang_vel[2] = vrz
             self.ang_acc[2] = arz
 
@@ -1209,7 +1285,6 @@ class paddleBody(RigidBody):
                                  (self.Shape.vertices[2][0], self.Shape.vertices[2][1]),
                                  (self.Shape.vertices[3][0], self.Shape.vertices[3][1])])
 
-Fx, Fy, Fz = self.F
 
 
     def _store_last_values(self):
