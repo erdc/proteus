@@ -30,10 +30,11 @@ p.domain = Domain.RectangularDomain(L=p.L,
 
 p.T = rot2D.T
 p.LevelModelType = VOF.LevelModel
-p.coefficients   = rot2D.MyCoefficients(epsFact=rot2D.epsFactHeaviside,checkMass=rot2D.checkMass,
-                                        useMetrics=rot2D.useMetrics,ME_model=0,
-                                        cE=rot2D.cE,cMax=rot2D.cMax,cK=rot2D.cK,
-                                        ENTROPY_VISCOSITY=rot2D.ENTROPY_VISCOSITY,SUPG=rot2D.SUPG)
+p.coefficients   = rot2D.MyCoefficients(epsFact=rot2D.epsFactHeaviside,checkMass=rot2D.checkMass,useMetrics=rot2D.useMetrics,ME_model=0,
+                                        EDGE_VISCOSITY=rot2D.EDGE_VISCOSITY, 
+                                        ENTROPY_VISCOSITY=rot2D.ENTROPY_VISCOSITY,
+                                        cK=rot2D.cK,cE=rot2D.cE,cMax=rot2D.cMax)
+                                        
 
 from proteus.ctransportCoefficients import smoothedHeaviside
 class init_cond:
@@ -50,6 +51,7 @@ class init_cond:
 p.analyticalSolutions = None
 
 def getDBC(x,flag):
+    #return lambda x,t: 1.0
     pass
 
 p.dirichletConditions = {0:getDBC}

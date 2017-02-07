@@ -57,10 +57,12 @@ class TestVOFrotationEV():
         Test total mass for Forward Euler Integration running for final time T=0.1
 
         These are the flags used for VOF.h in this benchmark for now
-        #define EDGE_VISCOSITY 1
-        #define USE_EDGE_BASED_EV 1 // if not then dissipative matrix is based purely on smoothness indicator of the solution
         #define POWER_SMOOTHNESS_INDICATOR 2
         #define LUMPED_MASS_MATRIX 0
+        #define KUZMINS_METHOD 1
+        #define INTEGRATE_BY_PARTS 1
+        #define QUANTITIES_OF_INTEREST 0
+        #define FIX_BOUNDARY_KUZMINS 1
         """
         run_dir = os.path.dirname(os.path.abspath(__file__))
         
@@ -71,7 +73,7 @@ class TestVOFrotationEV():
         vf.so.DT = vf.n.DT
         vf.so.tnList = [i*vf.n.DT for i  in range(vf.n.nDTout+1)]
 
-        #force ForwardEuler
+        #force F2orwardEuler
         vf.timeIntegration_vof="FE"
         vf.n.timeOrder = 1
         vf.n.nStagesTime = 1
@@ -91,7 +93,8 @@ class TestVOFrotationEV():
         sim_total_mass = np.loadtxt('total_mass_comp_0_'+sim_name+'.txt')
 
         failed = np.allclose(ref_total_mass, sim_total_mass,
-                             rtol=1e-05, atol=1e-07, equal_nan=True)
+                             rtol=1e-05, atol=1e-07, equal_nan=True) 
+        assert(failed) 
 
     def no_test_vof_total_mass_T1m1_SSP33(self):
         """
@@ -134,7 +137,7 @@ class TestVOFrotationEV():
 
         failed = np.allclose(ref_total_mass, sim_total_mass,
                              rtol=1e-05, atol=1e-07, equal_nan=True)
-
+        assert(failed) 
 
     def notest_vof_total_mass_T1_FE(self):
 
@@ -168,7 +171,8 @@ class TestVOFrotationEV():
 
         failed = np.allclose(ref_total_mass, sim_total_mass,
                              rtol=1e-05, atol=1e-07, equal_nan=True)
-        
+        assert(failed) 
+
     def notest_vof_total_mass_T1_SSP33(self):
 
         run_dir = os.path.dirname(os.path.abspath(__file__))
@@ -201,6 +205,7 @@ class TestVOFrotationEV():
 
         failed = np.allclose(ref_total_mass, sim_total_mass,
                              rtol=1e-05, atol=1e-07, equal_nan=True)
+        assert(failed) 
 
 if __name__ == '__main__':
     pass

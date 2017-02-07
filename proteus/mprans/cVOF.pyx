@@ -16,7 +16,9 @@ cdef extern from "VOF.h" namespace "proteus":
 		     int* csrRowIndeces_DofLoops, 
 		     int* csrColumnOffsets_DofLoops, 
 		     double* MassMatrix, 
-		     double* dL_minus_dC) 
+		     double* dL_minus_dC,
+		     double* min_u_bc,
+		     double* max_u_bc) 
         void calculateResidual(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -54,6 +56,7 @@ cdef extern from "VOF.h" namespace "proteus":
 			       double* velx_tn_dof, 
 			       double* vely_tn_dof, #HACKED TO 2D FOR NOW (MQL)
                                double* velocity,
+                               double* div_velocity,
                                double* q_m,
                                double* q_u,
                                double* q_m_betaBDF,
@@ -69,6 +72,7 @@ cdef extern from "VOF.h" namespace "proteus":
                                int* elementBoundaryElementsArray,
                                int* elementBoundaryLocalElementBoundariesArray,
                                double* ebqe_velocity_ext,
+                               double* ebqe_div_velocity_ext,
                                #VRANS
                                double* ebqe_porosity_ext,
                                #
@@ -79,12 +83,12 @@ cdef extern from "VOF.h" namespace "proteus":
                                double* ebqe_phi,double epsFact,
                                double* ebqe_u,
                                double* ebqe_flux,
+			       int EDGE_VISCOSITY,
+			       int ENTROPY_VISCOSITY,
 			       double cE,
 			       double cMax, 
 			       double cK,
-			       int ENTROPY_VISCOSITY,
 			       int BACKWARD_EULER, 
-			       int SUPG,
 			       double uL, 
 			       double uR,
 			       # PARAMETERS FOR EDGE VISCOSITY
@@ -94,12 +98,16 @@ cdef extern from "VOF.h" namespace "proteus":
 			       int* csrColumnOffsets_DofLoops,	
 			       int* csrRowIndeces_CellLoops,
 			       int* csrColumnOffsets_CellLoops,
+			       int* csrColumnOffsets_eb_CellLoops,
                                double* Cx, 
 			       double* Cy,
 			       double* CTx, 
 			       double* CTy, 
 			       double* flux_plus_dLij_times_soln,
-			       double* dL_minus_dC)
+			       double* dL_minus_dC,
+			       double* min_u_bc,
+			       double* max_u_bc,
+			       double* quantDOFs)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -150,8 +158,7 @@ cdef extern from "VOF.h" namespace "proteus":
                                int* isFluxBoundary_u,
                                double* ebqe_bc_flux_u_ext,
                                int* csrColumnOffsets_eb_u_u,
-			       int BACKWARD_EULER, 
-			       int SUPG)
+			       int EDGE_VISCOSITY)
     VOF_base* newVOF(int nSpaceIn,
                        int nQuadraturePoints_elementIn,
                        int nDOF_mesh_trial_elementIn,
@@ -190,7 +197,9 @@ cdef class cVOF_base:
 	       numpy.ndarray csrRowIndeces_DofLoops, 
 	       numpy.ndarray csrColumnOffsets_DofLoops, 
 	       numpy.ndarray MassMatrix, 
-	       numpy.ndarray dL_minus_dC):
+	       numpy.ndarray dL_minus_dC,
+	       numpy.ndarray min_u_bc,
+	       numpy.ndarray max_u_bc):
        self.thisptr.FCTStep(dt, 
        			    NNZ,
 	                    numDOFs,
@@ -201,7 +210,9 @@ cdef class cVOF_base:
 			    <int*> csrRowIndeces_DofLoops.data,
 			    <int*> csrColumnOffsets_DofLoops.data,
 			    <double*> MassMatrix.data,
-			    <double*> dL_minus_dC.data)
+			    <double*> dL_minus_dC.data,
+			    <double*> min_u_bc.data, 
+			    <double*> max_u_bc.data)
    def calculateResidual(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -240,6 +251,7 @@ cdef class cVOF_base:
 			 numpy.ndarray velx_tn_dof, 
 			 numpy.ndarray vely_tn_dof, #HACKED TO 2D FOR NOW (MQL) 
                          numpy.ndarray velocity,
+                         numpy.ndarray div_velocity,
                          numpy.ndarray q_m,
                          numpy.ndarray q_u,
                          numpy.ndarray q_m_betaBDF,
@@ -255,6 +267,7 @@ cdef class cVOF_base:
                          numpy.ndarray elementBoundaryElementsArray,
                          numpy.ndarray elementBoundaryLocalElementBoundariesArray,
                          numpy.ndarray ebqe_velocity_ext,
+                         numpy.ndarray ebqe_div_velocity_ext,
                          #VRANS
                          numpy.ndarray ebqe_porosity_ext,
                          #
@@ -265,12 +278,12 @@ cdef class cVOF_base:
                          numpy.ndarray ebqe_phi,double epsFact,
                          numpy.ndarray ebqe_u,
                          numpy.ndarray ebqe_flux,
+			 int EDGE_VISCOSITY,
+			 int ENTROPY_VISCOSITY,
 			 double cE,
 			 double cMax, 
 			 double cK,
-			 int ENTROPY_VISCOSITY,
 			 int BACKWARD_EULER, 
-			 int SUPG, 
 			 double uL, 
 			 double uR, 
 			 int numDOFs,
@@ -279,12 +292,16 @@ cdef class cVOF_base:
 			 numpy.ndarray csrColumnOffsets_DofLoops,
 			 numpy.ndarray csrRowIndeces_CellLoops,
 			 numpy.ndarray csrColumnOffsets_CellLoops,
+			 numpy.ndarray csrColumnOffsets_eb_CellLoops,
 			 numpy.ndarray Cx, 
 			 numpy.ndarray Cy,
 			 numpy.ndarray CTx, 
 			 numpy.ndarray CTy, 
 			 numpy.ndarray flux_plus_dLij_times_soln,
-			 numpy.ndarray dL_minus_dC):	
+			 numpy.ndarray dL_minus_dC,
+			 numpy.ndarray min_u_bc,
+			 numpy.ndarray max_u_bc,
+			 numpy.ndarray quantDOFs):	
        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -322,6 +339,7 @@ cdef class cVOF_base:
                                        <double*> velx_tn_dof.data,
                                        <double*> vely_tn_dof.data, #HACKED TO 2D FOR NOW (MQL)
                                        <double*> velocity.data,
+                                       <double*> div_velocity.data,
                                        <double*> q_m.data,
                                        <double*> q_u.data,
                                        <double*> q_m_betaBDF.data,
@@ -337,6 +355,7 @@ cdef class cVOF_base:
                                        <int*> elementBoundaryElementsArray.data,
                                        <int*> elementBoundaryLocalElementBoundariesArray.data,
                                        <double*> ebqe_velocity_ext.data,
+                                       <double*> ebqe_div_velocity_ext.data,
                                        #VRANS
                                        <double*> ebqe_porosity_ext.data,
                                        #
@@ -348,12 +367,12 @@ cdef class cVOF_base:
                                        epsFact,
                                        <double*> ebqe_u.data,
                                        <double*> ebqe_flux.data,
+				       EDGE_VISCOSITY,
+				       ENTROPY_VISCOSITY,
 				       cE,
 				       cMax,
 				       cK,
-				       ENTROPY_VISCOSITY,
 				       BACKWARD_EULER, 
-				       SUPG,
 				       uL, 
 				       uR,
 				       numDOFs,
@@ -362,12 +381,16 @@ cdef class cVOF_base:
 				       <int*> csrColumnOffsets_DofLoops.data,
 				       <int*> csrRowIndeces_CellLoops.data,
 				       <int*> csrColumnOffsets_CellLoops.data,
+				       <int*> csrColumnOffsets_eb_CellLoops.data,
                                        <double*> Cx.data, 
 				       <double*> Cy.data,
 				       <double*> CTx.data, 		       
 				       <double*> CTy.data, 
 				       <double*> flux_plus_dLij_times_soln.data,
-				       <double*> dL_minus_dC.data)
+				       <double*> dL_minus_dC.data,
+				       <double*> min_u_bc.data,
+				       <double*> max_u_bc.data,
+				       <double*> quantDOFs.data)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -419,8 +442,7 @@ cdef class cVOF_base:
                          numpy.ndarray isFluxBoundary_u,
                          numpy.ndarray ebqe_bc_flux_u_ext,
                          numpy.ndarray csrColumnOffsets_eb_u_u,
- 			 int BACKWARD_EULER, 
-			 int SUPG):
+ 			 int EDGE_VISCOSITY):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
@@ -473,5 +495,4 @@ cdef class cVOF_base:
                                        <int*> isFluxBoundary_u.data,
                                        <double*> ebqe_bc_flux_u_ext.data,
                                        <int*> csrColumnOffsets_eb_u_u.data, 
-				       BACKWARD_EULER,
-				       SUPG)
+				       EDGE_VISCOSITY)

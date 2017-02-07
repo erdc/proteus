@@ -9,9 +9,9 @@ timeIntegration_vof = "FE"
 
 fullNewton=False
 #ENTROPY VISCOSITY and ART COMPRESSION PARAMETERS
+EDGE_VISCOSITY=1
 ENTROPY_VISCOSITY=1
 FCT=1
-SUPG=0
 cE = 1.0
 cMax = 0.1
 cK = 0.25
@@ -28,7 +28,7 @@ lag_shockCapturing_vof=True
 parallel = False
 linearSmoother = None
 #compute mass balance statistics or not
-checkMass=True
+checkMass=False
 #number of space dimensions
 nd=2
 #time integration, not relevant if using BDF with cfl timestepping
@@ -107,10 +107,13 @@ class MyCoefficients(VOF.Coefficients):
         self.vely_tn_dof = np.zeros(self.model.u[0].dof.shape,'d')+1E10
         self.flux_plus_dLij_times_soln = np.zeros(self.model.u[0].dof.shape,'d')
         self.q_v = np.zeros((self.model.mesh.nElements_global,self.model.nQuadraturePoints_element,self.model.nSpace_global),'d')+1E10
-        self.ebqe_v = np.zeros((self.model.mesh.nExteriorElementBoundaries_global,self.model.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe_v = np.zeros((self.model.mesh.nExteriorElementBoundaries_global,self.model.nElementBoundaryQuadraturePoints_elementBoundary,self.model.nSpace_global),'d')
         self.model.q[('velocity',0)]=self.q_v
         self.model.ebqe[('velocity',0)]=self.ebqe_v
         self.ebqe_phi = np.zeros(self.model.ebqe[('u',0)].shape,'d') #NOTE: this is not needed (is for LS)
+        # Divergence. Assume the velocity is div free
+        self.q_div_velocity = np.zeros(self.model.q[('u', 0)].shape,'d')
+        self.ebqe_div_velocity = np.zeros(self.model.ebqe[('u', 0)].shape,'d')
     def preStep(self,t,firstStep=False):
         # SAVE OLD SOLUTIONS
         self.u_dof_old_old = np.copy(self.u_dof_old)
@@ -128,9 +131,20 @@ class MyCoefficients(VOF.Coefficients):
         # GET VELOCITY AT QUADRATURE POINTS (FOR CELL BASE METHODS)
         x = self.model.q['x'][...,0]
         y = self.model.q['x'][...,1]
+        x_boundary = self.model.ebqe['x'][...,0]
+        y_boundary = self.model.ebqe['x'][...,1]
+
         #ROTATION
         self.q_v[...,0]  = -2.0*pi*y
         self.q_v[...,1]  =  2.0*pi*x
+
+        self.ebqe_v[...,0]  = -2.0*pi*y_boundary
+        self.ebqe_v[...,1]  =  2.0*pi*x_boundary
+        
+        #DIVERGENCE OF VEOCITY
+        self.q_div_velocity = 0*x
+        self.ebqe_div_velocity[...] = 0*x_boundary
+
         #PERIODIC VORTEX
         #T=8
         #self.q_v[...,0] = -2*np.sin(pi*y)*np.cos(pi*y)*np.sin(pi*x)**2*np.cos(pi*t/T)
