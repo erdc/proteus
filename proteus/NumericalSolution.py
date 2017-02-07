@@ -642,7 +642,264 @@ class NS_base:  # (HasTraits):
             model.viewer = Viewers.V_base(p,n,s)
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
 
+    def PUMI_estimateError(self):
+        p0 = self.pList[0]
+        n0 = self.nList[0]
+
+        adaptMeshNow = False
+        if (isinstance(p0.domain, Domain.PUMIDomain) and
+            n0.adaptMesh and
+            self.so.useOneMesh and 
+            self.nSequenceSteps%n0.adaptMesh_nSteps==0):
+            logEvent("Copying coordinates to PUMI")
+            p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
+                self.modelList[0].levelModelList[0].mesh.nodeArray)
+            logEvent("Copying DOF and parameters to PUMI")
+            for m in self.modelList:
+              for lm in m.levelModelList:
+                coef = lm.coefficients
+                if coef.vectorComponents != None:
+                  vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+                  for vci in range(len(coef.vectorComponents)):
+                    vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
+                  p0.domain.PUMIMesh.transferFieldToPUMI(
+                         coef.vectorName, vector)
+                  del vector
+                for ci in range(coef.nc):
+                  if coef.vectorComponents == None or \
+                     ci not in coef.vectorComponents:
+                    scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                    scalar[:,0] = lm.u[ci].dof[:]
+                    p0.domain.PUMIMesh.transferFieldToPUMI(
+                        coef.variableNames[ci], scalar)
+                    del scalar
+            #Get Physical Parameters
+            #Can we do this in a problem-independent  way?
+            rho = numpy.array([self.pList[0].rho_0,
+                               self.pList[0].rho_1])
+            nu = numpy.array([self.pList[0].nu_0,
+                              self.pList[0].nu_1])
+            g = numpy.asarray(self.pList[0].g)
+            deltaT = self.tn-self.tn_last
+            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
+            del rho, nu, g
+
+            logEvent("Estimate Error")
+            sfConfig = p0.domain.PUMIMesh.size_field_config()
+            if(sfConfig=="ERM"):
+              errorTotal= p0.domain.PUMIMesh.get_local_error()
+              
+              if(p0.domain.PUMIMesh.willAdapt()):
+                adaptMeshNow=True
+                logEvent("Need to Adapt")
+            elif(sfConfig=='interface' ):
+              adaptMeshNow=True
+              logEvent("Need to Adapt")
+            else:
+              adaptMeshNow=True
+              logEvent("Need to Adapt")
+        return adaptMeshNow
+
+    def PUMI_adaptMesh(self,n):
+        ##
+        ## zhang-alvin's BC communication for N-S error estimation
+        ##
+        #  #for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
+        #    #if idx>0:
+        #    #    diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
+        #    #else:
+        #    #    diff_flux = numpy.empty([2,2]) #dummy diff flux
+        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
+        #    #    idx,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+        #    #    diff_flux)
+        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
+        #    #    idx,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+        #    #    diff_flux)
+        p0 = self.pList[0]
+        n0 = self.nList[0]
+        sfConfig = p0.domain.PUMIMesh.size_field_config()
+        logEvent("h-adapt mesh by calling AdaptPUMIMesh")
+        p0.domain.PUMIMesh.adaptPUMIMesh()
+
+        #code to suggest adapting until error is reduced;
+        #not fully baked and can lead to infinite loops of adaptation
+        #if(sfConfig=="ERM"):
+        #  p0.domain.PUMIMesh.get_local_error() 
+        #  while(p0.domain.PUMIMesh.willAdapt()):
+        #    p0.domain.PUMIMesh.adaptPUMIMesh()
+        #    p0.domain.PUMIMesh.get_local_error()
+        
+        logEvent("Converting PUMI mesh to Proteus")
+        #ibaned: PUMI conversion #2
+        #TODO: this code is nearly identical to
+        #PUMI conversion #1, they should be merged
+        #into a function
+        if p0.domain.nd == 3:
+          mesh = MeshTools.TetrahedralMesh()
+        else:
+          mesh = MeshTools.TriangularMesh()
+        mesh.convertFromPUMI(p0.domain.PUMIMesh,
+                             p0.domain.faceList,
+                             parallel = self.comm.size() > 1,
+                             dim = p0.domain.nd)
+        logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
+        if p0.domain.nd == 3:
+          mlMesh = MeshTools.MultilevelTetrahedralMesh(
+              0,0,0,skipInit=True,
+              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+              parallelPartitioningType=n.parallelPartitioningType)
+        if p0.domain.nd == 2:
+          mlMesh = MeshTools.MultilevelTriangularMesh(
+              0,0,0,skipInit=True,
+              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+              parallelPartitioningType=n.parallelPartitioningType)
+        if self.comm.size()==1:
+            mlMesh.generateFromExistingCoarseMesh(
+                mesh,n0.nLevels,
+                nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
+                parallelPartitioningType=n0.parallelPartitioningType)
+        else:
+            mlMesh.generatePartitionedMeshFromPUMI(
+                mesh,n0.nLevels,
+                nLayersOfOverlap=n0.nLayersOfOverlapForParallel)
+        self.mlMesh_nList=[]
+        for p in self.pList:
+            self.mlMesh_nList.append(mlMesh)
+        #may want to trigger garbage collection here
+        modelListOld = self.modelList
+        logEvent("Allocating models on new mesh")
+        self.allocateModels()
+        logEvent("Attach auxiliary variables to new models")
+        #(cut and pasted from init, need to cleanup)
+        self.simOutputList = []
+        self.auxiliaryVariables = {}
+        if self.simFlagsList != None:
+            for p, n, simFlags, model, index in zip(
+                    self.pList,
+                    self.nList,
+                    self.simFlagsList,
+                    self.modelList,
+                    range(len(self.pList))):
+                self.simOutputList.append(
+                    SimTools.SimulationProcessor(
+                        flags=simFlags,
+                        nLevels=n.nLevels,
+                        pFile=p,
+                        nFile=n,
+                        analyticalSolution=p.analyticalSolution))
+                model.simTools = self.simOutputList[-1]
+                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
+        else:
+            for p,n,s,model,index in zip(
+                    self.pList,
+                    self.nList,
+                    self.sList,
+                    self.modelList,
+                    range(len(self.pList))):
+                self.simOutputList.append(SimTools.SimulationProcessor(pFile=p,nFile=n))
+                model.simTools = self.simOutputList[-1]
+                model.viewer = Viewers.V_base(p,n,s)
+                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
+        for avList in self.auxiliaryVariables.values():
+            for av in avList:
+                av.attachAuxiliaryVariables(self.auxiliaryVariables)
+        logEvent("Transfering fields from PUMI to Proteus")
+        for m in self.modelList:
+          for lm in m.levelModelList:
+            coef = lm.coefficients
+            if coef.vectorComponents != None:
+              vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+              p0.domain.PUMIMesh.transferFieldToProteus(
+                     coef.vectorName, vector)
+              for vci in range(len(coef.vectorComponents)):
+                lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
+              del vector
+            for ci in range(coef.nc):
+              if coef.vectorComponents == None or \
+                 ci not in coef.vectorComponents:
+                scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                p0.domain.PUMIMesh.transferFieldToProteus(
+                    coef.variableNames[ci], scalar)
+                lm.u[ci].dof[:] = scalar[:,0]
+                del scalar
+        logEvent("Attaching models on new mesh to each other")
+        for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
+                save_dof=[]
+                for ci in range(lm.coefficients.nc):
+                    save_dof.append( lm.u[ci].dof.copy())
+                lm.setFreeDOF(lu)
+                for ci in range(lm.coefficients.nc):
+                    assert((save_dof[ci] == lm.u[ci].dof).all())
+                lm.calculateSolutionAtQuadrature()
+                lm.timeIntegration.tLast = lmOld.timeIntegration.tLast
+                lm.timeIntegration.t = lmOld.timeIntegration.t
+                lm.timeIntegration.dt = lmOld.timeIntegration.dt
+                assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+                assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+                assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
+            m.stepController.dt_model = mOld.stepController.dt_model
+            m.stepController.t_model = mOld.stepController.t_model
+            m.stepController.t_model_last = mOld.stepController.t_model_last
+            m.stepController.substeps = mOld.stepController.substeps
+        logEvent("Evaluating residuals and time integration")
+        for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
+            logEvent("Attaching models to model "+ptmp.name)
+            m.attachModels(self.modelList)
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+                lm.timeTerm=True
+                lm.getResidual(lu,lr)
+                lm.timeIntegration.initializeTimeHistory(resetFromDOF=True)
+                lm.initializeTimeHistory()
+                lm.timeIntegration.initializeSpaceHistory()
+                lm.getResidual(lu,lr)
+                assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+                assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+                assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
+                #lm.coefficients.evaluate(self.t_stepSequence,lm.q)
+                #lm.coefficients.evaluate(self.t_stepSequence,lm.ebqe)
+                #lm.timeIntegration.calculateElementCoefficients(lm.q)
+            assert(m.stepController.dt_model == mOld.stepController.dt_model)
+            assert(m.stepController.t_model == mOld.stepController.t_model)
+            assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
+            logEvent("Initializing time history for model step controller")
+            m.stepController.initializeTimeHistory()
+        p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+        self.systemStepController.modelList = self.modelList
+        self.systemStepController.exitModelStep = {}
+        self.systemStepController.controllerList = []
+        for model in self.modelList:
+            self.systemStepController.exitModelStep[model] = False
+            if model.levelModelList[-1].timeIntegration.isAdaptive:
+                self.systemStepController.controllerList.append(model)
+                self.systemStepController.maxFailures = model.stepController.maxSolverFailures
+        self.systemStepController.choose_dt_system()
+        for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
+            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+                assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+                assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+                assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
+            assert(m.stepController.dt_model == mOld.stepController.dt_model)
+            assert(m.stepController.t_model == mOld.stepController.t_model)
+            assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
+        if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
+            #hack for archiving initial solution on adapted mesh
+            self.tCount+=1
+            for index,model in enumerate(self.modelList):
+                self.archiveSolution(
+                    model,
+                    index,
+                    self.systemStepController.t_system_last+1.0e-6)
+      ##chitak end Adapt
+
     ## compute the solution
+
     def calculateSolution(self,runName):
         """ Cacluate the PDEs numerical solution.
 
@@ -982,261 +1239,11 @@ class NS_base:  # (HasTraits):
                 #h-adapt mesh, cekees modified from chitak
                 #
                 #assuming same for all physics and numerics  for now
-                p0 = self.pList[0]
-                n0 = self.nList[0]
-
-                adaptMeshNow = False
-                if (isinstance(p0.domain, Domain.PUMIDomain) and
-                    n0.adaptMesh and
-                    self.so.useOneMesh and 
-                    self.nSequenceSteps%n0.adaptMesh_nSteps==0):
-                    logEvent("Copying coordinates to PUMI")
-                    p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
-                        self.modelList[0].levelModelList[0].mesh.nodeArray)
-                    logEvent("Copying DOF and parameters to PUMI")
-                    for m in self.modelList:
-                      for lm in m.levelModelList:
-                        coef = lm.coefficients
-                        if coef.vectorComponents != None:
-                          vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
-                          for vci in range(len(coef.vectorComponents)):
-                            vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
-                          p0.domain.PUMIMesh.transferFieldToPUMI(
-                                 coef.vectorName, vector)
-                          del vector
-                        for ci in range(coef.nc):
-                          if coef.vectorComponents == None or \
-                             ci not in coef.vectorComponents:
-                            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-                            scalar[:,0] = lm.u[ci].dof[:]
-                            p0.domain.PUMIMesh.transferFieldToPUMI(
-                                coef.variableNames[ci], scalar)
-                            del scalar
-                    #Get Physical Parameters
-                    #Can we do this in a problem-independent  way?
-                    rho = numpy.array([self.pList[0].rho_0,
-                                       self.pList[0].rho_1])
-                    nu = numpy.array([self.pList[0].nu_0,
-                                      self.pList[0].nu_1])
-                    g = numpy.asarray(self.pList[0].g)
-                    deltaT = self.tn-self.tn_last
-                    p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
-                    del rho, nu, g
-
-                    #
-                    # Should we put in a hook here for forcing refinements?
-                    # (e.g. set size  field  based on proteus calcualtions?)
-                    # ...
-                    #
-                    logEvent("Estimate Error")
-                    sfConfig = p0.domain.PUMIMesh.size_field_config()
-                    if(sfConfig=="ERM"):
-                      errorTotal= p0.domain.PUMIMesh.get_local_error()
-                      
-                      if(p0.domain.PUMIMesh.willAdapt()):
-                        adaptMeshNow=True
-                        logEvent("Need to Adapt")
-                    elif(sfConfig=='interface' ):
-                      adaptMeshNow=True
-                      logEvent("Need to Adapt")
-                    else:
-                      adaptMeshNow=True
-                      logEvent("Need to Adapt")
 
                 #can only handle PUMIDomain's for now
-                if(adaptMeshNow):
-                    ##
-                    ## zhang-alvin's BC communication for N-S error estimation
-                    ##
-                    #  #for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
-                    #    #if idx>0:
-                    #    #    diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
-                    #    #else:
-                    #    #    diff_flux = numpy.empty([2,2]) #dummy diff flux
-                    #    #p.domain.PUMIMesh.transferBCtagsToProteus(
-                    #    #    self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
-                    #    #    idx,
-                    #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-                    #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-                    #    #    diff_flux)
-                    #    #p.domain.PUMIMesh.transferBCtagsToProteus(
-                    #    #    self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
-                    #    #    idx,
-                    #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-                    #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-                    #    #    diff_flux)
+                if(self.PUMI_estimateError()):
+                    self.PUMI_adaptMesh(n)
 
-                    logEvent("h-adapt mesh by calling AdaptPUMIMesh")
-                    p0.domain.PUMIMesh.adaptPUMIMesh()
-
-                    if(sfConfig=="ERM"):
-                      p0.domain.PUMIMesh.get_local_error() 
-                      while(p0.domain.PUMIMesh.willAdapt()):
-                        p0.domain.PUMIMesh.adaptPUMIMesh()
-                        p0.domain.PUMIMesh.get_local_error()
-                    
-                    logEvent("Converting PUMI mesh to Proteus")
-                    #ibaned: PUMI conversion #2
-                    #TODO: this code is nearly identical to
-                    #PUMI conversion #1, they should be merged
-                    #into a function
-                    if p0.domain.nd == 3:
-                      mesh = MeshTools.TetrahedralMesh()
-                    else:
-                      mesh = MeshTools.TriangularMesh()
-                    mesh.convertFromPUMI(p0.domain.PUMIMesh,
-                                         p0.domain.faceList,
-                                         parallel = self.comm.size() > 1,
-                                         dim = p0.domain.nd)
-                    logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
-                    if p0.domain.nd == 3:
-                      mlMesh = MeshTools.MultilevelTetrahedralMesh(
-                          0,0,0,skipInit=True,
-                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                          parallelPartitioningType=n.parallelPartitioningType)
-                    if p0.domain.nd == 2:
-                      mlMesh = MeshTools.MultilevelTriangularMesh(
-                          0,0,0,skipInit=True,
-                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                          parallelPartitioningType=n.parallelPartitioningType)
-                    if self.comm.size()==1:
-                        mlMesh.generateFromExistingCoarseMesh(
-                            mesh,n0.nLevels,
-                            nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
-                            parallelPartitioningType=n0.parallelPartitioningType)
-                    else:
-                        mlMesh.generatePartitionedMeshFromPUMI(
-                            mesh,n0.nLevels,
-                            nLayersOfOverlap=n0.nLayersOfOverlapForParallel)
-                    self.mlMesh_nList=[]
-                    for p in self.pList:
-                        self.mlMesh_nList.append(mlMesh)
-                    #may want to trigger garbage collection here
-                    modelListOld = self.modelList
-                    logEvent("Allocating models on new mesh")
-                    self.allocateModels()
-                    logEvent("Attach auxiliary variables to new models")
-                    #(cut and pasted from init, need to cleanup)
-                    self.simOutputList = []
-                    self.auxiliaryVariables = {}
-                    if self.simFlagsList != None:
-                        for p, n, simFlags, model, index in zip(
-                                self.pList,
-                                self.nList,
-                                self.simFlagsList,
-                                self.modelList,
-                                range(len(self.pList))):
-                            self.simOutputList.append(
-                                SimTools.SimulationProcessor(
-                                    flags=simFlags,
-                                    nLevels=n.nLevels,
-                                    pFile=p,
-                                    nFile=n,
-                                    analyticalSolution=p.analyticalSolution))
-                            model.simTools = self.simOutputList[-1]
-                            self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
-                    else:
-                        for p,n,s,model,index in zip(
-                                self.pList,
-                                self.nList,
-                                self.sList,
-                                self.modelList,
-                                range(len(self.pList))):
-                            self.simOutputList.append(SimTools.SimulationProcessor(pFile=p,nFile=n))
-                            model.simTools = self.simOutputList[-1]
-                            model.viewer = Viewers.V_base(p,n,s)
-                            self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
-                    for avList in self.auxiliaryVariables.values():
-                        for av in avList:
-                            av.attachAuxiliaryVariables(self.auxiliaryVariables)
-                    logEvent("Transfering fields from PUMI to Proteus")
-                    for m in self.modelList:
-                      for lm in m.levelModelList:
-                        coef = lm.coefficients
-                        if coef.vectorComponents != None:
-                          vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
-                          p0.domain.PUMIMesh.transferFieldToProteus(
-                                 coef.vectorName, vector)
-                          for vci in range(len(coef.vectorComponents)):
-                            lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
-                          del vector
-                        for ci in range(coef.nc):
-                          if coef.vectorComponents == None or \
-                             ci not in coef.vectorComponents:
-                            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-                            p0.domain.PUMIMesh.transferFieldToProteus(
-                                coef.variableNames[ci], scalar)
-                            lm.u[ci].dof[:] = scalar[:,0]
-                            del scalar
-                    logEvent("Attaching models on new mesh to each other")
-                    for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
-                        for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
-                            save_dof=[]
-                            for ci in range(lm.coefficients.nc):
-                                save_dof.append( lm.u[ci].dof.copy())
-                            lm.setFreeDOF(lu)
-                            for ci in range(lm.coefficients.nc):
-                                assert((save_dof[ci] == lm.u[ci].dof).all())
-                            lm.calculateSolutionAtQuadrature()
-                            lm.timeIntegration.tLast = lmOld.timeIntegration.tLast
-                            lm.timeIntegration.t = lmOld.timeIntegration.t
-                            lm.timeIntegration.dt = lmOld.timeIntegration.dt
-                            assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
-                            assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
-                            assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
-                        m.stepController.dt_model = mOld.stepController.dt_model
-                        m.stepController.t_model = mOld.stepController.t_model
-                        m.stepController.t_model_last = mOld.stepController.t_model_last
-                        m.stepController.substeps = mOld.stepController.substeps
-                    logEvent("Evaluating residuals and time integration")
-                    for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
-                        logEvent("Attaching models to model "+ptmp.name)
-                        m.attachModels(self.modelList)
-                        for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                            lm.timeTerm=True
-                            lm.getResidual(lu,lr)
-                            lm.timeIntegration.initializeTimeHistory(resetFromDOF=True)
-                            lm.initializeTimeHistory()
-                            lm.timeIntegration.initializeSpaceHistory()
-                            lm.getResidual(lu,lr)
-                            assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
-                            assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
-                            assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
-                            #lm.coefficients.evaluate(self.t_stepSequence,lm.q)
-                            #lm.coefficients.evaluate(self.t_stepSequence,lm.ebqe)
-                            #lm.timeIntegration.calculateElementCoefficients(lm.q)
-                        assert(m.stepController.dt_model == mOld.stepController.dt_model)
-                        assert(m.stepController.t_model == mOld.stepController.t_model)
-                        assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
-                        logEvent("Initializing time history for model step controller")
-                        m.stepController.initializeTimeHistory()
-                    p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
-                    self.systemStepController.modelList = self.modelList
-                    self.systemStepController.exitModelStep = {}
-                    self.systemStepController.controllerList = []
-                    for model in self.modelList:
-                        self.systemStepController.exitModelStep[model] = False
-                        if model.levelModelList[-1].timeIntegration.isAdaptive:
-                            self.systemStepController.controllerList.append(model)
-                            self.systemStepController.maxFailures = model.stepController.maxSolverFailures
-                    self.systemStepController.choose_dt_system()
-                    for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
-                        for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                            assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
-                            assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
-                            assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
-                        assert(m.stepController.dt_model == mOld.stepController.dt_model)
-                        assert(m.stepController.t_model == mOld.stepController.t_model)
-                        assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
-                    if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
-                        #hack for archiving initial solution on adapted mesh
-                        self.tCount+=1
-                        for index,model in enumerate(self.modelList):
-                            self.archiveSolution(
-                                model,
-                                index,
-                                self.systemStepController.t_system_last+1.0e-6)
-                  ##chitak end Adapt
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
                 self.tCount+=1
