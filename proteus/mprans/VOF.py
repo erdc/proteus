@@ -251,8 +251,31 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import VolumeAveragedVOFCoefficientsEvaluate
     from proteus.cfemIntegrals import copyExteriorElementBoundaryValuesFromElementBoundaryValues
     def __init__(self,
-                 FCT=0,cE=0.5,cMax=0.1,cK=1.0,ENTROPY_VISCOSITY=0,SUPG=1,uL=0.0,uR=1.0,
-                 LS_model=None,V_model=0,RD_model=None,ME_model=1,EikonalSolverFlag=0,checkMass=True,epsFact=0.0,useMetrics=0.0,sc_uref=1.0,sc_beta=1.0,setParamsFunc=None,movingDomain=False):
+                 EDGE_VISCOSITY=0,
+                 ENTROPY_VISCOSITY=0,
+                 FCT=0,
+                 # FOR LOG BASED ENTROPY FUNCTION
+                 uL=0.0, 
+                 uR=1.0,
+                 # FOR ARTIFICIAL COMPRESSION
+                 cK=0.25,
+                 # FOR IMPOSING DIRICHLET BCs STRONGLY
+                 forceStrongConditions=0,
+                 # FOR ELEMENT BASED ENTROPY VISCOSITY
+                 cMax=0.1,
+                 cE=1.0,
+                 LS_model=None,
+                 V_model=0,
+                 RD_model=None,
+                 ME_model=1,
+                 EikonalSolverFlag=0,
+                 checkMass=True,
+                 epsFact=0.0,
+                 useMetrics=0.0,
+                 sc_uref=1.0,
+                 sc_beta=1.0,
+                 setParamsFunc=None,
+                 movingDomain=False):
         self.useMetrics = useMetrics
         self.variableNames=['vof']
         nc=1
@@ -289,17 +312,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.setParamsFunc   = setParamsFunc
         self.flowCoefficients=None
         self.movingDomain=movingDomain
-        # FCT
-        self.FCT=FCT
-        #ENTROPY VISCOSITY and ART COMPRESSION
-        self.cE=cE
-        self.cMax=cMax
-        self.cK=cK
+        # EDGE BASED (AND ENTROPY) VISCOSITY 
+        self.EDGE_VISCOSITY=EDGE_VISCOSITY
         self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
-        self.SUPG=SUPG
-        #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
+        self.FCT=FCT
         self.uL=uL
         self.uR=uR
+        self.cK=cK
+        self.forceStrongConditions=forceStrongConditions
+        self.cMax=cMax
+        self.cE=cE
+
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def attachModels(self,modelList):
@@ -326,12 +349,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #print "flow model index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))        
 
         if self.flowModelIndex is not None:
+            self.velx_tn_dof = modelList[self.flowModelIndex].u[0].dof #NOTE: this is not a copy. It is a reference 
+            self.vely_tn_dof = modelList[self.flowModelIndex].u[1].dof
+            self.velz_tn_dof = modelList[self.flowModelIndex].u[2].dof
+
             if modelList[self.flowModelIndex].q.has_key(('velocity',0)):
                 self.q_v = modelList[self.flowModelIndex].q[('velocity',0)]
                 self.ebqe_v = modelList[self.flowModelIndex].ebqe[('velocity',0)]
                 #self.ux_dof = modelList[solf.flowModelIndex].u[1].dof
                 #self.uy_dof = modelList[solf.flowModelIndex].u[2].dof
                 #self.uz_dof = modelList[solf.flowModelIndex].u[3].dof
+                # Take divergence from velocity model 
+                self.q_div_velocity = modelList[self.V_model].q['div_velocity']
+                self.ebqe_div_velocity = modelList[self.V_model].ebqe['div_velocity']
             else:
                 self.q_v = modelList[self.flowModelIndex].q[('f',0)]
                 self.ebqe_v = modelList[self.flowModelIndex].ebqe[('f',0)]
@@ -344,6 +374,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             else:
                 if modelList[self.flowModelIndex].ebq.has_key(('f',0)):
                     self.ebq_v = modelList[self.flowModelIndex].ebq[('f',0)]
+        else:
+            # Then it is assumed that the velocity is in the same space as the VOF solution
+            self.velx_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
+            self.vely_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
+            self.velz_tn_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
+
+            # If no velocity model I assume the vel field is div free 
+            self.q_div_velocity = numpy.zeros(self.model.q[('u', 0)].shape,'d')
+            self.ebqe_div_velocity = numpy.zeros(self.model.ebqe[('u', 0)].shape,'d')
+
         #
         if self.eikonalSolverFlag == 2: #FSW
             self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
@@ -791,6 +831,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # dL_global and dC_global are not the full matrices but just the CSR arrays containing the non zero entries
         self.flux_plus_dLij_times_soln=None
         self.dL_minus_dC=None
+        self.min_u_bc=None
+        self.max_u_bc=None
+        # Aux quantity at DOFs to be filled by optimized code (MQL)
+        self.quantDOFs=None
+
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -883,7 +928,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                          rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
                          colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
                          MassMatrix, 
-                         self.dL_minus_dC)
+                         self.dL_minus_dC,
+                         self.min_u_bc,
+                         self.max_u_bc)
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
@@ -1050,6 +1097,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         # This is dummy. I just care about the csr structure of the sparse matrix
         self.dL_minus_dC = np.zeros(Cx.shape,'d')
+        self.min_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
+        self.max_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
+        self.min_u_bc.fill(1E10);
+        self.max_u_bc.fill(-1E10);
         self.flux_plus_dLij_times_soln = numpy.zeros(self.u[0].dof.shape,'d')
         #
         #cek end computationa of cterm_global
@@ -1087,13 +1138,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
               for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                   self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
-        #print "***************************************"
-        #print "PRINT SOME PARAMETERS FOR VOF"
-        #print "Coefficients (cE, cMax, cK): ", self.coefficients.cE, self.coefficients.cMax, self.coefficients.cK
-        #print "Flags (EV, SUPG): ", self.coefficients.ENTROPY_VISCOSITY, self.coefficients.SUPG
-        #print "Time integration: ", self.timeIntegration.IMPLICIT
-        #print "***************************************"
-                      
         self.vof.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1135,6 +1179,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.velx_tn_dof, 
             self.coefficients.vely_tn_dof, # HACKED TO 2D FOR NOW (MQL)
             self.coefficients.q_v,
+            self.coefficients.q_div_velocity,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
             self.timeIntegration.beta_bdf[0],
@@ -1150,6 +1195,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
+            self.coefficients.ebqe_div_velocity,
             #VRANS start
             self.coefficients.ebqe_porosity,
             #VRANS end
@@ -1160,13 +1206,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_phi,self.coefficients.epsFact,
             self.ebqe[('u',0)],
             self.ebqe[('advectiveFlux',0)],
+            # PARAMETERS FOR EDGE_VISCOSITY
+            self.coefficients.EDGE_VISCOSITY,
+            self.coefficients.ENTROPY_VISCOSITY,
             #ENTROPY VISCOSITY and ARTIFICIAL COMRPESSION
             self.coefficients.cE,
             self.coefficients.cMax,
             self.coefficients.cK,
-            self.coefficients.ENTROPY_VISCOSITY,
             self.timeIntegration.IMPLICIT,
-            self.coefficients.SUPG,
             #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
             self.coefficients.uL, 
             self.coefficients.uR,
@@ -1177,13 +1224,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
             self.csrRowIndeces[(0,0)], #row indices (convenient for element loops)
             self.csrColumnOffsets[(0,0)], #column indices (convenient for element loops)
+            self.csrColumnOffsets_eb[(0, 0)], #indices for boundary terms
             Cx, #Cij Matrix
             Cy,
             CTx,
             CTy, #NOTE: for now I assume the problem is in 2D!!!! (MQL). TODO: make it general 
             # FLUX CORRECTED TRANSPORT
             self.flux_plus_dLij_times_soln, 
-            self.dL_minus_dC)
+            self.dL_minus_dC, 
+            self.min_u_bc,
+            self.max_u_bc,
+            self.quantDOFs)
 
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -1252,8 +1303,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag',0)],
             self.ebqe[('advectiveFlux_bc',0)],
             self.csrColumnOffsets_eb[(0,0)], 
-            self.timeIntegration.IMPLICIT,
-            self.coefficients.SUPG)
+            self.coefficients.EDGE_VISCOSITY)
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system

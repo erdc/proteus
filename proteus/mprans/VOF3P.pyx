@@ -715,9 +715,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.cK=cK
         self.forceStrongConditions=forceStrongConditions
         self.cMax=cMax
-        self.cE=cE
-
-        
+        self.cE=cE        
 
     def initializeMesh(self, mesh):
         self.eps = self.epsFact * mesh.h

@@ -11,8 +11,11 @@ The non-conservative level set description of a bubble in a two-phase flow
 
 LevelModelType = VOF.LevelModel
 
-coefficients = MyCoefficients(FCT=FCT,epsFact=epsFactHeaviside,checkMass=checkMass,useMetrics=useMetrics,ME_model=0,
-                              cE=cE,cMax=cMax,cK=cK,ENTROPY_VISCOSITY=ENTROPY_VISCOSITY,SUPG=SUPG)
+coefficients = MyCoefficients(epsFact=epsFactHeaviside,checkMass=checkMass,useMetrics=useMetrics,ME_model=0,
+                              EDGE_VISCOSITY=EDGE_VISCOSITY,
+                              ENTROPY_VISCOSITY=ENTROPY_VISCOSITY,
+                              FCT=FCT,
+                              cK=cK,cE=cE,cMax=cMax)
 
 def Heaviside(phi):
     if phi > 0:
@@ -54,7 +57,8 @@ class init_cond:
 analyticalSolutions = None
 
 def getDBC(x,flag):
-    pass
+    return lambda x,t: 1.0
+    #pass
 
 dirichletConditions = {0:getDBC}
 
