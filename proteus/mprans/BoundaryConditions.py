@@ -626,8 +626,6 @@ class RelaxationZoneWaveGenerator():
                             u = zone.calculate_vel(x, t)
                             q_velocity_solid[eN, k, 0] = u[0]
                             q_velocity_solid[eN, k, 1] = u[1]
-                            if 1.2 < x[1] < 1.3:
-                                print(mType, "x: ", x[0], x[1], x[2], "phi: ", phi, "u: ", u[0], u[1], u[2])
                             if self.nd > 2:
                                 q_velocity_solid[eN, k, 2] = u[2]
             m.q['phi_solid'] = q_phi_solid
