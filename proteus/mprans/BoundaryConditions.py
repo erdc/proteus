@@ -612,22 +612,24 @@ class RelaxationZoneWaveGenerator():
             # costly loop
             for eN in range(nE):
                 mType = mTypes[eN]
-                if mType < self.max_flag:
+                if mType <= self.max_flag:
                     zone = self.zones_array[mType]
                     if zone is not None:
-                      for k in range(nk):
-                          x[0] = qx[eN, k, 0]
-                          x[1] = qx[eN, k, 1]
-                          x[2] = qx[eN, k, 2]
-                          #print qx.__array_interface__['data'] == m.q['x'].__array_interface__['data']
-                          #print x.__array_interface__['data'] == m.q['x'][eN, k].__array_interface__['data']
-                          phi = zone.calculate_phi(x)
-                          q_phi_solid[eN, k] = phi
-                          u = zone.calculate_vel(x, t)
-                          q_velocity_solid[eN, k, 0] = u[0]
-                          q_velocity_solid[eN, k, 1] = u[1]
-                          if self.nd > 2:
-                              q_velocity_solid[eN, k, 2] = u[2]
+                        for k in range(nk):
+                            x[0] = qx[eN, k, 0]
+                            x[1] = qx[eN, k, 1]
+                            x[2] = qx[eN, k, 2]
+                            #print qx.__array_interface__['data'] == m.q['x'].__array_interface__['data']
+                            #print x.__array_interface__['data'] == m.q['x'][eN, k].__array_interface__['data']
+                            phi = zone.calculate_phi(x)
+                            q_phi_solid[eN, k] = phi
+                            u = zone.calculate_vel(x, t)
+                            q_velocity_solid[eN, k, 0] = u[0]
+                            q_velocity_solid[eN, k, 1] = u[1]
+                            if 1.2 < x[1] < 1.3:
+                                print(mType, "x: ", x[0], x[1], x[2], "phi: ", phi, "u: ", u[0], u[1], u[2])
+                            if self.nd > 2:
+                                q_velocity_solid[eN, k, 2] = u[2]
             m.q['phi_solid'] = q_phi_solid
             m.q['velocity_solid'] = q_velocity_solid
 
