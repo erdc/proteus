@@ -1,4 +1,3 @@
-#cython: profile=True
 #cython: wraparound=False
 #cython: boundscheck=False
 #cython: initializedcheck=False
@@ -184,6 +183,10 @@ class BC_RANS(BC_Base):
         self.dissipation_diffusive.setConstantBC(0.)
 
 
+    def setChMoveMesh(self, body):
+        self.hx_dirichlet.uOfXT = lambda x, t: body.hx(x, t)
+        self.hy_dirichlet.uOfXT = lambda x, t: body.hy(x, t)
+        self.hz_dirichlet.uOfXT = lambda x, t: body.hz(x, t)
 
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
@@ -503,9 +506,6 @@ class RelaxationZone:
     def calculate_phi(self, x):
         return self.phi(self, x)
 
-    @cython.boundscheck(False)
-    @cython.wraparound(False)
-    @cython.initializedcheck(False)
     def __cpp_calculate_phi_solid(self, x):
         """
         Used for RelaxationZone only
@@ -513,10 +513,14 @@ class RelaxationZone:
         cython.declare(d=cython.double[3], o=cython.double[3])
         d[0] = self.center[0]-x[0]
         d[1] = self.center[1]-x[1]
-        d[2] = self.center[2]-x[2]
         o[0] = self.orientation[0]
         o[1] = self.orientation[1]
-        o[2] = self.orientation[2]
+        if self.nd > 2:
+            d[2] = self.center[2]-x[2]
+            o[2] = self.orientation[2]
+        else:
+            d[2] = 0
+            o[2] = 0
         phi = o[0]*d[0]+o[1]*d[1]+o[2]*d[2]
         return phi
 
@@ -524,7 +528,27 @@ class RelaxationZone:
         return self.epsFact_solid
 
     def calculate_vel(self, x, t):
-        return self.uu(self, x, t)
+        cython.declare(d=cython.double[3], o=cython.double[3])
+        d[0] = x[0]
+        d[1] = x[1]
+        d[2] = x[2]
+        return self.uu(self, d, t)
+
+    def calculate_phi_python(self, x):
+        cython.declare(xx=cython.double[3], tt=cython.double)
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        ph = self.phi(self, xx)
+        return ph
+
+    def calculate_vel_python(self, x, t):
+        cython.declare(xx=cython.double[3], tt=cython.double)
+        xx[0] = x[0]
+        xx[1] = x[1]
+        xx[2] = x[2]
+        tt = t
+        return self.uu(self,xx, tt)
 
     def  __cpp_calculate_vel_zero(self, x, t):
         return self.zero_vel
@@ -629,16 +653,21 @@ class __cppClass_WavesCharacteristics:
         xx[1] = x[1]
         xx[2] = x[2]
         phi = self.__cpp_calculate_phi(x, t)
-        H = self.__cpp_calculate_smoothing_H(phi)
-        if 0 <= H < 0.5:
+        if phi <= 0.:
+            # no smoothing below mwl, or wave peak could get chopped off
+            H = 0
             waterSpeed = self.WT.u(xx, t)
-        elif 0.5 < H < 1.:
+        elif 0 < phi <= self.smoothing:
+            # smoothing on half the range of VOF (above wave crest)
+            H = smoothedHeaviside(self.smoothing/2.,phi-self.smoothing/2.)
+            # use max velocity of wave for water
             x_max[0] = x[0]
             x_max[1] = x[1]
             x_max[2] = x[2]
             x_max[self.vert_axis] = x[self.vert_axis]-phi
             waterSpeed = self.WT.u(x_max, t)
         else:
+            H = 1.
             waterSpeed = self.zero_vel
         u[0] = H*self.wind_speed[0] + (1-H)*waterSpeed[0]
         u[1] = H*self.wind_speed[1] + (1-H)*waterSpeed[1]
@@ -678,9 +707,6 @@ class __cppClass_WavesCharacteristics:
         return H
 
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.initializedcheck(False)
 def __x_to_cpp(x):
     cython.declare(xx=double[3])
     xx[0] = x[0]
