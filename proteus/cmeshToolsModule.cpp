@@ -1743,12 +1743,12 @@ static PyObject* SparsityInfo_getCSR(SparsityInfo *self,
 //     }
   int nnz=0;
   int dim[1];
-  dim[0] = self->columnIndecesMap.size()+1;
+  dim[0] = int(self->columnIndecesMap.size())+1;
   PyArrayObject *rowptr = (PyArrayObject *)PyArray_FromDims(1,dim,PyArray_INT);
   int* rowptr_ = IDATA(rowptr);
   rowptr_[0] = 0;
   for(int I=1;I< self->columnIndecesMap.size()+1;I++)
-    rowptr_[I]=rowptr_[I-1] + self->columnIndecesMap[I-1].size();
+    rowptr_[I]=rowptr_[I-1] + int(self->columnIndecesMap[I-1].size());
   nnz = rowptr_[self->columnIndecesMap.size()];
   dim[0] = nnz;
   PyArrayObject *colind = (PyArrayObject *)PyArray_FromDims(1,dim,PyArray_INT);
@@ -1761,6 +1761,7 @@ static PyObject* SparsityInfo_getCSR(SparsityInfo *self,
       for(std::set<int>::iterator sit=self->columnIndecesMap[I].begin();sit != self->columnIndecesMap[I].end();sit++)
         {
           self->columnOffsetsMap[I][*sit] = offset;
+          assert(rowptr_[I]+offset < nnz);
           colind_[rowptr_[I]+offset]=*sit;
           offset++;
         }
