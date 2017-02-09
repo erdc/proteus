@@ -431,6 +431,7 @@ class KSP_petsc4py(LinearSolver):
         if convergenceTest == 'r-true':
             self.r_work = self.petsc_L.getVecLeft()
             self.rnorm0 = None
+#            import pdb ; pdb.set_trace()
             self.ksp.setConvergenceTest(self._converged_trueRes)
         else:
             self.r_work = None
@@ -480,7 +481,8 @@ class KSP_petsc4py(LinearSolver):
             if self.preconditioner.PCType=='schur':
                 # this should probably live somewhere else?!
                 self.preconditioner.setUp(self.ksp)
-                self.pc.getFieldSplitSubKSP()[1].setPCSide(0)
+#                import pdb ; pdb.set_trace()
+#                self.pc.getFieldSplitSubKSP()[1].setPCSide(1)
         self.ksp.setUp()
         self.ksp.pc.setUp()
 #        self.ksp.pc.getFieldSplitSubKSP()[1].setConvergenceTest(self.preconditioner._converged_trueRes)
@@ -791,10 +793,22 @@ class SchurOperatorConstructor:
         
     def getFp(self,output_matrix=False):
         """ Return the convection-diffusion matrix for the pressure """
-        # TODO - The pressure mass matrix should be scaled by the viscosity.
         self.Fp = self.getCp()
         Ap = self.getAp()
-        viscosity = self.opBuilder.OLT.coefficients.nu
+        
+        # TODO - ARB.  In the case of two-phase coefficient classes
+        # with a constant viscosity, nu may not be updated to reflect
+        # the viscosities nu_0 and nu_1.  I'm not sure how to fix this here.
+        # In the future when we have two-phase versions of the preconditioner,
+        # the two phase problems should not be allowed to use the single
+        # phase versions of the PC.
+
+        try:
+            viscosity = self.opBuilder.OLT.coefficients.nu
+        except ValueError:
+            print "Invalid viscosity in coefficients class."
+            raise
+        
         self.Fp.axpy(viscosity,Ap)
         return self.Fp
 
@@ -822,7 +836,6 @@ class SchurOperatorConstructor:
         self._u = numpy.copy(self.L.pde.q[('u',1)])
         self._v = numpy.copy(self.L.pde.q[('u',2)])
         self._advectiveField = [self._u,self._v]
-
         Cp_sys_petsc4py = self._getAdvection()
         self.Cp = Cp_sys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                self.linear_smoother.isp)
@@ -1151,8 +1164,10 @@ class NavierStokesSchur(SchurPrecon):
 
     def _converged_trueRes(self,ksp,its,rnorm):
         """ Function handle to feed to ksp's setConvergenceTest  """
+#        import pdb ; pdb.set_trace()
         r_work = ksp.getOperators()[1].getVecLeft()
         ksp.buildResidual(r_work)
+#        import pdb ; pdb.set_trace()
         truenorm = r_work.norm()
         if its == 0:
             self.rnorm0 = truenorm
@@ -1315,6 +1330,7 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
 
     def setUp(self,global_ksp):
         # initialize the Qv_diagonal operator
+#        import pdb ;  pdb.set_trace()
         self.Qv = self.operator_constructor.getQv()
         self.Qv_hat = p4pyPETSc.Mat().create()
         self.Qv_hat.setSizes(self.Qv.getSizes())
@@ -1325,9 +1341,9 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         # ARB Note - There are two ways this can be done...first pull the
         # F and B operators from the global system.  I think this is most
         # direct and cleanest, but one could also call the operator constructors.
-#        self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
+        self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
         self.F = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
-        self.B = self.operator_constructor.getB()
+#        self.B = self.operator_constructor.getB()
 #        self.F = self.operator_constructor.getF()
         self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.F)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
@@ -2434,14 +2450,15 @@ class OperatorConstructor:
 
     def attachMassOperator(self,rho=1.,recalculate=False):
         """Create a discrete Mass Operator matrix. """
+#        import pdb ; pdb.set_trace()
         self._mass_val = self.OLT.nzval.copy()
+        self._mass_val.fill(0.)
         self.MassOperator = SparseMat(self.OLT.nFreeVDOF_global,
                                       self.OLT.nFreeVDOF_global,
                                       self.OLT.nnz,
                                       self._mass_val,
                                       self.OLT.colind,
                                       self.OLT.rowptr)
-
         _nd = self.OLT.coefficients.nd
         if self.OLT.coefficients.rho != None:
             _rho = self.OLT.coefficients.rho
@@ -2463,7 +2480,6 @@ class OperatorConstructor:
                 cfemIntegrals.updateMassJacobian_weak(Mass_q[('dm',ci,cj)],
                                                       Mass_q[('vXw*dV_m',cj,ci)],
                                                       Mass_Jacobian[ci][cj])
-
         self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.MassOperator)
         self.massOperatorAttached = True
 
@@ -2611,19 +2627,21 @@ class OperatorConstructor:
         self._attachTestInfo(self._operatorQ)
         self._attachTrialInfo(self._operatorQ)
 
-    def _attachQuadratureInfo(self,_nd=2,_order=4):
+    def _attachQuadratureInfo(self):
         """Define the quadrature type used to build operators.
         
-        Arguments
-        ---------
-        _nd : int
-            The number of spatial dimensions
-        _order : int
-            The order of the quadrature space.
         """
-        self._elementQuadrature = Quadrature.SimplexGaussQuadrature(nd=_nd,
+        _nd = self.OLT.coefficients.nd
+        # TBD - find a better way to get the order??
+        _order = 3
+        if _nd == 2 and self.OLT.mesh.nNodes_element==4:
+            quad_mesh = True
+        if quad_mesh == True:
+            self._elementQuadrature = Quadrature.CubeGaussQuadrature(nd=_nd,
                                                                     order=_order)
-        
+        else:
+            self._elementQuadrature = Quadrature.SimplexGaussQuadrature(nd=_nd,
+                                                                    order=_order)
 
     def _attachJacobianInfo(self,Q):
         """ This helper function attaches quadrature data related to 'J'
@@ -2970,7 +2988,6 @@ class OperatorConstructor:
     def _calculateMassOperatorQ(self,Q):
         """ Calculate values for mass operator. """
         elementQuadratureDict = {}
-
         for ci in self.MassOperatorCoeff.mass.keys():
             elementQuadratureDict[('m',ci)] = self._elementQuadrature
         (elementQuadraturePoints,elementQuadratureWeights,
