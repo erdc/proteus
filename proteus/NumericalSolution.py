@@ -257,18 +257,12 @@ class NS_base:  # (HasTraits):
                                                                 nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                 parallelPartitioningType=n.parallelPartitioningType)
                     logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
-                    if opts.generatePartitionedMeshFromFiles:
-                        logEvent("Generating partitioned mesh from Triangle files")
-                        mlMesh.generatePartitionedMeshFromTetgenFiles(p.domain.geofile,nbase,mesh,n.nLevels,
-                                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                      parallelPartitioningType=n.parallelPartitioningType)
-                    else:
-                        logEvent("Generating coarse global mesh from Triangle files")
-                        mesh.generateFromTriangleFiles(filebase=p.domain.geofile,base=1)
-                        logEvent("Generating partitioned %i-level mesh from coarse global Triangle mesh" % (n.nLevels,))
-                        mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
-                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                              parallelPartitioningType=n.parallelPartitioningType)
+                    logEvent("Generating coarse global mesh from Triangle files")
+                    mesh.generateFromTriangleFiles(filebase=p.domain.geofile,base=1)
+                    logEvent("Generating partitioned %i-level mesh from coarse global Triangle mesh" % (n.nLevels,))
+                    mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=n.parallelPartitioningType)
                 else:
                     logEvent("Calling Triangle to generate 2D mesh for"+p.name)
                     tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
