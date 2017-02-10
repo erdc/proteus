@@ -236,7 +236,7 @@ class TestVOFrotationEV():
         print failed
         assert(failed) 
 
-    def test_vof_total_mass_SSP33(self):
+    def no_test_vof_total_mass_SSP33(self):
         """
         Test total mass for SSP33 Integration running for some final time. 
         The following method is considered
@@ -257,7 +257,7 @@ class TestVOFrotationEV():
         vf.so.DT = vf.n.DT
         vf.so.tnList = [i*vf.n.DT for i  in range(vf.n.nDTout+1)]
 
-        #force F2orwardEuler
+        #force SSP33
         vf.timeIntegration_vof="SSP33"
         vf.n.timeOrder = 3
         vf.n.nStagesTime = 3
@@ -304,6 +304,60 @@ class TestVOFrotationEV():
         failed = np.allclose(init_mass, final_mass, rtol=1e-05, atol=1e-07, equal_nan=True) 
         print failed
         assert(failed) 
+
+    def test_vof_total_mass_T1_SSP33(self):
+        
+        run_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        #set the time step
+        vf.p.T = 1.0
+        vf.n.nDTout = 10
+        vf.n.DT = vf.p.T/float(vf.n.nDTout)
+        vf.so.DT = vf.n.DT
+        vf.so.tnList = [i*vf.n.DT for i  in range(vf.n.nDTout+1)]
+
+        #force SSP33
+        vf.timeIntegration_vof="SSP33"
+        vf.n.timeOrder = 3
+        vf.n.nStagesTime = 3
+        vf.rot2D.soname=vf.rot2D.soname.replace("FE","SSP33")
+        vf.p.name = vf.p.name.replace("FE","SSP33")
+        vf.so.name = vf.rot2D.soname
+
+        #############################################
+        # SECOND ORDER KUZMINS METHOD (MPP via FCT) #
+        #############################################
+        """ 
+        2nd ORDER KUZMINS METHOD (MPP via FCT)
+        This combination of parameters correspond to the first order Kuzmin's method with boundary treatment. The soln is MPP 
+        """
+        
+        vf.p.coefficients = vf.rot2D.MyCoefficients(epsFact=vf.rot2D.epsFactHeaviside,checkMass=vf.rot2D.checkMass,useMetrics=vf.rot2D.useMetrics,ME_model=0,
+                                                    EDGE_VISCOSITY=1,
+                                                    ENTROPY_VISCOSITY=1,
+                                                    POWER_SMOOTHNESS_INDICATOR=2,
+                                                    LUMPED_MASS_MATRIX=0,
+                                                    FCT=1, #NOTE: FCT IS USED
+                                                    cK=0.25)
+        
+        ns = proteus.NumericalSolution.NS_base(vf.so,[vf.p],[vf.n],vf.so.sList,opts)
+        sim_name = ns.modelList[0].name
+        # READ REFERENCE 
+        ref_total_mass = np.loadtxt(os.path.join(run_dir,'comparison_files','total_mass_comp_0_T1_'+sim_name+'.txt'))
+        # end of reading reference 
+
+        aux = ns.auxiliaryVariables[ns.modelList[0].name][0]
+        self.sim_names.append(sim_name)
+        self.aux_names.append(aux.ofile.name)
+        ns.calculateSolution('test_vof_total_mass_T1')
+        aux.ofile.close() #have to close manually for now, would be good to have a hook for this
+
+        sim_total_mass = np.loadtxt('total_mass_comp_0_'+sim_name+'.txt')
+
+        failed = np.allclose(ref_total_mass, sim_total_mass,
+                             rtol=1e-05, atol=1e-07, equal_nan=True)
+        print(failed)
+        assert(failed)
 
 if __name__ == '__main__':
     pass
