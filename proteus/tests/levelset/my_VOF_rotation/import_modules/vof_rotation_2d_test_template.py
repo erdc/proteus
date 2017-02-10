@@ -23,19 +23,19 @@ p file
 """
 p.name=rot2D.soname+"_vof"
 p.nd = 2
-p.L = [2.0,2.0]
+p.L = [1.0,1.0]
 p.domain = Domain.RectangularDomain(L=p.L,
-                                    x=(-1.0,-1.0),
+                                    x=(0.0,0.0),
                                     name="box");
 
 p.T = rot2D.T
 p.LevelModelType = VOF.LevelModel
-p.coefficients   = rot2D.MyCoefficients(epsFact=rot2D.epsFactHeaviside,checkMass=rot2D.checkMass,useMetrics=rot2D.useMetrics,ME_model=0,
-                                        EDGE_VISCOSITY=rot2D.EDGE_VISCOSITY, 
-                                        ENTROPY_VISCOSITY=rot2D.ENTROPY_VISCOSITY,
-                                        cK=rot2D.cK,cE=rot2D.cE,cMax=rot2D.cMax)
-                                        
 
+p.coefficients = rot2D.MyCoefficients(epsFact=rot2D.epsFactHeaviside,checkMass=rot2D.checkMass,useMetrics=rot2D.useMetrics,ME_model=0,
+                                      EDGE_VISCOSITY=rot2D.EDGE_VISCOSITY, 
+                                      ENTROPY_VISCOSITY=rot2D.ENTROPY_VISCOSITY,
+                                      cK=rot2D.cK,cE=rot2D.cE,cMax=rot2D.cMax)
+                                        
 from proteus.ctransportCoefficients import smoothedHeaviside
 class init_cond:
     def __init__(self,center=[0.5,0.75,0.5],radius=0.15):
@@ -55,9 +55,7 @@ def getDBC(x,flag):
     pass
 
 p.dirichletConditions = {0:getDBC}
-
-p.initialConditions  = {0:init_cond(center=[0.0,0.5],radius=0.25)}
-
+p.initialConditions  = {0:init_cond(center=[0.5,0.75],radius=0.15)}
 p.fluxBoundaryConditions = {0:'outFlow'}
 
 #cek made no flux since v.n = 0 for this v
@@ -65,7 +63,6 @@ def getAFBC(x,flag):
    return lambda x,t: 0.0
 
 p.advectiveFluxBoundaryConditions =  {0:getAFBC}
-
 p.diffusiveFluxBoundaryConditions = {0:{}}
 
 
