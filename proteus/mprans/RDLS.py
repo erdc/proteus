@@ -29,12 +29,12 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         if self.lag:
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             self.lag = True
             self.numDiff_last=[]
             for ci in range(self.nc):
                 self.numDiff_last.append(self.numDiff[ci].copy())
-        log("RDLS: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
+        logEvent("RDLS: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
 
 class PsiTC(proteus.StepControl.SC_base):
     def __init__(self,model,nOptions):
@@ -73,7 +73,7 @@ class PsiTC(proteus.StepControl.SC_base):
         self.t = tOut
         self.setSubsteps([tOut])
         self.nSteps=0
-        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+        logEvent("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
     def updateSubstep(self):
@@ -100,19 +100,19 @@ class PsiTC(proteus.StepControl.SC_base):
             self.dt_model = m.timeIntegration.dt
             if self.nSteps >= self.nStepsOsher:#start ramping up the time step
                 self.dt_model = self.dt_model*self.red_ratio
-            #log("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
+            #logEvent("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
             self.set_dt_allLevels()
             #physical time step
             self.t_model = self.substeps[0]
             self.substeps.append(self.substeps[0])
-            log("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " %(self.nSteps,self.dt_model,res,(res/self.res0)*100.0),level=1)
+            logEvent("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " %(self.nSteps,self.dt_model,res,(res/self.res0)*100.0),level=1)
         elif self.nSteps >= self.nStepsMax:
-            log("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" %(res,))
-            log("Osher-PsiTC tolerance                %12.5e " % (self.res0*self.rtol + self.atol,))
+            logEvent("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" %(res,))
+            logEvent("Osher-PsiTC tolerance                %12.5e " % (self.res0*self.rtol + self.atol,))
             self.nSteps=0
         else:
-            log("Osher-PsiTC converged |res| = %12.5e %12.5e" %(res,ssError*100.0))
-            log("Osher-PsiTC tolerance                %12.5e " % (self.res0*self.rtol + self.atol,))
+            logEvent("Osher-PsiTC converged |res| = %12.5e %12.5e" %(res,ssError*100.0))
+            logEvent("Osher-PsiTC tolerance                %12.5e " % (self.res0*self.rtol + self.atol,))
             self.nSteps=0
     def choose_dt_model(self):
         #don't modify dt_model
@@ -127,7 +127,7 @@ class PsiTC(proteus.StepControl.SC_base):
         #physical time step
         self.t_model = self.substeps[0]
         self.setSubsteps([self.substeps[0]])
-        log("Osher-PsiTC choosing dt = %12.5e " %(self.dt_model,))
+        logEvent("Osher-PsiTC choosing dt = %12.5e " %(self.dt_model,))
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import redistanceLevelSetCoefficientsEvaluate
@@ -165,7 +165,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.backgroundDiffusionFactor=backgroundDiffusionFactor
         self.weakDirichletFactor=weakDirichletFactor
     def attachModels(self,modelList):
-        if self.nModelId != None:
+        if self.nModelId is not None:
             self.nModel = modelList[self.nModelId]
             self.q_u0 =   self.nModel.q[('u',0)]
             if self.nModel.ebq.has_key(('u',0)):
@@ -179,31 +179,31 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.h=mesh.h
         self.eps = self.epsFact*mesh.h
     def initializeElementQuadrature(self,t,cq):
-        if self.nModelId == None:
-            if self.q_u0 == None:
+        if self.nModelId is None:
+            if self.q_u0 is None:
                 self.q_u0 = numpy.zeros(cq[('u',0)].shape,'d')
-            if self.u0 != None:
+            if self.u0 is not None:
                 for i in range(len(cq[('u',0)].flat)):
                     self.q_u0.flat[i]=self.u0.uOfXT(cq['x'].flat[3*i:3*(i+1)],0.)
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.nModelId == None:
-            if self.ebq_u0 == None:
+        if self.nModelId is None:
+            if self.ebq_u0 is None:
                 self.ebq_u0 = numpy.zeros(cebq[('u',0)].shape,'d')
-            if self.u0 != None:
+            if self.u0 is not None:
                 for i in range(len(cebq[('u',0)].flat)):
                     self.ebq_u0.flat[i]=self.u0.uOfXT(cebq['x'].flat[3*i:3*(i+1)],0.)
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.nModelId == None:
-            if self.ebqe_u0 == None:
+        if self.nModelId is None:
+            if self.ebqe_u0 is None:
                 self.ebqe_u0 = numpy.zeros(cebqe[('u',0)].shape,'d')
-            if self.u0 != None:
+            if self.u0 is not None:
                 for i in range(len(cebqe[('u',0)].flat)):
                     self.ebqe_u0.flat[i]=self.u0.uOfXT(cebqe['x'].flat[3*i:3*(i+1)],0.)
     def preStep(self,t,firstStep=False):
         import pdb
         #pdb.set_trace()
-        if self.nModel != None:
-            log("resetting signed distance level set to current level set",level=2)
+        if self.nModel is not None:
+            logEvent("resetting signed distance level set to current level set",level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
             self.rdModel.calculateCoefficients()
             self.rdModel.calculateElementResidual()
@@ -224,9 +224,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             return {}
     def postStep(self,t,firstStep=False):
-        if self.nModel != None:
+        if self.nModel is not None:
             if self.applyRedistancing == True:
-                log("resetting level set to signed distance")
+                logEvent("resetting level set to signed distance")
                 self.nModel.u[0].dof.flat[:]  = self.rdModel.u[0].dof.flat[:]
                 self.nModel.calculateCoefficients()
                 self.nModel.calculateElementResidual()
@@ -250,7 +250,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             u0 = self.ebqe_u0
         else:
             u0 = self.ebq_u0
-        assert u0 != None
+        assert u0 is not None
         ##\todo make redistancing epsilon depend on local element diamater instead of global max
         self.redistanceLevelSetCoefficientsEvaluate(self.eps,
                                                     u0,
@@ -459,7 +459,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for ci in range(self.nc):
                 if coefficients.mass.has_key(ci):
                     for flag in coefficients.mass[ci].values():
@@ -489,8 +489,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or 
+                                                 (numericalFluxType is not None) or 
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -523,7 +523,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[I] = elementQuadrature
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(I):
@@ -532,7 +532,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature['default']
                 else:
                     elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(('numDiff',ci,ci)):
@@ -650,31 +650,31 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         del self.internalNodes
         self.internalNodes = None
-        log("Updating local to global mappings",2)
+        logEvent("Updating local to global mappings",2)
         self.updateLocal2Global()
-        log("Building time integration object",2)
-        log(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
+        logEvent("Building time integration object",2)
+        logEvent(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
         #mwf for interpolating subgrid error for gradients etc
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
              self.timeIntegration = TimeIntegrationClass(self)
 
-        if options != None:
+        if options is not None:
             self.timeIntegration.setFromOptions(options)
-        log(memory("TimeIntegration","OneLevelTransport"),level=4)
-        log("Calculating numerical quadrature formulas",2)
+        logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
+        logEvent("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
         self.setupFieldStrides()
 
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
-            assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
+            assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        log(memory("stride+offset","OneLevelTransport"),level=4)
-        if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+        logEvent(memory("stride+offset","OneLevelTransport"),level=4)
+        if numericalFluxType is not None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -700,12 +700,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
-        log(memory("numericalFlux","OneLevelTransport"),level=4)
+        logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
-        log(memory("velocity postprocessor","OneLevelTransport"),level=4)
+        logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         from proteus import Archiver
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
@@ -851,10 +851,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #print "dH_sge",self.q[('dH_sge',0,0)]
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
-        log("Global residual",level=9,data=r)
+        logEvent("Global residual",level=9,data=r)
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy == None:
+        if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
         if not debugRDLS:
@@ -929,7 +929,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.ebqe[('u',0)],
             self.csrColumnOffsets_eb[(0,0)])
-        log("Jacobian ",level=10,data=jacobian)
+        logEvent("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
@@ -948,10 +948,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
     def calculateElementBoundaryQuadrature(self):
         pass

@@ -817,7 +817,8 @@ inline
       //}
       for(int I=0; I<nBeams; I++)
 	{
-	  buoy=0.0 ;(rho - 368.0)*3.14159*beamRadius[I]*beamRadius[I];
+	  buoy=0.0;
+          //(rho - 368.0)*3.14159*beamRadius[I]*beamRadius[I];
 	  for(int k=0;k<nBeamElements; k++)
 	    {
 	      for(int l=0;l<beam_quadOrder; l++)

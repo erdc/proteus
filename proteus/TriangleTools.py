@@ -2,6 +2,9 @@
 """Collect functionality to make a lightweight interface for
 Shewchuk's Triangle package. Follow the ellipt2d example in some
 respects
+
+.. inheritance-diagram:: proteus.TriangleTools
+   :parts: 1
 """
 import os
 import numpy
@@ -11,17 +14,18 @@ import TriangleFileUtils
 
 
 class TriangleBaseMesh:
-    """ This is basically a wrapper for the triangulateio interface
+    """A triangulation interface wrapper.
+
+    This is basically a wrapper for the triangulation interface
     that should be able to create a triangle mesh in different ways
 
-       from .ele and .node files
-       from a .poly file
-       from a proteus mesh
+    * from .ele and .node files
+    * from a .poly file
+    * from a proteus mesh
 
     It should also be able to generate a proteus mesh from the
     triangle representation and allow the user to access the basic
     data arrays in triangle
-
     """
 
     def __init__(self,baseFlags="zen",nbase=0,verbose=0):
@@ -377,8 +381,8 @@ number of edges         = %d
         #minimal information necessary
         spaceDim = 2
         assert(meshin.nElementBoundaries_element == spaceDim+1)
-        assert(not meshin.nodeArray == None)
-        assert(not meshin.elementNodesArray == None)
+        assert(meshin.nodeArray is not None)
+        assert(meshin.elementNodesArray is not None)
 
         #get a clean slate
         tri0 = triangleWrappers.new()
@@ -446,11 +450,11 @@ number of edges         = %d
         #now create an initial representation
         tri0 = triangleWrappers.new()
 
-        if nodesM == None:
+        if nodesM is None:
             triangleWrappers.setPoints(tri0,nodes)
         else:
             triangleWrappers.setPointsAndMarkers(tri0,nodes,nodesM)
-        if not nodesA == None:
+        if nodesA is not None:
             triangleWrappers.setPointAttributes(tri0,nodesA)
 
         #run triangleWrappers on it using the base flags and whatever else was
@@ -515,16 +519,16 @@ number of edges         = %d
         #now create an initial representation
         tri0 = triangleWrappers.new()
 
-        if nodesM == None:
+        if nodesM is None:
             triangleWrappers.setPoints(tri0,nodes)
         else:
             triangleWrappers.setPointsAndMarkers(tri0,nodes,nodesM)
-        if not nodesA == None:
+        if nodesA is not None:
             triangleWrappers.setPointAttributes(tri0,nodesA)
         #end if
 
         triangleWrappers.setTriangles(tri0,triangles)
-        if not trianglesA == None:
+        if trianglesA is not None:
             triangleWrappers.setTriangleAttributes(tri0,trianglesA)
 
         #run triangulate on it using the base flags and whatever else was
@@ -557,9 +561,19 @@ number of edges         = %d
         #do I need to clean up explicitly?
         del tri0
     def readFromPolyFile(self,filebase,flagsAdd="",verbose=0):
-        """
-        read triangle representation from filebase.poly file
-        assumes the nbase data member is set appropriately
+        """Reads in the triangle representation from filebase.poly file.
+
+        Parameters
+        ----------
+        filebase : str
+            The filename with the triangluation.
+        flagsAdd : str
+        verbose : int
+            A flag indicating how much information to pipe to stdout.
+
+        Notes
+        -----
+        Function assumes the nbase data member is set appropriately.
         """
         reader = TriangleUtils.TriangleInputFileReader()
         if verbose > 0:
@@ -593,25 +607,25 @@ number of edges         = %d
         #end if
         tri0 = triangleWrappers.new()
 
-        if nodesM == None:
+        if nodesM is None:
             triangleWrappers.setPoints(tri0,nodes)
         else:
             nodesMtmp = numpy.zeros(nodesM.shape,'i')
             nodesMtmp[:] = nodesM
             nodesM = nodesMtmp
             triangleWrappers.setPointsAndMarkers(tri0,nodes,nodesM)
-        if not nodesA == None:
+        if nodesA is not None:
             triangleWrappers.setPointAttributes(tri0,nodesA)
         #end if
-        if segmentsM == None:
+        if segmentsM is None:
             triangleWrappers.setSegments(tri0,segments)
         else:
             triangleWrappers.setSegmentsAndMarkers(tri0,segments,segmentsM)
         #end if
-        if (not holes == None):
+        if (holes is not None):
             triangleWrappers.setHoles(tri0,holes)
         #end if
-        if (not regions == None):
+        if (regions is not None):
             #print 'setting trin1 regions=\n',regions2
             triangleWrappers.setRegions(tri0,regions)
         #end if

@@ -1,5 +1,8 @@
 """
 Tools for high level profiling and event logging
+
+.. inheritance-diagram:: proteus.Profiling
+   :parts: 1
 """
 import gc
 import inspect
@@ -205,18 +208,44 @@ class Dispatcher():
         stripped_profile_name = profile_name + '_c' + str(comm.rank())
 
         prof.dump_stats(profile_rank_name)
-        comm.beginSequential()
-        stats = pstats.Stats(profile_rank_name)
-        stats.strip_dirs()
-        stats.dump_stats(stripped_profile_name)
-        stats.sort_stats('cumulative')
-        if verbose and comm.isMaster():
+        comm.barrier()#ensure files are ready for master
+        if comm.isMaster():
+            import copy
+            import StringIO
+            profilingLog = StringIO.StringIO()
+            stats = pstats.Stats(profile_rank_name, stream=profilingLog)
+            stats.__dict__['files']=['Maximum times across MPI tasks for',
+                                     stats.__dict__['files'][0]]
+            statsm = stats.stats
+            for i in range(1,comm.size()):
+                pstatsi = pstats.Stats(profile_name+str(i))
+                statsi = pstatsi.stats
+                stats.__dict__['files'].append(pstatsi.__dict__['files'][0])
+                for f,c in statsi.iteritems():
+                    if f in statsm:
+                        if c[2] > statsm[f][2]:
+                            statsm[f] = c
+                    else:
+                        statsm[f] = c
+            stats.sort_stats('cumulative')
             stats.print_stats(30)
             stats.sort_stats('time')
-            if verbose and comm.isMaster():
-                stats.print_stats(30)
-        comm.endSequential()
-
+            stats.print_stats(30)
+            logEvent(profilingLog.getvalue())
+            msg = r"""
+Wall clock percentage of top 20 calls
+-------------------------------------
+"""
+            total=0.0
+            for f in stats.__dict__['fcn_list'][0:20]:
+                if f[0] == '~':
+                    fname=f[-1].strip("<").strip(">")
+                else:
+                    fname="function '{2:s}' at {0:s}:{1:d}".format(*f)
+                msg+=("{0:11.1%} {1:s}\n".format(statsm[f][2]/stats.__dict__['total_tt'],str(fname)))
+                total += statsm[f][2]/stats.__dict__['total_tt']
+            logEvent(msg)
+            logEvent("Representing "+`total*100.`+"%")
         return func_return
 
 @atexit.register

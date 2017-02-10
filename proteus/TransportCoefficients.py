@@ -3,19 +3,20 @@ Classes for implementing the coefficients of transport equations.
 
 TC_base defines the interface. The classes derived from TC_base in
 this module define common PDE's.
+
+.. inheritance-diagram:: proteus.TransportCoefficients
+   :parts: 1
 """
 from math import *
+from warnings import warn
 import numpy
 import Norms
-import Profiling
-
-log = Profiling.logEvent
+from Profiling import logEvent
+from warnings import warn
 
 ## \file TransportCoefficients.py
 #
 #@{
-
-log = Profiling.logEvent
 
 ##\brief Base class for transport coefficients classes
 #
@@ -151,7 +152,7 @@ class TC_base:
                 self.elementIntegralKeys.append(('a',ci,ck))
                 self.elementBoundaryIntegralKeys.append(('a',ci,ck))
                 if not self.potential.has_key(ck):
-                    warn("""a[ci=%d][ck=%d] is non-zero but phi[ck=%d] is undefined. Setting
+                    logEvent("""a[ci=%d][ck=%d] is non-zero but phi[ck=%d] is undefined. Setting
                     phi[ck=%d]=u[ck=%d], the potential definition
                     should be corrected in the future\n""" % (ci,ck,ck,ck,ck))
                     self.potential[ck]='u'
@@ -185,6 +186,7 @@ class TC_base:
         for ci in range(self.nc):
             self.elementIntegralKeys.append(('u',ci))
             self.elementBoundaryIntegralKeys.append(('u',ci))
+
     def evaluate(self,t,c):
         """
         Evaluate the coefficients at a given time, t, using the coefficient storage passed in as the dictionary c.
@@ -1103,17 +1105,19 @@ class NavierStokes(TC_base):
                                           c[('dH',3,0)])
 
 class ShallowWater(TC_base):
-    """
-    The coefficients for the shallow water equations.
+    r"""The coefficients for the shallow water equations.
 
-    right hand side for bed friction looks like
-     -\tau_b / \rho
+    Right hand side for bed friction looks like :math:`-\tau_b/\rho`
     where the bed friction stress is
-     \tau_b = \rho C_f \vec u \|\vec u\|
-    C_f = g b/h^{a}
 
-    b = n^2 for Mannings law --> bedFrictionCoefficient
-    a = 1/3 for Mannings law --> bedFrictionPower
+    .. math::
+
+       \tau_b = \rho C_f \vec u \|\vec u\|
+       C_f = g b/h^{a}
+
+    :math:`b = n^2` for Mannings law --> bedFrictionCoefficient
+    :math:`a = 1/3` for Mannings law --> bedFrictionPower
+
     """
     from ctransportCoefficients import shallowWater_1D_Evaluate
     from ctransportCoefficients import shallowWater_2D_Evaluate
@@ -1403,6 +1407,100 @@ class ShallowWater(TC_base):
 #                                           c[('H',3)],
 #                                           c[('dH',3,0)])
 
+class DiscreteLaplaceOperator(TC_base):
+    r""" A coefficient class to construct the discrete Laplace Operator.
+    
+    This class defines the coefficients necessary to construct the
+    discrete Laplace operator :math:`A` where
+
+    .. math::
+    
+        a^{c}_{i,j} = \int_{T} \nabla \phi^{c}_{i} \cdot \nabla \phi^{c}_{j} dT
+
+    for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
+    :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
+    """
+    from ctransportCoefficients import Laplace_2D_Evaluate
+    from ctransportCoefficients import Laplace_3D_Evaluate
+    def __init__(self,nd=2,nu=1.0):
+        self.nd=nd
+        self.nu=nu # ... Detail I need to worry about later ...
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames=['p','u','v']
+            diffusion = {0:{0:{0:'constant'}},
+                         1:{1:{1:'constant'}},
+                         2:{2:{2:'constant'}}}
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
+                         2:{2:'u'}}
+            sdInfo    = {(0,0):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i')),
+                         (1,1):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i')),
+                         (2,2):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i'))}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors=sdInfo,
+                             useSparseDiffusion=True)
+            self.vectorComponents=[1,2]
+        if nd==3:
+            variableNames=['p','u','v','w']
+            diffusion ={0:{0:{0:'constant'}},
+                        1:{1:{1:'constant'}},
+                        2:{2:{2:'constant'}},
+                        3:{3:{3:'constant'}}}
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
+                         2:{2:'u'},
+                         3:{3:'u'}}
+            sdInfo  = {(0,0):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (1,1):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (2,2):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (3,3):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i'))}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors=sdInfo,
+                             useSparseDiffusion=True)
+            self.vectorComponents=[1,2,3]
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.Laplace_2D_Evaluate(c[('u',0)],
+                                     c[('u',1)],
+                                     c[('u',2)],
+                                     c[('a',0,0)],
+                                     c[('a',1,1)],
+                                     c[('a',2,2)])
+        if self.nd==3:
+            self.Laplace_3D_Evaluate(c[('u',0)],
+                                     c[('u',1)],
+                                     c[('u',2)],
+                                     c[('u',3)],
+                                     c[('a',0,0)],
+                                     c[('a',1,1)],
+                                     c[('a',2,2)],
+                                     c[('a',3,3)])
+
 ##\brief Incompressible Stokes equations
 #
 #The equations are formulated as
@@ -1433,19 +1531,24 @@ class Stokes(TC_base):
         hamiltonian={}
         if nd==2:
             variableNames=['p','u','v']
-            mass={1:{1:'linear'},
+            mass={0:{0:'linear'},
+                  1:{1:'linear'},
                   2:{2:'linear'}}
             if not weakBoundaryConditions:
-                advection = {0:{1:'linear',
+                advection = {0:{0:'linear',
+                                1:'linear',
                                 2:'linear'}}
             else:
-                advection = {0:{1:'linear',
+                advection = {0:{0:'linear',
+                                1:'linear',
                                 2:'linear'},
                              1:{0:'linear'},
                              2:{0:'linear'}}
-            diffusion = {1:{1:{1:'constant'}},
+            diffusion = {0:{0:{0:'constant'}},
+                         1:{1:{1:'constant'}},
                          2:{2:{2:'constant'}}}
-            potential = {1:{1:'u'},
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
                          2:{2:'u'}}
             reaction = {1:{1:'constant'},
                         2:{2:'constant'}}
@@ -1459,28 +1562,34 @@ class Stokes(TC_base):
                              potential,
                              reaction,
                              hamiltonian,
-                             variableNames)
+                             variableNames,
+                             useSparseDiffusion=True)
             self.vectorComponents=[1,2]
         elif nd==3:
             variableNames=['p','u','v','w']
-            mass={1:{1:'linear'},
+            mass={0:{0:'linear'},
+                  1:{1:'linear'},
                   2:{2:'linear'},
                   3:{3:'linear'}}
             if not weakBoundaryConditions:
-                advection = {0:{1:'linear',
+                advection = {0:{0:'linear',
+                                1:'linear',
                                 2:'linear',
                                 3:'linear'}}
             else:
-                advection = {0:{1:'linear',
+                advection = {0:{0:'linear',
+                                1:'linear',
                                 2:'linear',
                                 3:'linear'},
                              1:{0:'linear'},
                              2:{0:'linear'},
                              3:{0:'linear'}}
-            diffusion = {1:{1:{1:'constant'}},
+            diffusion = {0:{0:{0:'constant'}},
+                         1:{1:{1:'constant'}},
                          2:{2:{2:'constant'}},
                          3:{3:{3:'constant'}}}
-            potential = {1:{1:'u'},
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
                          2:{2:'u'},
                          3:{3:'u'}}
             reaction = {1:{1:'constant'},
@@ -1497,8 +1606,13 @@ class Stokes(TC_base):
                              potential,
                              reaction,
                              hamiltonian,
-                             variableNames)
+                             variableNames,
+                             useSparseDiffusion=True)
             self.vectorComponents=[1,2,3]
+
+    def attachModels(self,modelList):
+        modelList[0].pp_hasConstantNullSpace = False
+
     def evaluate(self,t,c):
         if self.nd==2:
             self.Stokes_2D_Evaluate(self.rho,
@@ -3597,7 +3711,7 @@ class NCLevelSetCoefficients(TC_base):
                                                                      self.model.q['dV'],
                                                                      self.model.q[('u',0)],
                                                                      self.model.mesh.nElements_owned)
-            log("Attach Models NCLS: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Attach Models NCLS: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
             self.totalFluxGlobal=0.0
             self.lsGlobalMassArray = [self.m_pre]
             self.lsGlobalMassErrorArray = [0.0]
@@ -3620,14 +3734,14 @@ class NCLevelSetCoefficients(TC_base):
                                                                      self.model.q['dV'],
                                                                      self.model.q[('u',0)],
                                                                      self.model.mesh.nElements_owned)
-            log("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
             self.m_last = self.m_pre
             # self.m_last = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
             #                                                           self.model.mesh.elementDiametersArray,
             #                                                           self.model.q['dV'],
             #                                                           self.model.timeIntegration.m_last[0],
             #                                                           self.model.mesh.nElements_owned)
-            # log("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
+            # logEvent("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
         #cek todo why is this here
         if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
             self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
@@ -3641,14 +3755,14 @@ class NCLevelSetCoefficients(TC_base):
                                                                       self.model.q['dV'],
                                                                       self.model.q[('u',0)],
                                                                       self.model.mesh.nElements_owned)
-            log("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)
+            logEvent("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)
             #need a flux here not a velocity
             self.fluxIntegral = Norms.fluxDomainBoundaryIntegralFromVector(self.ebqe_dS,
                                                                            self.ebqe_v,
                                                                            self.model.ebqe['n'],
                                                                            self.model.mesh)
-            log("Flux integral = %12.5e" % (self.fluxIntegral,),level=2)
-            log("Phase  0 mass conservation after NCLS step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+            logEvent("Flux integral = %12.5e" % (self.fluxIntegral,),level=2)
+            logEvent("Phase  0 mass conservation after NCLS step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
             self.lsGlobalMass = self.m_post
             self.fluxGlobal = self.fluxIntegral*self.model.timeIntegration.dt
             self.totalFluxGlobal += self.fluxGlobal
@@ -3909,16 +4023,16 @@ class VOFCoefficients(TC_base):
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
                                                      self.model.mesh.nElements_owned)
-            log("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_pre,),level=2)
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
                                                      self.model.mesh.nElements_owned)
-            log("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
+            logEvent("Attach Models VOF: Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
             if self.model.ebqe.has_key(('advectiveFlux',0)):
                 self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
                                                                      self.model.ebqe[('advectiveFlux',0)],
                                                                      self.model.mesh)
-                log("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+                logEvent("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
 
     def initializeElementQuadrature(self,t,cq):
         if self.flowModelIndex == None:
@@ -3940,11 +4054,11 @@ class VOFCoefficients(TC_base):
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                     self.model.q[('m',0)],
                                                     self.model.mesh.nElements_owned)
-            log("Phase  0 mass before VOF step = %12.5e" % (self.m_pre,),level=2)
+            logEvent("Phase  0 mass before VOF step = %12.5e" % (self.m_pre,),level=2)
             self.m_last = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.timeIntegration.m_last[0],
                                                      self.model.mesh.nElements_owned)
-            log("Phase  0 mass before VOF (m_last) step = %12.5e" % (self.m_last,),level=2)
+            logEvent("Phase  0 mass before VOF (m_last) step = %12.5e" % (self.m_last,),level=2)
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
@@ -3952,17 +4066,17 @@ class VOFCoefficients(TC_base):
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
                                                      self.model.q[('m',0)],
                                                      self.model.mesh.nElements_owned)
-            log("Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
+            logEvent("Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
             self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
                                                                  self.model.ebqe[('advectiveFlux',0)],
                                                                  self.model.mesh)
-            log("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
-            log("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+            logEvent("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
+            logEvent("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
             divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.model.ebqe['dS'],
                                                                     self.ebqe_v,
                                                                     self.model.ebqe['n'],
                                                                     self.model.mesh)
-            log("Divergence = %12.5e" % (divergence,),level=2)
+            logEvent("Divergence = %12.5e" % (divergence,),level=2)
         copyInstructions = {}
         return copyInstructions
     def updateToMovingDomain(self,t,c):
@@ -3993,7 +4107,7 @@ class VOFCoefficients(TC_base):
                                          c[('f',0)],
                                          c[('df',0,0)])
         if self.checkMass:
-            log("Phase  0 mass in eavl = %12.5e" % (Norms.scalarDomainIntegral(self.model.q['dV'],
+            logEvent("Phase  0 mass in eavl = %12.5e" % (Norms.scalarDomainIntegral(self.model.q['dV'],
                                                                                self.model.q[('m',0)],
                                                                                self.model.mesh.nElements_owned),),level=2)
 
@@ -4105,7 +4219,7 @@ class LevelSetCurvatureCoefficients(TC_base):
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def attachModels(self,modelList):
-        log("Attaching \grad \phi in curvature model")
+        logEvent("Attaching \grad \phi in curvature model")
         self.q_grad_phi    = modelList[self.levelSetModelIndex].q[('grad(u)',0)]
         self.ebqe_grad_phi = modelList[self.levelSetModelIndex].ebqe[('grad(u)',0)]
         if modelList[self.levelSetModelIndex].ebq.has_key(('grad(u)',0)):
@@ -4217,7 +4331,7 @@ class LevelSetConservation(TC_base):
         self.epsDiffusion = self.epsFactDiffusion*mesh.h
     def attachModels(self,modelList):
         import copy
-        log("Attaching models in LevelSetConservation")
+        logEvent("Attaching models in LevelSetConservation")
         #level set
         self.lsModel = modelList[self.levelSetModelIndex]
         self.q_u_ls    = modelList[self.levelSetModelIndex].q[('u',0)]
@@ -4245,7 +4359,7 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMass = Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
                                                                         self.lsModel.q[('u',0)],
                                                                         self.massCorrModel.mesh.nElements_owned)
-                log("Attach Models MCorr: mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+                logEvent("Attach Models MCorr: mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                 self.massCorrModel.q[('r',0)],
                                                                                                 self.massCorrModel.mesh.nElements_owned),),level=2)
                 self.fluxGlobal = 0.0
@@ -4256,10 +4370,10 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMassErrorArray = [self.lsGlobalMass - self.lsGlobalMassArray[0] + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral]
                 self.fluxArray = [self.vofModel.coefficients.fluxIntegral]
                 self.timeArray = [self.vofModel.timeIntegration.t]
-                log("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
-                log("Attach Models MCorr: Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
-                log("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
-                log("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                logEvent("Attach Models MCorr: Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
+                logEvent("Attach Models MCorr: Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
+                logEvent("Attach Models MCorr: Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
+                logEvent("Attach Models MCorr: Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_pre + self.vofModel.timeIntegration.dt*self.vofModel.coefficients.fluxIntegral,),level=2)
     def initializeElementQuadrature(self,t,cq):
         if self.sd and cq.has_key(('a',0,0)):
             cq[('a',0,0)].fill(self.epsDiffusion)
@@ -4271,10 +4385,10 @@ class LevelSetConservation(TC_base):
             cebqe[('a',0,0)].fill(self.epsDiffusion)
     def preStep(self,t,firstStep=False):
         if self.checkMass:
-            log("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                                  self.vofModel.q[('m',0)],
                                                                                                  self.massCorrModel.mesh.nElements_owned),),level=2)
-            log("Phase 0 mass before mass correction (LS) %12.5e" % (Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass before mass correction (LS) %12.5e" % (Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
                                                                                                          self.lsModel.q[('m',0)],
                                                                                                          self.massCorrModel.mesh.nElements_owned),),level=2)
         copyInstructions = {'clear_uList':True}
@@ -4303,7 +4417,7 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMass = Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
                                                                         self.lsModel.q[('u',0)],
                                                                         self.massCorrModel.mesh.nElements_owned)
-                log("mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+                logEvent("mass correction %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                            self.massCorrModel.q[('r',0)],
                                                                            self.massCorrModel.mesh.nElements_owned),),level=2)
                 self.fluxGlobal = self.vofModel.coefficients.fluxIntegral*self.vofModel.timeIntegration.dt
@@ -4314,10 +4428,10 @@ class LevelSetConservation(TC_base):
                 self.lsGlobalMassErrorArray.append(self.lsGlobalMass - self.lsGlobalMassArray[0] + self.totalFluxGlobal)
                 self.fluxArray.append(self.vofModel.coefficients.fluxIntegral)
                 self.timeArray.append(self.vofModel.timeIntegration.t)
-                log("Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
-                log("Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
-                log("Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_last + self.fluxGlobal,),level=2)
-                log("Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_last + self.fluxGlobal,),level=2)
+                logEvent("Phase 0 mass after mass correction (VOF) %12.5e" % (self.vofGlobalMass,),level=2)
+                logEvent("Phase 0 mass after mass correction (LS) %12.5e" % (self.lsGlobalMass,),level=2)
+                logEvent("Phase  0 mass conservation (VOF) after step = %12.5e" % (self.vofGlobalMass - self.vofModel.coefficients.m_last + self.fluxGlobal,),level=2)
+                logEvent("Phase  0 mass conservation (LS) after step = %12.5e" % (self.lsGlobalMass - self.lsModel.coefficients.m_last + self.fluxGlobal,),level=2)
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):
@@ -4358,10 +4472,10 @@ class LevelSetConservation(TC_base):
         if (self.checkMass and c[('u',0)].shape == self.q_u_ls.shape):
             self.m_tmp[:] = H_vof
             self.m_tmp += self.massCorrModel.q[('r',0)]
-            log("mass correction during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("mass correction during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                      self.massCorrModel.q[('r',0)],
                                                                                      self.massCorrModel.mesh.nElements_owned),),level=2)
-            log("Phase 0 mass during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+            logEvent("Phase 0 mass during Newton %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
                                                                                  self.m_tmp,
                                                                                   self.massCorrModel.mesh.nElements_owned),),level=2)
 
@@ -5872,7 +5986,7 @@ class RedistanceLevelSet(TC_base):
         import pdb
         #pdb.set_trace()
         if self.nModel != None:
-            log("resetting signed distance level set to current level set",level=2)
+            logEvent("resetting signed distance level set to current level set",level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
             self.rdModel.calculateCoefficients()
             self.rdModel.calculateElementResidual()
@@ -5895,7 +6009,7 @@ class RedistanceLevelSet(TC_base):
     def postStep(self,t,firstStep=False):
         if self.nModel != None:
             if self.applyRedistancing == True:
-                log("resetting level set to signed distance")
+                logEvent("resetting level set to signed distance")
                 self.nModel.u[0].dof.flat[:]  = self.rdModel.u[0].dof.flat[:]
                 self.nModel.calculateCoefficients()
                 self.nModel.calculateElementResidual()
@@ -6589,64 +6703,72 @@ class MovingMesh(TC_base):
 
 
 class kEpsilon(TC_base):
-    """
-Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
+    r"""Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
 
-\bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-\vec v^{'}   = turbulent fluctuation
-assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
+    :math:`\bar{\vec v} = <\vec v>` Reynolds-averaged (mean) velocity
+    :math:`\vec v^{'}   =` turbulent fluctuation
 
-Reynolds averaged NS equations
+    assume :math:`\vec v = <\vec v> + \vec v^{'}`, with :math:`<\vec v^{'}> = 0`
 
-\deld \bar{\vec v} = 0
+    Reynolds averaged NS equations
 
-\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+    .. math::
+
+       \deld \bar{\vec v} = 0
+    
+    .. math::
+
+       \pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
                -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
                - \frac{1}{rho}\deld \ten{R} = 0
 
-Reynolds stress term
+    Reynolds stress term
 
-\ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
-\frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+    .. math::
 
-D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
-\ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
+       \ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
+       \frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+       D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
+       \ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
 
+    k-epsilon tranport equations
 
+    .. math::
 
-k-epsilon tranport equations
+       \pd{k}{t} + \deld (k\bar{\vec v})
+       - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
+       - 4\nu_t \Pi_{D} + \epsilon = 0
 
-\pd{k}{t} + \deld (k\bar{\vec v})
-          - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
-          - 4\nu_t \Pi_{D} + \epsilon = 0
+    .. math::
 
-\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
-          - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
-          - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
-
-
-k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
-\varepsilon    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
-
-\nu            -- kinematic viscosity (\mu/\rho)
-\nu_t          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
-
-
-\Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
-\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
-                                        1/2 (u_y + v_x)^2 \right]
-
-4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
-                                1/2 (u_y + v_x)^2 \right]
-          = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
-
-\sigma_k -- Prandtl number \approx 1
-\sigma_e -- c_{\mu}/c_e
-
-c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
-
-
+       \pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
+       - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
+       - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
+    
     """
+
+# k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
+# \varepsilon    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
+
+# \nu            -- kinematic viscosity (\mu/\rho)
+# \nu_t          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
+
+
+# \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
+# \ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+#                                         1/2 (u_y + v_x)^2 \right]
+
+# 4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+#                                 1/2 (u_y + v_x)^2 \right]
+#           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
+
+# \sigma_k -- Prandtl number \approx 1
+# \sigma_e -- c_{\mu}/c_e
+
+# c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
+
+
+#     """
     from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate
     from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate_sd
     from proteus.ctransportCoefficients import kEpsilon_3D_Evaluate_sd
@@ -6925,63 +7047,68 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                 c[('dr',1,1)].flat[:] = 0.0
 
 class kEpsilon_k(TC_base):
-    """
-Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
- but solves for just k assuming epsilon computed independently and lagged in time
+    r"""Basic k-epsilon model for incompressible flow from Hutter etal
+    Chaper 11 but solves for just k assuming epsilon computed
+    independently and lagged in time
 
-\bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-\vec v^{'}   = turbulent fluctuation
-assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
+    
+    :math:`\bar{\vec v} = <\vec v>` Reynolds-averaged (mean) velocity
 
-Reynolds averaged NS equations
+    :math:`\vec v^{'}   =` turbulent fluctuation
 
-\deld \bar{\vec v} = 0
+    assume :math:`\vec v = <\vec v> + \vec v^{'}`, with :math:`<\vec v^{'}> = 0`
 
-\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+    Reynolds averaged NS equations
+
+    .. math::
+    
+       \deld \bar{\vec v} = 0
+       \pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
                -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
                - \frac{1}{rho}\deld \ten{R} = 0
 
-Reynolds stress term
+    Reynolds stress term
 
-\ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
-\frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+    .. math::
 
-D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
-\ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
+       \ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
+       \frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+       D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
+       \ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
 
+    k-epsilon tranport equations
 
+    .. math::
 
-k-epsilon tranport equations
-
-\pd{k}{t} + \deld (k\bar{\vec v})
+        \pd{k}{t} + \deld (k\bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
           - 4\nu_t \Pi_{D} + \epsilon = 0
-
-\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
+        \pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
           - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
 
 
-k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
-\varepsilon    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
 
-\nu            -- kinematic viscosity (\mu/\rho)
-\nu_t          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
+    :math:`k`              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
+    :math:`\varepsilon`   -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
+    :math:`\nu`            -- kinematic viscosity (\mu/\rho)
+    :math:`\nu_t`          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
 
+    .. math::
 
-\Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
-\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+       \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
+       \ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                         1/2 (u_y + v_x)^2 \right]
-
-4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+       4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                 1/2 (u_y + v_x)^2 \right]
           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
+   
+    :math:`\sigma_k` -- Prandtl number \approx 1
+    :math:`\sigma_e` -- c_{\mu}/c_e
 
-\sigma_k -- Prandtl number \approx 1
-\sigma_e -- c_{\mu}/c_e
+    .. math::
 
-c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
-
+       c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
 
     """
     from proteus.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
@@ -7203,63 +7330,65 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
             c[('dr',0,0)].flat[:] = 0.0
 
 class kEpsilon_epsilon(TC_base):
-    """
-Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
-  but solves for just epsilon assuming k lagged
+    r"""Basic k-epsilon model for incompressible flow from Hutter etal
+    Chaper 11 but solves for just epsilon assuming k lagged
 
-\bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-\vec v^{'}   = turbulent fluctuation
-assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
+    :math:`\bar{\vec v} = <\vec v>` Reynolds-averaged (mean) velocity
 
-Reynolds averaged NS equations
+    :math:`\vec v^{'}`   = turbulent fluctuation
 
-\deld \bar{\vec v} = 0
+    assume :math:`\vec v = <\vec v> + \vec v^{'}`, with :math:`<\vec v^{'}> = 0`
 
-\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+    Reynolds averaged NS equations
+
+    .. math::
+
+       \deld \bar{\vec v} = 0
+       \pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
                -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
                - \frac{1}{rho}\deld \ten{R} = 0
+    
+    Reynolds stress term
 
-Reynolds stress term
+    .. math::
 
-\ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
-\frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+       \ten R = -\rho <\vec v^{'}\outer \vec v^{'}>
+       \frac{1}{\rho}\ten{R} = 2 \nu_t \bar{D} - \frac{2}{3}k\ten{I}
+       D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
+       \ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
 
-D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
-\ten D \bar{\ten D} = D(<\vec v>), \ten D^{'} = \ten D(\vec v^{'})
+    k-epsilon tranport equations
 
-
-
-k-epsilon tranport equations
-
-\pd{k}{t} + \deld (k\bar{\vec v})
+    .. math::
+       \pd{k}{t} + \deld (k\bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
           - 4\nu_t \Pi_{D} + \epsilon = 0
 
-\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
+    .. math::
+
+       \pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
           - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
 
 
-k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
-\varepsilon    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
+    :math:`k`              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
+    :math:`\varepsilon`    -- turbulent dissipation rate = 4 \nu <\Pi_{D^{'}}>
+    :math:`\nu`            -- kinematic viscosity (\mu/\rho)
+    :math:`\nu_t`          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
 
-\nu            -- kinematic viscosity (\mu/\rho)
-\nu_t          -- turbulent viscosity = c_mu \frac{k^2}{\varepsilon}
-
-
-\Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
-\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+    .. math::
+       \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
+       \ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                         1/2 (u_y + v_x)^2 \right]
 
-4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
+        4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                 1/2 (u_y + v_x)^2 \right]
           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
 
-\sigma_k -- Prandtl number \approx 1
-\sigma_e -- c_{\mu}/c_e
+    :math:`\sigma_k` -- Prandtl number \approx 1
+    :math:`\sigma_e` -- :math:`c_{\mu}/c_e`
 
-c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
-
+    :math:c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07`
 
     """
     from proteus.ctransportCoefficients import kEpsilon_epsilon_2D_Evaluate_sd

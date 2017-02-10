@@ -1,8 +1,11 @@
 """
 A class hierarchy for numerical integration on reference domains in 1,2, and 3D.
+
+.. inheritance-diagram:: proteus.Quadrature
+   :parts: 1
 """
 from EGeometry import *
-from Profiling import logEvent
+from .Profiling import logEvent
 from math import *
 
 class Q_base:
@@ -717,8 +720,14 @@ class FaceBarycenterTetrahedron(Q_base):
         self.weights = self.weightsAll[0]
 
 class SimplexGaussQuadrature(Q_base):
-    """
-    A class for all quadrature on unit simplices.
+    """ A class which defines quadrature on unit simplices.
+    
+    Arguments
+    ---------
+    nd : int
+        Dimension of the finite element problem.
+    order : int
+        Polynomial order for which the integration is exact.
     """
     def __init__(self,nd=3,order=1):
         Q_base.__init__(self,order)

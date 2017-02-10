@@ -5,6 +5,9 @@ This module contains methods for solving
 
 The solution is the vector of components :math:`u=u_0,\ldots,u_{nc-1}`, and
 the nonlinear coefficients are :math:`m^i,f^i,a^{ik},\phi^k, H^i` and :math:`r^i`.
+
+.. inheritance-diagram:: proteus.Transport
+   :parts: 1
 """
 from math import *
 
@@ -17,15 +20,16 @@ import Quadrature
 from TimeIntegration import *
 from NonlinearSolvers import *
 import cfemIntegrals
-import Profiling
 from TransportCoefficients import *
 import NumericalFlux
 import cnumericalFlux
 import Comm
 import flcbdfWrappers
 import cmeshTools
-
-log = Profiling.logEvent
+from .Profiling import logEvent
+from petsc4py import PETSc as p4pyPETSc
+import superluWrappers
+import numpy
 
 class StorageSet(set):
     def __init__(self,initializer=[],shape=(0,),storageType='d'):
@@ -44,21 +48,26 @@ class OneLevelTransport(NonlinearEquation):
     Objects of this type take the initial-boundary value
     problem for
 
-    .. math:: m_t^i + \nabla \cdot (\mathbf{f}^i - \sum_k \mathbf{a}^{ik} \nabla \phi^k) + H^i(\nabla u) + r^i = 0
+    .. math:: 
+
+            m_t^i + \nabla \cdot (\mathbf{f}^i - \sum_k \mathbf{a}^{ik}
+            \nabla \phi^k) + H^i(\nabla u) + r^i = 0
 
     and turn it into the discrete (nonlinear or linear) algebraic
     problem
 
     .. math:: F(U) = 0
 
-    where F and U have dimension self.dim. The Jacobian of F or an
+    where F and U have dimension `self.dim`. The Jacobian of F or an
     approximation for it may also be  provided.
 
     The NonlinearEquation interface is
 
-    self.dim
-    getResidual(u,r)
-    getJacobian(jacobian)
+    * self.dim
+
+    * getResidual(u,r)
+
+    * getJacobian(jacobian).
 
     The rest of the functions in this class are either private functions
     or return various other pieces of information.
@@ -89,40 +98,54 @@ class OneLevelTransport(NonlinearEquation):
                  reuse_trial_and_test_quadrature=False,
                  sd = True,
                  movingDomain=False):#,
-        import Comm
-        """
-        Allocate storage and initialize some variables.
+        r""" Allocate storage and initialize some variables.
 
-        uDict   -- a dictionary of FiniteElementFunction objects
+        Parameters
+        ----------
+        uDict : dict
+            Dictionary of 
+            :class:`proteus.FemTools.FiniteElementFunction` objects.
 
-        phiDict -- a dictionary of FiniteElementFunction objects
+        phiDict : dict
+            Dictionary of
+            :class:`proteus.FemTools.FiniteElementFunction` objects.
 
-        testSpaceDict -- a dictionary of FiniteElementSpace objects
+        testSpaceDict : dict
+            Dictionary of FiniteElementSpace objects
 
-        dofBoundaryConditionsDict -- a dictionary of DOFBoundaryConditions objects for
-        the Dirichlet conditions
+        dofBoundaryConditionsDict : dict
+            Dictionary of DOFBoundaryConditions objects for the 
+            Dirichlet conditions.
 
-        coefficients -- a TransportCoefficients object
+        coefficients : :class:`proteus.TransportCoefficients.TC_base`
+            Problem's Transport Coefficients class.
 
-        elementQuadratureDict -- a dictionary of dictionaries of quadrature rules for each
-        element integral in each component equation
+        elementQuadratureDict : dict
+            Dictionary of dictionaries of quadrature rules for each 
+            element integral in each component equation.
 
-        elementBoundaryQuadratureDict -- a dictionary of dictionaries of quadrature rules
-        for each element boundary integral in each component equation
+        elementBoundaryQuadratureDict : dict
+            Dictionary of dictionaries of quadrature rules for each 
+            element boundary integral in each component equation
 
-        stabilization
+        stabilization : bool
 
-        shockCapturing
+        shockCapturing : bool
 
-        numericalFlux
+        numericalFlux : bool
+
+        Notes
+        -----
 
         The constructor sets the input arguments, calculates
         dimensions, and allocates storage. The meanings of variable
         suffixes are
 
-        _global          -- per physical domain
-        _element         -- per element
-        _elementBoundary -- per element boundary
+        * global          -- per physical domain
+
+        * element         -- per element
+
+        * elementBoundary -- per element boundary
 
         The prefix n means 'number of'.
 
@@ -131,13 +154,22 @@ class OneLevelTransport(NonlinearEquation):
         dictionary for all the quantities of that type. The names
         and dimensions of the storage dictionaries are
 
-        e          -- at element
-        q          -- at element quadrature, unique to elements
-        ebq        -- at element boundary quadrature, unique to elements
-        ebq_global -- at element boundary quadrature, unique to element boundary
-        ebqe       -- at element boundary quadrature, unique to global, exterior element boundary
-        phi_ip     -- at the generalized interpolation points required to build a nonlinear  phi
+        * e -- at element
+
+        * q -- at element quadrature, unique to elements
+
+        * ebq -- at element boundary quadrature, unique to elements
+
+        * ebq_global -- at element boundary quadrature, unique to element 
+          boundary
+
+        * ebqe -- at element boundary quadrature, unique to global, 
+          exterior element boundary
+
+        * phi_ip -- at the generalized interpolation points required to
+          build a nonlinear phi
         """
+        import Comm
         #
         #set the objects describing the method and boundary conditions
         #
@@ -148,7 +180,7 @@ class OneLevelTransport(NonlinearEquation):
         self.sd=sd
         for u in uDict.values():
             if u.femSpace.referenceFiniteElement.localFunctionSpace.nonzeroHessians:
-                if stabilization != None:
+                if stabilization is not None:
                     self.Hess=True
         self.Hess=True#False
         self.lowmem=True
@@ -203,7 +235,7 @@ class OneLevelTransport(NonlinearEquation):
         self.stressFluxBoundaryConditionsSetterDict = stressFluxBoundaryConditionsSetterDict
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for ci in range(self.nc):
                 if coefficients.mass.has_key(ci):
                     for flag in coefficients.mass[ci].values():
@@ -233,8 +265,8 @@ class OneLevelTransport(NonlinearEquation):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
-                                                 (numericalFluxType != None) or
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or
+                                                 (numericalFluxType is not None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -256,7 +288,7 @@ class OneLevelTransport(NonlinearEquation):
                     if not coefficients.sdInfo.has_key((ci,ck)):
                         coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=self.nSpace_global**2+1,step=self.nSpace_global,dtype='i'),
                                                         numpy.array([range(self.nSpace_global) for row in range(self.nSpace_global)],dtype='i'))
-                    log("Sparse diffusion information key "+`(ci,ck)`+' = '+`coefficients.sdInfo[(ci,ck)]`)
+                    logEvent("Sparse diffusion information key "+`(ci,ck)`+' = '+`coefficients.sdInfo[(ci,ck)]`)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -275,7 +307,7 @@ class OneLevelTransport(NonlinearEquation):
         else:
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[I] = elementQuadrature
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(I):
@@ -284,7 +316,7 @@ class OneLevelTransport(NonlinearEquation):
                         elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature['default']
                 else:
                     elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(('numDiff',ci,ci)):
@@ -481,7 +513,7 @@ class OneLevelTransport(NonlinearEquation):
         self.scalars_quadrature |= set([('phi',ck) for ck  in self.coefficients.potential.keys()])
         self.scalars_elementBoundaryQuadrature |= set([('phi',ck) for ck  in self.coefficients.potential.keys()])
         self.scalars_phi_ip |= set([('phi',ck) for ck  in self.coefficients.potential.keys()])
-        if numericalFluxType != None:
+        if numericalFluxType is not None:
             self.test_shape_quadrature |= set([('w',ci) for ci in self.coefficients.diffusion.keys()])
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             self.test_shapeGradient_quadrature |= set([('grad(w)*dV_a',ck,ci) for ck in ckDict])
@@ -497,7 +529,7 @@ class OneLevelTransport(NonlinearEquation):
             self.phi_trial_shapeGradient_elementBoundaryQuadrature |= set([('grad(v)',ck) for ck  in ckDict.keys()])
             self.gradient_X_test_shapeGradient_quadrature |= set([('grad(phi)Xgrad(w)*dV_a',ck,ci) for ck in ckDict.keys()])
             self.gradient_X_test_shapeGradient_quadrature |= set([('grad(u)Xgrad(w)*dV_a',ck,ci) for ck in ckDict.keys()]) #\todo remove when nonlinear phi...
-            if numericalFluxType != None:
+            if numericalFluxType is not None:
                 self.test_shape_quadrature |= set([('w*dV_a',ck,ci) for ck in ckDict.keys()])
             for ck,cjDict in ckDict.iteritems():
                 self.tensors_quadrature |= set([('da',ci,ck,cj) for cj  in cjDict.keys()])
@@ -524,7 +556,7 @@ class OneLevelTransport(NonlinearEquation):
                     self.phi_trial_shapeGradient_quadrature |= set([('grad(v)',cj)])
                     self.phi_trial_shapeGradient_X_test_shapeGradient_quadrature |= set([('grad(v)Xgrad(w)*dV_a',ck,cj,ci)])
                     self.phi_trial_shapeGradient_X_test_shape_elementBoundaryQuadrature |= set([('grad(v)Xw*dS_a',ck,cj,ci)])
-                    if numericalFluxType != None:
+                    if numericalFluxType is not None:
                         self.trial_shape_X_test_shape_quadrature |= set([('vXw*dV_a',ck,cj,ci)])
         #mwf what if miss nonlinearities in diffusion that don't match potentials?
         for comb in self.dphi.keys():
@@ -581,14 +613,14 @@ class OneLevelTransport(NonlinearEquation):
             self.tensors_quadrature |= set([('dsigma',ci,cj) for cj  in cjDict.keys()])
             self.tensors_elementBoundaryQuadrature |= set([('dsigma',ci,cj) for cj  in cjDict.keys()])
         #TODO
-        if numericalFluxType != None:#put in more specific check
+        if numericalFluxType is not None:#put in more specific check
             self.test_shape_elementBoundaryQuadrature |= set([('w',ci) for ci in self.coefficients.hamiltonian.keys()])
             self.test_shape_elementBoundaryQuadrature |= set([('w*dS_H',ci) for ci in self.coefficients.hamiltonian.keys()])
             for ci,cjDict in self.coefficients.hamiltonian.iteritems():
                 self.trial_shape_X_test_shape_elementBoundaryQuadrature |= set([('vXw*dS_H',cj,ci) for cj in cjDict.keys()])
 
         #stabilization
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for cjDict in self.coefficients.advection.values():
                 self.vectors_quadrature |= set([('grad(u)',cj) for cj  in cjDict.keys()])
                 self.trial_shapeGradient_quadrature |= set([('grad(v)',cj) for cj  in cjDict.keys()])
@@ -660,7 +692,7 @@ class OneLevelTransport(NonlinearEquation):
             #end usesFEMinterpolant case
 
         #shock capturing
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 self.scalars_quadrature |= set([('numDiff',ci,ci)])
                 self.scalars_quadrature |= set([('pdeResidual',ci)])
@@ -711,7 +743,7 @@ class OneLevelTransport(NonlinearEquation):
         #mwf add for inflow boundary calculations, wastes space for interor
         self.scalars_elementBoundaryQuadrature |= set([('inflowFlux',ci) for ci in self.coefficients.advection.keys()])
         #for 2-sided Hamilton Jacobi fluxes
-        if numericalFluxType != None:#mwf TODO make more specific
+        if numericalFluxType is not None:#mwf TODO make more specific
             self.scalars_elementBoundaryQuadrature |= set([('HamiltonJacobiFlux',ci) for ci in self.coefficients.hamiltonian.keys()])
             #don't have to set exterior explicitly
         #mwf have to go back and separate out logic to remove duplication once things working
@@ -759,7 +791,7 @@ class OneLevelTransport(NonlinearEquation):
         for k in self.tensors_quadrature:
             if (self.sd
                 and k[0] in ['a','da']
-                and self.coefficients.sdInfo != None
+                and self.coefficients.sdInfo is not None
                 and (k[1],k[2]) in self.coefficients.sdInfo.keys()):
                 self.q[k]=numpy.zeros(
                     (self.mesh.nElements_global,
@@ -773,7 +805,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nSpace_global,
                      self.nSpace_global),
                     'd')
-        log(memory("element quadrature","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature","OneLevelTransport"),level=4)
         #
         # element boundary quadrature
         #
@@ -783,10 +815,10 @@ class OneLevelTransport(NonlinearEquation):
         # numerical flux (dg method)
         # postprocessing cg velocity fields
         #
-        needEBQ = (numericalFluxType != None) and numericalFluxType.hasInterior
-        if self.conservativeFlux != None:
+        needEBQ = (numericalFluxType is not None) and numericalFluxType.hasInterior
+        if self.conservativeFlux is not None:
             for ci in self.conservativeFlux.keys():
-                needEBQ = needEBQ or self.conservativeFlux[ci] != None
+                needEBQ = needEBQ or self.conservativeFlux[ci] is not None
         if options.needEBQ:
             needEBQ = True
         self.needEBQ=needEBQ
@@ -800,7 +832,7 @@ class OneLevelTransport(NonlinearEquation):
             for k in self.tensors_elementBoundaryQuadrature:
                 if (self.sd
                     and k[0] in ['a','da']
-                    and self.coefficients.sdInfo != None
+                    and self.coefficients.sdInfo is not None
                     and (k[1],k[2]) in self.coefficients.sdInfo.keys()):
                     self.ebq[k]=numpy.zeros(
                         (self.mesh.nElements_global,
@@ -823,7 +855,7 @@ class OneLevelTransport(NonlinearEquation):
                                            max(1,self.nSpace_global-1),
                                            max(1,self.nSpace_global-1)),
                                           'd')
-            log(memory("element boundary quadrature","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature","OneLevelTransport"),level=4)
         #
         # exterior element boundary quadrature
         #
@@ -838,7 +870,7 @@ class OneLevelTransport(NonlinearEquation):
         for k in self.tensors_elementBoundaryQuadrature_exterior:
             if (self.sd
                 and k[0] in ['a','da']
-                and self.coefficients.sdInfo != None
+                and self.coefficients.sdInfo is not None
                 and (k[1],k[2]) in self.coefficients.sdInfo.keys()):
                 self.ebqe[k]=numpy.zeros(
                     (self.mesh.nExteriorElementBoundaries_global,
@@ -858,7 +890,7 @@ class OneLevelTransport(NonlinearEquation):
                                        max(1,self.nSpace_global-1),
                                        max(1,self.nSpace_global-1)),
                                       'd')
-        log(memory("global exterior element boundary quadrature","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature","OneLevelTransport"),level=4)
         self.forceStrongConditions= numericalFluxType.useStrongDirichletConstraints
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
@@ -871,10 +903,10 @@ class OneLevelTransport(NonlinearEquation):
         #mwf only need ebq if
         # numerical flux (dg method)
         # postprocessing cg velocity fields
-        needEBQ_GLOBAL = numericalFluxType != None
-        if self.conservativeFlux != None:
+        needEBQ_GLOBAL = numericalFluxType is not None
+        if self.conservativeFlux is not None:
             for ci in self.conservativeFlux.keys():
-                needEBQ_GLOBAL = needEBQ_GLOBAL or self.conservativeFlux[ci] != None
+                needEBQ_GLOBAL = needEBQ_GLOBAL or self.conservativeFlux[ci] is not None
         if options.needEBQ_GLOBAL:
             needEBQ_GLOBAL = True
         self.needEBQ_GLOBAL=needEBQ_GLOBAL
@@ -884,7 +916,7 @@ class OneLevelTransport(NonlinearEquation):
             self.scalars_elementBoundaryQuadrature_global.allocate(self.ebq_global)
             #allocate vectors element boundary quadrature global
             self.vectors_elementBoundaryQuadrature_global.allocate(self.ebq_global)
-            log(memory("element boundary quadrature global","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature global","OneLevelTransport"),level=4)
         #
         # phi interpolation points
         #
@@ -901,7 +933,7 @@ class OneLevelTransport(NonlinearEquation):
         for k in self.tensors_phi_ip:
             if (self.sd
                 and k[0] in ['a','da']
-                and self.coefficients.sdInfo != None
+                and self.coefficients.sdInfo is not None
                 and (k[1],k[2]) in self.coefficients.sdInfo.keys()):
                 self.phi_ip[k]=numpy.zeros(
                     (self.mesh.nElements_global,
@@ -963,7 +995,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nSpace_global),
                         'd')
 
-        log(memory("interpolation points","OneLevelTransport"),level=4)
+        logEvent(memory("interpolation points","OneLevelTransport"),level=4)
         #
         # shape
         #
@@ -976,7 +1008,7 @@ class OneLevelTransport(NonlinearEquation):
                 kv = kv0
             if self.testIsTrial:
                 if kv in sd.keys():
-                    log("Shallow copy of trial shape is being used for test shape %s " % kw[0],level=4)
+                    logEvent("Shallow copy of trial shape is being used for test shape %s " % kw[0],level=4)
                     sd[kw] = sd[kv]
                     aliased=True
             return aliased
@@ -987,9 +1019,9 @@ class OneLevelTransport(NonlinearEquation):
             if ks not in entryStrings:
                 return False
             k0 = (ks,)+(refi,)
-            if self.reuse_test_trial_quadrature and refi != None:
+            if self.reuse_test_trial_quadrature and refi is not None:
                 if k0 in sd.keys():
-                    log("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
+                    logEvent("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
                     sd[k] = sd[k0]
                     aliased=True
             return aliased
@@ -1015,7 +1047,7 @@ class OneLevelTransport(NonlinearEquation):
         for k in trial_shape_quadrature_duplicate:
             self.q[k] = self.q[trial_shape_quadrature_duplicate_map[k]]
         #mwf trial-dup end
-        log(memory("element quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
         #allocate phi trial shape functions
         refComponent_phi = findReferenceComponent_phi(self.coefficients.diffusion)
         for k in sorted(self.phi_trial_shape_quadrature):
@@ -1025,7 +1057,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nQuadraturePoints_element,
                      self.nDOF_phi_trial_element[k[-1]]),
                     'd')
-        log(memory("element quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
         #allocate test shape functions
         for k in self.test_shape_quadrature:
             if not makeAlias(self.q,k):
@@ -1034,7 +1066,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nQuadraturePoints_element,
                      self.nDOF_test_element[k[-1]]),
                     'd')
-        log(memory("element quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
         #allocate trial shape function gradients
         for k in sorted(self.trial_shapeGradient_quadrature):
             if not makeAliasForComponent1(self.q,k,['grad(v)'],refi=0):#need to handle multiple component combinations
@@ -1044,7 +1076,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_trial_element[k[-1]],
                      self.nSpace_global),
                     'd')
-        log(memory("element quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
         #allocate phi trial shape function gradients
         for k in sorted(self.phi_trial_shapeGradient_quadrature):
             if not makeAliasForComponent1(self.q,k,['grad(v)'],refi=refComponent_phi):
@@ -1054,7 +1086,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_phi_trial_element[k[-1]],
                      self.nSpace_global),
                     'd')
-        log(memory("element quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
         #allocate test shape function gradients
         for k in self.test_shapeGradient_quadrature:
             if not makeAlias(self.q,k):
@@ -1085,7 +1117,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nSpace_global,
                          self.nSpace_global),
                         'd')
-        log(memory("element quadrature, test/trial functions test_shapeGradient","OneLevelTransport"),level=4)
+        logEvent(memory("element quadrature, test/trial functions test_shapeGradient","OneLevelTransport"),level=4)
         if not self.lowmem:
             #allocate trial shape function X test shape functions
             for k in self.trial_shape_X_test_shape_quadrature:
@@ -1095,7 +1127,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_trial_element[k[1]],
                      self.nDOF_test_element[k[2]]),
                     'd')
-            log(memory("element quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
             #allocate phi trial shape function X test shape functions
             for k in self.phi_trial_shape_X_test_shape_quadrature:
                 self.q[k]=numpy.zeros(
@@ -1104,7 +1136,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_phi_trial_element[k[1]],
                      self.nDOF_test_element[k[2]]),
                     'd')
-            log(memory("element quadrature, test/trial functions phi_trial_shape_X_test_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions phi_trial_shape_X_test_shape","OneLevelTransport"),level=4)
             #allocate gradient X test shape function gradients
             for k in self.gradient_X_test_shapeGradient_quadrature:
                 self.q[k]=numpy.zeros(
@@ -1114,7 +1146,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nSpace_global,
                      self.nSpace_global),
                     'd')
-            log(memory("element quadrature, test/trial functions gradient_X_test_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions gradient_X_test_shapeGradient","OneLevelTransport"),level=4)
             #allocate trial shape function X shape function gradients
             for k in self.trial_shape_X_test_shapeGradient_quadrature:
                 self.q[k]=numpy.zeros(
@@ -1124,7 +1156,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_test_element[k[2]],
                      self.nSpace_global),
                     'd')
-            log(memory("element quadrature, test/trial functions trial_shape_X_test_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions trial_shape_X_test_shapeGradient","OneLevelTransport"),level=4)
             #
             #allocate trial shape function gradient X test shape function
             for k in self.trial_shapeGradient_X_test_shape_quadrature:
@@ -1135,7 +1167,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_test_element[k[2]],
                      self.nSpace_global),
                     'd')
-            log(memory("element quadrature, test/trial functions trial_shapeGradient_X_test_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions trial_shapeGradient_X_test_shape","OneLevelTransport"),level=4)
 
             #allocate trial shape function gradient X test shape function gradients
             for k in self.trial_shapeGradient_X_test_shapeGradient_quadrature:
@@ -1147,7 +1179,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nSpace_global,
                      self.nSpace_global),
                     'd')
-            log(memory("element quadrature, test/trial functions trial_shapeGradient_X_test_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions trial_shapeGradient_X_test_shapeGradient","OneLevelTransport"),level=4)
             #allocate phi trial shape function gradient X test shape function gradients
             for k in self.phi_trial_shapeGradient_X_test_shapeGradient_quadrature:
                 self.q[k]=numpy.zeros(
@@ -1158,7 +1190,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nSpace_global,
                      self.nSpace_global),
                     'd')
-            log(memory("element quadrature, test/trial functions phi_trial_shapeGradient_X_test_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element quadrature, test/trial functions phi_trial_shapeGradient_X_test_shapeGradient","OneLevelTransport"),level=4)
         #
         # element boundary quadrature
         #
@@ -1172,7 +1204,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                          self.nDOF_trial_element[k[-1]]),
                         'd')
-            log(memory("element boundary quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
             #allocate phi trial shape element boundary quadrature
             for k in sorted(self.phi_trial_shape_elementBoundaryQuadrature):
                 if not makeAliasForComponent1(self.ebq,k,['v'],refi=refComponent_phi):
@@ -1182,7 +1214,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                          self.nDOF_phi_trial_element[k[-1]]),
                         'd')
-            log(memory("element boundary quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
             #allocate test shape element boundary quadrature
             for k in self.test_shape_elementBoundaryQuadrature:
                 if not makeAlias(self.ebq,k):
@@ -1192,7 +1224,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                          self.nDOF_test_element[k[-1]]),
                         'd')
-            log(memory("element boundary quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
             #allocate trial shape gradient element boundary quadrature
             for k in sorted(self.trial_shapeGradient_elementBoundaryQuadrature):
                 if not makeAliasForComponent1(self.ebq,k,['grad(v)'],refi=0):
@@ -1203,7 +1235,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nDOF_trial_element[k[-1]],
                          self.nSpace_global),
                         'd')
-            log(memory("element boundary quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
             #allocate phi trial shape gradient element boundary quadrature
             for k in sorted(self.phi_trial_shapeGradient_elementBoundaryQuadrature):
                 if not makeAliasForComponent1(self.ebq,k,['grad(v)'],refi=refComponent_phi):
@@ -1214,7 +1246,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nDOF_phi_trial_element[k[-1]],
                          self.nSpace_global),
                         'd')
-            log(memory("element boundary quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
+            logEvent(memory("element boundary quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
             #allocate trial shape X test shape element boundary quadratre
             if not self.lowmem:
                 for k in self.trial_shape_X_test_shape_elementBoundaryQuadrature:
@@ -1225,7 +1257,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nDOF_trial_element[k[1]],
                          self.nDOF_test_element[k[2]]),
                         'd')
-                log(memory("element boundary quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
+                logEvent(memory("element boundary quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
         #
         # global exterior element boundary quadrature
         #
@@ -1238,7 +1270,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.nDOF_trial_element[k[-1]]),
                     'd')
-        log(memory("global exterior element boundary quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature, test/trial functions trial_shape","OneLevelTransport"),level=4)
         #allocate phi trial shape element boundary quadrature
         for k in sorted(self.phi_trial_shape_elementBoundaryQuadrature):
             if not makeAliasForComponent1(self.ebqe,k,['v'],refi=refComponent_phi):
@@ -1247,7 +1279,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.nDOF_phi_trial_element[k[-1]]),
                     'd')
-        log(memory("global exterior element boundary quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature, test/trial functions phi_trial_shape","OneLevelTransport"),level=4)
         #allocate test shape element boundary quadrature
         for k in self.test_shape_elementBoundaryQuadrature:
             if not makeAlias(self.ebqe,k):
@@ -1256,7 +1288,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.nDOF_test_element[k[-1]]),
                     'd')
-        log(memory("global exterior element boundary quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature, test/trial functions test_shape","OneLevelTransport"),level=4)
         #allocate trial shape gradient element boundary quadrature
         for k in sorted(self.trial_shapeGradient_elementBoundaryQuadrature):
             if not makeAliasForComponent1(self.ebqe,k,['grad(v)'],refi=0):
@@ -1266,7 +1298,7 @@ class OneLevelTransport(NonlinearEquation):
                  self.nDOF_trial_element[k[-1]],
                  self.nSpace_global),
                 'd')
-        log(memory("global exterior element boundary quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
         #allocate phi trial shape gradient element boundary quadrature
         for k in sorted(self.phi_trial_shapeGradient_elementBoundaryQuadrature):
             #if not makeAlias(self.ebqe,k):
@@ -1277,7 +1309,7 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_phi_trial_element[k[-1]],
                      self.nSpace_global),
                     'd')
-        log(memory("global exterior element boundary quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
+        logEvent(memory("global exterior element boundary quadrature, test/trial functions phi_trial_shapeGradient","OneLevelTransport"),level=4)
         #allocate trial shape X test shape element boundary quadratre
         if not self.lowmem:
             for k in self.trial_shape_X_test_shape_elementBoundaryQuadrature:
@@ -1287,18 +1319,18 @@ class OneLevelTransport(NonlinearEquation):
                      self.nDOF_trial_element[k[1]],
                      self.nDOF_test_element[k[2]]),
                     'd')
-            log(memory("global exterior element boundary quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
-        log("Dumping quadrature shapes for model %s" % self.name,level=9)
-        log("Element quadrature array (q)", level=9)
-        for (k,v) in self.q.iteritems(): log(str((k,v.shape)),level=9)
-        log("Element boundary quadrature (ebq)",level=9)
-        for (k,v) in self.ebq.iteritems(): log(str((k,v.shape)),level=9)
-        log("Global element boundary quadrature (ebq_global)",level=9)
-        for (k,v) in self.ebq_global.iteritems(): log(str((k,v.shape)),level=9)
-        log("Exterior element boundary quadrature (ebqe)",level=9)
-        for (k,v) in self.ebqe.iteritems(): log(str((k,v.shape)),level=9)
-        log("Interpolation points for nonlinear diffusion potential (phi_ip)",level=9)
-        for (k,v) in self.phi_ip.iteritems(): log(str((k,v.shape)),level=9)
+            logEvent(memory("global exterior element boundary quadrature, test/trial functions trial_shape_X_test_shape","OneLevelTransport"),level=4)
+        logEvent("Dumping quadrature shapes for model %s" % self.name,level=9)
+        logEvent("Element quadrature array (q)", level=9)
+        for (k,v) in self.q.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Element boundary quadrature (ebq)",level=9)
+        for (k,v) in self.ebq.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Global element boundary quadrature (ebq_global)",level=9)
+        for (k,v) in self.ebq_global.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Exterior element boundary quadrature (ebqe)",level=9)
+        for (k,v) in self.ebqe.iteritems(): logEvent(str((k,v.shape)),level=9)
+        logEvent("Interpolation points for nonlinear diffusion potential (phi_ip)",level=9)
+        for (k,v) in self.phi_ip.iteritems(): logEvent(str((k,v.shape)),level=9)
         #
         # allocate residual and Jacobian storage
         #
@@ -1328,7 +1360,7 @@ class OneLevelTransport(NonlinearEquation):
                          self.nDOF_test_element[ci],
                          self.nDOF_trial_element[cj]),
                         'd')
-        log(memory("element Jacobian","OneLevelTransport"),level=4)
+        logEvent(memory("element Jacobian","OneLevelTransport"),level=4)
         self.fluxJacobian = {}
         self.fluxJacobian_eb = {}
         self.fluxJacobian_exterior = {}
@@ -1363,7 +1395,7 @@ class OneLevelTransport(NonlinearEquation):
                         self.nElementBoundaryQuadraturePoints_elementBoundary),
                         'd')
 
-                if numericalFluxType != None:
+                if numericalFluxType is not None:
                     self.fluxJacobian_exterior[ci][cj] = numpy.zeros(
                         (self.mesh.nExteriorElementBoundaries_global,
                          self.nElementBoundaryQuadraturePoints_elementBoundary,
@@ -1454,7 +1486,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         #
         #
-        log(memory("element and element boundary Jacobians","OneLevelTransport"),level=4)
+        logEvent(memory("element and element boundary Jacobians","OneLevelTransport"),level=4)
         self.inflowBoundaryBC = {}
         self.inflowBoundaryBC_values = {}
         self.inflowFlux = {}
@@ -1480,35 +1512,38 @@ class OneLevelTransport(NonlinearEquation):
         #
         del self.internalNodes
         self.internalNodes = None
-        log("Updating local to global mappings",2)
+        logEvent("Updating local to global mappings",2)
         self.updateLocal2Global()
-        log("Building time integration object",2)
-        log(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
+        logEvent("Building time integration object",2)
+        logEvent(memory("inflowBC, internalNodes,updateLocal2Global","OneLevelTransport"),level=4)
         #mwf for interpolating subgrid error for gradients etc
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
             self.timeIntegration = TimeIntegrationClass(self)
 
-        if options != None:
+        if options is not None:
             self.timeIntegration.setFromOptions(options)
-        log(memory("TimeIntegration","OneLevelTransport"),level=4)
-        log("Calculating numerical quadrature formulas",2)
+        logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
+        logEvent("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
 
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
-            assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
+            assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        interleave_DOF=True
-        for nDOF_trial_element_ci in self.nDOF_trial_element:
-            if nDOF_trial_element_ci != self.nDOF_trial_element[0]:
-                interleave_DOF=False
+        if numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions:
+            interleave_DOF=True
+            for nDOF_trial_element_ci in self.nDOF_trial_element:
+                if nDOF_trial_element_ci != self.nDOF_trial_element[0]:
+                    interleave_DOF=False
+        else:
+            interleave_DOF=False
         self.setupFieldStrides(interleaved=interleave_DOF)
 
-        log(memory("stride+offset","OneLevelTransport"),level=4)
-        if numericalFluxType != None:
+        logEvent(memory("stride+offset","OneLevelTransport"),level=4)
+        if numericalFluxType is not None:
             if options == None or options.periodicDirichletConditions == None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
@@ -1520,7 +1555,7 @@ class OneLevelTransport(NonlinearEquation):
                                                        advectiveFluxBoundaryConditionsSetterDict,
                                                        diffusiveFluxBoundaryConditionsSetterDictDict,
                                                        options.periodicDirichletConditions)
-            if options != None:
+            if options is not None:
                 self.numericalFlux.setFromOptions(options)
         else:
             self.numericalFlux = None
@@ -1537,12 +1572,12 @@ class OneLevelTransport(NonlinearEquation):
                 ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                 for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
                     self.ebqe['penalty'][ebNE,k] = self.numericalFlux.penalty_constant/self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
-        log(memory("numericalFlux","OneLevelTransport"),level=4)
+        logEvent(memory("numericalFlux","OneLevelTransport"),level=4)
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
-        log(memory("velocity postprocessor","OneLevelTransport"),level=4)
+        logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         import Archiver
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
@@ -1613,11 +1648,13 @@ class OneLevelTransport(NonlinearEquation):
                 for eN in range(self.mesh.nElements_global):
                     materialFlag = self.mesh.elementMaterialTypes[eN]
                     for k in range(self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+#                        pdb.set_trace()
                         interpolationValues[eN,k] = sol.uOfXT(self.u[cj].femSpace.interpolationPoints[eN,k],T,materialFlag)
             except TypeError:
                 for eN in range(self.mesh.nElements_global):
                     for k in range(self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
                         interpolationValues[eN,k] = sol.uOfXT(self.u[cj].femSpace.interpolationPoints[eN,k],T)
+#            pdb.set_trace()
             self.ua[cj].projectFromInterpolationConditions(interpolationValues)
             self.u[cj].femSpace.writeFunctionXdmf(archive,self.ua[cj],tCount)
     #what about setting initial conditions directly from dofs calculated elsewhere?
@@ -1638,21 +1675,21 @@ class OneLevelTransport(NonlinearEquation):
         self.timeIntegration.t=t0
         self.getResidual(u0,r0)
         self.estimate_mt()
-        if DTSET != None:
+        if DTSET is not None:
             self.timeIntegration.chooseInitial_dt(t0,tOut,self.q)
             self.timeIntegration.set_dt(DTSET)
         else:
             self.timeIntegration.chooseInitial_dt(t0,tOut,self.q)
         self.timeIntegration.setInitialStageValues()
         self.timeIntegration.initializeTimeHistory(resetFromDOF=True)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.updateSubgridErrorHistory(initializationPhase=True)#mwf added arg for tracking subscales
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.updateShockCapturingHistory()
     def initializeTimeHistory(self):
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.updateSubgridErrorHistory(initializationPhase=True)#mwf added arg for tracking subscales
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.updateShockCapturingHistory()
     def updateTimeHistory(self,T,resetFromDOF=False):
         """
@@ -1660,14 +1697,14 @@ class OneLevelTransport(NonlinearEquation):
         """
 #         self.timeIntegration.t=T
 #         self.timeIntegration.updateTimeHistory(resetFromDOF)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.updateSubgridErrorHistory()
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.updateShockCapturingHistory()
             #ci
         #if
     def calculateAuxiliaryQuantitiesAfterStep(self):
-        if self.conservativeFlux != None and self.velocityPostProcessor != None:
+        if self.conservativeFlux is not None and self.velocityPostProcessor is not None:
             if self.movingDomain:
                 for ci in range(self.nc):
                     try:
@@ -1699,24 +1736,23 @@ class OneLevelTransport(NonlinearEquation):
         #cek debug
         #u.tofile("u"+`self.nonlinear_function_evaluations`,sep="\n")
         r.fill(0.0)
-        #Load the Dirichlet conditions
         for cj in range(self.nc):
             for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
                 self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+                    u[self.offset[cj]+self.stride[cj]*dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)#load the BC value directly into the global array
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
         self.calculateCoefficients()
         self.calculateElementResidual()
         self.scale_dt = False
-        log("Element residual",level=9,data=self.elementResidual)
+        logEvent("Element residual",level=9,data=self.elementResidual)
         if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
             self.scale_dt = True
-            log("Rescaling residual for small time steps")
+            logEvent("Rescaling residual for small time steps")
         else:
             self.scale_dt = False
         for ci in range(self.nc):
@@ -1729,7 +1765,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.l2g[ci]['freeGlobal'],
                                                                   self.elementResidual[ci],
                                                                   r);
-        log("Global residual",level=9,data=r)
+        logEvent("Global residual",level=9,data=r)
         if self.forceStrongConditions:#
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1742,8 +1778,6 @@ class OneLevelTransport(NonlinearEquation):
         #imax = numpy.argmax(r); imin = numpy.argmin(r)
         #print "getResidual max,index r[%s]= %s min,index= r[%s] r= %s " % (imax,r[imax],imin,r[imin])
     def getJacobian(self,jacobian,skipMassTerms=False):
-        import superluWrappers
-        import numpy
         ##\todo clean up update,calculate,get,intialize usage
         self.calculateElementBoundaryJacobian()
         self.calculateExteriorElementBoundaryJacobian()
@@ -1767,23 +1801,31 @@ class OneLevelTransport(NonlinearEquation):
             for ci in self.fluxJacobian_hj.keys():
                 for cj in self.fluxJacobian_hj[ci].keys():
                     self.fluxJacobian_hj[ci][cj] *= self.timeIntegration.dt
-        log("Element Jacobian ",level=10,data=self.elementJacobian)
+        logEvent("Element Jacobian ",level=10,data=self.elementJacobian)
         if self.matType == superluWrappers.SparseMatrix:
             self.getJacobian_CSR(jacobian)
         elif self.matType  == numpy.array:
             self.getJacobian_dense(jacobian)
         else:
             raise TypeError("Matrix type must be SparseMatrix or array")
-        log("Jacobian ",level=10,data=jacobian)
+        logEvent("Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
+                    self.nzval[numpy.where(self.colind == global_dofN)] = 0.0 #column
+                    self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN+1]] = 0.0 #row
+                    zeroRow=True
+                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):#row
                         if (self.colind[i] == global_dofN):
                             self.nzval[i] = 1.0
-                        else:
-                            self.nzval[i] = 0.0
+                            zeroRow = False
+                    if zeroRow:
+                        raise RuntimeError("Jacobian has a zero row because sparse matrix has no diagonal entry at row "+`global_dofN`+". You probably need add diagonal mass or reaction term")
+                    #print "row = ",global_dofN,"\t",self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN+1]].max()
+        rowptr, colind, nzval = jacobian.getCSRrepresentation()
+        #for i in range(self.dim):
+        #   print "row i=",i,'\t',nzval[rowptr[i]:rowptr[i+1]].max()
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         #cek debug
@@ -1812,7 +1854,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                             self.l2g[cj]['freeGlobal'],
                                                                             self.elementJacobian[ci][cj],
                                                                             jacobian)
-                if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                     cfemIntegrals.updateGlobalJacobianFromElementJacobian_eb_dense(self.mesh.elementNeighborsArray,
                                                                                    self.offset[ci],
                                                                                    self.stride[ci],
@@ -1830,7 +1872,7 @@ class OneLevelTransport(NonlinearEquation):
                 #
                 #element boundary contributions
                 #
-                if self.numericalFlux != None and type(self.numericalFlux) != NumericalFlux.DoNothing:
+                if self.numericalFlux is not None and type(self.numericalFlux) != NumericalFlux.DoNothing:
                     if self.numericalFlux.hasInterior:
                         cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(self.offset[ci],
                                                                                                         self.stride[ci],
@@ -1948,7 +1990,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                         self.ebqe[('w*dS_f',ci)],
                                                                                                         jacobian)
                     #mwf TODO can't get here in logic?
-                    if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                    if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                         #
                         cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(self.mesh.elementNeighborsArray,
                                                                                                            self.mesh.nElements_global,
@@ -2143,7 +2185,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                           self.csrColumnOffsets[(ci,cj)],
                                                                           self.elementJacobian[ci][cj],
                                                                           jacobian)
-                if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                     cfemIntegrals.updateGlobalJacobianFromElementJacobian_eb_CSR(self.mesh.elementNeighborsArray,
                                                                                  self.l2g[ci]['nFreeDOF'],
                                                                                  self.l2g[ci]['freeLocal'],
@@ -2156,7 +2198,7 @@ class OneLevelTransport(NonlinearEquation):
                 #
                 #element boundary contributions
                 #
-                if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+                if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
                     if self.numericalFlux.hasInterior:
                         cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(self.mesh.interiorElementBoundariesArray,
                                                                                                       self.mesh.elementBoundaryElementsArray,
@@ -2244,7 +2286,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                           self.ebqe[('w*dS_f',ci)],
                                                                                                           jacobian)
                             #mwf TODO can't get here with current logic?
-                            if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                            if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                             #
                                 cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(self.mesh.exteriorElementBoundariesArray,
                                                                                                                  self.mesh.elementBoundaryElementsArray,
@@ -2416,7 +2458,7 @@ class OneLevelTransport(NonlinearEquation):
                                             self.elementResidual[0],
                                             self.elementResidual[1],
                                             self.elementResidual[2])
-        if  self.stabilization != None:
+        if  self.stabilization is not None:
             for ci in range(self.nc):
                 for cj in self.coefficients.stencil[ci]:
                     cfemIntegrals.updateSubgridError(self.q[('subgridError',cj)],
@@ -2440,7 +2482,7 @@ class OneLevelTransport(NonlinearEquation):
                         else:
                             assert False, "need self.q[('grad(subgridError)Xgrad(w)*dV_numDiff',ci,ci)] if not self.lowmem "
 
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if self.lowmem:
                     cfemIntegrals.updateNumericalDiffusion_lowmem(self.q[('numDiff',ci,ci)],
@@ -2451,13 +2493,7 @@ class OneLevelTransport(NonlinearEquation):
                     cfemIntegrals.updateNumericalDiffusion(self.q[('numDiff',ci,ci)],
                                                            self.q[('grad(u)Xgrad(w)*dV_numDiff',ci,ci)],
                                                            self.elementResidual[ci])
-        # for eN in range(self.mesh.nElements_global):
-        #     for i in range(self.nDOF_test_element[0]):
-        #         print "element residual "+`eN`+'\t'+`i`
-        #         print self.elementResidual[0][eN,i]
-        #         print self.elementResidual[1][eN,i]
-        #         print self.elementResidual[2][eN,i]
-        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+        if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             for ci in range(self.nc):
                 self.ebq_global[('totalFlux',ci)].fill(0.0)
                 self.ebqe[('totalFlux',ci)].fill(0.0)
@@ -2588,7 +2624,7 @@ class OneLevelTransport(NonlinearEquation):
 #                                                                                                                                    *self.ebqe[('grad(v)',ci)][ebNE,k,i,I]
 #                                                                                                                                    *self.ebqe[('dS_u',ci)][ebNE,k])
             for ci in range(self.nc):
-                if self.numericalFlux.hasInterior or self.conservativeFlux != None:
+                if self.numericalFlux.hasInterior or self.conservativeFlux is not None:
                     cfemIntegrals.copyExteriorElementBoundaryValuesToGlobalElementBoundaryValues(self.mesh.exteriorElementBoundariesArray,
                                                                                                  self.mesh.elementBoundaryElementsArray,
                                                                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -2627,7 +2663,7 @@ class OneLevelTransport(NonlinearEquation):
             for ci,flag in self.fluxBoundaryConditions.iteritems():
                 #put in total flux here as well?
                 self.ebqe[('totalFlux',ci)].fill(0.0)
-                if self.conservativeFlux != None and self.conservativeFlux.has_key(ci) and self.conservativeFlux[ci] != None and self.numericalFlux.hasInterior:
+                if self.conservativeFlux is not None and self.conservativeFlux.has_key(ci) and self.conservativeFlux[ci] is not None and self.numericalFlux.hasInterior:
                     self.ebq_global[('totalFlux',ci)].fill(0.0)
                 if (flag == 'outFlow' or
                     flag == 'mixedFlow' or
@@ -2652,7 +2688,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                             self.ebqe[('w*dS_a',ck,ci)],
                                                                             self.elementResidual[ci])
                             self.ebqe[('totalFlux',ci)]       += self.ebqe[('diffusiveFlux',ck,ci)]
-                if self.conservativeFlux != None and self.conservativeFlux.has_key(ci) and self.conservativeFlux[ci] != None:
+                if self.conservativeFlux is not None and self.conservativeFlux.has_key(ci) and self.conservativeFlux[ci] is not None:
                     cfemIntegrals.copyExteriorElementBoundaryValuesToGlobalElementBoundaryValues(self.mesh.exteriorElementBoundariesArray,
                                                                                                  self.mesh.elementBoundaryElementsArray,
                                                                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -2666,7 +2702,7 @@ class OneLevelTransport(NonlinearEquation):
             cfemIntegrals.updateMass_weak(self.q[('mt',ci)],
                                           self.q[('w*dV_m',ci)],
                                           self.elementResidual[ci])
-        if self.dirichletNodeSetList != None:
+        if self.dirichletNodeSetList is not None:
             for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
                 for eN in range(self.mesh.nElements_global):
                     for j in nodeSetList[eN]:
@@ -2808,7 +2844,7 @@ class OneLevelTransport(NonlinearEquation):
                                                     self.elementJacobian[2][0],
                                                     self.elementJacobian[2][1],
                                                     self.elementJacobian[2][2])
-        if self.stabilization!= None:
+        if self.stabilization is not None:
             for ci in range(self.coefficients.nc):
                 if self.timeIntegration.stabilizationIsImplicit[ci]:
                     for cj in self.coefficients.stencil[ci]:
@@ -2826,7 +2862,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                       self.elementJacobian[ci][ci])
                             else:
                                 assert False
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if self.timeIntegration.shockCapturingIsImplicit[ci]:
                     if self.lowmem:
@@ -2853,9 +2889,9 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.q[('vXw*dV_m',cj,ci)],
                                                                   self.elementJacobian[ci][cj])
             for cj in range(self.nc):
-                if self.timeIntegration.duStar_du[cj] != None:
+                if self.timeIntegration.duStar_du[cj] is not None:
                     self.elementJacobian[ci][cj] *= self.timeIntegration.duStar_du[cj]
-        if self.dirichletNodeSetList != None:
+        if self.dirichletNodeSetList is not None:
             for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
                 for eN in range(self.mesh.nElements_global):
                     for j in nodeSetList[eN]:
@@ -2882,9 +2918,9 @@ class OneLevelTransport(NonlinearEquation):
                                                               self.q[('vXw*dV_m',cj,ci)],
                                                               self.elementJacobian[ci][cj])
         for cj in range(self.nc):
-            if self.timeIntegration.duStar_du[cj] != None:
+            if self.timeIntegration.duStar_du[cj] is not None:
                 self.elementJacobian[ci][cj] *= self.timeIntegration.duStar_du[cj]
-        if self.dirichletNodeSetList != None:
+        if self.dirichletNodeSetList is not None:
             for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
                 for eN in range(self.mesh.nElements_global):
                     for j in nodeSetList[eN]:
@@ -2906,7 +2942,7 @@ class OneLevelTransport(NonlinearEquation):
                 evalElementBoundaryJacobian_hj = True
                 j.fill(0.0)
         #cek clean up this logic using numerical flux
-        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+        if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             #
             self.numericalFlux.updateInteriorNumericalFluxJacobian(self.l2g,self.q,self.ebq,self.ebq_global,self.dphi,
                                                                    self.fluxJacobian,self.fluxJacobian_eb,self.fluxJacobian_hj)
@@ -2921,7 +2957,7 @@ class OneLevelTransport(NonlinearEquation):
         for jDict in self.fluxJacobian_exterior.values():
             for j in jDict.values():
                 j.fill(0.0)
-        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+        if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             self.numericalFlux.updateExteriorNumericalFluxJacobian(self.l2g,self.inflowFlag,self.q,self.ebqe,self.dphi,
                                                                    self.fluxJacobian_exterior,self.fluxJacobian_eb,self.fluxJacobian_hj)
         else:
@@ -2993,7 +3029,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                          cq[('dpdeResidual',ci,cj)])
             for ci,ckDict in self.coefficients.diffusion.iteritems():
                 for ck,cjDict in ckDict.iteritems():
-                    if self.Hess and self.stabilization != None:
+                    if self.Hess and self.stabilization is not None:
                         if self.sd:
                             cfemIntegrals.updateDiffusion2_strong_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                      cq[('a',ci,ck)],
@@ -3055,7 +3091,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                              cq[('grad(u)',cj)],
                                                                              cq[('grad(v)',cj)],
                                                                              cq[('dpdeResidual',ci,cj)])
-                    if self.Hess and self.stabilization != None:
+                    if self.Hess and self.stabilization is not None:
                         for cj in self.coefficients.potential[ck].keys():
                             if self.sd:
                                 cfemIntegrals.updateDiffusionJacobian2_strong_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
@@ -3127,7 +3163,7 @@ class OneLevelTransport(NonlinearEquation):
                     if self.stabilization and self.stabilization.trackSubScales:# or self.stabilization.usesGradientStabilization):
                         #mwf this needs to be dmt_sge, but needs to go after calculateSubgridError then
                         #mwf debug
-                        log("Transport adding adjoint mass term dmt_sge(%s,%s) max=%s min=%s " % (ci,cj,cq[('dmt_sge',ci,cj)].max(),cq[('dmt_sge',ci,cj)].min()))
+                        logEvent("Transport adding adjoint mass term dmt_sge(%s,%s) max=%s min=%s " % (ci,cj,cq[('dmt_sge',ci,cj)].max(),cq[('dmt_sge',ci,cj)].min()))
                         cfemIntegrals.updateMass_adjoint(cq[('dmt_sge',ci,cj)],
                                                          cq[('w*dV_stab',ci)],
                                                          cq[('Lstar*w*dV',cj,ci)])
@@ -3146,7 +3182,7 @@ class OneLevelTransport(NonlinearEquation):
             if self.q.has_key(('grad(u)',cj)):
                 self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
                                              self.q[('grad(u)',cj)])
-            if self.stabilization != None:
+            if self.stabilization is not None:
                 if self.q.has_key(('Hess(u)',cj)):
                     self.u[cj].getHessianValues(self.q[('Hess(v)',cj)],
                                                 self.q[('Hess(u)',cj)])
@@ -3178,7 +3214,7 @@ class OneLevelTransport(NonlinearEquation):
 #                                     for I in range(self.nSpace_global):
 #                                         self.q[('df',ci,cj)][eN,k,I]-=self.q[('dm',ci,cj)][eN,k]*self.q['xt'][eN,k,I]
 #                     print "f",ci,self.q[('f',ci)]
-        log("Coefficients on element",level=10,data=self.q)
+        logEvent("Coefficients on element",level=10,data=self.q)
         #
         # let the time integrator calculate m_t and possibly other coefficients at the quadrature points
         #
@@ -3225,16 +3261,16 @@ class OneLevelTransport(NonlinearEquation):
                     self.dphi[(ck,cj)].projectFromInterpolationConditions(self.phi_ip[('dphi',ck,cj)])
                     #mwf need to communicate values across processors if have spatial heterogeneity and spatial dependence of
                     #potential
-                    if self.phi[ck].par_dof != None:
+                    if self.phi[ck].par_dof is not None:
                         self.phi[ck].par_dof.scatter_forward_insert()
-                    if self.dphi[(ck,cj)].par_dof != None:
+                    if self.dphi[(ck,cj)].par_dof is not None:
                         self.dphi[(ck,cj)].par_dof.scatter_forward_insert()
 
                     self.phi[ck].getValues(self.q[('v',ck)],
                                            self.q[('phi',ck)])
                     self.phi[ck].getGradientValues(self.q[('grad(v)',ck)],
                                                    self.q[('grad(phi)',ck)])
-                    if self.stabilization != None and self.Hess:
+                    if self.stabilization is not None and self.Hess:
                         self.phi[ck].getHessianValues(self.q[('Hess(v)',ck)],
                                                       self.q[('Hess(phi)',ck)])
                     for ci in self.coefficients.diffusion.keys():
@@ -3248,7 +3284,7 @@ class OneLevelTransport(NonlinearEquation):
                     self.q[('phi',ck)][:]=self.q[('u',ck)]
                     self.q[('dphi',ck,cj)].fill(1.0)
                     self.q[('grad(phi)',ck)][:]=self.q[('grad(u)',ck)]
-                    if self.stabilization != None and self.Hess:
+                    if self.stabilization is not None and self.Hess:
                         self.q[('Hess(phi)',ck)][:]=self.q[('Hess(u)',ck)]
                     for ci in self.coefficients.diffusion.keys():
                         if self.coefficients.diffusion[ci].has_key(ck):
@@ -3327,7 +3363,7 @@ class OneLevelTransport(NonlinearEquation):
                                                   self.q[('dH',ci,ci)],
                                                   self.q[('cfl',ci)])
 
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.calculateNumericalDiffusion(self.q)
     def calculateElementBoundaryCoefficients(self):
         """
@@ -3388,12 +3424,12 @@ class OneLevelTransport(NonlinearEquation):
         #
         # calculate the averages and jumps at element boundaries
         #
-        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+        if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             self.numericalFlux.calculateInteriorNumericalFlux(self.q,self.ebq,self.ebq_global)
-        if self.conservativeFlux != None:
+        if self.conservativeFlux is not None:
             for ci in self.conservativeFlux.keys():
                 #don't need for p1-nc?
-                if self.conservativeFlux[ci] not in ['p1-nc','dg','dg-bdm','dg-point-eval','point-eval-gwvd'] and self.conservativeFlux[ci] != None:
+                if self.conservativeFlux[ci] not in ['p1-nc','dg','dg-bdm','dg-point-eval','point-eval-gwvd'] and self.conservativeFlux[ci] is not None:
                     self.ebq[('velocity',ci)].fill(0.0)
                     #self.ebq_global[('velocity',ci)].fill(0.0)
                     self.ebq_global[('velocityAverage',ci)].fill(0.0)
@@ -3441,7 +3477,7 @@ class OneLevelTransport(NonlinearEquation):
                     #
                     #cek can we get rid fo this flag if we're always doing it
                     includeShockCapturingVelocity = True
-                    if self.shockCapturing != None and includeShockCapturingVelocity:
+                    if self.shockCapturing is not None and includeShockCapturingVelocity:
                         fact=1.0
                         cfemIntegrals.updateInteriorElementBoundaryShockCapturingVelocity(self.mesh.interiorElementBoundariesArray,
                                                                                           self.mesh.elementBoundaryElementsArray,
@@ -3524,7 +3560,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         # calculate the averages and jumps at element boundaries
         #
-        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+        if self.numericalFlux is not None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             self.numericalFlux.calculateExteriorNumericalFlux(self.inflowFlag,self.q,self.ebqe)
         else:
             #cek this wll go away
@@ -3546,11 +3582,9 @@ class OneLevelTransport(NonlinearEquation):
                 if self.coefficients.advection.has_key(ci):
                     self.ebqe[('advectiveFlux',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                     for cj in self.coefficients.advection[ci].keys():
-                        #
                         self.ebqe[('dadvectiveFlux_left',ci,cj)][t[0],t[1]] = 0.0
             for ck,diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.iteritems():
                 for t,g in diffusiveFluxBoundaryConditionsDict.iteritems():
-                    #
                     self.ebqe[('diffusiveFlux',ck,ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
         for ci,sbcObject  in self.stressFluxBoundaryConditionsObjectsDict.iteritems():
             for t,g in sbcObject.stressFluxBoundaryConditionsDict.iteritems():
@@ -3558,11 +3592,11 @@ class OneLevelTransport(NonlinearEquation):
 
 
     def calculateQuadrature(self):
-        log("Element Quadrature",level=3)
+        logEvent("Element Quadrature",level=3)
         self.calculateElementQuadrature()
-        log("Element Boundary Quadrature",level=3)
+        logEvent("Element Boundary Quadrature",level=3)
         self.calculateElementBoundaryQuadrature()
-        log("Global Exterior Element Boundary Quadrature",level=3)
+        logEvent("Global Exterior Element Boundary Quadrature",level=3)
         self.calculateExteriorElementBoundaryQuadrature()
     def updateAfterMeshMotion(self):
         self.calculateQuadrature()#not always the right thing to do (e.g. for optimized models)
@@ -3580,7 +3614,7 @@ class OneLevelTransport(NonlinearEquation):
         self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
                                                   self.q['x'])
         if self.movingDomain:
-            if self.tLast_mesh != None:
+            if self.tLast_mesh is not None:
                 self.q['xt'][:]=self.q['x']
                 self.q['xt']-=self.q['x_last']
                 alpha = 1.0/(self.t_mesh - self.tLast_mesh)
@@ -3704,7 +3738,7 @@ class OneLevelTransport(NonlinearEquation):
                 #self.dphi[ci].femSpace.interpolationPoints = self.phi.femSpace.interpolationPoints
         #cek todo, I think this needs to be moved, we don't want to re-initialize variables, just update Eulerian coordinates and quadrature formulas
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             #mwf hack interpolating subgrid error
             if self.stabilization.usesGradientStabilization:
                 self.phi[0].femSpace.elementMaps.getJacobianValues(self.phi[0].femSpace.referenceFiniteElement.interpolationConditions.quadraturePointArray,
@@ -3729,7 +3763,7 @@ class OneLevelTransport(NonlinearEquation):
             else:
                 self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
         #update interpolation points here?
         ##\todo put logic in to evaluate only when necessary
@@ -3757,7 +3791,7 @@ class OneLevelTransport(NonlinearEquation):
         #get metric tensor and unit normals
         #
         if self.movingDomain:
-            if self.tLast_mesh != None:
+            if self.tLast_mesh is not None:
                 self.ebq['xt'][:]=self.ebq['x']
                 self.ebq['xt']-=self.ebq['x_last']
                 alpha = 1.0/(self.t_mesh - self.tLast_mesh)
@@ -3820,7 +3854,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                    self.ebq['xt'])
 
 #         if self.movingDomain:
-#             if self.tLast_mesh != None:
+#             if self.tLast_mesh is not None:
 #                 self.ebq['xt']-=self.ebq['x']
 #                 alpha = -1.0/(self.t_mesh - self.tLast_mesh)
 #                 self.ebq['xt']*=alpha
@@ -3943,9 +3977,9 @@ class OneLevelTransport(NonlinearEquation):
         #mwf should be able to get rid of this too
         #setup flux boundary conditions
         fluxBoundaryCondition_components = set()
-        if self.advectiveFluxBoundaryConditionsSetterDict != None:
+        if self.advectiveFluxBoundaryConditionsSetterDict is not None:
             fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.advectiveFluxBoundaryConditionsSetterDict.keys()))
-        if self.diffusiveFluxBoundaryConditionsSetterDictDict != None:
+        if self.diffusiveFluxBoundaryConditionsSetterDictDict is not None:
             fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.diffusiveFluxBoundaryConditionsSetterDictDict .keys()))
         self.fluxBoundaryConditionsObjectsDictGlobalElementBoundary = {}
         for ci in fluxBoundaryCondition_components:
@@ -3986,7 +4020,7 @@ class OneLevelTransport(NonlinearEquation):
         #get metric tensor and unit normals
         #
         if self.movingDomain:
-            if self.tLast_mesh != None:
+            if self.tLast_mesh is not None:
                 self.ebqe['xt'][:]=self.ebqe['x']
                 self.ebqe['xt']-=self.ebqe['x_last']
                 alpha = 1.0/(self.t_mesh - self.tLast_mesh)
@@ -4007,7 +4041,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                 self.ebqe['sqrt(det(g))'],
                                                                                 self.ebqe['n'])
 #         if self.movingDomain:
-#             if self.tLast_mesh != None:
+#             if self.tLast_mesh is not None:
 #                 self.ebqe['xt']-=self.ebqe['x']
 #                 alpha = -1.0/(self.t_mesh - self.tLast_mesh)
 #                 self.ebqe['xt']*=alpha
@@ -4127,9 +4161,9 @@ class OneLevelTransport(NonlinearEquation):
 
         #setup flux boundary conditions
         fluxBoundaryCondition_components = set()
-        if self.advectiveFluxBoundaryConditionsSetterDict != None:
+        if self.advectiveFluxBoundaryConditionsSetterDict is not None:
             fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.advectiveFluxBoundaryConditionsSetterDict.keys()))
-        if self.diffusiveFluxBoundaryConditionsSetterDictDict != None:
+        if self.diffusiveFluxBoundaryConditionsSetterDictDict is not None:
             fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.diffusiveFluxBoundaryConditionsSetterDictDict .keys()))
         self.fluxBoundaryConditionsObjectsDict = {}
         for ci in fluxBoundaryCondition_components:
@@ -4181,6 +4215,8 @@ class OneLevelTransport(NonlinearEquation):
         list of local dof because of the exclusion of Dirichlet nodes
         (otherwise we could just loop over range(self.nDOF_element).
         """
+        import pdb
+#        pdb.set_trace()
         self.l2g=[{'nFreeDOF':numpy.zeros((self.mesh.nElements_global,),'i'),
                    'freeLocal':numpy.zeros((self.mesh.nElements_global,self.nDOF_trial_element[cj]),'i'),
                    'freeGlobal':numpy.zeros((self.mesh.nElements_global,self.nDOF_trial_element[cj]),'i')} for cj in range(self.nc)]
@@ -4236,44 +4272,44 @@ class OneLevelTransport(NonlinearEquation):
                                         self.timeIntegration.shockCapturingIsImplicit[ci])
 
         columnIndecesDict={}#replace with C++ map (this  collects column indeces for each row)
-        log("Building sparse matrix structure",level=2)
+        logEvent("Building sparse matrix structure",level=2)
         self.sparsityInfo = cmeshTools.SparsityInfo()
         useC=True
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]: #if we make stencil an array this can pass to C++
                 if useC:
                     hasNumericalFlux=0
-                    if self.numericalFlux != None and self.numericalFlux.hasInterior:
+                    if self.numericalFlux is not None and self.numericalFlux.hasInterior:
                         hasNumericalFlux = 1
-                    hasDiffusionInMixedForm = int(self.numericalFlux != None and  self.numericalFlux.mixedDiffusion[ci] == True)
+                    hasDiffusionInMixedForm = int(self.numericalFlux is not None and  self.numericalFlux.mixedDiffusion[ci] == True)
                     needNumericalFluxJacobian_int = int(needNumericalFluxJacobian)
                     hasOutflowBoundary = int(self.fluxBoundaryConditions[ci] == 'outFlow')
                     needsOutflowJacobian_int = int(needOutflowJacobian == True)
                     self.sparsityInfo.findNonzeros(self.mesh.nElements_global,
-                                              self.nDOF_test_element[ci],
-                                              self.nDOF_trial_element[cj],
-                                              self.l2g[ci]['nFreeDOF'],
-                                              self.l2g[ci]['freeGlobal'],
-                                              self.l2g[cj]['nFreeDOF'],
-                                              self.l2g[cj]['freeGlobal'],
-                                              self.offset[ci],
-                                              self.stride[ci],
-                                              self.offset[cj],
-                                              self.stride[cj],
-                                              hasNumericalFlux,
-                                              hasDiffusionInMixedForm,
-                                              needNumericalFluxJacobian_int,
-                                              self.mesh.nElementBoundaries_element,
-                                              self.mesh.elementNeighborsArray,
-                                              self.mesh.nInteriorElementBoundaries_global,
-                                              self.mesh.interiorElementBoundariesArray,
-                                              self.mesh.elementBoundaryElementsArray,
-                                              self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                              self.fluxBoundaryConditions[ci] == 'outFlow',
-                                              self.mesh.nExteriorElementBoundaries_global,
-                                              self.mesh.exteriorElementBoundariesArray,
-                                              hasOutflowBoundary,
-                                              needsOutflowJacobian_int)
+                                                   self.nDOF_test_element[ci],
+                                                   self.nDOF_trial_element[cj],
+                                                   self.l2g[ci]['nFreeDOF'],
+                                                   self.l2g[ci]['freeGlobal'],
+                                                   self.l2g[cj]['nFreeDOF'],
+                                                   self.l2g[cj]['freeGlobal'],
+                                                   self.offset[ci],
+                                                   self.stride[ci],
+                                                   self.offset[cj],
+                                                   self.stride[cj],
+                                                   hasNumericalFlux,
+                                                   hasDiffusionInMixedForm,
+                                                   needNumericalFluxJacobian_int,
+                                                   self.mesh.nElementBoundaries_element,
+                                                   self.mesh.elementNeighborsArray,
+                                                   self.mesh.nInteriorElementBoundaries_global,
+                                                   self.mesh.interiorElementBoundariesArray,
+                                                   self.mesh.elementBoundaryElementsArray,
+                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                   self.fluxBoundaryConditions[ci] == 'outFlow',
+                                                   self.mesh.nExteriorElementBoundaries_global,
+                                                   self.mesh.exteriorElementBoundariesArray,
+                                                   hasOutflowBoundary,
+                                                   needsOutflowJacobian_int)
                 else:
                     for eN in range(self.mesh.nElements_global):
                         for ii in range(self.l2g[ci]['nFreeDOF'][eN]): #l2g is an array
@@ -4283,7 +4319,7 @@ class OneLevelTransport(NonlinearEquation):
                             for jj in range(self.l2g[cj]['nFreeDOF'][eN]):
                                 J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][eN,jj]
                                 columnIndecesDict[I].add(J)
-                        if (self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True and
+                        if (self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True and
                             needNumericalFluxJacobian == True):#pass in array of flags for numflux and mixed
                             for ebN in range(self.mesh.nElementBoundaries_element):
                                 eN_ebN = self.mesh.elementNeighborsArray[eN,ebN]
@@ -4293,7 +4329,7 @@ class OneLevelTransport(NonlinearEquation):
                                         for jj in range(self.l2g[cj]['nFreeDOF'][eN_ebN]):
                                             J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][eN_ebN,jj]
                                             columnIndecesDict[I].add(J)
-                    if self.numericalFlux != None and needNumericalFluxJacobian == True:
+                    if self.numericalFlux is not None and needNumericalFluxJacobian == True:
                         for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                             ebN = self.mesh.interiorElementBoundariesArray[ebNI]
                             left_eN_global   = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -4344,7 +4380,7 @@ class OneLevelTransport(NonlinearEquation):
                                             for  jj  in range(self.l2g[cj]['nFreeDOF'][right_eN_ebN]):
                                                 right_J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][right_eN_ebN,jj]
                                                 columnIndecesDict[right_I].add(right_J)
-                    if ((self.numericalFlux != None and needNumericalFluxJacobian == True) or
+                    if ((self.numericalFlux is not None and needNumericalFluxJacobian == True) or
                         (self.fluxBoundaryConditions[ci] == 'outFlow' and needOutflowJacobian == True)):#BC flag to array
                         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -4357,7 +4393,7 @@ class OneLevelTransport(NonlinearEquation):
                                 for  jj  in range(self.l2g[cj]['nFreeDOF'][eN_global]):
                                     J = self.offset[cj] + self.stride[cj]*self.l2g[cj]['freeGlobal'][eN_global,jj]
                                     columnIndecesDict[I].add(J)
-                            if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                            if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                                 for ebN_eN in range(self.mesh.nElementBoundaries_element):
                                     eN_ebN = self.mesh.elementNeighborsArray[eN_global,ebN_eN]
                                     for  ii  in range(self.l2g[ci]['nFreeDOF'][eN_global]):
@@ -4403,32 +4439,32 @@ class OneLevelTransport(NonlinearEquation):
         self.csrColumnOffsets_eb_eNebN = {}
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]:
-                hasNumericalFlux = int(self.numericalFlux != None)
-                hasDiffusionInMixedForm = int(self.numericalFlux != None and  self.numericalFlux.mixedDiffusion[ci] == True)
+                hasNumericalFlux = int(self.numericalFlux is not None)
+                hasDiffusionInMixedForm = int(self.numericalFlux is not None and  self.numericalFlux.mixedDiffusion[ci] == True)
                 needNumericalFluxJacobian_int = int(needNumericalFluxJacobian)
                 hasOutflowBoundary = int(self.fluxBoundaryConditions[ci] == 'outFlow')
                 needsOutflowJacobian_int = int(needOutflowJacobian == True)
                 memory()
                 self.csrRowIndeces[(ci,cj)] = numpy.zeros((self.mesh.nElements_global,
                                                              self.nDOF_test_element[ci]),'i')
-                log(memory("csrRowIndeces","OneLevelTransport"),level=4)
+                logEvent(memory("csrRowIndeces","OneLevelTransport"),level=4)
                 self.csrColumnOffsets[(ci,cj)] = numpy.zeros((self.mesh.nElements_global,
                                                                 self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
-                log(memory("csrColumnOffsets","OneLevelTransport"),level=4)
+                logEvent(memory("csrColumnOffsets","OneLevelTransport"),level=4)
                 if hasDiffusionInMixedForm:
                     self.csrColumnOffsets_eNebN[(ci,cj)] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,
                                                                         self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
                 else:
                     self.csrColumnOffsets_eNebN[(ci,cj)] = numpy.zeros((0,),'i')
-                log(memory("csrColumnOffsets_eNebN","OneLevelTransport"),level=4)
+                logEvent(memory("csrColumnOffsets_eNebN","OneLevelTransport"),level=4)
                 self.csrColumnOffsets_eb[(ci,cj)] = numpy.zeros((self.mesh.nElementBoundaries_global,2,2,self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
-                log(memory("csrColumnOffsets_eb","OneLevelTransport"),level=4)
+                logEvent(memory("csrColumnOffsets_eb","OneLevelTransport"),level=4)
                 if hasDiffusionInMixedForm:
                     self.csrColumnOffsets_eb_eNebN[(ci,cj)] = numpy.zeros((self.mesh.nElementBoundaries_global,2,2,self.mesh.nElementBoundaries_element,
                                                                            self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
                 else:
                     self.csrColumnOffsets_eb_eNebN[(ci,cj)] = numpy.zeros((0,),'i')
-                log(memory("csrColumnOffsets_eb_eNebN","OneLevelTransport"),level=4)
+                logEvent(memory("csrColumnOffsets_eb_eNebN","OneLevelTransport"),level=4)
                 if useC:
                     self.sparsityInfo.setOffsets_CSR(self.mesh.nElements_global,
                                                      self.nDOF_test_element[ci],
@@ -4469,7 +4505,7 @@ class OneLevelTransport(NonlinearEquation):
                             for jj in range(self.l2g[cj]['nFreeDOF'][eN]):
                                 J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][eN,jj]
                                 self.csrColumnOffsets[(ci,cj)][eN,ii,jj] = columnOffsetDict[(I,J)]
-                        if (self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True):
+                        if (self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True):
                             for ebN in range(self.mesh.nElementBoundaries_element):
                                 eN_ebN = self.mesh.elementNeighborsArray[eN,ebN]
                                 if eN_ebN >= 0:
@@ -4478,7 +4514,7 @@ class OneLevelTransport(NonlinearEquation):
                                         for jj in range(self.l2g[cj]['nFreeDOF'][eN_ebN]):
                                             J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][eN_ebN,jj]
                                             self.csrColumnOffsets_eNebN[(ci,cj)][eN,ebN,ii,jj] = columnOffsetDict[(I,J)]
-                    if self.numericalFlux != None and needNumericalFluxJacobian == True:
+                    if self.numericalFlux is not None and needNumericalFluxJacobian == True:
                         for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                             ebN = self.mesh.interiorElementBoundariesArray[ebNI]
                             left_eN_global   = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -4525,7 +4561,7 @@ class OneLevelTransport(NonlinearEquation):
                                             for  jj  in range(self.l2g[cj]['nFreeDOF'][right_eN_ebN]):
                                                 right_J = self.offset[cj]+self.stride[cj]*self.l2g[cj]['freeGlobal'][right_eN_ebN,jj]
                                                 self.csrColumnOffsets_eb_eNebN[(ci,cj)][ebN,1,1,ebN_eN,ii,jj] = columnOffsetDict[(right_I,right_J)]
-                    if ((self.numericalFlux != None and needNumericalFluxJacobian == True) or
+                    if ((self.numericalFlux is not None and needNumericalFluxJacobian == True) or
                         (self.fluxBoundaryConditions[ci] == 'outFlow' and needOutflowJacobian  == True)):
                         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -4536,7 +4572,7 @@ class OneLevelTransport(NonlinearEquation):
                                 for  jj  in range(self.l2g[cj]['nFreeDOF'][eN_global]):
                                     J = self.offset[cj] + self.stride[cj]*self.l2g[cj]['freeGlobal'][eN_global,jj]
                                     self.csrColumnOffsets_eb[(ci,cj)][ebN,0,0,ii,jj] = columnOffsetDict[(I,J)]
-                            if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                            if self.numericalFlux is not None and self.numericalFlux.mixedDiffusion[ci] == True:
                                 for ebN_eN in range(self.mesh.nElementBoundaries_element):
                                     eN_ebN = self.mesh.elementNeighborsArray[eN_global,ebN_eN]
                                     for ii in range(self.l2g[ci]['nFreeDOF'][eN_global]):
@@ -4554,7 +4590,7 @@ class OneLevelTransport(NonlinearEquation):
         if Viewers.viewerType == 'vtk':
             return self.viewSolutionVTK(plotOffSet=plotOffSet,titleModifier=titleModifier,dgridnx=dgridnx,
                                         dgridny=dgridny,dgridp=dgridp,pause=pause)
-        if plotOffSet != None:
+        if plotOffSet is not None:
             windowNumberSave = Viewers.windowNumber
             Viewers.windowNumber=plotOffSet
         else:
@@ -4728,7 +4764,7 @@ class OneLevelTransport(NonlinearEquation):
                         Viewers.newPlot()
                         Viewers.newWindow()
 
-                if self.coefficients.vectorComponents != None:
+                if self.coefficients.vectorComponents is not None:
                     scale_x = max(numpy.absolute(self.u[self.coefficients.vectorComponents[0]].dof.flat))
                     scale_y = max(numpy.absolute(self.u[self.coefficients.vectorComponents[1]].dof.flat))
                     L = min((max(self.mesh.nodeArray[:,0]),max(self.mesh.nodeArray[:,1])))
@@ -4790,7 +4826,7 @@ class OneLevelTransport(NonlinearEquation):
                         Viewers.newPlot()
                         Viewers.newWindow()
 
-                if (self.coefficients.vectorComponents != None and
+                if (self.coefficients.vectorComponents is not None and
                     (isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis) and
                      isinstance(self.u[1].femSpace,C0_AffineLinearOnSimplexWithNodalBasis) and
                      isinstance(self.u[2].femSpace,C0_AffineLinearOnSimplexWithNodalBasis) or
@@ -4857,7 +4893,7 @@ class OneLevelTransport(NonlinearEquation):
                 Viewers.windowNumber += nplotted
             #
             if self.nSpace_global == 2:
-                if self.coefficients.vectorComponents != None:
+                if self.coefficients.vectorComponents is not None:
                     vci0 = self.coefficients.vectorComponents[0]
                     vci1 = self.coefficients.vectorComponents[1]
 
@@ -4886,7 +4922,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                   title = 'velocity_{dof}' + titleModifier)
                         Viewers.windowNumber += nplotted
             elif self.nSpace_global == 3:
-                if self.coefficients.vectorComponents != None:
+                if self.coefficients.vectorComponents is not None:
                     vci0 = self.coefficients.vectorComponents[0]
                     vci1 = self.coefficients.vectorComponents[1]
                     vci2 = self.coefficients.vectorComponents[2]
@@ -4919,7 +4955,7 @@ class OneLevelTransport(NonlinearEquation):
                         Viewers.windowNumber += nplotted
 
         #if matlab
-        if windowNumberSave != None:
+        if windowNumberSave is not None:
             Viewers.windowNumber = windowNumberSave
         return Viewers.windowNumber
 
@@ -4928,7 +4964,7 @@ class OneLevelTransport(NonlinearEquation):
                         pause=False):
         import Viewers
         from proteusGraphical import vtkViewers
-        if plotOffSet != None:
+        if plotOffSet is not None:
             windowNumberSave = Viewers.windowNumber
             Viewers.windowNumber=plotOffSet
         else:
@@ -5138,7 +5174,7 @@ class OneLevelTransport(NonlinearEquation):
                     Viewers.newWindow()
 
                 #if has vel
-            if self.coefficients.vectorComponents != None:
+            if self.coefficients.vectorComponents is not None:
                 #
                 scale_x = max(numpy.absolute(self.u[self.coefficients.vectorComponents[0]].dof.flat))
                 scale_y = max(numpy.absolute(self.u[self.coefficients.vectorComponents[1]].dof.flat))
@@ -5229,7 +5265,7 @@ class OneLevelTransport(NonlinearEquation):
                     Viewers.newPlot()
                     Viewers.newWindow()
 
-            if self.coefficients.vectorComponents != None:
+            if self.coefficients.vectorComponents is not None:
                 #
                 scale_x = max(numpy.absolute(self.u[self.coefficients.vectorComponents[0]].dof.flat))
                 scale_y = max(numpy.absolute(self.u[self.coefficients.vectorComponents[1]].dof.flat))
@@ -5261,7 +5297,7 @@ class OneLevelTransport(NonlinearEquation):
                     Viewers.newWindow()
                 #
             #vector components
-        if windowNumberSave != None:
+        if windowNumberSave is not None:
             Viewers.windowNumber = windowNumberSave
         return Viewers.windowNumber
     #### start routines for saving/writing data
@@ -5337,7 +5373,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                         t,init=False,meshChanged=meshChanged,tCount=tCount)
 
             self.u[ci].femSpace.writeFunctionXdmf(archive,self.u[ci],tCount)
-        if writeVectors and self.coefficients.vectorComponents != None:
+        if writeVectors and self.coefficients.vectorComponents is not None:
             c0 = self.coefficients.vectorComponents[0]
             self.u[c0].femSpace.writeVectorFunctionXdmf(archive,
                                                         self.u,
@@ -5345,7 +5381,7 @@ class OneLevelTransport(NonlinearEquation):
                                                         self.coefficients.vectorName,
                                                         tCount)
 
-        if writeVelocityPostProcessor and self.velocityPostProcessor != None:
+        if writeVelocityPostProcessor and self.velocityPostProcessor is not None:
             self.velocityPostProcessor.archiveVelocityValues(archive,t,tCount,initialPhase=initialPhase,meshChanged=meshChanged)
     def archiveElementQuadratureValues(self,archive,t,tCount,scalarKeys=None,vectorKeys=None,
                                        tensorKeys=None,
@@ -5362,7 +5398,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                t=t,init=initialPhase,
                                                                                meshChanged=meshChanged,arGrid=None,
                                                                                tCount=tCount)
-        if scalarKeys != None:
+        if scalarKeys is not None:
             for key in scalarKeys:
                 if isinstance(key,str):
                     name = key
@@ -5375,7 +5411,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                          self.q[key],
                                                                                          name,
                                                                                          tCount)
-        if vectorKeys != None:
+        if vectorKeys is not None:
             for key in vectorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5388,7 +5424,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                          self.q[key],
                                                                                          name,
                                                                                          tCount)
-        if tensorKeys != None:
+        if tensorKeys is not None:
             for key in tensorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5419,7 +5455,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                meshChanged=meshChanged,arGrid=None,
                                                                                                tCount=tCount)
 
-        if scalarKeys != None:
+        if scalarKeys is not None:
             for key in scalarKeys:
                 if isinstance(key,str):
                     name = key
@@ -5432,7 +5468,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                          self.ebq_global[key],
                                                                                                          name,
                                                                                                          tCount)
-        if vectorKeys != None:
+        if vectorKeys is not None:
             for key in vectorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5445,7 +5481,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                          self.ebq_global[key],
                                                                                                          name,
                                                                                                          tCount)
-        if tensorKeys != None:
+        if tensorKeys is not None:
             for key in tensorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5475,7 +5511,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                t=t,init=initialPhase,
                                                                                                                meshChanged=meshChanged,arGrid=None,
                                                                                                                tCount=tCount)
-        if scalarKeys != None:
+        if scalarKeys is not None:
             for key in scalarKeys:
                 if isinstance(key,str):
                     name = key
@@ -5488,7 +5524,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                          self.ebqe[key],
                                                                                                                          name,
                                                                                                                          tCount)
-        if vectorKeys != None:
+        if vectorKeys is not None:
             for key in vectorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5501,7 +5537,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                          self.ebqe[key],
                                                                                                                          name,
                                                                                                                          tCount)
-        if tensorKeys != None:
+        if tensorKeys is not None:
             for key in tensorKeys:
                 if isinstance(key,str):
                     name = key
@@ -5536,7 +5572,7 @@ class OneLevelTransport(NonlinearEquation):
         """
         Setup the storage for the mass jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
         """
-        if self.mass_jacobian != None:
+        if self.mass_jacobian is not None:
             return self.mass_jacobian
 
         import superluWrappers
@@ -5554,7 +5590,7 @@ class OneLevelTransport(NonlinearEquation):
         """
         Setup the storage for the spatial jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
         """
-        if self.space_jacobian != None:
+        if self.space_jacobian is not None:
             return self.space_jacobian
         import superluWrappers
         if self.matType == superluWrappers.SparseMatrix:
@@ -5595,7 +5631,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         for key in q_save.keys():
             self.q[key].flat[:] = q_save[key].flat[:]
-        log("Coefficients on element",level=10,data=self.q)
+        logEvent("Coefficients on element",level=10,data=self.q)
         ## exterior element boundaries
     def calculateElementLoad_inhomogeneous(self):
         """
@@ -5604,7 +5640,7 @@ class OneLevelTransport(NonlinearEquation):
         portions of the reaction term, 'r', and boundary condition terms
         This is a temporary fix for linear model reduction.
         """
-        import pdb
+        #import pdb
         #pdb.set_trace()
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
@@ -5613,7 +5649,7 @@ class OneLevelTransport(NonlinearEquation):
                                               self.q[('w*dV_r',ci)],
                                               self.elementResidual[ci])
 
-        if self.numericalFlux != None:
+        if self.numericalFlux is not None:
             for ci in self.coefficients.advection.keys():
                 if (self.numericalFlux.advectiveNumericalFlux.has_key(ci) and
                     self.numericalFlux.advectiveNumericalFlux[ci]) == True:
@@ -5748,7 +5784,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         # calculate the averages and jumps at element boundaries
         #
-        if self.numericalFlux != None:
+        if self.numericalFlux is not None:
             self.numericalFlux.calculateExteriorNumericalFlux(self.inflowFlag,self.q,self.ebqe)
         else:
             #cek this wll go away
@@ -5800,7 +5836,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.l2g[ci]['freeGlobal'],
                                                                   self.elementResidual[ci],
                                                                   f);
-        log("Global Load Vector",level=9,data=f)
+        logEvent("Global Load Vector",level=9,data=f)
 
 
     def getMassJacobian(self,jacobian):
@@ -5810,7 +5846,7 @@ class OneLevelTransport(NonlinearEquation):
         import superluWrappers
         import numpy
         self.calculateElementMassJacobian()
-        log("Element Mass Jacobian ",level=10,data=self.elementJacobian)
+        logEvent("Element Mass Jacobian ",level=10,data=self.elementJacobian)
         if self.matType == superluWrappers.SparseMatrix:
             cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                            jacobian)
@@ -5851,7 +5887,7 @@ class OneLevelTransport(NonlinearEquation):
 
         else:
             raise TypeError("Matrix type must be SparseMatrix or array")
-        log("Mass Jacobian ",level=10,data=jacobian)
+        logEvent("Mass Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
@@ -5886,10 +5922,10 @@ class OneLevelTransport(NonlinearEquation):
         self.calculateCoefficients()
         self.calculateElementResidual()
         self.scale_dt = False
-        log("Element spatial residual",level=9,data=self.elementSpatialResidual)
+        logEvent("Element spatial residual",level=9,data=self.elementSpatialResidual)
         if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
             self.scale_dt = True
-            log("Rescaling residual for small time steps")
+            logEvent("Rescaling residual for small time steps")
         else:
             self.scale_dt = False
         for ci in range(self.nc):
@@ -5902,7 +5938,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.l2g[ci]['freeGlobal'],
                                                                   self.elementSpatialResidual[ci],
                                                                   r);
-        log("Global spatial residual",level=9,data=r)
+        logEvent("Global spatial residual",level=9,data=r)
         if self.forceStrongConditions:#
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -5932,10 +5968,10 @@ class OneLevelTransport(NonlinearEquation):
             elementMassResidual[ci]-= self.elementSpatialResidual[ci]
 
         self.scale_dt = False
-        log("Element Mass residual",level=9,data=elementMassResidual)
+        logEvent("Element Mass residual",level=9,data=elementMassResidual)
         if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
             self.scale_dt = True
-            log("Rescaling residual for small time steps")
+            logEvent("Rescaling residual for small time steps")
         else:
             self.scale_dt = False
         for ci in range(self.nc):
@@ -5948,18 +5984,134 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.l2g[ci]['freeGlobal'],
                                                                   elementMassResidual[ci],
                                                                   r);
-        log("Global mass residual",level=9,data=r)
+        logEvent("Global mass residual",level=9,data=r)
         if self.forceStrongConditions:#
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
 
+    def attachLaplaceOperator(self,nu=1.0):
+        """Attach a Discrete Laplace Operator to the Transport Class.
+
+        Arguments
+        ---------
+        nu : float
+             Viscosity parameter for the Laplace operator.
+
+        Notes
+        -----
+        This function creates a Laplace matrix and stores the result in the 
+        :class:`proteus.OneLevelTransport` class to assist in the construction 
+        of physics based preconditione
+        """
+
+        self.laplace_val = self.nzval.copy()
+        self.LaplaceOperator = SparseMat(self.nFreeVDOF_global,
+                                         self.nFreeVDOF_global,
+                                         self.nnz,
+                                         self.laplace_val,
+                                         self.colind,
+                                         self.rowptr)
+
+        _nd = self.coefficients.nd
+        if self.coefficients.nu != None:
+            _nu = self.coefficients.nu
+        self.LaplaceOperatorCoeff = DiscreteLaplaceOperator(nd=_nd)
+        _t = 1.0
+
+        Laplace_phi = {}
+        Laplace_dphi = {}
+
+        for ci,space in self.testSpace.iteritems():
+            Laplace_phi[ci] = FiniteElementFunction(space)
+
+        for ck,phi in Laplace_phi.iteritems():
+            Laplace_dphi[(ck,ck)] = FiniteElementFunction(Laplace_phi[ck].femSpace)
+
+        for ci,dphi in Laplace_dphi.iteritems():
+            dphi.dof.fill(1.0)
+
+        self.Laplace_q = {}
+        scalar_quad = StorageSet(shape=(self.mesh.nElements_global,
+                                        self.nQuadraturePoints_element))
+        tensors_quad = StorageSet(shape={})
+        
+        scalar_quad |= set([('u',ci) for ci in range(self.nc)])
+        tensors_quad |= set([('a',ci,ci) for ci in range(self.nc)])
+        tensors_quad |= set([('da',ci,ci,ci) for ci in range(self.nc)])
+
+        scalar_quad.allocate(self.Laplace_q)
+        
+        for k in tensors_quad:
+            self.Laplace_q[k] = numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nQuadraturePoints_element,
+                 self.LaplaceOperatorCoeff.sdInfo[(k[1],k[2])][0][self.nSpace_global]),
+                'd')
+
+        if _nd == 2:
+            self.LaplaceOperatorCoeff.evaluate(_t,self.Laplace_q)
+        
+        LaplaceJacobian = {}
+        for ci in range(self.nc):
+            LaplaceJacobian[ci] = {}
+            for cj in range(self.nc):
+                if cj in self.LaplaceOperatorCoeff.stencil[ci]:
+                    LaplaceJacobian[ci][cj] = numpy.zeros(
+                        (self.mesh.nElements_global,
+                         self.nDOF_test_element[ci],
+                         self.nDOF_trial_element[cj]),
+                        'd')
+
+        for ci,ckDict in self.LaplaceOperatorCoeff.diffusion.iteritems():
+            for ck,cjDict in ckDict.iteritems():
+                for cj in set(cjDict.keys()+self.LaplaceOperatorCoeff.potential[ck].keys()):
+                    cfemIntegrals.updateDiffusionJacobian_weak_sd(self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][0],
+                                                                  self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][1],
+                                                                  self.phi[ck].femSpace.dofMap.l2g,
+                                                                  self.Laplace_q[('a',ci,ck)],
+                                                                  self.Laplace_q[('da',ci,ck,cj)],
+                                                                  self.q[('grad(phi)',ck)],
+                                                                  self.q[('grad(w)*dV_a',ck,ci)],
+                                                                  Laplace_dphi[(ck,cj)].dof,
+                                                                  self.q[('v',cj)],
+                                                                  self.q[('grad(v)',cj)],
+                                                                  LaplaceJacobian[ci][cj])
+        for ci in range(self.nc):
+            for cj in self.LaplaceOperatorCoeff.stencil[ci]:
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[ci]['nFreeDOF'],
+                                                                          self.l2g[ci]['freeLocal'],
+                                                                          self.l2g[cj]['nFreeDOF'],
+                                                                          self.l2g[cj]['freeLocal'],
+                                                                          self.csrRowIndeces[(ci,cj)],
+                                                                          self.csrColumnOffsets[(ci,cj)],
+                                                                          LaplaceJacobian[ci][cj],
+                                                                          self.LaplaceOperator)
+
+        self.LaplaceOperatorpetsc = superlu_2_petsc4py(self.LaplaceOperator)
+        
+        var_range = []
+        isp_list = []
+        starting_idx = 0
+        for comp in range(self.nc):
+            comp_num_dof = self.phi[comp].femSpace.dofMap.nDOF
+            var_range.append(numpy.arange(start=starting_idx,
+                                          stop=starting_idx+comp_num_dof,
+                                          dtype='i'))
+            isp_list.append(p4pyPETSc.IS())
+            isp_list[comp].createGeneral(var_range[comp])
+            starting_idx+=comp_num_dof
+
+        self.LaplaceOperatorList = []
+        for comp in range(self.nc):
+            self.LaplaceOperatorList.append(self.LaplaceOperatorpetsc.getSubMatrix
+                                            (isp_list[comp],
+                                             isp_list[comp]))
+
 #end Transport definition
 class MultilevelTransport:
     """Nonlinear ADR on a multilevel mesh"""
     def __init__(self,problem,numerics,mlMesh,OneLevelTransportType=OneLevelTransport):
-        #import pdb
-        #pdb.set_trace()
         self.name = problem.name
         #cek temporary fix to get everything weaned off the old BC's
         if numerics.numericalFluxType == None:
@@ -6024,6 +6176,12 @@ class MultilevelTransport:
         """read in the multilevel mesh, mesh independent boundary
         conditions, and types for test and trial spaces and the
         jacobian. Pass through the rest to the models on each mesh"""
+
+        if bool(TrialSpaceTypeDict) == False:
+            raise Exception,  'Proteus is trying to create a' \
+            ' Multilevel Transport object with no trial space.  Make' \
+            ' sure femSpaces is properly specified in your numerics.'
+        
         self.weakDirichletConditions=weakDirichletConditions
         self.jacobianList=[]
         self.par_jacobianList=[]
@@ -6051,60 +6209,62 @@ class MultilevelTransport:
         self.phiSpaceDictList = []
         #self.phiSpaceListDict = {}
 
-        log("Building Transport for each mesh",level=2)
+        logEvent("Building Transport for each mesh",level=2)
         for  cj in TrialSpaceTypeDict.keys():
             self.trialSpaceListDict[cj]=[]
             self.bcListDict[cj]=[]
         for mesh in mlMesh.meshList:
-            #import pdb
-            #pdb.set_trace()
+       #     import pdb
+       #     pdb.set_trace()
             sdmesh = mesh.subdomainMesh
             memory()
-            log("Generating Trial Space",level=2)
+            logEvent("Generating Trial Space",level=2)
             trialSpaceDict = dict([ (cj,TrialSpaceType(sdmesh,nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.iteritems()])
             self.trialSpaceDictList.append(trialSpaceDict)
-            log("Generating Test Space",level=2)
+            logEvent("Generating Test Space",level=2)
             testSpaceDict = dict([(ci,TestSpaceType(sdmesh,nd)) for (ci,TestSpaceType) in TestSpaceTypeDict.iteritems()])
             self.testSpaceDictList.append(testSpaceDict)
-            log("Allocating u",level=2)
+            logEvent("Allocating u",level=2)
             uDict = dict([(cj,FiniteElementFunction(trialSpace,name=coefficients.variableNames[cj])) for (cj,trialSpace) in trialSpaceDict.iteritems()])
             #11/11/09 allow FiniteElementFunction to communicate uknowns across procs
             for cj in uDict.keys():
                 uDict[cj].setupParallelCommunication()
             self.uDictList.append(uDict)
-            log("Allocating phi")
+            logEvent("Allocating phi")
             phiSpaceDict = dict([ (cj,PhiSpaceType(sdmesh,nd)) for (cj,PhiSpaceType) in PhiSpaceTypeDict.iteritems()])
             self.phiSpaceDictList.append(phiSpaceDict)
             phiDict = dict([(cj,FiniteElementFunction(phiSpace)) for (cj,phiSpace) in phiSpaceDict.iteritems()])
             #need to communicate phi if nonlinear potential and there is spatial dependence in potential function
             for cj in phiDict.keys():
                 phiDict[cj].setupParallelCommunication()
-            log(memory("finite element spaces","MultilevelTransport"),level=4)
-            log("Setting Boundary Conditions")
+            logEvent(memory("finite element spaces","MultilevelTransport"),level=4)
+            logEvent("Setting Boundary Conditions")
             if numericalFluxType==None:
                 useWeakDirichletConditions=False
             else:
                 useWeakDirichletConditions=numericalFluxType.useWeakDirichletConditions
-            log("Setting Boundary Conditions-1")
+            logEvent("Setting Boundary Conditions-1")
+            import pdb
+#            pdb.set_trace()
             for cj in trialSpaceDict.keys():
                 if not dirichletConditionsSetterDict.has_key(cj):
                     dirichletConditionsSetterDict[cj] = None
                 if not fluxBoundaryConditionsDict.has_key(cj):
                     fluxBoundaryConditionsDict[cj] = None
-            log("Setting Boundary Conditions-2")
+            logEvent("Setting Boundary Conditions-2")
             if options == None or options.periodicDirichletConditions == None or options.parallelPeriodic==True:
-                log("Setting Boundary Conditions-2a")
+                logEvent("Setting Boundary Conditions-2a")
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions))
                                               for (cj,trialSpace) in trialSpaceDict.iteritems()])
             else:
-                log("Setting Boundary Conditions-2b")
+                logEvent("Setting Boundary Conditions-2b")
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions,options.periodicDirichletConditions[cj]))
                                               for (cj,trialSpace) in trialSpaceDict.iteritems()])
-            log("Setting Boundary Conditions-3")
+            logEvent("Setting Boundary Conditions-3")
             self.bcDictList.append(dirichletConditionsDict)
-            log("Setting Boundary Conditions-4")
+            logEvent("Setting Boundary Conditions-4")
             for cj in TrialSpaceTypeDict.keys():
                 self.trialSpaceListDict[cj].append(trialSpaceDict[cj])
                 self.bcListDict[cj].append(dirichletConditionsDict[cj])
@@ -6113,10 +6273,10 @@ class MultilevelTransport:
             import Comm
             comm = Comm.get()
             if options.periodicDirichletConditions and options.parallelPeriodic:
-                log("Generating Trial Space--Parallel Periodic",level=2)
+                logEvent("Generating Trial Space--Parallel Periodic",level=2)
                 #the global mesh has been renumbered so all this is in the new (partitioned) numberings
                 trialSpace_global = TrialSpaceType(mesh,nd)
-                log("Setting Boundary Conditions--Parallel Periodic")
+                logEvent("Setting Boundary Conditions--Parallel Periodic")
                 #get new global numbering of DOF that maps periodic DOF to a single master DOF
                 periodicConditions_global=DOFBoundaryConditions(trialSpace_global,
                                                                 lambda x,flag: None,
@@ -6186,8 +6346,8 @@ class MultilevelTransport:
                     testSpaceDict[ci].dofMap.nDOF_subdomain_owned = trialSpaceDict[0].dofMap.nDOF_subdomain_owned
             #
             #
-            log(memory("boundary conditions","MultilevelTransport"),level=4)
-            log("Initializing OneLevelTransport",level=2)
+            logEvent(memory("boundary conditions","MultilevelTransport"),level=4)
+            logEvent("Initializing OneLevelTransport",level=2)
             transport=self.OneLevelTransportType(uDict,
                                             phiDict,
                                             testSpaceDict,
@@ -6216,96 +6376,292 @@ class MultilevelTransport:
             self.strideListList.append(transport.stride)
             memory()
             self.levelModelList.append(transport)
-            log("Allocating residual and solution vectors",level=2)
+            logEvent("Allocating residual and solution vectors",level=2)
             u = numpy.zeros((transport.dim,),'d')
             du = numpy.zeros((transport.dim,),'d')
             r = numpy.zeros((transport.dim,),'d')
             self.uList.append(u)
             self.duList.append(du)
             self.rList.append(r)
-            log("Allocating Jacobian",level=2)
+            logEvent("Allocating Jacobian",level=2)
             jacobian = transport.initializeJacobian()
             self.jacobianList.append(jacobian)
             par_bs = transport.coefficients.nc
-            log("Allocating parallel storage",level=2)
+            logEvent("Allocating parallel storage",level=2)
             comm = Comm.get()
             self.comm=comm
-            ##\todo setup to let PETSc use the vector and matrix storage
-            #import pdb
-            #pdb.set_trace()
-            #mwf hack element boundary partition
-            if comm.size() > 1:
-                #problem with parallel info in dofMap not getting updated after partition mesh
-                #may want to call this elsewhere
-                #trialSpaceDict[0].dofMap.updateAfterParallelPartitioning(mesh)
-                #todo figure out better way to handle the situation where l2g may have changed based on parallel decomposition
-                #mwf stopped here
-                #have to recalculate all trial functions if l2g changes!
-                #transport.updateLocal2Global()
-                #transport.initializeJacobian()
-                assert trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned != None, "trial space %s needs subdomain -> global mappings " % trialSpaceDict
+            if (comm.size() > 1):
+                for ci in range(transport.nc):
+                    assert trialSpaceDict[ci].dofMap.dof_offsets_subdomain_owned is not None, "trial space %s needs subdomain -> global mappings " % trialSpaceDict
                 #initially assume all the spaces can share the same l2g information ...
                 par_n = trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()]
                 par_N = trialSpaceDict[0].dofMap.nDOF_all_processes
-                par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
-                subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
-                max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
-                #for now move to solver specific branch
-                #log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                #par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                #par_r = ParVec(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                #log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                #par_du = ParVec(du,par_bs,par_n,par_N)
-                #log("Allocating matrix on rank %i" % comm.rank(),level=2)
-                #par_jacobian = flcbdfWrappers.ParMat(par_bs,par_n,par_N,par_nghost,max_dof_neighbors,subdomain2global,jacobian)
+                mixed = False
+                for ts in trialSpaceDict.values():
+                    if ts.dofMap.nDOF_all_processes != par_N:
+                        mixed=True
                 if (options.multilevelLinearSolver == KSP_petsc4py or
-                   options.levelLinearSolver == KSP_petsc4py):
-                    log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                    par_u = ParVec_petsc4py(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                    par_r = ParVec_petsc4py(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                    log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                    par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
-                    log("Allocating matrix on rank %i" % comm.rank(),level=2)
-                    par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
+                    options.levelLinearSolver == KSP_petsc4py):
+                    if mixed:
+                        #
+                        #calculate dimensions mixed multicomponent system
+                        #since it's not nc*dim
+                        #
+                        #first create list of global dof dim for each component
+                        #this is the proteus component global numbering
+                        par_N_list = [ts.dofMap.nDOF_all_processes for ts in trialSpaceDict.values()]
+                        #sum to get total global dimension
+                        par_N = sum(par_N_list)
+                        #calculate list of  dimensions of the locally owned
+                        #dof for  each component
+                        par_n_list = [ts.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -
+                                      ts.dofMap.dof_offsets_subdomain_owned[comm.rank()]
+                                      for ts in trialSpaceDict.values()]
+                        #sum to get total local dimension
+                        par_n = sum(par_n_list)
+                        #calculate number of  ghosts  fo r each component
+                        par_nghost_list = [ts.dofMap.nDOF_subdomain - nDOF_owned
+                                           for ts,nDOF_owned in zip(trialSpaceDict.values(),
+                                                                    par_n_list)]
+                        #sum to  get total ghost dimension
+                        par_nghost = sum(par_nghost_list)
+                        #
+                        #calculate offsets
+                        #
+                        #first for petsc global (natural) numbering offsets
+                        # if p and q are components and ^o and ^g are
+                        # owned and ghost this numbering has
+                        # p^o_0, p^o_1,...p^o_{np}, q^o_0,...q^0_{nq}, p^g_0...
+                        # i.e. all owned, then all ghost
+                        # we'll eventually need the processor and local
+                        # component index  of each ghost too
+                        petsc_global_offsets=[0]
+                        petsc_component_offsets=[[0]]
+                        component_ghost_proc={}
+                        component_ghost_local_index={}
+                        total_dof_proc=0
+                        for proc in range(comm.size()):
+                            for ci,ts in enumerate(trialSpaceDict.values()):
+                                total_dof_proc += (ts.dofMap.dof_offsets_subdomain_owned[proc+1] -
+                                                   ts.dofMap.dof_offsets_subdomain_owned[proc])
+                                petsc_component_offsets[proc].append(total_dof_proc)
+                                for g in ts.dofMap.subdomain2global[par_n_list[ci]:ts.dofMap.nDOF_subdomain]:
+                                    if g >= ts.dofMap.dof_offsets_subdomain_owned[proc] and g < ts.dofMap.dof_offsets_subdomain_owned[proc+1]:
+                                        component_ghost_proc[g] = proc
+                                        component_ghost_local_index[g] = g -  ts.dofMap.dof_offsets_subdomain_owned[proc]
+                            petsc_component_offsets.append([petsc_component_offsets[-1][-1]])
+                            petsc_global_offsets.append(total_dof_proc)
+                        #calculate proteus global (end-to-end) offset for each component
+                        global_component_offset = [0]
+                        for ts in trialSpaceDict.values():
+                            global_component_offset.append(global_component_offset[-1] + ts.dofMap.nDOF_all_processes)
+                        #
+                        #now create subdomain2global for stacked ghosted component DOF by shifting global DOF  numbers  by global offsets
+                        #
+                        subdomain2global = numpy.hstack([offset+ts.dofMap.subdomain2global
+                                                         for offset,ts in
+                                                         zip(global_component_offset, trialSpaceDict.values())])
+                        #
+                        #store ghost proc w.r.t. proteus  global number
+                        #store petsc global w.r.t. proteus global number
+                        ghost_proc={}
+                        ghost_global2petsc={}
+                        for ci,offset, ts in zip(range(transport.nc), global_component_offset, trialSpaceDict.values()):
+                            for g,gproc in component_ghost_proc.iteritems():
+                                ghost_proc[offset+g] = gproc
+                                ghost_global2petsc[offset+g] = petsc_component_offsets[gproc][ci] + component_ghost_local_index[g]
+                        #
+                        #build subdomain2global mappings
+                        #
+                        subdomain2global_list = [ts.dofMap.subdomain2global for ts in  trialSpaceDict.values()]
+                        #
+                        #form lists of owned and ghosts elements
+                        #
+                        ghosts_list=[]
+                        owned_list=[]
+                        owned = numpy.zeros((par_n),'i')
+                        owned_local = numpy.zeros((par_n),'i')
+                        ghosts = numpy.zeros((par_nghost),'i')
+                        ghosts_start = 0
+                        owned_start = 0
+                        for ci in range(transport.nc):
+                            #owned
+                            owned_ci = subdomain2global[transport.offset[ci]:transport.offset[ci]+par_n_list[ci]]
+                            owned_local[owned_start:owned_start + par_n_list[ci]] = numpy.arange(transport.offset[ci],transport.offset[ci]+par_n_list[ci])
+                            owned[owned_start:owned_start + par_n_list[ci]] = owned_ci
+                            owned_list.append(owned_ci)
+                            owned_start = owned_start + par_n_list[ci]
+                            #ghosts
+                            ghosts_ci = subdomain2global[transport.offset[ci]+par_n_list[ci]:transport.offset[ci]+par_n_list[ci]+par_nghost_list[ci]]
+                            ghosts[ghosts_start:ghosts_start + par_nghost_list[ci]] = ghosts_ci
+                            ghosts_list.append(ghosts_ci)
+                            ghosts_start = ghosts_start + par_nghost_list[ci]
+                        transport.owned_local = owned_local
+                        #stack all owned and all ghost
+                        petsc_subdomain2global = np.hstack(owned_list+ghosts_list)
+                        #
+                        # now find mappings (permutations) between proteus and
+                        # petsc orderings
+                        perm_petsc_subdomain2global = petsc_subdomain2global.argsort()
+                        perm_subdomain2global = subdomain2global.argsort()
+                        proteus2petsc_subdomain = np.array(perm_petsc_subdomain2global[perm_subdomain2global.argsort()],'i')
+                        petsc2proteus_subdomain = np.array(perm_subdomain2global[perm_petsc_subdomain2global.argsort()],'i')
+                        assert((petsc_subdomain2global[perm_petsc_subdomain2global] == subdomain2global[perm_subdomain2global]).all())
+                        assert((petsc_subdomain2global[proteus2petsc_subdomain] == subdomain2global).all())
+                        assert((subdomain2global[petsc2proteus_subdomain] == petsc_subdomain2global).all())
+                        petsc_subdomain2global_petsc = subdomain2global.copy()
+                        petsc_subdomain2global_petsc[:]=-1
+                        for i in range(par_n):
+                            petsc_subdomain2global_petsc[i] = petsc_global_offsets[comm.rank()]+i
+                        petsc_ghosts=ghosts.copy()
+                        for gi,i in enumerate(range(par_n,par_n+par_nghost)):
+                            global_proteus = subdomain2global[petsc2proteus_subdomain[i]]
+                            petsc_subdomain2global_petsc[i] = ghost_global2petsc[global_proteus]
+                            petsc_ghosts[gi] = petsc_subdomain2global_petsc[i]
+                        if comm.size() == 1:
+                            assert((subdomain2global == petsc_subdomain2global).all())
+                            assert((subdomain2global == petsc_subdomain2global_petsc).all())
+                        par_u  = ParVec_petsc4py(u, 1, par_n, par_N, par_nghost,
+                                                 petsc_subdomain2global_petsc, ghosts=petsc_ghosts,
+                                                 proteus2petsc_subdomain=proteus2petsc_subdomain,
+                                                 petsc2proteus_subdomain=petsc2proteus_subdomain)
+                        par_r  = ParVec_petsc4py(r, 1, par_n, par_N, par_nghost,
+                                                 petsc_subdomain2global_petsc, ghosts=petsc_ghosts,
+                                                 proteus2petsc_subdomain=proteus2petsc_subdomain,
+                                                 petsc2proteus_subdomain=petsc2proteus_subdomain)
+                        par_du = ParVec_petsc4py(du, 1, par_n, par_N, par_nghost,
+                                                 petsc_subdomain2global_petsc, ghosts=petsc_ghosts,
+                                                 proteus2petsc_subdomain=proteus2petsc_subdomain,
+                                                 petsc2proteus_subdomain=petsc2proteus_subdomain)
+                        rowptr, colind, nzval = jacobian.getCSRrepresentation()
+                        rowptr_petsc = rowptr.copy()
+                        colind_petsc = colind.copy()
+                        nzval[:] = np.arange(nzval.shape[0])
+                        nzval_petsc = nzval.copy()
+                        nzval_proteus2petsc=colind.copy()
+                        nzval_petsc2proteus=colind.copy()
+                        rowptr_petsc[0] = 0
+                        comm.beginSequential()
+                        for i in range(par_n+par_nghost):
+                            start_proteus = rowptr[petsc2proteus_subdomain[i]]
+                            end_proteus = rowptr[petsc2proteus_subdomain[i]+1]
+                            nzrow =  end_proteus - start_proteus
+                            rowptr_petsc[i+1] = rowptr_petsc[i] + nzrow
+                            start_petsc = rowptr_petsc[i]
+                            end_petsc = rowptr_petsc[i+1]
+                            #print "proteus_colind", colind[start_proteus:end_proteus]
+                            petsc_cols_i = proteus2petsc_subdomain[colind[start_proteus:end_proteus]]
+                            j_sorted = petsc_cols_i.argsort()
+                            colind_petsc[start_petsc:end_petsc] = petsc_cols_i[j_sorted]
+                            nzval_petsc[start_petsc:end_petsc] = nzval[start_proteus:end_proteus][j_sorted]
+                            for j_petsc, j_proteus in zip(np.arange(start_petsc,end_petsc),
+                                                          np.arange(start_proteus,end_proteus)[j_sorted]):
+                                nzval_petsc2proteus[j_petsc] = j_proteus
+                                nzval_proteus2petsc[j_proteus] = j_petsc
+                        assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
+                        assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
+                        comm.endSequential()
+                        assert(nzval_petsc.shape[0] == colind_petsc.shape[0] == rowptr_petsc[-1] - rowptr_petsc[0])
+                        petsc_a = np.zeros((transport.dim, transport.dim),'d')
+                        proteus_a = np.zeros((transport.dim, transport.dim),'d')
+                        for i in range(transport.dim):
+                            for j,k in zip(colind[rowptr[i]:rowptr[i+1]],range(rowptr[i],rowptr[i+1])):
+                                nzval[k] = i*transport.dim+j
+                                proteus_a[i,j] = nzval[k]
+                                petsc_a[proteus2petsc_subdomain[i],proteus2petsc_subdomain[j]] = nzval[k]
+                        for i in range(transport.dim):
+                            for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],range(rowptr_petsc[i],rowptr_petsc[i+1])):
+                                nzval_petsc[k] = petsc_a[i,j]
+                        assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
+                        assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
+                        assert (proteus_a[petsc2proteus_subdomain,:][:,petsc2proteus_subdomain] == petsc_a).all()
+                        assert((proteus_a == petsc_a[proteus2petsc_subdomain,:][:,proteus2petsc_subdomain]).all())
+                        petsc_a = np.arange(transport.dim**2).reshape(transport.dim,transport.dim)
+                        transport.nzval_petsc = nzval_petsc
+                        transport.colind_petsc = colind_petsc
+                        transport.rowptr_petsc = rowptr_petsc
+                        petsc_jacobian = SparseMat(transport.dim,transport.dim,nzval_petsc.shape[0], nzval_petsc, colind_petsc, rowptr_petsc)
+                        transport.petsc_jacobian = petsc_jacobian#petsc_jacobian = jacobian
+                        if  comm.size() == 1:
+                            assert (nzval_petsc == nzval).all()
+                            assert (colind_petsc == colind).all()
+                            assert (rowptr_petsc == rowptr).all()
+                        assert(colind.max() <= par_n+par_nghost)
+                        assert(colind_petsc.max() <= par_n + par_nghost)
+                        par_jacobian = ParMat_petsc4py(petsc_jacobian,1,par_n,par_N,par_nghost,
+                                                       petsc_subdomain2global_petsc,pde=transport,
+                                                       proteus_jacobian=jacobian, nzval_proteus2petsc=nzval_proteus2petsc)
+                    else:
+                        transport.owned_local = numpy.arange(par_n*par_bs)
+                        par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
+                        subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
+                        logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                        par_u = ParVec_petsc4py(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
+                        par_r = ParVec_petsc4py(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
+                        logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                        par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
+                        logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
+                        par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
                 else:
-                    log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                    par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
+                    subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
+                    max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
+                    logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                     par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
                     par_r = ParVec(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                    log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                    logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                     par_du = ParVec(du,par_bs,par_n,par_N)
-                    log("Allocating matrix on rank %i" % comm.rank(),level=2)
+                    logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = flcbdfWrappers.ParMat(par_bs,par_n,par_N,par_nghost,max_dof_neighbors,subdomain2global,jacobian)
             elif  (options.multilevelLinearSolver == PETSc or
                    options.levelLinearSolver == PETSc):
-                assert trialSpaceDict[0].dofMap.subdomain2global != None, "need trivial subdomain2global in dofMap for running PETSc"
-                assert trialSpaceDict[0].dofMap.max_dof_neighbors!= None, "need max_dof_neighbors in dofMap for running PETSc"
+                assert trialSpaceDict[0].dofMap.subdomain2global is not None, "need trivial subdomain2global in dofMap for running PETSc"
+                assert trialSpaceDict[0].dofMap.max_dof_neighbors is not None, "need max_dof_neighbors in dofMap for running PETSc"
                 par_N = par_n =  trialSpaceDict[0].dofMap.nDOF_all_processes
                 par_nghost = 0
                 subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
                 max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
-                log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
                 par_r = ParVec(r,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
-                log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 par_du = ParVec(du,par_bs,par_n,par_N)
-                log("Allocating matrix on rank %i" % comm.rank(),level=2)
+                logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                 par_jacobian = flcbdfWrappers.ParMat(par_bs,par_n,par_N,par_nghost,max_dof_neighbors,subdomain2global[:par_n],jacobian)
             elif  (options.multilevelLinearSolver == KSP_petsc4py or
                    options.levelLinearSolver == KSP_petsc4py):
-                assert trialSpaceDict[0].dofMap.subdomain2global != None, "need trivial subdomain2global in dofMap for running PETSc"
-                assert trialSpaceDict[0].dofMap.max_dof_neighbors!= None, "need max_dof_neighbors in dofMap for running PETSc"
+                assert trialSpaceDict[0].dofMap.subdomain2global is not None, "need trivial subdomain2global in dofMap for running PETSc"
+                assert trialSpaceDict[0].dofMap.max_dof_neighbors is not None, "need max_dof_neighbors in dofMap for running PETSc"
                 par_N = par_n =  trialSpaceDict[0].dofMap.nDOF_all_processes
+                mixed = False
+                for ts in trialSpaceDict.values():
+                    if ts.dofMap.nDOF_all_processes != par_N:
+                        mixed=True
                 par_nghost = 0
-                subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
-                max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
-                log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                par_u = ParVec_petsc4py(u,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
-                par_r = ParVec_petsc4py(r,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
-                log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
-                log("Allocating matrix on rank %i" % comm.rank(),level=2)
-                par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
+                logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                if mixed:
+                    par_N = par_n = sum([ts.dofMap.nDOF_all_processes for ts in trialSpaceDict.values()])
+                    transport.owned_local = numpy.arange(par_n)
+                    subdomain2global = numpy.hstack([offset+ts.dofMap.subdomain2global for
+                                                     offset,ts in zip(transport.offset,trialSpaceDict.values())])
+                    par_u = ParVec_petsc4py(u,1,par_n,par_N,par_nghost,subdomain2global[:par_n])
+                    par_r = ParVec_petsc4py(r,1,par_n,par_N,par_nghost,subdomain2global[:par_n])
+                    logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                    par_du = ParVec_petsc4py(du,1,par_n,par_N)
+                    logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
+                    par_jacobian = ParMat_petsc4py(jacobian,1,par_n,par_N,par_nghost,subdomain2global,pde=transport)
+                else:
+                    transport.owned_local = numpy.arange(par_n*par_bs)
+                    subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
+                    max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
+                    par_u = ParVec_petsc4py(u,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
+                    par_r = ParVec_petsc4py(r,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
+                    logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                    par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
+                    logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
+                    par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
             else:
+                transport.owned_local = numpy.arange(transport.dim)
                 par_u = None
                 par_r = None
                 par_du = None
@@ -6314,8 +6670,8 @@ class MultilevelTransport:
             self.par_duList.append(par_du)
             self.par_rList.append(par_r)
             self.par_jacobianList.append(par_jacobian)
-            log(memory("global Jacobian and vectors","MultilevelTransport"),level=4)
-        log("Building Mesh Transfers",level=2)
+            logEvent(memory("global Jacobian and vectors","MultilevelTransport"),level=4)
+        logEvent("Building Mesh Transfers",level=2)
         MultilevelProjectionOperatorType = MultilevelProjectionOperators
         self. meshTransfers = MultilevelProjectionOperatorType(
             mlMesh,
@@ -6323,11 +6679,11 @@ class MultilevelTransport:
             self.offsetListList,
             self.strideListList,
             self.bcDictList)
-        log(memory("mesh transfers","MultilevelTransport"),level=4)
+        logEvent(memory("mesh transfers","MultilevelTransport"),level=4)
         #mwf hack keep reference to mlMesh in Transport ctor for now
         self.mlMeshSave = mlMesh
     def setInitialConditions(self,getInitialConditionsDict,T=0.0):
-        log("Setting initial conditions on model "+self.name)
+        logEvent("Setting initial conditions on model "+self.name)
         self.t=T
         for m,u in zip(self.levelModelList,self.uList):
             m.setInitialConditions(getInitialConditionsDict,T)
@@ -6356,11 +6712,11 @@ class MultilevelTransport:
         for idx, par_jacobian in enumerate(self.par_jacobianList):
             if hasattr(par_jacobian, 'save'):
                 filename = file_prefix + 'par_j' + '_' + str(idx)
-                log('Saving Parallel Jacobian to %s' % filename)
+                logEvent('Saving Parallel Jacobian to %s' % filename)
                 par_jacobian.save(filename)
         if b and hasattr(b, 'save'):
             filename = file_prefix + 'b'
-            log('Saving right-hand-side to %s' % filename)
+            logEvent('Saving right-hand-side to %s' % filename)
             b.save(filename)
 
 ## @}

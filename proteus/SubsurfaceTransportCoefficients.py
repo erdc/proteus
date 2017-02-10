@@ -1,11 +1,14 @@
 """
 TransportCoefficients for flow and transport in porous media
+
+.. inheritance-diagram:: proteus.SubsurfaceTransportCoefficients
+   :parts: 1
+
 """
 from math import *
 from TransportCoefficients import TC_base
 import numpy
-import Profiling
-log = Profiling.logEvent
+from .Profiling import logEvent
 from proteus import FemTools
 from proteus import Transport
 import subsurfaceTransportFunctions as stfuncs
@@ -15,20 +18,20 @@ import subsurfaceTransportFunctions as stfuncs
 ######################################################################
 
 class BlockHeterogeneousCoefficients:
-    """
-    Basic data structures and functionality for keeping track of a
+    """Basic data structures and functionality for keeping track of a
     block heterogeneity
+
     """
     def __init__(self,mesh):
         self.mesh = mesh
     def initializeMaterialTypes(self):
-        """
-        returns material type identifiers for mesh topology
-          in tuple
+        """returns material type identifiers for mesh topology in tuple
         element,exterior_element_boundaries,element_boundaries
 
-        note element_boundaries is nElementBoundaries_global x 2 and gives the
-         element material property to the left and right of a global element boundary
+        note element_boundaries is nElementBoundaries_global x 2 and
+        gives the element material property to the left and right of a
+        global element boundary
+
         """
         elementMaterialTypes = self.mesh.elementMaterialTypes
         exteriorElementBoundaryTypes =  numpy.zeros((self.mesh.nExteriorElementBoundaries_global),'i')
@@ -47,8 +50,8 @@ class BlockHeterogeneousCoefficients:
 #Single-phase flow
 ##################################################
 class SinglePhaseDarcyCoefficients(TC_base):
-    """
-    S_s h_t -\deld ( K_i(x,t) \grad h_i ) + r(x,t) = 0 i=1,nc
+    """:math:`S_s h_t -\deld ( K_i(x,t) \grad h_i ) + r(x,t) = 0 i=1,nc`
+
     """
     def __init__(self,K_types,source_types,S_s_types=None,
                  nc=1,nd=2,
@@ -366,8 +369,8 @@ class SinglePhaseDarcyCoefficients(TC_base):
 #Richards equation
 ########################################
 class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
-    """
-    version of Re where element material type id's used in evals
+    """version of Re where element material type id's used in evals
+
     """
     from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2
     from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchten_sd_het
@@ -549,9 +552,10 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
 
 from proteus import cfemIntegrals
 class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
-    """
-    OneLevelTransport designed specifically for Non-Conforming P^1 approximation to RE
-    Approximation uses nodal quadrature and upwinding
+    """OneLevelTransport designed specifically for Non-Conforming
+    :math:`P^1` approximation to RE Approximation uses nodal
+    quadrature and upwinding
+
     """
     def __init__(self,
                  uDict,
@@ -739,7 +743,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #                 kv = kv0
 #             if self.testIsTrial:
 #                 if kv in sd.keys():
-#                     log("Shallow copy of trial shape is being used for test shape %s " % kw[0],level=4)
+#                     logEvent("Shallow copy of trial shape is being used for test shape %s " % kw[0],level=4)
 #                     sd[kw] = sd[kv]
 #                     aliased=True
 #             return aliased
@@ -752,7 +756,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #             k0 = (ks,)+(refi,)
 #             if self.reuse_test_trial_quadrature and refi != None:
 #                 if k0 in sd.keys():
-#                     log("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
+#                     logEvent("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
 #                     sd[k] = sd[k0]
 #                     aliased=True
 #             return aliased
@@ -770,7 +774,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #         for k in trial_shape_quadrature_duplicate:
 #             self.u_ip[k] = self.u_ip[trial_shape_quadrature_duplicate_map[k]]
 #         #mwf trial-dup end
-#         log(memory("solution interpolation points, test/trial functions trial_shape","OneLevelTransport"),level=4)
+#         logEvent(memory("solution interpolation points, test/trial functions trial_shape","OneLevelTransport"),level=4)
 #         #allocate test shape functions
 #         for k in self.test_shape_quadrature:
 #             if not makeAlias(self.u_ip,k):
@@ -779,7 +783,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #                      self.n_u_ip_element,
 #                      self.nDOF_test_element[k[-1]]),
 #                     'd')
-#         log(memory("solution interpolation points, test/trial functions test_shape","OneLevelTransport"),level=4)
+#         logEvent(memory("solution interpolation points, test/trial functions test_shape","OneLevelTransport"),level=4)
 #         #allocate trial shape function gradients
 #         for k in sorted(self.trial_shapeGradient_quadrature):
 #             if not makeAliasForComponent1(self.u_ip,k,['grad(v)'],refi=0):#need to handle multiple component combinations
@@ -789,7 +793,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #                      self.nDOF_trial_element[k[-1]],
 #                      self.nSpace_global),
 #                     'd')
-#         log(memory("solution interpolation points, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
+#         logEvent(memory("solution interpolation points, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
 #         #allocate test shape function gradients
 #         for k in self.test_shapeGradient_quadrature:
 #             if not makeAlias(self.u_ip,k):
@@ -800,9 +804,9 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #                      self.nSpace_global),
 #                     'd')
     def calculateElementCoefficients(self):
-        """
-        calculate the nonlinear coefficients at the quadrature points and nodes
-        include interpolation points explicitly here now
+        """calculate the nonlinear coefficients at the quadrature points and
+        nodes include interpolation points explicitly here now
+
         """
 
         for cj in range(self.nc):
@@ -967,15 +971,17 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 ########################################
 class TwophaseDarcyFlow_base(TC_base):
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_vol_frac,generateSplineTables
-    """
-    base class for two-phase flow implementations
-    holds information for
+    """base class for two-phase flow implementations 
 
-        fluid properties
-        eos model tag
-        psk model tag
-        material heterogeneity information (number of types, lookup arrays)
+    holds information for:
+
+      * fluid properties
+      * eos model tag
+      * psk model tag
+      * material heterogeneity information (number of types, lookup arrays)
+
     default fluids are water and air assumed to be incompressible
+
     """
     default_density_w_parameters = {'model':'Exponential',
                                     'nParameters':3,
@@ -1203,52 +1209,68 @@ class TwophaseDarcyFlow_base(TC_base):
     #
 
 class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
+    """continuity equation for each phase
+
+    .. math::
+
+        \pd{m_w}{t} - \deld (\ten{a}_w \grad \phi_w) + r_w = 0
+        \pd{m_n}{t} - \deld (\ten{a}_n \grad \phi_n) + r_n = 0
+
     """
-    continuity equation for each phase
+    # (normalized) mass for each phase
 
-      \pd{m_w}{t} - \deld (\ten{a}_w \grad \phi_w) + r_w = 0
+    # .. math::
 
-      \pd{m_n}{t} - \deld (\ten{a}_n \grad \phi_n) + r_n = 0
+    #     m_i = \theta_i \rho_i,  i=w,n
 
-    (normalized) mass for each phase
-       m_i = \theta_i \rho_i,  i=w,n
+    #     \theta_i = \theta_s S_i
 
-       \theta_i = \theta_s S_i
-       \rho_i   = \varrho_i/\varrho_{i,0}, i=w,n
+    #     \rho_i   = \varrho_i/\varrho_{i,0}, i=w,n
 
-     where S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    # where :math:`S_i` is the saturation for each phase,
+    # :math:`\varrho_{i}` is the density and :math:`\varrho_{i,0}` is a
+    # reference value
 
-    (normalized) mass flux for each phase is
+    # (normalized) mass flux for each phase is
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # .. math::
 
-       \ten{a}_i = \rho_i k_{r,i}/\hat{\mu}_i \ten{K}_s
-    and the potentials are defined as
-       \phi_{w}  = \psi_{w} - \rho_w \vec g\cdot \vec x
-       \phi_{n}  = \psi_{n} - b \rho_n \vec g\cdot \vec x
+    #     \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    #     \ten{a}_i = \rho_i k_{r,i}/\hat{\mu}_i \ten{K}_s
 
-    where
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    # and the potentials are defined as
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    # .. math::
 
-    The dependent variables are
-      S_w, and \psi_w
+    #     \phi_{w}  = \psi_{w} - \rho_w \vec g\cdot \vec x
+    #     \phi_{n}  = \psi_{n} - b \rho_n \vec g\cdot \vec x
 
-    Note S_n = 1-S_w
+    # where
 
-    needs to be implemented
-    r_i = r_i(\vec x,t)
+    # .. math::
 
+    #     \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #     b        = \varrho_{n,0}/\varrho_{w,0}
+    #     \hat{mu}_{i} = \mu_i/\mu_{w}
 
-    slight compressibility assumed in spatial gradients
+    # for the pressure of each phase, :math:`p_i`, and we have the
+    # capillary pressure relation
 
-    TODO:
-   """
+    # .. math::
+
+    #     \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #     r_i = r_i(\vec x,t)
+
+    # slight compressibility assumed in spatial gradients
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_sd_het_matType
     def __init__(self,
                  nd=1,
@@ -1411,12 +1433,12 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
 #
 
 class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
-    """
-    Formulation using phase continuity equations and
-     Van-Genuchten Mualem psk relations
+    """Formulation using phase continuity equations and Van-Genuchten
+    Mualem psk relations
 
     Basically a convenience wrapper for fully coupled approximation
-     with volume-fraction based inputs as in Richards' equation formulations
+    with volume-fraction based inputs as in Richards' equation
+    formulations
 
     """
     def __init__(self,
@@ -1522,9 +1544,8 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
 
 
 class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
-    """
-    Formulation using phase continuity equations and
-     'simp' quadratic rel-perm, linear capillary pressure psk relations
+    """Formulation using phase continuity equations and 'simp' quadratic
+    rel-perm, linear capillary pressure psk relations
 
     """
     def __init__(self,
@@ -1566,52 +1587,72 @@ class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
 
 
 class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
-    """
-    continuity equation for each phase
+    """continuity equation for each phase
+
+    .. math::
 
       \pd{m_w}{t} - \deld (\ten{a}_w \grad \phi_w) + r_w = 0
-
       \pd{m_n}{t} - \deld (\ten{a}_n \grad \phi_n) + r_n = 0
+    
+    """
+    
+    # (normalized) mass for each phase :math:`m_i = \theta_i \rho_i,
+    # i=w,n`
 
-    (normalized) mass for each phase
-       m_i = \theta_i \rho_i,  i=w,n
+    # .. math::
 
-       \theta_i = \theta_s S_i
-       \rho_i   = \varrho_i/\varrho_{i,0}, i=w,n
+    #    \theta_i = \theta_s S_i
+    #    \rho_i   = \varrho_i/\varrho_{i,0}, i=w,n
 
-     where S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    # where :math:`S_i` is the saturation for each phase,
+    # :math:`\varrho_{i}` is the density and :math:`\varrho_{i,0}` is a
+    # reference value
 
-    (normalized) mass flux for each phase is
+    # (normalized) mass flux for each phase is
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # .. math::
 
-       \ten{a}_i = \rho_i k_{r,i}/\hat{\mu}_i \ten{K}_s
-    and the potentials are defined as
-       \phi_{w}  = \psi_{w} - \rho_w \vec g\cdot \vec x
-       \phi_{n}  = \psi_{n} - b \rho_n \vec g\cdot \vec x
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    #    \ten{a}_i = \rho_i k_{r,i}/\hat{\mu}_i \ten{K}_s
 
-    where
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    # and the potentials are defined as
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    # .. math::
 
-    The dependent variables are
-      \psi_w, and \psi_c
+    #    \phi_{w}  = \psi_{w} - \rho_w \vec g\cdot \vec x
+    #    \phi_{n}  = \psi_{n} - b \rho_n \vec g\cdot \vec x
 
-    Note S_n = 1-S_w
+    # where
 
-    needs to be implemented
-    r_i = r_i(\vec x,t)
+    # .. math::
 
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
 
-    slight compressibility assumed in spatial gradients
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
 
-    TODO:
-   """
+    # .. math::
+
+    #    \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are
+
+    # .. math::
+
+    #   \psi_w, and \psi_c
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #   r_i = r_i(\vec x,t)
+
+    # slight compressibility assumed in spatial gradients
+
+    # """
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_pp_sd_het_matType
     def __init__(self,
                  nd=1,
@@ -1797,12 +1838,12 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
             pdb.set_trace()
 #
 class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
-    """
-    Formulation using phase continuity equations, pressure-pressure formulation and
-     Van-Genuchten Mualem psk relations
+    """Formulation using phase continuity equations, pressure-pressure
+    formulation and Van-Genuchten Mualem psk relations
 
     Basically a convenience wrapper for fully coupled approximation
-     with volume-fraction based inputs as in Richards' equation formulations
+    with volume-fraction based inputs as in Richards' equation
+    formulations
 
     """
     def __init__(self,
@@ -1914,10 +1955,10 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
 
 
 class FullyCoupledPressurePressureSimplePSKs(TwophaseDarcy_fc_pp):
-    """
-    Formulation using phase continuity equations and
-     'simp' quadratic rel-perm, linear capillary pressure psk relations
+    """Formulation using phase continuity equations and 'simp' quadratic
+    rel-perm, linear capillary pressure psk relations
     pressure-pressure formulation
+
     """
     def __init__(self,
                  nd,
@@ -1961,13 +2002,13 @@ class FullyCoupledPressurePressureSimplePSKs(TwophaseDarcy_fc_pp):
 
 ###########
 class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
-    """
-    Base class for 'pressure' or total flow conservation equation in fractional flow formulations. This
+    """Base class for 'pressure' or total flow conservation equation in
+    fractional flow formulations. This
 
     The primary functionality of the base class is to handle synchronization with a 'saturation' model to
     get the saturation, S_w, and capillary pressure (head), \psi_c, variables
 
-   """
+    """
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -2089,15 +2130,14 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
 
 #
 class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
-    """
-    Base class for aqueous phase mass conservation equation (saturation equation) in
-    a fractional flow formulation.
+    """Base class for aqueous phase mass conservation equation
+    (saturation equation) in a fractional flow formulation.
 
     The primary responsibility of the base class is to handle
     synchronization with the 'pressure' equation to get the total flow
     velocity variable, q_t, and aqueous phase pressure head, psi_w
 
-   """
+    """
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -2178,72 +2218,86 @@ class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
         self.ip_psiw = numpy.ones(cip[('u',0)].shape,'d')
 
 class TwophaseDarcy_incompressible_split_pressure(TwophaseDarcy_split_pressure_base):
+    """Total flow conservation equation in an incompressible fractional
+    flow formulation
+
     """
-    Total flow conservation equation in an incompressible fractional flow formulation
+    # Saturation equation
 
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    # .. math::
 
-\begin{table}[ht]
-\caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
-\label{tab:2p-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\end{tabular}
-\end{table}
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+    #     and total flow conservation equation
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-m}
+    #     \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
 
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
+    #     \label{tab:2p-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \end{tabular}
+    #     \end{table}
 
-    (normalized) mass flux for each phase is
+    #  Here :math:`S_i` is the saturation for each phase,
+    #  :math:`\varrho_{i}` is the density and :math:`\varrho_{i,0}` is a
+    #  reference value
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # (normalized) mass flux for each phase is
 
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    # .. math::
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
 
-    The dependent variables are
-      S_w, and \psi_w
+    # and
+   
+    # .. math::
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
 
-    Note S_n = 1-S_w
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
 
-    needs to be implemented
-    r_m = r_m(\vec x,t)
+    # .. math::
 
-    TODO:
+    #    \psi_{c} = \psi_{n} - \psi_{w}
 
-      Figure out if really need to evaluate potential interpolation points
-   """
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #   r_m = r_m(\vec x,t)
+
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_sd_pressure_het_matType
     def __init__(self,
                  nd=1,
@@ -2400,73 +2454,87 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
 #
 class TwophaseDarcy_incompressible_split_saturation(TwophaseDarcy_split_saturation_base):
-    """
-    Aqueous phase mass conservation equation (saturation equation) in
+    """Aqueous phase mass conservation equation (saturation equation) in
     an incompressible fractional flow formulation
+ 
+    """
+    
+    # Saturation equation
 
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    # .. math::
 
-\begin{table}[ht]
-\caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
-\label{tab:2p-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\end{tabular}
-\end{table}
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+    #     and total flow conservation equation
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-m}
+    #     \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
 
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
+    #     \label{tab:2p-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \end{tabular}
+    #     \end{table}
 
-    (normalized) mass flux for each phase is
+    #  Here :math:`S_i` is the saturation for each phase, :math:`\varrho_{i}` is the density and
+    #  :math:`\varrho_{i,0}` is a reference value
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # (normalized) mass flux for each phase is
 
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    # .. math::
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
 
-    The dependent variables are
-      S_w, and \psi_w
+    # and
 
-    Note S_n = 1-S_w
+    # .. math::
 
-    needs to be implemented
-    r_m = r_m(\vec x,t)
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
 
-    TODO:
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
 
-      Figure out if really need to evaluate potential interpolation points
-   """
+    # .. math::
+
+    #    \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #   r_m = r_m(\vec x,t)
+    
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_sd_saturation_het_matType
     def __init__(self,
                  nd=1,
@@ -2622,84 +2690,98 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
 
 class TwophaseDarcy_compressible_split_pressure(TwophaseDarcy_split_pressure_base):
+    """Total flow conservation equation in a split compressible
+    fractional flow formulation Right now, the options are
+
+    compressibility for the non-wetting phase (compressibleN) :
+    compressiblityFlag=1
+    
+    compressibility for both phases but with the slight compressiblity
+    assumption (spatial density gradients are negligible)
+    compressiblityFlag=2
+
     """
-    Total flow conservation equation in a split compressible fractional flow formulation
-    Right now, the options are
+    # Saturation equation
 
-        compressibility for the non-wetting phase (compressibleN) : compressiblityFlag=1
-        compressibility for both phases but with the slight
-          compressiblity assumption (spatial density gradients are negligible) compressiblityFlag=2
+    # .. math::
 
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-c-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-c-ff-mb-m}
-\pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    #     \begin{eqnarray}
+    #     \label{eq:2p-c-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+    #     and total flow conservation equation
+    #     \begin{eqnarray}
+    #     \label{eq:2p-c-ff-mb-m}
+    #     \pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
 
-\begin{table}[ht]
-\caption{Coefficient definitions for compressible two-phase fractional flow formulation flow, \eqn{2p-c-ff-mb-w} and \eqn{2p-c-ff-mb-m}
-\label{tab:2p-c-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$m_m$ & $\theta_s \rho_{w}S_w + \theta_s\rho_{n}(1-S_w)$  \\
-$\vec f_w^{\dagger}$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m^{\dagger}$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}^{\dagger}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}^{\dagger}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\multicolumn{2}{l}
-{$\dagger$ : $\rho_i \equiv 1$, $\lambda_i= k_{r,i}/\hat{\mu}_{i}$ for slight compressibility assumption}
-\end{tabular}
-\end{table}
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for compressible two-phase fractional flow formulation flow, \eqn{2p-c-ff-mb-w} and \eqn{2p-c-ff-mb-m}
+    #     \label{tab:2p-c-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $m_m$ & $\theta_s \rho_{w}S_w + \theta_s\rho_{n}(1-S_w)$  \\
+    #     $\vec f_w^{\dagger}$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m^{\dagger}$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}^{\dagger}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}^{\dagger}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \multicolumn{2}{l}
+    #     {$\dagger$ : $\rho_i \equiv 1$, $\lambda_i= k_{r,i}/\hat{\mu}_{i}$ for slight compressibility assumption}
+    #     \end{tabular}
+    #     \end{table}
 
+    #  Here :math:`S_i` is the saturation for each phase, :math:`\varrho_{i}` is the
+    #  density and :math:`\varrho_{i,0}` is a reference value
 
+    # (normalized) mass flux for each phase is
 
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    # .. math::
 
-    (normalized) mass flux for each phase is
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # and
 
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
-       \lambda_i= \rho k_{r,i}/\hat{\mu}_{i}
-       \lambda_t= \lambda_n + \lambda_w
+    # .. math::
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
+    #    \lambda_i= \rho k_{r,i}/\hat{\mu}_{i}
+    #    \lambda_t= \lambda_n + \lambda_w
 
-    The dependent variables are
-      S_w, and \psi_w
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
 
-    Note S_n = 1-S_w
+    # .. math::
 
-    needs to be implemented
-    r_m = r_m(\vec x,t)
+    #    \psi_{c} = \psi_{n} - \psi_{w}
 
-    TODO:
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
 
-      Figure out if really need to evaluate potential interpolation points
-   """
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #   r_m = r_m(\vec x,t)
+
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_slightCompressible_split_sd_pressure_het_matType
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_compressibleN_split_sd_pressure_het_matType
     def __init__(self,
@@ -2880,85 +2962,103 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
 
 class TwophaseDarcy_compressible_split_saturation(TwophaseDarcy_split_saturation_base):
-    """
-    Aqueous phase mass conservation equation (saturation equation) in
-    a  compressible fractional flow formulation
+    """Aqueous phase mass conservation equation (saturation equation) in a
+    compressible fractional flow formulation
 
     Right now, the options are
 
-        compressibility for the non-wetting phase (compressibleN) : compressiblityFlag=1
-        compressibility for both phases but with the slight
-          compressiblity assumption (spatial density gradients are negligible) compressiblityFlag=2
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-c-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-c-ff-mb-m}
-\pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    compressibility for the non-wetting phase (compressibleN) :
+    compressiblityFlag=1
+    
+    compressibility for both phases but with the slight compressiblity
+    assumption (spatial density gradients are negligible)
+    compressiblityFlag=2
 
-\begin{table}[ht]
-\caption{Coefficient definitions for compressible two-phase fractional flow formulation flow, \eqn{2p-c-ff-mb-w} and \eqn{2p-c-ff-mb-m}
-\label{tab:2p-c-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$m_m$ & $\theta_s \rho_{w}S_w + \theta_s\rho_{n}(1-S_w)$  \\
-$\vec f_w^{\dagger}$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m^{\dagger}$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}^{\dagger}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}^{\dagger}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\multicolumn{2}{l}
-{$\dagger$ : $\rho_i \equiv 1$, $\lambda_i= k_{r,i}/\hat{\mu}_{i}$ for slight compressibility assumption}
-\end{tabular}
-\end{table}
-
-
-
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
-
-    (normalized) mass flux for each phase is
-
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
-
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
-       \lambda_i= \rho k_{r,i}/\hat{\mu}_{i}
-       \lambda_t= \lambda_n + \lambda_w
-
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
-
-    The dependent variables are
-      S_w, and \psi_w
-
-    Note S_n = 1-S_w
-
-    needs to be implemented
-    r_m = r_m(\vec x,t)
-
-    TODO:
-
-      Figure out if really need to evaluate potential interpolation points
     """
+    # Saturation equation
+
+    # .. math::
+
+    #     \begin{eqnarray}
+    #     \label{eq:2p-c-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+
+    # and total flow conservation equation
+
+    # .. math::
+    #     \begin{eqnarray}
+    #     \label{eq:2p-c-ff-mb-m}
+    #     \pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
+
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for compressible two-phase fractional flow formulation flow, \eqn{2p-c-ff-mb-w} and \eqn{2p-c-ff-mb-m}
+    #     \label{tab:2p-c-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $m_m$ & $\theta_s \rho_{w}S_w + \theta_s\rho_{n}(1-S_w)$  \\
+    #     $\vec f_w^{\dagger}$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m^{\dagger}$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}^{\dagger}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}^{\dagger}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \multicolumn{2}{l}
+    #     {$\dagger$ : $\rho_i \equiv 1$, $\lambda_i= k_{r,i}/\hat{\mu}_{i}$ for slight compressibility assumption}
+    #     \end{tabular}
+    #     \end{table}
+
+    #  Here :math:`S_i` is the saturation for each phase, :math:`\varrho_{i}` is the density and
+    #  :math:`\varrho_{i,0}` is a reference value
+
+    #  (normalized) mass flux for each phase is
+
+    # .. math::
+
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+
+    # and
+
+    # .. math::
+
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
+    #    \lambda_i= \rho k_{r,i}/\hat{\mu}_{i}
+    #    \lambda_t= \lambda_n + \lambda_w
+
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
+
+    # .. math::
+
+    #    \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #     r_m = r_m(\vec x,t)
+
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_slightCompressible_split_sd_saturation_het_matType
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_compressibleN_split_sd_saturation_het_matType
     def __init__(self,
@@ -3137,14 +3237,17 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
 ###########
 class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
+    """Base class for 'pressure' or total flow conservation equation in
+    fractional flow formulations. This
+
+    The primary functionality of the base class is to handle
+    synchronization with a 'saturation' model to get the saturation,
+    :math:`S_w`, and capillary pressure (head), :math:`\psi_c`, variables
+
+    This version would allow for capillary pressure to be unknown for
+    saturation equation
+
     """
-    Base class for 'pressure' or total flow conservation equation in fractional flow formulations. This
-
-    The primary functionality of the base class is to handle synchronization with a 'saturation' model to
-    get the saturation, S_w, and capillary pressure (head), \psi_c, variables
-
-    This version would allow for capillary pressure to be unknown for saturation equation
-   """
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -3246,15 +3349,14 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
 
 #
 class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
-    """
-    Base class for aqueous phase mass conservation equation (saturation equation) in
-    a fractional flow formulation.
+    """Base class for aqueous phase mass conservation equation
+    (saturation equation) in a fractional flow formulation.
 
     The primary responsibility of the base class is to handle
     synchronization with the 'pressure' equation to get the total flow
-    velocity variable, q_t, and aqueous phase pressure head, psi_w
+    velocity variable, :math:`q_t`, and aqueous phase pressure head, :math:`psi_w`
 
-   """
+    """
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -3342,72 +3444,86 @@ class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
         cip['sw'] = numpy.zeros(cip[('u',0)].shape,'d')
 
 class TwophaseDarcy_incompressible_split_pp_pressure(TwophaseDarcy_split_pp_pressure_base):
+    """Total flow conservation equation in an incompressible fractional
+    flow formulation
+
     """
-    Total flow conservation equation in an incompressible fractional flow formulation
+    # Saturation equation
 
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    # .. math::
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+    #     and total flow conservation equation
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-m}
+    #     \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
 
-\begin{table}[ht]
-\caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
-\label{tab:2p-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\end{tabular}
-\end{table}
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
+    #     \label{tab:2p-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \end{tabular}
+    #     \end{table}
 
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    #  Here :math:`S_i` is the saturation for each phase,
+    #  :math:`\varrho_{i}` is the density and :math:`\varrho_{i,0}` is a
+    #  reference value
 
-    (normalized) mass flux for each phase is
+    # (normalized) mass flux for each phase is
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    # .. math::
 
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    # and
 
-    The dependent variables are
-      S_w, and \psi_w
+    # .. math::
 
-    Note S_n = 1-S_w
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
 
-    needs to be implemented
-    r_m = r_m(\vec x,t)
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
 
-    TODO:
+    # .. math::
 
-      Figure out if really need to evaluate potential interpolation points
-   """
+    #    \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+
+    #     r_m = r_m(\vec x,t)
+
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_sd_pressure_het_matType
     def __init__(self,
                  nd=1,
@@ -3560,73 +3676,86 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
 #
 class TwophaseDarcy_incompressible_split_pp_saturation(TwophaseDarcy_split_pp_saturation_base):
-    """
-    Aqueous phase mass conservation equation (saturation equation) in
+    """Aqueous phase mass conservation equation (saturation equation) in
     an incompressible fractional flow formulation
 
-Saturation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-w}
-\pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
-\end{eqnarray}
-and total flow conservation equation
-\begin{eqnarray}
-\label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
-\end{eqnarray}
+    """
+    # Saturation equation
 
-\begin{table}[ht]
-\caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
-\label{tab:2p-ff-coef-1}
-}
-\begin{tabular}{cc}
-\hline
-Var. & Def. \\
-\hline
-$u_w$ & $S_w $ \\
-$u_n$ & $\psi_w $ \\
-$\phi_w$ & $\psi_c$ \\
-$\phi_m$ & $\psi_w$  \\
-$m_w$ & $\theta_s \rho_{w}S_w$  \\
-$\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
-$\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
-$\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
-$\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
-\hline
-$F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
-$\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
-$\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline
-\end{tabular}
-\end{table}
+    # .. math::
 
-     Here S_i is the saturation for each phase, \varrho_{i} is the density and
-     \varrho_{i,0} is a reference value
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-w}
+    #     \pd{m_w}{t} + \deld\left(\vec f_w - \ten{a}_{w}\grad \phi_w \right) + r_w &=& 0
+    #     \end{eqnarray}
+    #     and total flow conservation equation
+    #     \begin{eqnarray}
+    #     \label{eq:2p-ff-mb-m}
+    #     \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
+    #     \end{eqnarray}
 
-    (normalized) mass flux for each phase is
+    #     \begin{table}[ht]
+    #     \caption{Coefficient definitions for Two-phase flow, \eqn{2p-ff-mb-w} and \eqn{2p-ff-mb-m}
+    #     \label{tab:2p-ff-coef-1}
+    #     }
+    #     \begin{tabular}{cc}
+    #     \hline
+    #     Var. & Def. \\
+    #     \hline
+    #     $u_w$ & $S_w $ \\
+    #     $u_n$ & $\psi_w $ \\
+    #     $\phi_w$ & $\psi_c$ \\
+    #     $\phi_m$ & $\psi_w$  \\
+    #     $m_w$ & $\theta_s \rho_{w}S_w$  \\
+    #     $\vec f_w$ & $\gvec{\sigma}_t F_w - \ten{K}_s\lambda_wF_n\left(b\rho_n - \rho_w\right)\vec g_u$  \\
+    #     $\vec f_m$ &$-\ten{K}_s\lambda_tF_n\grad \psi_c + \ten{K}_s\vec g\lambda_t\left[\rho_w + F_n\left(b\rho_n - \rho_w\right)\right]$\\
+    #     $\ten a_{w,w}$ & $-\lambda_wF_n \ten{K}_{s}$ \\
+    #     $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
+    #     \hline
+    #     $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
+    #     $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
+    #     $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
+    #     \hline
+    #     \end{tabular}
+    #     \end{table}
 
-       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    #  Here :math:`S_i` is the saturation for each phase, :math:`\varrho_{i}` is the density and
+    #  :math:`\varrho_{i,0}` is a reference value
 
-    and
-       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
-       b        = \varrho_{n,0}/\varrho_{w,0}
-       \hat{mu}_{i} = \mu_i/\mu_{w}
+    # (normalized) mass flux for each phase is
 
-    for the pressure of each phase, p_i, and we have the capillary pressure relation
-       \psi_{c} = \psi_{n} - \psi_{w}
+    # .. math::
 
-    The dependent variables are
-      S_w, and \psi_w
+    #    \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
 
-    Note S_n = 1-S_w
+    # and
 
-    needs to be implemented
-    r_m = r_m(\vec x,t)
+    # .. math::
 
-    TODO:
+    #    \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+    #    b        = \varrho_{n,0}/\varrho_{w,0}
+    #    \hat{mu}_{i} = \mu_i/\mu_{w}
 
-      Figure out if really need to evaluate potential interpolation points
-   """
+    # for the pressure of each phase, p_i, and we have the capillary pressure relation
+
+    # .. math::
+
+    #    \psi_{c} = \psi_{n} - \psi_{w}
+
+    # The dependent variables are :math:`S_w`, and :math:`\psi_w`
+
+    # Note :math:`S_n = 1-S_w`
+
+    # needs to be implemented
+
+    # .. math::
+    
+    #     r_m = r_m(\vec x,t)
+    
+    # """
+#    TODO:
+#
+#      Figure out if really need to evaluate potential interpolation points
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_pp_sd_saturation_het_matType
     def __init__(self,
                  nd=1,
@@ -3754,8 +3883,9 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 #begin classes for specific psk models
 ########################################
 class IncompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_incompressible_split_pressure):
-    """
-    Total flow equation coefficients for incompressible flow assuming Mualem-Van Genuchten psk's
+    """Total flow equation coefficients for incompressible flow assuming
+    Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -3811,8 +3941,9 @@ class IncompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_incom
 
 #
 class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_incompressible_split_saturation):
-    """
-    Saturation equation coefficients for incompressible flow assuming Mualem-Van Genuchten psk's
+    """Saturation equation coefficients for incompressible flow assuming
+    Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -3870,9 +4001,10 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
 
 
 class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(IncompressibleFractionalFlowSaturationMualemVanGenuchten):
-    """
-    Saturation equation coefficients for incompressible flow assuming Mualem-Van Genuchten psk's
-    and splitting of advection and capillary diffusion terms
+    """Saturation equation coefficients for incompressible flow assuming
+    Mualem-Van Genuchten psk's and splitting of advection and
+    capillary diffusion terms
+
     """
     def __init__(self,
                  nd,
@@ -3947,7 +4079,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
             #tLastSave =self.satModel_me.timeIntegration.tLast
             #todo need to do make sure mass conserved, handle projection from cg to dg correctly
             #todo ExplicitRK is getting messed up here, going twice as fast
-            log("Incomp.FracFlowSatAdvDiff preStep t= %s model %s setting its solution from model %s " % (t,self.satModel_me,self.satModel_other),level=2)
+            logEvent("Incomp.FracFlowSatAdvDiff preStep t= %s model %s setting its solution from model %s " % (t,self.satModel_me,self.satModel_other),level=2)
             #if self.satModelIndex_me != 1:#mwf hack
             self.satModel_other.u[0].getValues(self.u_ip[('v_other',0)],
                                                self.u_ip[('u_other',0)])
@@ -3987,8 +4119,9 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
 
 #
 class CompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_compressible_split_pressure):
-    """
-    Total flow equation coefficients for slight compressible flow assuming Mualem-Van Genuchten psk's
+    """Total flow equation coefficients for slight compressible flow
+    assuming Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -4051,8 +4184,9 @@ class CompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_compres
 
 #
 class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compressible_split_saturation):
-    """
-    Saturation equation coefficients for slightly compressible flow assuming Mualem-Van Genuchten psk's
+    """Saturation equation coefficients for slightly compressible flow
+    assuming Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -4116,8 +4250,9 @@ class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compr
 
 #
 class IncompressibleFractionalFlowPressureSimplePSKs(TwophaseDarcy_incompressible_split_pressure):
-    """
-    Total flow equation coefficients for incompressible flow assuming  'simp' quadratic rel-perm, linear capillary pressure psk relations
+    """Total flow equation coefficients for incompressible flow assuming
+    'simp' quadratic rel-perm, linear capillary pressure psk relations
+
     """
     def __init__(self,
                  nd,
@@ -4165,8 +4300,9 @@ class IncompressibleFractionalFlowPressureSimplePSKs(TwophaseDarcy_incompressibl
 
 #
 class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressible_split_saturation):
-    """
-    Saturation equation coefficients for incompressible flow assuming  'simp' quadratic rel-perm, linear capillary pressure psk relations
+    """Saturation equation coefficients for incompressible flow assuming
+    'simp' quadratic rel-perm, linear capillary pressure psk relations
+
     """
     def __init__(self,
                  nd,
@@ -4218,8 +4354,9 @@ class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressi
 
 
 class PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_incompressible_split_pp_pressure):
-    """
-    Total flow equation coefficients for incompressible flow assuming Mualem-Van Genuchten psk's
+    """Total flow equation coefficients for incompressible flow assuming
+    Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -4275,8 +4412,9 @@ class PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten(Two
 
 #
 class PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_incompressible_split_pp_saturation):
-    """
-    Saturation equation coefficients for incompressible flow assuming Mualem-Van Genuchten psk's
+    """Saturation equation coefficients for incompressible flow assuming
+    Mualem-Van Genuchten psk's
+
     """
     def __init__(self,
                  nd,
@@ -4337,10 +4475,8 @@ class PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten(T
 ########################################
 class GroundwaterTransportCoefficients(TC_base):
     from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate_hetMat
-    """
-    groundwater advection-dispersion equation with coefficients varying by material type and variable
-    velocity
-    """
+    """ groundwater advection-dispersion equation with coefficients
+    varying by material type and variable velocity """
     def __init__(self,nc=1,nd=2,
                  omega_types=numpy.array([0.3]),
                  alpha_L_types=numpy.array([1.0]),
@@ -4424,9 +4560,6 @@ class GroundwaterTransportCoefficients(TC_base):
                     self.ebq_global[('velocity',ci)] = self.flowModel.ebq_global[('velocity',ci)]
 
     def evaluateVelocity(self,t,c):
-        """
-
-        """
         if self.velocityFunctions != None:
             for ci in range(self.nc):
                 if len(c['x'].shape) == 3:
@@ -4440,11 +4573,9 @@ class GroundwaterTransportCoefficients(TC_base):
                                 c[('velocity',ci)][i,j,k,:] = self.velocityFunctions[ci](c['x'][i,j,k],t)
 
     def evaluate(self,t,c):
-        """
-        TODO
-          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
-          before evaluate is called with c=ebqe
-        """
+#        TODO
+#          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
+#          before evaluate is called with c=ebqe
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4484,10 +4615,8 @@ class GroundwaterTransportCoefficients(TC_base):
 ########################################
 class MultiphaseGroundwaterTransportCoefficients(TC_base):
     from proteus.ctransportCoefficients import variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat
-    """
-    groundwater advection-dispersion equation with coefficients varying by material type and variable
-    velocity
-    """
+    """ groundwater advection-dispersion equation with coefficients
+    varying by material type and variable velocity """
     def __init__(self,nc=1,nd=2,
                  omega_types=numpy.array([0.3]),
                  alpha_L_types=numpy.array([1.0]),
@@ -4576,9 +4705,6 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
                 self.q[('vol_frac',ci)]    = self.flowModel.coefficients.q[('vol_frac',ci)]
                 self.ebqe[('vol_frac',ci)] = self.flowModel.coefficients.ebqe[('vol_frac',ci)]
     def evaluateVelocity(self,t,c):
-        """
-
-        """
         if self.velocityFunctions != None:
             for ci in range(self.nc):
                 if len(c['x'].shape) == 3:
@@ -4592,11 +4718,9 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
                                 c[('velocity',ci)][i,j,k,:] = self.velocityFunctions[ci](c['x'][i,j,k],t)
 
     def evaluate(self,t,c):
-        """
-        TODO
-          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
-          before evaluate is called with c=ebqe
-        """
+#        TODO
+#          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
+#          before evaluate is called with c=ebqe
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4637,10 +4761,8 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
 
 class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwaterTransportCoefficients):
     from proteus.ctransportCoefficients import variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat
-    """
-    groundwater heat equation with coefficients varying by material type and variable
-    velocity
-    """
+    """ groundwater heat equation with coefficients varying by material
+    type and variable velocity """
     def __init__(self,nc=1,nd=2,
                  density_w=998.2, #kg/m^3
                  density_n=1.205, #kg/m^3
@@ -4678,11 +4800,9 @@ class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwa
         self.nd = nd
 
     def evaluate(self,t,c):
-        """
-        TODO
-          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
-          before evaluate is called with c=ebqe
-        """
+#        TODO
+#          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
+#          before evaluate is called with c=ebqe
         #mwf debug
         #import pdb
         #pdb.set_trace()

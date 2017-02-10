@@ -11,9 +11,7 @@ from math import *
 import math #to disambiguate math.log and log
 from LinearAlgebraTools import *
 from LinearSolvers import *
-from Profiling import *
-
-log = logEvent
+from .Profiling import *
 
 #mwf hack for Eikonal equation solvers
 import FemTools
@@ -28,7 +26,7 @@ class NonlinearEquation:
 
     def __init__(self,dim=0,dim_proc=None):
         self.dim=dim
-        if dim_proc==None:
+        if dim_proc is None:
             self.dim_proc=self.dim
         else:
             self.dim_proc = dim_proc
@@ -71,7 +69,7 @@ class NonlinearSolver:
         #NonlinearEquation
         self.F = F
         self.J = J
-        if du == None:
+        if du is None:
             self.du = Vec(F.dim)
         else:
             self.du = du
@@ -122,7 +120,7 @@ class NonlinearSolver:
         self.computeRates = computeRates
         self.printInfo = printInfo
         self.norm_function = norm
-        if unorm != None:
+        if unorm is not None:
             self.unorm_function = unorm
         else:
             self.unorm_function = self.norm_function
@@ -138,10 +136,10 @@ class NonlinearSolver:
         self.failedFlag = False
 
     def norm(self,u):
-        return self.norm_function(u[:self.F.dim_proc])
+        return self.norm_function(u[self.F.owned_local])
 
     def unorm(self,u):
-        return self.unorm_function(u[:self.F.dim_proc])
+        return self.unorm_function(u[self.F.owned_local])
 
     def fullNewtonOff(self):
         self.fullNewton=False
@@ -158,19 +156,19 @@ class NonlinearSolver:
     def computeResidual(self,u,r,b):
         if self.fullResidual:
             self.F.getResidual(u,r)
-            if b != None:
+            if b is not None:
                 r-=b
         else:
             if type(self.J).__name__ == 'ndarray':
                 r[:] = numpy.dot(u,self.J)
             elif type(self.J).__name__ == 'SparseMatrix':
                 self.J.matvec(u,r)
-            if b != None:
+            if b is not None:
                 r-=b
 
     def solveInitialize(self,u,r,b):
-        if r == None:
-            if self.r == None:
+        if r is None:
+            if self.r is None:
                 self.r = Vec(self.F.dim)
             r=self.r
         else:
@@ -211,7 +209,7 @@ class NonlinearSolver:
                 if self.norm_r < self.lastNorm_r:
                     self.ratio_r_current = self.norm_r/self.lastNorm_r
                 else:
-                    log("residual increase %s" % self.norm_r)
+                    logEvent("residual increase %s" % self.norm_r)
                     self.convergingIts=0
                     self.ratio_r_solve = 1.0
                     self.ratio_du_solve = 1.0
@@ -221,7 +219,7 @@ class NonlinearSolver:
                 if self.ratio_r_current > 1.0e-100:
                     log_ratio_r_current = math.log(self.ratio_r_current)
                 else:
-                    log("log(ratio_r) too small ratio_r = %12.5e" % self.ratio_r_current)
+                    logEvent("log(ratio_r) too small ratio_r = %12.5e" % self.ratio_r_current)
                     self.convergingIts=0
                     self.ratio_r_solve = 1.0
                     self.ratio_du_solve = 1.0
@@ -236,7 +234,7 @@ class NonlinearSolver:
                     if self.norm_du < self.lastNorm_du:
                         ratio_du_current = self.norm_du/self.lastNorm_du
                     else:
-                        log("du increase norm(du_last)=%12.5e, norm(du)=%12.5e, its=%d, convergingIts=%d" % (self.lastNorm_du,self.norm_du,self.its,self.convergingIts))
+                        logEvent("du increase norm(du_last)=%12.5e, norm(du)=%12.5e, its=%d, convergingIts=%d" % (self.lastNorm_du,self.norm_du,self.its,self.convergingIts))
                         self.convergingIts=0
                         self.ratio_r_solve = 1.0
                         self.ratio_du_solve = 1.0
@@ -246,7 +244,7 @@ class NonlinearSolver:
                     if ratio_du_current > 1.0e-100:
                         log_ratio_du_current = math.log(ratio_du_current)
                     else:
-                        log("log(du ratio) too small to calculate ratio_du=%12.5e" % ratio_du_current)
+                        logEvent("log(du ratio) too small to calculate ratio_du=%12.5e" % ratio_du_current)
                         self.convergingIts=0
                         self.ratio_r_solve = 1.0
                         self.ratio_du_solve = 1.0
@@ -302,7 +300,7 @@ class NonlinearSolver:
             self.solveCalls_failed +=1
             self.recordedIts_failed +=self.its
             self.failedFlag = True
-            log("   Newton it %d == maxIts FAILED convergenceTest = %s" % (self.its,self.convergenceTest))
+            logEvent("   Newton it %d == maxIts FAILED convergenceTest = %s" % (self.its,self.convergenceTest))
         else:
             self.its+=1
             self.convergingIts+=1
@@ -353,7 +351,6 @@ class NonlinearSolver:
         self.infoString += "rtol_r                = %12.5e \n" % self.rtol_r
         self.infoString += "norm(r0)              = %12.5e \n" % self.norm_r0
         self.infoString += "norm(r)               = %12.5e \n" % self.norm_r
-        self.infoString += "norm(du)              = %12.5e \n" % self.norm_du
         if self.convergenceHistoryIsCorrupt:
             self.infoString += "CONVERGENCE HISTORY IS CORRUPT!!!\n"
         self.infoString += "************End Nonlinear Solver Info ************\n"
@@ -384,7 +381,7 @@ class Newton(NonlinearSolver):
                  maxLSits = 100):
         import copy
         self.par_du = par_du
-        if par_du != None:
+        if par_du is not None:
             F.dim_proc = par_du.dim_proc
         NonlinearSolver.__init__(self,F,J,du,
                                  rtol_r,
@@ -419,18 +416,18 @@ class Newton(NonlinearSolver):
             etaMin = 0.0001
         else:
             etaMin = 0.0001*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
-        log("etaMin "+`etaMin`)
+        logEvent("etaMin "+`etaMin`)
         if self.its > 1:
             etaA = gamma * self.norm_r**2/self.norm_r_last**2
-            log("etaA "+`etaA`)
-            log("gama*self.etaLast**2 "+ `gamma*self.etaLast**2`)
+            logEvent("etaA "+`etaA`)
+            logEvent("gama*self.etaLast**2 "+ `gamma*self.etaLast**2`)
             if gamma*self.etaLast**2 < 0.1:
                 etaC = min(etaMax,etaA)
             else:
                 etaC = min(etaMax,max(etaA,gamma*self.etaLast**2))
         else:
             etaC = etaMax
-        log("etaC "+`etaC`)
+        logEvent("etaC "+`etaC`)
         eta = min(etaMax,max(etaC,etaMin))
         self.etaLast = eta
         self.norm_r_last = self.norm_r
@@ -449,7 +446,7 @@ class Newton(NonlinearSolver):
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
         r=self.solveInitialize(u,r,b)
-        if par_u != None:
+        if par_u is not None:
             #allow linear solver to know what type of assembly to use
             self.linearSolver.par_fullOverlap = self.par_fullOverlap
             #no overlap
@@ -466,13 +463,13 @@ class Newton(NonlinearSolver):
         self.linearSolverFailed = False
         while (not self.converged(r) and
                not self.failed()):
-            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
                 % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
                 if self.linearSolver.computeEigenvalues:
-                    log("Calculating eigenvalues of J^t J")
+                    logEvent("Calculating eigenvalues of J^t J")
                     self.JLast[:]=self.J
                     self.J_t_J[:]=self.J
                     self.J_t_J *= numpy.transpose(self.J)
@@ -481,7 +478,7 @@ class Newton(NonlinearSolver):
                     try:
                         self.norm_2_Jinv_current = 1.0/sqrt(min(self.JLsolver.eigenvalues_r))
                     except:
-                        log("Norm of J_inv_current is singular to machine prection 1/sqrt("+`min(self.JLsolver.eigenvalues_r)`+")")
+                        logEvent("Norm of J_inv_current is singular to machine prection 1/sqrt("+`min(self.JLsolver.eigenvalues_r)`+")")
                         self.norm_2_Jinv_current = np.inf
                     self.kappa_current = self.norm_2_J_current*self.norm_2_Jinv_current
                     self.betaK_current = self.norm_2_Jinv_current
@@ -493,14 +490,11 @@ class Newton(NonlinearSolver):
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
                 self.linearSolverFailed = self.linearSolver.failed()
-            #print self.du
             u-=self.du
-            if par_u != None:
+            if par_u is not None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)
-            #no overlap
-            #print "local r",r
-            if par_r != None:
+            if par_r is not None:
                 #no overlap
                 if not self.par_fullOverlap:
                     par_r.scatter_reverse_add()
@@ -510,7 +504,7 @@ class Newton(NonlinearSolver):
             #print "global r",r
             if self.linearSolver.computeEigenvalues:
                 #approximate Lipschitz constant of J
-                log("Calculating eigenvalues of dJ^t dJ")
+                logEvent("Calculating eigenvalues of dJ^t dJ")
                 self.F.getJacobian(self.dJ_t_dJ)
                 self.dJ_t_dJ-=self.JLast
                 self.dJ_t_dJ *= numpy.transpose(self.dJ_t_dJ)
@@ -562,23 +556,23 @@ class Newton(NonlinearSolver):
                         ls_its +=1
                         self.du *= 0.5
                         u += self.du
-                        if par_u != None:
+                        if par_u is not None:
                             par_u.scatter_forward_insert()
                         self.computeResidual(u,r,b)
                         #no overlap
-                        if par_r != None:
+                        if par_r is not None:
                             #no overlap
                             if not self.par_fullOverlap:
                                 par_r.scatter_reverse_add()
                             else:
                                 par_r.scatter_forward_insert()
                         norm_r_cur = self.norm(r)
-                        log("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
+                        logEvent("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
                                                                                norm_r_cur,
                                                                                self.atol_r,
                                                                                self.rtol_r))
                     if ls_its > 0:
-                        log("Linesearches = %i" % ls_its,level=3)
+                        logEvent("Linesearches = %i" % ls_its,level=3)
         else:
             if self.linearSolver.computeEigenvalues:
                 try:
@@ -626,13 +620,13 @@ class Newton(NonlinearSolver):
                     Viewers.newPlot()
                     Viewers.newWindow()
                 #raw_input("wait")
-            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-            log(memory("Newton","Newton"),level=4)
+            logEvent(memory("Newton","Newton"),level=4)
             return self.failedFlag
-        log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-        log(memory("Newton","Newton"),level=4)
+        logEvent(memory("Newton","Newton"),level=4)
 
 import deim_utils
 class POD_Newton(Newton):
@@ -690,14 +684,14 @@ class POD_Newton(Newton):
         """
         if self.fullResidual:
             self.F.getResidual(u,r)
-            if b != None:
+            if b is not None:
                 r-=b
         else:
             if type(self.J).__name__ == 'ndarray':
                 r[:] = numpy.dot(u,self.J)
             elif type(self.J).__name__ == 'SparseMatrix':
                 self.J.matvec(u,r)
-            if b != None:
+            if b is not None:
                 r-=b
 
     def norm(self,u):
@@ -721,7 +715,7 @@ class POD_Newton(Newton):
         self.linearSolverFailed = False
         while (not self.converged(pod_r) and
                not self.failed()):
-            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
                 % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
@@ -750,10 +744,10 @@ class POD_Newton(Newton):
             pod_r[:] = np.dot(self.U_transpose,r)
             r[:] = np.dot(self.U,pod_r)
         else:
-            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
-        log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 
 class POD_DEIM_Newton(Newton):
@@ -858,17 +852,17 @@ class POD_DEIM_Newton(Newton):
 
         NOT FINISHED
         """
-        if r == None:
-            if self.r == None:
+        if r is None:
+            if self.r is None:
                 self.r = Vec(self.F.dim)
             r=self.r
         else:
             self.r=r
         self.computeResidual(u,r,b)
         if self.use_deim:
-            if self.rs == None:
+            if self.rs is None:
                 self.rs = Vec(self.F.dim)
-            if self.rt == None:
+            if self.rt is None:
                 self.rt = Vec(self.F.dim)
             self.computeDEIMresiduals(u,self.rs,self.rt)
         self.its = 0
@@ -906,7 +900,7 @@ class POD_DEIM_Newton(Newton):
         self.linearSolverFailed = False
         while (not self.converged(pod_r) and
                not self.failed()):
-            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
                 % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
@@ -935,10 +929,10 @@ class POD_DEIM_Newton(Newton):
             pod_r[:] = np.dot(self.U_transpose,r)
             r[:] = np.dot(self.U,pod_r)
         else:
-            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
-        log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
     def solveDEIM(self,u,r=None,b=None,par_u=None,par_r=None):
         """
@@ -977,7 +971,7 @@ class POD_DEIM_Newton(Newton):
         self.linearSolverFailed = False
         while (not self.converged(pod_r) and
                not self.failed()):
-            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
                 % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
@@ -1063,10 +1057,10 @@ class POD_DEIM_Newton(Newton):
             assert not numpy.isnan(pod_r).any()
             r[:] = np.dot(self.U,pod_r)
         else:
-            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
-        log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 
 
@@ -1094,7 +1088,7 @@ class NewtonNS(NonlinearSolver):
                  maxLSits = 100):
         import copy
         self.par_du = par_du
-        if par_du != None:
+        if par_du is not None:
             F.dim_proc = par_du.dim_proc
         NonlinearSolver.__init__(self,F,J,du,
                                  rtol_r,
@@ -1192,7 +1186,7 @@ class NewtonNS(NonlinearSolver):
             self.u0[:]=u
         r=self.solveInitialize(u,r,b)
 
-        if par_u != None:
+        if par_u is not None:
             #allow linear solver to know what type of assembly to use
             self.linearSolver.par_fullOverlap = self.par_fullOverlap
             #no overlap
@@ -1212,18 +1206,18 @@ class NewtonNS(NonlinearSolver):
         self.linearSolverFailed = False
         while (not self.converged(r) and
                not self.failed()):
-            log("   Newton it %d Mom.  norm(r) = %12.5e   tol = %12.5e" % (self.its-1,self.norm_mom_r,self.atol_r),level=1)
-            log("   Newton it %d Cont. norm(r) = %12.5e   tol = %12.5e" % (self.its-1,self.norm_cont_r,self.rtol_r*self.norm_mom_r0  + self.atol_r),level=1)
+            logEvent("   Newton it %d Mom.  norm(r) = %12.5e   tol = %12.5e" % (self.its-1,self.norm_mom_r,self.atol_r),level=1)
+            logEvent("   Newton it %d Cont. norm(r) = %12.5e   tol = %12.5e" % (self.its-1,self.norm_cont_r,self.rtol_r*self.norm_mom_r0  + self.atol_r),level=1)
 
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
-                log("Start assembling jacobian",level=4)
+                logEvent("Start assembling jacobian",level=4)
                 self.F.getJacobian(self.J)
-                log("Done  assembling jacobian",level=4)
+                logEvent("Done  assembling jacobian",level=4)
 
                 if self.linearSolver.computeEigenvalues:
 
-                    log("Performing eigen analyses",level=4)
+                    logEvent("Performing eigen analyses",level=4)
                     self.JLast[:]=self.J
                     self.J_t_J[:]=self.J
                     self.J_t_J *= numpy.transpose(self.J)
@@ -1239,19 +1233,21 @@ class NewtonNS(NonlinearSolver):
                 if self.EWtol:
                     self.setLinearSolverTolerance(r)
 
-            log("Start linear solve",level=4)
+            logEvent("Start linear solve",level=4)
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
                 self.linearSolverFailed = self.linearSolver.failed()
             self.linearSolver.printPerformance()
             #print self.du
+            #if par_du is not None:
+            #    par_du.scatter_forward_insert()
             u-=self.du
-            if par_u != None:
+            if par_u is not None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)
             #no overlap
             #print "local r",r
-            if par_r != None:
+            if par_r is not None:
                 #no overlap
                 if not self.par_fullOverlap:
                     par_r.scatter_reverse_add()
@@ -1309,11 +1305,11 @@ class NewtonNS(NonlinearSolver):
                     ls_its +=1
                     self.du *= 0.5
                     u += self.du
-                    if par_u != None:
+                    if par_u is not None:
                         par_u.scatter_forward_insert()
                     self.computeResidual(u,r,b)
                     #no overlap
-                    if par_r != None:
+                    if par_r is not None:
                         #no overlap
                         if not self.par_fullOverlap:
                             par_r.scatter_reverse_add()
@@ -1321,12 +1317,12 @@ class NewtonNS(NonlinearSolver):
                             par_r.scatter_forward_insert()
                     norm_r_last = norm_r_cur
                     norm_r_cur = self.norm(r)
-                    log("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
+                    logEvent("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
                                                                            norm_r_cur,
                                                                            self.atol_r,
                                                                            self.rtol_r))
                 if ls_its > 0:
-                    log("Linesearches = %i" % ls_its,level=3)
+                    logEvent("Linesearches = %i" % ls_its,level=3)
         else:
             if self.linearSolver.computeEigenvalues:
                 if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:
@@ -1371,10 +1367,10 @@ class NewtonNS(NonlinearSolver):
                     Viewers.newPlot()
                     Viewers.newWindow()
 
-        log("   Final       Mom.  norm(r) = %12.5e   %12.5e" % (self.norm_mom_r,self.rtol_r*self.norm_mom_r0  + self.atol_r),level=1)
-        log("   Final       Cont. norm(r) = %12.5e   %12.5e" % (self.norm_cont_r,self.rtol_r*self.norm_mom_r0  + self.atol_r),level=1)
+        logEvent("   Final       Mom.  norm(r) = %12.5e   %12.5e" % (self.norm_mom_r,self.rtol_r*self.norm_mom_r0  + self.atol_r),level=1)
+        logEvent("   Final       Cont. norm(r) = %12.5e   %12.5e" % (self.norm_cont_r,self.rtol_r*self.norm_mom_r0  + self.atol_r),level=1)
 
-        log(memory("NSNewton","NSNewton"),level=4)
+        logEvent(memory("NSNewton","NSNewton"),level=4)
 
 class SSPRKNewton(Newton):
     """
@@ -1398,7 +1394,7 @@ class SSPRKNewton(Newton):
                  EWtol=True,
                  maxLSits = 100):
         self.par_du = par_du
-        if par_du != None:
+        if par_du is not None:
             F.dim_proc = par_du.dim_proc
         Newton.__init__(self,
                         linearSolver,
@@ -1432,7 +1428,7 @@ class SSPRKNewton(Newton):
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
         r=self.solveInitialize(u,r,b)
-        if par_u != None:
+        if par_u is not None:
             #no overlap
             #par_r.scatter_reverse_add()
             #no overlap or overlap (until we compute norms over only owned dof)
@@ -1443,7 +1439,7 @@ class SSPRKNewton(Newton):
         self.linearSolverFailed = False
         while (not self.converged(r) and
                not self.failed()):
-            log("SSPRKNewton it "+`self.its`+" norm(r) " + `self.norm_r`,level=3)
+            logEvent("SSPRKNewton it "+`self.its`+" norm(r) " + `self.norm_r`,level=3)
             if self.updateJacobian or self.fullNewton and not self.isFactored:
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
@@ -1469,12 +1465,12 @@ class SSPRKNewton(Newton):
                 self.linearSolverFailed = self.linearSolver.failed()
             #print self.du
             u-=self.du
-            if par_u != None:
+            if par_u is not None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)
             #no overlap
             #print "local r",r
-            if par_r != None:
+            if par_r is not None:
                 #no overlap
                 #par_r.scatter_reverse_add()
                 par_r.scatter_forward_insert()
@@ -1528,11 +1524,11 @@ class SSPRKNewton(Newton):
                     ls_its +=1
                     self.du *= 0.5
                     u += self.du
-                    if par_u != None:
+                    if par_u is not None:
                         par_u.scatter_forward_insert()
                     self.computeResidual(u,r,b)
                     #no overlap
-                    if par_r != None:
+                    if par_r is not None:
                         #no overlap
                         #par_r.scatter_reverse_add()
                         par_r.scatter_forward_insert()
@@ -1543,7 +1539,7 @@ class SSPRKNewton(Newton):
                                                                         self.atol_r,
                                                                         self.rtol_r)
                 if ls_its > 0:
-                    log("Linesearches = %i" % ls_its,level=3)
+                    logEvent("Linesearches = %i" % ls_its,level=3)
         else:
             if self.linearSolver.computeEigenvalues:
                 if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:
@@ -1643,7 +1639,7 @@ class PicardNewton(Newton):
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
         r=self.solveInitialize(u,r,b)
-        if par_u != None:
+        if par_u is not None:
             #allow linear solver to know what type of assembly to use
             self.linearSolver.par_fullOverlap = self.par_fullOverlap
             #no overlap
@@ -1661,7 +1657,7 @@ class PicardNewton(Newton):
         while (not self.converged(r) and
                not self.failed()):
             if self.maxIts>1:
-                log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
+                logEvent("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
                             % (self.its-1,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
@@ -1691,12 +1687,12 @@ class PicardNewton(Newton):
                 self.linearSolverFailed = self.linearSolver.failed()
             #print self.du
             u-=self.du
-            if par_u != None:
+            if par_u is not None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)
             #no overlap
             #print "local r",r
-            if par_r != None:
+            if par_r is not None:
                 #no overlap
                 if not self.par_fullOverlap:
                     par_r.scatter_reverse_add()
@@ -1754,23 +1750,23 @@ class PicardNewton(Newton):
                     ls_its +=1
                     self.du *= 0.5
                     u += self.du
-                    if par_u != None:
+                    if par_u is not None:
                         par_u.scatter_forward_insert()
                     self.computeResidual(u,r,b)
                     #no overlap
-                    if par_r != None:
+                    if par_r is not None:
                         #no overlap
                         if not self.par_fullOverlap:
                             par_r.scatter_reverse_add()
                         else:
                             par_r.scatter_forward_insert()
                     norm_r_cur = self.norm(r)
-                    log("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
+                    logEvent("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
                                                                            norm_r_cur,
                                                                            self.atol_r,
                                                                            self.rtol_r))
                 if ls_its > 0:
-                    log("Linesearches = %i" % ls_its,level=3)
+                    logEvent("Linesearches = %i" % ls_its,level=3)
         else:
             if self.linearSolver.computeEigenvalues:
                 if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:
@@ -1815,7 +1811,7 @@ class PicardNewton(Newton):
                     Viewers.newPlot()
                     Viewers.newWindow()
             if self.maxIts>1:
-                log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
+                logEvent("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
                              % (self.its-1,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
 
@@ -2243,10 +2239,10 @@ class MultilevelNonlinearSolver:
             self.solverList[l].printInfo = printInfo
 
     def solveMultilevel(self,uList,rList,bList=None,par_uList=None,par_rList=None):
-        if bList == None:
+        if bList is None:
             bList = [None for r in rList]
         for l in range(self.nLevels):
-            if par_uList != None and len(par_uList) > 0:
+            if par_uList is not None and len(par_uList) > 0:
                 par_u=par_uList[l]
                 par_r=par_rList[l]
             else:
@@ -2276,16 +2272,15 @@ class MultilevelNonlinearSolver:
 class EikonalSolver:
     """
     Simple wrapper for special purpose Eikonal equation solvers on a single level.
-    Current types allowed:
-       FMMEikonalSolver
-       FSWEikonalSOlver
+    Current types allowed::
 
-    TODO Feb 20
-      Debug change in use truncation approach for positive and negative solutions
-      Debug local Reconstruction
+       FMMEikonalSolver
+       FSWEikonalSolver
 
     """
-
+#    TODO Feb 20
+#      Debug change in use truncation approach for positive and negative solutions
+#      Debug local Reconstruction
     def __init__(self,
                  levelSolverType,
                  F,
@@ -2311,7 +2306,7 @@ class EikonalSolver:
         for space in self.allowedEikonalSpaces:
             if isinstance(self.F.u[self.eikonalVariable].femSpace,space):
                 self.eikonalVariableFemSpace = space
-        assert self.eikonalVariableFemSpace != None, "allowed spaces= %s" % self.allowedEikonalSpaces
+        assert self.eikonalVariableFemSpace is not None, "allowed spaces= %s" % self.allowedEikonalSpaces
 
         #for determining if a point is on front or not
         self.frontTolerance = frontTolerance
@@ -2328,7 +2323,7 @@ class EikonalSolver:
 
         if (self.localReconstruction == 'localPWL' and
             self.eikonalVariableFemSpace != FemTools.C0_AffineLinearOnSimplexWithNodalBasis):
-            log("""WARNING EikonalSolver localReconstruction = %s only allowed with P1C0 for now""" % self.localReconstruction)
+            logEvent("""WARNING EikonalSolver localReconstruction = %s only allowed with P1C0 for now""" % self.localReconstruction)
             self.localReconstruction = None
         #if
         #do not overwrite values from input if magnitude <  bandTolerance
@@ -2505,7 +2500,7 @@ class MultilevelEikonalSolver:
         self.printInfo = printInfo
 
     def solveMultilevel(self,uList,rList,bList=None,par_uList=None,par_rList=None):
-        if bList == None:
+        if bList is None:
             bList = [None for r in rList]
         failedFlag = False
         for l in range(self.nLevels):
@@ -2575,41 +2570,41 @@ class NLNI(MultilevelNonlinearSolver):
             self.bList[currentMesh][:] = b
             for l in range(currentMesh,1,-1):
                 self.restrictList[l].matvec(self.uList[l],self.uList[l-1])
-                if b != None:
+                if b is not None:
                     self.restrictList[l].matvec(self.bList[l],self.bList[l-1])
                 for i in range(self.uList[l-1].shape[0]):
                     self.uList[l-1][i]/=self.restrictSumList[l][i]
             for l in range(currentMesh):
-                if self.tolList != None:
+                if self.tolList is not None:
                     self.switchToResidualConvergence(self.solverList[l],
                                                      self.tolList[l])
                 self.solverList[l].solve(u=self.uList[l],r=self.rList[l],b=self.bList[l],par_u=self.par_uList[l],par_r=self.par_rList[l])
-                if self.tolList != None:
+                if self.tolList is not None:
                     self.revertToFixedIteration(self.solverList[l])
             if l < currentMesh -1:
                 self.prolongList[l+1].matvec(self.uList[l],self.uList[l+1])
             else:
                 self.prolongList[l+1].matvec(self.uList[l],u)
-        if self.tolList != None:
+        if self.tolList is not None:
             self.switchToResidualConvergence(self.solverList[currentMesh],
                                              self.tolList[currentMesh])
         self.solverList[currentMesh].solve(u,r,b)
-        if self.tolList != None:
+        if self.tolList is not None:
             self.revertToFixedIteration(self.solverList[currentMesh])
         return self.solverList[currentMesh].failedFlag
 
     def solveMultilevel(self,uList,rList,bList=None,par_uList=None,par_rList=None):
-        if bList == None:
+        if bList is None:
             bList = [None for r in rList]
         self.infoString="********************Start Multilevel Nonlinear Solver Info*********************\n"
         for l in range(self.fineLevel):
-            if self.tolList != None:
+            if self.tolList is not None:
                 self.switchToResidualConvergence(self.solverList[l],self.tolList[l])
             self.solverList[l].solve(u=uList[l],r=rList[l],b=bList[l],par_u=par_uList[l],par_r=par_rList[l])
             self.infoString+="****************Start Level %i Info******************\n" %l
             self.infoString+=self.solverList[l].info()
             self.infoString+="****************End Level %i Info******************\n" %l
-            if self.tolList != None:
+            if self.tolList is not None:
                 self.revertToFixedIteration(self.solverList[l])
             #\todo see if there's a better way to do this
             #copy user u,r into internal
@@ -2621,7 +2616,7 @@ class NLNI(MultilevelNonlinearSolver):
             for ci,p in self.prolongList.iteritems():
                 p[l+1].matvec(self.solverList[l].F.u[ci].dof,self.solverList[l+1].F.u[ci].dof)
             self.solverList[l+1].F.setFreeDOF(uList[l+1])
-        if self.tolList != None:
+        if self.tolList is not None:
             self.switchToResidualConvergence(self.solverList[self.fineLevel],self.tolList[self.fineLevel])
         self.solverList[self.fineLevel].solve(u=uList[self.fineLevel],
                                               r=rList[self.fineLevel],
@@ -2631,7 +2626,7 @@ class NLNI(MultilevelNonlinearSolver):
         self.infoString+="****************Start Level %i Info******************\n" %self.fineLevel
         self.infoString+=self.solverList[self.fineLevel].info()
         self.infoString+="****************End Level %i Info******************\n" %self.fineLevel
-        if self.tolList != None:
+        if self.tolList is not None:
             self.revertToFixedIteration(self.solverList[self.fineLevel])
         #reset u and r on other levels:
         for l in range(self.fineLevel):
@@ -2721,7 +2716,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
             mgItsList.append(cycles)
             if l > 0:
                 if smootherType == NLJacobi:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 2.0/5.0#4.0/5.0
                     preSmootherList.append(NLJacobi(F=nonlinearOperatorList[l],
                                                     J=jacobianList[l],
@@ -2742,7 +2737,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                      printInfo=printSmootherInfo,
                                                      fullNewton=smootherFullNewtonFlag))
                 elif smootherType == NLGaussSeidel:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 3.0/5.0
                     preSmootherList.append(NLGaussSeidel(connectionList = connectionListList[l],
                                                          F=nonlinearOperatorList[l],
@@ -2765,7 +2760,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                           printInfo=printSmootherInfo,
                                                           fullNewton=smootherFullNewtonFlag))
                 elif smootherType == NLStarILU:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 2.0/5.0
                     preSmootherList.append(NLStarILU(connectionList = connectionListList[l],
                                                      F = nonlinearOperatorList[l],
@@ -2791,7 +2786,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                     raise RuntimeError("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!smootherType unrecognized")
             else:
                 if smootherType == NLJacobi:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 4.0/5.0
                     coarseSolver = NLJacobi(F=nonlinearOperatorList[l],
                                             J=jacobianList[l],
@@ -2804,7 +2799,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                             fullNewton=smootherFullNewtonFlag,
                                             norm = nonlinearSolverNorm)
                 elif smootherType == NLGaussSeidel:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 3.0/5.0
                     coarseSolver = NLGaussSeidel(connectionList = connectionListList[l],
                                                  F=nonlinearOperatorList[l],
@@ -2818,7 +2813,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                  fullNewton=smootherFullNewtonFlag,
                                                  norm = nonlinearSolverNorm)
                 elif smootherType == NLStarILU:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 2.0/5.0
                     coarseSolver = NLStarILU(connectionList = connectionListList[l],
                                              F = nonlinearOperatorList[l],
@@ -2848,7 +2843,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
         levelNonlinearSolverList = levelNonlinearSolver.solverList
     elif levelNonlinearSolverType == Newton:
         for l in range(nLevels):
-            if par_duList != None and len(par_duList) > 0:
+            if par_duList is not None and len(par_duList) > 0:
                 par_du=par_duList[l]
             else:
                 par_du=None
@@ -2870,7 +2865,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                    maxLSits=maxLSits ))
     elif levelNonlinearSolverType in [POD_Newton,POD_DEIM_Newton]:
         for l in range(nLevels):
-            if par_duList != None and len(par_duList) > 0:
+            if par_duList is not None and len(par_duList) > 0:
                 par_du=par_duList[l]
             else:
                 par_du=None
@@ -2892,7 +2887,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                                      maxLSits=maxLSits ))
     elif levelNonlinearSolverType == NewtonNS:
         for l in range(nLevels):
-            if par_duList != None and len(par_duList) > 0:
+            if par_duList is not None and len(par_duList) > 0:
                 par_du=par_duList[l]
             else:
                 par_du=None
@@ -2913,7 +2908,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                    EWtol=EWtol,
                                                    maxLSits=maxLSits ))
     elif levelNonlinearSolverType == NLJacobi:
-        if relaxationFactor == None:
+        if relaxationFactor is None:
             relaxationFactor = 4.0/5.0
         for l in range(nLevels):
             levelNonlinearSolverList.append(NLJacobi(F=nonlinearOperatorList[l],
@@ -2929,7 +2924,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                      printInfo=printLevelSolverInfo,
                                                      fullNewton=levelSolverFullNewtonFlag))
     elif levelNonlinearSolverType == NLGaussSeidel:
-        if relaxationFactor == None:
+        if relaxationFactor is None:
             relaxationFactor = 4.0/5.0
         for l in range(nLevels):
             levelNonlinearSolverList.append(NLGaussSeidel(F=nonlinearOperatorList[l],
@@ -2945,7 +2940,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                           printInfo=printLevelSolverInfo,
                                                           fullNewton=levelSolverFullNewtonFlag))
     elif levelNonlinearSolverType == NLStarILU:
-        if relaxationFactor == None:
+        if relaxationFactor is None:
             relaxationFactor = 3.0/5.0
         for l in range(nLevels):
             levelNonlinearSolverList.append(NLStarILU(F=nonlinearOperatorList[l],
@@ -2975,7 +2970,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
 
     elif levelNonlinearSolverType == SSPRKNewton:
         for l in range(nLevels):
-            if par_duList != None and len(par_duList) > 0:
+            if par_duList is not None and len(par_duList) > 0:
                 par_du=par_duList[l]
             else:
                 par_du=None
@@ -2999,7 +2994,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
     else:
         try:
             for l in range(nLevels):
-                if par_duList != None and len(par_duList) > 0:
+                if par_duList is not None and len(par_duList) > 0:
                     par_du=par_duList[l]
                 else:
                     par_du=None
@@ -3045,7 +3040,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                               printInfo = printSolverInfo)
     elif multilevelNonlinearSolverType == MultilevelEikonalSolver:
         #should I take care of assignment here
-        log("Warning Using Multilevel Eikonal Equation Solver, hope equation is correct!")
+        logEvent("Warning Using Multilevel Eikonal Equation Solver, hope equation is correct!")
         multilevelNonlinearSolver = MultilevelEikonalSolver(levelNonlinearSolverList,
                                                             printInfo = printSolverInfo)
 

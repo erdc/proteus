@@ -19,19 +19,43 @@
 	integer, allocatable :: IEMAT(:)
 
 	character(len=128) :: fname
+	character(len=30) :: length_scale_string
+	character(len=30) :: perm_x_string
+	character(len=30) :: perm_y_string
+	character(len=30) :: perm_z_string
   	character(len=128) :: ctmp
+	real(kind=8) length_scale
+	integer :: perm(3)
 
- 	 EType = 2
-	  NSHL  = 4
-	  NSHLb = 3
+	EType = 2
+	NSHL  = 4
+	NSHLb = 3
 
 !==================================
 ! Read mesh in .mesh format
 !==================================
 	  meshf = 11      
+	  length_scale=1.0
+	  perm(1) = 1
+	  perm(2) = 2
+	  perm(3) = 3      
 	  i = iargc()
 	  if (i.eq.1) then  
 	    call getarg(1,fname)
+	 else if (i.eq.2) then
+	    call getarg(1,fname)
+	    call getarg(2,length_scale_string)
+	    read (length_scale_string,*) length_scale  
+	 else if (i.eq.5) then
+	    call getarg(1,fname)
+	    call getarg(2,length_scale_string)
+	    read (length_scale_string,*) length_scale  
+	    call getarg(3,perm_x_string)           
+	    read (perm_x_string,*) perm(1)  
+	    call getarg(4,perm_y_string)           
+	    read (perm_y_string,*) perm(2)  
+	    call getarg(5,perm_z_string)           
+	    read (perm_z_string,*) perm(3)  
 	  else
 	    write(*,*) 'Wrong input'
 	    stop
@@ -103,7 +127,7 @@
   	write(*,*) "Writing ", fname  
   	write(meshf,*) NElem, NSHL, 1
   	do i = 1, NElem
-	    write(meshf,'(6I8)') i, (IEN(i,j), j = 1, NSHL), IEMAT(i)
+	    write(meshf,'(6I11)') i, (IEN(i,j), j = 1, NSHL), IEMAT(i)
 	end do      
 	close(meshf)
 
@@ -112,7 +136,7 @@
   	open(meshf, file = fname, status = 'unknown')
   	write(meshf,*) NNode, NSD, 0,0 
   	do i = 1, NNode
-    	  write(meshf,'(I8,x, 3E17.9)') i, (  xg(i,j), j = 1, NSD)
+    	  write(meshf,'(I11,x, 3E17.9)') i, (  xg(i,perm(j))*length_scale, j = 1, NSD)
   	end do  
   	close(meshf)
 
@@ -121,7 +145,7 @@
   	open(meshf, file = fname, status = 'unknown')
   	write(meshf,*) NFace,1  
   	do i = 1, NFace
- 	   write(meshf,'(5I8)') i,(Face_IEN(i,j), j=1,NSHLb),FaceID(i)
+ 	   write(meshf,'(5I11)') i,(Face_IEN(i,j), j=1,NSHLb),FaceID(i)
   	end do       
   	close(meshf)
 
@@ -138,20 +162,20 @@
   	write(meshf,'(a)') 'ASCII'
 	write(meshf,'(a)') 'DATASET UNSTRUCTURED_GRID'
   
- 	write(meshf,'(a,x,I10,x,a)') 'POINTS ',NNode, 'float'
+ 	write(meshf,'(a,x,I11,x,a)') 'POINTS ',NNode, 'float'
 
   	do i = 1, NNode
   	  write(meshf,'(3E17.8)') (real(xg(i,j),4), j = 1, NSD)    
   	end do
 
-  	write(meshf,'(a,x,I10,x,I10)') 'CELLS ',NElem, NElem*5
+  	write(meshf,'(a,x,I11,x,I11)') 'CELLS ',NElem, NElem*5
   	do i = 1, NElem
-  	  write(meshf,'(5I10)') 4, (IEN(i,j)-1, j = 1, 4)
+  	  write(meshf,'(5I11)') 4, (IEN(i,j)-1, j = 1, 4)
   	end do
 
-  	write(meshf,'(a,x,I10)') 'CELL_TYPES',NElem
+  	write(meshf,'(a,x,I11)') 'CELL_TYPES',NElem
   	do i = 1, NElem
-  	  write(meshf,'(I10)') 10
+  	  write(meshf,'(I11)') 10
   	enddo
 
   	close(meshf)
@@ -174,7 +198,7 @@
     	   if (hNFace.ge.1) then
     	      write(*,*) "Generate hull.vtk file ..."
       	      meshf = 99
-    	      write(fname,'(I8)') FACE_ID
+    	      write(fname,'(I11)') FACE_ID
       	      fname = trim('face.'// trim(adjustl(fname))//'.vtk')
       	      open(meshf, file=fname, status='unknown', form='formatted')
       
@@ -183,20 +207,20 @@
       	      write(meshf,'(a)') 'ASCII'
        	      write(meshf,'(a)') 'DATASET UNSTRUCTURED_GRID'
   
-      	      write(meshf,'(a,x,I10,x,a)') 'POINTS ',NNode, 'float'
+      	      write(meshf,'(a,x,I11,x,a)') 'POINTS ',NNode, 'float'
 
      	      do i = 1, NNode
      	         write(meshf,'(3E17.8)') (real(xg(i,j)), j = 1, NSD)    
      	      end do
 
-     	      write(meshf,'(a,x,I10,x,I10)') 'CELLS ',hNFace, hNFace*4
+     	      write(meshf,'(a,x,I11,x,I11)') 'CELLS ',hNFace, hNFace*4
      	      do i = 1, hNFace
-      	        write(meshf,'(4I10)') 3, (hFace_IEN(i,j)-1, j = 1, NSHLb)
+      	        write(meshf,'(4I11)') 3, (hFace_IEN(i,j)-1, j = 1, NSHLb)
      	      end do
 
-      	      write(meshf,'(a,x,I10)') 'CELL_TYPES',hNFace
+      	      write(meshf,'(a,x,I11)') 'CELL_TYPES',hNFace
       	      do i = 1, hNFace
-       	         write(meshf,'(I10)') 5
+       	         write(meshf,'(I11)') 5
       	      enddo
 
       	      close(meshf)
