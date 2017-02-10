@@ -4,17 +4,21 @@ from proteus import Norms
 from proteus import Profiling
 import numpy as np
 
-#timeIntegration_vof = "SSP33"
-timeIntegration_vof = "FE"
+timeIntegration_vof = "SSP33"
+#timeIntegration_vof = "FE"
 
 fullNewton=False
-#ENTROPY VISCOSITY and ART COMPRESSION PARAMETERS
+# ENTROPY VISCOSITY and ART COMPRESSION PARAMETERS
 EDGE_VISCOSITY=1
 ENTROPY_VISCOSITY=1
+POWER_SMOOTHNESS_INDICATOR=2
+LUMPED_MASS_MATRIX=0
 FCT=1
-cE = 1.0
-cMax = 0.1
-cK = 0.25
+cK=0.25
+# FOR EDGE BASED ENTROPY VISCOSITY
+cE=1.0
+cMax=0.1
+# FOR SUPG 
 shockCapturingFactor_vof=0.2
 #Other time parameters
 if timeIntegration_vof == "SSP33":
@@ -54,11 +58,11 @@ lRefinement=3
 nn=nnx=nny=(2**lRefinement)*10+1
 nnz=1
 he=1.0/(nnx-1.0)
-L=[2.0,2.0]
+L=[1.0,1.0]
 
 unstructured=False #True for tetgen, false for tet or hex from rectangular grid
-box=Domain.RectangularDomain(L=(2.0,2.0),
-                             x=(-1.0,-1.0),
+box=Domain.RectangularDomain(L=(1.0,1.0),
+                             x=(0.0,0.0),
                              name="box");
 box.writePoly("box")
 if unstructured:
@@ -70,7 +74,7 @@ if unstructured:
 else:
     domain = box
 #end time of simulation
-T = 0.1
+T=1.0
 #number of output time steps
 nDTout = 10
 #smoothing factors
@@ -134,22 +138,38 @@ class MyCoefficients(VOF.Coefficients):
         x_boundary = self.model.ebqe['x'][...,0]
         y_boundary = self.model.ebqe['x'][...,1]
 
-        #ROTATION
-        self.q_v[...,0]  = -2.0*pi*y
-        self.q_v[...,1]  =  2.0*pi*x
+        ############
+        # ROTATION #
+        ############
+        #self.q_v[...,0]  = -2.0*pi*y
+        #self.q_v[...,1]  =  2.0*pi*x
 
-        self.ebqe_v[...,0]  = -2.0*pi*y_boundary
-        self.ebqe_v[...,1]  =  2.0*pi*x_boundary
+        #self.ebqe_v[...,0]  = -2.0*pi*y_boundary
+        #self.ebqe_v[...,1]  =  2.0*pi*x_boundary
+        
+        #DIVERGENCE OF VEOCITY
+        #self.q_div_velocity = 0*x
+        #self.ebqe_div_velocity[...] = 0*x_boundary
+
+        ###################
+        # PERIODIC VORTEX #
+        ###################
+        T=8
+        yy=y
+        xx=x
+        self.q_v[...,0] = -2*np.sin(pi*yy)*np.cos(pi*yy)*np.sin(pi*xx)**2*np.cos(pi*t/T)
+        self.q_v[...,1] = 2*np.sin(pi*xx)*np.cos(pi*xx)*np.sin(pi*yy)**2*np.cos(pi*t/T)
+        
+        self.ebqe_v[...,0]  = -2*np.sin(pi*y_boundary)*np.cos(pi*y_boundary)*np.sin(pi*x_boundary)**2*np.cos(pi*t/T)
+        self.ebqe_v[...,1]  =  2*np.sin(pi*x_boundary)*np.cos(pi*x_boundary)*np.sin(pi*y_boundary)**2*np.cos(pi*t/T)
         
         #DIVERGENCE OF VEOCITY
         self.q_div_velocity = 0*x
         self.ebqe_div_velocity[...] = 0*x_boundary
-
-        #PERIODIC VORTEX
-        #T=8
-        #self.q_v[...,0] = -2*np.sin(pi*y)*np.cos(pi*y)*np.sin(pi*x)**2*np.cos(pi*t/T)
-        #self.q_v[...,1] = 2*np.sin(pi*x)*np.cos(pi*x)*np.sin(pi*y)**2*np.cos(pi*t/T)
-        #TRANSLATION
+        
+        ###############
+        # TRANSLATION #
+        ###############
         #self.q_v[...,0]  = 0.0
         #self.q_v[...,1]  = -1.0
 

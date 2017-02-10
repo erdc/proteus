@@ -14,6 +14,8 @@ LevelModelType = VOF.LevelModel
 coefficients = MyCoefficients(epsFact=epsFactHeaviside,checkMass=checkMass,useMetrics=useMetrics,ME_model=0,
                               EDGE_VISCOSITY=EDGE_VISCOSITY,
                               ENTROPY_VISCOSITY=ENTROPY_VISCOSITY,
+                              POWER_SMOOTHNESS_INDICATOR=POWER_SMOOTHNESS_INDICATOR, 
+                              LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,
                               FCT=FCT,
                               cK=cK,cE=cE,cMax=cMax)
 
@@ -57,13 +59,13 @@ class init_cond:
 analyticalSolutions = None
 
 def getDBC(x,flag):
-    return lambda x,t: 1.0
-    #pass
+    #return lambda x,t: 1.0
+    pass
 
 dirichletConditions = {0:getDBC}
 
-initialConditions  = {0:init_cond(center=[0.0,0.5],radius=0.25)}
-#initialConditions  = {0:init_cond(center=[0.5,0.75],radius=0.15)}
+#initialConditions  = {0:init_cond(center=[0.0,0.5],radius=0.25)}
+initialConditions  = {0:init_cond(center=[0.5,0.75],radius=0.15)}
 
 fluxBoundaryConditions = {0:'outFlow'}
 
