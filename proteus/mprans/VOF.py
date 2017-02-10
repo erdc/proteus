@@ -253,6 +253,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(self,
                  EDGE_VISCOSITY=0,
                  ENTROPY_VISCOSITY=0,
+                 POWER_SMOOTHNESS_INDICATOR=2,
+                 LUMPED_MASS_MATRIX=0,
                  FCT=0,
                  # FOR LOG BASED ENTROPY FUNCTION
                  uL=0.0, 
@@ -315,6 +317,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # EDGE BASED (AND ENTROPY) VISCOSITY 
         self.EDGE_VISCOSITY=EDGE_VISCOSITY
         self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
+        self.POWER_SMOOTHNESS_INDICATOR=POWER_SMOOTHNESS_INDICATOR
+        self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
         self.FCT=FCT
         self.uL=uL
         self.uR=uR
@@ -1213,7 +1217,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.cE,
             self.coefficients.cMax,
             self.coefficients.cK,
-            self.timeIntegration.IMPLICIT,
             #PARAMETERS FOR LOG BASED ENTROPY FUNCTION
             self.coefficients.uL, 
             self.coefficients.uR,
@@ -1229,6 +1232,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             Cy,
             CTx,
             CTy, #NOTE: for now I assume the problem is in 2D!!!! (MQL). TODO: make it general 
+            # PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+            self.coefficients.POWER_SMOOTHNESS_INDICATOR,
+            self.coefficients.LUMPED_MASS_MATRIX,
             # FLUX CORRECTED TRANSPORT
             self.flux_plus_dLij_times_soln, 
             self.dL_minus_dC, 
@@ -1303,7 +1309,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag',0)],
             self.ebqe[('advectiveFlux_bc',0)],
             self.csrColumnOffsets_eb[(0,0)], 
-            self.coefficients.EDGE_VISCOSITY)
+            self.coefficients.EDGE_VISCOSITY,
+            self.coefficients.LUMPED_MASS_MATRIX)
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
