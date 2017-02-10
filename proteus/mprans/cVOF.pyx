@@ -88,7 +88,6 @@ cdef extern from "VOF.h" namespace "proteus":
 			       double cE,
 			       double cMax, 
 			       double cK,
-			       int BACKWARD_EULER, 
 			       double uL, 
 			       double uR,
 			       # PARAMETERS FOR EDGE VISCOSITY
@@ -103,6 +102,8 @@ cdef extern from "VOF.h" namespace "proteus":
 			       double* Cy,
 			       double* CTx, 
 			       double* CTy, 
+			       int POWER_SMOOTHNESS_INDICATOR,
+			       int LUMPED_MASS_MATRIX,
 			       double* flux_plus_dLij_times_soln,
 			       double* dL_minus_dC,
 			       double* min_u_bc,
@@ -158,7 +159,8 @@ cdef extern from "VOF.h" namespace "proteus":
                                int* isFluxBoundary_u,
                                double* ebqe_bc_flux_u_ext,
                                int* csrColumnOffsets_eb_u_u,
-			       int EDGE_VISCOSITY)
+			       int EDGE_VISCOSITY,
+			       int LUMPED_MASS_MATRIX)
     VOF_base* newVOF(int nSpaceIn,
                        int nQuadraturePoints_elementIn,
                        int nDOF_mesh_trial_elementIn,
@@ -283,7 +285,6 @@ cdef class cVOF_base:
 			 double cE,
 			 double cMax, 
 			 double cK,
-			 int BACKWARD_EULER, 
 			 double uL, 
 			 double uR, 
 			 int numDOFs,
@@ -297,6 +298,8 @@ cdef class cVOF_base:
 			 numpy.ndarray Cy,
 			 numpy.ndarray CTx, 
 			 numpy.ndarray CTy, 
+			 int POWER_SMOOTHNESS_INDICATOR,
+			 int LUMPED_MASS_MATRIX,
 			 numpy.ndarray flux_plus_dLij_times_soln,
 			 numpy.ndarray dL_minus_dC,
 			 numpy.ndarray min_u_bc,
@@ -372,7 +375,6 @@ cdef class cVOF_base:
 				       cE,
 				       cMax,
 				       cK,
-				       BACKWARD_EULER, 
 				       uL, 
 				       uR,
 				       numDOFs,
@@ -386,6 +388,8 @@ cdef class cVOF_base:
 				       <double*> Cy.data,
 				       <double*> CTx.data, 		       
 				       <double*> CTy.data, 
+				       POWER_SMOOTHNESS_INDICATOR,
+				       LUMPED_MASS_MATRIX,
 				       <double*> flux_plus_dLij_times_soln.data,
 				       <double*> dL_minus_dC.data,
 				       <double*> min_u_bc.data,
@@ -442,7 +446,8 @@ cdef class cVOF_base:
                          numpy.ndarray isFluxBoundary_u,
                          numpy.ndarray ebqe_bc_flux_u_ext,
                          numpy.ndarray csrColumnOffsets_eb_u_u,
- 			 int EDGE_VISCOSITY):
+ 			 int EDGE_VISCOSITY,
+			 int LUMPED_MASS_MATRIX):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
@@ -495,4 +500,5 @@ cdef class cVOF_base:
                                        <int*> isFluxBoundary_u.data,
                                        <double*> ebqe_bc_flux_u_ext.data,
                                        <int*> csrColumnOffsets_eb_u_u.data, 
-				       EDGE_VISCOSITY)
+				       EDGE_VISCOSITY,
+				       LUMPED_MASS_MATRIX)

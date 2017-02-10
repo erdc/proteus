@@ -5,17 +5,11 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define POWER_SMOOTHNESS_INDICATOR 2
-#define LUMPED_MASS_MATRIX 0
 #define KUZMINS_METHOD 1
 #define INTEGRATE_BY_PARTS 1
 #define QUANTITIES_OF_INTEREST 0
 #define FIX_BOUNDARY_KUZMINS 1
 
-//#define EDGE_VISCOSITY 1
-//#define USE_EDGE_BASED_EV 1 // if not then dissipative matrix is based purely on smoothness indicator of the solution
-//#define POWER_SMOOTHNESS_INDICATOR 2
-//#define LUMPED_MASS_MATRIX 0
 /////////////////////
 //ENTROPY FUNCTION //
 /////////////////////
@@ -123,7 +117,6 @@ namespace proteus
 				   double cE,
 				   double cMax, 
 				   double cK,
-				   int IMPLICIT, 
 				   // PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
 				   double uL, 
 				   double uR, 
@@ -140,6 +133,9 @@ namespace proteus
 				   double* Cy,
 				   double* CTx,
 				   double* CTy,
+				   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+				   int POWER_SMOOTHNESS_INDICATOR, 
+				   int LUMPED_MASS_MATRIX, 
  				   // FOR FCT
 				   double* flux_plus_dLij_times_soln, 
 				   double* dL_minus_dC,
@@ -201,7 +197,8 @@ namespace proteus
 				   double* ebqe_bc_flux_u_ext,
 				   int* csrColumnOffsets_eb_u_u,
 				   // PARAMETERS FOR EDGE_VISCOSITY
-				   int EDGE_VISCOSITY)=0;
+				   int EDGE_VISCOSITY, 
+				   int LUMPED_MASS_MATRIX)=0;
   };
 
   template<class CompKernelType,
@@ -564,7 +561,6 @@ namespace proteus
 			   double cE,
 			   double cMax, 
 			   double cK,
-			   int IMPLICIT, 
 			   // PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
 			   double uL, 
 			   double uR,
@@ -581,6 +577,9 @@ namespace proteus
 			   double* Cy, 
 			   double* CTx,
 			   double* CTy, 
+			   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+			   int POWER_SMOOTHNESS_INDICATOR, 
+			   int LUMPED_MASS_MATRIX, 
 			   // FOR FCT
 			   double* flux_plus_dLij_times_soln, 
 			   double* dL_minus_dC,
@@ -1258,7 +1257,10 @@ namespace proteus
 	      if (ENTROPY_VISCOSITY==1)
 		MaxEntResVector[i] = MaxEntResi + 1E-14; // tolerance is used to avoid division by zero
 	      alphai = std::abs(alphai_numerator)/(alphai_denominator+1E-14);
-	      psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+	      if (POWER_SMOOTHNESS_INDICATOR==0)
+		psi[i] = 1.; //This means don't enhance the first order viscosity
+	      else
+		psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
 	    }
 
 	  /////////////////////////////////////////////
@@ -1533,6 +1535,7 @@ namespace proteus
 		  //VRANS
 		  porosity = q_porosity[eN_k];
 		  // COMPUTE u and u_grad star to allow easy change between BACKWARD OR FORWARD EULER (for transport)
+		  int IMPLICIT = (ENTROPY_VISCOSITY == 1 ? 0. : 1.);
 		  u_star = IMPLICIT*u+(1-IMPLICIT)*u_old;
 		  for (int I=0; I<nSpace; I++)
 		    grad_u_star[I] = IMPLICIT*grad_u[I]+(1-IMPLICIT)*grad_u_old[I];
@@ -2024,7 +2027,8 @@ namespace proteus
 			   int* isFluxBoundary_u,
 			   double* ebqe_bc_flux_u_ext,
 			   int* csrColumnOffsets_eb_u_u,
-			   int EDGE_VISCOSITY)
+			   int EDGE_VISCOSITY,
+			   int LUMPED_MASS_MATRIX)
     {
       double dt = 1./alphaBDF; // valid just for forward/backward euler
       //std::cout<<"ndjaco  address "<<q_numDiff_u_last<<std::endl;
