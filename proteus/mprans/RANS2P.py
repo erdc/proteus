@@ -407,16 +407,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.barycenters == None:
             self.barycenters = numpy.zeros((nBoundariesMax,3),'d')
         comm = Comm.get()
-        import os
-        if comm.isMaster():
-            self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,
-                                                       "wettedAreaHistory.txt"),"w")
-            self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,
-                                                    "forceHistory_p.txt"),"w")
-            self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,
-                                                    "forceHistory_v.txt"),"w")
-            self.momentHistory = open(os.path.join(proteus.Profiling.logDir,
-                                                   "momentHistory.txt"),"w")
+        #import os
+        #if comm.isMaster():
+        #    self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,
+        #                                               "wettedAreaHistory.txt"),"w")
+        #    self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,
+        #                                            "forceHistory_p.txt"),"w")
+        #    self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,
+        #                                            "forceHistory_v.txt"),"w")
+        #    self.momentHistory = open(os.path.join(proteus.Profiling.logDir,
+        #                                           "momentHistory.txt"),"w")
         self.comm = comm
     #initialize so it can run as single phase
     def initializeElementQuadrature(self,t,cq):
@@ -695,13 +695,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                      `self.netForces_p[:,:]` +
                      "\nForces_v\n" +
                      `self.netForces_v[:,:]`)
-            self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
-            self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
-            self.forceHistory_p.flush()
-            self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_v[-1,:]))
-            self.forceHistory_v.flush()
-            self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1,:]))
-            self.momentHistory.flush()
+            #self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
+            #self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
+            #self.forceHistory_p.flush()
+            #self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_v[-1,:]))
+            #self.forceHistory_v.flush()
+            #self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1,:]))
+            #self.momentHistory.flush()
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls=0
