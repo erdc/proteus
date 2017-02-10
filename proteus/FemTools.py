@@ -6140,7 +6140,7 @@ class FiniteElementFunction:
         """
         build data structure for parallel communication
         """
-        if self.femSpace.dofMap.dof_offsets_subdomain_owned == None:
+        if self.femSpace.dofMap.dof_offsets_subdomain_owned is None:
             logEvent("WARNING setupParallelCommunication not valid for %s must have parallel information for dofMap" % self,level=-1)
             return
         comm = Comm.get()

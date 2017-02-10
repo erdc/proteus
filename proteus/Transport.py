@@ -6247,7 +6247,7 @@ class MultilevelTransport:
             self.comm=comm
             if (comm.size() > 1):
                 for ci in range(transport.nc):
-                    assert trialSpaceDict[ci].dofMap.dof_offsets_subdomain_owned != None, "trial space %s needs subdomain -> global mappings " % trialSpaceDict
+                    assert trialSpaceDict[ci].dofMap.dof_offsets_subdomain_owned is not None, "trial space %s needs subdomain -> global mappings " % trialSpaceDict
                 #initially assume all the spaces can share the same l2g information ...
                 par_n = trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()]
                 par_N = trialSpaceDict[0].dofMap.nDOF_all_processes

@@ -149,7 +149,7 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
                                                  proteus2petsc_subdomain=None,
                                                  petsc2proteus_subdomain=None):
         p4pyPETSc.Vec.__init__(self)
-        if array == None:
+        if array is None:
             return#when duplicating for petsc usage
         self.proteus2petsc_subdomain=proteus2petsc_subdomain
         self.petsc2proteus_subdomain=petsc2proteus_subdomain

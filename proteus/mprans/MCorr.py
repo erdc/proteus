@@ -603,7 +603,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.massConservationError = fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         logEvent("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy == None:
+        if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)

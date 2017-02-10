@@ -854,7 +854,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Global residual",level=9,data=r)
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy == None:
+        if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
         if not debugRDLS:

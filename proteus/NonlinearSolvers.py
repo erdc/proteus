@@ -39,7 +39,8 @@ class NonlinearEquation:
         pass
 
     def getJacobian(jacobian,usePicard=False):
-        """"""
+        """
+        """
         pass
 
     def resetNonlinearFunctionStatistics(self):
@@ -69,7 +70,7 @@ class NonlinearSolver:
         #NonlinearEquation
         self.F = F
         self.J = J
-        if du == None:
+        if du is None:
             self.du = Vec(F.dim)
         else:
             self.du = du
@@ -167,7 +168,7 @@ class NonlinearSolver:
                 r-=b
 
     def solveInitialize(self,u,r,b):
-        if r == None:
+        if r is None:
             if self.r == None:
                 self.r = Vec(self.F.dim)
             r=self.r

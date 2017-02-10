@@ -404,7 +404,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.netForces_p = numpy.zeros((nBoundariesMax,3),'d')
         self.netForces_v = numpy.zeros((nBoundariesMax,3),'d')
         self.netMoments = numpy.zeros((nBoundariesMax,3),'d')
-        if self.barycenters == None:
+        if self.barycenters is None:
             self.barycenters = numpy.zeros((nBoundariesMax,3),'d')
         comm = Comm.get()
         import os
@@ -1226,7 +1226,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=1.0
         else:
             self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
         #cek/ido todo replace python loops in modules with optimized code if possible/necessary
         logEvent("dirichlet conditions")

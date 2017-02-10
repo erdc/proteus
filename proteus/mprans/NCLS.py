@@ -593,7 +593,7 @@ class LevelModel(OneLevelTransport):
             self.MOVING_DOMAIN=1.0
         else:
             self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
 
 	self.waterline_calls  = 0
@@ -605,7 +605,7 @@ class LevelModel(OneLevelTransport):
         pass
 
     def calculateElementResidual(self):
-        if self.globalResidualDummy != None:
+        if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
     def getResidual(self,u,r):
         import pdb

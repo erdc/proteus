@@ -640,7 +640,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=1.0
         else:
             self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
@@ -747,7 +747,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #pdb.set_trace()
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy == None:
+        if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
