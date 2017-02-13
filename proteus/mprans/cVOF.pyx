@@ -160,6 +160,7 @@ cdef extern from "VOF.h" namespace "proteus":
                                double* ebqe_bc_flux_u_ext,
                                int* csrColumnOffsets_eb_u_u,
 			       int EDGE_VISCOSITY,
+			       int ENTROPY_VISCOSITY,
 			       int LUMPED_MASS_MATRIX)
     VOF_base* newVOF(int nSpaceIn,
                        int nQuadraturePoints_elementIn,
@@ -447,6 +448,7 @@ cdef class cVOF_base:
                          numpy.ndarray ebqe_bc_flux_u_ext,
                          numpy.ndarray csrColumnOffsets_eb_u_u,
  			 int EDGE_VISCOSITY,
+			 int ENTROPY_VISCOSITY,
 			 int LUMPED_MASS_MATRIX):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -501,4 +503,5 @@ cdef class cVOF_base:
                                        <double*> ebqe_bc_flux_u_ext.data,
                                        <int*> csrColumnOffsets_eb_u_u.data, 
 				       EDGE_VISCOSITY,
+				       ENTROPY_VISCOSITY,
 				       LUMPED_MASS_MATRIX)

@@ -1310,6 +1310,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc',0)],
             self.csrColumnOffsets_eb[(0,0)], 
             self.coefficients.EDGE_VISCOSITY,
+            self.coefficients.ENTROPY_VISCOSITY,
             self.coefficients.LUMPED_MASS_MATRIX)
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
