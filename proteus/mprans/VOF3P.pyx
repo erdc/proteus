@@ -189,6 +189,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * ebqe_bc_flux_u_ext,
                                int * csrColumnOffsets_eb_u_u,
                                int EDGE_VISCOSITY,
+                               int ENTROPY_VISCOSITY,
                                int LUMPED_MASS_MATRIX)
     cppVOF3P_base* newVOF3P(int nSpaceIn,
                             int nQuadraturePoints_elementIn,
@@ -514,6 +515,7 @@ cdef class VOF3P:
                           numpy.ndarray ebqe_bc_flux_u_ext,
                           numpy.ndarray csrColumnOffsets_eb_u_u,
                           int EDGE_VISCOSITY, 
+                          int ENTROPY_VISCOSITY,
                           int LUMPED_MASS_MATRIX):
         """
         Optimized jacobian calculation
@@ -568,6 +570,7 @@ cdef class VOF3P:
                                        <double*> ebqe_bc_flux_u_ext.data,
                                        <int*> csrColumnOffsets_eb_u_u.data,
                                        EDGE_VISCOSITY, 
+                                       ENTROPY_VISCOSITY,
                                        LUMPED_MASS_MATRIX)
 
 class SubgridError(SGE_base):
@@ -1896,6 +1899,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc', 0)],
             self.csrColumnOffsets_eb[(0, 0)], 
             self.coefficients.EDGE_VISCOSITY,
+            self.coefficients.ENTROPY_VISCOSITY,
             self.coefficients.LUMPED_MASS_MATRIX)
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:

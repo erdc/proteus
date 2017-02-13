@@ -198,6 +198,7 @@ namespace proteus
 				   int* csrColumnOffsets_eb_u_u,
 				   // PARAMETERS FOR EDGE_VISCOSITY
 				   int EDGE_VISCOSITY, 
+				   int ENTROPY_VISCOSITY,
 				   int LUMPED_MASS_MATRIX)=0;
   };
 
@@ -1421,10 +1422,10 @@ namespace proteus
 		      //get the trial function gradients
 		      ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		      //get the solution at quad point at tn and tnm1
-		      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
-		      ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],unm1);
+		      ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+		      ck.valFromDOF(u_dof_old_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],unm1);
 		      //get the solution gradients at tn
-		      ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
+		      ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_un);
 		      //velocity at tn
 		      vn[0] = velocity[eN_k_nSpace];
 		      vn[1] = velocity[eN_k_nSpace+1];
@@ -1634,7 +1635,7 @@ namespace proteus
 		      // ** ARTIFICIAL COMPRESSION (MQL) ** //
 		      double n_grad_u=0.0; 
 		      for (int I=0; I<nSpace; I++)
-			n_grad_u += grad_u[I]*grad_u[I];
+			n_grad_u += grad_u_old[I]*grad_u_old[I];
 		      n_grad_u = sqrt(n_grad_u);
 		      double compression_factor = fmax(1-cK*fmax(u*(1.0-u),0.)/(h*n_grad_u+1.0e-8),0.);
 		      q_numDiff_u[eN_k] *= compression_factor;
@@ -2028,6 +2029,7 @@ namespace proteus
 			   double* ebqe_bc_flux_u_ext,
 			   int* csrColumnOffsets_eb_u_u,
 			   int EDGE_VISCOSITY,
+			   int ENTROPY_VISCOSITY,
 			   int LUMPED_MASS_MATRIX)
     {
       double dt = 1./alphaBDF; // valid just for forward/backward euler
@@ -2203,11 +2205,12 @@ namespace proteus
 	      for(int j=0;j<nDOF_trial_element;j++)
 		dsubgridError_u_u[j] = -tau*dpdeResidual_u_u[j];
 	      double h=elementDiameter[eN];
+	      int IMPLICIT = (EDGE_VISCOSITY==1 ? 0. : 1.)*(ENTROPY_VISCOSITY==1 ? 0. : 1.); 
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
 		  //int eN_k_i=eN_k*nDOF_test_element+i;
 		  //int eN_k_i_nSpace=eN_k_i*nSpace;
-		  for(int j=0;j<nDOF_trial_element;j++) 
+		  for(int j=0;j<nDOF_trial_element;j++)
 		    {
 		      if (LUMPED_MASS_MATRIX==1)
 			{
@@ -2223,9 +2226,9 @@ namespace proteus
 			  //std::cout<<"jac "<<'\t'<<q_numDiff_u_last[eN_k]<<'\t'<<dm_t<<'\t'<<df[0]<<df[1]<<'\t'<<dsubgridError_u_u[j]<<std::endl;
 			  elementJacobian_u_u[i][j] += 
 			    dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) + 
-			    dt*(EDGE_VISCOSITY==1 ? 0. : 1.)*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
-			    dt*(EDGE_VISCOSITY==1 ? 0. : 1.)*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
-			    dt*(EDGE_VISCOSITY==1 ? 0. : 1.)*ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); //implicit
+			    dt*IMPLICIT*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
+			    dt*IMPLICIT*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
+			    dt*IMPLICIT*ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); //implicit
 			}
 		    }//j
 		}//i
@@ -2412,8 +2415,11 @@ namespace proteus
 		{
 		  //register int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
 		  register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
-	      
-		  fluxJacobian_u_u[j]=dt*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+		  if (EDGE_VISCOSITY==0)
+		    fluxJacobian_u_u[j]=dt*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+		  else 
+		    fluxJacobian_u_u[j]=
+		      (FIX_BOUNDARY_KUZMINS==0 ? 1. : 0.)*dt*ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);		  
 		}//j
 	      //
 	      //update the global Jacobian from the flux Jacobian
