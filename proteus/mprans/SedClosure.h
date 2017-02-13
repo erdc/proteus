@@ -93,7 +93,7 @@ public:
     
 
     
-    return (weight*gDrag1 + (1.-weight)*gDrag2)*rhoFluid;
+    return uFluid[0] ; //(weight*gDrag1 + (1.-weight)*gDrag2)*rhoFluid;
     }
 
     inline double gs0(double sedF)
@@ -576,7 +576,7 @@ public:
 
     
 
-    inline double*  mIntFluid(  double sedF,
+    inline void  mIntFluid( double * mint2, double sedF,
 			   double rhoFluid,
 			      double uFluid_n[nSpace], //Fluid velocity
 			      double uSolid_n[nSpace], //Sediment velocity
@@ -586,19 +586,16 @@ public:
 			      double gradc[nSpace]
 			      )
     {
-
+      
       double beta = betaCoeff(sedF,rhoFluid,uFluid_n,uSolid_n,nu);
-      double* mint2;
-      mint2 = new double[nSpace];
       for  (int ii=0; ii<nSpace;  ii++)
 	{
-	  mint2[ii] = -sedF*beta*(uFluid_np1[ii])/(rhoFluid * (1. - sedF)) ;
+	  mint2[ii] =  -sedF*beta*(uFluid_np1[ii])/(rhoFluid * (1. - sedF)) ;
 	    }
-      return  mint2;
       
       }
 
-    inline double*  mIntSolid(  double sedF,
+    inline void mIntSolid(   double * mint2, double sedF,
 			   double rhoFluid,
 			      double uFluid_n[nSpace], //Fluid velocity
 			      double uSolid_n[nSpace], //Sediment velocity
@@ -610,15 +607,13 @@ public:
     {
 
       double beta = betaCoeff(sedF,rhoFluid,uFluid_n,uSolid_n,nu);
-      double* mint2;
-      mint2 = new double[nSpace];
       for  (int ii=0; ii<nSpace;  ii++)
 	{
 	  mint2[ii] = -sedF*beta*(-uSolid_np1[ii])/(rhoFluid * (1. - sedF)) ;
 	    }
-      return  mint2;
+
     }
-      inline double*  mIntgradC(  double sedF,
+    inline void mIntgradC(double * mint2,  double sedF,
 			   double rhoFluid,
 				  double uFluid_n[nSpace], //Fluid velocity
 				  double uSolid_n[nSpace], //Sediment velocity
@@ -629,13 +624,11 @@ public:
     {
 
       double beta = betaCoeff(sedF,rhoFluid,uFluid_n,uSolid_n,nu);
-      double* mint2;
-      mint2 = new double[nSpace];
       for  (int ii=0; ii<nSpace;  ii++)
 	{
 	  mint2[ii] = - sedF*beta*nuT*gradc[ii]/sigmaC_/(rhoFluid * (1. - sedF));
 	    }
-      return  mint2;
+
      
     }
 
