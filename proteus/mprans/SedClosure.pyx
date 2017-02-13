@@ -581,9 +581,12 @@ cdef class HsuSedStress:
                      numpy.ndarray gradc
    ):
 	
-        cython.declare(xx=cython.double[3])
-        for ii in range(3):	
+
+
+        cython.declare(xx=cython.double[2])
+        for ii in range(2):	
             xx[ii] = 0.
+
         self.thisptr.mIntFluid(xx, sedF,rhoFluid ,
 
                                   < double * > uFluid_n.data,
@@ -592,8 +595,8 @@ cdef class HsuSedStress:
                                          nu,
                                          nuT,
                                   < double * > gradc.data)
-        mint = numpy.zeros(3,)
-        for ii in range(3):
+        mint = numpy.zeros(2,)
+        for ii in range(2):
             mint[ii] = xx[ii]
         return mint
 
@@ -608,8 +611,9 @@ cdef class HsuSedStress:
                      numpy.ndarray gradc
    ):
 
-        cython.declare(xx=cython.double[3])
-        for ii in range(3):	
+
+        cython.declare(xx=cython.double[2])
+        for ii in range(2):	
             xx[ii] = 0.
 
         self.thisptr.mIntSolid(xx, sedF,rhoFluid ,
@@ -619,8 +623,8 @@ cdef class HsuSedStress:
                                          nu,
                                          nuT,
                                   < double * > gradc.data)
-        mint = numpy.zeros(3,)
-        for ii in range(3):
+        mint = numpy.zeros(2,)
+        for ii in range(2):
             mint[ii] = xx[ii]
         return mint
 
@@ -634,8 +638,9 @@ cdef class HsuSedStress:
                      numpy.ndarray gradc
    ):
 
-        cython.declare(xx=cython.double[3])
-        for ii in range(3):	
+
+        cython.declare(xx=cython.double[2])
+        for ii in range(2):	
             xx[ii] = 0.
 
 
@@ -645,10 +650,11 @@ cdef class HsuSedStress:
                                          nu,
                                          nuT,
                                   < double * > gradc.data)
-        mint = numpy.zeros(3,)
-        for ii in range(3):
+        mint = numpy.zeros(2,)
+        for ii in range(2):
             mint[ii] = xx[ii]
         return mint
+
 
 
 
