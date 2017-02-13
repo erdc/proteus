@@ -252,15 +252,15 @@ class BC_RANS(BC_Base):
             index of vertical position vector (x:0, y:1, z:2), must always be
             aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
         wind_speed: Optional[array_like]
+            speed of air phase
         vof_air: Optional[float]
             VOF value of air (default is 1.)
         vof_water: Optional[float]
             VOF value of water (default is 0.)
 
         Below the sea water level: fluid velocity to wave speed.
-        Above the sea water level: fluid velocity set to wind speed.
-        (!) Boundary condition relies on specific variables defined in Context:
-            he (mesh element size) and ecH (number of elements for smoothing)
+        Above the sea water level: fluid velocity set to wind speed 
+        (with smoothing).
         """
         self.reset()
         if vert_axis is None:
@@ -468,12 +468,21 @@ class RelaxationZone:
         parameter for porous zones (default: 0.)
     porosity: Optional[float]
         parameter for porous zone (default: 1.)
+    vert_axis: Optional[int]
+        index of vertical position vector (x:0, y:1, z:2), must always be
+        aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
+    smoothing: Optional[float]
+        smoothing distance from the free surface (usually 3*he)
+    vof_water: Optional[int]
+        VOF value of water (default: 0)
+    vof_air: Optional[int]
+        VOF value of air (default: 1)
     """
 
     def __cinit__(self, zone_type, center, orientation, epsFact_solid,
                   waves=None, shape=None, wind_speed=np.array([0.,0.,0.]),
                   dragAlpha=0.5/1.005e-6, dragBeta=0., porosity=1., vert_axis=None, smoothing=0.,
-                  he=0., ecH=3., vof_water=0., vof_air=1.):
+                  vof_water=0., vof_air=1.):
         self.Shape = shape
         self.nd = self.Shape.Domain.nd
         self.zone_type = zone_type
@@ -632,7 +641,33 @@ class RelaxationZoneWaveGenerator():
             m.q['velocity_solid'] = q_velocity_solid
 
 class __cppClass_WavesCharacteristics:
-    def __init__(self, waves, vert_axis, wind_speed=None, b_or=None, smoothing=0., vof_water=0., vof_air = 1.):
+    """
+    Class holding information from WaveTools waves and cnvering it to
+    boundary conditions to use for relaxation zones and wave inlet.
+    This class is created automatically when passing WaveTools class
+    instances to a relaxation zone or wave inlet BC.
+
+    Parameters
+    ----------
+    wave: proteus.WaveTools
+        class describing a wave (from proteus.WaveTools)
+    vert_axis: int
+        index of vertical position vector (x:0, y:1, z:2), must always be
+        aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
+    wind_speed: Optional[array_like]
+        speed of air phase
+    b_or: Optional[array_like]
+        boundary orientation. Necessary for pressure calculations. Used
+        for boundary conditions but not in relaxation zones.
+    smoothing: Optional[float]
+        smoothing distance from the free surface (usually 3*he)
+    vof_water: Optional[float]
+        VOF value of water (default: 0)
+    vof_air: Optional[float]
+        VOF value of air (default: 1)
+    """
+    def __init__(self, waves, vert_axis, wind_speed=None, b_or=None,
+                 smoothing=0., vof_water=0., vof_air = 1.):
         self.WT = waves  # wavetools wave
         self.vert_axis = vert_axis
         self.zero_vel = np.zeros(3)
