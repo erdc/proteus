@@ -248,8 +248,7 @@ class NS_base:  # (HasTraits):
                         logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
                         check_call(gmsh_cmd, shell=True)
                         logEvent("Done running gmsh; converting to triangle")
-                        from proteus.gmsh2triangle import msh2triangle
-                        msh2triangle(p.domain.geofile)
+                        MeshTools.msh2triangle(p.domain.geofile)
 
                     comm.barrier()
                     mesh = MeshTools.TriangularMesh()
