@@ -217,9 +217,9 @@ class BC_RANS(BC_Base):
         self.hz_dirichlet.uOfXT = lambda x, t: self.__cpp_MoveMesh_hz(x, t)
 
     def __cpp_MoveMesh_h(self, x, t):
-        x_0 = cython.declare(cython.double[3]) 
-        new_x_0 = cython.declare(cython.double[3]) 
-        hx = cython.declare(cython.double[3]) 
+        cython.declare(x_0=cython.double[3])
+        cython.declare(new_x_0=cython.double[3])
+        hx = np.zeros(3)
         x_0[0] = x[0]-self.body_python_last_pos[0]
         x_0[1] = x[1]-self.body_python_last_pos[1]
         x_0[2] = x[2]-self.body_python_last_pos[2]
