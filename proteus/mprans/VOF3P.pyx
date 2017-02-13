@@ -116,6 +116,11 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * ebqe_flux,
                                int EDGE_VISCOSITY,
                                int ENTROPY_VISCOSITY, 
+                               double cE,
+                               double cMax, 
+                               double cK,
+                               double uL, 
+                               double uR, 
                                int numDOFs,                              
                                int NNZ,
                                int* csrRowIndeces_DofLoops,
@@ -129,15 +134,12 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * CTx,
                                double * CTy,
                                double * CTz,
-                               double uL, 
-                               double uR,
-                               double cK,
+                               int POWER_SMOOTHNESS_INDICATOR, 
+                               int LUMPED_MASS_MATRIX, 
                                double * flux_plus_dLij_times_soln,
                                double * dL_minus_dC,
                                double * min_u_bc,
                                double * max_u_bc,
-                               double cMax, 
-                               double cE, 
                                double * quantDOFs)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -186,7 +188,8 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                int * isFluxBoundary_u,
                                double * ebqe_bc_flux_u_ext,
                                int * csrColumnOffsets_eb_u_u,
-                               int EDGE_VISCOSITY)
+                               int EDGE_VISCOSITY,
+                               int LUMPED_MASS_MATRIX)
     cppVOF3P_base* newVOF3P(int nSpaceIn,
                             int nQuadraturePoints_elementIn,
                             int nDOF_mesh_trial_elementIn,
@@ -343,6 +346,11 @@ cdef class VOF3P:
                           numpy.ndarray ebqe_flux, 
                           int EDGE_VISCOSITY, 
                           int ENTROPY_VISCOSITY, 
+                          double cE, 
+                          double cMax, 
+                          double cK,
+                          double uL, 
+                          double uR,
                           int numDOFs,
                           int NNZ,
                           numpy.ndarray csrRowIndeces_DofLoops,
@@ -356,15 +364,12 @@ cdef class VOF3P:
                           numpy.ndarray CTx,
                           numpy.ndarray CTy,
                           numpy.ndarray CTz,
-                          double uL,
-                          double uR, 
-                          double cK, 
+                          int POWER_SMOOTHNESS_INDICATOR, 
+                          int LUMPED_MASS_MATRIX, 
                           numpy.ndarray flux_plus_dLij_times_soln,
                           numpy.ndarray dL_minus_dC, 
                           numpy.ndarray min_u_bc,
                           numpy.ndarray max_u_bc,
-                          double cMax, 
-                          double cE, 
                           numpy.ndarray quantDOFs):
         self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
@@ -435,6 +440,11 @@ cdef class VOF3P:
                                        <double*> ebqe_flux.data,
                                        EDGE_VISCOSITY,
                                        ENTROPY_VISCOSITY, 
+                                       cE, 
+                                       cMax, 
+                                       cK,
+                                       uL, 
+                                       uR, 
                                        numDOFs,
                                        NNZ,
 				       <int*> csrRowIndeces_DofLoops.data,
@@ -448,15 +458,12 @@ cdef class VOF3P:
                                        <double*> CTx.data,
                                        <double*> CTy.data,
                                        <double*> CTz.data,
-                                       uL,
-                                       uR, 
-                                       cK,
+                                       POWER_SMOOTHNESS_INDICATOR, 
+                                       LUMPED_MASS_MATRIX, 
                                        <double*> flux_plus_dLij_times_soln.data,
                                        <double*> dL_minus_dC.data, 
                                        <double*> min_u_bc.data,
                                        <double*> max_u_bc.data,
-                                       cMax,
-                                       cE,
                                        <double*> quantDOFs.data)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -506,7 +513,8 @@ cdef class VOF3P:
                           numpy.ndarray isFluxBoundary_u,
                           numpy.ndarray ebqe_bc_flux_u_ext,
                           numpy.ndarray csrColumnOffsets_eb_u_u,
-                          int EDGE_VISCOSITY):
+                          int EDGE_VISCOSITY, 
+                          int LUMPED_MASS_MATRIX):
         """
         Optimized jacobian calculation
         """
@@ -559,7 +567,8 @@ cdef class VOF3P:
                                        <int*> isFluxBoundary_u.data,
                                        <double*> ebqe_bc_flux_u_ext.data,
                                        <int*> csrColumnOffsets_eb_u_u.data,
-                                       EDGE_VISCOSITY)
+                                       EDGE_VISCOSITY, 
+                                       LUMPED_MASS_MATRIX)
 
 class SubgridError(SGE_base):
 
@@ -643,6 +652,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             EDGE_VISCOSITY=0,
             ENTROPY_VISCOSITY=0,
             FCT=0,
+            POWER_SMOOTHNESS_INDICATOR=2,
+            LUMPED_MASS_MATRIX=0,
             # FOR LOG BASED ENTROPY FUNCTION
             uL=0.0, 
             uR=1.0,
@@ -709,6 +720,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # EDGE BASED (AND ENTROPY) VISCOSITY 
         self.EDGE_VISCOSITY=EDGE_VISCOSITY
         self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
+        self.POWER_SMOOTHNESS_INDICATOR=POWER_SMOOTHNESS_INDICATOR
+        self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
         self.FCT=FCT
         self.uL=uL
         self.uR=uR
@@ -1782,6 +1795,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # PARAMETERS FOR EDGE_VISCOSITY
             self.coefficients.EDGE_VISCOSITY,
             self.coefficients.ENTROPY_VISCOSITY, 
+            # PARAMETERS FOR ELEMENT BASED ENTROPY VISCOSITY
+            self.coefficients.cE, 
+            self.coefficients.cMax, 
+            self.coefficients.cK,
+            # PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
+            self.coefficients.uL,
+            self.coefficients.uR,
             len(rowptr)-1, #num of DOFs
             self.nnz,
             rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
@@ -1795,19 +1815,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             CTx,
             CTy,
             CTz,
-            # PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
-            self.coefficients.uL,
-            self.coefficients.uR,
-            # PARAMETER FOR ARTIFICIAL COMPRESSION 
-            self.coefficients.cK, 
+            # PARAMETERS FOR 1st or 2nd ORDER MPP METHOD 
+            self.coefficients.POWER_SMOOTHNESS_INDICATOR,
+            self.coefficients.LUMPED_MASS_MATRIX,
             # FLUX CORRECTED TRANSPORT 
             self.flux_plus_dLij_times_soln,
             self.dL_minus_dC, 
             self.min_u_bc,
             self.max_u_bc,
-            # PARAMETERS FOR ELEMENT BASED ENTROPY VISCOSITY
-            self.coefficients.cMax,
-            self.coefficients.cE,
             self.quantDOFs) #TMP
 
         if self.forceStrongConditions:
@@ -1880,7 +1895,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
             self.csrColumnOffsets_eb[(0, 0)], 
-            self.coefficients.EDGE_VISCOSITY)
+            self.coefficients.EDGE_VISCOSITY,
+            self.coefficients.LUMPED_MASS_MATRIX)
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
             scaling = 1.0  # probably want to add some scaling to match non-dirichlet diagonals in linear system
