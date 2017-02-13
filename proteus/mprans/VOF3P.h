@@ -5,8 +5,6 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define POWER_SMOOTHNESS_INDICATOR 2
-#define LUMPED_MASS_MATRIX 0
 #define KUZMINS_METHOD 1
 #define INTEGRATE_BY_PARTS 1
 #define QUANTITIES_OF_INTEREST 0
@@ -135,6 +133,14 @@ namespace proteus
 				   // PARAMETERS FOR EDGE BASED STABILIZATION
 				   int EDGE_VISCOSITY, 
 				   int ENTROPY_VISCOSITY, 
+				   // ELEMENT BASED ENTROPY VISCOSITY
+				   double cE,
+				   double cMax, 
+				   double cK,
+				   // PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
+				   double uL, 
+				   double uR, 
+				   // PARAMETERS FOR EDGE VISCOSITY
 				   int numDOFs, 
 				   int NNZ,
 				   int* csrRowIndeces_DofLoops,
@@ -149,19 +155,14 @@ namespace proteus
 				   double* CTx,
 				   double* CTy, 
 				   double* CTz, 
-				   // PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
-				   double uL, 
-				   double uR,
-				   // PARAMETER FOR ARTIFICIAL COMPRESSION
-				   double cK,
+				   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+				   int POWER_SMOOTHNESS_INDICATOR, 
+				   int LUMPED_MASS_MATRIX, 
 				   // FOR FCT
 				   double* flux_plus_dLij_times_soln, 
 				   double* dL_minus_dC,
 				   double* min_u_bc,
 				   double* max_u_bc,
-				   // ELEMENT BASED ENTROPY VISCOSITY
-				   double cMax, 
-				   double cE,
 				   // AUX QUANTITIES OF INTEREST
 				   double* quantDOFs)=0;
     virtual void calculateJacobian(//element
@@ -218,7 +219,8 @@ namespace proteus
 				   double* ebqe_bc_flux_u_ext,
 				   int* csrColumnOffsets_eb_u_u,
 				   // PARAMETERS FOR EDGE_VISCOSITY
-				   int EDGE_VISCOSITY)=0;
+				   int EDGE_VISCOSITY, 
+				   int LUMPED_MASS_MATRIX)=0;
   };
 
   template<class CompKernelType,
@@ -678,6 +680,14 @@ namespace proteus
 			   // PARAMETERS FOR EDGE BASED STABILIZATION
 			   int EDGE_VISCOSITY, 
 			   int ENTROPY_VISCOSITY,
+			   // ELEMENT BASED ENTROPY VISCOSITY
+			   double cE,
+			   double cMax, 
+			   double cK,			
+			   // PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
+			   double uL, 
+			   double uR, 
+			   // PARAMETERS FOR EDGE VISCOSITY
 			   int numDOFs,
 			   int NNZ,
 			   int* csrRowIndeces_DofLoops,
@@ -692,19 +702,14 @@ namespace proteus
 			   double* CTx,
 			   double* CTy, 
 			   double* CTz, 
-			   // PARAMETERS FOR LOG BASED ENTROPY FUNCTION 
-			   double uL, 
-			   double uR,
-			   // PARAMETER FOR ARTIFICIAL COMPRESSION
-			   double cK,
+			   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+			   int POWER_SMOOTHNESS_INDICATOR, 
+			   int LUMPED_MASS_MATRIX, 
 			   // FOR FCT
 			   double* flux_plus_dLij_times_soln, 
 			   double* dL_minus_dC, 
 			   double* min_u_bc,
 			   double* max_u_bc,
-			   // ELEMENT BASED ENTROPY VISCOSITY
-			   double cMax, 
-			   double cE, 
 			   // AUX QUANTITIES OF INTEREST 
 			   double* quantDOFs)
     {
@@ -2140,7 +2145,8 @@ namespace proteus
 			   double* ebqe_bc_flux_u_ext,
 			   int* csrColumnOffsets_eb_u_u,
 			   // PARAMETERS FOR EDGE VISCOSITY 
-			   int EDGE_VISCOSITY)
+			   int EDGE_VISCOSITY,
+			   int LUMPED_MASS_MATRIX)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
       //std::cout<<"ndjaco  address "<<q_numDiff_u_last<<std::endl;
