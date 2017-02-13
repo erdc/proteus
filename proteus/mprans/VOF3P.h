@@ -802,7 +802,7 @@ namespace proteus
 			}
 		    }
 		  //evaluate coefficients to compute time derivative (for term with mass matrix)
-		  porosity = 1.0;// - q_vos[eN_k]; //TMP
+		  porosity = 1.0 - q_vos[eN_k]; //TMP
 		  evaluateCoefficients(&velocity[eN_k_nSpace],
 				       u,
 				       //VRANS
@@ -986,7 +986,7 @@ namespace proteus
 		      for (int j=0;j<nDOF_trial_element;j++)
 			u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
 		      //VRANS
-		      porosity_ext = 1.0; // - ebqe_vos_ext[ebNE_kb]; //TMP
+		      porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb]; //TMP
 		      // 
 		      //calculate the internal and external trace of the pde coefficients 
 		      // 
@@ -1283,7 +1283,7 @@ namespace proteus
 		    //
 		    bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
 		    //VRANS
-		    porosity_ext = 1.0; // - ebqe_vos_ext[ebNE_kb]; //TMP
+		    porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb]; //TMP
 		    //
 		    // 
 		    //calculate the pde coefficients using the solution and the boundary values for the solution 
@@ -1541,7 +1541,7 @@ namespace proteus
 			jac[nSpace*nSpace],jacDet,jacInv[nSpace*nSpace],
 			u_grad_trial[nDOF_trial_element*nSpace],
 			dV,x,y,z,
-			porosity = 1.0;// - q_vos[eN_k]; //TMP			
+			porosity = 1.0 - q_vos[eN_k]; //TMP			
 		      ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
 		      //get the physical integration weight
 		      dV = fabs(jacDet)*dV_ref[k];
@@ -1661,7 +1661,7 @@ namespace proteus
 			}
 		    }
 		  //VRANS
-		  porosity = 1.0;// - q_vos[eN_k]; //TMP
+		  porosity = 1.0 - q_vos[eN_k]; //TMP
 		  // COMPUTE u and u_grad star to allow easy change between BACKWARD OR FORWARD EULER (for transport)
 		  int IMPLICIT = (ENTROPY_VISCOSITY == 1 ? 0. : 1.);
 		  u_star = IMPLICIT*u+(1-IMPLICIT)*un;
@@ -1909,7 +1909,7 @@ namespace proteus
 		  //
 		  bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
 		  //VRANS
-		  porosity_ext = 1.0; // - ebqe_vos_ext[ebNE_kb]; //TMP
+		  porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb]; //TMP
 		  //
 		  // 
 		  //calculate the pde coefficients using the solution and the boundary values for the solution 
@@ -2267,7 +2267,7 @@ namespace proteus
 		    }
 		}
 	      //VRANS
-	      porosity = 1.0;// - q_vos[eN_k]; //TMP
+	      porosity = 1.0 - q_vos[eN_k]; //TMP
 	      //
 	      //
 	      //calculate pde coefficients and derivatives at quadrature points
@@ -2500,7 +2500,7 @@ namespace proteus
 	      //
 	      bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
 	      //VRANS
-	      porosity_ext = 1.0; // - ebqe_vos_ext[ebNE_kb]; //TMP
+	      porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb]; //TMP
 	      //
 	      // 
 	      //calculate the internal and external trace of the pde coefficients 
