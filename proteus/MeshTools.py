@@ -6009,38 +6009,57 @@ from proteus import default_p as dp
 class MeshOptions:
     """
     Mesh options for the domain
+
+    Parameters
+    ----------
+    domain: proteus.Domain
     """
-    def __init__(self, domain=None):
+    def __init__(self, domain):
         self.Domain = domain
         self.he = 1.
         self.use_gmsh = False
         self.genMesh = dp.genMesh
-        self.outputFiles = {'name': 'mesh',        
-                            'poly': True,     
+        self.outputFiles_name = 'mesh'
+        self.outputFiles = {'poly': True,     
                             'ply': False,        
                             'asymptote': False,
                             'geo': False}
         self.restrictFineSolutionToAllMeshes = dn.restrictFineSolutionToAllMeshes
         self.parallelPartitioningType = dn.parallelPartitioningType
         self.nLayersOfOverlapForParallel = dn.parallelPartitioningType
+        self.triangleOptions = dn.triangleOptions  # defined when setTriangleOptions called
+        self.nLevels = dn.nLevels
         if domain is not None:
             self.nd = domain.nd
             if self.nd == 2:
-                self.generator = 'triangle'
                 self.triangle_string = 'VApq30Dena'
             if self.nd == 3:
-                self.generator = 'tetgen'
                 self.triangle_string = 'VApq1.35q12feena'
         else:
-            self.generator = None
             self.triangle_string = None
-        self.triangleOptions = dn.triangleOptions  # defined when setTriangleOptions called
-        self.nLevels = dn.nLevels
 
-    def setElementSize(self, he, refinement_lvl=0.):
-        self.he = he*0.5**refinement_lvl
+    def setElementSize(self, he):
+        """
+        Sets element size for uniform mesh.
+
+        Parameters
+        ----------
+        he: float
+            mesh characteristic element size
+        """
+        self.he = he
 
     def setParallelPartitioningType(self, partitioning_type='node', layers_overlap=0):
+        """
+        Changes parallel partitioning type
+
+        Parameters
+        ----------
+        partitioning_type: Optional[str, int]
+            parallel partitioning type (default: 'node' (1))
+        layers: int
+            layers of overlap for paralllel (default: 0)
+        """
         if partitioning_type == 'element' or partitioning_type == 0:
             self.parallelPartitioningType = mpt.element
         if partitioning_type == 'node' or partitioning_type == 1:
@@ -6048,6 +6067,16 @@ class MeshOptions:
         self.nLayersOfOverlapForParallel = layers_overlap
 
     def setTriangleOptions(self, triangle_options=None):
+        """
+        Sets the trangle options
+
+        Parameters
+        ----------
+        triangle_options: Optional[str]
+            string for triangle options. If not passed, it will be
+            set with triangle_string attribute and 'he' value, with
+            default for 2D: he**2/2; default for 3D: he**3/6
+        """
         if triangle_options is not None:
             self.triangleOptions = triangle_options
         else:
@@ -6061,18 +6090,46 @@ class MeshOptions:
                                        % (self.he**3/6.,)
 
     def setMeshGenerator(self, generator):
+        """
+        Indicates mesh generator to use
+
+        Parameters
+        ----------
+        generator: str
+            options: 'gmsh', 'triangle', 'tetgen'
+
+        (!) Only has an effect when setting to 'gmsh' in current 
+        implementation (triangle is default for 2D, tetgen for 3D)
+        """
         generators = ['gmsh', 'triangle', 'tetgen']
         assert generator in generators, 'Unknown mesh generator'
         if generator == 'gmsh':
-            if self.Domain is not None:
-                self.Domain.use_gmsh = True
+            self.use_gmsh = True
+        else:
+            self.use_gmsh = False
 
     def setOutputFiles(self, name='mesh', poly=True, ply=False, asymptote=False, geo=False):
-            self.outputFiles['name'] = name       
-            self.outputFiles['poly'] = poly      
-            self.outputFiles['ply'] = ply       
-            self.outputFiles['asymptote'] = asymptote
-            self.outputFiles['geo'] = gmsh
+        """
+        Output files to be created 
+
+        Parameters
+        ----------
+        name: Optional[str]
+            name of the mesh files (prefix) (default: 'mesh')
+        poly: Optional[bool]
+            create a poly file
+        ply: Optional[bool]
+            create a ply file
+        asymptote: Optional[bool]
+            create an asymptote file
+        geo:
+            create a geofile
+        """
+        self.outputFiles_name = name
+        self.outputFiles['poly'] = poly
+        self.outputFiles['ply'] = ply
+        self.outputFiles['asymptote'] = asymptote
+        self.outputFiles['geo'] = gmsh
 
 
 def msh2triangle(fileprefix):
