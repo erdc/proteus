@@ -44,7 +44,6 @@ class TestHsu(unittest.TestCase):
         drag = (gl.aDarcy * nu* sedF /((1.-sedF)*gl.grain**2) +  gl.bForch * umag / gl.grain)*rhoFluid
         # For sedF > pacFraction - > drag = a * nu* sedF /((1-sedF)*gl.grain^2) + beta * umag / gl.grain
         drag2 = gl.sedSt.betaCoeff(sedF, rhoFluid, uf, us, nu)
-        print drag,drag2
         if(drag2 != 0):
             drag /=drag2
             drag2/=drag2
