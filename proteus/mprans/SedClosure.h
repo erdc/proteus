@@ -79,21 +79,21 @@ public:
     double gDrag2 = 0.75 * Cd * du * pow(1. - sedF, -1.65)/grain_;
 	  
     //cek  debug -- this makes the drag term nonlinear
-    /* if(sedF < packFraction_ + packMargin_)  */
-    /*   {  */
-    /*     if (sedF > packFraction_ - packMargin_) */
-    /*       {	   */
-    /*         weight =  0.5 + 0.5* (sedF - packFraction_) /packMargin_; */
-    /*       } */
-    /*     else */
-    /*       { */
-    /*         weight =  0.; */
-    /*       } */
-    /*   } */
+     if(sedF < packFraction_ + packMargin_)  
+       {  
+         if (sedF > packFraction_ - packMargin_) 
+           {	   
+             weight =  0.5 + 0.5* (sedF - packFraction_) /packMargin_; 
+           } 
+         else 
+           {
+            weight =  0.; 
+           } 
+       } 
     
 
     
-    return uFluid[0] ; //(weight*gDrag1 + (1.-weight)*gDrag2)*rhoFluid;
+    return (weight*gDrag1 + (1.-weight)*gDrag2)*rhoFluid;
     }
 
     inline double gs0(double sedF)
