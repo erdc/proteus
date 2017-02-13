@@ -48,8 +48,8 @@ class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIP
                                                                                         getAdvectiveFluxBoundaryConditions,
                                                                                         getDiffusiveFluxBoundaryConditions)
 
-
 class RKEV(proteus.TimeIntegration.SSP33):
+    from proteus import TimeIntegration
     """
     Wrapper for SSPRK time integration using EV
 
