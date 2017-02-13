@@ -61,7 +61,7 @@ class TestVOFrotationEV():
            2. 2nd order MPP ...
            3. 2nd order non-MPP KUZMIN's with entropy viscosity, consistent mass matrix and art compression 
            4. 2nd order MPP KUZMIN's via FCT with entropy viscosity, consistent mass matrix and art comrpession
-        This test check some correctness of different components of the full algorithm 
+        This test checks some correctness of different components of the full algorithm 
         These are the flags used for VOF.h in this benchmark 
         #define KUZMINS_METHOD 1
         #define INTEGRATE_BY_PARTS 1
@@ -71,7 +71,7 @@ class TestVOFrotationEV():
         run_dir = os.path.dirname(os.path.abspath(__file__))
 
         #set the time step
-        vf.p.T = 1.0
+        vf.p.T = 0.1
         vf.n.nDTout = 10
         vf.n.DT = vf.p.T/float(vf.n.nDTout)
         vf.so.DT = vf.n.DT
@@ -237,7 +237,7 @@ class TestVOFrotationEV():
         Test total mass for SSP33 Integration running for any final time. 
         The following method is considered
            2nd order MPP KUZMIN's via FCT with entropy viscosity, consistent mass matrix and art comrpession
-        This test check some correctness of different components of the full algorithm 
+        This test checks some correctness of different components of the full algorithm 
         These are the flags used for VOF.h in this benchmark 
         #define KUZMINS_METHOD 1
         #define INTEGRATE_BY_PARTS 1
@@ -247,7 +247,7 @@ class TestVOFrotationEV():
         run_dir = os.path.dirname(os.path.abspath(__file__))
 
         #set the time step
-        vf.p.T = 1.0
+        vf.p.T = 0.1
         vf.n.nDTout = 10
         vf.n.DT = vf.p.T/float(vf.n.nDTout)
         vf.so.DT = vf.n.DT
@@ -348,7 +348,6 @@ class TestVOFrotationEV():
         sim_name = ns.modelList[0].name
         # READ REFERENCE 
         ref_total_mass = np.loadtxt(os.path.join(run_dir,'comparison_files','total_mass_comp_0_T1_rotation_c0p1_SSP33_EdgeBasedEV_level_3_vof.txt'))
-        #ref_total_mass = np.loadtxt(os.path.join(run_dir,'comparison_files','total_mass_comp_0_T1_'+sim_name+'.txt'))
         # end of reading reference 
 
         aux = ns.auxiliaryVariables[ns.modelList[0].name][0]
