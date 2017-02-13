@@ -324,8 +324,8 @@ cdef class HsuSedStress:
     def betaCoeff(self,
                      sedF,
                   rhoFluid,
-                  numpy.ndarray uFluid,
-                     numpy.ndarray uSolid,
+                  uFluid,
+                  uSolid,
                      nu):
         """ Function for calculating equation (7) from Chen and Hsu, CACR 14-08, A Multidimensional TwoPhase Eulerian Model for Sediment Transport TwoPhaseEulerSedFoam (Version 1.0)
         http://www.coastal.udel.edu/~thsu/simulation_data_files/CACR-14-08.pdf
@@ -334,12 +334,14 @@ cdef class HsuSedStress:
         param: uSolid: Solid velocity vector [L/T]
         param: nu  : Fluid kinematic viscosity [L^2/T]
         """
-        return uFluid[0]
-#        return self.thisptr.betaCoeff(sedF,
-#                                   rhoFluid,
-#                                 < double * > uFluid.data,
-#                                  < double * > uSolid.data,
-#                                  nu)
+
+        cython.declare(UF=double[2])
+        cython.declare(US=double[2])
+        for ii in range(2):
+            UF[ii] = uFluid[ii]
+            US[ii] = uSolid[ii]
+        beta = self.thisptr.betaCoeff(sedF,rhoFluid,UF,US,nu)
+        return beta
 
     def gs0(self,sedF):
         """ Radial distribution function for collision closure,  equation (2.31) from  Hsu et al 2004 'On two-phase sediment transport:
