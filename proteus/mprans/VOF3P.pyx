@@ -61,9 +61,6 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * u_grad_trial_ref,
                                double * u_test_ref,
                                double * u_grad_test_ref,
-                               int nDOF_vel_trial_element, 
-                               int * vel_l2g,
-                               double * vel_grad_trial_ref,
                                double * mesh_trial_trace_ref,
                                double * mesh_grad_trial_trace_ref,
                                double * dS_ref,
@@ -292,9 +289,6 @@ cdef class VOF3P:
                           numpy.ndarray u_grad_trial_ref,
                           numpy.ndarray u_test_ref,
                           numpy.ndarray u_grad_test_ref,
-                          int nDOF_vel_trial_element, 
-                          numpy.ndarray vel_l2g,
-                          numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray mesh_trial_trace_ref,
                           numpy.ndarray mesh_grad_trial_trace_ref,
                           numpy.ndarray dS_ref,
@@ -383,9 +377,6 @@ cdef class VOF3P:
                                        <double*> u_grad_trial_ref.data,
                                        <double*> u_test_ref.data,
                                        <double*> u_grad_test_ref.data,
-                                       nDOF_vel_trial_element,
-                                       <int*> vel_l2g.data,
-                                       <double*> vel_grad_trial_ref.data,
                                        <double*> mesh_trial_trace_ref.data,
                                        <double*> mesh_grad_trial_trace_ref.data,
                                        <double*> dS_ref.data,
@@ -642,6 +633,200 @@ class NumericalFlux(
             getAdvectiveFluxBoundaryConditions,
             getDiffusiveFluxBoundaryConditions)
 
+class RKEV(proteus.TimeIntegration.SSP33):
+    """
+    Wrapper for SSPRK time integration using EV
+
+    ... more to come ...
+    """
+    def __init__(self, transport, timeOrder=1, runCFL=0.1):
+        #from proteus import TimeIntegration
+        proteus.TimeIntegration.SSP33.__init__(self, transport,runCFL=runCFL)
+        self.timeOrder = timeOrder  #order of approximation
+        self.nStages = timeOrder  #number of stages total
+        self.lstage = 0  #last stage completed
+        # storage vectors
+        # previous time step mass and solution dof per component
+        self.m_last = {}
+        #temporarily use this to stash previous solution since m_last used
+        #in EV transport models for previous solution value
+        self.m_last_save = {}
+        self.u_dof_last = {}
+        # per component stage values, list with array at each stage
+        self.m_stage = {}
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+             if transport.q.has_key(('m',ci)):
+                self.m_last[ci] = transport.q[('m',ci)].copy()
+                self.m_last_save[ci] = transport.q[('m',ci)].copy()
+
+                self.u_dof_last[ci] = transport.u[ci].dof.copy()
+                self.m_stage[ci] = []
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages+1):                    
+                    self.m_stage[ci].append(transport.q[('m',ci)].copy())
+                    self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
+        
+    #def set_dt(self, DTSET):
+    #    self.dt = DTSET #  don't update t
+    def choose_dt(self):
+        maxCFL = 1.0e-6
+        for ci in range(self.nc):
+            if self.cfl.has_key(ci):
+                maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
+        self.dt = self.runCFL/maxCFL
+        if self.dtLast == None:
+            self.dtLast = self.dt
+        # mwf debug
+        print "RKEv max cfl component ci dt dtLast {0} {1} {2} {3}".format(maxCFL,ci,self.dt,self.dtLast)
+        if self.dt/self.dtLast  > self.dtRatioMax:
+            self.dt = self.dtLast*self.dtRatioMax
+        self.t = self.tLast + self.dt
+        self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
+    def initialize_dt(self,t0,tOut,q):
+        """
+        Modify self.dt
+        """
+        self.tLast=t0
+        self.choose_dt()
+        self.t = t0+self.dt
+ 
+    def setCoefficients(self):
+        """
+        beta are all 1's here
+        mwf not used right now
+        """
+        self.alpha = numpy.zeros((self.nStages, self.nStages),'d')
+        self.dcoefs = numpy.zeros((self.nStages),'d')
+        
+    def updateStage(self):
+        """
+        Need to switch to use coefficients
+        """
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        self.lstage += 1
+        assert self.timeOrder in [1,3]
+        assert self.lstage > 0 and self.lstage <= self.timeOrder
+        if self.timeOrder == 3:
+            if self.lstage == 1:
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) #no need for .copy?
+                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
+                    #needs to be updated for non-scalar equations
+                    #these match what is in the hand-coded NumericalSolution
+                    self.transport.coefficients.u_dof_old = numpy.copy(self.transport.u[ci].dof)
+                    #this as used as last stage value in EV Transport model
+                    self.m_last[ci] = numpy.copy(self.transport.q[('m',ci)])
+
+            elif self.lstage == 2:
+                 for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) 
+                    self.u_dof_stage[ci][self.lstage] *= 1./4.
+                    self.u_dof_stage[ci][self.lstage] += 3./4.*self.u_dof_last[ci]
+                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
+                    self.m_stage[ci][self.lstage] *= 1./4.
+                    #mwf this has to be fixed
+                    #previous stage updated m_last to the stage value
+                    #either have another temporary here or have the VOF code use m_stage
+                    #instead of m_last
+                    self.m_stage[ci][self.lstage] += 3./4.*self.m_last_save[ci] 
+                   
+                    #needs to be updated for non-scalar equations
+                    #these match what is in the hand-coded NumericalSolution
+                    self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_stage[ci][self.lstage])
+                    self.m_last[ci] = numpy.copy(self.m_stage[ci][self.lstage])
+            elif self.lstage == 3:
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof)
+                    self.u_dof_stage[ci][self.lstage][:] *= 2.0/3.0
+                    self.u_dof_stage[ci][self.lstage][:] += 1.0/3.0*self.u_dof_last[ci]
+                    #switch  time history back
+                    #this needs to be updated for multiple components
+                    self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_last[ci])
+                    self.transport.u[ci].dof = numpy.copy(self.u_dof_stage[ci][self.lstage])
+                    self.m_last[ci] = numpy.copy(self.m_last_save[ci])
+                    self.transport.getResidual(self.u_dof_stage[ci][self.lstage],
+                                               self.transport.globalResidualDummy)
+                    
+        else:
+            assert self.timeOrder == 1
+            for ci in range(self.nc):
+                self.m_stage[ci][self.lstage][:]=self.transport.q[('m',ci)][:]
+                self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
+ 
+            
+
+    def initializeTimeHistory(self,resetFromDOF=True):
+        """
+        Push necessary information into time history arrays
+        """
+        for ci in range(self.nc):
+            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
+ 
+    def updateTimeHistory(self,resetFromDOF=False):
+        """
+        assumes successful step has been taken
+        """
+        #mwf
+        #import pdb;
+        #pdb.set_trace()
+        
+        self.t = self.tLast + self.dt
+        for ci in range(self.nc):
+            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
+            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+            for k in range(self.nStages):
+                self.m_stage[ci][k][:]=self.transport.q[('m',ci)][:]
+                self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
+        self.lstage=0
+        self.dtLast = self.dt
+        self.tLast = self.t
+    def generateSubsteps(self,tList):
+        """
+        create list of substeps over time values given in tList. These correspond to stages
+        """
+        self.substeps = []
+        tLast = self.tLast
+        for t in tList:
+            dttmp = t-tLast
+            self.substeps.extend([tLast + dttmp for i in range(self.nStages)])
+            tLast = t
+
+    def resetOrder(self,order):
+        """
+        initialize data structures for stage updges
+        """
+        self.timeOrder = order  #order of approximation
+        self.nStages = order  #number of stages total
+        self.lstage = 0  #last stage completed
+        # storage vectors
+        # per component stage values, list with array at each stage
+        self.m_stage = {}
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+             if self.transport.q.has_key(('m',ci)):
+                self.m_stage[ci] = []
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages+1):                    
+                    self.m_stage[ci].append(self.transport.q[('m',ci)].copy())
+                    self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
+        self.substeps = [self.t for i in range(self.nStages)]            
+    def setFromOptions(self,nOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        flags = ['timeOrder']
+        for flag in flags:
+            if flag in dir(nOptions):
+                val = getattr(nOptions,flag)
+                setattr(self,flag,val)
+                if flag == 'timeOrder':
+                    self.resetOrder(self.timeOrder)
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import VOFCoefficientsEvaluate
@@ -1721,7 +1906,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
                         self.timeIntegration.t)
         assert (self.coefficients.q_porosity == 1).all()
-
+        
         self.vof.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1734,10 +1919,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
-            # trial grads on vel Space
-            self.coefficients.nDOF_vel_trial_element,
-            self.coefficients.vel_l2g,
-            self.coefficients.velSpace_grad_psi,
             # element boundary
             self.u[0].femSpace.elementMaps.psi_trace,
             self.u[0].femSpace.elementMaps.grad_psi_trace,
