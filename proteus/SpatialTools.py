@@ -1054,13 +1054,13 @@ def _generateMesh(domain):
     # --------------------------- #
     mesh = domain.MeshOptions
     if mesh.outputFiles['poly'] is True:
-        domain.writePoly(mesh.outputFiles['name'])
+        domain.writePoly(mesh.outputFiles_name)
     if mesh.outputFiles['ply'] is True:
-        domain.writePLY(mesh.outputFiles['name'])
+        domain.writePLY(mesh.outputFiles_name)
     if mesh.outputFiles['asymptote'] is True:
-        domain.writeAsymptote(mesh.outputFiles['name'])
-    if mesh.outputFiles['geo'] is True:
-        domain.writeGeo(mesh.outputFiles['name'])
+        domain.writeAsymptote(mesh.outputFiles_name)
+    if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
+        domain.writeGeo(mesh.outputFiles_name)
     mesh.setTriangleOptions()
     logEvent("""Mesh generated using: tetgen -%s %s"""  %
         (mesh.triangleOptions, domain.polyfile+".poly"))
