@@ -2631,17 +2631,8 @@ class OperatorConstructor:
         """Define the quadrature type used to build operators.
         
         """
-        _nd = self.OLT.coefficients.nd
-        # TBD - find a better way to get the order??
-        _order = 3
-        if _nd == 2 and self.OLT.mesh.nNodes_element==4:
-            quad_mesh = True
-        if quad_mesh == True:
-            self._elementQuadrature = Quadrature.CubeGaussQuadrature(nd=_nd,
-                                                                    order=_order)
-        else:
-            self._elementQuadrature = Quadrature.SimplexGaussQuadrature(nd=_nd,
-                                                                    order=_order)
+        self._elementQuadrature = self.OLT._elementQuadrature
+        self._elementBoundaryQuadrature = self.OLT._elementBoundaryQuadrature
 
     def _attachJacobianInfo(self,Q):
         """ This helper function attaches quadrature data related to 'J'
@@ -2992,7 +2983,6 @@ class OperatorConstructor:
             elementQuadratureDict[('m',ci)] = self._elementQuadrature
         (elementQuadraturePoints,elementQuadratureWeights,
          elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
-
         for ci in range(self.OLT.nc):
             if Q.has_key(('w*dV_m',ci)):
                 cfemIntegrals.calculateWeightedShape(elementQuadratureWeights[('m',ci)],

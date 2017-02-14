@@ -23,6 +23,21 @@ proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 
 class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
 
+    def setup_method(self,method):
+        self.petsc_options = p4pyPETSc.Options()
+
+    def teardown_method(self,method):
+        # ARB TODO - There must be a better way to do this...
+        rm_lst = []
+        aux_names = ['innerPCDsolver_Ap_',
+                     'innerPCDsolver_Qp_',
+                     'innerLSCsolver_BTinvBt_',
+                     'innerLSCsolver_T_']
+        for name in aux_names:
+            rm_lst.extend([name+g for g in ['ksp_type','pc_type']])
+        for element in rm_lst:
+            self.petsc_options.delValue(element)
+
     def test_pcd_shell(self):
         '''  Tests the pcd_shell operators produce correct output. '''
         vals_Qp = [1., 3., 1.5, -2.1, 4., 3.]
@@ -41,7 +56,11 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
                                                 csr = (row_idx_Fp,col_idx_Fp,vals_Fp))
         petsc_matAp = p4pyPETSc.Mat().createAIJ(size = (size_n,size_n), 
                                                 csr = (row_idx_Ap,col_idx_Ap,vals_Ap))
-        PCD_shell = LinearAlgebraTools.PCDInv_shell(petsc_matQp,petsc_matFp,petsc_matAp)
+        self.petsc_options.setValue('innerPCDsolver_Ap_ksp_type','preonly')
+        self.petsc_options.setValue('innerPCDsolver_Qp_ksp_type','preonly')
+        self.petsc_options.setValue('innerPCDsolver_Ap_pc_type','lu')
+        self.petsc_options.setValue('innerPCDsolver_Qp_pc_type','lu')
+        PCD_shell = LinearAlgebraTools.PCDInv_shell(petsc_matQp , petsc_matFp , petsc_matAp)
         x_vec = np.ones(size_n)
         y_vec = np.zeros(size_n)
         x_PETSc_vec = p4pyPETSc.Vec().createWithArray(x_vec)
@@ -94,6 +113,10 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
                                                 csr = (row_idx_B,col_idx_B,vals_B))
         petsc_matF = p4pyPETSc.Mat().createAIJ(size = (num_B_cols,num_B_cols), 
                                                 csr = (row_idx_F,col_idx_F,vals_F))
+        self.petsc_options.setValue('innerLSCsolver_BTinvBt_ksp_type','preonly')
+        self.petsc_options.setValue('innerLSCsolver_T_ksp_type','preonly')
+        self.petsc_options.setValue('innerLSCsolver_BTinvBt_pc_type','lu')
+        self.petsc_options.setValue('innerLSCsolver_T_pc_type','lu')
         LSC_shell = LinearAlgebraTools.LSCInv_shell(petsc_matA,petsc_matB,petsc_matF)
         x_vec = np.ones(num_B_rows)
         y_vec = np.zeros(num_B_rows)

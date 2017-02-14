@@ -429,6 +429,12 @@ class InvOperatorShell(OperatorShell):
         tmp.setSizes(size)
         return tmp
 
+    def _create_constant_nullspace(self):
+        """Initialize a constant null space. """
+        self.const_null_space = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                                             vectors = (),
+                                                             constant = True)
+    
     def _converged_trueRes(self,ksp,its,rnorm):
         """ Function handle to feed to ksp's setConvergenceTest  """
         ksp.buildResidual(self.r_work)
@@ -611,6 +617,118 @@ class MatrixInvShell(InvOperatorShell):
         """
         self.ksp.solve(x,y)
 
+class TwoPhase_PCDInv_shell(InvOperatorShell):
+    r""" Shell class for the two-phase PCD preconditioner.  The
+    two-phase PCD_inverse shell applies the following operator.
+
+    .. math::
+
+        \hat{S}^{-1} = (Q^{(1 / \mu)})^{-1} + (A_{p}^{(1 / \rho)})^{-1}
+        (N_{p}^{(\rho)} + \dfrac{\alpha}{\Delta t} Q^{(\rho)} ) 
+        (Q^{(\rho)})^{-1}
+
+    where :math:`Q^{(1 / \mu)}` and :math:`Q^{(\rho)}` denote the pressure 
+    mass matrix scaled by the inverse dynamic viscosity and density
+    respectively, :math:`(A_{p}^{(1 / \rho)})^{-1}`
+    denotes the pressure Laplacian scaled by inverse density, and
+    :math:`N_{p}^{(\rho)}` denotes the pressure advection operator scaled by
+    the density, and :math:`\alpha` is a binary operator indicating 
+    whether the problem is temporal or steady state.
+    """
+    def __init__(self,
+                 Qp_visc,
+                 Qp_dens,
+                 Ap_rho,
+                 Np_rho,
+                 alpha = False,
+                 delta_t = 0):
+        """ Initialize the two-phase PCD inverse operator.
+        
+        Parameters
+        ----------
+        Qp_visc : petsc4py matrix
+                  The pressure mass matrix with dynamic viscocity
+                  scaling.
+        Qp_dens : petsc4py matrix
+                  The pressure mass matrix with density scaling.
+        Ap_rho : petsc4py matrix
+                 The pressure Laplacian scaled with density scaling.
+        Np_rho : petsc4py matrix
+                 The pressure advection operator with inverse density
+                 scaling.
+        alpha : binary
+                True if problem is temporal, False if problem is steady
+                state.
+        delta_t : float
+                Time step parameter.
+        """
+        self.Qp_visc = Qp_visc
+        self.Qp_dens = Qp_dens
+        self.Ap_rho = Ap_rho
+        self.Np_rho = Np_rho
+        self.alpha = alpha
+        self.delta_t = delta_t
+
+        # TODO ARB - Need to implement the Chebyshev semi-iteration for
+        # mass matrix solves.
+
+        # Initialize mass matrix inverses.
+        self.kspQp_visc = p4pyPETSc.KSP().create()
+        self.kspQp_visc.setOperators(self.Qp_visc,self.Qp_visc)
+        self.kspQp_visc.setOptionsPrefix('innerTPPCDsolver_Qp_visc_')
+
+        self.kspQp_dens = p4pyPETSc.KSP().create()
+        self.kspQp_dens.setOperators(self.Qp_visc,self.Qp_visc)
+        self.kspQp_dens.setOptionsPrefix('innerTPPCDsolver_Qp_dens_')
+
+        # Initialize Laplacian inverse.
+        self._create_constant_nullspace()
+        self.kspAp_rho.setNullSpace(self.const_null_space)
+        self.kspAp_rho = p4pyPETSc.KSP().create()
+        self.kspAp_rho.setOperators(self.Ap_rho,self.Ap_rho)
+        self.kspAp_rho.setOptionsPrefix('innerTPPCDsolver_Ap_rho_')
+        self.kspAp_rho.setFromOptions()
+        self.kspAp_rho.setUp()
+
+    def apply(self,A,x,y):
+        """Apply the two-phase pressure-convection-diffusion preconditioner 
+
+        Parameters
+        ----------
+        A : None
+            Dummy variabled needed to interface with PETSc
+        x : petsc4py vector
+            Vector to which operator is applied
+
+        Returns
+        -------
+        y : petsc4py vector
+            Result of operator acting on x.
+        """
+        # TODO ARB - write a subroutine in InvOperatorShell
+        # to create petsc4py vectors
+        tmp1.setType('seq')
+        tmp1 = p4pyPETSc.Vec().create()
+        tmp2.setType('seq')
+        tmp2 = p4pyPETSc.Vec().create()
+        tmp3.setType('seq')
+        tmp3 = p4pyPETSc.Vec().create()
+        tmp1 = y.copy()
+        tmp2 = y.copy()
+        tmp3 = y.copy()
+
+        self.kspQp_visc.solve(x,y)
+        self.kspQp_dens.solve(x,tmp1)
+
+        self.Np_rho.mult(tmp1,tmp2)
+        if self.alpha==True:
+            tmp2.axpy(1./self.delta_t,x)
+
+        self.kspAp_rho.solve(tmp2,tmp3)
+        
+        y.axpy(1.,tmp3)
+        
+ 
 class PCDInv_shell(InvOperatorShell):
     """ Shell class for the PCD Inverse preconditioner """
     def __init__(self,Qp_matrix,Fp_matrix,Ap_matrix):
@@ -630,33 +748,25 @@ class PCDInv_shell(InvOperatorShell):
         self.Fp = Fp_matrix
         self.Ap = Ap_matrix
         # initialize kspAp
-        self.nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
-                                           vectors = (),
-                                           constant = True)
-        self.Ap.setNullSpace(self.nsp)
-        prefix = p4pyPETSc.Options()
-#        prefix.setValue('ksp_max_it','70')
+        self._create_constant_nullspace()
+        self._options = p4pyPETSc.Options()
+        #ARB - I need to look at this on a different problem, but I'm not sure why
+        # the has_constant_null space flag does not set a constant null space on the
+        # operator matrix.  It may be that the function tests for it, so I want to
+        # check with a problem that actually has a constant null space.  The following
+        # logic may not be necessary.
+        if self._options.hasName('innerPCDsolver_Ap_ksp_constant_null_space'):
+            self.Ap.setNullSpace(self.const_null_space)
+        # ARB - I think the lines above are best handled from the petsc command line
+        # arguments.  Remove before merge if no issues.
+        # ARB does this prefix need to be here?
+        # I think the answer to this is no since its gone!
         self.kspAp = p4pyPETSc.KSP().create()
         self.kspAp.setOperators(self.Ap,self.Ap)
         self.kspAp.setOptionsPrefix('innerPCDsolver_Ap_')
-#        self.kspAp.setType('fgmres')
-#        self.kspAp.pc.setType('ilu')
-#        self.kspAp.pc.setType('hypre')
- #       self.kspAp.pc.setHYPREType('boomeramg')
+        # ARB - I don't think this pc.setUp() call is necessary.
         self.kspAp.pc.setUp()
         self.kspAp.setFromOptions()
-        # ARB - Add null space here..
-        self.kspAp.setUp()
-#        import pdb ; pdb.set_trace()
-        # initialize kspQp
-        self.kspQp = p4pyPETSc.KSP().create()
-        self.kspQp.setOperators(self.Qp,self.Qp)
-        self.kspQp.setOptionsPrefix('innerPCDsolver_Qp_')
-#        self.kspQp.setType('preonly')
-#        self.kspQp.pc.setType('lu')
-        self.kspQp.setFromOptions()
-        self.kspQp.setUp()
-        #
         convergenceTest = 'r-true'
         if convergenceTest == 'r-true':
             self.r_work = self.Ap.getVecLeft()
@@ -666,7 +776,13 @@ class PCDInv_shell(InvOperatorShell):
             self.r_work = None        
         self.kspAp.setUp()
 
-
+        # initialize kspQp
+        self.kspQp = p4pyPETSc.KSP().create()
+        self.kspQp.setOperators(self.Qp,self.Qp)
+        self.kspQp.setOptionsPrefix('innerPCDsolver_Qp_')
+        self.kspQp.setFromOptions()
+        self.kspQp.setUp()
+        
     def apply(self,A,x,y):
         """  
         Apply the inverse pressure-convection-diffusion operator.
@@ -683,9 +799,12 @@ class PCDInv_shell(InvOperatorShell):
         y : petsc4py vector
             Result of operator acting on x.
         """
+        # TODO ARB - 02/10/17 Should we apply the operator
+        # in the reserve order?
         x_tmp = p4pyPETSc.Vec().create()
         x_tmp = x.copy()
-        self.nsp.remove(x_tmp)
+        if self._options.hasName('innerPCDsolver_Ap_ksp_constant_null_space'):
+            self.const_null_space.remove(x_tmp)
         temp1 = p4pyPETSc.Vec().create()
         # create a copy / duplicate of the vector x ...
         temp1.setType('seq')
@@ -696,7 +815,6 @@ class PCDInv_shell(InvOperatorShell):
         self.kspAp.solve(x_tmp,temp1)
         self.Fp.mult(temp1,temp2)
         self.kspQp.solve(temp2,y)
-
 
 
 class LSCInv_shell(InvOperatorShell):
@@ -737,7 +855,6 @@ class LSCInv_shell(InvOperatorShell):
         # operator.  I don't think this is the best approach but
         # in case I want to explore this in the future I've
         # left it in.
-#        import pdb ; pdb.set_trace()
         # L_size = self.B.size[0]
         # L_sizes = (L_size,L_size)
         # self.BQinvBt = p4pyPETSc.Mat().create()
@@ -749,15 +866,13 @@ class LSCInv_shell(InvOperatorShell):
         
         # initialize (B Q_hat B')
         self.__constructBQinvBt()
+        self._options = p4pyPETSc.Options()
         
         # initialize (B Q_hat B') solver
         # ARB - Adding a null space ...
-        self.nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
-                                                vectors = (),
-                                                constant = True)
-        self.BQinvBt.setNullSpace(self.nsp)
-
-#        prefix = p4pyPETSc.Options()
+        self._create_constant_nullspace()
+        if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
+            self.BQinvBt.setNullSpace(self.const_null_space)
 
         self.kspBQinvBt = p4pyPETSc.KSP().create()
         self.kspBQinvBt.setOperators(self.BQinvBt,self.BQinvBt)
@@ -770,7 +885,6 @@ class LSCInv_shell(InvOperatorShell):
         self.kspQv = p4pyPETSc.KSP().create()
         self.kspQv.setOperators(self.Qv,self.Qv)
         self.kspQv.setOptionsPrefix('innerLSCsolver_T_')
-#        import pdb ; pdb.set_trace()
         self.kspQv.setFromOptions()
         
         convergenceTest = 'r-true'
@@ -788,7 +902,8 @@ class LSCInv_shell(InvOperatorShell):
         B_sizes = self.B.getSizes()
         x_tmp = p4pyPETSc.Vec().create()
         x_tmp = x.copy()
-        self.nsp.remove(x_tmp)
+        if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
+            self.const_null_space.remove(x_tmp)
         tmp1 = self._create_tmp_vec(B_sizes[0])
         tmp2 = self._create_tmp_vec(B_sizes[1])
         tmp3 = self._create_tmp_vec(B_sizes[1])
@@ -799,7 +914,8 @@ class LSCInv_shell(InvOperatorShell):
         self.F.mult(tmp3,tmp2)
         self.kspQv.solve(tmp2,tmp3)
         self.B.mult(tmp3,tmp1)
-        self.nsp.remove(tmp1)
+        if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
+            self.const_null_space.remove(x_tmp)
         self.kspBQinvBt.solve(tmp1,y)
         
     def __constructBQinvBt(self):
