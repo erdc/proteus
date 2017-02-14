@@ -29,7 +29,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         if self.lag:
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             self.lag = True
             self.numDiff_last=[]
             for ci in range(self.nc):
@@ -165,7 +165,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.backgroundDiffusionFactor=backgroundDiffusionFactor
         self.weakDirichletFactor=weakDirichletFactor
     def attachModels(self,modelList):
-        if self.nModelId != None:
+        if self.nModelId is not None:
             self.nModel = modelList[self.nModelId]
             self.q_u0 =   self.nModel.q[('u',0)]
             if self.nModel.ebq.has_key(('u',0)):
@@ -179,30 +179,30 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.h=mesh.h
         self.eps = self.epsFact*mesh.h
     def initializeElementQuadrature(self,t,cq):
-        if self.nModelId == None:
-            if self.q_u0 == None:
+        if self.nModelId is None:
+            if self.q_u0 is None:
                 self.q_u0 = numpy.zeros(cq[('u',0)].shape,'d')
-            if self.u0 != None:
+            if self.u0 is not None:
                 for i in range(len(cq[('u',0)].flat)):
                     self.q_u0.flat[i]=self.u0.uOfXT(cq['x'].flat[3*i:3*(i+1)],0.)
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.nModelId == None:
-            if self.ebq_u0 == None:
+        if self.nModelId is None:
+            if self.ebq_u0 is None:
                 self.ebq_u0 = numpy.zeros(cebq[('u',0)].shape,'d')
-            if self.u0 != None:
+            if self.u0 is not None:
                 for i in range(len(cebq[('u',0)].flat)):
                     self.ebq_u0.flat[i]=self.u0.uOfXT(cebq['x'].flat[3*i:3*(i+1)],0.)
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.nModelId == None:
-            if self.ebqe_u0 == None:
+        if self.nModelId is None:
+            if self.ebqe_u0 is None:
                 self.ebqe_u0 = numpy.zeros(cebqe[('u',0)].shape,'d')
-            if self.u0 != None:
+            if self.u0 is not None:
                 for i in range(len(cebqe[('u',0)].flat)):
                     self.ebqe_u0.flat[i]=self.u0.uOfXT(cebqe['x'].flat[3*i:3*(i+1)],0.)
     def preStep(self,t,firstStep=False):
         import pdb
         #pdb.set_trace()
-        if self.nModel != None:
+        if self.nModel is not None:
             logEvent("resetting signed distance level set to current level set",level=2)
             self.rdModel.u[0].dof[:] = self.nModel.u[0].dof[:]
             self.rdModel.calculateCoefficients()
@@ -224,7 +224,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             return {}
     def postStep(self,t,firstStep=False):
-        if self.nModel != None:
+        if self.nModel is not None:
             if self.applyRedistancing == True:
                 logEvent("resetting level set to signed distance")
                 self.nModel.u[0].dof.flat[:]  = self.rdModel.u[0].dof.flat[:]
@@ -250,7 +250,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             u0 = self.ebqe_u0
         else:
             u0 = self.ebq_u0
-        assert u0 != None
+        assert u0 is not None
         ##\todo make redistancing epsilon depend on local element diamater instead of global max
         self.redistanceLevelSetCoefficientsEvaluate(self.eps,
                                                     u0,
@@ -459,7 +459,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for ci in range(self.nc):
                 if coefficients.mass.has_key(ci):
                     for flag in coefficients.mass[ci].values():
@@ -489,8 +489,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or 
+                                                 (numericalFluxType is not None) or 
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -523,7 +523,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[I] = elementQuadrature
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(I):
@@ -532,7 +532,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature['default']
                 else:
                     elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(('numDiff',ci,ci)):
@@ -660,7 +660,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
              self.timeIntegration = TimeIntegrationClass(self)
 
-        if options != None:
+        if options is not None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
         logEvent("Calculating numerical quadrature formulas",2)
@@ -670,11 +670,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
-            assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
+            assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
-        if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+        if numericalFluxType is not None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -948,10 +948,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
     def calculateElementBoundaryQuadrature(self):
         pass
