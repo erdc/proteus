@@ -2834,6 +2834,68 @@ static PyObject* ctransportCoefficientsConservativeHeadRichardsBCBfromMVGHomEval
   return Py_None;
 }
 
+static PyObject* ctransportCoefficientsLaplace_2D_Evaluate(PyObject* self,
+							PyObject* args)
+{
+  // Need to double check I'm not adding too many attributes here.
+  int i,nPoints=1;
+  PyObject *u,*v,*p,*mom_u_diff_ten,*mom_v_diff_ten,*mom_p_diff_ten ;
+
+  if (!PyArg_ParseTuple(args,"OOOOOO",
+			&p,
+			&u,
+			&v,
+			&mom_p_diff_ten,
+			&mom_u_diff_ten,
+			&mom_v_diff_ten))
+  return NULL;
+
+  for (i=0;i<ND(p);i++){
+    nPoints *= SHAPE(p)[i];
+  }
+
+  Laplace_Evaluate2D(nPoints,
+		   DDATA(mom_p_diff_ten),
+		   DDATA(mom_u_diff_ten),
+		   DDATA(mom_v_diff_ten));
+
+  Py_INCREF(Py_None);
+  return Py_None;	
+}
+
+static PyObject* ctransportCoefficientsLaplace_3D_Evaluate(PyObject* self,
+							PyObject* args)
+{
+  int i,nPoints=1;
+  PyObject *u,*v,*w,*p,*mom_u_diff_ten,*mom_v_diff_ten,
+           *mom_w_diff_ten, *mom_p_diff_ten ;
+
+  if (!PyArg_ParseTuple(args,"OOOOOOOO",
+			&p,
+			&u,
+			&v,
+			&w,
+			&mom_p_diff_ten,
+			&mom_u_diff_ten,
+			&mom_v_diff_ten,
+			&mom_w_diff_ten))
+  return NULL;
+
+  for (i=0;i<ND(p);i++){
+    nPoints *= SHAPE(p)[i];
+  }
+
+  Laplace_Evaluate3D(nPoints,
+		   DDATA(mom_p_diff_ten),
+		   DDATA(mom_u_diff_ten),
+		   DDATA(mom_v_diff_ten),
+		   DDATA(mom_w_diff_ten));
+
+  Py_INCREF(Py_None);
+  return Py_None;	
+}
+
+
 static PyObject* ctransportCoefficientsNavierStokes_2D_Evaluate(PyObject* self, 
                                                                 PyObject* args)
 {
@@ -9698,7 +9760,15 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
   { "Stokes_2D_Evaluate", 
     ctransportCoefficientsStokes_2D_Evaluate,
     METH_VARARGS, 
-    "evaluate the coefficients  of the 2D Stokes equations"}, 
+    "evaluate the coefficients  of the 2D Stokes equations"},
+  { "Laplace_2D_Evaluate",
+    ctransportCoefficientsLaplace_2D_Evaluate,
+    METH_VARARGS,
+    "evaluate the coefficients of the distcrete 2D Laplace operator"},
+  { "Laplace_3D_Evaluate",
+    ctransportCoefficientsLaplace_3D_Evaluate,
+    METH_VARARGS,
+    "evaluate the coefficients of the discrete 3D Laplace operator"},
   { "StokesP_2D_Evaluate", 
     ctransportCoefficientsStokesP_2D_Evaluate,
     METH_VARARGS, 
