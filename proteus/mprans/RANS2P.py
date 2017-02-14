@@ -57,7 +57,7 @@ class SubgridError(proteus.SubgridError.SGE_base):
         self.nSteps += 1
         if self.lag:
             self.v_last[:] = self.cq[('velocity',0)]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             logEvent("RANS2P.SubgridError: switched to lagged subgrid error")
             self.lag = True
             self.v_last = self.cq[('velocity',0)].copy()
@@ -99,7 +99,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         if self.lag:
             for ci in range(1,4):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             logEvent("RANS2P.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
             for ci in range(1,4):
@@ -173,7 +173,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.useRBLES=useRBLES
         self.useMetrics=useMetrics
         self.sd=sd
-        if epsFact_density != None:
+        if epsFact_density is not None:
             self.epsFact_density = epsFact_density
         else:
             self.epsFact_density = epsFact
@@ -327,7 +327,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model = modelList[self.ME_model]
         self.model.q['phi_solid'] = self.q_phi_solid
         self.model.q['velocity_solid'] = self.q_velocity_solid
-        if self.LS_model != None:
+        if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u',0)]
             if modelList[self.LS_model].ebq.has_key(('u',0)):
                 self.ebq_phi = modelList[self.LS_model].ebq[('u',0)]
@@ -348,7 +348,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.bc_ebqe_phi = 10.0*numpy.ones(self.model.ebqe[('u',1)].shape,'d')
             self.q_n = numpy.ones(self.model.q[('velocity',0)].shape,'d')
             self.ebqe_n    = numpy.ones(self.model.ebqe[('velocity',0)].shape,'d')
-        if self.VF_model != None:
+        if self.VF_model is not None:
             self.q_vf = modelList[self.VF_model].q[('u',0)]
             if modelList[self.VF_model].ebq.has_key(('u',0)):
                 self.ebq_vf = modelList[self.VF_model].ebq[('u',0)]
@@ -361,7 +361,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_vf = numpy.zeros(self.model.ebqe[('u',1)].shape,'d')
             self.bc_ebqe_vf = numpy.zeros(self.model.ebqe[('u',1)].shape,'d')
         #curvature
-        if self.KN_model != None:
+        if self.KN_model is not None:
             self.q_kappa    = modelList[self.KN_model].q[('u',0)]
             self.ebqe_kappa = modelList[self.KN_model].ebqe[('u',0)]
             if modelList[self.KN_model].ebq.has_key(('u',0)):
@@ -374,7 +374,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #Turbulence Closures
         #only option for now is k-epsilon
         self.q_turb_var = {}; self.q_turb_var_grad = {}; self.ebqe_turb_var = {};
-        if self.Closure_0_model != None:
+        if self.Closure_0_model is not None:
             self.q_turb_var[0] = modelList[self.Closure_0_model].q[('u',0)]
             self.q_turb_var_grad[0] = modelList[self.Closure_0_model].q[('grad(u)',0)]
             self.ebqe_turb_var[0] = modelList[self.Closure_0_model].ebqe[('u',0)]
@@ -382,13 +382,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.q_turb_var[0] = numpy.ones(self.model.q[('u',1)].shape,'d')
             self.q_turb_var_grad[0] = numpy.ones(self.model.q[('grad(u)',1)].shape,'d')
             self.ebqe_turb_var[0] = numpy.ones(self.model.ebqe[('u',1)].shape,'d')
-        if self.Closure_1_model != None:
+        if self.Closure_1_model is not None:
             self.q_turb_var[1] = modelList[self.Closure_1_model].q[('u',0)]
             self.ebqe_turb_var[1] = modelList[self.Closure_1_model].ebqe[('u',0)]
         else:
             self.q_turb_var[1] = numpy.ones(self.model.q[('u',1)].shape,'d')
             self.ebqe_turb_var[1] = numpy.ones(self.model.ebqe[('u',1)].shape,'d')
-        if self.epsFact_solid == None:
+        if self.epsFact_solid is None:
             self.epsFact_solid = numpy.ones(self.model.mesh.elementMaterialTypes.max()+1)
         assert len(self.epsFact_solid) > self.model.mesh.elementMaterialTypes.max(), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
 
@@ -404,7 +404,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.netForces_p = numpy.zeros((nBoundariesMax,3),'d')
         self.netForces_v = numpy.zeros((nBoundariesMax,3),'d')
         self.netMoments = numpy.zeros((nBoundariesMax,3),'d')
-        if self.barycenters == None:
+        if self.barycenters is None:
             self.barycenters = numpy.zeros((nBoundariesMax,3),'d')
         comm = Comm.get()
         import os
@@ -428,17 +428,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.q_dragAlpha.fill(self.dragAlpha)
         self.q_dragBeta= numpy.ones(cq[('u',1)].shape,'d')
         self.q_dragBeta.fill(self.dragBeta)
-        if self.setParamsFunc != None:
+        if self.setParamsFunc is not None:
             self.setParamsFunc(cq['x'],self.q_porosity,self.q_dragAlpha,self.q_dragBeta)
         else:
             #TODO make loops faster
-            if self.porosityTypes != None:
+            if self.porosityTypes is not None:
                 for eN in range(self.q_porosity.shape[0]):
                     self.q_porosity[eN,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-            if self.dragAlphaTypes != None:
+            if self.dragAlphaTypes is not None:
                 for eN in range(self.q_dragAlpha.shape[0]):
                     self.q_dragAlpha[eN,:] = self.dragAlphaTypes[self.elementMaterialTypes[eN]]
-            if self.dragBetaTypes != None:
+            if self.dragBetaTypes is not None:
                 for eN in range(self.q_dragBeta.shape[0]):
                     self.q_dragBeta[eN,:] = self.dragBetaTypes[self.elementMaterialTypes[eN]]
         #
@@ -449,11 +449,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebq_dragAlpha.fill(self.dragAlpha)
         self.ebq_dragBeta= numpy.ones(cebq['det(J)'].shape,'d')
         self.ebq_dragBeta.fill(self.dragBeta)
-        if self.setParamsFunc != None:
+        if self.setParamsFunc is not None:
             self.setParamsFunc(cebq['x'],self.ebq_porosity,self.ebq_dragAlpha,self.ebq_dragBeta)
         #TODO which mean to use or leave discontinuous
         #TODO make loops faster
-        if self.porosityTypes != None:
+        if self.porosityTypes is not None:
             for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                 ebN = self.mesh.interiorElementBoundariesArray[ebNI]
                 eN_left  = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -469,7 +469,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
                 ebN_element = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
                 self.ebq_porosity[eN,ebN_element,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-        if self.dragAlphaTypes != None:
+        if self.dragAlphaTypes is not None:
             for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                 ebN = self.mesh.interiorElementBoundariesArray[ebNI]
                 eN_left  = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -485,7 +485,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
                 ebN_element = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
                 self.ebq_dragAlpha[eN,ebN_element,:] = self.dragAlphaTypes[self.elementMaterialTypes[eN]]
-        if self.dragBetaTypes != None:
+        if self.dragBetaTypes is not None:
             for ebNI in range(self.mesh.nInteriorElementBoundaries_global):
                 ebN = self.mesh.interiorElementBoundariesArray[ebNI]
                 eN_left  = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -512,20 +512,20 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebqe_dragBeta.fill(self.dragBeta)
         logEvent("porosity and drag")
         #TODO make loops faster
-        if self.setParamsFunc != None:
+        if self.setParamsFunc is not None:
             self.setParamsFunc(cebqe['x'],self.ebqe_porosity,self.ebqe_dragAlpha,self.ebqe_dragBeta)
         else:
-            if self.porosityTypes != None:
+            if self.porosityTypes is not None:
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                     ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                     eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
                     self.ebqe_porosity[ebNE,:] = self.porosityTypes[self.elementMaterialTypes[eN]]
-            if self.dragAlphaTypes != None:
+            if self.dragAlphaTypes is not None:
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                     ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                     eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
                     self.ebqe_dragAlpha[ebNE,:] = self.dragAlphaTypes[self.elementMaterialTypes[eN]]
-            if self.dragBetaTypes != None:
+            if self.dragBetaTypes is not None:
                 for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
                     ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
                     eN  = self.mesh.elementBoundaryElementsArray[ebN,0]
@@ -652,9 +652,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                       t)
 
         else:
-            assert mesh != None
-            assert mesh_trial_ref != None
-            assert mesh_l2g != None
+            assert mesh is not None
+            assert mesh_trial_ref is not None
+            assert mesh_l2g is not None
             #cek hack
             pass
         #            self.calculateWaveFunction3d_ref(mesh_trial_ref,
@@ -779,7 +779,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization != None:
+	if self.stabilization is not None:
 	    for ci in range(self.nc):
 		if coefficients.mass.has_key(ci):
 		    for flag in coefficients.mass[ci].values():
@@ -809,8 +809,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
-                                                 (numericalFluxType != None) or
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or
+                                                 (numericalFluxType is not None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -843,7 +843,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[I] = elementQuadrature
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(I):
@@ -852,7 +852,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature['default']
                 else:
                     elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(('numDiff',ci,ci)):
@@ -1152,7 +1152,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
              self.timeIntegration = TimeIntegrationClass(self)
 
-        if options != None:
+        if options is not None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
         logEvent("Calculating numerical quadrature formulas",2)
@@ -1163,12 +1163,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
-            assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
+            assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
         logEvent("initalizing numerical flux")
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
-        if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+        if numericalFluxType is not None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -1226,7 +1226,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.MOVING_DOMAIN=1.0
         else:
             self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
         #cek/ido todo replace python loops in modules with optimized code if possible/necessary
         logEvent("dirichlet conditions")
@@ -1739,10 +1739,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[1].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[1].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
-        if self.stabilization != None and not domainMoved:
+        if self.stabilization is not None and not domainMoved:
             self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing != None and not domainMoved:
+        if self.shockCapturing is not None and not domainMoved:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
     def calculateElementBoundaryQuadrature(self, domainMoved=False):
         """
