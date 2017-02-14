@@ -1226,8 +1226,8 @@ def checkOrder(A):
 import NumericalFlux,cnumericalFlux
 class RusanovNumericalFlux_Diagonal_Diffusion_LDG(NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG):
     """
-    apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a) where
-    \lambda >= max |f^{\prime}| for a<= u <= b
+    apply numerical flus :math:`f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a)` where
+    :math:`\lambda >= max |f^{\prime}|` for :math:`a<= u <= b`
     this one applies flux to each component of flux separately
     """
     def __init__(self,vt,getPointwiseBoundaryConditions,
