@@ -59,7 +59,7 @@ class NS_base:  # (HasTraits):
        }
     """
 
-    def __init__(self, so,pList,nList,sList,opts,simFlagsList=None):
+    def __init__(self,so,pList,nList,sList,opts,simFlagsList=None):
         import Comm
         comm=Comm.get()
         self.comm=comm
@@ -359,7 +359,7 @@ class NS_base:  # (HasTraits):
                                                            os.path.exists(p.domain.polyfile+".node") and
                                                            os.path.exists(p.domain.polyfile+".face"))):
                     logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
-                    gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s}  -format mesh  -clmax {2:f} -clscale {2:f}".format(p.domain.geofile, p.domain.name+".mesh", p.domain.he)
+                    gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s}  -format mesh  -clmax {2:f}".format(p.domain.geofile, p.domain.name+".mesh", 0.5*p.domain.he)
 
                     logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
 
@@ -370,7 +370,7 @@ class NS_base:  # (HasTraits):
                     gmsh2tetgen_cmd = "gmsh2tetgen {0} {1:f} {2:d} {3:d} {4:d}".format(
                         p.domain.name+".mesh",
                         p.domain.length_scale,
-                        p.domain.permute_dims[0]+1,
+                        p.domain.permute_dims[0]+1,#switch to base 1 index...
                         p.domain.permute_dims[1]+1,
                         p.domain.permute_dims[2]+1)
 
@@ -452,17 +452,15 @@ class NS_base:  # (HasTraits):
         self.nlsList=[]
         from collections import OrderedDict
         self.modelSpinUp = OrderedDict()
-        #
         for p in pList:
             p.coefficients.opts = self.opts
             if p.coefficients.sdInfo == {}:
-                for ci,ckDict in p.coefficients.diffusion.iteritems():
-                    for ck in ckDict.keys():
-                        if not p.coefficients.sdInfo.has_key((ci,ck)):
-                            p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
-                                                              numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
-                            logEvent("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`p.coefficients.sdInfo[(ci,ck)]`)
-
+                 for ci,ckDict in p.coefficients.diffusion.iteritems():
+                     for ck in ckDict.keys():
+                         if not p.coefficients.sdInfo.has_key((ci,ck)):
+                             p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
+                                                               numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
+                             logEvent("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`p.coefficients.sdInfo[(ci,ck)]`)
         for p,n,s,mlMesh,index in zip(pList,nList,sList,mlMesh_nList,range(len(pList))):
             if so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True
@@ -671,8 +669,17 @@ class NS_base:  # (HasTraits):
         for index,m in self.modelSpinUp.iteritems():
             spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
         for index,m in enumerate(self.modelList):
+            logEvent("Attaching models to model "+p.name)
+            m.attachModels(self.modelList)
             if index not in self.modelSpinUp:
                 spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
+        for m in self.modelList:
+            for lm,lu,lr in zip(m.levelModelList,
+                                m.uList,
+                                m.rList):
+                #calculate the coefficients, any explicit-in-time
+                #terms will be wrong
+                lm.getResidual(lu,lr)
         for p,n,m,simOutput in spinup:
             logEvent("Attaching models to model "+p.name)
             m.attachModels(self.modelList)

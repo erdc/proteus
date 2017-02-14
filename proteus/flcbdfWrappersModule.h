@@ -1,6 +1,7 @@
 #ifndef FLCBDFWRAPPERSMODULE_H
 #define FLCBDFWRAPPERSMODULE_H 
 #include <cstddef>
+#include <complex>
 
 extern "C"
 {
@@ -28,6 +29,7 @@ namespace Daetk
 #endif
 #include "mpi.h"
 #include "hdf5.h"
+#include "H5FDmpio.h"
 #ifdef PETSC_INCLUDE_AS_C
 #define PETSC_RESTRICT __restrict__
 #define PETSC_C_RESTRICT __restrict__
