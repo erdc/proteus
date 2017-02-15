@@ -922,40 +922,32 @@ namespace proteus
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+      C=0.0;
       for (int i=0;i<nParticles;i++)
 	{
 	  phi_s = particle_signed_distance[i*sd_offset];
 	  u_s = particle_velocity[i*sd_offset*3+0];
 	  v_s = particle_velocity[i*sd_offset*3+1];
 	  w_s = particle_velocity[i*sd_offset*3+2];
+	  //skipping for now
 	  //update particle centroid velocity with angular here
 	  //particle_angular_velocity
 	  //particle_centroid
+	  //
 	  H_s = smoothedHeaviside(eps_s,phi_s);
 	  D_s = smoothedDirac(eps_s,phi_s);
-	  double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
 	  double rel_vel_norm=sqrt((uStar-u_s)*(uStar-u_s)+
 				   (vStar-v_s)*(vStar-v_s)+
 				   (wStar-w_s)*(wStar-w_s));
 	  double C_surf = viscosity*penalty;
 	  double C_vol = alpha + beta*rel_vel_norm;
-	  C = (D_s*C_surf + (1.0 - H_s)*C_vol);
-	  mom_u_source += C*(u-u_s);
-	  mom_v_source += C*(v-v_s);
-	  /* mom_w_source += C*(w-w_s); */
-	  
-	  dmom_u_source[0] = C;
-	  dmom_u_source[1] = 0.0;
-	  /* dmom_u_source[2] = 0.0; */
-	  
-	  dmom_v_source[0] = 0.0;
-	  dmom_v_source[1] = C;
-	  dmom_v_source[2] = 0.0;
-	  
-	  dmom_w_source[0] = 0.0;
-	  dmom_w_source[1] = 0.0;
-	  dmom_w_source[2] = C;
+	  C += (D_s*C_surf + (1.0 - H_s)*C_vol);
 	}
+      mom_u_source += C*(u-u_s);
+      mom_v_source += C*(v-v_s);
+      
+      dmom_u_source[0] += C;
+      dmom_v_source[1] += C;
     }
 
     inline

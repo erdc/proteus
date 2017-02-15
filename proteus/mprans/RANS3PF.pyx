@@ -2573,7 +2573,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
  		 fContact=0.02,
                  mContact=2.0,
                  nContact=5.0,
-                 angFriction=pi/6.0):
+                 angFriction=pi/6.0,
+                 particle_epsFact=3.0,
+                 particle_alpha=1000.0,
+                 particle_beta=1000.0,
+                 particle_penalty_constant=1000.0,
+                 particle_sdf=None):
+        self.particle_epsFact=particle_epsFact
+        self.particle_alpha=particle_alpha
+        self.particle_beta=particle_beta
+        self.particle_penalty_constant=particle_penalty_constant
+        self.particle_sdf=particle_sdf
         self.aDarcy=aDarcy
         self.betaForch=betaForch
         self.grain=grain
@@ -2762,13 +2772,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebqe_nu  = self.model.ebqe[('u',0)].copy()
         #DEM particles
         self.nParticles=1
-        self.particle_epsFact=3.0
-        self.particle_alpha=10.0
-        self.particle_beta=10.0
-        self.particle_penalty_constant=10.0
         self.particle_signed_distance=self.model.q[('u',0)].copy()
-        r = np.sqrt((self.model.q['x'][...,0] - 0.5)**2 + self.model.q['x'][...,1]**2)
-        self.particle_signed_distance[:] = r-0.1
+        for eN in range(self.model.q['x'].shape[0]):
+            for k in range(self.model.q['x'].shape[1]):
+                self.particle_signed_distance[eN,k] = self.particle_sdf(self.model.q['x'][eN,k])
         self.particle_velocity=self.model.q[('velocity',0)].copy()
         self.particle_velocity[:]=0.0
         self.particle_angular_velocity=self.model.q[('velocity',0)].copy()
