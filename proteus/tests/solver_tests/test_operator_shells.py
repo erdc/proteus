@@ -127,5 +127,66 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         true_solu = np.mat('[-0.01096996,0.00983216]')
         assert np.allclose(y_vec,true_solu)
 
+    def test_twp_pcd_shell_1(self):
+        ''' test example for a two-phase pcd shell with no temproal component '''
+        Qp_rho_vals = [0.1,0.4,7.1,0.4,1.2,3.4,8]
+        Qp_rho_col_idx = [0, 1, 1, 2, 0, 1, 2]
+        Qp_rho_row_idx = [0,2,4,7]
+        Qp_rho_num_rows = len(Qp_rho_row_idx) - 1
+        Qp_rho_petsc = p4pyPETSc.Mat().createAIJ(size = (Qp_rho_num_rows,Qp_rho_num_rows),
+                                                 csr = (Qp_rho_row_idx,Qp_rho_col_idx,Qp_rho_vals))
+
+        Qp_visc_vals = [1.1, 2.2, 0.3, 4.0, 8.3, 0.3, 6., 5.]
+        Qp_visc_col_idx = [0, 1, 2, 0, 1, 2, 0, 2]
+        Qp_visc_row_idx = [0, 3, 6, 8]
+        Qp_visc_num_rows = len(Qp_visc_row_idx) - 1
+        Qp_visc_petsc = p4pyPETSc.Mat().createAIJ(size = (Qp_visc_num_rows,Qp_visc_num_rows),
+                                                 csr = (Qp_visc_row_idx,Qp_visc_col_idx,Qp_visc_vals))
+
+        Np_vals = [3.2, 1.1, 6.3, 1.0, -5.1]
+        Np_col_idx = [0, 1, 1, 2, 2]
+        Np_row_idx = [0, 2, 4, 5]
+        Np_num_rows = len(Np_row_idx) - 1
+        Np_petsc = p4pyPETSc.Mat().createAIJ(size = (Np_num_rows,Np_num_rows),
+                                                 csr = (Np_row_idx,Np_col_idx,Np_vals))
+
+        Ap_vals = [0.6, 8.2, 1.0, 0.2, 1.2, 2.5]
+        Ap_col_idx = [0, 1, 2, 1, 0, 2]
+        Ap_row_idx = [0, 3, 4, 6]
+        Ap_num_rows = len(Ap_row_idx) - 1
+        Ap_petsc = p4pyPETSc.Mat().createAIJ(size = (Ap_num_rows,Ap_num_rows),
+                                                 csr = (Ap_row_idx,Ap_col_idx,Ap_vals))
+
+        self.petsc_options.setValue('innerTPPCDsolver_Qp_visc_ksp_type','preonly')
+        self.petsc_options.setValue('innerTPPCDsolver_Qp_dens_ksp_type','preonly')
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_ksp_type','preonly')
+        self.petsc_options.setValue('innerTPPCDsolver_Qp_visc_pc_type','lu')
+        self.petsc_options.setValue('innerTPPCDsolver_Qp_dens_pc_type','lu')
+        self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','lu')
+
+        TPPCD_shell_1 = LinearAlgebraTools.TwoPhase_PCDInv_shell(Qp_visc_petsc,
+                                                                 Qp_rho_petsc,
+                                                                 Ap_petsc,
+                                                                 Np_petsc)
+
+        TPPCD_shell_2 = LinearAlgebraTools.TwoPhase_PCDInv_shell(Qp_visc_petsc,
+                                                                 Qp_rho_petsc,
+                                                                 Ap_petsc,
+                                                                 Np_petsc,
+                                                                 True,
+                                                                 4)        
+
+        x_vec = np.ones(Ap_num_rows)
+        y_vec = np.zeros(Ap_num_rows)
+        x_vec_petsc = p4pyPETSc.Vec().createWithArray(x_vec)
+        y_vec_petsc = p4pyPETSc.Vec().createWithArray(y_vec)
+        A = None
+        TPPCD_shell_1.apply(A,x_vec_petsc,y_vec_petsc)
+        true_sol = np.mat('[211.32623352, 1.58465852, -96.29629194]')
+        assert np.allclose(y_vec,true_sol)
+        TPPCD_shell_2.apply(A,x_vec_petsc,y_vec_petsc)
+        true_sol = np.mat('[127.15956685,2.83465852,-55.79629194]')
+        assert np.allclose(y_vec,true_sol)
+        
 if __name__ == '__main__':
     pass
