@@ -48,6 +48,200 @@ class NumericalFlux(proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart)
         proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart.__init__(self,vt,getPointwiseBoundaryConditions,
                                                                              getAdvectiveFluxBoundaryConditions,
                                                                              getDiffusiveFluxBoundaryConditions)
+        
+class RKEV(proteus.TimeIntegration.SSP33):
+    """
+    Wrapper for SSPRK time integration using EV
+
+    ... more to come ...
+    """
+    def __init__(self, transport, timeOrder=1, runCFL=0.1):
+        proteus.TimeIntegration.SSP33.__init__(self, transport,runCFL=runCFL)
+        self.timeOrder = timeOrder  #order of approximation
+        self.nStages = timeOrder  #number of stages total
+        self.lstage = 0  #last stage completed
+        # storage vectors
+        # previous time step mass and solution dof per component
+        self.m_last = {}
+        #temporarily use this to stash previous solution since m_last used
+        #in EV transport models for previous solution value
+        self.m_last_save = {}
+        self.u_dof_last = {}
+        # per component stage values, list with array at each stage
+        self.m_stage = {}
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+             if transport.q.has_key(('m',ci)):
+                self.m_last[ci] = transport.q[('m',ci)].copy()
+                self.m_last_save[ci] = transport.q[('m',ci)].copy()
+
+                self.u_dof_last[ci] = transport.u[ci].dof.copy()
+                self.m_stage[ci] = []
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages+1):                    
+                    self.m_stage[ci].append(transport.q[('m',ci)].copy())
+                    self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
+        
+    #def set_dt(self, DTSET):
+    #    self.dt = DTSET #  don't update t
+    def choose_dt(self):
+        maxCFL = 1.0e-6
+        for ci in range(self.nc):
+            if self.cfl.has_key(ci):
+                maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
+        self.dt = self.runCFL/maxCFL
+        if self.dtLast == None:
+            self.dtLast = self.dt
+        # mwf debug
+        print "RKEv max cfl component ci dt dtLast {0} {1} {2} {3}".format(maxCFL,ci,self.dt,self.dtLast)
+        if self.dt/self.dtLast  > self.dtRatioMax:
+            self.dt = self.dtLast*self.dtRatioMax
+        self.t = self.tLast + self.dt
+        self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
+    def initialize_dt(self,t0,tOut,q):
+        """
+        Modify self.dt
+        """
+        self.tLast=t0
+        self.choose_dt()
+        self.t = t0+self.dt
+ 
+    def setCoefficients(self):
+        """
+        beta are all 1's here
+        mwf not used right now
+        """
+        self.alpha = numpy.zeros((self.nStages, self.nStages),'d')
+        self.dcoefs = numpy.zeros((self.nStages),'d')
+        
+    def updateStage(self):
+        """
+        Need to switch to use coefficients
+        """
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        self.lstage += 1
+        assert self.timeOrder in [1,3]
+        assert self.lstage > 0 and self.lstage <= self.timeOrder
+        if self.timeOrder == 3:
+            if self.lstage == 1:
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) #no need for .copy?
+                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
+                    #needs to be updated for non-scalar equations
+                    #these match what is in the hand-coded NumericalSolution
+                    self.transport.coefficients.u_dof_old = numpy.copy(self.transport.u[ci].dof)
+                    #this as used as last stage value in EV Transport model
+                    self.m_last[ci] = numpy.copy(self.transport.q[('m',ci)])
+
+            elif self.lstage == 2:
+                 for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) 
+                    self.u_dof_stage[ci][self.lstage] *= 1./4.
+                    self.u_dof_stage[ci][self.lstage] += 3./4.*self.u_dof_last[ci]
+                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
+                    self.m_stage[ci][self.lstage] *= 1./4.
+                    #mwf this has to be fixed
+                    #previous stage updated m_last to the stage value
+                    #either have another temporary here or have the VOF code use m_stage
+                    #instead of m_last
+                    self.m_stage[ci][self.lstage] += 3./4.*self.m_last_save[ci] 
+                   
+                    #needs to be updated for non-scalar equations
+                    #these match what is in the hand-coded NumericalSolution
+                    self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_stage[ci][self.lstage])
+                    self.m_last[ci] = numpy.copy(self.m_stage[ci][self.lstage])
+            elif self.lstage == 3:
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof)
+                    self.u_dof_stage[ci][self.lstage][:] *= 2.0/3.0
+                    self.u_dof_stage[ci][self.lstage][:] += 1.0/3.0*self.u_dof_last[ci]
+                    #switch  time history back
+                    #this needs to be updated for multiple components
+                    self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_last[ci])
+                    self.transport.u[ci].dof = numpy.copy(self.u_dof_stage[ci][self.lstage])
+                    self.m_last[ci] = numpy.copy(self.m_last_save[ci])
+                    self.transport.getResidual(self.u_dof_stage[ci][self.lstage],
+                                               self.transport.globalResidualDummy)
+                    
+        else:
+            assert self.timeOrder == 1
+            for ci in range(self.nc):
+                self.m_stage[ci][self.lstage][:]=self.transport.q[('m',ci)][:]
+                self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
+ 
+            
+
+    def initializeTimeHistory(self,resetFromDOF=True):
+        """
+        Push necessary information into time history arrays
+        """
+        for ci in range(self.nc):
+            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
+ 
+    def updateTimeHistory(self,resetFromDOF=False):
+        """
+        assumes successful step has been taken
+        """
+        #mwf
+        #import pdb;
+        #pdb.set_trace()
+        
+        self.t = self.tLast + self.dt
+        for ci in range(self.nc):
+            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
+            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+            for k in range(self.nStages):
+                self.m_stage[ci][k][:]=self.transport.q[('m',ci)][:]
+                self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
+        self.lstage=0
+        self.dtLast = self.dt
+        self.tLast = self.t
+    def generateSubsteps(self,tList):
+        """
+        create list of substeps over time values given in tList. These correspond to stages
+        """
+        self.substeps = []
+        tLast = self.tLast
+        for t in tList:
+            dttmp = t-tLast
+            self.substeps.extend([tLast + dttmp for i in range(self.nStages)])
+            tLast = t
+
+    def resetOrder(self,order):
+        """
+        initialize data structures for stage updges
+        """
+        self.timeOrder = order  #order of approximation
+        self.nStages = order  #number of stages total
+        self.lstage = 0  #last stage completed
+        # storage vectors
+        # per component stage values, list with array at each stage
+        self.m_stage = {}
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+             if self.transport.q.has_key(('m',ci)):
+                self.m_stage[ci] = []
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages+1):                    
+                    self.m_stage[ci].append(self.transport.q[('m',ci)].copy())
+                    self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
+        self.substeps = [self.t for i in range(self.nStages)]            
+    def setFromOptions(self,nOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        flags = ['timeOrder']
+        for flag in flags:
+            if flag in dir(nOptions):
+                val = getattr(nOptions,flag)
+                setattr(self,flag,val)
+                if flag == 'timeOrder':
+                    self.resetOrder(self.timeOrder)
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import ncLevelSetCoefficientsEvaluate
@@ -55,6 +249,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.NonlinearSolvers import EikonalSolver
 
     def __init__(self,
+                 EDGE_VISCOSITY=0, 
+                 ENTROPY_VISCOSITY=0,
+                 cE=1.0, 
+                 cMax=1.0,
+                 POWER_SMOOTHNESS_INDICATOR=2, 
+                 LUMPED_MASS_MATRIX=0,
+                 FCT=0,
                  V_model=0,
                  RD_model=None,
                  ME_model=1,
@@ -95,13 +296,20 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 	self.sc_uref=sc_uref
 	self.sc_beta=sc_beta
         self.waterline_interval = waterline_interval
+        # mql added
+        self.EDGE_VISCOSITY=EDGE_VISCOSITY
+        self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
+        self.POWER_SMOOTHNESS_INDICATOR=POWER_SMOOTHNESS_INDICATOR
+        self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
+        self.FCT=FCT
+        self.cE=cE
+        self.cMax=cMax
 
     def attachModels(self,modelList):
         #the level set model
         self.model = modelList[self.modelIndex]
-
-	#self.u_old_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
-	self.u_old_dof = self.model.u[0].dof.copy()
+        self.u_dof_old = numpy.copy(self.model.u[0].dof)
+        self.u_dof_old_old = numpy.copy(self.model.u[0].dof)
         #the velocity
         if self.flowModelIndex >= 0:
             self.flowModel = modelList[self.flowModelIndex]
@@ -159,6 +367,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.flowModelIndex == None:
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)',0)].shape,'d')
     def preStep(self,t,firstStep=False):
+	self.u_dof_old_old = numpy.copy(self.u_dof_old)
+	self.u_dof_old = numpy.copy(self.model.u[0].dof)
         # if self.checkMass:
         #     self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                              self.model.mesh.elementDiametersArray,
@@ -179,7 +389,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-        self.u_old_dof[:] = self.model.u[0].dof
+        if (self.FCT==1):
+            self.model.FCTStep()
         self.model.q['dV_last'][:] = self.model.q['dV']
         # if self.checkMass:
         #     self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
@@ -515,6 +726,14 @@ class LevelModel(OneLevelTransport):
 
         self.setupFieldStrides()
 
+	# Mass matrices 
+        self.ML=None #lumped mass matrix
+        self.MC_global=None #consistent mass matrix
+        self.flux_plus_dLij_times_soln=None
+        self.dL_minus_dE=None
+        self.min_u_bc=None
+        self.max_u_bc=None
+
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -599,6 +818,21 @@ class LevelModel(OneLevelTransport):
 	self.waterline_calls  = 0
 	self.waterline_prints = 0
 
+    def FCTStep(self):
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+        self.ncls.FCTStep(self.timeIntegration.dt, 
+                          self.nnz, #number of non zero entries 
+                          len(rowptr)-1, #number of DOFs
+                          self.ML, #Lumped mass matrix
+                          self.coefficients.u_dof_old, #soln
+                          self.u[0].dof, #solH
+                          self.flux_plus_dLij_times_soln, 
+                          rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
+                          colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
+                          MassMatrix, 
+                          self.dL_minus_dE,
+                          self.min_u_bc,
+                          self.max_u_bc)
 
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
@@ -613,6 +847,77 @@ class LevelModel(OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
+
+	# COMPUTE MASS MATRICES
+        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+        nnz = nzval.shape[-1] #number of non-zero entries in sparse matrix
+        # JACOBIANS (FOR ELEMENT TRANSFORMATION)
+        self.q[('J')] = numpy.zeros((self.mesh.nElements_global,
+                                     self.nQuadraturePoints_element,
+                                     self.nSpace_global,
+                                     self.nSpace_global),
+                                    'd')
+        self.q[('inverse(J)')] = numpy.zeros((self.mesh.nElements_global,
+                                              self.nQuadraturePoints_element,
+                                              self.nSpace_global,
+                                              self.nSpace_global),
+                                             'd')
+        self.q[('det(J)')] = numpy.zeros((self.mesh.nElements_global,
+                                          self.nQuadraturePoints_element),
+                                         'd')
+        self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
+                                                         self.q['J'],
+                                                         self.q['inverse(J)'],
+                                                         self.q['det(J)'])
+        self.q['abs(det(J))'] = numpy.abs(self.q['det(J)'])
+        # SHAPE FUNCTIONS
+        self.q[('w',0)] = numpy.zeros((self.mesh.nElements_global,
+                                       self.nQuadraturePoints_element,
+                                       self.nDOF_test_element[0]),
+                                      'd')
+        self.q[('w*dV_m',0)] = self.q[('w',0)].copy()
+        self.u[0].femSpace.getBasisValues(self.elementQuadraturePoints, self.q[('w',0)])
+        cfemIntegrals.calculateWeightedShape(self.elementQuadratureWeights[('u',0)],
+                                             self.q['abs(det(J))'],
+                                             self.q[('w',0)],
+                                             self.q[('w*dV_m',0)])
+        dm = numpy.ones(self.q[('u',0)].shape,'d')
+        elementMassMatrix = numpy.zeros((self.mesh.nElements_global,
+                                         self.nDOF_test_element[0],
+                                         self.nDOF_trial_element[0]),'d')
+        cfemIntegrals.updateMassJacobian_weak_lowmem(dm,
+                                                     self.q[('w',0)],
+                                                     self.q[('w*dV_m',0)],
+                                                     elementMassMatrix)
+        self.MC_a = nzval.copy()
+        self.MC_global = LinearAlgebraTools.SparseMat(self.nFreeDOF_global[0],
+                                                      self.nFreeDOF_global[0],
+                                                      nnz,
+                                                      self.MC_a,
+                                                      colind,
+                                                      rowptr)
+        cfemIntegrals.zeroJacobian_CSR(self.nnz, self.MC_global)
+        cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                  self.l2g[0]['freeLocal'],
+                                                                  self.l2g[0]['nFreeDOF'],
+                                                                  self.l2g[0]['freeLocal'],
+                                                                  self.csrRowIndeces[(0,0)],
+                                                                  self.csrColumnOffsets[(0,0)],
+                                                                  elementMassMatrix,
+                                                                  self.MC_global)
+        self.ML = numpy.zeros((self.nFreeDOF_global[0],),'d')
+        for i in range(self.nFreeDOF_global[0]):
+            self.ML[i] = self.MC_a[rowptr[i]:rowptr[i+1]].sum()
+        numpy.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
+
+        # This is dummy. I just care about the csr structure of the sparse matrix
+        self.dL_minus_dE = numpy.zeros(self.MC_global.shape,'d')
+        self.min_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
+        self.max_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
+        self.min_u_bc.fill(1E10);
+        self.max_u_bc.fill(-1E10);
+        self.flux_plus_dLij_times_soln = numpy.zeros(self.u[0].dof.shape,'d')
+
         #mwf debug
         #pdb.set_trace()
         r.fill(0.0)
@@ -665,7 +970,8 @@ class LevelModel(OneLevelTransport):
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.u[0].dof,
-	    self.coefficients.u_old_dof,
+	    self.coefficients.u_dof_old,
+	    self.coefficients.u_dof_old_old,
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
@@ -687,7 +993,29 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
-            self.ebqe[('u',0)])
+            self.ebqe[('u',0)], 
+            # PARAMETERS FOR EDGE BASED STABILIZATION 
+            self.coefficients.EDGE_VISCOSITY, 
+            self.coefficients.ENTROPY_VISCOSITY,
+            # PARAMETERS FOR CELL BASED ENTROPY VISCOSITY
+            self.coefficients.cE, 
+            self.coefficients.cMax, 
+            # PARAMETERS FOR EDGE VISCOSITY 
+            len(rowptr)-1,
+            self.nnz,
+            rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
+            colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
+            self.csrRowIndeces[(0,0)], #row indices (convenient for element loops)
+            self.csrColumnOffsets[(0,0)], #column indices (convenient for element loops)
+            self.csrColumnOffsets_eb[(0, 0)], #indices for boundary terms
+            # PARAMETERS FOR 1st and 2nd ORDER MPP METHOD 
+            self.coefficients.POWER_SMOOTHNESS_INDICATOR, 
+            self.coefficients.LUMPED_MASS_MATRIX,
+            # FLUX CORRECTED TRANSPORT
+            self.flux_plus_dLij_times_soln, 
+            self.dL_minus_dE, 
+            self.min_u_bc,
+            self.max_u_bc)
 
 	if self.forceStrongConditions:#
 	    for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -757,7 +1085,10 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.coefficients.rdModel.ebqe[('u',0)],
             self.numericalFlux.ebqe[('u',0)],
-            self.csrColumnOffsets_eb[(0,0)])
+            self.csrColumnOffsets_eb[(0,0)], 
+            self.coefficients.EDGE_VISCOSITY, 
+            self.coefficients.ENTROPY_VISCOSITY, 
+            self.coefficients.LUMPED_MASS_MATRIX)
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
@@ -869,7 +1200,7 @@ class LevelModel(OneLevelTransport):
                    self.u[0].femSpace.dofMap.l2g,
                    self.mesh.elementDiametersArray,
                    self.u[0].dof,
-	           self.coefficients.u_old_dof,
+	           self.coefficients.u_dof_old,
                    self.coefficients.q_v,
                    self.timeIntegration.m_tmp[0],
                    self.q[('u',0)],
