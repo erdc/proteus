@@ -14,23 +14,28 @@ import StupidHeap as SHeap
 #solvers
 ########################################################################
 class FMMEikonalSolver:
-    """
-    Encapsulate naive implementation of Fast Marching Methods on unstructured grids
-      for
+    """Encapsulate naive implementation of Fast Marching Methods on
+unstructured grids for
+
+    .. math::
+
       \|\grad T\| = 1/F
 
-      T = 0 on \Gamma
+    :math:`T = 0` on :math:`\Gamma`
 
     1d local solver is standard upwind approximation
-    2d local solver variations:
-       acute triangulations version 1 or version 2 from Qian Zhang etal 07
-       obtuse triangulation not implemented
+
+    2d local solver variations: acute triangulations version 1 or
+    version 2 from Qian Zhang etal 07 obtuse triangulation not
+    implemented
+
     3d local solver varitions: not fully checked
 
     For now, the input should be non-negative!
-    TODO:
-       3D version needs to be tested more
+
     """
+#    TODO:
+#       3D version needs to be tested more
     from proteus import cfmmfsw
     def __init__(self,mesh,dofMap,nSpace,localSolverType='QianEtalV2',frontInitType='magnitudeOnly',#'magnitudeOnly',
                  debugLevel=3):
@@ -109,24 +114,29 @@ class FMMEikonalSolver:
 
 
 class FSWEikonalSolver:
-    """
-    Encapsulate naive implementation of Fast Marching Methods on unstructured grids
+    """Encapsulate naive implementation of Fast Marching Methods on unstructured grids
       for
-      \|\grad T\| = 1/F
 
-      T = 0 on \Gamma
+    .. math::
+
+        \|\grad T\| = 1/F
+
+    :math:`T = 0` on :math:`\Gamma`
 
     1d local solver is standard upwind approximation
-    2d local solver variations:
-       acute triangulations version 1 or version 2 from Qian Zhang etal 07
-       obtuse triangulation not implemented
+
+    2d local solver variations: acute triangulations version 1 or
+    version 2 from Qian Zhang etal 07 obtuse triangulation not
+    implemented
+
     3d local solver variations: not fully checked
 
 
     For now, the input should be non-negative!
-    TODO:
-       3D version needs to be tested more
+
     """
+#    TODO:
+#       3D version needs to be tested more
     from proteus import cfmmfsw
 
     def __init__(self,mesh,dofMap,nSpace,iterAtol=1.0e-8,iterRtol=0.0,maxIts=100,
