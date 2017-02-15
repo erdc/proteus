@@ -662,6 +662,9 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         delta_t : float
                 Time step parameter.
         """
+        # ARB TODO : There should be an exception to ensure each of these
+        # matrices has non-zero elements along the diagonal.  I cannot
+        # think of a case where this would not be an error.
         self.Qp_visc = Qp_visc
         self.Qp_dens = Qp_dens
         self.Ap_rho = Ap_rho
@@ -669,6 +672,8 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         self.alpha = alpha
         self.delta_t = delta_t
 
+        self._options = p4pyPETSc.Options()
+        self._create_constant_nullspace()
         # TODO ARB - Need to implement the Chebyshev semi-iteration for
         # mass matrix solves.
 
@@ -676,18 +681,22 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         self.kspQp_visc = p4pyPETSc.KSP().create()
         self.kspQp_visc.setOperators(self.Qp_visc,self.Qp_visc)
         self.kspQp_visc.setOptionsPrefix('innerTPPCDsolver_Qp_visc_')
-
+        self.kspQp_visc.setFromOptions()
+        self.kspQp_visc.setUp()
+        
         self.kspQp_dens = p4pyPETSc.KSP().create()
-        self.kspQp_dens.setOperators(self.Qp_visc,self.Qp_visc)
+        self.kspQp_dens.setOperators(self.Qp_dens,self.Qp_dens)
         self.kspQp_dens.setOptionsPrefix('innerTPPCDsolver_Qp_dens_')
+        self.kspQp_dens.setFromOptions()
+        self.kspQp_dens.setUp()
 
         # Initialize Laplacian inverse.
-        self._create_constant_nullspace()
-        self.kspAp_rho.setNullSpace(self.const_null_space)
         self.kspAp_rho = p4pyPETSc.KSP().create()
         self.kspAp_rho.setOperators(self.Ap_rho,self.Ap_rho)
         self.kspAp_rho.setOptionsPrefix('innerTPPCDsolver_Ap_rho_')
         self.kspAp_rho.setFromOptions()
+        if self._options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
+            self.Ap_rho.setNullSpace(self.const_null_space)
         self.kspAp_rho.setUp()
 
     def apply(self,A,x,y):
@@ -707,12 +716,12 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         """
         # TODO ARB - write a subroutine in InvOperatorShell
         # to create petsc4py vectors
-        tmp1.setType('seq')
         tmp1 = p4pyPETSc.Vec().create()
-        tmp2.setType('seq')
         tmp2 = p4pyPETSc.Vec().create()
-        tmp3.setType('seq')
         tmp3 = p4pyPETSc.Vec().create()
+        tmp1.setType('seq')
+        tmp2.setType('seq')
+        tmp3.setType('seq')
         tmp1 = y.copy()
         tmp2 = y.copy()
         tmp3 = y.copy()
@@ -724,8 +733,10 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         if self.alpha==True:
             tmp2.axpy(1./self.delta_t,x)
 
+        if self._options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
+            self.const_null_space.remove(tmp2)
+
         self.kspAp_rho.solve(tmp2,tmp3)
-        
         y.axpy(1.,tmp3)
         
  
@@ -748,8 +759,22 @@ class PCDInv_shell(InvOperatorShell):
         self.Fp = Fp_matrix
         self.Ap = Ap_matrix
         # initialize kspAp
-        self._create_constant_nullspace()
         self._options = p4pyPETSc.Options()
+
+        self.kspAp = p4pyPETSc.KSP().create()
+        self.kspAp.setOperators(self.Ap,self.Ap)
+        self.kspAp.setOptionsPrefix('innerPCDsolver_Ap_')
+        # ARB - I don't think this pc.setUp() call is necessary.
+        self.kspAp.pc.setUp()
+
+        # initialize kspQp
+        self.kspQp = p4pyPETSc.KSP().create()
+        self.kspQp.setOperators(self.Qp,self.Qp)
+        self.kspQp.setOptionsPrefix('innerPCDsolver_Qp_')
+        self.kspQp.setFromOptions()
+        self.kspQp.setUp()
+
+        self._create_constant_nullspace()
         #ARB - I need to look at this on a different problem, but I'm not sure why
         # the has_constant_null space flag does not set a constant null space on the
         # operator matrix.  It may be that the function tests for it, so I want to
@@ -761,11 +786,6 @@ class PCDInv_shell(InvOperatorShell):
         # arguments.  Remove before merge if no issues.
         # ARB does this prefix need to be here?
         # I think the answer to this is no since its gone!
-        self.kspAp = p4pyPETSc.KSP().create()
-        self.kspAp.setOperators(self.Ap,self.Ap)
-        self.kspAp.setOptionsPrefix('innerPCDsolver_Ap_')
-        # ARB - I don't think this pc.setUp() call is necessary.
-        self.kspAp.pc.setUp()
         self.kspAp.setFromOptions()
         convergenceTest = 'r-true'
         if convergenceTest == 'r-true':
@@ -776,12 +796,6 @@ class PCDInv_shell(InvOperatorShell):
             self.r_work = None        
         self.kspAp.setUp()
 
-        # initialize kspQp
-        self.kspQp = p4pyPETSc.KSP().create()
-        self.kspQp.setOperators(self.Qp,self.Qp)
-        self.kspQp.setOptionsPrefix('innerPCDsolver_Qp_')
-        self.kspQp.setFromOptions()
-        self.kspQp.setUp()
         
     def apply(self,A,x,y):
         """  
