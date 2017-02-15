@@ -15,3 +15,5 @@ PROTEUS_BLAS_LIB_DIR = '/app/intel/compilers/15/mkl/lib/intel64/'
 PROTEUS_BLAS_LIB   = 'mkl_rt'
 PROTEUS_LAPACK_LIB_DIR = '/app/intel/compilers/15/mkl/lib/intel64/'
 PROTEUS_LAPACK_LIB = 'mkl_rt'
+PROTEUS_SUPERLU_LIB_DIR = pjoin(prefix, 'lib64')
+
