@@ -643,6 +643,11 @@ class NS_base:  # (HasTraits):
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
 
     def PUMI_estimateError(self):
+        """
+        Estimate the error using the classical element residual method by
+        Ainsworth and Oden and generates a corresponding error field.
+        """
+
         p0 = self.pList[0]
         n0 = self.nList[0]
 
@@ -700,7 +705,11 @@ class NS_base:  # (HasTraits):
               logEvent("Need to Adapt")
         return adaptMeshNow
 
-    def PUMI_adaptMesh(self,n):
+    def PUMI_adaptMesh(self):
+        """
+        Uses a computed error field to construct a size field and adapts
+        the mesh using SCOREC tools (a.k.a. MeshAdapt)
+        """
         ##
         ## zhang-alvin's BC communication for N-S error estimation
         ##
@@ -752,13 +761,13 @@ class NS_base:  # (HasTraits):
         if p0.domain.nd == 3:
           mlMesh = MeshTools.MultilevelTetrahedralMesh(
               0,0,0,skipInit=True,
-              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-              parallelPartitioningType=n.parallelPartitioningType)
+              nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
+              parallelPartitioningType=n0.parallelPartitioningType)
         if p0.domain.nd == 2:
           mlMesh = MeshTools.MultilevelTriangularMesh(
               0,0,0,skipInit=True,
-              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-              parallelPartitioningType=n.parallelPartitioningType)
+              nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
+              parallelPartitioningType=n0.parallelPartitioningType)
         if self.comm.size()==1:
             mlMesh.generateFromExistingCoarseMesh(
                 mesh,n0.nLevels,
@@ -1242,7 +1251,7 @@ class NS_base:  # (HasTraits):
 
                 #can only handle PUMIDomain's for now
                 if(self.PUMI_estimateError()):
-                    self.PUMI_adaptMesh(n)
+                    self.PUMI_adaptMesh()
 
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
