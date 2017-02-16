@@ -20,7 +20,7 @@ opts = Context.Options([
     ("name", "drivenCavityStokesTrial", "output data file name"),
     ("numeric_scheme", "C0Q1C0Q1", "specify the numerical scheme being used"),
     ("useWeakBoundaryConditions", True,"Flag: False-Strong boundary conditions, True-Weak boundary conditions"),
-    ("solveIteratively", True,"Flag: False-Direct Solver, True-Iterative Solver"),
+    ("solveIteratively", False,"Flag: False-Direct Solver, True-Iterative Solver"),
     ("solveInParallel", False,"Flag: False-Serial Solve, True-Parallel Solve"),
     ("schur_solver", "Qp" , "Flag: Options - selfp, Qp ")
     ])
