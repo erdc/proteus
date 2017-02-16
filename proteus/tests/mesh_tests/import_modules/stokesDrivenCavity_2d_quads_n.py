@@ -48,13 +48,12 @@ else:
 
 ######################################################
 #           Mesh and Quadrature Options
-
 if (numeric_scheme=="C0Q1C0Q1" or numeric_scheme=="THQuads"):
     # use a quadrilateral grid
     quad = True
     # numerical quadrature choice
-    elementQuadrature = CubeGaussQuadrature(nd,2)
-    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,1)
+    elementQuadrature = CubeGaussQuadrature(nd,4)
+    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,3)
     nnx = 41 ; nny = 41
 else:
     # use a simplex grid
@@ -65,7 +64,6 @@ else:
     triangleOptions = "VApq30Dena%8.8f" % he
     
 #####################################################
-
 #no shock capturing
 shockCapturing = None
 
@@ -117,7 +115,8 @@ else:
         multilevelLinearSolver = LU
         levelLinearSolver = LU
     if useWeakBoundaryConditions:
-        numericalFluxType =  Stokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior 
+        numericalFluxType =  Stokes_Advection_DiagonalUpwind_Diffusion_SIPG_exterior
+        numericalFluxType.useStrongDirichletConstraints = True
     else:
         pass
 

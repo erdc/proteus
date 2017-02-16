@@ -89,6 +89,7 @@ def getAdvFluxBCp(x,flag):
 #     if (x[0]==1.0):#outflow
 #         return lambda x,t: 0.0
 
+boundaryCreatesNullSpace = True
 
 def getAdvFluxBCu(x,flag):
     pass

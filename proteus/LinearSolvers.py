@@ -11,6 +11,7 @@ import superluWrappers
 import TransportCoefficients
 import cfemIntegrals
 import Quadrature
+import petsc4py
 from petsc4py import PETSc as p4pyPETSc
 from math import *
 from .Profiling import logEvent
@@ -399,11 +400,8 @@ class KSP_petsc4py(LinearSolver):
                               convergenceTest=convergenceTest,
                               computeRates=computeRates,
                               printInfo=printInfo)
-        import petsc4py
-
         assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
         assert isinstance(par_L,ParMat_petsc4py)
-
         # ARB - WIP: this self.pc and self.preconditioner stuff is confusing to read
         # and not necessary.  This should be refactored before merging. 1/21/2017.  
         # initialize some class attributes
@@ -507,7 +505,6 @@ class KSP_petsc4py(LinearSolver):
             self.pccontext.par_u = par_u
         if self.matcontext != None:
             self.matcontext.par_b = par_b
-        self.bdyNullSpace=True
         if self.bdyNullSpace==True:
             # is there a reason par_b should not be owned by self?
             self.__setNullSpace(par_b)
@@ -582,7 +579,6 @@ class KSP_petsc4py(LinearSolver):
                                                                                               (truenorm/ self.rnorm0),
                                                                                               ksp.atol,
                                                                                               ksp.rtol))
-#            import pdb ; pdb.set_trace()
             if truenorm < self.rnorm0*ksp.rtol:
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
             if truenorm < ksp.atol:
@@ -1119,20 +1115,17 @@ class SchurPrecon(KSP_Preconditioner):
             self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
         self.pc = p4pyPETSc.PC().create()
         # DO NOT MERGE - THIS NEEDS TO BE FIXED!!!!
-#        if prefix:
-#            self.pc.setOptionsPrefix(prefix)
         self.pc.setType('fieldsplit')
         self.isp = p4pyPETSc.IS()
         self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.isv = p4pyPETSc.IS()
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
-        # Global null space constructor
+        #Global null space constructor
         temp_array = numpy.zeros(shape=(neqns,1))
         temp_array[0:nDOF_pressure] = 1.0/(sqrt(nDOF_pressure))
         null_space_basis = p4pyPETSc.Vec().createWithArray(temp_array)
         self.global_null_space = [null_space_basis]
-        
         
 class NavierStokesSchur(SchurPrecon):
     """ Schur complement preconditioners for Navier-Stokes problems.
@@ -1167,7 +1160,6 @@ class NavierStokesSchur(SchurPrecon):
 #        import pdb ; pdb.set_trace()
         r_work = ksp.getOperators()[1].getVecLeft()
         ksp.buildResidual(r_work)
-#        import pdb ; pdb.set_trace()
         truenorm = r_work.norm()
         if its == 0:
             self.rnorm0 = truenorm
@@ -1194,8 +1186,6 @@ class NavierStokesSchur(SchurPrecon):
         return False
 
     def _setConstantPressureNullSpace(self,global_ksp):
-#        self.global_nsp = p4pyPETSc.NullSpace().create(vectors=self.global_null_space)
-#        self.nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,constant=True)
         nsp = global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].getNullSpace()
         global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
 

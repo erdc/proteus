@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
+<Xdmf Version="2.0" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <Domain>
+    <Grid CollectionType="Temporal" GridType="Collection" Name="Mesh Spatial_Domain">
+      <Grid GridType="Uniform">
+        <Time Name="0" Value="0.0" />
+        <Topology NumberOfElements="1600" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="1600 4" Format="HDF">drivenCavityStokesTrial.h5:/elementsSpatial_Domain0</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="1681 3" Format="HDF" Precision="8">drivenCavityStokesTrial.h5:/nodesSpatial_Domain0</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="nodeMaterialTypes">
+          <DataItem DataType="Int" Dimensions="1681" Format="HDF">drivenCavityStokesTrial.h5:/nodeMaterialTypes_t0</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Cell" Name="elementMaterialTypes">
+          <DataItem DataType="Int" Dimensions="1600" Format="HDF">drivenCavityStokesTrial.h5:/elementMaterialTypes_t0</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="p">
+          <DataItem DataType="Float" Dimensions="1681" Format="HDF" Precision="8">drivenCavityStokesTrial.h5:/p_t0</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="1681" Format="HDF" Precision="8">drivenCavityStokesTrial.h5:/u_t0</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="v">
+          <DataItem DataType="Float" Dimensions="1681" Format="HDF" Precision="8">drivenCavityStokesTrial.h5:/v_t0</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="1681 3" Format="HDF" Precision="8">drivenCavityStokesTrial.h5:/velocity_t0</DataItem>
+        </Attribute>
+      </Grid>
+      <Grid GridType="Uniform">
+        <Time Name="1" Value="0.001953125" />
+        <Topology NumberOfElements="1600" Type="Quadrilateral">
+          <DataItem DataType="Int" Dimensions="1600 4" Format="HDF">drivenCavityStokesTrial.h5:/elementsSpatial_Domain1</DataItem>
+        </Topology>
+        <Geometry Type="XYZ">
+          <DataItem DataType="Float" Dimensions="1681 3" Format="HDF" Precision="8">drivenCavityStokesTrial.h5:/nodesSpatial_Domain1</DataItem>
+        </Geometry>
+        <Attribute AttributeType="Scalar" Center="Node" Name="nodeMaterialTypes">
+          <DataItem DataType="Int" Dimensions="1681" Format="HDF">drivenCavityStokesTrial.h5:/nodeMaterialTypes_t1</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Cell" Name="elementMaterialTypes">
+          <DataItem DataType="Int" Dimensions="1600" Format="HDF">drivenCavityStokesTrial.h5:/elementMaterialTypes_t1</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="p">
+          <DataItem DataType="Float" Dimensions="1681" Format="HDF" Precision="8">drivenCavityStokesTrial.h5:/p_t1</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="u">
+          <DataItem DataType="Float" Dimensions="1681" Format="HDF" Precision="8">drivenCavityStokesTrial.h5:/u_t1</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Scalar" Center="Node" Name="v">
+          <DataItem DataType="Float" Dimensions="1681" Format="HDF" Precision="8">drivenCavityStokesTrial.h5:/v_t1</DataItem>
+        </Attribute>
+        <Attribute AttributeType="Vector" Center="Node" Name="velocity">
+          <DataItem DataType="Float" Dimensions="1681 3" Format="HDF" Precision="8">drivenCavityStokesTrial.h5:/velocity_t1</DataItem>
+        </Attribute>
+      </Grid>
+    </Grid>
+  </Domain>
+</Xdmf>
