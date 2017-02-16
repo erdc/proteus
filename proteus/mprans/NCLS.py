@@ -126,6 +126,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
         assert self.lstage > 0 and self.lstage <= self.timeOrder
         if self.timeOrder == 3:
             if self.lstage == 1:
+                logEvent("First stage of SSP33 method",level=4)
                 for ci in range(self.nc):
                     self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) #no need for .copy?
                     self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
@@ -136,7 +137,8 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.m_last[ci] = numpy.copy(self.transport.q[('m',ci)])
 
             elif self.lstage == 2:
-                 for ci in range(self.nc):
+                logEvent("Second stage of SSP33 method",level=4)
+                for ci in range(self.nc):
                     self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) 
                     self.u_dof_stage[ci][self.lstage] *= 1./4.
                     self.u_dof_stage[ci][self.lstage] += 3./4.*self.u_dof_last[ci]
@@ -153,6 +155,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_stage[ci][self.lstage])
                     self.m_last[ci] = numpy.copy(self.m_stage[ci][self.lstage])
             elif self.lstage == 3:
+                logEvent("Third stage of SSP33 method",level=4)
                 for ci in range(self.nc):
                     self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof)
                     self.u_dof_stage[ci][self.lstage][:] *= 2.0/3.0
@@ -251,8 +254,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(self,
                  EDGE_VISCOSITY=0, 
                  ENTROPY_VISCOSITY=0,
-                 cE=1.0, 
-                 cMax=1.0,
                  POWER_SMOOTHNESS_INDICATOR=2, 
                  LUMPED_MASS_MATRIX=0,
                  FCT=0,
@@ -302,8 +303,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.POWER_SMOOTHNESS_INDICATOR=POWER_SMOOTHNESS_INDICATOR
         self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
         self.FCT=FCT
-        self.cE=cE
-        self.cMax=cMax
 
     def attachModels(self,modelList):
         #the level set model
@@ -733,6 +732,8 @@ class LevelModel(OneLevelTransport):
         self.dL_minus_dE=None
         self.min_u_bc=None
         self.max_u_bc=None
+        # Aux quantity at DOFs to be filled by optimized code (MQL)
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
         comm = Comm.get()
         self.comm=comm
@@ -916,10 +917,11 @@ class LevelModel(OneLevelTransport):
         self.max_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
         self.min_u_bc.fill(1E10);
         self.max_u_bc.fill(-1E10);
-        self.flux_plus_dLij_times_soln = numpy.zeros(self.u[0].dof.shape,'d')
+        self.flux_plus_dLij_times_soln = numpy.zeros(self.u[0].dof.shape,'d') # NOTE (mql): it is important to fill it with zeros
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
         #mwf debug
-        #pdb.set_trace()
+        #pdb.set_trace()        
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
@@ -997,9 +999,6 @@ class LevelModel(OneLevelTransport):
             # PARAMETERS FOR EDGE BASED STABILIZATION 
             self.coefficients.EDGE_VISCOSITY, 
             self.coefficients.ENTROPY_VISCOSITY,
-            # PARAMETERS FOR CELL BASED ENTROPY VISCOSITY
-            self.coefficients.cE, 
-            self.coefficients.cMax, 
             # PARAMETERS FOR EDGE VISCOSITY 
             len(rowptr)-1,
             self.nnz,
@@ -1015,7 +1014,8 @@ class LevelModel(OneLevelTransport):
             self.flux_plus_dLij_times_soln, 
             self.dL_minus_dE, 
             self.min_u_bc,
-            self.max_u_bc)
+            self.max_u_bc, 
+            self.quantDOFs)
 
 	if self.forceStrongConditions:#
 	    for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
