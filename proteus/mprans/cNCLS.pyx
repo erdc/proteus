@@ -74,8 +74,6 @@ cdef extern from "NCLS.h" namespace "proteus":
                                double* ebqe_u, 
 			       int EDGE_VISCOSITY, 
 			       int ENTROPY_VISCOSITY, 
-			       double cE, 
-			       double cMax, 
 			       int numDOFs, 
 			       int NNZ, 
 			       int* csrRowIndeces_DofLoops, 
@@ -88,7 +86,8 @@ cdef extern from "NCLS.h" namespace "proteus":
 			       double* flux_plus_dLij_times_soln,
 			       double* dL_minus_dE, 
 			       double* min_u_bc,
-			       double* max_u_bc
+			       double* max_u_bc, 
+			       double* quantDOFs
 			       )
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -299,8 +298,6 @@ cdef class cNCLS_base:
                          numpy.ndarray ebqe_u,
 			 int EDGE_VISCOSITY, 
 			 int ENTROPY_VISCOSITY,
-			 double cE, 
-			 double cMax, 
 			 int numDOFs, 
 			 int NNZ, 
 			 numpy.ndarray csrRowIndeces_DofLoops,
@@ -313,7 +310,8 @@ cdef class cNCLS_base:
 			 numpy.ndarray flux_plus_dLij_times_soln,
 			 numpy.ndarray dL_minus_dE, 
 			 numpy.ndarray min_u_bc,
-			 numpy.ndarray max_u_bc):
+			 numpy.ndarray max_u_bc, 
+			 numpy.ndarray quantDOFs):
        self.thisptr.calculateResidual(<double*>mesh_trial_ref.data,
                                        <double*>mesh_grad_trial_ref.data,
                                        <double*>mesh_dof.data,
@@ -370,8 +368,6 @@ cdef class cNCLS_base:
                                        <double*>ebqe_u.data, 
 				       EDGE_VISCOSITY, 
 				       ENTROPY_VISCOSITY, 
-				       cE, 
-				       cMax, 
 				       numDOFs, 
 				       NNZ, 
 				       <int*>csrRowIndeces_DofLoops.data,
@@ -384,7 +380,8 @@ cdef class cNCLS_base:
 				       <double*> flux_plus_dLij_times_soln.data,
 				       <double*> dL_minus_dE.data, 
 				       <double*> min_u_bc.data,
-				       <double*> max_u_bc.data)
+				       <double*> max_u_bc.data, 
+				       <double*> quantDOFs.data)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
