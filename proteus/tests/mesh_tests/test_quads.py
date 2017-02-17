@@ -104,7 +104,8 @@ class Test2DDrivenCavityStokesOnQuads(proteus.test_utils.TestTools.SimulationTes
         self.ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
 
     def teardown_method(self,method):
-        extens = ('edge','ele','neig','node','poly','prof0','log','xmf','h5')
+        extens = ()
+#        extens = ('edge','ele','neig','node','poly','prof0','log','xmf','h5')
         for currentFile in os.listdir('.'):
             if any(currentFile.endswith(ext) for ext in extens):
                 os.remove(currentFile)
@@ -115,6 +116,8 @@ class Test2DDrivenCavityStokesOnQuads(proteus.test_utils.TestTools.SimulationTes
         f_expected = tables.openFile(os.path.join(self._scriptdir,
                                                   "comparison_files/drivenCavityStokesC0Q1C0Q1.h5"),
                                      'r')
+
+#        import pdb ; pdb.set_trace()
 
         if (numpy.allclose(f_actual.root.v_t1,
                            f_expected.root.v_t1,atol=1e-4)) == False:

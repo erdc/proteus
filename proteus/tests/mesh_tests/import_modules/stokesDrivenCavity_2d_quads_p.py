@@ -1,9 +1,9 @@
 from proteus import *
 from proteus.default_p import *
 from proteus import Domain
-import stokesDrivenCavity_2d
+import stokesDrivenCavity_2d_quads
 from proteus import Context
-Context.setFromModule(stokesDrivenCavity_2d)
+Context.setFromModule(stokesDrivenCavity_2d_quads)
 ct=Context.get()
 
 """
@@ -49,7 +49,7 @@ class uTrue:
     def uOfX(self,x):
         return 1.
     def uOfXT(self,x,t):
-        return self.uOfX(x)
+        return self.uOfX(x)*(1-x[0]**4)
 
 class vTrue:
     def __init__(self):
