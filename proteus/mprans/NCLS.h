@@ -166,7 +166,6 @@ namespace proteus
 				   double* ebqe_bc_u_ext,
 				   int* csrColumnOffsets_eb_u_u, 
 				   int EDGE_VISCOSITY, 
-				   int ENTROPY_VISCOSITY,
 				   int LUMPED_MASS_MATRIX
 				   )=0;
     virtual void calculateWaterline(//element
@@ -1680,7 +1679,6 @@ namespace proteus
 			   double* ebqe_bc_u_ext,
 			   int* csrColumnOffsets_eb_u_u, 
 			   int EDGE_VISCOSITY, 
-			   int ENTROPY_VISCOSITY,
 			   int LUMPED_MASS_MATRIX)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1

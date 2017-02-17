@@ -254,7 +254,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(self,
                  EDGE_VISCOSITY=0, 
                  ENTROPY_VISCOSITY=0,
-                 POWER_SMOOTHNESS_INDICATOR=2, 
+                 POWER_SMOOTHNESS_INDICATOR=1, 
                  LUMPED_MASS_MATRIX=0,
                  FCT=0,
                  V_model=0,
@@ -1087,7 +1087,6 @@ class LevelModel(OneLevelTransport):
             self.numericalFlux.ebqe[('u',0)],
             self.csrColumnOffsets_eb[(0,0)], 
             self.coefficients.EDGE_VISCOSITY, 
-            self.coefficients.ENTROPY_VISCOSITY, 
             self.coefficients.LUMPED_MASS_MATRIX)
 
         #Load the Dirichlet conditions directly into residual
