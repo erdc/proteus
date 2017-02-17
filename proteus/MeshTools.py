@@ -4430,7 +4430,7 @@ class QuadrilateralMesh(Mesh):
         # Is the following line necessary?
         self.nodeDict = dict([(n,n) for n in self.nodeList])
         for q in griddata['quads']:
-            n0,n1,n2,n3 = q
+            n0,n3,n2,n1 = q # clockwise ordering needed
             e0 = Edge(nodes=[self.nodeList[n0],self.nodeList[n1]])
             e1 = Edge(nodes=[self.nodeList[n1],self.nodeList[n2]])
             e2 = Edge(nodes=[self.nodeList[n2],self.nodeList[n3]])
