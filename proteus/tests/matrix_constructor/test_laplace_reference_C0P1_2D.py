@@ -5,15 +5,15 @@ Test module for Laplace Matrix builder
 
 from proteus.iproteus import *
 from proteus import LinearAlgebraTools
-import proteus.tests.TestTools
+import proteus.test_utils.TestTools
 
 import os.path,sys,inspect
 import numpy
 
-proteus.tests.TestTools.addSubFolders(inspect.currentframe())
+proteus.test_utils.TestTools.addSubFolders(inspect.currentframe())
 import laplace_template_C0P1_2D as tp_2d
 
-class TestLaplaceConstruction2D(proteus.tests.TestTools.SimulationTest):
+class TestLaplaceConstruction2D(proteus.test_utils.TestTools.SimulationTest):
     """ Run tests to verify the construction of the 2D Laplace operator """
 
     def setup_method(self,method):

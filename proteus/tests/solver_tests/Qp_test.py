@@ -7,7 +7,7 @@ Test module for the pressure mass matrix schur complement
 from proteus.iproteus import *
 from proteus import Comm
 from proteus import LinearAlgebraTools
-import proteus.tests.TestTools
+import proteus.test_utils.TestTools
 
 import os,sys,inspect
 import tables
@@ -15,7 +15,7 @@ import numpy as np
 from petsc4py import PETSc as p4pyPETSc
 from scipy.sparse import csr_matrix
 
-proteus.tests.TestTools.addSubFolders(inspect.currentframe())
+proteus.test_utils.TestTools.addSubFolders(inspect.currentframe())
 import stokes_2d_p
 import stokes_2d_n
 
@@ -45,7 +45,7 @@ def test_pressure_mass_matrix_shell():
     comparison_vec = np.array([1.02564103, 0.25641026, -0.00854701])
     assert np.allclose(y_vec,comparison_vec)
 
-class TestStokesOperatorConstruction(proteus.tests.TestTools.SimulationTest):
+class TestStokesOperatorConstruction(proteus.test_utils.TestTools.SimulationTest):
     """ This class tests the operator construction on a 2D Stokes Poiseulle Flow problem """
 
     def setup_method(self,method):

@@ -1,6 +1,6 @@
 from proteus import *
 from proteus.default_n import *
-from stokesDrivenCavity_2d_p import *
+from stokesDrivenCavity_2d_quads_p import *
 
 #######################################################
 
@@ -53,7 +53,7 @@ if (numeric_scheme=="C0Q1C0Q1" or numeric_scheme=="THQuads"):
     quad = True
     # numerical quadrature choice
     elementQuadrature = CubeGaussQuadrature(nd,4)
-    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,3)
+    elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,4)
     nnx = 41 ; nny = 41
 else:
     # use a simplex grid

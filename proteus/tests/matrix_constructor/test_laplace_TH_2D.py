@@ -10,7 +10,7 @@ import proteus.test_utils.TestTools # ARB - need to make a descision about this 
 import os,sys,inspect
 import numpy
 
-proteus.tests.TestTools.addSubFolders(inspect.currentframe())
+proteus.test_utils.TestTools.addSubFolders(inspect.currentframe())
 import laplace_template_TH_2D_8 as L_2d
 
 class TestLaplaceConstruction2D(proteus.test_utils.TestTools.SimulationTest):

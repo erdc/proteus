@@ -4,15 +4,15 @@ Test module for Laplace Matrix
 """
 
 from proteus.iproteus import *
-import proteus.tests.TestTools
+import proteus.test_utils.TestTools
 
 import os,sys,inspect
 import numpy
 
-proteus.tests.TestTools.addSubFolders(inspect.currentframe())
+proteus.test_utils.TestTools.addSubFolders(inspect.currentframe())
 import laplace_template_TH_2D as L_2d
 
-class TestMassConstruction2D(proteus.tests.TestTools.SimulationTest):
+class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
     """ Verify construction of 2D Laplce using transport coefficients """
 
     def setup_method(self,method):

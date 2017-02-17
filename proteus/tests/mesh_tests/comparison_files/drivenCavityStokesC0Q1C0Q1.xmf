@@ -31,7 +31,7 @@
         </Attribute>
       </Grid>
       <Grid GridType="Uniform">
-        <Time Name="1" Value="0.001953125" />
+        <Time Name="1" Value="1.0" />
         <Topology NumberOfElements="1600" Type="Quadrilateral">
           <DataItem DataType="Int" Dimensions="1600 4" Format="HDF">drivenCavityStokesTrial.h5:/elementsSpatial_Domain1</DataItem>
         </Topology>
