@@ -4,6 +4,7 @@ import os
 import sys
 import inspect
 import pickle
+import petsc4py
 
 def get_include_dir():
     return os.path.dirname(os.path.realpath(__file__))
@@ -420,3 +421,32 @@ class SimulationTest(BasicTest):
         for file in filelist:
             if os.path.isfile(file):
                 os.remove(file)
+
+    def _setPETSc(self,petsc_file):
+        """The function takes a file with petsc options and sets the options globally.
+
+        petsc_file : str
+            string with the location of the file
+        """
+        petsc_options = []
+        with open(petsc_file) as petsc_file:
+            data = petsc_file.readlines()
+        def strip_comments(line):
+            if '#' in line:
+                line = line[:line.index('#')]
+            return line
+        stripped_data = [strip_comments(line) for line in data]
+        petsc_options = ''.join(stripped_data).split('\n')
+        new_petsc = []
+        for item in petsc_options:
+            if item != '':
+                new = item.split()
+                new[0] = new[0][1:]
+                new_petsc.append((new))
+        for item in new_petsc:
+            if len(item)==2:
+                petsc4py.PETSc.Options().setValue(item[0],item[1])
+            if len(item)==1:
+                petsc4py.PETSc.Options().setValue(item[0],'')
+
+        
