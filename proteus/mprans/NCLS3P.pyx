@@ -739,6 +739,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
         assert self.lstage > 0 and self.lstage <= self.timeOrder
         if self.timeOrder == 3:
             if self.lstage == 1:
+                log("First stage of SSP33 method",level=4)
                 for ci in range(self.nc):
                     self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) #no need for .copy?
                     self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
@@ -749,6 +750,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.m_last[ci] = numpy.copy(self.transport.q[('m',ci)])
 
             elif self.lstage == 2:
+                 log("Second stage of SSP33 method",level=4)
                  for ci in range(self.nc):
                     self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) 
                     self.u_dof_stage[ci][self.lstage] *= 1./4.
@@ -766,6 +768,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_stage[ci][self.lstage])
                     self.m_last[ci] = numpy.copy(self.m_stage[ci][self.lstage])
             elif self.lstage == 3:
+                log("Third stage of SSP33 method",level=4)
                 for ci in range(self.nc):
                     self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof)
                     self.u_dof_stage[ci][self.lstage][:] *= 2.0/3.0
