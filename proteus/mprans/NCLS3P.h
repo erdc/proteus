@@ -5,9 +5,7 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
-#define POWER_SMOOTHNESS_INDICATOR 1
-#define LUMPED_MASS_MATRIX 0
-#define FIX_BOUNDARY_KUZMINS 0
+#define FIX_BOUNDARY_KUZMINS 1
 
 /////////////////////
 //ENTROPY FUNCTION //
@@ -101,6 +99,7 @@ namespace proteus
 				   // PARAMETERS FOR EDGE BASED STABILIZATION
 				   int EDGE_VISCOSITY, 
 				   int ENTROPY_VISCOSITY,
+				   // PARAMETERS FOR EDGE VISCOSITY
 				   int numDOFs,
 				   int NNZ,
 				   int* csrRowIndeces_DofLoops,
@@ -108,6 +107,9 @@ namespace proteus
 				   int* csrRowIndeces_CellLoops,
 				   int* csrColumnOffsets_CellLoops,
 				   int* csrColumnOffsets_eb_CellLoops,
+				   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+				   int POWER_SMOOTHNESS_INDICATOR, 
+				   int LUMPED_MASS_MATRIX, 
 				   // FOR FCT
 				   double* flux_plus_dLij_times_soln,
 				   double* dL_minus_dE, 
@@ -159,7 +161,8 @@ namespace proteus
 				   double* ebqe_rd_u_ext,
 				   double* ebqe_bc_u_ext,
 				   int* csrColumnOffsets_eb_u_u,
-				   int EDGE_VISCOSITY)=0;
+				   int EDGE_VISCOSITY, 
+				   int LUMPED_MASS_MATRIX)=0;
     virtual void calculateWaterline(//element
                                    int* wlc,
 	                           double* waterline,
@@ -497,6 +500,7 @@ namespace proteus
 			   // PARAMETERS FOR EDGE BASED STABILIZATION
 			   int EDGE_VISCOSITY, 
 			   int ENTROPY_VISCOSITY,
+			   // PARAMETERS FOR EDGE VISCOSITY
 			   int numDOFs,
 			   int NNZ,
 			   int* csrRowIndeces_DofLoops,
@@ -504,6 +508,9 @@ namespace proteus
 			   int* csrRowIndeces_CellLoops,
 			   int* csrColumnOffsets_CellLoops,
 			   int* csrColumnOffsets_eb_CellLoops,
+			   // PARAMETERS FOR 1st or 2nd ORDER MPP METHOD
+			   int POWER_SMOOTHNESS_INDICATOR, 
+			   int LUMPED_MASS_MATRIX, 
 			   // FOR FCT
 			   double* flux_plus_dLij_times_soln,
 			   double* dL_minus_dE, 
@@ -532,7 +539,7 @@ namespace proteus
 	  // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
 	  //////////////////////////////////////////////
 	  // HERE WE COMPUTE: 
-	  //    * CFL for VOF model
+	  //    * CFL for NCLS model
 	  //    * Entropy residual (if ENTROPY_VISCOSITY=1)
 	  //    * (Lumped) Mass matrix times (soln - soln_tn) 
 	  //    * Transport matrices 
@@ -571,9 +578,7 @@ namespace proteus
 		    u_grad_test_dV[nDOF_test_element*nSpace],
 		    //for general use
 		    jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
-		    dV,x,y,z,
-		    //VRANS
-		    porosity;
+		    dV,x,y,z;
 		  //get the physical integration weight
 		  ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
 		  dV = fabs(jacDet)*dV_ref[k];
@@ -596,7 +601,6 @@ namespace proteus
 			u_grad_test_dV[j*nSpace+I] = u_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
 		    }
 		  //evaluate coefficients to compute time derivative (for term with mass matrix)
-		  porosity = 1.0;// - q_vos[eN_k]; //TMP
 		  evaluateCoefficients(&velocity[eN_k_nSpace],
 				       u,
 				       grad_u,
@@ -652,16 +656,10 @@ namespace proteus
 			  int j_nSpace = j*nSpace;
 			  int i_nSpace = i*nSpace;
 			  // COMPUTE ELEMENT TRANSPORT MATRIX (MQL)
-			  //elementTransport[i][j] += // int[(vel.grad_wj)*wi*dx]
-			  //-ck.AdvectionJacobian_weak(dH,u_trial_ref[k*nDOF_trial_element+i],&u_grad_test_dV[j_nSpace]);
-			  //elementTransposeTransport[i][j] += // -int[(vel.grad_wj)*wi*dx]
-			  //-ck.AdvectionJacobian_weak(dH,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]);
 			  elementTransport[i][j] += // int[(vel.grad_wj)*wi*dx]
 			    ck.HamiltonianJacobian_weak(dH,&u_grad_trial[j_nSpace],u_test_dV[i]);
-			  //-ck.AdvectionJacobian_weak(dH,u_trial_ref[k*nDOF_trial_element+i],&u_grad_test_dV[j_nSpace]);
-			  elementTransposeTransport[i][j] += // -int[(vel.grad_wj)*wi*dx]
+			  elementTransposeTransport[i][j] += // int[(vel.grad_wi)*wj*dx]
 			    ck.HamiltonianJacobian_weak(dH,&u_grad_trial[i_nSpace],u_test_dV[j]);
-			    //-ck.AdvectionJacobian_weak(dH,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]);
 			}
 		    }//i
 		  //save solution for other models 
@@ -710,9 +708,13 @@ namespace proteus
 		  register int eN  = elementBoundaryElementsArray[ebN*2+0],
 		    ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0],
 		    eN_nDOF_trial_element = eN*nDOF_trial_element;
-		  register double elementResidual_u[nDOF_test_element];
+		  register double elementResidual_u[nDOF_test_element],elementTransport[nDOF_test_element][nDOF_trial_element];
 		  for (int i=0;i<nDOF_test_element;i++)
-		    elementResidual_u[i]=0.0;
+		    {
+		      elementResidual_u[i]=0.0;
+		      for (int j=0;j<nDOF_trial_element;j++)
+			elementTransport[i][j]=0.0;
+		    }		
 		  for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) 
 		    { 
 		      register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
@@ -720,9 +722,8 @@ namespace proteus
 			ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
 			ebN_local_kb_nSpace = ebN_local_kb*nSpace;
 			  
-		      register double u_ext=0.0,m_ext=0.0,dm_ext=0.0,f_ext[nSpace],df_ext[nSpace],
-			flux_ext=0.0, dflux_ext=0.0, bc_u_ext=0.0,
-			fluxTransport[nDOF_trial_element],
+		      register double un_ext=0.0,m_ext=0.0,dm_ext=0.0,f_ext[nSpace],df_ext[nSpace],
+			flux_un_ext=0.0, flux_ext=0.0, dflux_ext=0.0, bc_u_ext=0.0,
 			jac_ext[nSpace*nSpace],
 			jacDet_ext,
 			jacInv_ext[nSpace*nSpace],
@@ -731,9 +732,7 @@ namespace proteus
 			metricTensorDetSqrt,
 			dS,
 			u_test_dS[nDOF_test_element],
-			normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
-			//VRANS
-			porosity_ext;
+			normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling;
 		      // calculate mappings 
 		      ck.calculateMapping_elementBoundary(eN,
 							  ebN_local,
@@ -768,7 +767,7 @@ namespace proteus
 		      //std::cout<<"J mtsqrdet "<<metricTensorDetSqrt<<" integralScaling "<<integralScaling<<std::endl;
 		      dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
 		      //compute shape and solution information
-		      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+		      ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],un_ext);
 		      //precalculate test function products with integration weights
 		      for (int j=0;j<nDOF_trial_element;j++)
 			u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
@@ -776,10 +775,6 @@ namespace proteus
 		      //load the boundary values
 		      //
 		      bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*ebqe_rd_u_ext[ebNE_kb];
-		      // TODO (MQL). Consider porosity and consider the possibility of having moving meshes 
-		      //VRANS
-		      porosity_ext = 1.0; // - ebqe_vos_ext[ebNE_kb]; //TMP
-		      
 		      // 
 		      //calculate the numerical fluxes 
 		      // 
@@ -788,56 +783,55 @@ namespace proteus
 			flow += normal[I]*ebqe_velocity_ext[ebNE_kb_nSpace+I];
 		      if (flow < 0)
 			{
-			  dflux_ext = -flow;
+			  dflux_ext = flow;
 			  flux_ext = flow*bc_u_ext;
+			  flux_un_ext = flow*un_ext;
 			}
 		      else 
 			dflux_ext = 0;
-			  
-		      for (int j=0;j<nDOF_trial_element;j++)
+
+		      for (int i=0;i<nDOF_trial_element;i++)
 			{
 			  // boundary integral related to data: int[(normal*velocity)*ubc*wi*dS]
-			  elementResidual_u[j] += dt*ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[j]);
+			  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]);
 			  // boundary integral related to solution: -int[(normal*velocity)*un*wi*dS]
-			  register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
-			  fluxTransport[j]= // -(normal*vel)*wj
-			    ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_ext,u_trial_trace_ref[ebN_local_kb_j]);
-			}//j
-		      //
-		      //update the global Transport Matrices and global residual
-		      //
-		      for (int i=0;i<nDOF_test_element;i++)
-			{
-			  register int eN_i = eN*nDOF_test_element+i;
-			  // distribute boundary element to global residual
-			  globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];	  
-	
-			  // distribute local transport matrix to global transport matrix
-			  for (int j=0;j<nDOF_trial_element;j++)
-			    {
-			      register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
-			      TransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_eb_CellLoops[ebN_i_j]] // -(normal*vel)*wj*wi
-				+= fluxTransport[j]*u_test_dS[i];
-			      TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_eb_CellLoops[ebN_i_j]] 
-				+= fluxTransport[i]*u_test_dS[j];
+			  for(int j=0;j<nDOF_trial_element;j++) 
+			    { 
+			      register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
+			      elementTransport[i][j] += // -(normal*vel)*wj*wi //TMP
+				-ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_ext,
+									   u_trial_trace_ref[ebN_local_kb_j])
+				*u_test_dS[i];
 			    }//j
 			}//i
-			    
 		      // local min/max at boundary
 		      min_u_bc_local = std::min(ebqe_bc_u_ext[ebNE_kb], min_u_bc_local);
 		      max_u_bc_local = std::max(ebqe_bc_u_ext[ebNE_kb], max_u_bc_local);
 		    }//kb
-		  // global min/max at boundary 
+		  ////////////////
+		  // DISTRIBUTE // 
+		  ////////////////
 		  for (int i=0;i<nDOF_test_element;i++)
 		    {
-		      int eN_i = eN*nDOF_test_element+i;
+		      int eN_i=eN*nDOF_test_element+i;
 		      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+		      globalResidual[gi] += dt*elementResidual_u[i];
+		      flux_plus_dLij_times_soln[gi] += elementResidual_u[i];		  
+		      // distribute local transport matrix to global transport matrix
+		      for (int j=0;j<nDOF_trial_element;j++)
+			{
+			  register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
+			  TransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_eb_CellLoops[ebN_i_j]] // -(normal*vel)*wj*wi
+			    += elementTransport[i][j];
+			  TransposeTransportMatrix[csrRowIndeces_CellLoops[eN_i] + csrColumnOffsets_eb_CellLoops[ebN_i_j]] 
+			    += elementTransport[j][i];
+			}//j
+		      // global min/max at boundary 
 		      min_u_bc[gi] = std::min(min_u_bc_local,min_u_bc[gi]);
 		      max_u_bc[gi] = std::max(max_u_bc_local,max_u_bc[gi]);		      
-		    }
-		}//ebNE
-	      // END OF ADDING BOUNDARY TERM TO TRANSPORT MATRICES //
-	    }
+		    }//i
+		}//ebNE  		  
+	    } // END OF ADDING BOUNDARY TERM TO TRANSPORT MATRICES //
 	  else // FIX_BOUNDARY_KUZMINS=0
 	    {
 	      ////////////////////////////////////////////////////////
@@ -975,7 +969,7 @@ namespace proteus
 		      for (int i=0;i<nDOF_test_element;i++)
 			{
 			  //int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
-			  elementResidual_u[i] += dt*ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]);
+			  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]);
 			}//i
 		    }//kb
 		  //
@@ -985,7 +979,8 @@ namespace proteus
 		    {
 		      int eN_i = eN*nDOF_test_element+i;		    
 		      //globalResidual[offset_u+stride_u*u_l2g[eN_i]] += MOVING_DOMAIN*elementResidual_u[i];
-		      globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];	  		      
+		      globalResidual[offset_u+stride_u*u_l2g[eN_i]] += dt*elementResidual_u[i];
+		      flux_plus_dLij_times_soln[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
 		    }//i
 		}//ebNE
 	      // END OF COMPUTING (FULL) BOUNDARY INTEGRAL WITHOUT TREATMENT //
@@ -1007,7 +1002,7 @@ namespace proteus
 		  ij+=1;
 		}
 	      globalResidual[i] += dt*ith_TransportMatrix_times_solution;
-	      flux_plus_dLij_times_soln[i] = ith_TransportMatrix_times_solution; 
+	      flux_plus_dLij_times_soln[i] += ith_TransportMatrix_times_solution; 
 	    }
 	  // END OF MULTIPLICATION OF TRANSPORT MATRIX TIMES SOLUTION AT tn
 
@@ -1036,7 +1031,10 @@ namespace proteus
 	      if (ENTROPY_VISCOSITY==1)
 		MaxEntResVector[i] = MaxEntResi + 1E-14; // tolerance is used to avoid division by zero
 	      alphai = std::abs(alphai_numerator)/(alphai_denominator+1E-14);
-	      psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+	      if (POWER_SMOOTHNESS_INDICATOR==0)
+		psi[i] = 1.0;
+	      else
+		psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
 	    }	  
 	  // END OF COMPUTING SMOOTHNESS INDICATOR 
 
@@ -1257,16 +1255,14 @@ namespace proteus
 		  //
 		  //calculate shock capturing diffusion
 		  //
-		  
-		  
 		  ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);	      
 		  //ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u_old,numDiff1);
 		  ck.calculateNumericalDiffusion(shockCapturingDiffusion,sc_uref, sc_alpha,G,G_dd_G,pdeResidual_u,grad_u,numDiff1);
 		  q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
+		  
 		  // 
 		  //update element residual 
 		  // 
-
 		  for(int i=0;i<nDOF_test_element;i++) 
 		    { 
 		      //register int eN_k_i=eN_k*nDOF_test_element+i,
@@ -1514,7 +1510,8 @@ namespace proteus
 			   double* ebqe_rd_u_ext,
 			   double* ebqe_bc_u_ext,
 			   int* csrColumnOffsets_eb_u_u,
-			   int EDGE_VISCOSITY)
+			   int EDGE_VISCOSITY, 
+			   int LUMPED_MASS_MATRIX)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
 

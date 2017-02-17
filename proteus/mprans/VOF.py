@@ -1106,6 +1106,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.min_u_bc.fill(1E10);
         self.max_u_bc.fill(-1E10);
         self.flux_plus_dLij_times_soln = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+
         #
         #cek end computationa of cterm_global
         #

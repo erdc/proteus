@@ -94,6 +94,8 @@ cdef extern from "mprans/NCLS3P.h" namespace "proteus":
                                int* csrRowIndeces_CellLoops,
                                int* csrColumnOffsets_CellLoops,
                                int * csrColumnOffsets_eb_CellLoops,
+			       int POWER_SMOOTHNESS_INDICATOR, 
+			       int LUMPED_MASS_MATRIX, 
    			       double* flux_plus_dLij_times_soln,
 			       double* dL_minus_dE, 
 			       double* min_u_bc,
@@ -141,7 +143,8 @@ cdef extern from "mprans/NCLS3P.h" namespace "proteus":
                                double * ebqe_rd_u_ext,
                                double * ebqe_bc_u_ext,
                                int * csrColumnOffsets_eb_u_u,
-			       int EDGE_VISCOSITY)
+			       int EDGE_VISCOSITY, 
+			       int LUMPED_MASS_MATRIX)
         void calculateWaterline(
             int * wlc,
             double * waterline,
@@ -313,6 +316,8 @@ cdef class NCLS3P:
                           numpy.ndarray csrRowIndeces_CellLoops,
                           numpy.ndarray csrColumnOffsets_CellLoops,
                           numpy.ndarray csrColumnOffsets_eb_CellLoops,
+			  int POWER_SMOOTHNESS_INDICATOR, 
+			  int LUMPED_MASS_MATRIX, 
 			  numpy.ndarray flux_plus_dLij_times_soln,
 			  numpy.ndarray dL_minus_dE, 
 			  numpy.ndarray min_u_bc,
@@ -380,6 +385,8 @@ cdef class NCLS3P:
 				       <int*> csrRowIndeces_CellLoops.data,
 				       <int*> csrColumnOffsets_CellLoops.data,
                                        <int*> csrColumnOffsets_eb_CellLoops.data,
+				       POWER_SMOOTHNESS_INDICATOR, 
+				       LUMPED_MASS_MATRIX, 
 				       <double*> flux_plus_dLij_times_soln.data,
 				       <double*> dL_minus_dE.data, 
 				       <double*> min_u_bc.data,
@@ -429,7 +436,8 @@ cdef class NCLS3P:
                           numpy.ndarray ebqe_rd_u_ext,
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray csrColumnOffsets_eb_u_u,
-			  int EDGE_VISCOSITY):
+			  int EDGE_VISCOSITY, 
+			  int LUMPED_MASS_MATRIX):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian( < double*>mesh_trial_ref.data,
@@ -475,7 +483,8 @@ cdef class NCLS3P:
                                        < double * >ebqe_rd_u_ext.data,
                                        < double * >ebqe_bc_u_ext.data,
                                        < int * >csrColumnOffsets_eb_u_u.data,
-				       EDGE_VISCOSITY)
+				       EDGE_VISCOSITY, 
+				       LUMPED_MASS_MATRIX)
 
     def calculateWaterline(self,
                            numpy.ndarray wlc,
@@ -653,6 +662,199 @@ class NumericalFlux(
             getAdvectiveFluxBoundaryConditions,
             getDiffusiveFluxBoundaryConditions)
 
+class RKEV(proteus.TimeIntegration.SSP33):
+    """
+    Wrapper for SSPRK time integration using EV
+
+    ... more to come ...
+    """
+    def __init__(self, transport, timeOrder=1, runCFL=0.1):
+        proteus.TimeIntegration.SSP33.__init__(self, transport,runCFL=runCFL)
+        self.timeOrder = timeOrder  #order of approximation
+        self.nStages = timeOrder  #number of stages total
+        self.lstage = 0  #last stage completed
+        # storage vectors
+        # previous time step mass and solution dof per component
+        self.m_last = {}
+        #temporarily use this to stash previous solution since m_last used
+        #in EV transport models for previous solution value
+        self.m_last_save = {}
+        self.u_dof_last = {}
+        # per component stage values, list with array at each stage
+        self.m_stage = {}
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+             if transport.q.has_key(('m',ci)):
+                self.m_last[ci] = transport.q[('m',ci)].copy()
+                self.m_last_save[ci] = transport.q[('m',ci)].copy()
+
+                self.u_dof_last[ci] = transport.u[ci].dof.copy()
+                self.m_stage[ci] = []
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages+1):                    
+                    self.m_stage[ci].append(transport.q[('m',ci)].copy())
+                    self.u_dof_stage[ci].append(transport.u[ci].dof.copy())
+        
+    #def set_dt(self, DTSET):
+    #    self.dt = DTSET #  don't update t
+    def choose_dt(self):
+        maxCFL = 1.0e-6
+        for ci in range(self.nc):
+            if self.cfl.has_key(ci):
+                maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
+        self.dt = self.runCFL/maxCFL
+        if self.dtLast == None:
+            self.dtLast = self.dt
+        # mwf debug
+        print "RKEv max cfl component ci dt dtLast {0} {1} {2} {3}".format(maxCFL,ci,self.dt,self.dtLast)
+        if self.dt/self.dtLast  > self.dtRatioMax:
+            self.dt = self.dtLast*self.dtRatioMax
+        self.t = self.tLast + self.dt
+        self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
+    def initialize_dt(self,t0,tOut,q):
+        """
+        Modify self.dt
+        """
+        self.tLast=t0
+        self.choose_dt()
+        self.t = t0+self.dt
+ 
+    def setCoefficients(self):
+        """
+        beta are all 1's here
+        mwf not used right now
+        """
+        self.alpha = numpy.zeros((self.nStages, self.nStages),'d')
+        self.dcoefs = numpy.zeros((self.nStages),'d')
+        
+    def updateStage(self):
+        """
+        Need to switch to use coefficients
+        """
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        self.lstage += 1
+        assert self.timeOrder in [1,3]
+        assert self.lstage > 0 and self.lstage <= self.timeOrder
+        if self.timeOrder == 3:
+            if self.lstage == 1:
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) #no need for .copy?
+                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
+                    #needs to be updated for non-scalar equations
+                    #these match what is in the hand-coded NumericalSolution
+                    self.transport.coefficients.u_dof_old = numpy.copy(self.transport.u[ci].dof)
+                    #this as used as last stage value in EV Transport model
+                    self.m_last[ci] = numpy.copy(self.transport.q[('m',ci)])
+
+            elif self.lstage == 2:
+                 for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) 
+                    self.u_dof_stage[ci][self.lstage] *= 1./4.
+                    self.u_dof_stage[ci][self.lstage] += 3./4.*self.u_dof_last[ci]
+                    self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
+                    self.m_stage[ci][self.lstage] *= 1./4.
+                    #mwf this has to be fixed
+                    #previous stage updated m_last to the stage value
+                    #either have another temporary here or have the VOF code use m_stage
+                    #instead of m_last
+                    self.m_stage[ci][self.lstage] += 3./4.*self.m_last_save[ci] 
+                   
+                    #needs to be updated for non-scalar equations
+                    #these match what is in the hand-coded NumericalSolution
+                    self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_stage[ci][self.lstage])
+                    self.m_last[ci] = numpy.copy(self.m_stage[ci][self.lstage])
+            elif self.lstage == 3:
+                for ci in range(self.nc):
+                    self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof)
+                    self.u_dof_stage[ci][self.lstage][:] *= 2.0/3.0
+                    self.u_dof_stage[ci][self.lstage][:] += 1.0/3.0*self.u_dof_last[ci]
+                    #switch  time history back
+                    #this needs to be updated for multiple components
+                    self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_last[ci])
+                    self.transport.u[ci].dof = numpy.copy(self.u_dof_stage[ci][self.lstage])
+                    self.m_last[ci] = numpy.copy(self.m_last_save[ci])
+                    self.transport.getResidual(self.u_dof_stage[ci][self.lstage],
+                                               self.transport.globalResidualDummy)
+                    
+        else:
+            assert self.timeOrder == 1
+            for ci in range(self.nc):
+                self.m_stage[ci][self.lstage][:]=self.transport.q[('m',ci)][:]
+                self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
+ 
+            
+
+    def initializeTimeHistory(self,resetFromDOF=True):
+        """
+        Push necessary information into time history arrays
+        """
+        for ci in range(self.nc):
+            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
+ 
+    def updateTimeHistory(self,resetFromDOF=False):
+        """
+        assumes successful step has been taken
+        """
+        #mwf
+        #import pdb;
+        #pdb.set_trace()
+        
+        self.t = self.tLast + self.dt
+        for ci in range(self.nc):
+            self.m_last[ci][:] = self.transport.q[('m',ci)][:]
+            self.m_last_save[ci][:] = self.transport.q[('m',ci)][:]
+            self.u_dof_last[ci][:] = self.transport.u[ci].dof[:]
+            for k in range(self.nStages):
+                self.m_stage[ci][k][:]=self.transport.q[('m',ci)][:]
+                self.u_dof_stage[ci][k][:] = self.transport.u[ci].dof[:]
+        self.lstage=0
+        self.dtLast = self.dt
+        self.tLast = self.t
+    def generateSubsteps(self,tList):
+        """
+        create list of substeps over time values given in tList. These correspond to stages
+        """
+        self.substeps = []
+        tLast = self.tLast
+        for t in tList:
+            dttmp = t-tLast
+            self.substeps.extend([tLast + dttmp for i in range(self.nStages)])
+            tLast = t
+
+    def resetOrder(self,order):
+        """
+        initialize data structures for stage updges
+        """
+        self.timeOrder = order  #order of approximation
+        self.nStages = order  #number of stages total
+        self.lstage = 0  #last stage completed
+        # storage vectors
+        # per component stage values, list with array at each stage
+        self.m_stage = {}
+        self.u_dof_stage = {}
+        for ci in range(self.nc):
+             if self.transport.q.has_key(('m',ci)):
+                self.m_stage[ci] = []
+                self.u_dof_stage[ci] = []
+                for k in range(self.nStages+1):                    
+                    self.m_stage[ci].append(self.transport.q[('m',ci)].copy())
+                    self.u_dof_stage[ci].append(self.transport.u[ci].dof.copy())
+        self.substeps = [self.t for i in range(self.nStages)]            
+    def setFromOptions(self,nOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        flags = ['timeOrder']
+        for flag in flags:
+            if flag in dir(nOptions):
+                val = getattr(nOptions,flag)
+                setattr(self,flag,val)
+                if flag == 'timeOrder':
+                    self.resetOrder(self.timeOrder)
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import ncLevelSetCoefficientsEvaluate
@@ -662,6 +864,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(self,
                  EDGE_VISCOSITY=0,
                  ENTROPY_VISCOSITY=0,                 
+                 POWER_SMOOTHNESS_INDICATOR=1, 
+                 LUMPED_MASS_MATRIX=0,
 		 FCT=0,
                  V_model=0,
                  RD_model=None,
@@ -706,6 +910,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # EDGE BASED (AND ENTROPY) VISCOSITY 
         self.EDGE_VISCOSITY=EDGE_VISCOSITY
         self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
+        self.POWER_SMOOTHNESS_INDICATOR=POWER_SMOOTHNESS_INDICATOR
+        self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
         self.FCT=FCT
 
     def attachModels(self, modelList):
@@ -1539,6 +1745,9 @@ class LevelModel(OneLevelTransport):
             self.csrRowIndeces[(0,0)], #row indices (convenient for element loops) 
             self.csrColumnOffsets[(0,0)], #column indices (convenient for element loops)
             self.csrColumnOffsets_eb[(0, 0)],
+            # PARAMETERS FOR 1st and 2nd ORDER MPP METHOD 
+            self.coefficients.POWER_SMOOTHNESS_INDICATOR, 
+            self.coefficients.LUMPED_MASS_MATRIX,
             # FLUX CORRECTED TRANSPORT 
             self.flux_plus_dLij_times_soln,
             self.dL_minus_dE, 
@@ -1616,7 +1825,8 @@ class LevelModel(OneLevelTransport):
             self.coefficients.rdModel.ebqe[('u', 0)],
             self.numericalFlux.ebqe[('u', 0)],
             self.csrColumnOffsets_eb[(0, 0)],
-	    self.coefficients.EDGE_VISCOSITY)
+	    self.coefficients.EDGE_VISCOSITY,
+	    self.coefficients.LUMPED_MASS_MATRIX)
 
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
