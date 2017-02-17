@@ -1,6 +1,7 @@
 #ifndef RANS3PF2D_H
 #define RANS3PF2D_H
 #include <cmath>
+#include <valarray>
 #include <iostream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
@@ -210,9 +211,11 @@ namespace proteus
 				   double particle_beta,
 				   double particle_penalty_constant,
 				   double* particle_signed_distance,
+				   double* particle_signed_distance_normal,
 				   double* particle_velocity,
-				   double* particle_angular_velocity,
-				   double* particle_centroid)=0;
+				   double* particle_centroid,
+				   double* particle_netForces,
+				   double* particle_netMoments)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -386,8 +389,8 @@ namespace proteus
 				   double particle_beta,
 				   double particle_penalty_constant,
 				   double* particle_signed_distance,
+				   double* particle_signed_distance_normal,
 				   double* particle_velocity,
-				   double* particle_angular_velocity,
 				   double* particle_centroid)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
     					  int* exteriorElementBoundariesArray,
@@ -865,7 +868,6 @@ namespace proteus
                                           solid_velocity,
                                           viscosity);
       new_beta/=rho;
-      //std::cout<<"total "<<(1.0-phi_s)*new_beta<<std::endl;
       mom_u_source += (1.0 - phi_s)*new_beta*(u-u_s);
       mom_v_source += (1.0 - phi_s)*new_beta*(v-v_s);
       /* mom_w_source += phi_s*new_beta*(w-w_s); */
@@ -884,11 +886,12 @@ namespace proteus
     }
     
     inline
-      void updateSolidParticleTerms(const int nParticles,
+      void updateSolidParticleTerms(const double dV,
+				    const int nParticles,
 				    const int sd_offset,
 				    double* particle_signed_distance,
+				    double* particle_signed_distance_normal,
 				    double* particle_velocity,
-				    double* particle_angular_velocity,
 				    double* particle_centroid,
 				    const double penalty,
 				    const double alpha,
@@ -902,6 +905,10 @@ namespace proteus
 				    const double useVF,
 				    const double vf,
 				    const double phi,
+				    const double x,
+				    const double y,
+				    const double z,
+				    const double p,
 				    const double u,
 				    const double v,
 				    const double w,
@@ -915,9 +922,12 @@ namespace proteus
 				    double dmom_u_source[nSpace],
 				    double dmom_v_source[nSpace],
 				    double dmom_w_source[nSpace],
-				    double& C)
+				    double& C,
+				    double* particle_netForces,
+				    double* particle_netMoments)
     {
-      double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,D_s,phi_s,u_s,v_s,w_s;
+      double rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,D_s,phi_s,u_s,v_s,w_s,force_x,force_y,r_x,r_y;
+      double* phi_s_normal;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
@@ -926,22 +936,26 @@ namespace proteus
       for (int i=0;i<nParticles;i++)
 	{
 	  phi_s = particle_signed_distance[i*sd_offset];
-	  u_s = particle_velocity[i*sd_offset*3+0];
-	  v_s = particle_velocity[i*sd_offset*3+1];
-	  w_s = particle_velocity[i*sd_offset*3+2];
-	  //skipping for now
-	  //update particle centroid velocity with angular here
-	  //particle_angular_velocity
-	  //particle_centroid
-	  //
-	  H_s = smoothedHeaviside(eps_s,phi_s);
-	  D_s = smoothedDirac(eps_s,phi_s);
+	  phi_s_normal = &particle_signed_distance_normal[i*sd_offset*nSpace];
+	  u_s = particle_velocity[i*sd_offset*nSpace+0];
+	  v_s = particle_velocity[i*sd_offset*nSpace+1];
+	  H_s = smoothedHeaviside(eps_s, phi_s);
+	  D_s = smoothedDirac(eps_s, phi_s);
 	  double rel_vel_norm=sqrt((uStar-u_s)*(uStar-u_s)+
 				   (vStar-v_s)*(vStar-v_s)+
 				   (wStar-w_s)*(wStar-w_s));
 	  double C_surf = viscosity*penalty;
 	  double C_vol = alpha + beta*rel_vel_norm;
 	  C += (D_s*C_surf + (1.0 - H_s)*C_vol);
+	  force_x = dV*D_s*(p*phi_s_normal[0] + C_surf*(u-u_s)*rho);
+	  force_y = dV*D_s*(p*phi_s_normal[1] + C_surf*(v-v_s)*rho);
+	  //always 3D for particle centroids
+	  r_x = x - particle_centroid[i*3+0];
+	  r_y = y - particle_centroid[i*3+1];
+	  //always 3D for particle forces
+	  particle_netForces[i*3+0] += force_x;
+	  particle_netForces[i*3+1] += force_y;
+	  particle_netMoments[i*3+2] += (r_x*force_y - r_y*force_x);
 	}
       mom_u_source += C*(u-u_s);
       mom_v_source += C*(v-v_s);
@@ -1705,9 +1719,11 @@ namespace proteus
 			   double particle_beta,
 			   double particle_penalty_constant,
 			   double* particle_signed_distance,
+			   double* particle_signed_distance_normal,
 			   double* particle_velocity,
-			   double* particle_angular_velocity,
-			   double* particle_centroid)
+			   double* particle_centroid,
+			   double* particle_netForces,
+			   double* particle_netMoments)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -1870,6 +1886,7 @@ namespace proteus
 	      
 	      eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 	      eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	      double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 	     
 	      //get the trial function gradients
 	      /* ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial); */
@@ -2035,11 +2052,12 @@ namespace proteus
 						dmom_v_source,
 						dmom_w_source);
 	      double C_particles=0.0;
-	      updateSolidParticleTerms(nParticles,
+	      updateSolidParticleTerms(dV,
+				       nParticles,
 				       nQuadraturePoints_global,
 				       &particle_signed_distance[eN_k],
+				       &particle_signed_distance_normal[eN_k_nSpace],
 				       &particle_velocity[eN_k_nSpace],
-				       &particle_angular_velocity[eN_k_nSpace],
 				       &particle_centroid[eN_k_nSpace],
 				       particle_penalty_constant/h_phi,//penalty,
 				       particle_alpha,
@@ -2053,20 +2071,26 @@ namespace proteus
 				       useVF,
 				       vf[eN_k],
 				       phi[eN_k],
+				       x,
+				       y,
+				       z,
+				       p,
 				       u,
 				       v,
 				       w,
 				       q_velocity_sge[eN_k_nSpace+0],
 				       q_velocity_sge[eN_k_nSpace+1],
 				       q_velocity_sge[eN_k_nSpace+1],
-				       particle_epsFact,
+				       particle_eps,
 				       mom_u_source,
 				       mom_v_source,
 				       mom_w_source,
 				       dmom_u_source,
 				       dmom_v_source,
 				       dmom_w_source,
-				       C_particles);
+				       C_particles,
+				       particle_netForces,
+				       particle_netMoments);
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{
@@ -3389,13 +3413,14 @@ namespace proteus
 			   double particle_beta,
 			   double particle_penalty_constant,
 			   double* particle_signed_distance,
+			   double* particle_signed_distance_normal,
 			   double* particle_velocity,
-			   double* particle_angular_velocity,
 			   double* particle_centroid)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
+      std::valarray<double> particle_netForces(nParticles*3), particle_netMoments(nParticles*3);
       const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
       for(int eN=0;eN<nElements_global;eN++)
 	{
@@ -3578,6 +3603,7 @@ namespace proteus
 	
 	      eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 	      eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	      const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 	      
 	      //get the trial function gradients
 	      /* ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial); */
@@ -3740,11 +3766,12 @@ namespace proteus
 						dmom_v_source,
 						dmom_w_source);
 	      double C_particles=0.0;
-	      updateSolidParticleTerms(nParticles,
+	      updateSolidParticleTerms(dV,
+				       nParticles,
 				       nQuadraturePoints_global,
 				       &particle_signed_distance[eN_k],
+				       &particle_signed_distance_normal[eN_k_nSpace],
 				       &particle_velocity[eN_k_nSpace],
-				       &particle_angular_velocity[eN_k_nSpace],
 				       &particle_centroid[eN_k_nSpace],
 				       particle_penalty_constant/h_phi,//penalty,
 				       particle_alpha,
@@ -3758,20 +3785,26 @@ namespace proteus
 				       useVF,
 				       vf[eN_k],
 				       phi[eN_k],
+				       x,
+				       y,
+				       z,
+				       p,
 				       u,
 				       v,
 				       w,
 				       q_velocity_sge[eN_k_nSpace+0],
 				       q_velocity_sge[eN_k_nSpace+1],
 				       q_velocity_sge[eN_k_nSpace+1],
-				       particle_epsFact,
+				       particle_eps,
 				       mom_u_source,
 				       mom_v_source,
 				       mom_w_source,
 				       dmom_u_source,
 				       dmom_v_source,
 				       dmom_w_source,
-				       C_particles);
+				       C_particles,
+				       &particle_netForces[0],
+				       &particle_netMoments[0]);
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{
