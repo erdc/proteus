@@ -39,6 +39,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
+                               double * vel_hess_trial_ref,
                                double * vel_test_ref,
                                double * vel_grad_test_ref,
                                double * mesh_trial_trace_ref,
@@ -198,14 +199,16 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_nu,
                                double * ebqe_nu,
                                int nParticles,
-			       double particle_epsFact,
-			       double particle_alpha,
-			       double particle_beta,
+                               double particle_epsFact,
+                               double particle_alpha,
+                               double particle_beta,
 			       double particle_penalty_constant,
 			       double* particle_signed_distance,
+			       double* particle_signed_distance_normal,
 			       double* particle_velocity,
-			       double* particle_angular_velocity,
-			       double* particle_centroid)
+			       double* particle_centroid,
+                               double* particle_netForces,
+                               double* particle_netMoments)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -224,6 +227,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
+                               double * vel_hess_trial_ref,
                                double * vel_test_ref,
                                double * vel_grad_test_ref,
                                double * mesh_trial_trace_ref,
@@ -377,8 +381,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double particle_beta,
 			       double particle_penalty_constant,
 			       double* particle_signed_distance,
+			       double* particle_signed_distance_normal,
 			       double* particle_velocity,
-			       double* particle_angular_velocity,
 			       double* particle_centroid)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
@@ -496,6 +500,7 @@ cdef class RANS3PF:
                           numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
+                          numpy.ndarray vel_hess_trial_ref,
                           numpy.ndarray vel_test_ref,
                           numpy.ndarray vel_grad_test_ref,
                           numpy.ndarray mesh_trial_trace_ref,
@@ -642,10 +647,12 @@ cdef class RANS3PF:
 			  double particle_alpha,
 			  double particle_beta,
 			  double particle_penalty_constant,
-			  numpy.ndarray particle_signed_distance,
-			  numpy.ndarray particle_velocity,
-			  numpy.ndarray particle_angular_velocity,
-			  numpy.ndarray particle_centroid):
+                          numpy.ndarray particle_signed_distance,
+                          numpy.ndarray particle_signed_distance_normal,
+                          numpy.ndarray particle_velocity,
+                          numpy.ndarray particle_centroid,
+                          numpy.ndarray particle_netForces,
+                          numpy.ndarray particle_netMoments):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -664,6 +671,7 @@ cdef class RANS3PF:
                                         < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
+                                       < double * > vel_hess_trial_ref.data,
                                        < double * > vel_test_ref.data,
                                        < double * > vel_grad_test_ref.data,
                                        < double * > mesh_trial_trace_ref.data,
@@ -810,10 +818,12 @@ cdef class RANS3PF:
 				        particle_alpha,
 				        particle_beta,
 				        particle_penalty_constant,
-				        < double* > particle_signed_distance.data,
-				        < double* > particle_velocity.data,
-				        < double* > particle_angular_velocity.data,
-				        < double* > particle_centroid.data)
+                                        < double* > particle_signed_distance.data,
+                                        < double* > particle_signed_distance_normal.data,
+                                        < double* > particle_velocity.data,
+                                        < double* > particle_centroid.data,
+                                        < double* > particle_netForces.data,
+                                        < double* > particle_netMoments.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -834,6 +844,7 @@ cdef class RANS3PF:
                           numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
+                          numpy.ndarray vel_hess_trial_ref,
                           numpy.ndarray vel_test_ref,
                           numpy.ndarray vel_grad_test_ref,
                           numpy.ndarray mesh_trial_trace_ref,
@@ -986,9 +997,11 @@ cdef class RANS3PF:
 			  double particle_beta,
 			  double particle_penalty_constant,
 			  numpy.ndarray particle_signed_distance,
+			  numpy.ndarray particle_signed_distance_normal,
 			  numpy.ndarray particle_velocity,
-			  numpy.ndarray particle_angular_velocity,
-			  numpy.ndarray particle_centroid):
+			  numpy.ndarray particle_centroid,
+			  numpy.ndarray particle_netForces,
+			  numpy.ndarray particle_netMoments):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian( < double*> mesh_trial_ref.data,
@@ -1009,6 +1022,7 @@ cdef class RANS3PF:
                                         < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
+                                       < double * > vel_hess_trial_ref.data,
                                        < double * > vel_test_ref.data,
                                        < double * > vel_grad_test_ref.data,
                                        < double * > mesh_trial_trace_ref.data,
@@ -1161,8 +1175,8 @@ cdef class RANS3PF:
 				        particle_beta,
 				        particle_penalty_constant,
 				        < double* > particle_signed_distance.data,
+				        < double* > particle_signed_distance_normal.data,
 				        < double* > particle_velocity.data,
-				        < double* > particle_angular_velocity.data,
 				        < double* > particle_centroid.data)
 
     def calculateVelocityAverage(self,
@@ -1378,11 +1392,13 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double particle_epsFact,
 			       double particle_alpha,
 			       double particle_beta,
-			       double particle_penalty_constant,
-			       double* particle_signed_distance,
+                               double particle_penalty_constant,
+                               double* particle_signed_distance,
+                               double* particle_signed_distance_normal,
 			       double* particle_velocity,
-			       double* particle_angular_velocity,
-			       double* particle_centroid)
+			       double* particle_centroid,
+                               double* particle_netForces,
+                               double* particle_netMoments)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1555,8 +1571,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double particle_beta,
 			       double particle_penalty_constant,
 			       double* particle_signed_distance,
+			       double* particle_signed_distance_normal,
 			       double* particle_velocity,
-			       double* particle_angular_velocity,
 			       double* particle_centroid)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
@@ -1822,9 +1838,11 @@ cdef class RANS3PF2D:
 			  double particle_beta,
 			  double particle_penalty_constant,
 			  numpy.ndarray particle_signed_distance,
-			  numpy.ndarray particle_velocity,
-                          numpy.ndarray particle_angular_velocity,
-			  numpy.ndarray particle_centroid):
+                          numpy.ndarray particle_signed_distance_normal,
+                          numpy.ndarray particle_velocity,
+                          numpy.ndarray particle_centroid,
+			  numpy.ndarray particle_netForces,
+                          numpy.ndarray particle_netMoments):
         self.thisptr.calculateResidual(< double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1991,9 +2009,11 @@ cdef class RANS3PF2D:
 			               particle_beta,
 			               particle_penalty_constant,
 			               < double* > particle_signed_distance.data,
+			               < double* > particle_signed_distance_normal.data,
 			               < double* > particle_velocity.data,
-			               < double* > particle_angular_velocity.data,
-			               < double* > particle_centroid.data)
+			               < double* > particle_centroid.data,
+			               < double* > particle_netForces.data,
+			               < double* > particle_netMoments.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -2167,8 +2187,8 @@ cdef class RANS3PF2D:
 			  double particle_beta,
 			  double particle_penalty_constant,
 			  numpy.ndarray particle_signed_distance,
+			  numpy.ndarray particle_signed_distance_normal,
 			  numpy.ndarray particle_velocity,
-			  numpy.ndarray particle_angular_velocity,
 			  numpy.ndarray particle_centroid):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
@@ -2343,8 +2363,8 @@ cdef class RANS3PF2D:
 			               particle_beta,
 			               particle_penalty_constant,
 			               < double* > particle_signed_distance.data,
-			               < double* > particle_velocity.data,
-                                       < double* > particle_angular_velocity.data,
+                                       < double* > particle_signed_distance_normal.data,
+                                       < double* > particle_velocity.data,
 			               < double* > particle_centroid.data)
 
     def calculateVelocityAverage(self,
@@ -2772,13 +2792,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebqe_nu  = self.model.ebqe[('u',0)].copy()
         #DEM particles
         self.nParticles=1
+        self.particle_netForces = np.zeros((self.nParticles,3),'d')
+        self.particle_netMoments = np.zeros((self.nParticles,3),'d')
         self.particle_signed_distance=self.model.q[('u',0)].copy()
+        self.particle_signed_distance_normal=self.model.q[('velocity',0)].copy()
         for eN in range(self.model.q['x'].shape[0]):
             for k in range(self.model.q['x'].shape[1]):
-                self.particle_signed_distance[eN,k] = self.particle_sdf(self.model.q['x'][eN,k])
+                self.particle_signed_distance[eN,k],self.particle_signed_distance_normal[eN,k] = self.particle_sdf(self.model.q['x'][eN,k])
         self.particle_velocity=self.model.q[('velocity',0)].copy()
         self.particle_velocity[:]=0.0
-        self.particle_angular_velocity=self.model.q[('velocity',0)].copy()
         self.particle_centroid=self.model.q['x'].copy()
         #
         if self.PRESSURE_model is not None:
@@ -4394,9 +4416,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	    self.coefficients.particle_beta,
 	    self.coefficients.particle_penalty_constant,
 	    self.coefficients.particle_signed_distance,
+	    self.coefficients.particle_signed_distance_normal,
 	    self.coefficients.particle_velocity,
-	    self.coefficients.particle_angular_velocity,
-	    self.coefficients.particle_centroid)
+	    self.coefficients.particle_centroid,
+            self.coefficients.particle_netForces,
+            self.coefficients.particle_netMoments)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
@@ -4408,6 +4432,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.coefficients.netForces_v[i, I])
                 self.coefficients.netMoments[i, I] = globalSum(
                     self.coefficients.netMoments[i, I])
+        for i in range(self.coefficients.particle_netForces.shape[0]):
+            for I in range(3):
+                self.coefficients.particle_netForces[i, I] = globalSum(
+                    self.coefficients.particle_netForces[i, I])
+                self.coefficients.particle_netMoments[i, I] = globalSum(
+                    self.coefficients.particle_netMoments[i, I])
+            logEvent("particle i="+`i`+ " force "+`self.coefficients.particle_netForces[i]`)
+            logEvent("particle i="+`i`+ " moment "+`self.coefficients.particle_netMoments[i]`)
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[
@@ -4655,8 +4687,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	    self.coefficients.particle_beta,
 	    self.coefficients.particle_penalty_constant,
 	    self.coefficients.particle_signed_distance,
+	    self.coefficients.particle_signed_distance_normal,
 	    self.coefficients.particle_velocity,
-	    self.coefficients.particle_angular_velocity,
 	    self.coefficients.particle_centroid)
 
         if not self.forceStrongConditions and max(
