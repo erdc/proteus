@@ -353,6 +353,17 @@ class NS_base:  # (HasTraits):
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                       parallelPartitioningType=n.parallelPartitioningType)
+            elif isinstance(p.domain,Domain.MeshQuadDomain_IFISS):
+                mesh=MeshTools.QuadrilateralMesh()
+                logEvent("Reading coarse mesh from file")
+                mesh.generateFromQuadFileIFISS(p.domain.meshfile)
+                mlMesh = MeshTools.MultilevelQuadrilateralMesh(0,0,0,skipInit=True,
+                                                               nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                               parallelPartitioningType=n.parallelPartitioningType)
+                logEvent("Generating %i-level mesh from coarse mesh" % (n.nLevels,))
+                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.GMSH_3D_Domain):
                 from subprocess import call
                 import sys

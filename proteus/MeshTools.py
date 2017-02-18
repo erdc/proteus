@@ -4419,7 +4419,32 @@ class QuadrilateralMesh(Mesh):
                 e3 = Edge(nodes=[n3,n0])
                 self.newQuadrilateral([e0,e1,e2,e3])
         self.finalize()
-    
+        
+    def generateFromQuadFileIFISS(self,meshfile):
+        ''' WIP - read a matlab.mat file containing IFISS vertices
+        and elements
+        '''
+        import scipy.io
+        griddata = scipy.io.loadmat(meshfile+'.mat')
+        self.nodeList = [Node(nN,n[0],n[1],0.0) for nN,n in enumerate(griddata['vertices'])]
+        # Is the following line necessary?
+        self.nodeDict = dict([(n,n) for n in self.nodeList])
+        for q in griddata['quads']:
+            n0,n3,n2,n1 = q # clockwise ordering needed
+            e0 = Edge(nodes=[self.nodeList[n0],self.nodeList[n1]])
+            e1 = Edge(nodes=[self.nodeList[n1],self.nodeList[n2]])
+            e2 = Edge(nodes=[self.nodeList[n2],self.nodeList[n3]])
+            e3 = Edge(nodes=[self.nodeList[n3],self.nodeList[n0]])
+            self.newQuadrilateral([e0,e1,e2,e3])
+        self.finalize()
+        for F,nN in griddata['bdyflags']:
+            self.nodeMaterialTypes[nN] = F
+        for ebNE in range(self.nExteriorElementBoundaries_global):
+            ebN = self.exteriorElementBoundariesArray[ebNE]
+            n0,n1 = self.elementBoundaryNodesArray[ebN]
+            self.elementBoundaryMaterialTypes[ebN]=max(self.nodeMaterialTypes[n0],
+                                                       self.nodeMaterialTypes[n1])
+
     def meshType(self):
         return 'cuboid'
 
@@ -4737,6 +4762,36 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
             self.meshList[-1].elementNumbering_subdomain2global.itemset(element,element)
         self.elementChildren.append(childrenDict)
 
+    def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
+        import cmeshTools
+        #blow away or just trust garbage collection
+        self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
+        self.meshList = []
+        self.elementParents = None
+        self.cmultilevelMesh = None
+        self.meshList.append(mesh0)
+        self.meshList[0].subdomainMesh = self.meshList[0]
+        self.elementChildren=[]
+        logEvent(self.meshList[0].meshInfo())
+        self.meshList[0].globalMesh = self.meshList[0]
+        # The following four lines should be called elsewhere...Most of this is don in
+        # the c-function calls that are not implemented yet for 2D quads
+        self.meshList[0].nElements_owned = self.meshList[0].nElements_global
+        self.meshList[0].nodeNumbering_subdomain2global.resize(self.meshList[0].nNodes_global)
+        self.meshList[0].elementNumbering_subdomain2global.resize(self.meshList[0].nElements_global)
+        self.meshList[0].nodeOffsets_subdomain_owned[-1] = self.meshList[0].nNodes_global
+        self.meshList[0].nNodes_owned = self.meshList[0].nNodes_global
+        self.meshList[0].elementOffsets_subdomain_owned[-1] = self.meshList[0].nElements_global
+        for node in range(self.meshList[0].nNodes_global):
+            self.meshList[0].nodeNumbering_subdomain2global.itemset(node,node)
+        for element in range(self.meshList[0].nElements_global):
+            self.meshList[0].elementNumbering_subdomain2global.itemset(element,element)
+        for l in range(1,refinementLevels):
+            self.refine()
+            self.meshList[l].subdomainMesh = self.meshList[l]
+            logEvent(self.meshList[-1].meshInfo())
+        self.buildArrayLists()
 
 class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
     """A triangular mesh that interpolates bathymetry from a point cloud"""
