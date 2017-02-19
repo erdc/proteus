@@ -11,6 +11,11 @@
 #include <iostream>
 #include <fstream>
 
+/** 
+ * \file ErrorResidualMethod.cpp
+ * \ingroup MeshAdaptPUMI
+ * @{
+ */
 //Global variables used to make it easier to pass these variables from MeshAdaptPUMIDrvr
 int approx_order; //shape function order
 int int_order; //integration order
@@ -28,7 +33,16 @@ void getProps(double*rho,double*nu)
 }
 
 double MeshAdaptPUMIDrvr::getMPvalue(double field_val,double val_0, double val_1)
-//Function primarily used to get the VOF-weighted average of physical properties at a given point
+/**
+ * @brief Function primarily used to get the VOF-weighted average of physical properties at a given point
+ *
+ * Due to the potential multi-phase nature of the problem, material properties at quadrature points
+ * are weighted averages of the different phases.
+ *
+ * \param field_val VOF value
+ * \param val_0 value of property for one phase
+ * \param val_1 value of property for second phase
+ */
 {
   return val_0*(1-field_val)+val_1*field_val;
 }
@@ -225,17 +239,20 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
 
 
 void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf)
-//Function used to compute the diffusive flux at interelement boundaries and stores the values as tags at the boundaries
-//Based on the mesh database, each face has a default orientation that is outward normal to a given element.
-//The flux has a different value depending on the element.
-//The value from the default element is stored in the first slot of the tag and the other value is stored in the second slot
-//Special considerations are made for global domain boundaries if boundary conditions exist and for parallel communications
-//Inputs:
-//  m is the mesh
-//  voff is the volume of fluid field
-//  visc is the field of viscosity
-//  pref is the pressure field
-//  velf is the velocity field
+/** 
+ * @brief Function used to compute the diffusive flux at interelement boundaries and stores the values as tags at the boundaries
+ *
+ * Based on the mesh database, each face has a default orientation that is outward normal to a given element.
+ * The flux has a different value depending on the element.
+ * The value from the default element is stored in the first slot of the tag and the other value is stored in the second slot
+ * Special considerations are made for global domain boundaries if boundary conditions exist and for parallel communications
+ * Inputs:
+ * \param m is the mesh
+ * \param voff is the volume of fluid field
+ * \param visc is the field of viscosity
+ * \param pref is the pressure field
+ * \param velf is the velocity field
+ */
 {
   if(comm_rank==0)
     std::cerr<<"Begin computeDiffusiveFlux()"<<std::endl;
@@ -412,12 +429,13 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
 }
 
 void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, double * endflux)
-//This function reads in the stored tags and computes the boundary flux according to the RHS formulation
-//Inputs:
-//  m is the mesh
-//  ent is an element (tetrahedron)
-//Outputs:
-//  endflux is the boundary flux used in the RHS 
+/** 
+ * @brief This function reads in the stored tags and computes the boundary flux according to the RHS formulation
+ * 
+ * \param m is the input mesh
+ * \param ent is an input element (tetrahedron)
+ * \param endflux is the output boundary flux used in the RHS 
+ */
 {
     int nshl;
     apf::NewArray <double> shpval;
@@ -492,7 +510,12 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, doub
 }
 
 apf::Field* MeshAdaptPUMIDrvr::getViscosityField(apf::Field* voff)
-//Function used to derive a viscosity field from a VOF field
+/** 
+ * @brief Function used to derive a viscosity field from a VOF field
+ *
+ * For convenience, derive a viscosity field using the getMPvalue() function. 
+ * \param voff is the VOF field. 
+ */
 {
   apf::Field* visc = apf::createLagrangeField(m,"viscosity",apf::SCALAR,1);
   apf::MeshEntity* ent;
@@ -534,8 +557,12 @@ void setErrorField(apf::Field* estimate,Vec coef,apf::MeshEntity* ent,int nsd,in
 }
 
 void MeshAdaptPUMIDrvr::removeBCData()
-//Function used to remove the BC tags that were created during the computeDiffusiveFlux() function
-//This is the simple way of avoiding errors from creating the same tags the next time the error estimator is called
+/** 
+ * @brief Function used to remove the BC tags that were created during the computeDiffusiveFlux() function
+ *
+ * This is the simple way of avoiding errors from creating the same tags the next time the error estimator is called
+ * The function just cycles through all of the faces and removes the apf tags.
+ */
 {
   if(comm_rank==0) std::cout<<"Start removing BC tags/data"<<std::endl;
   apf::MeshEntity* ent;   
@@ -568,10 +595,14 @@ void MeshAdaptPUMIDrvr::removeBCData()
 }
 
 void MeshAdaptPUMIDrvr::get_local_error(double &total_error) 
-//This function aims to compute error at each element via an Error Residual Method.
-//See Oden, J. Tinsley, Weihan Wu, and Mark Ainsworth. "An a posteriori error estimate for finite element approximations of the Navier-Stokes equations." Computer Methods in Applied Mechanics and Engineering 111.1 (1994): 185-202.
-//Effectively, it projects the weak residual onto a higher order space.
-//Boundary condition considerations are discussed in Ainsworth, Mark, and J. Tinsley Oden. A posteriori error estimation in finite element analysis. Vol. 37. John Wiley & Sons, 2011.
+/** 
+ * @brief This function aims to compute error at each element via an Element Residual Method.
+ *
+ * See Oden, J. Tinsley, Weihan Wu, and Mark Ainsworth. "An a posteriori error estimate for finite element approximations of the Navier-Stokes equations." Computer Methods in Applied Mechanics and Engineering 111.1 (1994): 185-202.
+ * Effectively, the method involves projecting the weak residual onto a higher order space.
+ * Boundary condition considerations are discussed in Ainsworth, Mark, and J. Tinsley Oden. A posteriori error estimation in finite element analysis. Vol. 37. John Wiley & Sons, 2011.
+ * The function loops through each element and solves the local problem.
+ */
 {
   getProps(rho,nu);
   approx_order = approximation_order; 
@@ -857,4 +888,4 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
     std::cerr<<"It cleared the ERM function.\n";
 }
 
-
+/** @} */

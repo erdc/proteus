@@ -2,7 +2,18 @@
 #include <apfMesh.h>
 #include <apfShape.h>
 
+/** 
+ * \file MeshFields.cpp
+ * \ingroup MeshAdaptPUMI 
+ @{ 
+*/
+
 void MeshAdaptPUMIDrvr::freeField(apf::Field*& f)
+/**
+ * @brief Destroy field to avoid memory leak
+ * 
+ * Every field needs to eventually be destroyed. Returns nothing.
+ */
 {
   if (f) {
     apf::destroyField(f);
@@ -11,6 +22,12 @@ void MeshAdaptPUMIDrvr::freeField(apf::Field*& f)
 }
 
 void MeshAdaptPUMIDrvr::freeNumbering(apf::Numbering*& n)
+/**
+ * @brief Destroy numbering to avoid memory leak
+ * 
+ * Every numbering needs to eventually be destroyed. Returns nothing
+ * 
+ */
 {
   if (n) {
     apf::destroyNumbering(n);
@@ -20,6 +37,18 @@ void MeshAdaptPUMIDrvr::freeNumbering(apf::Numbering*& n)
 
 int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArray,
     int nVar, int nN)
+/**
+ * @brief Convert Proteus fields to something PUMI can understand
+ * 
+ * Copies the Proteus field associated with an array into an apf field associated with
+ * "name"
+ *
+ * \param name is the desired name associated with the apf field
+ * \param inArray is the Proteus field
+ *
+ * The remainder of the parameters might be irrelevant.
+ */
+
 {
   assert(nN == static_cast<int>(m->count(0)));
   apf::Field* f = m->findField(name);
@@ -52,6 +81,17 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArr
 
 int MeshAdaptPUMIDrvr::transferFieldToProteus(const char* name, double* outArray,
     int nVar, int nN)
+/**
+ * @brief Convert PUMI fields to something Proteus can understand
+ * 
+ * Copies the PUMI apf field with name into an outArray.
+ *
+ * \param name is the desired name associated with the apf field
+ * \param outArray is the Proteus field that will be output
+ *
+ * The remainder of the parameters might be irrelevant.
+ */
+
 {
   assert(nN == static_cast<int>(m->count(0)));
   apf::Field* f = m->findField(name);
@@ -73,6 +113,16 @@ int MeshAdaptPUMIDrvr::transferFieldToProteus(const char* name, double* outArray
 }
 
 int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, double *g_p)
+/**
+ * @brief Transfer material properties to the MeshAdaptPUMI class
+ * 
+ * There are three material properties that the error estimator requires:
+ * 
+ * \param rho_p is the density
+ * \param nu_p is the kinematic viscosity
+ * \param g_p is the gravitational field (a 3-vector)
+ *
+ */
 { 
  rho[0] = rho_p[0]; rho[1] = rho_p[1];
  nu[0] = nu_p[0]; nu[1] = nu_p[1];
@@ -192,3 +242,6 @@ int MeshAdaptPUMIDrvr::transferBCsToProteus()
   return 0;
 }
 */
+
+/** @}*/
+

@@ -22,12 +22,18 @@
   pAManager SModel_attManager(pModel model);
 #endif
 
-
+/** 
+ * \file cMeshAdaptPUMI.cpp
+ * \ingroup MeshAdaptPUMI 
+ @{ 
+*/
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
     const char* sfConfig, const char* maType,const char* logType, double targetError, double targetElementCount)
-//MeshAdaptPUMIDrvr is the highest level class that handles the interface between Proteus and the PUMI libraries
-//See MeshAdaptPUMI.h for the list of class variables/functions/objects
-//This is the constructor for the class
+/**
+ * MeshAdaptPUMIDrvr is the highest level class that handles the interface between Proteus and the PUMI libraries
+ * See MeshAdaptPUMI.h for the list of class variables/functions/objects
+ * This is the constructor for the class
+*/
 {
   m = 0;
   PCU_Comm_Init();
@@ -73,7 +79,9 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
-//Destructor for MeshAdaptPUMIDrvr
+/**
+ * Destructor for MeshAdaptPUMIDrvr
+ */
 {
 
   freeField(err_reg);
@@ -94,13 +102,16 @@ static bool ends_with(std::string const& str, std::string const& ext)
   return str.size() >= ext.size() &&
          str.compare(str.size() - ext.size(), ext.size(), ext) == 0;
 }
+/**
+ * @brief Load the mesh and model for SCOREC libraries
+ *
+ * The default filetypes are .dmg (model) and .smb (mesh), but can support GMSH meshes (.msh) and Simmetrix models (.smd) and meshes (.sms)
+ * GMSH models are not used and .null filenames and passed instead.
+ * Each of the the GMSH and Simmetrix filetypes can be converted into a SCOREC filetype via tools in scorec
+ * Diffusive flux boundary conditions are supported with Simmetrix models and can be passed into the error estimator 
+ */
 
 int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshFile)
-//Load the mesh and model for SCOREC libraries
-//The default filetypes are .dmg (model) and .smb (mesh), but can support GMSH meshes (.msh) and Simmetrix models (.smd) and meshes (.sms)
-//GMSH models are not used and .null filenames and passed instead.
-//Each of the the GMSH and Simmetrix filetypes can be converted into a SCOREC filetype via tools in scorec and scorec-sim yaml files.
-//Diffusive flux boundary conditions are supported with Simmetrix models and can be passed into the error estimator 
 {
   comm_size = PCU_Comm_Peers();
   comm_rank = PCU_Comm_Self();
@@ -124,8 +135,14 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
 
 
 int MeshAdaptPUMIDrvr::getSimmetrixBC()
+/**
+ * @brief Function used to read in diffusive flux BC from Simmetrix Model.
+ *
+ * Simmetrix BCs set via the GUI are read-in through the Simmetrix API.
+ * The values are stored as apf tags on the mesh.
+ * BCs are not currently supported with any other type of model.
+ */
 {
-//Function used to read in diffusive flux BC from Simmetrix Model
 
 #ifdef PROTEUS_USE_SIMMETRIX
   pGModel model = 0;
@@ -247,10 +264,14 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
 } 
 
 int MeshAdaptPUMIDrvr::willAdapt() 
-//Function used to define whether a mesh needs to be adapted based on the error estimator
-//The return value is a flag indicating whether the mesh will not (0) or will be (1) adapted 
-//The THRESHOLD will be set to the error estimate after the wind-up step, but is currently 0
-//Assertion is set to ensure that all ranks in a parallel execution will enter the adapt stage
+/**
+ * @brief Looks at the estimated error and determines if mesh adaptation is necessary.
+ *
+ * Function used to define whether a mesh needs to be adapted based on the error estimator
+ * The return value is a flag indicating whether the mesh will not (0) or will be (1) adapted 
+ * The THRESHOLD will be set to the error estimate after the wind-up step, but is currently 0
+ * Assertion is set to ensure that all ranks in a parallel execution will enter the adapt stage
+ */
 {
   if(THRESHOLD==0){
     THRESHOLD = total_error;
@@ -280,14 +301,17 @@ int MeshAdaptPUMIDrvr::willAdapt()
 }
 
 int MeshAdaptPUMIDrvr::adaptPUMIMesh()
-//Function used to trigger adaptation
-//Inputs are the type of size-field that is desired:
-//"interface" refers to explicitly adapting to the current interface position based on the level-set field
-//"ERM" refers to the error-residual method and using error estimates to determine how a mesh should be adapted
-//  Within ERM, there is an isotropic and anisotropic configuration. The anisotropic configuration requires more development.
-//"Isotropic" refers to a uniform refinement based on a global hmin size and is primarily used for testing
-//Predictive load balancers Zoltan and ParMA are used in combination for before, during, and after adapt with a preset tolerance of imbalance
-//The nAdapt counter is iterated to track how many times a mesh is adapted
+/**
+ * @brief Function used to trigger adaptation
+ *
+ * Inputs are the type of size-field that is desired:
+ * "interface" refers to explicitly adapting to the current interface position based on the level-set field
+ * "ERM" refers to the error-residual method and using error estimates to determine how a mesh should be adapted
+ *  Within ERM, there is an isotropic and anisotropic configuration. The anisotropic configuration requires more development.
+ *  "Isotropic" refers to a uniform refinement based on a global hmin size and is primarily used for testing
+ *  Predictive load balancers Zoltan and ParMA are used in combination for before, during, and after adapt with a preset tolerance of imbalance
+ *  The nAdapt counter is iterated to track how many times a mesh is adapted
+ */
 {
   if (size_field_config == "interface")
       calculateAnisoSizeField();
@@ -382,9 +406,12 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 }
 
 double MeshAdaptPUMIDrvr::getMinimumQuality()
-//Function used to get the worst element quality in the mesh
-//Returns the minimum quality
-//Meant to be used to trigger adaptation, but has not been implemented yet
+/**
+ * @brief Function used to get the worst element quality in the mesh.
+ *
+ * Measures the quality via SCOREC library; returns the minimum quality
+ * Meant to be used to trigger adaptation, but has not been implemented yet
+ */
 {
   ma::SizeField* isf = new ma::IdentitySizeField(m);
   apf::MeshIterator* it = m->begin(m->getDimension());
@@ -398,8 +425,11 @@ double MeshAdaptPUMIDrvr::getMinimumQuality()
 }
 
 double MeshAdaptPUMIDrvr::getTotalMass()
-//Function to track total mass of the domain.
-//Returns total mass across all ranks
+/**
+ * @brief Function to track total mass of the domain.
+ *
+ * Returns total mass across all ranks
+ */
 {
   apf::Field* voff = m->findField("vof");
   assert(voff);
@@ -428,3 +458,4 @@ double MeshAdaptPUMIDrvr::getTotalMass()
   PCU_Add_Doubles(&mass,1);
   return mass;
 }
+/** @} */

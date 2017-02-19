@@ -4,6 +4,17 @@
 #include <apfMesh2.h>
 #include <apfNumbering.h>
 
+/**
+   \file MeshAdaptPUMI.h
+   \defgroup MeshAdaptPUMI MeshAdaptPUMI
+   \brief A C-library of functions that uses SCOREC tools for error estimation and mesh adaptation
+   @{
+*/
+
+/**
+  @brief Class that handles the interface between SCOREC tools and Proteus
+*/
+
 class MeshAdaptPUMIDrvr{
  
   public:
@@ -75,7 +86,7 @@ class MeshAdaptPUMIDrvr{
   int approximation_order; //what order polynomial (hierarchic is 2nd order)
   int integration_order; //determines number of integration points
   int num_quadrature; 
-  int num_quarature_boundary;
+  int num_quadrature_boundary;
   double total_error;
   double errRho_max;
   double rel_err_total;
@@ -124,3 +135,4 @@ class MeshAdaptPUMIDrvr{
 };
 
 
+/** @} */
