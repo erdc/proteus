@@ -27,7 +27,7 @@ def petsc_view(obj, filename):
     viewer2(obj)
     viewer2.popFormat()
 
-def petsc_load(filename):
+def petsc_load_matrix(filename):
     """ This function loads a PETSc matrix from a binary format.
     (Eg. what is saved using the petsc_view function).
 
@@ -43,11 +43,33 @@ def petsc_load(filename):
     """
     try:
         viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
-        matrix = p4pyPETSc.Mat().load(viewer)
+        output = p4pyPETSc.Mat().load(viewer)
     except:
         print('invalid file name')
-    return matrix
-    
+    return output
+
+def petsc_load_vector(filename):
+    """ This function loads a PETSc matrix from a binary format.
+    (Eg. what is saved using the petsc_view function).
+
+    Parameters
+    ----------
+    filename : str
+        This is the name of the binary with the file stored.
+
+    Returns
+    -------
+    matrix : petsc4py vector
+        The matrix that is stored in the binary file.
+    """
+    try:
+        viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
+        output = p4pyPETSc.Vec().load(viewer)
+    except:
+        print('invalid file name')
+    return output
+
+
 def _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output=False):
     """ Takes python CSR datatypes and makes a dense matrix """
     dense_matrix = numpy.zeros(shape = (nr,nc), dtype='float')
@@ -136,7 +158,14 @@ class ParVec:
     """
     A parallel vector built on top of daetk's wrappers for petsc
     """
-    def __init__(self,array,blockSize,n,N,nghosts=None,subdomain2global=None,blockVecType="simple"):#"block"
+    def __init__(self,
+                 array,
+                 blockSize,
+                 n,
+                 N,
+                 nghosts=None,
+                 subdomain2global=None,
+                 blockVecType="simple"):#"block"
         import flcbdfWrappers
         self.dim_proc=n*blockSize
         if nghosts is None:
@@ -162,10 +191,39 @@ class ParVec:
 class ParVec_petsc4py(p4pyPETSc.Vec):
     """
     Parallel vector using petsc4py's wrappers for PETSc
+    
+    ARB QUESTION - I think this has been implemented at this point?!
     WIP -- This function builds the local to global mapping for the PETSc parallel vectors.  At this
     point it only works when the variables can be interwoven (eg. stablized elements where velocity and
     pressure come from the same space).  We would like to extend this functionality to include finite
     element spaces that cannot be interwoven such as Taylor Hood.
+
+    Parameters
+    ----------
+    array : numpy_array
+            A numpy array with size equal to the number of locally
+            owned unknowns plus the number of local ghost cells.
+    bs : int
+         Block size.
+    n : int
+        The number of locally owned unknowns
+    N : int
+        The number of unknowns in the global system
+    nghosts : int
+              The number of ghost nodes for the process.
+    subdomain2global : numpy array
+                       Map from the process unknowns to the global
+                       uknowns.
+    blockVecType : str
+    ghosts : numpy array
+             A numpy array with the local process uknowns that are
+             ghost nodes.
+    proteus2petsc_subdomain : numpy array
+             A numpy array that serves as a map from the proteus
+             uknown ordering to the petsc uknown ordering
+    petsc2proteus_subdomain : numpy array
+            A numpy array that serves as a map from the petsc uknown
+            ordering to the proteus unknown ordering
     """
     def __init__(self,array=None,bs=None,n=None,N=None,nghosts=None,subdomain2global=None,blockVecType="simple",ghosts=None,
                                                  proteus2petsc_subdomain=None,
@@ -237,7 +295,19 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
 
 class ParMat_petsc4py(p4pyPETSc.Mat):
     """Parallel matrix based on petsc4py's wrappers for PETSc. """
-    def __init__(self,ghosted_csr_mat=None,par_bs=None,par_n=None,par_N=None,par_nghost=None,subdomain2global=None,blockVecType="simple",pde=None, par_nc=None, par_Nc=None, proteus_jacobian=None, nzval_proteus2petsc=None):
+    def __init__(self,
+                 ghosted_csr_mat=None,
+                 par_bs=None,
+                 par_n=None,
+                 par_N=None,
+                 par_nghost=None,
+                 subdomain2global=None,
+                 blockVecType="simple",
+                 pde=None,
+                 par_nc=None,
+                 par_Nc=None,
+                 proteus_jacobian=None,
+                 nzval_proteus2petsc=None):
         p4pyPETSc.Mat.__init__(self)
         if ghosted_csr_mat is None:
             return#when duplicating for petsc usage

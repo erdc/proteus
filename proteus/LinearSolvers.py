@@ -429,7 +429,6 @@ class KSP_petsc4py(LinearSolver):
         if convergenceTest == 'r-true':
             self.r_work = self.petsc_L.getVecLeft()
             self.rnorm0 = None
-#            import pdb ; pdb.set_trace()
             self.ksp.setConvergenceTest(self._converged_trueRes)
         else:
             self.r_work = None
@@ -505,9 +504,20 @@ class KSP_petsc4py(LinearSolver):
             self.pccontext.par_u = par_u
         if self.matcontext != None:
             self.matcontext.par_b = par_b
+#        import pdb ; pdb.set_trace()
+        # if p4pyPETSc.COMM_WORLD.rank==0:
+        #     import pdb ; pdb.set_trace()
+        ### THIS IS A DEBUGGING EXPERIMENT
+#        self.__createParVec(par_b)
+#        petsc_view(self.tmp,'tmp')
+        # petsc_view(self.vec_of_ones,'ones')
         if self.bdyNullSpace==True:
             # is there a reason par_b should not be owned by self?
+#            self.__setNullSpace(par_b)
             self.__setNullSpace(par_b)
+#        print '*********!!!!!!!!!!!!!!!!! par_u' + `par_u.norm()`
+#        print '*********!!!!!!!!!!!!!!!!! par_u' + `self.tmp.norm()`
+#        print '*********!!!!!!!!!!!!!!!!! par_b = ' + `par_b.norm()`
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -531,6 +541,109 @@ class KSP_petsc4py(LinearSolver):
     def info(self):
         self.ksp.view()
 
+    def __createParVec(self,par_b):
+        """ A initial attempt to set up the null space vector
+        in parallel.
+
+        """
+        #Global null space constructor
+        # if p4pyPETSc.COMM_WORLD.rank==0:
+        #     import pdb ; pdb.set_trace()
+        #Comm information
+        rank = p4pyPETSc.COMM_WORLD.rank
+        size = p4pyPETSc.COMM_WORLD.size
+        # information for par_vec
+        par_N = par_b.getSize()
+        par_n = par_b.getLocalSize()
+        par_nghosts = par_b.nghosts
+        subdomain2global = par_b.subdomain2global
+        proteus2petsc_subdomain = par_b.proteus2petsc_subdomain
+        petsc2proteus_subdomain = par_b.petsc2proteus_subdomain
+        # information for pressure uknowns
+        pSpace = self.par_L.pde.u[0].femSpace
+        pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
+        n_DOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
+        N_DOF_pressure = pressure_offsets[size]
+        total_pressure_unknowns = pSpace.dofMap.nDOF_subdomain
+        self.tmp_array_1 = numpy.ones((par_n+par_nghosts),'d')
+        self.tmp_array_2 = numpy.zeros((par_n+par_nghosts),'d')
+        self.tmp_array_3 = numpy.zeros((par_n+par_nghosts),'d')
+        self.vec_of_ones = ParVec_petsc4py(self.tmp_array_1,
+                                           1,
+                                           par_n,
+                                           par_N,
+                                           par_nghosts,
+                                           subdomain2global,
+                                           proteus2petsc_subdomain=proteus2petsc_subdomain,
+                                           petsc2proteus_subdomain=petsc2proteus_subdomain)
+        self.tmp = ParVec_petsc4py(self.tmp_array_2,
+                                   1,
+                                   par_n,
+                                   par_N,
+                                   par_nghosts,
+                                   subdomain2global,
+                                   proteus2petsc_subdomain=proteus2petsc_subdomain,
+                                   petsc2proteus_subdomain=petsc2proteus_subdomain)
+        # self.tmp2 = ParVec_petsc4py(tmp_array_3,
+        #                            1,
+        #                            par_n,
+        #                            par_N,
+        #                            par_nghosts,
+        #                            subdomain2global,
+        #                            proteus2petsc_subdomain=proteus2petsc_subdomain,
+        #                            petsc2proteus_subdomain=petsc2proteus_subdomain)
+        self.ksp.getOperators()[0].mult(self.vec_of_ones,self.tmp)
+#        print '*************' +`self.ksp.getOperators()[0]`
+        
+    def __defineNullSpaceVec(self,par_b):
+        """ A initial attempt to set up the null space vector
+        in parallel.
+
+        """
+        #Global null space constructor
+#        import pdb ; pdb.set_trace()
+        #Comm information
+        rank = p4pyPETSc.COMM_WORLD.rank
+        size = p4pyPETSc.COMM_WORLD.size
+        # information for par_vec
+        par_N = par_b.getSize()
+        par_n = par_b.getLocalSize()
+        par_nghosts = par_b.nghosts
+        subdomain2global = par_b.subdomain2global
+        proteus2petsc_subdomain = par_b.proteus2petsc_subdomain
+        petsc2proteus_subdomain = par_b.petsc2proteus_subdomain
+        # information for pressure uknowns
+        pSpace = self.par_L.pde.u[0].femSpace
+        pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
+        n_DOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
+#        assert par_n == n_DOF_pressure
+        N_DOF_pressure = pressure_offsets[size]
+        total_pressure_unknowns = pSpace.dofMap.nDOF_subdomain
+        t = pSpace.dofMap.nDOF_all_processes
+        assert t==N_DOF_pressure
+        self.tmp_array = numpy.zeros((par_n+par_nghosts),'d')
+        self.tmp_array[0:n_DOF_pressure] = 1.0/(sqrt(N_DOF_pressure))
+#        print 'pressure dofs global = ' +`N_DOF_pressure`
+#        self.tmp_array[0:n_DOF_pressure] = 1.0/N_DOF_pressure
+        # if p4pyPETSc.COMM_WORLD.rank==0:
+        #     import pdb ; pdb.set_trace()
+        null_space_basis = ParVec_petsc4py(self.tmp_array,
+                                           1,
+                                           par_n,
+                                           par_N,
+                                           par_nghosts,
+                                           subdomain2global,
+                                           proteus2petsc_subdomain=proteus2petsc_subdomain,
+                                           petsc2proteus_subdomain=petsc2proteus_subdomain)
+        petsc_view(null_space_basis,'pre_vec_rank_'+`p4pyPETSc.COMM_WORLD.rank`)
+        null_space_basis.scatter_forward_insert()
+#        print self.tmp_array
+        self.tmp_array[:] = self.tmp_array[petsc2proteus_subdomain]
+        from proteus import LinearAlgebraTools
+#        print 'PROTEUS NORM *********' + `LinearAlgebraTools.l2Norm(self.tmp_array[0:par_n])`
+#        print '*******NORM**********' + `null_space_basis.norm(1)`
+        self.global_null_space = [null_space_basis]
+
     def __setNullSpace(self,par_b):
         """ Set up the boundary null space for the KSP solves. 
 
@@ -539,13 +652,19 @@ class KSP_petsc4py(LinearSolver):
         par_b : proteus.LinearAlgebraTools.ParVec_petsc4py
             The problem's RHS vector.
         """
-        vecs = self.preconditioner.global_null_space
-        pressure_null_space = p4pyPETSc.NullSpace().create(constant = False,
-                                                         vectors = vecs,
+        self.__defineNullSpaceVec(par_b)
+        vecs = self.global_null_space
+#        vecs = self.preconditioner.global_null_space
+        # from proteus import Comm
+#        print 'processor rank = ' +`p4pyPETSc.COMM_WORLD.rank` + ' has left the station'
+        self.pressure_null_space = p4pyPETSc.NullSpace().create(constant = False,
+                                                           vectors = vecs,
                                                            comm = p4pyPETSc.COMM_WORLD)
-        self.ksp.getOperators()[0].setNullSpace(pressure_null_space)
-        pressure_null_space.remove(par_b)
-        
+        self.ksp.getOperators()[0].setNullSpace(self.pressure_null_space)
+#        petsc_view(par_b,'par_b_pre_remove')
+#        import pdb ; pdb.set_trace()
+        self.pressure_null_space.remove(par_b)
+#        petsc_view(par_b,'par_b_post_remove')
 
     def _setMatOperators(self):
         """ Initializes python context for the ksp matrix operator """
@@ -591,6 +710,10 @@ class KSP_petsc4py(LinearSolver):
             if Preconditioner == petsc_LU:
                 logEvent("NAHeader Precondtioner LU")
                 self.preconditioner = petsc_LU(par_L)
+                self.pc = self.preconditioner.pc
+            elif Preconditioner == petsc_ASM:
+                logEvent("NAHead Preconditioner ASM")
+                self.preconditioner = petsc_ASM(par_L,prefix)
                 self.pc = self.preconditioner.pc
             #ARB - something else needs to be done with these commented out preconditioners,
             #I've not thought of what just yet. 1-19-17.
@@ -1019,6 +1142,33 @@ class KSP_Preconditioner:
     def setup(self):
         pass
 
+class petsc_ASM(KSP_Preconditioner):
+    """ASM PETSc preconditioner class.
+
+    This class provides an ASM preconditioners for PETSc4py KSP
+    objects.
+    """
+    def __init__(self,L,prefix=None):
+        """
+        Initializes the ASMpreconditioner for use with PETSc.
+
+        Parameters
+        ----------
+        L : the global system matrix.
+        """
+        self.PCType = 'asm'
+        self.L = L
+        self._create_preconditioner()
+        self.pc.setFromOptions()
+
+    def _create_preconditioner(self):
+        """ Create the pc object. """
+        self.pc = p4pyPETSc.PC().create()
+        self.pc.setType('asm')
+
+    def setUp(self,global_ksp=None):
+        pass
+        
 class petsc_LU(KSP_Preconditioner):
     """ LU PETSc preconditioner class.
     
@@ -1090,14 +1240,16 @@ class SchurPrecon(KSP_Preconditioner):
         neqns = L_sizes[0][0]
         nc = self.L.pde.nc
         rank = p4pyPETSc.COMM_WORLD.rank
+        size = p4pyPETSc.COMM_WORLD.size
         pSpace = self.L.pde.u[0].femSpace
         pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
-        nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
+        n_DOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
+        N_DOF_pressure = pressure_offsets[size]
         if self.L.pde.stride[0] == 1:#assume end to end
             self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+nDOF_pressure,
+                                            stop=L_range[0]+n_DOF_pressure,
                                             dtype="i")
-            self.velocityDOF = numpy.arange(start=L_range[0]+nDOF_pressure,
+            self.velocityDOF = numpy.arange(start=L_range[0]+n_DOF_pressure,
                                             stop=L_range[0]+neqns,
                                             step=1,
                                             dtype="i")
@@ -1122,10 +1274,13 @@ class SchurPrecon(KSP_Preconditioner):
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         #Global null space constructor
-        temp_array = numpy.zeros(shape=(neqns,1))
-        temp_array[0:nDOF_pressure] = 1.0/(sqrt(nDOF_pressure))
-        null_space_basis = p4pyPETSc.Vec().createWithArray(temp_array)
-        self.global_null_space = [null_space_basis]
+        # if p4pyPETSc.COMM_WORLD.rank==0:
+        #     import pdb ; pdb.set_trace()
+        # temp_array = numpy.zeros(shape=(neqns,1))
+        # temp_array[0:n_DOF_pressure] = 1.0/(sqrt(N_DOF_pressure))
+        # null_space_basis = p4pyPETSc.Vec().createWithArray(temp_array,
+        #                                                    comm=p4pyPETSc.COMM_WORLD)
+        # self.global_null_space = [null_space_basis]
         
 class NavierStokesSchur(SchurPrecon):
     """ Schur complement preconditioners for Navier-Stokes problems.
@@ -1148,6 +1303,7 @@ class NavierStokesSchur(SchurPrecon):
         Preconditioner arguments can be set with PETSc command line.
         """
         if self.bdyNullSpace == True:
+#            import pdb ; pdb.set_trace()
             self._setConstantPressureNullSpace(global_ksp)
         self._setSchurlog(global_ksp)
 
@@ -1251,6 +1407,7 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
                 'supported.'
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
+#            import pdb ; pdb.set_trace() 
             self._setConstantPressureNullSpace(global_ksp)
 
 class NavierStokes3D_PCD(NavierStokesSchur) :

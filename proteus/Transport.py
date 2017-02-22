@@ -1749,6 +1749,7 @@ class OneLevelTransport(NonlinearEquation):
         for cj in range(self.nc):
             for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
                 self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+#        import pdb ; pdb.set_trace()
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -6386,7 +6387,9 @@ class MultilevelTransport:
             logEvent("Allocating parallel storage",level=2)
             comm = Comm.get()
             self.comm=comm
-            if (comm.size() > 1):
+            # before merging this stuff, the following line should be changed to
+            # if (comm.size() > 1): 
+            if (comm.size() >= 1):
                 for ci in range(transport.nc):
                     assert trialSpaceDict[ci].dofMap.dof_offsets_subdomain_owned is not None, "trial space %s needs subdomain -> global mappings " % trialSpaceDict
                 #initially assume all the spaces can share the same l2g information ...
@@ -6529,6 +6532,12 @@ class MultilevelTransport:
                                                  petsc_subdomain2global_petsc, ghosts=petsc_ghosts,
                                                  proteus2petsc_subdomain=proteus2petsc_subdomain,
                                                  petsc2proteus_subdomain=petsc2proteus_subdomain)
+                        # if comm.rank()==0:
+                        #     print 'par_n_list = ' + `par_n_list`
+                        #     print 'par_N_list = ' + `par_N_list`
+                        #     print 'par_nghosts_list = ' + `par_nghost_list`
+                        #     print 'subdomain2global = ' + `subdomain2global`
+#                            import pdb ; pdb.set_trace()
                         rowptr, colind, nzval = jacobian.getCSRrepresentation()
                         rowptr_petsc = rowptr.copy()
                         colind_petsc = colind.copy()
@@ -6558,8 +6567,10 @@ class MultilevelTransport:
                         assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
                         comm.endSequential()
                         assert(nzval_petsc.shape[0] == colind_petsc.shape[0] == rowptr_petsc[-1] - rowptr_petsc[0])
-                        petsc_a = np.zeros((transport.dim, transport.dim),'d')
-                        proteus_a = np.zeros((transport.dim, transport.dim),'d')
+                        petsc_a = {}
+                        proteus_a = {}
+ #                       petsc_a = np.zeros((transport.dim, transport.dim),'d')
+ #                       proteus_a = np.zeros((transport.dim, transport.dim),'d')
                         for i in range(transport.dim):
                             for j,k in zip(colind[rowptr[i]:rowptr[i+1]],range(rowptr[i],rowptr[i+1])):
                                 nzval[k] = i*transport.dim+j
@@ -6568,14 +6579,17 @@ class MultilevelTransport:
                         for i in range(transport.dim):
                             for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],range(rowptr_petsc[i],rowptr_petsc[i+1])):
                                 nzval_petsc[k] = petsc_a[i,j]
-                        assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
-                        assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
-                        assert (proteus_a[petsc2proteus_subdomain,:][:,petsc2proteus_subdomain] == petsc_a).all()
-                        assert((proteus_a == petsc_a[proteus2petsc_subdomain,:][:,proteus2petsc_subdomain]).all())
-                        petsc_a = np.arange(transport.dim**2).reshape(transport.dim,transport.dim)
+                                #TODO - ARB these asserts should be changed to reflect new petsc_a and proteus_a structures
+#                        assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
+#                        assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
+#                        assert (proteus_a[petsc2proteus_subdomain,:][:,petsc2proteus_subdomain] == petsc_a).all()
+#                        assert((proteus_a == petsc_a[proteus2petsc_subdomain,:][:,proteus2petsc_subdomain]).all())
+#                        petsc_a = np.arange(transport.dim**2).reshape(transport.dim,transport.dim)
                         transport.nzval_petsc = nzval_petsc
                         transport.colind_petsc = colind_petsc
                         transport.rowptr_petsc = rowptr_petsc
+#                        if comm.rank() == 0 :
+#                            import pdb ; pdb.set_trace()
                         petsc_jacobian = SparseMat(transport.dim,transport.dim,nzval_petsc.shape[0], nzval_petsc, colind_petsc, rowptr_petsc)
                         transport.petsc_jacobian = petsc_jacobian#petsc_jacobian = jacobian
                         if  comm.size() == 1:
