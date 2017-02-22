@@ -249,24 +249,31 @@ namespace proteus
 			} 
 		    }
                   else  if(nDOF_mesh_trial_elementIn == 4)
-                    {
-                      /* if (nQuadraturePoints_elementIn == 4) */
-                      /*   { */
-                      /*     if (nQuadraturePoints_elementBoundaryIn == 2) */
-                      /*       return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,2,4,4,4,4,2>()); */
-                      /*     else */
-                      /*       abort(); */
-                      /*   } */
-                      /* else */
+                    { // quad with Q1 
+                      if (nQuadraturePoints_elementIn == 4) 
+			{ 
+			  if (nQuadraturePoints_elementBoundaryIn == 2) 
+			    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,2,4,4,4,4,2>()); 
+			  else 
+			    abort(); 
+			} 
+		      else if (nQuadraturePoints_elementIn == 9)
+			{
+			  if (nQuadraturePoints_elementBoundaryIn == 3) 
+			    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,4,4>,2,9,4,4,4,3>()); 
+			  else 
+			    abort(); 
+			}
+		      else 
                         abort();
                     }
 		  else
 		    abort();
 		}
 	      else if (nDOF_mesh_trial_elementIn == 3)
-		{
+		{ // Simplex with higher order spaces 
 		  if (nDOF_trial_elementIn == 6)
-		    {
+		    { // simplex with P2
 		      /* if (nQuadraturePoints_elementIn == 1) */
 		      /* 	{ */
 		      /* 	  if (nQuadraturePoints_elementBoundaryIn == 1) */
@@ -305,7 +312,7 @@ namespace proteus
 		      /* 	    abort(); */
 		      /* 	} */
 		      if (nQuadraturePoints_elementIn == 6)
-		      	{
+		      	{ 
 		      	  if (nQuadraturePoints_elementBoundaryIn == 4)
 		      	    return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,6,6>,2,6,3,6,6,4>());
 		      	  else
@@ -314,7 +321,20 @@ namespace proteus
 		      else
 			abort();
 		    }
-		  else
+		  else // higher than P2
+		    abort();
+		}
+	      else if (nDOF_mesh_trial_elementIn == 4) 
+		{ // quads on high order spaces
+		  if (nDOF_trial_elementIn == 9)
+		    { // quad on Q2
+		      if (nQuadraturePoints_elementIn == 25)
+			if (nQuadraturePoints_elementBoundaryIn == 5) 
+			  return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,4,9,9>,2,25,4,9,9,5>()); 
+			else 
+			  abort(); 		      
+		    }
+		  else // quads on higher than 2nd order spaces
 		    abort();
 		}
 	      else
