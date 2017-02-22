@@ -77,6 +77,7 @@ namespace proteus
 				   //
 				   int* u_l2g, 
 				   double* elementDiameter,
+				   int degree_polynomial,
 				   double* u_dof,
 				   double* u_dof_old,
 				   double* u_dof_old_old,
@@ -176,6 +177,7 @@ namespace proteus
 				   //
 				   int* u_l2g,
 				   double* elementDiameter,
+				   int degree_polynomial,
 				   double* u_dof, 
 				   double* velocity,
 				   double* q_m_betaBDF, 
@@ -523,6 +525,7 @@ namespace proteus
 			   //
 			   int* u_l2g, 
 			   double* elementDiameter,
+			   int degree_polynomial,
 			   double* u_dof,
 			   double* u_dof_old,
 			   double* u_dof_old_old,
@@ -697,7 +700,7 @@ namespace proteus
 			 m_t,
 			 dm_t);
 		  // CALCULATE CFL //
-		  calculateCFL(elementDiameter[eN],df,cfl[eN_k]); // TODO: ADJUST SPEED IF MESH IS MOVING
+		  calculateCFL(elementDiameter[eN]/degree_polynomial,df,cfl[eN_k]); // TODO: ADJUST SPEED IF MESH IS MOVING
 		  
 		  // CALCULATE ENTROPY RESIDUAL AT QUAD POINT //
 		  //velocity at tn for entropy viscosity
@@ -1621,11 +1624,11 @@ namespace proteus
 		    } //ENTROPY_VISCOSITY=0
 		  else
 		    {
+		      double h=elementDiameter[eN]/degree_polynomial;
 		      // CALCULATE CFL //
-		      calculateCFL(elementDiameter[eN],df_star,cfl[eN_k]); // TODO: ADJUST SPEED IF MESH IS MOVING
+		      calculateCFL(h,df_star,cfl[eN_k]); // TODO: ADJUST SPEED IF MESH IS MOVING
 		      // ** LINEAR DIFFUSION (MQL) ** //
 		      // calculate linear viscosity 
-		      double h=elementDiameter[eN];
 		      double linear_viscosity = cMax*h*vel_max[eN]; // Cell based
 		      
 		      // ** ENTROPY VISCOSITY (MQL) ** //
@@ -1639,6 +1642,8 @@ namespace proteus
 		      n_grad_u = sqrt(n_grad_u);
 		      double compression_factor = fmax(1-cK*fmax(u*(1.0-u),0.)/(h*n_grad_u+1.0e-8),0.);
 		      q_numDiff_u[eN_k] *= compression_factor;
+
+		      //q_numDiff_u[eN_k] = linear_viscosity;
 		    }
 		  // 
 		  //update element residual 
@@ -1651,7 +1656,7 @@ namespace proteus
 		      elementResidual_u[i] += 
 			dt*ck.Mass_weak(m_t,u_test_dV[i]) + 
 			dt*ck.Advection_weak(f_star,&u_grad_test_dV[i_nSpace]) + 
-			dt*(ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridError(subgridError_u,Lstar_u[i]) + 		   
+			//dt*(ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridError(subgridError_u,Lstar_u[i]) + 		   
 			dt*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u_star,&u_grad_test_dV[i_nSpace]);
 		    }//i
 		  //
@@ -1669,6 +1674,7 @@ namespace proteus
 		{ 
 		  register int eN_i=eN*nDOF_test_element+i;
 		  globalResidual[offset_u+stride_u*u_l2g[eN_i]] += elementResidual_u[i];
+		  //globalResidual[offset_u+stride_u*u_l2g[eN_i]] += 0;
 		}//i
 	    }//elements
 	  //
@@ -2008,6 +2014,7 @@ namespace proteus
 			   //
 			   int* u_l2g,
 			   double* elementDiameter,
+			   int degree_polynomial,
 			   double* u_dof, 
 			   double* velocity,
 			   double* q_m_betaBDF, 
@@ -2204,7 +2211,7 @@ namespace proteus
 
 	      for(int j=0;j<nDOF_trial_element;j++)
 		dsubgridError_u_u[j] = -tau*dpdeResidual_u_u[j];
-	      double h=elementDiameter[eN];
+	      //double h=elementDiameter[eN];
 	      int IMPLICIT = (EDGE_VISCOSITY==1 ? 0. : 1.)*(ENTROPY_VISCOSITY==1 ? 0. : 1.); 
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
@@ -2226,9 +2233,9 @@ namespace proteus
 			  //std::cout<<"jac "<<'\t'<<q_numDiff_u_last[eN_k]<<'\t'<<dm_t<<'\t'<<df[0]<<df[1]<<'\t'<<dsubgridError_u_u[j]<<std::endl;
 			  elementJacobian_u_u[i][j] += 
 			    dt*ck.MassJacobian_weak(dm_t,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) + 
-			    dt*IMPLICIT*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
-			    dt*IMPLICIT*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
-			    dt*IMPLICIT*ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); //implicit
+			    0*dt*IMPLICIT*ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
+			    0*dt*IMPLICIT*ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
+			    0*dt*IMPLICIT*ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); //implicit
 			}
 		    }//j
 		}//i
