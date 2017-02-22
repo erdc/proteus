@@ -1039,7 +1039,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
             for i in range(self.nFreeDOF_global[0]):
                 self.ML[i] = self.MC_a[rowptr[i]:rowptr[i+1]].sum()
-            np.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
+            #np.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
             for d in range(self.nSpace_global): #spatial dimensions
                 #C matrices
                 self.cterm[d] = np.zeros((self.mesh.nElements_global,
@@ -1106,7 +1106,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.min_u_bc.fill(1E10);
         self.max_u_bc.fill(-1E10);
         self.flux_plus_dLij_times_soln = numpy.zeros(self.u[0].dof.shape,'d')
-        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        #self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
         #
         #cek end computationa of cterm_global
@@ -1144,6 +1144,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
               for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                   self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
+        degree_polynomial = 1
+        try:
+            degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
+
         self.vof.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1179,6 +1185,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
+            degree_polynomial,
             self.u[0].dof,
             self.coefficients.u_dof_old,
             self.coefficients.u_dof_old_old,
@@ -1243,6 +1250,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.min_u_bc,
             self.max_u_bc,
             self.quantDOFs)
+        
+        #print numpy.min(r), numpy.max(r)
+        #input("")
 
         if self.forceStrongConditions:#
             for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -1259,6 +1269,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getJacobian(self,jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
+
+        degree_polynomial = 1
+        try:
+            degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
+
         self.vof.calculateJacobian(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1291,6 +1308,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
+            degree_polynomial,
             self.u[0].dof,
             self.coefficients.q_v,
             self.timeIntegration.beta_bdf[0],

@@ -50,6 +50,7 @@ cdef extern from "VOF.h" namespace "proteus":
                                #
                                int* u_l2g, 
                                double* elementDiameter,
+			       int degree_polynomial,
                                double* u_dof,
 			       double* u_dof_old,
 			       double* u_dof_old_old,
@@ -139,6 +140,7 @@ cdef extern from "VOF.h" namespace "proteus":
                                #
                                int* u_l2g,
                                double* elementDiameter,
+			       int degree_polynomial,
                                double* u_dof, 
                                double* velocity,
                                double* q_m_betaBDF, 
@@ -248,6 +250,7 @@ cdef class cVOF_base:
                          #
                          numpy.ndarray u_l2g, 
                          numpy.ndarray elementDiameter,
+			 int degree_polynomial,
                          numpy.ndarray u_dof,
                  	 numpy.ndarray u_dof_old,
                  	 numpy.ndarray u_dof_old_old,
@@ -337,6 +340,7 @@ cdef class cVOF_base:
                                        #
                                        <int*> u_l2g.data, 
                                        <double*> elementDiameter.data,
+				       degree_polynomial,
                                        <double*> u_dof.data,
 				       <double*> u_dof_old.data,	
 				       <double*> u_dof_old_old.data,
@@ -427,6 +431,7 @@ cdef class cVOF_base:
                          #
                          numpy.ndarray u_l2g,
                          numpy.ndarray elementDiameter,
+			 int degree_polynomial,
                          numpy.ndarray u_dof, 
                          numpy.ndarray velocity,
                          numpy.ndarray q_m_betaBDF, 
@@ -482,6 +487,7 @@ cdef class cVOF_base:
                                        #
                                        <int*> u_l2g.data,
                                        <double*> elementDiameter.data,
+				       degree_polynomial,
                                        <double*> u_dof.data, 
                                        <double*> velocity.data,
                                        <double*> q_m_betaBDF.data, 

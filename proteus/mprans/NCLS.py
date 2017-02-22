@@ -939,6 +939,12 @@ class LevelModel(OneLevelTransport):
               for dofN,g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
                   self.u[0].dof[dofN] = g(self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
+        degree_polynomial = 1
+        try:
+            degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
+
         self.ncls.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -971,6 +977,7 @@ class LevelModel(OneLevelTransport):
 	    self.coefficients.sc_beta,
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
+            degree_polynomial,
             self.u[0].dof,
 	    self.coefficients.u_dof_old,
 	    self.coefficients.u_dof_old_old,
@@ -1038,6 +1045,13 @@ class LevelModel(OneLevelTransport):
         import pdb
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
 				       jacobian)
+
+        degree_polynomial = 1
+        try:
+            degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
+
         #mwf debug
         #pdb.set_trace()
         #cNCLS.calculateJacobian(self.mesh.nElements_global,
@@ -1070,6 +1084,7 @@ class LevelModel(OneLevelTransport):
             self.shockCapturing.shockCapturingFactor,
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
+            degree_polynomial,
             self.u[0].dof,
             self.coefficients.q_v,
             self.timeIntegration.beta_bdf[0],#mwf was self.timeIntegration.m_last[0],

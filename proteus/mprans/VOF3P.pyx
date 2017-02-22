@@ -79,6 +79,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                const double * q_vos,
                                int * u_l2g,
                                double * elementDiameter,
+                               int degree_polynomial,
                                double * u_dof, 
                                double * u_dof_old,
                                double * u_dof_old_old,
@@ -166,6 +167,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                const double * q_vos,
                                int * u_l2g,
                                double * elementDiameter,
+                               int degree_polynomial,
                                double * u_dof,
                                double * velocity,
                                double * q_m_betaBDF,
@@ -307,6 +309,7 @@ cdef class VOF3P:
                           numpy.ndarray q_vos,
                           numpy.ndarray u_l2g,
                           numpy.ndarray elementDiameter,
+                          int degree_polynomial,
                           numpy.ndarray u_dof, 
                           numpy.ndarray u_dof_old,
                           numpy.ndarray u_dof_old_old,
@@ -396,6 +399,7 @@ cdef class VOF3P:
                                        <double*> q_vos.data,
                                        <int*> u_l2g.data,
                                        <double*> elementDiameter.data,
+                                       degree_polynomial,
                                        <double*> u_dof.data,
                                        <double*> u_dof_old.data,
                                        <double*> u_dof_old_old.data,
@@ -486,6 +490,7 @@ cdef class VOF3P:
                           numpy.ndarray q_vos,
                           numpy.ndarray u_l2g,
                           numpy.ndarray elementDiameter,
+                          int degree_polynomial,
                           numpy.ndarray u_dof,
                           numpy.ndarray velocity,
                           numpy.ndarray q_m_betaBDF,
@@ -541,6 +546,7 @@ cdef class VOF3P:
                                        <double*> q_vos.data,
                                        <int*> u_l2g.data,
                                        <double*> elementDiameter.data,
+                                       degree_polynomial,
                                        <double*> u_dof.data,
                                        <double*> velocity.data,
                                        <double*> q_m_betaBDF.data,
@@ -1907,6 +1913,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.timeIntegration.t)
         assert (self.coefficients.q_porosity == 1).all()
         
+        degree_polynomial = 1
+        try:
+            degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
+
         self.vof.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -2027,6 +2039,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
+
+        degree_polynomial = 1
+        try:
+            degree_polynomial = self.u[0].femSpace.order
+        except:
+            pass
+
         self.vof.calculateJacobian(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,

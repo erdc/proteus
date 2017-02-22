@@ -92,6 +92,7 @@ namespace proteus
 				   //
 				   int* u_l2g, 
 				   double* elementDiameter,
+				   int degree_polynomial,
 				   double* u_dof,
 				   double* u_dof_old,	
 				   double* u_dof_old_old,
@@ -194,6 +195,7 @@ namespace proteus
 				   //
 				   int* u_l2g,
 				   double* elementDiameter,
+				   int degree_polynomial,
 				   double* u_dof, 
 				   double* velocity,
 				   double* q_m_betaBDF, 
@@ -636,6 +638,7 @@ namespace proteus
 			   //
 			   int* u_l2g, 
 			   double* elementDiameter,
+			   int degree_polynomial,
 			   double* u_dof,
 			   double* u_dof_old,
 			   double* u_dof_old_old,
@@ -2134,6 +2137,7 @@ namespace proteus
 			   //
 			   int* u_l2g,
 			   double* elementDiameter,
+			   int degree_polynomial,
 			   double* u_dof, 
 			   double* velocity,
 			   double* q_m_betaBDF, 

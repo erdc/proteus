@@ -72,6 +72,7 @@ namespace proteus
 		                   double sc_uref, double sc_alpha,
 				   int* u_l2g, 
 				   double* elementDiameter,
+				   int degree_polynomial,
 				   double* u_dof,
 				   double* u_dof_old,	
 				   double* u_dof_old_old,	
@@ -149,6 +150,7 @@ namespace proteus
 				   double shockCapturingDiffusion,
 				   int* u_l2g,
 				   double* elementDiameter,
+				   int degree_polynomial,
 				   double* u_dof, 
 				   double* velocity,
 				   double* q_m_betaBDF, 
@@ -478,6 +480,7 @@ namespace proteus
 			   double sc_uref, double sc_alpha,
 			   int* u_l2g, 
 			   double* elementDiameter,
+			   int degree_polynomial,
 			   double* u_dof,
 			   double* u_dof_old,			   
 			   double* u_dof_old_old,
@@ -628,7 +631,7 @@ namespace proteus
 			 m_t,
 			 dm_t);
 		  // CALCULATE CFL //
-		  calculateCFL(elementDiameter[eN],dH,cfl[eN_k]); // TODO: ADJUST SPEED IF MESH IS MOVING
+		  calculateCFL(elementDiameter[eN]/degree_polynomial,dH,cfl[eN_k]); // TODO: ADJUST SPEED IF MESH IS MOVING
 		      
 		  // CALCULATE ENTROPY RESIDUAL AT QUAD POINT //
 		  if (ENTROPY_VISCOSITY==1)
@@ -678,7 +681,7 @@ namespace proteus
 	      /////////////////
 	      // DISTRIBUTE // load cell based element into global residual
 	      ////////////////
-	      double h=elementDiameter[eN];
+	      double h=elementDiameter[eN]/degree_polynomial;
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  int eN_i=eN*nDOF_test_element+i;
@@ -1662,6 +1665,7 @@ namespace proteus
 			   double shockCapturingDiffusion,
 			   int* u_l2g,
 			   double* elementDiameter,
+			   int degree_polynomial,
 			   double* u_dof, 
 			   double* velocity,
 			   double* q_m_betaBDF, 
