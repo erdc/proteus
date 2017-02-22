@@ -136,6 +136,7 @@ class NS_base:  # (HasTraits):
                 logEvent("Hotstarting, using existing mesh "+p.name)
             else:
                 logEvent("Generating mesh for "+p.name)
+            
             #support for old-style domain input
             if p.domain == None:
                 if p.nd == 1:
@@ -179,7 +180,6 @@ class NS_base:  # (HasTraits):
 
                     if not hasattr(n,'quad'):
                         n.quad = False
-
                     if (n.quad):
                         mlMesh = MeshTools.MultilevelQuadrilateralMesh(nnx,nny,1,
                                                                        p.domain.x[0], p.domain.x[1], 0.0,
@@ -725,7 +725,7 @@ class NS_base:  # (HasTraits):
                 self.archiveInitialSolution(m,index)
             else:
                 self.ar[index].domain = self.ar[index].tree.find("Domain")
-            self.initializeViewSolution(m)
+            self.initializeViewSolution(m)            
             logEvent("Estimating initial time derivative and initializing time history for model "+p.name)
             #now the models are attached so we can calculate the coefficients
             for lm,lu,lr in zip(m.levelModelList,
@@ -920,11 +920,13 @@ class NS_base:  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
+
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
                 self.tCount+=1
                 for index,model in enumerate(self.modelList):
                     self.archiveSolution(model,index,self.systemStepController.t_system_last)
+                    #self.archiveInitialSolution(model,index)
             if systemStepFailed:
                 break
         logEvent("Finished calculating solution",level=3)
@@ -1022,17 +1024,18 @@ class NS_base:  # (HasTraits):
                                                                                     initialPhase=True,meshChanged=True)
 
         #For aux quantity of interest (MQL)        
-        try:
+        try: 
             quantDOFs = {}
             quantDOFs[0] = model.levelModelList[-1].quantDOFs
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   quantDOFs,
-                                                                   res_name_base='quantDOFs_for_'+model.name)
-            logEvent("Writing initial quantity of interest at DOFs for = "+model.name,level=3)
+            if quantDOFs[0] is not None:
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs_for_'+model.name)
+                logEvent("Writing initial quantity of interest at DOFs for = "+model.name,level=3)
         except:
-            pass        
+            pass
 
         #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
@@ -1052,6 +1055,7 @@ class NS_base:  # (HasTraits):
                 if index == len(self.ar) - 1:
                     self.ar[index].sync()
     ##save model's solution values to archive
+
     def archiveSolution(self,model,index,t=None):
         if self.archiveFlag == ArchiveFlags.UNDEFINED:
             return
@@ -1106,12 +1110,13 @@ class NS_base:  # (HasTraits):
         try:
             quantDOFs = {}
             quantDOFs[0] = model.levelModelList[-1].quantDOFs
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
-                                                                   self.tnList[0],
-                                                                   self.tCount,
-                                                                   quantDOFs,
-                                                                   res_name_base='quantDOFs_for_'+model.name)
-            logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+            if quantDOFs[0] is not None:
+                model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                       self.tnList[0],
+                                                                       self.tCount,
+                                                                       quantDOFs,
+                                                                       res_name_base='quantDOFs_for_'+model.name)
+                logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
         except:
             pass
 
