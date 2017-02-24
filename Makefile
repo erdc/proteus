@@ -268,7 +268,7 @@ check:
 
 	@echo "************************"
 	@echo "Parallel Proteus Partition Test"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
+#	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
 doc:

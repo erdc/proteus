@@ -22,7 +22,7 @@ if sys.platform == 'darwin':
     platform_lapack_integer = '__CLPK_integer'
     platform_blas_h = r'<Accelerate/Accelerate.h>'
     platform_lapack_h = r'<Accelerate/Accelerate.h>'
-    platform_extra_compile_args = ['-flax-vector-conversions','-DPETSC_SKIP_COMPLEX']
+    platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C','-flax-vector-conversions','-DPETSC_SKIP_COMPLEX']
 elif sys.platform == 'linux2':
     platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C', '-DPETSC_SKIP_COMPLEX']
     platform_extra_link_args = ['-L'+PROTEUS_LIB_DIR,'-Wl,-rpath,' + PROTEUS_LIB_DIR]
@@ -52,10 +52,10 @@ def get_flags(package):
         lib_dir = PROTEUS_LIB_DIR
     return include_dir, lib_dir
 
-PROTEUS_EXTRA_LINK_ARGS=platform_extra_link_args+['-lopenblas']
+PROTEUS_EXTRA_LINK_ARGS=platform_extra_link_args+['-lblas']
 
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
-PROTEUS_EXTRA_FC_LINK_ARGS=['-L'+PROTEUS_LIB_DIR,'-lopenblas']
+PROTEUS_EXTRA_FC_LINK_ARGS=['-L'+PROTEUS_LIB_DIR,'-lblas']
 
 
 PROTEUS_BLAS_INCLUDE_DIR   = '.'
@@ -64,7 +64,7 @@ if platform_blas_h:
 else:
     PROTEUS_BLAS_H = r'"cblas.h"'
 PROTEUS_BLAS_LIB_DIR = PROTEUS_LIB_DIR
-PROTEUS_BLAS_LIB   = 'openblas'
+PROTEUS_BLAS_LIB   = "blas"
 
 PROTEUS_LAPACK_INCLUDE_DIR = '.'
 if platform_lapack_h:
@@ -72,7 +72,7 @@ if platform_lapack_h:
 else:
     PROTEUS_LAPACK_H   = r'"clapack.h"'
 PROTEUS_LAPACK_LIB_DIR = PROTEUS_LIB_DIR
-PROTEUS_LAPACK_LIB = 'openblas'
+PROTEUS_LAPACK_LIB = "lapack"
 if platform_lapack_integer:
     PROTEUS_LAPACK_INTEGER = platform_lapack_integer
 else:
@@ -100,7 +100,7 @@ PROTEUS_PETSC_INCLUDE_DIRS = [PROTEUS_PETSC_INCLUDE_DIR]
 PROTEUS_SUPERLU_INCLUDE_DIR = PROTEUS_PETSC_INCLUDE_DIR
 PROTEUS_SUPERLU_LIB_DIR = PROTEUS_PETSC_LIB_DIR
 PROTEUS_SUPERLU_H   = r'"slu_ddefs.h"'
-PROTEUS_SUPERLU_LIB = 'superlu'
+PROTEUS_SUPERLU_LIB = 'superlu_4.3'
 
 PROTEUS_HDF5_INCLUDE_DIR, PROTEUS_HDF5_LIB_DIR = get_flags('hdf5')
 PROTEUS_HDF5_LIB_DIRS = [PROTEUS_HDF5_LIB_DIR]
