@@ -655,6 +655,10 @@ class KSP_petsc4py(LinearSolver):
                 logEvent("NAHeader Preconditioner Qp" )
                 self.preconditioner = NavierStokes3D_Qp(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
+            elif Preconditioner == NavierStokes_TwoPhaseQp:
+                logEvent("NAHeader Preconditioner TwoPhaseQp" )
+                self.preconditioner = NavierStokes_TwoPhaseQp(par_L,prefix,self.bdyNullSpace)
+                self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokes3D_PCD:
                 logEvent("NAHeader Preconditioner PCD" )
                 self.preconditioner = NavierStokes3D_PCD(par_L,prefix,self.bdyNullSpace)
@@ -720,11 +724,38 @@ class SchurOperatorConstructor:
             The pressure mass matrix.
         """
         self.Qsys_petsc4py = self._massMatrix()
-        self.Qp = self.Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
-                                                  self.linear_smoother.isp)
+        self.Qp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                             self.linear_smoother.isp)
         if output_matrix==True:
             self._exportMatrix(self.Qp,"Qp")
         return self.Qp
+
+    def getTwoPhaseQp(self, output_matrix=False, phase_function=None):
+        """ Return the two-phase pressure mass matrix.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Flag for weather matrix should be output.
+        phase_function : lambda
+            Optional function describing the fluid phases.
+
+        Returns
+        -------
+        Qp : matrix
+           A two-phase pressure mass matrix.
+        """
+        if self.L.pde.coefficients.which_region != None:
+            self._phase_function = self.L.pde.coefficients.which_region
+            
+        Qsys_petsc4py = self._TPmassMatrix()
+        self.TPQp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                               self.linear_smoother.isp)
+
+        if output_matrix == True:
+            self._exportMatrix(self.TPQp)
+
+        return self.TPQp
 
     def getQv(self,output_matrix=False):
         """ Return the velocity mass matrix Qv.
@@ -930,6 +961,18 @@ class SchurOperatorConstructor:
         self.opBuilder.attachMassOperator()
         return superlu_2_petsc4py(self.opBuilder.MassOperator)
 
+    def _TPmassMatrix(self):
+        """ Generates a two phase mass matrix.
+
+        Returns
+        -------
+        Qsys : matrix
+            The two-phase mass matrix.
+
+        """
+        self.opBuilder.attachTwoPhaseMassOperator(phase_function = self._phase_function)
+        return superlu_2_petsc4py(self.opBuilder.MassOperator)
+    
     def _getLaplace(self,output_matrix=False):
         """ Return the Laplacian pressure matrix Ap.
 
@@ -1142,7 +1185,7 @@ class NavierStokesSchur(SchurPrecon):
 
     def setUp(self,global_ksp=None):
         """
-        Set up the NaverStokesSchur preconditioner.  
+        Set up the NavierStokesSchur preconditioner.  
 
         Nothing needs to be done here for a generic NSE preconditioner. 
         Preconditioner arguments can be set with PETSc command line.
@@ -1253,6 +1296,45 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
 
+class NavierStokes_TwoPhaseQp(NavierStokesSchur):
+    """A two-phase pressure mass matrix preconditioner """
+    def __init__(self, L, prefix=None, bdyNullSpace=False):
+        """
+        Initialize the two-phase pressure mass matrix preconditioner.
+
+        Parameters
+        ----------
+        L - petsc4py matrix
+        """
+        NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
+
+    def setUp(self, global_ksp, S_hat = False):
+        """  Attach the two-phase pressure mass matrix to preconditioner.
+        
+        Parameters
+        ----------
+        global_ksp : PETSc KSP object
+        S_hat : bool
+        """
+        self.twoPhaseQp = self.operator_constructor.getTwoPhaseQp()
+        L_sizes = self.twoPhaseQp.size
+        L_range = self.twoPhaseQp.owner_range
+
+        self.twoPhaseQpInv = p4pyPETSc.Mat().create()
+        self.twoPhaseQpInv.setSizes(L_sizes)
+        self.twoPhaseQpInv.setType('python')
+        self.matcontext_inv = MatrixInvShell(self.twoPhaseQp)
+        self.twoPhaseQpInv.setPythonContext(self.matcontext_inv)
+        self.twoPhaseQpInv.setUp()
+
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace == True:
+            self._setConstantPressureNullSpace(global_ksp)
+        
 class NavierStokes3D_PCD(NavierStokesSchur) :
     def __init__(self,L,prefix=None,bdyNullSpace=False):
         """
@@ -1306,6 +1388,24 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
 #            self._setConstantPressureNullSpace(global_ksp)
+
+class NavierStokes3D_TwoPhasePCD(NavierStokesSchur) :
+    def __init__(self, L, prefix=None, bdyNullSpace=False):
+        """
+        Initialize the two-phase PCD preconditioning class.
+
+        Parameters
+        ----------
+        L : 
+        prefix :
+
+        """
+        NavierStokes3D.__init__(self, L, prefix, bdyNullSpace)
+
+    def setUp(self, global_ksp):
+        # Step-1: build the necessary operators
+        pass
+
 
 class NavierStokes3D_LSC(NavierStokesSchur) :
     def __init__(self,L,prefix=None,bdyNullSpace=False):
@@ -2473,6 +2573,64 @@ class OperatorConstructor:
         self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.MassOperator)
         self.massOperatorAttached = True
 
+    def attachTwoPhaseMassOperator(self,rho=1., recalculate=False, phase_function = None):
+        """Create a discrete Mass Operator matrix. """
+        self._mass_val = self.OLT.nzval.copy()
+        
+        _rho_0 = self.OLT.coefficients.rho_0
+        _rho_1 = self.OLT.coefficients.rho_1
+        _nu_0 = self.OLT.coefficients.nu_0
+        _nu_1 = self.OLT.coefficients.nu_1
+        
+        self._mass_val.fill(0.)
+        self.MassOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                      self.OLT.nFreeVDOF_global,
+                                      self.OLT.nnz,
+                                      self._mass_val,
+                                      self.OLT.colind,
+                                      self.OLT.rowptr)
+        _nd = self.OLT.coefficients.nd
+        if self.OLT.coefficients.rho != None:
+            _rho = self.OLT.coefficients.rho
+
+        if phase_function == None:
+            self.MassOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseMassMatrix(nd = _nd,
+                                                                                      rho_0 = _rho_0,
+                                                                                      nu_0 = _nu_0,
+                                                                                      rho_1 = _rho_1,
+                                                                                      nu_1 = _nu_1,
+                                                                                      LS_model = _phase_func)
+        else:
+            self.MassOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseMassMatrix(nd = _nd,
+                                                                                      rho_0 = _rho_0,
+                                                                                      nu_0 = _nu_0,
+                                                                                      rho_1 = _rho_1,
+                                                                                      nu_1 = _nu_1,
+                                                                                      phase_function = phase_function)
+            
+        _t = 1.0
+
+        Mass_q = {}
+        self._allocateTwoPhaseMassOperatorQStorageSpace(Mass_q)
+        self._cacluateQuadratureValues(Mass_q)
+        if _nd == 2:
+            self.MassOperatorCoeff.evaluate(_t,Mass_q)
+        self._calculateTwoPhaseMassOperatorQ(Mass_q)
+        
+        Mass_Jacobian = {}
+        self._allocateMatrixSpace(self.MassOperatorCoeff,
+                                  Mass_Jacobian)
+
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            for cj in cjDict:
+                cfemIntegrals.updateMassJacobian_weak(Mass_q[('dm',ci,cj)],
+                                                      Mass_q[('vXw*dV_m',cj,ci)],
+                                                      Mass_Jacobian[ci][cj])
+        
+        self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.MassOperator)
+        self.massOperatorAttached = True
+
+
     def attachLaplaceOperator(self,nu=1.0):
         """ Create a Discrete Laplace Operator matrix."""
         self._laplace_val = self.OLT.nzval.copy()
@@ -2649,7 +2807,7 @@ class OperatorConstructor:
                                 'd')
 
         scalar_quad.allocate(Q)
-
+        
         self.OLT.u[0].femSpace.elementMaps.getJacobianValues(self.OLT.elementQuadraturePoints,
                                                              Q['J'],
                                                              Q['inverse(J)'],
@@ -2833,6 +2991,51 @@ class OperatorConstructor:
 
         scalar_quad.allocate(Q)
 
+    def _allocateTwoPhaseMassOperatorQStorageSpace(self,Q):
+        """ Allocate space for mass operator values. """
+        test_shape_quad = StorageSet(shape={})
+        trial_shape_quad = StorageSet(shape={})
+        trial_shape_X_test_shape_quad = StorageSet(shape={})
+        tensor_quad = StorageSet(shape={})
+        points_quadrature = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                              self.OLT.nQuadraturePoints_element,
+                                              3))
+        scalar_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                        self.OLT.nQuadraturePoints_element,
+                                        3))
+
+        points_quadrature |= set(['x'])
+        scalar_quad |= set([('u',ci) for ci in range(self.OLT.nc)])
+        scalar_quad |= set([('m',ci) for ci in self.MassOperatorCoeff.mass.keys()])
+        test_shape_quad |= set([('w*dV_m',ci) for ci in self.MassOperatorCoeff.mass.keys()])
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            trial_shape_X_test_shape_quad |= set([('vXw*dV_m',cj,ci) for cj in cjDict.keys()])
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            scalar_quad |= set([('dm',ci,cj) for cj in cjDict.keys()])
+
+        for k in tensor_quad:
+            Q[k] = numpy.zeros(
+                (self.OLT.mesh.nElements_global,
+                 self.OLT.nQuadraturePoints_element,
+                 self.OLT.nSpace_global,
+                 self.OLT.nSpace_global),
+                'd')
+
+        for k in test_shape_quad:
+            Q[k] = numpy.zeros(
+                (self.OLT.mesh.nElements_global,
+                 self.OLT.nQuadraturePoints_element,
+                 self.OLT.nDOF_test_element[k[-1]]),
+                'd')
+
+        for k in trial_shape_X_test_shape_quad:
+            Q[k] = numpy.zeros((self.OLT.mesh.nElements_global,
+                                self.OLT.nQuadraturePoints_element,
+                                self.OLT.nDOF_trial_element[k[1]],
+                                self.OLT.nDOF_test_element[k[2]]),'d')
+        
+        scalar_quad.allocate(Q)
+        points_quadrature.allocate(Q)
 
 
     def _allocateLaplaceOperatorQStorageSpace(self,Q):
@@ -2969,6 +3172,7 @@ class OperatorConstructor:
     def _calculateMassOperatorQ(self,Q):
         """ Calculate values for mass operator. """
         elementQuadratureDict = {}
+
         for ci in self.MassOperatorCoeff.mass.keys():
             elementQuadratureDict[('m',ci)] = self._elementQuadrature
         (elementQuadraturePoints,elementQuadratureWeights,
@@ -2984,6 +3188,38 @@ class OperatorConstructor:
                 cfemIntegrals.calculateShape_X_weightedShape(self._operatorQ[('v',ci[1])],
                                                              Q[('w*dV_m',ci[0])],
                                                              Q[('vXw*dV_m',ci[1],ci[0])])
+
+    def _cacluateQuadratureValues(self,Q):
+        elementQuadratureDict = {}
+
+        elementQuadratureDict[('m',1)] = self._elementQuadrature
+
+        (elementQuadraturePoints,elementQuadratureWeights,
+         elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
+
+        self.OLT.u[0].femSpace.elementMaps.getValues(elementQuadraturePoints,
+                                                     Q['x'])
+    
+    def _calculateTwoPhaseMassOperatorQ(self,Q):
+        """ Calculate values for mass operator. """
+        elementQuadratureDict = {}
+        for ci in self.MassOperatorCoeff.mass.keys():
+            elementQuadratureDict[('m',ci)] = self._elementQuadrature
+        (elementQuadraturePoints,elementQuadratureWeights,
+         elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
+        for ci in range(self.OLT.nc):
+            if Q.has_key(('w*dV_m',ci)):
+                cfemIntegrals.calculateWeightedShape(elementQuadratureWeights[('m',ci)],
+                                                     self._operatorQ['abs(det(J))'],
+                                                     self._operatorQ[('w',ci)],
+                                                     Q[('w*dV_m',ci)])
+
+        for ci in zip(range(self.OLT.nc),range(self.OLT.nc)):
+                cfemIntegrals.calculateShape_X_weightedShape(self._operatorQ[('v',ci[1])],
+                                                             Q[('w*dV_m',ci[0])],
+                                                             Q[('vXw*dV_m',ci[1],ci[0])])
+        self.OLT.u[0].femSpace.elementMaps.getValues(elementQuadraturePoints,
+                                                     Q['x'])
 
     def _calculateLaplaceOperatorQ(self,Q):
         """Calculate quadrature values for Laplace operator. """

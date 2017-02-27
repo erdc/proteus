@@ -35,6 +35,15 @@ double relaxationFunction(double phi, double phiStart, double phiEnd)
 	  
   
 }
+double testHeaviside(double phi)
+{
+  double H;
+  if (phi > 0.0)
+    H=1.0;
+  else
+    H=0.0;
+  return H;
+}
 /*#define SCALAR_DIFFUSION*/
 double smoothedHeaviside(double eps, double phi)
 {
@@ -12793,6 +12802,87 @@ void Mass_3D_Evaluate(const int nPoints,
   }
 }
 	
+
+void TwoPhaseMass_2D_Evaluate(const int nPoints,
+			      const double eps,
+			      const double rho_0,
+			      const double nu_0,
+			      const double rho_1,
+			      const double nu_1,
+			      const double* phi,
+			      double *p,
+			      double *u,
+			      double *v,
+			      double *mom_p_acc,
+			      double *mom_u_acc,
+			      double *mom_v_acc,
+			      double *dmom_p_acc_p,
+			      double *dmom_u_acc_u,
+			      double *dmom_v_acc_v)
+{
+  int k;
+  double rho,nu,mu,H;
+  
+  for (k=0 ; k<nPoints ; k++){
+    H = testHeaviside(phi[k]);
+    rho = rho_0*(1.0-H) + rho_1*H;
+    nu = nu_0*(1.0-H) + nu_1*H;
+    mu = nu / rho;
+
+    mom_p_acc[k] = p[k] / mu;
+    dmom_p_acc_p[k] = 1.0 / mu;
+
+    mom_u_acc[k] = u[k] / mu;
+    dmom_u_acc_u[k] = 1.0 / mu;
+
+    mom_v_acc[k] = v[k] / mu;
+    dmom_v_acc_v[k] = 1.0;
+  }
+}
+
+void TwoPhaseMass_3D_Evaluate(const int nPoints,
+			      const double eps,
+			      const double rho_0,
+			      const double nu_0,
+			      const double rho_1,
+			      const double nu_1,
+			      const double* phi,
+			      double *p,
+			      double *u,
+			      double *v,
+			      double *w,
+			      double *mom_p_acc,
+			      double *mom_u_acc,
+			      double *mom_v_acc,
+			      double *mom_w_acc,
+			      double *dmom_p_acc_p,
+			      double *dmom_u_acc_u,
+			      double *dmom_v_acc_v,
+			      double *dmom_w_acc_w)
+{
+  int k;
+  double rho,nu,mu,H;
+  
+  for (k=0 ; k<nPoints ; k++){
+    H = smoothedHeaviside(eps,phi[k]);
+    rho = rho_0*(1.0-H) + rho_1*H;
+    nu = nu_0*(1.0-H) + nu_1*H;
+    mu = nu / rho;
+    
+    mom_p_acc[k] = p[k] / mu;
+    dmom_p_acc_p[k] = 1.0 / mu;
+
+    mom_u_acc[k] = u[k] / mu;
+    dmom_u_acc_u[k] = 1.0 / mu;
+
+    mom_v_acc[k] = v[k] / mu;
+    dmom_v_acc_v[k] = 1.0 / mu;
+
+    mom_w_acc[k] = w[k] / mu;
+    dmom_w_acc_w[k] = 1.0 / mu;
+  }
+}
+
 
 void B_2D_Evaluate(const int nPoints,
 		   double *grad_p,

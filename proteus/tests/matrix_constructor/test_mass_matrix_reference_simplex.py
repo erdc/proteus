@@ -14,6 +14,7 @@ import numpy
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 import mass_matrix_reference_C0P1_2D as mm_2d_C0P1
 import mass_matrix_reference_TH_2D as mm_2d_TH
+import twophase_mass_matrix_TH_2D_8 as tp_mm_2d_TH
 
 class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
     """ Verify construction of 2D Mass Matrix using transport coefficients """
@@ -22,6 +23,7 @@ class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
         """ Initialize the test problem """
         reload(mm_2d_C0P1)
         reload(mm_2d_TH)
+        reload(tp_mm_2d_TH)
         self._setRelativePath()
         
     def teardown_method(self):
@@ -91,6 +93,28 @@ class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
         comparison_mat = numpy.load(os.path.join(self.scriptdir,rel_path))
         assert numpy.allclose(mass_mat,comparison_mat)
 
+    def test_4(self):
+        """ Tests mass matrix construction for TH elements.
+        ARB TODO - this test needs to be moved to a different file because its testing on a larger mesh"""
+        self.mass_matrix_object = tp_mm_2d_TH.ns
+        self.mass_matrix_object.modelList[0].levelModelList[0].calculateCoefficients()
+        rowptr, colind, nzval = self.mass_matrix_object.modelList[0].levelModelList[0].jacobian.getCSRrepresentation()
+        self.Asys_rowptr = rowptr.copy()
+        self.Asys_colptr = colind.copy()
+        self.Asys_nzval = nzval.copy()
+        nn = len(self.Asys_rowptr)-1
+        self.Asys = LinearAlgebraTools.SparseMatrix(nn,nn,
+                                                    self.Asys_nzval.shape[0],
+                                                    self.Asys_nzval,
+                                                    self.Asys_colptr,
+                                                    self.Asys_rowptr)
+        self.petsc4py_A = self.mass_matrix_object.modelList[0].levelModelList[0].getMassJacobian(self.Asys)
+        mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
+        rel_path = "comparison_files/two_phase_mass_matrix_expected_mesh_8.data"
+        comparison_mat = numpy.load(os.path.join(self.scriptdir,rel_path))
+        assert numpy.allclose(mass_mat,comparison_mat)
+
+        
         
 
 if __name__ == '__main__':
