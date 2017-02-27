@@ -10754,6 +10754,138 @@ class DiscreteMassMatrix(TC_base):
                                   c[('dm',2,2)],
                                   c[('dm',3,3)])
 
+class DiscreteTwoPhaseMassMatrix(TC_base):
+    r"""Coefficients class for the discrete Mass Operator.
+    
+    This class defines the coefficients necessary to construct the
+    discrete mass operator :math:`A` where
+
+    .. math::
+    
+        a^{c}_{i,j} = \int_{T} \phi^{c}_{i} \phi^{c}_{j} dT
+
+    for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
+    :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
+    """
+    from ctransportCoefficients import TwoPhaseMass_2D_Evaluate
+    from ctransportCoefficients import TwoPhaseMass_3D_Evaluate
+    def __init__(self,
+                 nd = 2,
+                 rho_0 = 1.0,
+                 nu_0 = 1.0,
+                 rho_1 = 1.0,
+                 nu_1 = 1.0,
+                 eps = 0.0000001,
+                 LS_model = None,
+                 phase_function = None):
+        self.nd = nd
+        self.LS_model = LS_model
+        self.phase_function = phase_function
+        self.eps = eps
+        self.rho_0 = rho_0
+        self.nu_0 = nu_0
+        self.rho_1 = rho_1
+        self.nu_1 = nu_1
+        self.nd = nd
+        mass = {}
+        advection= {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames = ['p','u','v']
+            mass = {0:{0:'linear'},
+                    1:{1:'linear'},
+                    2:{2:'linear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors={})
+            self.vectorComponents = [1,2]
+        elif nd==3:
+            variableNames = ['p','u','v','w']
+            mass = {0:{0:'linear'},
+                    1:{1:'linear'},
+                    2:{2:'linear'},
+                    3:{3:'linear'}}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents=[1,2,3]
+            
+    def attachModels(self,modelList):
+        if self.LS_model != None:
+            self.q_phi = modelList[self.LS_model].q[('u',0)]
+            self.ebqe_phi = modelList[self.LS_model].ebqe[('u',0)]
+            self.ebq_phi = None
+
+    def initializeQuadratureWithPhaseFunction(self,c):
+        self.q_phi = c[('u',0)].copy()
+        for i,element in enumerate(c['x']):
+            for j,pt in enumerate(c['x'][i]):
+                self.q_phi[i][j] = self.phase_function(pt)
+    
+    def evaluate(self,t,c):
+        if self.phase_function != None:
+            self.initializeQuadratureWithPhaseFunction(c)
+            
+        if c[('u',0)].shape == self.q_phi.shape:
+            phi = self.q_phi
+        else:
+            phi = self.ebq_phi
+
+        if self.nd==2:
+            self.TwoPhaseMass_2D_Evaluate(self.eps,
+                                          self.rho_0,
+                                          self.nu_0,
+                                          self.rho_1,
+                                          self.nu_1,
+                                          phi,
+                                          c[('u',0)],
+                                          c[('u',1)],
+                                          c[('u',2)],
+                                          c[('m',0)],
+                                          c[('m',1)],
+                                          c[('m',2)],
+                                          c[('dm',0,0)],
+                                          c[('dm',1,1)],
+                                          c[('dm',2,2)])
+#            import pdb ; pdb.set_trace()
+
+        elif self.nd==3:
+            self.TwoPhaseMass_3D_Evaluate(self.eps,
+                                          self.rho_0,
+                                          self.nu_0,
+                                          self.rho_1,
+                                          self.nu_1,
+                                          phi,
+                                          c[('u',0)],
+                                          c[('u',1)],
+                                          c[('u',2)],
+                                          c[('u',3)],
+                                          c[('m',0)],
+                                          c[('m',1)],
+                                          c[('m',2)],
+                                          c[('m',3)],
+                                          c[('dm',0,0)],
+                                          c[('dm',1,1)],
+                                          c[('dm',2,2)],
+                                          c[('dm',3,3)])
+    
+
 class DiscreteBOperator(TC_base):
     r"""Coefficients class for the discrete B Operator.
     
