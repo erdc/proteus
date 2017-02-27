@@ -815,6 +815,14 @@ class Mesh3DMDomain(D_base):
         self.meshfile=fileprefix
 
 
+class MeshQuadDomain_IFISS(D_base):
+    """
+    2D domains from Quad .mat files from IFISS
+    """
+    def __init__(self,fileprefix):
+        D_base.__init__(self,2,name=fileprefix)
+        self.meshfile=fileprefix
+
 class MeshHexDomain(D_base):
     """
     3D domains from Hex mesh files
