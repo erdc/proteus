@@ -1,8 +1,10 @@
 import numpy
+import cython
 cimport numpy
 from cpython cimport array
 #pull in C++ definitions and declare interface
 cdef extern from "mprans/SedClosure.h" namespace "proteus":
+
     cdef cppclass cppHsuSedStress2D:
         double aDarcy_;
         double betaForch_;
@@ -202,7 +204,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 		      double dw_dy,
                      double dw_dz)
 
-        double*  mIntFluid(
+        void  mIntFluid(double * mint2,
                             double sedF,         # Sediment fraction
 			   double rhoFluid,
                            double* uFluid_n,    #Fluid velocity
@@ -212,7 +214,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                             double nuT,
                             double* gradc
                            )
-        double*  mIntSolid(
+        void  mIntSolid(double * mint2,
                             double sedF,         # Sediment fraction
 			   double rhoFluid,
                             double* uFluid_n,    #Fluid velocity
@@ -223,7 +225,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                             double* gradc
                            )
 
-        double*  mIntgradC(
+        void  mIntgradC(double * mint2,
                             double sedF,         # Sediment fraction
  			   double rhoFluid,
                            double* uFluid_n,    #Fluid velocity
@@ -322,8 +324,8 @@ cdef class HsuSedStress:
     def betaCoeff(self,
                      sedF,
                   rhoFluid,
-                  numpy.ndarray uFluid,
-                     numpy.ndarray uSolid,
+                  uFluid,
+                  uSolid,
                      nu):
         """ Function for calculating equation (7) from Chen and Hsu, CACR 14-08, A Multidimensional TwoPhase Eulerian Model for Sediment Transport TwoPhaseEulerSedFoam (Version 1.0)
         http://www.coastal.udel.edu/~thsu/simulation_data_files/CACR-14-08.pdf
@@ -332,11 +334,14 @@ cdef class HsuSedStress:
         param: uSolid: Solid velocity vector [L/T]
         param: nu  : Fluid kinematic viscosity [L^2/T]
         """
-        return self.thisptr.betaCoeff(sedF,
-                                   rhoFluid,
-                                 < double * > uFluid.data,
-                                  < double * > uSolid.data,
-                                  nu)
+
+        cython.declare(UF=double[2])
+        cython.declare(US=double[2])
+        for ii in range(2):
+            UF[ii] = uFluid[ii]
+            US[ii] = uSolid[ii]
+        beta = self.thisptr.betaCoeff(sedF,rhoFluid,UF,US,nu)
+        return beta
 
     def gs0(self,sedF):
         """ Radial distribution function for collision closure,  equation (2.31) from  Hsu et al 2004 'On two-phase sediment transport:
@@ -577,9 +582,14 @@ cdef class HsuSedStress:
                      nuT,
                      numpy.ndarray gradc
    ):
+	
 
-        mint = numpy.zeros(len(uFluid_n),"d")
-        cdef double* carr = self.thisptr.mIntFluid(sedF,rhoFluid ,
+
+        cython.declare(xx=cython.double[2])
+        for ii in range(2):	
+            xx[ii] = 0.
+
+        self.thisptr.mIntFluid(xx, sedF,rhoFluid ,
 
                                   < double * > uFluid_n.data,
                                   < double * > uSolid_n.data,
@@ -587,8 +597,9 @@ cdef class HsuSedStress:
                                          nu,
                                          nuT,
                                   < double * > gradc.data)
-        for ii in range(len(mint)):
-            mint[ii] = carr[ii]
+        mint = numpy.zeros(2,)
+        for ii in range(2):
+            mint[ii] = xx[ii]
         return mint
 
     def  mIntSolid(self,
@@ -602,16 +613,21 @@ cdef class HsuSedStress:
                      numpy.ndarray gradc
    ):
 
-        mint = numpy.zeros(len(uFluid_n),"d")
-        cdef double* carr = self.thisptr.mIntSolid(sedF,rhoFluid ,
+
+        cython.declare(xx=cython.double[2])
+        for ii in range(2):	
+            xx[ii] = 0.
+
+        self.thisptr.mIntSolid(xx, sedF,rhoFluid ,
                                   < double * > uFluid_n.data,
                                   < double * > uSolid_n.data,
                                   < double * > uSolid_np1.data,
                                          nu,
                                          nuT,
                                   < double * > gradc.data)
-        for ii in range(len(mint)):
-            mint[ii] = carr[ii]
+        mint = numpy.zeros(2,)
+        for ii in range(2):
+            mint[ii] = xx[ii]
         return mint
 
     def  mIntgradC(self,
@@ -624,16 +640,23 @@ cdef class HsuSedStress:
                      numpy.ndarray gradc
    ):
 
-        mint = numpy.zeros(len(uFluid_n),"d")
-        cdef double* carr = self.thisptr.mIntgradC(sedF, rhoFluid ,
+
+        cython.declare(xx=cython.double[2])
+        for ii in range(2):	
+            xx[ii] = 0.
+
+
+        self.thisptr.mIntgradC(xx,sedF, rhoFluid ,
                                   < double * > uFluid_n.data,
                                   < double * > uSolid_n.data,
                                          nu,
                                          nuT,
                                   < double * > gradc.data)
-        for ii in range(len(mint)):
-            mint[ii] = carr[ii]
+        mint = numpy.zeros(2,)
+        for ii in range(2):
+            mint[ii] = xx[ii]
         return mint
+
 
 
 
