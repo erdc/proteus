@@ -35,14 +35,13 @@ double relaxationFunction(double phi, double phiStart, double phiEnd)
 	  
   
 }
-double testHeaviside(double phi)
+
+int testHeaviside(double phi)
 {
-  double H;
   if (phi > 0.0)
-    H=1.0;
+    return 1;
   else
-    H=0.0;
-  return H;
+    return 0;
 }
 /*#define SCALAR_DIFFUSION*/
 double smoothedHeaviside(double eps, double phi)
@@ -12822,21 +12821,21 @@ void TwoPhaseMass_2D_Evaluate(const int nPoints,
 {
   int k;
   double rho,nu,mu,H;
-  
+
   for (k=0 ; k<nPoints ; k++){
     H = testHeaviside(phi[k]);
     rho = rho_0*(1.0-H) + rho_1*H;
     nu = nu_0*(1.0-H) + nu_1*H;
-    mu = nu / rho;
+    mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
 
-    mom_p_acc[k] = p[k] / mu;
-    dmom_p_acc_p[k] = 1.0 / mu;
+    mom_p_acc[k] = p[k] / nu;
+    dmom_p_acc_p[k] = 1.0 / nu;
 
-    mom_u_acc[k] = u[k] / mu;
-    dmom_u_acc_u[k] = 1.0 / mu;
+    mom_u_acc[k] = u[k] / nu;
+    dmom_u_acc_u[k] = 1.0 / nu;
 
-    mom_v_acc[k] = v[k] / mu;
-    dmom_v_acc_v[k] = 1.0;
+    mom_v_acc[k] = v[k] / nu;
+    dmom_v_acc_v[k] = 1.0 / nu;
   }
 }
 

@@ -723,7 +723,7 @@ class SchurOperatorConstructor:
         Qp : matrix
             The pressure mass matrix.
         """
-        self.Qsys_petsc4py = self._massMatrix()
+        Qsys_petsc4py = self._massMatrix()
         self.Qp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                              self.linear_smoother.isp)
         if output_matrix==True:
@@ -747,7 +747,7 @@ class SchurOperatorConstructor:
         """
         if self.L.pde.coefficients.which_region != None:
             self._phase_function = self.L.pde.coefficients.which_region
-            
+
         Qsys_petsc4py = self._TPmassMatrix()
         self.TPQp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                self.linear_smoother.isp)
@@ -971,7 +971,7 @@ class SchurOperatorConstructor:
 
         """
         self.opBuilder.attachTwoPhaseMassOperator(phase_function = self._phase_function)
-        return superlu_2_petsc4py(self.opBuilder.MassOperator)
+        return superlu_2_petsc4py(self.opBuilder.TPMassOperator)
     
     def _getLaplace(self,output_matrix=False):
         """ Return the Laplacian pressure matrix Ap.
@@ -2583,7 +2583,7 @@ class OperatorConstructor:
         _nu_1 = self.OLT.coefficients.nu_1
         
         self._mass_val.fill(0.)
-        self.MassOperator = SparseMat(self.OLT.nFreeVDOF_global,
+        self.TPMassOperator = SparseMat(self.OLT.nFreeVDOF_global,
                                       self.OLT.nFreeVDOF_global,
                                       self.OLT.nnz,
                                       self._mass_val,
@@ -2626,10 +2626,9 @@ class OperatorConstructor:
                 cfemIntegrals.updateMassJacobian_weak(Mass_q[('dm',ci,cj)],
                                                       Mass_q[('vXw*dV_m',cj,ci)],
                                                       Mass_Jacobian[ci][cj])
-        
-        self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.MassOperator)
-        self.massOperatorAttached = True
 
+        self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.TPMassOperator)
+        self.massOperatorAttached = True
 
     def attachLaplaceOperator(self,nu=1.0):
         """ Create a Discrete Laplace Operator matrix."""
@@ -2953,6 +2952,8 @@ class OperatorConstructor:
         trial_shape_quad = StorageSet(shape={})
         trial_shape_X_test_shape_quad = StorageSet(shape={})
         tensor_quad = StorageSet(shape={})
+        # TODO - ARB : I don't think the 3 is necessary here...It created a
+        # confusing bug in the 2-phase problem...Need to investigate.
         scalar_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
                                         self.OLT.nQuadraturePoints_element,
                                         3))
@@ -3001,8 +3002,7 @@ class OperatorConstructor:
                                               self.OLT.nQuadraturePoints_element,
                                               3))
         scalar_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
-                                        self.OLT.nQuadraturePoints_element,
-                                        3))
+                                        self.OLT.nQuadraturePoints_element))
 
         points_quadrature |= set(['x'])
         scalar_quad |= set([('u',ci) for ci in range(self.OLT.nc)])
@@ -3033,7 +3033,7 @@ class OperatorConstructor:
                                 self.OLT.nQuadraturePoints_element,
                                 self.OLT.nDOF_trial_element[k[1]],
                                 self.OLT.nDOF_test_element[k[2]]),'d')
-        
+
         scalar_quad.allocate(Q)
         points_quadrature.allocate(Q)
 
