@@ -10863,7 +10863,6 @@ class DiscreteTwoPhaseMassMatrix(TC_base):
                                           c[('dm',0,0)],
                                           c[('dm',1,1)],
                                           c[('dm',2,2)])
-#            import pdb ; pdb.set_trace()
 
         elif self.nd==3:
             self.TwoPhaseMass_3D_Evaluate(self.eps,
