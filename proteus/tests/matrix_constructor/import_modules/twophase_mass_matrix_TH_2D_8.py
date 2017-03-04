@@ -34,12 +34,12 @@ p.diffusiveFluxBoundaryConditions = {}
 p.periodicDirichletConditions = None
 
 phase_func = lambda x: x[0]
-p.coefficients = pr.TransportCoefficients.DiscreteTwoPhaseMassMatrix(p.nd,
-                                                                     rho_0 = 1.0,
-                                                                     nu_0 = 1.0,
-                                                                     rho_1 = 1.0,
-                                                                     nu_1 = 2.0,
-                                                                     phase_function = phase_func)
+p.coefficients = pr.TransportCoefficients.DiscreteTwoPhaseInvScaledMassMatrix(p.nd,
+                                                                              rho_0 = 1.0,
+                                                                              nu_0 = 1.0,
+                                                                              rho_1 = 1.0,
+                                                                              nu_1 = 2.0,
+                                                                              phase_function = phase_func)
 
 ############################
 
