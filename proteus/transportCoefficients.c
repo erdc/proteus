@@ -12828,14 +12828,14 @@ void TwoPhaseMass_2D_Evaluate(const int nPoints,
     nu = nu_0*(1.0-H) + nu_1*H;
     mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
 
-    mom_p_acc[k] = p[k] / nu;
-    dmom_p_acc_p[k] = 1.0 / nu;
+    mom_p_acc[k] = p[k] * nu;
+    dmom_p_acc_p[k] = 1.0 * nu;
 
-    mom_u_acc[k] = u[k] / nu;
-    dmom_u_acc_u[k] = 1.0 / nu;
+    mom_u_acc[k] = u[k] * nu;
+    dmom_u_acc_u[k] = 1.0 * nu;
 
-    mom_v_acc[k] = v[k] / nu;
-    dmom_v_acc_v[k] = 1.0 / nu;
+    mom_v_acc[k] = v[k] * nu;
+    dmom_v_acc_v[k] = 1.0 * nu;
   }
 }
 
@@ -12866,22 +12866,101 @@ void TwoPhaseMass_3D_Evaluate(const int nPoints,
     H = smoothedHeaviside(eps,phi[k]);
     rho = rho_0*(1.0-H) + rho_1*H;
     nu = nu_0*(1.0-H) + nu_1*H;
-    mu = nu / rho;
+    mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
     
-    mom_p_acc[k] = p[k] / mu;
-    dmom_p_acc_p[k] = 1.0 / mu;
+    mom_p_acc[k] = p[k] * nu;
+    dmom_p_acc_p[k] = 1.0 * nu;
 
-    mom_u_acc[k] = u[k] / mu;
-    dmom_u_acc_u[k] = 1.0 / mu;
+    mom_u_acc[k] = u[k] * nu;
+    dmom_u_acc_u[k] = 1.0 * nu;
 
-    mom_v_acc[k] = v[k] / mu;
-    dmom_v_acc_v[k] = 1.0 / mu;
+    mom_v_acc[k] = v[k] * nu;
+    dmom_v_acc_v[k] = 1.0 * nu;
 
-    mom_w_acc[k] = w[k] / mu;
-    dmom_w_acc_w[k] = 1.0 / mu;
+    mom_w_acc[k] = w[k] * nu;
+    dmom_w_acc_w[k] = 1.0 * nu;
   }
 }
 
+void TwoPhaseInvScaledMass_2D_Evaluate(const int nPoints,
+				       const double eps,
+				       const double rho_0,
+				       const double nu_0,
+				       const double rho_1,
+				       const double nu_1,
+				       const double* phi,
+				       double *p,
+				       double *u,
+				       double *v,
+				       double *mom_p_acc,
+				       double *mom_u_acc,
+				       double *mom_v_acc,
+				       double *dmom_p_acc_p,
+				       double *dmom_u_acc_u,
+				       double *dmom_v_acc_v)
+{
+  int k;
+  double rho,nu,mu,H;
+
+  for (k=0 ; k<nPoints ; k++){
+    H = testHeaviside(phi[k]);
+    rho = rho_0*(1.0-H) + rho_1*H;
+    nu = nu_0*(1.0-H) + nu_1*H;
+    mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
+
+    mom_p_acc[k] = p[k] / nu;
+    dmom_p_acc_p[k] = 1.0 / nu;
+
+    mom_u_acc[k] = u[k] / nu;
+    dmom_u_acc_u[k] = 1.0 / nu;
+
+    mom_v_acc[k] = v[k] / nu;
+    dmom_v_acc_v[k] = 1.0 / nu;
+  }
+}
+
+void TwoPhaseInvScaledMass_3D_Evaluate(const int nPoints,
+				       const double eps,
+				       const double rho_0,
+				       const double nu_0,
+				       const double rho_1,
+				       const double nu_1,
+				       const double* phi,
+				       double *p,
+				       double *u,
+				       double *v,
+				       double *w,
+				       double *mom_p_acc,
+				       double *mom_u_acc,
+				       double *mom_v_acc,
+				       double *mom_w_acc,
+				       double *dmom_p_acc_p,
+				       double *dmom_u_acc_u,
+				       double *dmom_v_acc_v,
+				       double *dmom_w_acc_w)
+{
+  int k;
+  double rho,nu,mu,H;
+  
+  for (k=0 ; k<nPoints ; k++){
+    H = smoothedHeaviside(eps,phi[k]);
+    rho = rho_0*(1.0-H) + rho_1*H;
+    nu = nu_0*(1.0-H) + nu_1*H;
+    mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
+    
+    mom_p_acc[k] = p[k] / nu;
+    dmom_p_acc_p[k] = 1.0 / nu;
+
+    mom_u_acc[k] = u[k] / nu;
+    dmom_u_acc_u[k] = 1.0 / nu;
+
+    mom_v_acc[k] = v[k] / nu;
+    dmom_v_acc_v[k] = 1.0 / nu;
+
+    mom_w_acc[k] = w[k] / nu;
+    dmom_w_acc_w[k] = 1.0 / nu;
+  }
+}
 
 void B_2D_Evaluate(const int nPoints,
 		   double *grad_p,
