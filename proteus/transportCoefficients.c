@@ -1820,9 +1820,10 @@ void Laplace_2D_Evaluate(const int nPoints,
 			 double *mom_v_diff_ten)
 {
   int k;
+  
   for (k=0; k<nPoints; k++)
     {
-      mom_p_diff_ten[k*2+0] = 1.0;
+      mom_p_diff_ten[k*2+0] = 1.0; 
       mom_p_diff_ten[k*2+1] = 1.0;
 
       mom_u_diff_ten[k*2+0] = 1.0;
@@ -1830,6 +1831,38 @@ void Laplace_2D_Evaluate(const int nPoints,
 
       mom_v_diff_ten[k*2+0] = 1.0;
       mom_v_diff_ten[k*2+1] = 1.0;
+    } 
+}
+
+void TwoPhaseInvScaledLaplace_2D_Evaluate(const int nPoints,
+					  const double eps,
+					  const double rho_0,
+					  const double nu_0,
+					  const double rho_1,
+					  const double nu_1,
+					  const double* phi,
+					  double *mom_p_diff_ten,
+					  double *mom_u_diff_ten,
+					  double *mom_v_diff_ten)
+{
+  int k;
+  double rho,nu,mu,H;
+  
+  for (k=0; k<nPoints; k++)
+    {
+      H = testHeaviside(phi[k]);
+      rho = rho_0*(1.0-H) + rho_1*H;
+      nu = nu_0*(1.0-H) + nu_1*H;
+      mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
+      
+      mom_p_diff_ten[k*2+0] = 1.0 / rho;
+      mom_p_diff_ten[k*2+1] = 1.0 / rho;
+
+      mom_u_diff_ten[k*2+0] = 1.0 / rho;
+      mom_u_diff_ten[k*2+1] = 1.0 / rho;
+
+      mom_v_diff_ten[k*2+0] = 1.0 / rho;
+      mom_v_diff_ten[k*2+1] = 1.0 / rho;
     } 
 }
 
@@ -1859,6 +1892,47 @@ void Laplace_3D_Evaluate(const int nPoints,
       mom_w_diff_ten[k*3+2] = 1.0;
     } 
 }
+
+void TwoPhaseInvScaledLaplace_3D_Evaluate(const int nPoints,
+					  const double eps,
+					  const double rho_0,
+					  const double nu_0,
+					  const double rho_1,
+					  const double nu_1,
+					  const double* phi,
+					  double *mom_p_diff_ten,
+					  double *mom_u_diff_ten,
+					  double *mom_v_diff_ten,
+					  double *mom_w_diff_ten)
+{
+  int k;
+  double rho, nu, mu, H;
+  
+  for (k=0; k<nPoints; k++)
+    {
+      H = testHeaviside(phi[k]);
+      rho = rho_0*(1.0-H) + rho_1*H;
+      nu = nu_0*(1.0-H) + nu_1*H;
+      mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
+      
+      mom_p_diff_ten[k*3+0] = 1.0 / rho;
+      mom_p_diff_ten[k*3+1] = 1.0 / rho;
+      mom_p_diff_ten[k*3+2] = 1.0 / rho;
+
+      mom_u_diff_ten[k*3+0] = 1.0 / rho;
+      mom_u_diff_ten[k*3+1] = 1.0 / rho;
+      mom_u_diff_ten[k*3+2] = 1.0 / rho;
+
+      mom_v_diff_ten[k*3+0] = 1.0 / rho;
+      mom_v_diff_ten[k*3+1] = 1.0 / rho;
+      mom_v_diff_ten[k*3+2] = 1.0 / rho;
+
+      mom_w_diff_ten[k*3+0] = 1.0 / rho;
+      mom_w_diff_ten[k*3+1] = 1.0 / rho;
+      mom_w_diff_ten[k*3+2] = 1.0 / rho;
+    } 
+}
+
 
 void Advection_2D_Evaluate(const int nPoints,
 			   const double *p,
