@@ -732,8 +732,7 @@ class SchurOperatorConstructor:
 
     def getTwoPhaseQp(self,
                       output_matrix = False,
-                      phase_function = None,
-                      inv_scaled = False):
+                      phase_function = None):
         """ Return the two-phase pressure mass matrix.
 
         Parameters
@@ -755,7 +754,7 @@ class SchurOperatorConstructor:
         if self.L.pde.coefficients.which_region != None:
             self._phase_function = self.L.pde.coefficients.which_region
 
-        Qsys_petsc4py = self._TPmassMatrix(inv_scaled = inv_scaled)
+        Qsys_petsc4py = self._TPmassMatrix()
         self.TPQp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                self.linear_smoother.isp)
 
@@ -790,13 +789,13 @@ class SchurOperatorConstructor:
             self._phase_function = self.L.pde.coefficients.which_region
 
         Qsys_petsc4py = self._TPInvScaledMassMatrix()
-        self.TPQp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
-                                               self.linear_smoother.isp)
+        self.TPInvScaledQp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                                        self.linear_smoother.isp)
 
         if output_matrix == True:
-            self._exportMatrix(self.TPQp)
+            self._exportMatrix(self.TPInvScaledQp)
 
-        return self.TPQp
+        return self.TPInvScaledQp
 
 
     def getQv(self,output_matrix=False):
@@ -864,6 +863,41 @@ class SchurOperatorConstructor:
         if output_matrix==True:
             self._exportmatrix(self.Ap,'Ap')
         return self.Ap
+
+    def getTwoPhaseInvScaledAp(self,
+                               output_matrix = False,
+                               phase_function = None):
+        """ Return the two-phase pressure laplacian scaled with the
+        inverse of the viscosity.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Flag for weather matrix should be output.
+        phase_function : lambda
+            Optional function describing the fluid phases.
+        inv_scaled : bool
+            Determines whether the mass matrix should be 
+            scaled by the viscosity or the inverse of the
+            viscosity.
+
+        Returns
+        -------
+        Qp : matrix
+           A two-phase pressure mass matrix.
+        """
+        if self.L.pde.coefficients.which_region != None:
+            self._phase_function = self.L.pde.coefficients.which_region
+
+        Qsys_petsc4py = self._getTPInvScaledLaplace()
+        self.TPInvScaledAp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                                        self.linear_smoother.isp)
+
+        if output_matrix == True:
+            self._exportMatrix(self.TPInvScaledQp)
+
+        return self.TPInvScaledQp
+
 
     def getAv(self,output_matrix=False):
         """ Return the Laplacian velocity matrix Av.
@@ -1069,6 +1103,23 @@ class SchurOperatorConstructor:
         """
         self.opBuilder.attachLaplaceOperator()
         return superlu_2_petsc4py(self.opBuilder.LaplaceOperator)
+
+    def _getTPInvScaledLaplace(self,output_matrix=False):
+        """ Return the Laplacian pressure matrix Ap.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether matrix should be exported.
+
+        Returns
+        -------
+        A : matrix
+            The Laplacian  matrix.
+
+        """
+        self.opBuilder.attachTPInvScaledLaplaceOperator()
+        return superlu_2_petsc4py(self.opBuilder.TPInvScaledLaplaceOperator)
     
     def _getAdvection(self,output_matrix=False):
         """ Return the advection matrix Fp.
@@ -2793,6 +2844,63 @@ class OperatorConstructor:
                              Laplace_Jacobian,
                              self.LaplaceOperator)
         self.laplaceOperatorAttached = True
+
+    def attachTPInvScaledLaplaceOperator(self):
+        """ Create a Discrete Laplace Operator matrix."""
+        self._laplace_val = self.OLT.nzval.copy()
+
+        _rho_0 = self.OLT.coefficients.rho_0
+        _rho_1 = self.OLT.coefficients.rho_1
+        _nu_0 = self.OLT.coefficients.nu_0
+        _nu_1 = self.OLT.coefficients.nu_1
+
+        
+        self.TPInvScaledLaplaceOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                                    self.OLT.nFreeVDOF_global,
+                                                    self.OLT.nnz,
+                                                    self._laplace_val,
+                                                    self.OLT.colind,
+                                                    self.OLT.rowptr)
+        _nd = self.OLT.coefficients.nd
+        if self.OLT.coefficients.nu != None:
+            _nu = self.OLT.coefficients.nu
+        self.LaplaceOperatorCoeff = TransportCoefficients.DiscreteTPInvScaledLaplaceOperator(nd=_nd)
+        _t = 1.0
+
+        Laplace_phi = {}
+        Laplace_dphi = {}
+        self._initializeLaplacePhiFunctions(Laplace_phi,Laplace_dphi)
+        self._initializeSparseDiffusionTensor(self.LaplaceOperatorCoeff)
+
+        Laplace_q = {}
+        self._allocateLaplaceOperatorQStorageSpace(Laplace_q)
+        if _nd==2:
+            self.LaplaceOperatorCoeff.evaluate(_t,Laplace_q)
+        self._calculateLaplaceOperatorQ(Laplace_q)
+        
+        Laplace_Jacobian = {}
+        self._allocateMatrixSpace(self.LaplaceOperatorCoeff,
+                                  Laplace_Jacobian)
+
+        for ci,ckDict in self.LaplaceOperatorCoeff.diffusion.iteritems():
+            for ck,cjDict in ckDict.iteritems():
+                for cj in set(cjDict.keys()+self.LaplaceOperatorCoeff.potential[ck].keys()):
+                    cfemIntegrals.updateDiffusionJacobian_weak_sd(self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][0],
+                                                                  self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][1],
+                                                                  self.OLT.phi[ck].femSpace.dofMap.l2g, #??!!??
+                                                                  Laplace_q[('a',ci,ck)],
+                                                                  Laplace_q[('da',ci,ck,cj)],
+                                                                  Laplace_q[('grad(phi)',ck)],
+                                                                  Laplace_q[('grad(w)*dV_a',ck,ci)],
+                                                                  Laplace_dphi[(ck,cj)].dof,
+                                                                  self._operatorQ[('v',cj)],
+                                                                  self._operatorQ[('grad(v)',cj)],
+                                                                  Laplace_Jacobian[ci][cj])
+        self._createOperator(self.LaplaceOperatorCoeff,
+                             Laplace_Jacobian,
+                             self.LaplaceOperator)
+        self.laplaceOperatorAttached = True
+
 
 
     def attachAdvectionOperator(self,advective_field):

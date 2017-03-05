@@ -3253,6 +3253,86 @@ static PyObject* ctransportCoefficientsLaplace_3D_Evaluate(PyObject* self,
   return Py_None;	
 }
 
+static PyObject* ctransportCoefficientsTwoPhaseInvScaledLaplace_2D_Evaluate(PyObject* self,
+									    PyObject* args)
+{
+  int i,nPoints=1;
+  double eps, rho_0, nu_0, rho_1, nu_1 ;
+  PyObject *phi, *u,*v,*p,*mom_u_diff_ten,*mom_v_diff_ten,*mom_p_diff_ten ;
+
+  if (!PyArg_ParseTuple(args,"dddddOOOOOOO",
+			&eps,
+			&rho_0,
+			&nu_0,
+			&rho_1,
+			&nu_1,
+			&phi,
+			&p,
+			&u,
+			&v,
+			&mom_p_diff_ten,
+			&mom_u_diff_ten,
+			&mom_v_diff_ten))
+  return NULL;
+
+  for (i=0;i<ND(p);i++){
+    nPoints *= SHAPE(p)[i];
+  }
+
+  TwoPhaseInvScaledLaplace_2D_Evaluate(nPoints,
+				       eps,
+				       rho_0,
+				       nu_0,
+				       rho_1,
+				       nu_1,
+				       DDATA(phi),
+				       DDATA(mom_p_diff_ten),
+				       DDATA(mom_u_diff_ten),
+				       DDATA(mom_v_diff_ten));
+
+  Py_INCREF(Py_None);
+  return Py_None;	
+}
+
+static PyObject* ctransportCoefficientsTwoPhaseInvScaledLaplace_3D_Evaluate(PyObject* self,
+									    PyObject* args)
+{
+  int i,nPoints=1;
+  double eps, rho_0, nu_0, rho_1, nu_1 ;
+  PyObject *phi,*u,*v,*w,*p,*mom_u_diff_ten,*mom_v_diff_ten,
+           *mom_w_diff_ten, *mom_p_diff_ten ;
+
+  if (!PyArg_ParseTuple(args,"OOOOOOOO",
+			&eps,
+			&rho_0,
+			&nu_0,
+			&rho_1,
+			&nu_1,
+			&phi,
+			&p,
+			&u,
+			&v,
+			&w,
+			&mom_p_diff_ten,
+			&mom_u_diff_ten,
+			&mom_v_diff_ten,
+			&mom_w_diff_ten))
+  return NULL;
+
+  for (i=0;i<ND(p);i++){
+    nPoints *= SHAPE(p)[i];
+  }
+
+  TwoPhaseInvScaledLaplace_3D_Evaluate(nPoints,
+				       DDATA(mom_p_diff_ten),
+				       DDATA(mom_u_diff_ten),
+				       DDATA(mom_v_diff_ten),
+				       DDATA(mom_w_diff_ten));
+
+  Py_INCREF(Py_None);
+  return Py_None;	
+}
+
 static PyObject* ctransportCoefficientsAdvection_2D_Evaluate(PyObject* self,
 							     PyObject* args)
 {
@@ -10393,6 +10473,14 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
     ctransportCoefficientsLaplace_3D_Evaluate,
     METH_VARARGS,
     "evaluate the coefficients of the discrete 3D Laplace operator"},
+  { "TwoPhaseInvScaledLaplace_2D_Evaluate",
+    ctransportCoefficientsTwoPhaseInvScaledLaplace_2D_Evaluate,
+    METH_VARARGS,
+    "evaluate the coefficients for a two-phase inverse scaled 2D Laplace operator"},
+   { "TwoPhaseInvScaledLaplace_3D_Evaluate",
+    ctransportCoefficientsTwoPhaseInvScaledLaplace_3D_Evaluate,
+    METH_VARARGS,
+    "evaluate the coefficients for a two-phase inverse scaled 3D Laplace operator"},
   { "B_2D_Evaluate", 
     ctransportCoefficientsB_2D_Evaluate,
     METH_VARARGS, 
