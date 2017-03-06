@@ -1073,6 +1073,176 @@ class DiscreteAdvectionOperator(TC_base):
                                        c[('df',3,3)])
 
 
+class DiscreteTwoPhaseAdvectionOperator(TC_base):
+    r""" A coefficient class to build the discrete advection operator.
+
+    This class defines the coefficients necessary to construct the
+    discrete advection operator :math:`N` where
+    
+    .. math::
+
+       n^{c}_{i,j} = \int_{T} (\mathbf{w}_{h} \phi_{j}) \cdot
+       \nabla \phi_{i} d T
+
+    for all :math:`T \in \Omega`, :math:`c = 0,...nc-1` and
+    :math:`phi^{c}_{i}`, `i=0,\cdot k-1` is a basis component for
+    :math:`c`.  Also note, :math:`\mathbf{w}_{h}` is a vector field 
+    (often the solution from the last non-linear iteration).
+    
+    Parameters
+    ----------
+    nd : int
+        The dimension of the physical domain
+    u : numpy array
+        An array of arrays with the advective field evaluated at the 
+        quadrature points.
+    """
+    from ctransportCoefficients import TwoPhaseAdvection_2D_Evaluate
+    from ctransportCoefficients import TwoPhaseAdvection_3D_Evaluate
+    def __init__(self,
+                 u,
+                 nd=2,
+                 rho_0 = 1.0,
+                 nu_0 = 1.0,
+                 rho_1 = 1.0,
+                 nu_1 = 1.0,
+                 eps = 0.00000001,
+                 LS_model = None,
+                 phase_function = None):
+        self.nd=nd
+        self.advection_field_u = numpy.copy(u[0])
+        self.advection_field_v = numpy.copy(u[1])
+        if self.nd==3:
+            self.advection_field_w = numpy.copy(u[2])
+        self.eps = eps
+        self.rho_0 = rho_0
+        self.nu_0 = nu_0
+        self.rho_1 = rho_1
+        self.nu_1 = nu_1
+        self.LS_model = LS_model
+        self.phase_function = phase_function
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if self.nd==2:
+            variableNames=['p','u','v']
+            advection = {0:{0:'linear',
+                            1:'linear',
+                            2:'linear'},
+                         1:{1:'nonlinear',
+                            2:'nonlinear'},
+                         2:{1:'nonlinear',
+                            2:'nonlinear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors={})
+            self.vectorComponents = [1,2]
+        if self.nd==3:
+            variableNames=['p','u','v','w']
+            advection = {0:{0:'linear',
+                            1:'linear',
+                            2:'linear',
+                            3:'linear'},
+                         1:{1:'nonlinear',
+                            2:'nonlinear',
+                            3:'nonlinear'},
+                         2:{1:'nonlinear',
+                            2:'nonlinear',
+                            3:'nonlinear'},
+                          3:{1:'nonlinear',
+                             2:'nonlinear',
+                             3:'nonlinear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents = [1,2,3]
+    def attachModels(self,modelList):
+        if self.LS_model != None:
+            self.q_phi = modelList[self.LS_model].q[('u',0)]
+            self.ebqe_phi = modelList[self.LS_model].ebqe[('u',0)]
+            self.ebq_phi = None
+
+    def initializeQuadratureWithPhaseFunction(self,c):
+        self.q_phi = c[('u',0)].copy()
+        for i, element in enumerate(c['x']):
+            for j,pt in enumerate(c['x'][i]):
+                self.q_phi[i][j] = self.phase_function(pt)
+
+    def evaluate(self,t,c):
+        if self.phase_function != None:
+            self.initializeQuadratureWithPhaseFunction(c)
+
+        if c[('u',0)].shape == self.q_phi.shape:
+            phi = self.q_phi
+        else:
+            phi = self.ebq_phi
+            
+        if self.nd==2:
+            self.TwoPhaseAdvection_2D_Evaluate(self.eps,
+                                               self.rho_0,
+                                               self.nu_0,
+                                               self.rho_1,
+                                               self.nu_1,
+                                               phi,
+                                               c[('u',0)],
+                                               self.advection_field_u,
+                                               self.advection_field_v,
+                                               c[('f',0)],
+                                               c[('f',1)],
+                                               c[('f',2)],
+                                               c[('df',0,0)],
+                                               c[('df',0,1)],
+                                               c[('df',0,2)],
+                                               c[('df',1,1)],
+                                               c[('df',1,2)],
+                                               c[('df',2,1)],
+                                               c[('df',2,2)])
+        elif self.nd==3:
+            self.TwoPhaseAdvection_3D_Evaluate(self.eps,
+                                               self.rho_0,
+                                               self.nu_0,
+                                               self.rho_1,
+                                               self.nu_1,
+                                               phi,
+                                               c[('u',0)],
+                                               self.advection_field_u,
+                                               self.advection_field_v,
+                                               self.advection_field_w,
+                                               c[('f',0)],
+                                               c[('f',1)],
+                                               c[('f',2)],
+                                               c[('f',3)],
+                                               c[('df',0,0)],
+                                               c[('df',0,1)],
+                                               c[('df',0,2)],
+                                               c[('df',0,3)],
+                                               c[('df',1,1)],
+                                               c[('df',1,2)],
+                                               c[('df',1,3)],
+                                               c[('df',2,1)],
+                                               c[('df',2,2)],
+                                               c[('df',2,3)],
+                                               c[('df',3,1)],
+                                               c[('df',3,2)],
+                                               c[('df',3,3)])
+
+
 class NavierStokes(TC_base):
     r""" The coefficients for the incompressible Navier-Stokes equations.
 
