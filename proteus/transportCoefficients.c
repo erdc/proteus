@@ -2050,7 +2050,158 @@ void Advection_3D_Evaluate(const int nPoints,
     }
 }
 
-			   
+void TwoPhaseAdvection_2D_Evaluate(const int nPoints,
+				   const double eps,
+				   const double rho_0,
+				   const double nu_0,
+				   const double rho_1,
+				   const double nu_1,
+				   const double *phi,
+				   const double *p,
+				   const double *u,
+				   const double *v,
+				   double *mass_adv,
+				   double *dmass_adv_p,
+				   double *dmass_adv_u,
+				   double *dmass_adv_v,
+				   double *mom_u_adv,
+				   double *dmom_u_adv_u,
+				   double *dmom_u_adv_v,
+				   double *mom_v_adv,
+				   double *dmom_v_adv_u,
+				   double *dmom_v_adv_v)
+{
+  int k;
+  double rho, nu, mu, H;
+  
+  for (k=0;k<nPoints;k++)
+    {
+      H = testHeaviside(phi[k]);
+      rho = rho_0*(1.0-H) + rho_1*H;
+      nu = nu_0*(1.0-H) + nu_1*H;
+      mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
+
+      //mass advective flux
+      mass_adv[k*2+0]=nu*u[k]*p[k];
+      mass_adv[k*2+1]=nu*v[k]*p[k];
+      
+      dmass_adv_p[k*2+0] = nu*u[k];
+      dmass_adv_p[k*2+1] = nu*v[k];
+      // ARB - NOTE TO SELF...Why arent these derivatives p[k]?
+      // Possible error to investigate.
+      dmass_adv_u[k*2+0]= 0.0;
+      dmass_adv_v[k*2+1]= 0.0;
+      
+      mom_u_adv[k*2+0] = nu*u[k]*u[k];
+      mom_u_adv[k*2+1] = nu*u[k]*v[k];
+      
+      dmom_u_adv_u[k*2+0] = nu*2.0*u[k];
+      dmom_u_adv_u[k*2+1] = nu*v[k];
+      
+      dmom_u_adv_v[k*2+1] = nu*u[k];
+      
+      mom_v_adv[k*2+0] = nu*v[k]*u[k];
+      mom_v_adv[k*2+1] = nu*v[k]*v[k];
+  
+      dmom_v_adv_u[k*2+0] = nu*v[k];
+
+      dmom_v_adv_v[k*2+0] = nu*u[k];
+      dmom_v_adv_v[k*2+1] = nu*2.0*v[k];
+    }
+}
+
+void TwoPhaseAdvection_3D_Evaluate(const int nPoints,
+				   const eps,
+				   const rho_0,
+				   const nu_0,
+				   const rho_1,
+				   const nu_1,
+				   const *phi,
+				   const double *p,
+				   const double *u,
+				   const double *v,
+				   const double *w,
+				   double *mass_adv,
+				   double *dmass_adv_u,
+				   double *dmass_adv_v,
+				   double *dmass_adv_w,
+				   double *mom_u_adv,
+				   double *dmom_u_adv_u,
+				   double *dmom_u_adv_v,
+				   double *dmom_u_adv_w,
+				   double *mom_v_adv,
+				   double *dmom_v_adv_u,
+				   double *dmom_v_adv_v,
+				   double *dmom_v_adv_w,
+				   double *mom_w_adv,
+				   double *dmom_w_adv_u,
+				   double *dmom_w_adv_v,
+				   double *dmom_w_adv_w)
+{
+  int k;
+  double rho, nu, mu, H;
+  
+  for (k=0;k<nPoints;k++)
+    {
+      H = testHeaviside(phi[k]);
+      rho = rho_0*(1.0-H) + rho_1*H;
+      nu = nu_0*(1.-H) + nu_1*H;
+      mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
+      
+      //mass advective flux
+      mass_adv[k*3+0]=nu*u[k]*p[k];
+      mass_adv[k*3+1]=nu*v[k]*p[k];
+      mass_adv[k*3+2]=nu*w[k]*p[k];
+
+
+      // ARB - there is an error here...need to solve
+      // once moving the 3D
+      dmass_adv_u[k*3+0] = nu;
+      dmass_adv_v[k*3+1] = nu;
+      dmass_adv_w[k*3+2] = nu;
+
+      /* dmass_adv_u[k*3+0]=1.0; */
+      /* dmass_adv_v[k*3+1]=1.0; */
+      /* dmass_adv_w[k*3+2]=1.0; */
+
+      mom_u_adv[k*3+0] = nu*u[k]*u[k];
+      mom_u_adv[k*3+1] = nu*u[k]*v[k];
+      mom_u_adv[k*3+2] = nu*u[k]*w[k];
+
+      dmom_u_adv_u[k*3+0] = nu*2.0*u[k];
+      dmom_u_adv_u[k*3+1] = nu*v[k];
+      dmom_u_adv_u[k*3+2] = nu*w[k];
+
+      dmom_u_adv_v[k*3+1] = nu*u[k];
+      dmom_u_adv_w[k*3+2] = nu*u[k];
+      
+      mom_v_adv[k*3+0] = nu*v[k]*u[k];
+      mom_v_adv[k*3+1] = nu*v[k]*v[k];
+      mom_v_adv[k*3+2] = nu*v[k]*w[k];
+
+      dmom_v_adv_u[k*3+0] = nu*v[k];
+
+      dmom_v_adv_v[k*3+0] = nu*u[k];
+      dmom_v_adv_v[k*3+1] = nu*2.0*v[k];
+      dmom_v_adv_v[k*3+2] = nu*w[k];
+
+      dmom_v_adv_w[k*3+2] = nu*v[k];
+
+      mom_w_adv[k*3+0] = nu*w[k]*u[k];
+      mom_w_adv[k*3+1] = nu*w[k]*v[k];
+      mom_w_adv[k*3+2] = nu*w[k]*w[k];
+
+      dmom_w_adv_u[k*3+0] = nu*w[k];
+      
+      dmom_w_adv_v[k*3+1] = nu*w[k];
+      
+      dmom_w_adv_w[k*3+0] = nu*u[k];
+      dmom_w_adv_w[k*3+1] = nu*v[k];
+      dmom_w_adv_w[k*3+2] = nu*2.0*w[k];
+    }
+}
+
+
 void NavierStokes_2D_Evaluate(const int nPoints,
                               const double rho,
                               const double nu,
@@ -12902,14 +13053,14 @@ void TwoPhaseMass_2D_Evaluate(const int nPoints,
     nu = nu_0*(1.0-H) + nu_1*H;
     mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
 
-    mom_p_acc[k] = p[k] * nu;
-    dmom_p_acc_p[k] = 1.0 * nu;
+    mom_p_acc[k] = p[k] * rho;
+    dmom_p_acc_p[k] = 1.0 * rho;
 
-    mom_u_acc[k] = u[k] * nu;
-    dmom_u_acc_u[k] = 1.0 * nu;
+    mom_u_acc[k] = u[k] * rho;
+    dmom_u_acc_u[k] = 1.0 * rho;
 
-    mom_v_acc[k] = v[k] * nu;
-    dmom_v_acc_v[k] = 1.0 * nu;
+    mom_v_acc[k] = v[k] * rho;
+    dmom_v_acc_v[k] = 1.0 * rho;
   }
 }
 
@@ -12942,17 +13093,17 @@ void TwoPhaseMass_3D_Evaluate(const int nPoints,
     nu = nu_0*(1.0-H) + nu_1*H;
     mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
     
-    mom_p_acc[k] = p[k] * nu;
-    dmom_p_acc_p[k] = 1.0 * nu;
+    mom_p_acc[k] = p[k] * rho;
+    dmom_p_acc_p[k] = 1.0 * rho;
 
-    mom_u_acc[k] = u[k] * nu;
-    dmom_u_acc_u[k] = 1.0 * nu;
+    mom_u_acc[k] = u[k] * rho;
+    dmom_u_acc_u[k] = 1.0 * rho;
 
-    mom_v_acc[k] = v[k] * nu;
-    dmom_v_acc_v[k] = 1.0 * nu;
+    mom_v_acc[k] = v[k] * rho;
+    dmom_v_acc_v[k] = 1.0 * rho;
 
-    mom_w_acc[k] = w[k] * nu;
-    dmom_w_acc_w[k] = 1.0 * nu;
+    mom_w_acc[k] = w[k] * rho;
+    dmom_w_acc_w[k] = 1.0 * rho;
   }
 }
 
