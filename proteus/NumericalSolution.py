@@ -655,7 +655,8 @@ class NS_base:  # (HasTraits):
         if (isinstance(p0.domain, Domain.PUMIDomain) and
             n0.adaptMesh and
             self.so.useOneMesh and 
-            self.nSequenceSteps%n0.adaptMesh_nSteps==0):
+            self.tCount%n0.adaptMesh_nSteps==0 and
+            self.tCount != 0):
             logEvent("Copying coordinates to PUMI")
             p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                 self.modelList[0].levelModelList[0].mesh.nodeArray)
