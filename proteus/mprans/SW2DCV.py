@@ -616,9 +616,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
                                    compKernelFlag)
 
-        if 'use_invariant_domain_stabilization' in dir(options):
-            self.calculateResidual = self.sw2d.calculateResidual_invariant_domain_SWEs
-            self.calculateJacobian = self.sw2d.calculateJacobian_invariant_domain_SWEs
+        if 'use_first_order_flatB_GP_stabilization' in dir(options):
+            self.calculateResidual = self.sw2d.calculateResidual_first_order_flatB_GP
+            self.calculateJacobian = self.sw2d.calculateJacobian_first_order_flatB_GP
         elif 'use_EV_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_cell_based_entropy_viscosity
             self.calculateJacobian = self.sw2d.calculateJacobian_cell_based_entropy_viscosity
