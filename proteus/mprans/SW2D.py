@@ -616,8 +616,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.calculateResidual =  self.sw2d.calculateResidual
             self.calculateJacobian = self.sw2d.calculateJacobian
         if try_invariant_domain:
-            self.calculateResidual = self.sw2d.calculateResidual_mql
-            self.calculateJacobian = self.sw2d.calculateJacobian_mql
+            self.calculateResidual = self.sw2d.calculateResidual_EV
+            self.calculateJacobian = self.sw2d.calculateJacobian_EV
         
     def getResidual(self,u,r):
         """

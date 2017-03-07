@@ -322,7 +322,7 @@ cdef extern from "SW2D.h" namespace "proteus":
                                double* ebqe_velocity,
                                double* flux,
                                double* elementResidual_h)        
-        void calculateResidual_mql(double* mesh_trial_ref,
+        void calculateResidual_EV(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                double* mesh_velocity_dof,
@@ -535,7 +535,7 @@ cdef extern from "SW2D.h" namespace "proteus":
                                int* csrColumnOffsets_eb_v_h,
                                int* csrColumnOffsets_eb_v_u,
                                int* csrColumnOffsets_eb_v_v)                               
-        void calculateJacobian_mql(double* mesh_trial_ref,
+        void calculateJacobian_EV(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                double* mesh_velocity_dof,
@@ -1539,7 +1539,7 @@ cdef class cSW2D_base:
                                       <int*> csrColumnOffsets_eb_v_h.data,
                                       <int*> csrColumnOffsets_eb_v_u.data,
                                       <int*> csrColumnOffsets_eb_v_v.data)
-   def calculateResidual_mql(self,
+   def calculateResidual_EV(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
@@ -1643,7 +1643,7 @@ cdef class cSW2D_base:
                          numpy.ndarray ebqe_velocity,
                          numpy.ndarray flux,
                          numpy.ndarray elementResidual_h):
-       self.thisptr.calculateResidual_mql(#element
+       self.thisptr.calculateResidual_EV(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
             <double*> mesh_dof.data,
@@ -1749,7 +1749,7 @@ cdef class cSW2D_base:
             <double*> ebqe_velocity.data,
             <double*> flux.data,
             <double*> elementResidual_h.data)		       
-   def calculateJacobian_mql(self,
+   def calculateJacobian_EV(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
@@ -1862,7 +1862,7 @@ cdef class cSW2D_base:
                          numpy.ndarray csrColumnOffsets_eb_v_v):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
-       self.thisptr.calculateJacobian_mql(<double*> mesh_trial_ref.data,
+       self.thisptr.calculateJacobian_EV(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
                                        <double*> mesh_velocity_dof.data,

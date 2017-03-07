@@ -344,7 +344,7 @@ namespace proteus
 				   double* ebqe_velocity,
 				   double* flux,
 				   double* elementResidual_h)=0;
-    virtual void calculateResidual_mql(//element
+    virtual void calculateResidual_EV(//element
 				       double* mesh_trial_ref,
 				       double* mesh_grad_trial_ref,
 				       double* mesh_dof,
@@ -563,7 +563,7 @@ namespace proteus
 				   int* csrColumnOffsets_eb_v_h,
 				   int* csrColumnOffsets_eb_v_u,
 				   int* csrColumnOffsets_eb_v_v)=0;
-    virtual void calculateJacobian_mql(//element
+    virtual void calculateJacobian_EV(//element
 				       double* mesh_trial_ref,
 				       double* mesh_grad_trial_ref,
 				       double* mesh_dof,
@@ -2872,7 +2872,7 @@ namespace proteus
       	}
     }
 
-    void calculateResidual_mql(//element
+    void calculateResidual_EV(//element
 			       double* mesh_trial_ref,
 			       double* mesh_grad_trial_ref,
 			       double* mesh_dof,
@@ -5177,7 +5177,7 @@ namespace proteus
     /* 	} */
     /* } */
 
-    void calculateJacobian_mql(//element
+    void calculateJacobian_EV(//element
 			       double* mesh_trial_ref,
 			       double* mesh_grad_trial_ref,
 			       double* mesh_dof,

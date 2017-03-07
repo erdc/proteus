@@ -232,7 +232,7 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       int* csrRowIndeces_DofLoops,   
 			       int* csrColumnOffsets_DofLoops,
 			       double* lumped_mass_matrix)
-        void calculateResidual_invariant_domain_SWEs(double* mesh_trial_ref,
+        void calculateResidual_first_order_flatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                double* mesh_velocity_dof,
@@ -563,7 +563,7 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                                int* csrColumnOffsets_eb_v_h,
                                int* csrColumnOffsets_eb_v_u,
                                int* csrColumnOffsets_eb_v_v)                               
-        void calculateJacobian_invariant_domain_SWEs(double* mesh_trial_ref,
+        void calculateJacobian_first_order_flatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                double* mesh_velocity_dof,
@@ -1159,7 +1159,7 @@ cdef class cSW2DCV_base:
 	    <int*> csrRowIndeces_DofLoops.data,
 	    <int*> csrColumnOffsets_DofLoops.data,
 	    <double*> lumped_mass_matrix.data)  
-   def calculateResidual_invariant_domain_SWEs(self,
+   def calculateResidual_first_order_flatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
@@ -1273,7 +1273,7 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray csrRowIndeces_DofLoops,
 			 numpy.ndarray csrColumnOffsets_DofLoops,
 			 numpy.ndarray lumped_mass_matrix):
-       self.thisptr.calculateResidual_invariant_domain_SWEs(#element
+       self.thisptr.calculateResidual_first_order_flatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
             <double*> mesh_dof.data,
@@ -1831,7 +1831,7 @@ cdef class cSW2DCV_base:
                                       <int*> csrColumnOffsets_eb_v_h.data,
                                       <int*> csrColumnOffsets_eb_v_u.data,
                                       <int*> csrColumnOffsets_eb_v_v.data)
-   def calculateJacobian_invariant_domain_SWEs(self,
+   def calculateJacobian_first_order_flatB_GP(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
@@ -1943,7 +1943,7 @@ cdef class cSW2DCV_base:
                          numpy.ndarray csrColumnOffsets_eb_v_v):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
-       self.thisptr.calculateJacobian_invariant_domain_SWEs(<double*> mesh_trial_ref.data,
+       self.thisptr.calculateJacobian_first_order_flatB_GP(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
                                        <double*> mesh_velocity_dof.data,
