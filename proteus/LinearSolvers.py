@@ -839,7 +839,7 @@ class SchurOperatorConstructor:
         if self.L.pde.coefficients.which_region != None:
             self._phase_function = self.L.pde.coefficients.which_region
 
-        Qsys_petsc4py = self._TPmassMatrix()
+        Qsys_petsc4py = self._TPMassMatrix()
         self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
                                              self.linear_smoother.isv)
         if output_matrix==True:
@@ -847,6 +847,29 @@ class SchurOperatorConstructor:
 
         return self.Qv
 
+    def getTPQv_mu(self,output_matrix=False):
+        """ Return the velocity mass matrix Qv.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether the matrix should be exported.
+        
+        Returns
+        -------
+        Qv : matrix
+            The velocity mass matrix.
+        """
+        if self.L.pde.coefficients.which_region != None:
+            self._phase_function = self.L.pde.coefficients.which_region
+
+        Qsys_petsc4py = self._TPMassMatrix_mu()
+        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+                                             self.linear_smoother.isv)
+        if output_matrix==True:
+            self._exportmatrix(self.Qv,'Qv')
+
+        return self.Qv
 
     def getAp(self,output_matrix=False):
         """ Return the Laplacian pressure matrix Ap.
@@ -1110,6 +1133,19 @@ class SchurOperatorConstructor:
         """
         self.opBuilder.attachTwoPhaseMassOperator(phase_function = self._phase_function)
         return superlu_2_petsc4py(self.opBuilder.TPMassOperator)
+
+    def _TPMassMatrix_mu(self):
+        """ Generates a two phase mass matrix scaled by the dynamic viscosity.
+
+        Returns
+        -------
+        Qsys : matrix
+            The two-phase mass matrix.
+
+        """
+        self.opBuilder.attachTwoPhaseMassOperator_mu(phase_function = self._phase_function)
+        return superlu_2_petsc4py(self.opBuilder.TPMassOperator)
+
 
     def _TPInvScaledMassMatrix(self):
         """ Generates a two phase mass matrix scaled by the inverse of the viscosity.
@@ -1666,7 +1702,7 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
         NavierStokesSchur.__init__(self,L,prefix,bdyNullSpace)
 
     def setUp(self,global_ksp):
-        self.two_phase_Qv = self.operator_constructor.getTPQv()
+        self.two_phase_Qv = self.operator_constructor.getTPQv_mu()
         self.Qv_hat = p4pyPETSc.Mat().create()
         self.Qv_hat.setSizes(self.two_phase_Qv.getSizes())
         self.Qv_hat.setType('aij')
@@ -2758,6 +2794,64 @@ class OperatorConstructor:
                                                       Mass_Jacobian[ci][cj])
         self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.MassOperator)
         self.massOperatorAttached = True
+
+    def attachTwoPhaseMassOperator_mu(self,recalculate=False, phase_function = None):
+        """Create a discrete Mass Operator matrix. """
+        self._mass_val = self.OLT.nzval.copy()
+        
+        _rho_0 = self.OLT.coefficients.rho_0
+        _rho_1 = self.OLT.coefficients.rho_1
+        _nu_0 = self.OLT.coefficients.nu_0
+        _nu_1 = self.OLT.coefficients.nu_1
+        
+        self._mass_val.fill(0.)
+        self.TPMassOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                      self.OLT.nFreeVDOF_global,
+                                      self.OLT.nnz,
+                                      self._mass_val,
+                                      self.OLT.colind,
+                                      self.OLT.rowptr)
+        _nd = self.OLT.coefficients.nd
+        if self.OLT.coefficients.rho != None:
+            _rho = self.OLT.coefficients.rho
+
+        if phase_function == None:
+            self.MassOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseMassMatrix_mu(nd = _nd,
+                                                                                         rho_0 = _rho_0,
+                                                                                         nu_0 = _nu_0,
+                                                                                         rho_1 = _rho_1,
+                                                                                         nu_1 = _nu_1,
+                                                                                         LS_model = _phase_func)
+        else:
+            self.MassOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseMassMatrix_mu(nd = _nd,
+                                                                                         rho_0 = _rho_0,
+                                                                                         nu_0 = _nu_0,
+                                                                                         rho_1 = _rho_1,
+                                                                                         nu_1 = _nu_1,
+                                                                                         phase_function = phase_function)
+            
+        _t = 1.0
+
+        Mass_q = {}
+        self._allocateTwoPhaseMassOperatorQStorageSpace(Mass_q)
+        self._calculateQuadratureValues(Mass_q)
+        if _nd == 2:
+            self.MassOperatorCoeff.evaluate(_t,Mass_q)
+        self._calculateTwoPhaseMassOperatorQ(Mass_q)
+        
+        Mass_Jacobian = {}
+        self._allocateMatrixSpace(self.MassOperatorCoeff,
+                                  Mass_Jacobian)
+
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            for cj in cjDict:
+                cfemIntegrals.updateMassJacobian_weak(Mass_q[('dm',ci,cj)],
+                                                      Mass_q[('vXw*dV_m',cj,ci)],
+                                                      Mass_Jacobian[ci][cj])
+
+        self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.TPMassOperator)
+        self.massOperatorAttached = True
+
 
     def attachTwoPhaseMassOperator(self,recalculate=False, phase_function = None):
         """Create a discrete Mass Operator matrix. """
