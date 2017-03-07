@@ -1954,6 +1954,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
+            degree_polynomial,
             self.u[0].dof,
             self.coefficients.u_dof_old,
             self.coefficients.u_dof_old_old,
@@ -2078,6 +2079,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
+            degree_polynomial,
             self.u[0].dof,
             self.coefficients.q_v,
             self.timeIntegration.beta_bdf[0],

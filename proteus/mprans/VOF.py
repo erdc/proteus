@@ -1099,6 +1099,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr, colind, Cy = self.cterm_global[1].getCSRrepresentation()
         rowptr, colind, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr, colind, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         # This is dummy. I just care about the csr structure of the sparse matrix
         self.dL_minus_dC = np.zeros(Cx.shape,'d')
         self.min_u_bc = numpy.zeros(self.u[0].dof.shape,'d')
@@ -1249,6 +1250,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dL_minus_dC, 
             self.min_u_bc,
             self.max_u_bc,
+            self.ML, 
+            MassMatrix,
             self.quantDOFs)
         
         #print numpy.min(r), numpy.max(r)
