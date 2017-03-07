@@ -3123,6 +3123,66 @@ static PyObject* ctransportCoefficientsTwoPhaseInvScaledMass_2D_Evaluate(PyObjec
   return Py_None;
 }
 
+static PyObject* ctransportCoefficientsTwoPhaseMass_mu_2D_Evaluate(PyObject* self,
+								   PyObject* args)
+{
+  int i, nPoints = 1;
+  double eps, rho_0, nu_0, rho_1, nu_1;
+  PyObject *phi,
+    *p,
+    *u,
+    *v,
+    *mom_p_acc,
+    *mom_u_acc,
+    *mom_v_acc,
+    *dmom_p_acc_p,
+    *dmom_u_acc_u,
+    *dmom_v_acc_v;
+
+  if(!PyArg_ParseTuple(args,"dddddOOOOOOOOOO",
+		       &eps,
+		       &rho_0,
+		       &nu_0,
+		       &rho_1,
+		       &nu_1,
+		       &phi,
+		       &p,
+		       &u,
+		       &v,
+		       &mom_p_acc,
+		       &mom_u_acc,
+		       &mom_v_acc,
+		       &dmom_p_acc_p,
+		       &dmom_u_acc_u,
+		       &dmom_v_acc_v))
+
+    return NULL;
+
+  for (i=0 ; i<ND(p) ; i++)
+    nPoints*=SHAPE(p)[i];
+
+  TwoPhaseMass_mu_2D_Evaluate(nPoints,
+			      eps,
+			      rho_0,
+			      nu_0,
+			      rho_1,
+			      nu_1,
+			      DDATA(phi),
+			      DDATA(p),
+			      DDATA(u),
+			      DDATA(v),
+			      DDATA(mom_p_acc),
+			      DDATA(mom_u_acc),
+			      DDATA(mom_v_acc),
+			      DDATA(dmom_p_acc_p),
+			      DDATA(dmom_u_acc_u),
+			      DDATA(dmom_v_acc_v));
+			   
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
 static PyObject* ctransportCoefficientsTwoPhaseInvScaledMass_3D_Evaluate(PyObject* self,
 									 PyObject* args)
 {
@@ -3186,6 +3246,74 @@ static PyObject* ctransportCoefficientsTwoPhaseInvScaledMass_3D_Evaluate(PyObjec
 				    DDATA(dmom_u_acc_u),
 				    DDATA(dmom_v_acc_v),
 				    DDATA(dmom_w_acc_w));
+			   
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject* ctransportCoefficientsTwoPhaseMass_mu_3D_Evaluate(PyObject* self,
+								   PyObject* args)
+{
+  int i, nPoints = 1;
+  double eps, rho_0, nu_0, rho_1, nu_1;
+  PyObject *phi,
+    *p,
+    *u,
+    *v,
+    *w,
+    *mom_p_acc,
+    *mom_u_acc,
+    *mom_v_acc,
+    *mom_w_acc,
+    *dmom_p_acc_p,
+    *dmom_u_acc_u,
+    *dmom_v_acc_v,
+    *dmom_w_acc_w;
+
+  if(!PyArg_ParseTuple(args,"dddddOOOOOOOOOOOOO",
+		       &eps,
+		       &rho_0,
+		       &nu_0,
+		       &rho_1,
+		       &nu_1,
+		       &phi,
+		       &p,
+		       &u,
+		       &v,
+		       &w,
+		       &mom_p_acc,
+		       &mom_u_acc,
+		       &mom_v_acc,
+		       &mom_w_acc,
+		       &dmom_p_acc_p,
+		       &dmom_u_acc_u,
+		       &dmom_v_acc_v,
+		       &dmom_w_acc_w))
+
+    return NULL;
+
+  for (i=0 ; i<ND(p) ; i++)
+    nPoints*=SHAPE(p)[i];
+
+  TwoPhaseMass_mu_3D_Evaluate(nPoints,
+			      eps,
+			      rho_0,
+			      nu_0,
+			      rho_1,
+			      nu_1,
+			      DDATA(phi),
+			      DDATA(p),
+			      DDATA(u),
+			      DDATA(v),
+			      DDATA(w),
+			      DDATA(mom_p_acc),
+			      DDATA(mom_u_acc),
+			      DDATA(mom_v_acc),
+			      DDATA(mom_w_acc),
+			      DDATA(dmom_p_acc_p),
+			      DDATA(dmom_u_acc_u),
+			      DDATA(dmom_v_acc_v),
+			      DDATA(dmom_w_acc_w));
 			   
   Py_INCREF(Py_None);
   return Py_None;
@@ -10599,12 +10727,20 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
     ctransportCoefficientsTwoPhaseMass_3D_Evaluate,
     METH_VARARGS,
     "evaluate the coefficients of a two-phase 3D mass matrix"},
-   { "TwoPhaseInvScaledMass_2D_Evaluate",
+  { "TwoPhaseInvScaledMass_2D_Evaluate",
     ctransportCoefficientsTwoPhaseInvScaledMass_2D_Evaluate,
     METH_VARARGS,
     "evaluate the coefficients of a two-phase 2D mass matrix"},
-   { "TwoPhaseInvScaledMass_3D_Evaluate",
+  { "TwoPhaseMass_mu_2D_Evaluate",
+    ctransportCoefficientsTwoPhaseMass_mu_2D_Evaluate,
+    METH_VARARGS,
+    "evaluate the coefficients of a two-phase 2D mass matrix"},
+  { "TwoPhaseInvScaledMass_3D_Evaluate",
     ctransportCoefficientsTwoPhaseInvScaledMass_3D_Evaluate,
+    METH_VARARGS,
+    "evaluate the coefficients of a two-phase 3D mass matrix"},
+   { "TwoPhaseMass_mu_3D_Evaluate",
+    ctransportCoefficientsTwoPhaseMass_mu_3D_Evaluate,
     METH_VARARGS,
     "evaluate the coefficients of a two-phase 3D mass matrix"},
   { "Advection_2D_Evaluate", 
