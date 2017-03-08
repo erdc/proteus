@@ -2082,31 +2082,31 @@ void TwoPhaseAdvection_2D_Evaluate(const int nPoints,
       mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
 
       //mass advective flux
-      mass_adv[k*2+0]=nu*u[k]*p[k];
-      mass_adv[k*2+1]=nu*v[k]*p[k];
+      mass_adv[k*2+0]=rho*u[k]*p[k];
+      mass_adv[k*2+1]=rho*v[k]*p[k];
       
-      dmass_adv_p[k*2+0] = nu*u[k];
-      dmass_adv_p[k*2+1] = nu*v[k];
+      dmass_adv_p[k*2+0] = rho*u[k];
+      dmass_adv_p[k*2+1] = rho*v[k];
       // ARB - NOTE TO SELF...Why arent these derivatives p[k]?
       // Possible error to investigate.
       dmass_adv_u[k*2+0]= 0.0;
       dmass_adv_v[k*2+1]= 0.0;
       
-      mom_u_adv[k*2+0] = nu*u[k]*u[k];
-      mom_u_adv[k*2+1] = nu*u[k]*v[k];
+      mom_u_adv[k*2+0] = rho*u[k]*u[k];
+      mom_u_adv[k*2+1] = rho*u[k]*v[k];
       
-      dmom_u_adv_u[k*2+0] = nu*2.0*u[k];
-      dmom_u_adv_u[k*2+1] = nu*v[k];
+      dmom_u_adv_u[k*2+0] = rho*2.0*u[k];
+      dmom_u_adv_u[k*2+1] = rho*v[k];
       
-      dmom_u_adv_v[k*2+1] = nu*u[k];
+      dmom_u_adv_v[k*2+1] = rho*u[k];
       
-      mom_v_adv[k*2+0] = nu*v[k]*u[k];
-      mom_v_adv[k*2+1] = nu*v[k]*v[k];
+      mom_v_adv[k*2+0] = rho*v[k]*u[k];
+      mom_v_adv[k*2+1] = rho*v[k]*v[k];
   
-      dmom_v_adv_u[k*2+0] = nu*v[k];
+      dmom_v_adv_u[k*2+0] = rho*v[k];
 
-      dmom_v_adv_v[k*2+0] = nu*u[k];
-      dmom_v_adv_v[k*2+1] = nu*2.0*v[k];
+      dmom_v_adv_v[k*2+0] = rho*u[k];
+      dmom_v_adv_v[k*2+1] = rho*2.0*v[k];
     }
 }
 
@@ -2149,55 +2149,55 @@ void TwoPhaseAdvection_3D_Evaluate(const int nPoints,
       mu = rho_0*nu_0*(1.0-H) + rho_1*nu_1*H;
       
       //mass advective flux
-      mass_adv[k*3+0]=nu*u[k]*p[k];
-      mass_adv[k*3+1]=nu*v[k]*p[k];
-      mass_adv[k*3+2]=nu*w[k]*p[k];
+      mass_adv[k*3+0]=rho*u[k]*p[k];
+      mass_adv[k*3+1]=rho*v[k]*p[k];
+      mass_adv[k*3+2]=rho*w[k]*p[k];
 
 
       // ARB - there is an error here...need to solve
       // once moving the 3D
-      dmass_adv_u[k*3+0] = nu;
-      dmass_adv_v[k*3+1] = nu;
-      dmass_adv_w[k*3+2] = nu;
+      dmass_adv_u[k*3+0] = rho;
+      dmass_adv_v[k*3+1] = rho;
+      dmass_adv_w[k*3+2] = rho;
 
       /* dmass_adv_u[k*3+0]=1.0; */
       /* dmass_adv_v[k*3+1]=1.0; */
       /* dmass_adv_w[k*3+2]=1.0; */
 
-      mom_u_adv[k*3+0] = nu*u[k]*u[k];
-      mom_u_adv[k*3+1] = nu*u[k]*v[k];
-      mom_u_adv[k*3+2] = nu*u[k]*w[k];
+      mom_u_adv[k*3+0] = rho*u[k]*u[k];
+      mom_u_adv[k*3+1] = rho*u[k]*v[k];
+      mom_u_adv[k*3+2] = rho*u[k]*w[k];
 
-      dmom_u_adv_u[k*3+0] = nu*2.0*u[k];
-      dmom_u_adv_u[k*3+1] = nu*v[k];
-      dmom_u_adv_u[k*3+2] = nu*w[k];
+      dmom_u_adv_u[k*3+0] = rho*2.0*u[k];
+      dmom_u_adv_u[k*3+1] = rho*v[k];
+      dmom_u_adv_u[k*3+2] = rho*w[k];
 
-      dmom_u_adv_v[k*3+1] = nu*u[k];
-      dmom_u_adv_w[k*3+2] = nu*u[k];
+      dmom_u_adv_v[k*3+1] = rho*u[k];
+      dmom_u_adv_w[k*3+2] = rho*u[k];
       
-      mom_v_adv[k*3+0] = nu*v[k]*u[k];
-      mom_v_adv[k*3+1] = nu*v[k]*v[k];
-      mom_v_adv[k*3+2] = nu*v[k]*w[k];
+      mom_v_adv[k*3+0] = rho*v[k]*u[k];
+      mom_v_adv[k*3+1] = rho*v[k]*v[k];
+      mom_v_adv[k*3+2] = rho*v[k]*w[k];
 
-      dmom_v_adv_u[k*3+0] = nu*v[k];
+      dmom_v_adv_u[k*3+0] = rho*v[k];
 
-      dmom_v_adv_v[k*3+0] = nu*u[k];
-      dmom_v_adv_v[k*3+1] = nu*2.0*v[k];
-      dmom_v_adv_v[k*3+2] = nu*w[k];
+      dmom_v_adv_v[k*3+0] = rho*u[k];
+      dmom_v_adv_v[k*3+1] = rho*2.0*v[k];
+      dmom_v_adv_v[k*3+2] = rho*w[k];
 
-      dmom_v_adv_w[k*3+2] = nu*v[k];
+      dmom_v_adv_w[k*3+2] = rho*v[k];
 
-      mom_w_adv[k*3+0] = nu*w[k]*u[k];
-      mom_w_adv[k*3+1] = nu*w[k]*v[k];
-      mom_w_adv[k*3+2] = nu*w[k]*w[k];
+      mom_w_adv[k*3+0] = rho*w[k]*u[k];
+      mom_w_adv[k*3+1] = rho*w[k]*v[k];
+      mom_w_adv[k*3+2] = rho*w[k]*w[k];
 
-      dmom_w_adv_u[k*3+0] = nu*w[k];
+      dmom_w_adv_u[k*3+0] = rho*w[k];
       
-      dmom_w_adv_v[k*3+1] = nu*w[k];
+      dmom_w_adv_v[k*3+1] = rho*w[k];
       
-      dmom_w_adv_w[k*3+0] = nu*u[k];
-      dmom_w_adv_w[k*3+1] = nu*v[k];
-      dmom_w_adv_w[k*3+2] = nu*2.0*w[k];
+      dmom_w_adv_w[k*3+0] = rho*u[k];
+      dmom_w_adv_w[k*3+1] = rho*v[k];
+      dmom_w_adv_w[k*3+2] = rho*2.0*w[k];
     }
 }
 
