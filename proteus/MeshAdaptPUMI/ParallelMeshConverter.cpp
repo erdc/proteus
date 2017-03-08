@@ -91,11 +91,12 @@ int MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   constructMaterialArrays(*mesh.subdomainp);
   constructGlobalStructures(mesh); 
 
+/* Turn on only for debugging
   std::stringstream ss;
   ss << "ToProteus_t" << nAdapt<<".smb";
   std::string s = ss.str();
   m->writeNative(s.c_str());
-
+*/
   return 0;
 } 
 
