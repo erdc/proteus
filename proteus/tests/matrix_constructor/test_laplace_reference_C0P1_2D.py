@@ -5,28 +5,22 @@ Test module for Laplace Matrix builder
 
 from proteus.iproteus import *
 from proteus import LinearAlgebraTools
+import proteus.test_utils.TestTools
 
-import set_paths
-import os.path
+import os.path,sys,inspect
 import numpy
 
+proteus.test_utils.TestTools.addSubFolders(inspect.currentframe())
 import laplace_template_C0P1_2D as tp_2d
 
-class TestLaplaceConstruction2D():
+class TestLaplaceConstruction2D(proteus.test_utils.TestTools.SimulationTest):
     """ Run tests to verify the construction of the 2D Laplace operator """
-
-    @classmethod
-    def setup_class(cls):
-        pass
-
-    @classmethod
-    def teardown_class(cls):
-        pass
 
     def setup_method(self,method):
         """ Intialize the test problem """
         reload(tp_2d)
         self.laplace_object = tp_2d.ns
+        self._setRelativePath()
 
     def teardown_method(self,method):
         """ Tear down function """
@@ -37,9 +31,10 @@ class TestLaplaceConstruction2D():
                     "reference_triangle_2d.poly",
                     "proteus.log",
                     "proteus_default.log"]
-        for file in FileList:
-            if os.path.isfile(file):
-                os.remove(file)
+        self.remove_files(FileList)
+
+    def _setRelativePath(self):
+        self._scriptdir = os.path.dirname(__file__)
 
     def test_1(self):
         """ Initial test to check whether this is working """

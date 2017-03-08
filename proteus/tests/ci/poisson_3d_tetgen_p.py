@@ -316,6 +316,8 @@ fluxBoundaryConditions = {0:'setFlow'} #options are 'setFlow','noFlow','mixedFlo
 
 
 #equation coefficient names
+#import pdb
+#pdb.set_trace()
 coefficients = TransportCoefficients.PoissonEquationCoefficients(aOfX,fOfX,nc,nd)
 #
 coefficients.variableNames=['u0']

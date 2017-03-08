@@ -223,6 +223,7 @@ if opts.petscOptionsFile != None:
     stripped_data = [strip_comments(line) for line in data]
     petsc_argv += '\n'.join(stripped_data).split()
     log("PETSc options from commandline")
+    log(Profiling.print_petsc_commandline_options(petsc_argv))
     log(str(petsc_argv))
 
 Comm.argv = petsc_argv

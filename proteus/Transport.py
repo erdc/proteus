@@ -71,6 +71,15 @@ class OneLevelTransport(NonlinearEquation):
 
     The rest of the functions in this class are either private functions
     or return various other pieces of information.
+    
+    Attributes
+    ----------
+    coefficients : :class:`proteus.TransportCoefficients`
+        The coefficients defining the problem's physics.
+    q : dict
+        This dictionary contains a the function values
+        used in Jacobian and residual assembly at the required
+        quadrature points.
     """
     def __init__(self,
                  uDict,
@@ -296,6 +305,8 @@ class OneLevelTransport(NonlinearEquation):
         #is just for convenience so that the input doesn't have to be
         #complete)
         #
+        self._elementQuadrature = elementQuadrature
+        self._elementBoundaryQuadrature = elementBoundaryQuadrature
         elementQuadratureDict={}
         elemQuadIsDict = isinstance(elementQuadrature,dict)
         if elemQuadIsDict: #set terms manually
@@ -1630,7 +1641,6 @@ class OneLevelTransport(NonlinearEquation):
     #what about setting initial conditions directly from dofs calculated elsewhere?
     def archiveAnalyticalSolutions(self,archive,analyticalSolutionsDict,T=0.0,tCount=0):
         import copy
-        import pdb
         #
         #set the initial conditions for the DOF based on the generalized interpolation conditions
         #
@@ -2367,14 +2377,13 @@ class OneLevelTransport(NonlinearEquation):
         return jacobian
     def calculateElementResidual(self):
         """Calculate all the element residuals"""
-        import pdb
-        #pdb.set_trace()
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
         for ci  in self.coefficients.advection.keys():
             cfemIntegrals.updateAdvection_weak(self.q[('f',ci)],
                                                self.q[('grad(w)*dV_f',ci)],
                                                self.elementResidual[ci])
+
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck in ckDict.keys():
                 if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
@@ -2393,7 +2402,6 @@ class OneLevelTransport(NonlinearEquation):
                         cfemIntegrals.updateDiffusion_weak(self.q[('a',ci,ck)],
                                                            self.q[('grad(phi)Xgrad(w)*dV_a',ck,ci)],
                                                            self.elementResidual[ci])
-
                 else:
                     if not self.q.has_key(('grad(w)*dV_f',ck)):
                         self.q[('grad(w)*dV_f',ck)] = self.q[('grad(w)*dV_a',ci,ck)]
@@ -2403,8 +2411,6 @@ class OneLevelTransport(NonlinearEquation):
                         rho_split = 0
                     if self.sd:
                         #tjp need to zero velocity because this just updates
-                        #import pdb
-                        #pdb.set_trace()
                         self.q[('velocity',ck)].fill(0.0)
                         cfemIntegrals.updateDiffusion_MixedForm_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                         self.numericalFlux.aTilde[(ci,ck)],
@@ -3195,6 +3201,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         #get functions of (t,x,u) at the quadrature points
         #
+
         self.coefficients.evaluate(self.timeIntegration.t,self.q)
         if self.movingDomain and self.coefficients.movingDomain:
             self.coefficients.updateToMovingDomain(self.timeIntegration.t,self.q)
@@ -3775,7 +3782,6 @@ class OneLevelTransport(NonlinearEquation):
 
         This function should be called only when the mesh changes.
         """
-        import pdb
         #
         #cek get rid of trickiness
         #
@@ -4215,8 +4221,6 @@ class OneLevelTransport(NonlinearEquation):
         list of local dof because of the exclusion of Dirichlet nodes
         (otherwise we could just loop over range(self.nDOF_element).
         """
-        import pdb
-#        pdb.set_trace()
         self.l2g=[{'nFreeDOF':numpy.zeros((self.mesh.nElements_global,),'i'),
                    'freeLocal':numpy.zeros((self.mesh.nElements_global,self.nDOF_trial_element[cj]),'i'),
                    'freeGlobal':numpy.zeros((self.mesh.nElements_global,self.nDOF_trial_element[cj]),'i')} for cj in range(self.nc)]
@@ -5640,8 +5644,6 @@ class OneLevelTransport(NonlinearEquation):
         portions of the reaction term, 'r', and boundary condition terms
         This is a temporary fix for linear model reduction.
         """
-        #import pdb
-        #pdb.set_trace()
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
         for ci in self.coefficients.reaction.keys():
@@ -6202,8 +6204,6 @@ class MultilevelTransport:
         self.strideListList=[]
         self.matType = matType
         #mwf debug
-        #import pdb
-        #pdb.set_trace()
         if PhiSpaceTypeDict == None: #by default phi in same space as u
             PhiSpaceTypeDict = TrialSpaceTypeDict
         self.phiSpaceDictList = []
@@ -6214,8 +6214,6 @@ class MultilevelTransport:
             self.trialSpaceListDict[cj]=[]
             self.bcListDict[cj]=[]
         for mesh in mlMesh.meshList:
-       #     import pdb
-       #     pdb.set_trace()
             sdmesh = mesh.subdomainMesh
             memory()
             logEvent("Generating Trial Space",level=2)
@@ -6244,8 +6242,6 @@ class MultilevelTransport:
             else:
                 useWeakDirichletConditions=numericalFluxType.useWeakDirichletConditions
             logEvent("Setting Boundary Conditions-1")
-            import pdb
-#            pdb.set_trace()
             for cj in trialSpaceDict.keys():
                 if not dirichletConditionsSetterDict.has_key(cj):
                     dirichletConditionsSetterDict[cj] = None

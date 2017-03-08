@@ -4,21 +4,16 @@ Test module for Laplace Matrix
 """
 
 from proteus.iproteus import *
-import set_paths
+import proteus.test_utils.TestTools
+
+import os,sys,inspect
 import numpy
 
+proteus.test_utils.TestTools.addSubFolders(inspect.currentframe())
 import laplace_template_TH_2D as L_2d
 
-class TestMassConstruction2D():
+class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
     """ Verify construction of 2D Laplce using transport coefficients """
-
-    @classmethod
-    def setup_class(cls):
-        pass
-
-    @classmethod
-    def teardown_class(cls):
-        pass
 
     def setup_method(self,method):
         """ Initialize the test problem """
@@ -34,9 +29,10 @@ class TestMassConstruction2D():
                     "reference_triangle_2d.node",
                     "reference_triangle_2d.face",
                     "reference_triangle_2d.poly"]
-        for file in FileList:
-            if os.path.isfile(file):
-                os.remove(file)
+        self.remove_files(FileList)
+        
+    def _setRelativePath(self):
+        self._scriptdir = os.path.dirname(__file__)
 
     def test_1(self):
         """ An initial test of the coefficient class. """

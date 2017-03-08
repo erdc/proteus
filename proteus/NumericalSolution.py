@@ -255,6 +255,7 @@ class NS_base:  # (HasTraits):
                 mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                             parallelPartitioningType=n.parallelPartitioningType)
+                logEvent("NAHeader GridRefinements %i" % (n.nLevels) )
                 logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
@@ -348,6 +349,17 @@ class NS_base:  # (HasTraits):
                 mlMesh = MeshTools.MultilevelHexahedralMesh(0,0,0,skipInit=True,
                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                              parallelPartitioningType=n.parallelPartitioningType)
+                logEvent("Generating %i-level mesh from coarse mesh" % (n.nLevels,))
+                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=n.parallelPartitioningType)
+            elif isinstance(p.domain,Domain.MeshQuadDomain_IFISS):
+                mesh=MeshTools.QuadrilateralMesh()
+                logEvent("Reading coarse mesh from file")
+                mesh.generateFromQuadFileIFISS(p.domain.meshfile)
+                mlMesh = MeshTools.MultilevelQuadrilateralMesh(0,0,0,skipInit=True,
+                                                               nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                               parallelPartitioningType=n.parallelPartitioningType)
                 logEvent("Generating %i-level mesh from coarse mesh" % (n.nLevels,))
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
@@ -452,6 +464,7 @@ class NS_base:  # (HasTraits):
         self.nlsList=[]
         from collections import OrderedDict
         self.modelSpinUp = OrderedDict()
+#        import pdb ; pdb.set_trace()
         for p in pList:
             p.coefficients.opts = self.opts
             if p.coefficients.sdInfo == {}:
@@ -461,6 +474,7 @@ class NS_base:  # (HasTraits):
                              p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
                                                                numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
                              logEvent("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`p.coefficients.sdInfo[(ci,ck)]`)
+#        import pdb ; pdb.set_trace()
         for p,n,s,mlMesh,index in zip(pList,nList,sList,mlMesh_nList,range(len(pList))):
             if so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True
@@ -479,7 +493,7 @@ class NS_base:  # (HasTraits):
                 tolList.append(n.tolFac*fac)
                 linTolList.append(n.linTolFac*fac)
 
-            logEvent("Setting up MultilevelTransport for "+p.name)
+                logEvent("Setting up MultilevelTransport for "+p.name)
             model = Transport.MultilevelTransport(p,n,mlMesh,OneLevelTransportType=p.LevelModelType)
             self.modelList.append(model)
             model.name = p.name
@@ -491,7 +505,6 @@ class NS_base:  # (HasTraits):
             linear_solver_options_prefix = None
             if 'linear_solver_options_prefix' in dir(n):
                 linear_solver_options_prefix = n.linear_solver_options_prefix
-
             (multilevelLinearSolver,directSolverFlag) = LinearSolvers.multilevelLinearSolverChooser(
                 linearOperatorList = model.jacobianList,
                 par_linearOperatorList = model.par_jacobianList,
@@ -502,6 +515,7 @@ class NS_base:  # (HasTraits):
                 computeLevelSolverRates=n.computeLevelLinearSolverRates,
                 printLevelSolverInfo=n.printLevelLinearSolverInfo,
                 smootherType = n.linearSmoother,
+                boundaryNullSpace = p.boundaryCreatesNullSpace,
                 computeSmootherRates=n.computeLinearSmootherRates,
                 printSmootherInfo=n.printLinearSmootherInfo,
                 prolongList = model.meshTransfers.prolongList,
@@ -603,6 +617,7 @@ class NS_base:  # (HasTraits):
             logEvent("Using tnList from so = "+so.name)
             self.tnList = so.tnList
         logEvent("Time sequence"+`self.tnList`)
+        logEvent("NAHeader Num Time Steps "+`len(self.tnList)-1`)
         logEvent("Setting "+so.name+" systemStepController to object of type "+str(so.systemStepControllerType))
         self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
         self.systemStepController.setFromOptions(so)
@@ -798,6 +813,7 @@ class NS_base:  # (HasTraits):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
+            logEvent("NumericalAnalytics Time Step " + `self.tn`,level=0)
             if self.opts.save_dof:
                 for m in self.modelList:
                     for lm in m.levelModelList:
@@ -846,7 +862,6 @@ class NS_base:  # (HasTraits):
                                 logEvent("Model substep t=%12.5e for model %s model.timeIntegration.t= %12.5e" % (self.tSubstep,model.name,model.levelModelList[-1].timeIntegration.t),level=3)
 
                                 model.stepController.setInitialGuess(model.uList,model.rList)
-
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,

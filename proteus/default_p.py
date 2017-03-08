@@ -79,6 +79,9 @@ weakDirichletConditions = None
 
 dummyInitialConditions = False #mwf temporary hack for RD level sets
 
+boundaryCreatesNullSpace = False
+"""Boolean indicating whether the boundary conditions imply a null space exits"""
+
 #what to do after each coupling step?
 def finalizeStepDummy(c):
     pass

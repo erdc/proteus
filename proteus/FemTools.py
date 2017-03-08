@@ -3105,15 +3105,21 @@ Finite Element Spaces
 """
 
 class ParametricFiniteElementSpace:
-    """
-    Base class for spaces of functions defined by a set of finite
-    elements that are each related to the same reference finite element.
+    """ Base class for finite elements defined on the reference element.
 
-    dim -- global dimension of the space
-    mesh -- a Mesh object, which is a partition of the domain
-    finiteElements -- a dictionary of the FiniteElement objects
-    indexed by element number
-    dofMap -- a DOF
+    Parameters
+    ----------
+    referenceFiniteElement : :class:`proteus.FemTools.ReferenceFiniteElement`
+    elementMaps : :class:`proteus.FemTools.AffineMaps`
+    dofMap : :class:`proteus.FemTools.DOFMap`
+
+    Attributes
+    ----------
+    mesh : :class:`proteus.MeshTools.Mesh`
+        The mesh object associated with the finite element.
+    dofMap : :class:`proteus.FemTools.DOFMap`
+        Describes the global degree-of-freedom numbers associated with
+        each element in the finite element triangulation.
     """
     def __init__(self, referenceFiniteElement, elementMaps, dofMap):
         self.strongDirichletConditions = True

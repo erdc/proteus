@@ -433,12 +433,19 @@ class Newton(NonlinearSolver):
         self.norm_r_last = self.norm_r
         self.linearSolver.setResTol(rtol=eta,atol=self.linearSolver.atol_r)
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        """
-        Solve F(u) = b
+        """ Solve the non-linear problem F(u) = b.
 
-        b -- right hand side
-        u -- solution
-        r -- F(u) - b
+        Parameters
+        ----------
+        b : vec
+           The right hand side vector.
+        r : vec
+           The solution residual F(u) - b.
+
+        Returns
+        -------
+        u : vec
+            The solution.
         """
 
         import Viewers
@@ -463,7 +470,9 @@ class Newton(NonlinearSolver):
         self.linearSolverFailed = False
         while (not self.converged(r) and
                not self.failed()):
-            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+            logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
+                %(self.its-1, self.norm_r), level=1)
+            logEvent("  Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
                 % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
@@ -620,10 +629,14 @@ class Newton(NonlinearSolver):
                     Viewers.newPlot()
                     Viewers.newWindow()
                 #raw_input("wait")
+            logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
+                %(self.its-1, self.norm_r), level=1)
             logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             logEvent(memory("Newton","Newton"),level=4)
             return self.failedFlag
+        logEvent("  NumericalAnalytics NewtonIteration: %d, NewtonNorm: %12.5e"
+            %(self.its-1, self.norm_r), level=1)
         logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
@@ -2248,6 +2261,7 @@ class MultilevelNonlinearSolver:
             else:
                 par_u=None
                 par_r=None
+            logEvent("  NumericalAnalytics Newton iteration for level " + `l`, level = 0)
             self.solverList[l].solve(u = uList[l],
                                      r = rList[l],
                                      b = bList[l],

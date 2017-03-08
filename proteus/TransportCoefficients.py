@@ -11,6 +11,7 @@ from math import *
 from warnings import warn
 import numpy
 import Norms
+import abc
 from Profiling import logEvent
 from warnings import warn
 
@@ -37,28 +38,36 @@ from warnings import warn
 #matrix.
 #
 class TC_base:
-    """
+    """ Base class for vector transport coefficients.
+
     This is the base class for coefficients of the vector transport
     equation with nc components. The coefficients and their derivative
     are evaluated at a time t over an array of solution values, u, at
     an array of points x.
 
-    methods:
+    Parameters
+    -----------
+    nc :  int
+        Number of unknowns.
+    mass : ({{}} logically nc x nc) str ('linear' or 'nonlinear')
+        Coefficients for the mass terms.
+    advection :  ({{}} logically nc x nc) str 'constant', 'linear' or 'nonlinear'
+        Coefficients for the advection terms.
+    diffusion : ({{{}}} logically nc x nc x nc) str 'constant' or 'nonlinear'
+        Coefficients for the diffusion terms.
+    potential : ({{}} logically nc x nc) str 'u' or 'nonlinear'
+        Coefficients for the potential terms.
+    reaction  : ({{}} logically nc x nc) str 'constant','linear', or 'nonlinear'
+        Coefficients for the reaction terms.
+    hamiltonian : ({{}} logically nx x nc) str 'linear' or 'nonlinear'
+        Coefficients for the hamiltonian terms.
+    stencil  : ([set(),] nc x nc) 
+        indicates jacobian block structure
+    variableNames : str (number of components) 
+        string describing the component
 
-    evaluate(t,c) -- t, time, is a float, c is a dictionary of x,u, and coefficients
-
-    members:
-
-    nc        -- (number  of components) integer
-    mass      -- ({{}} logically nc x nc) 'linear' or 'nonlinear'
-    advection -- ({{}} logically nc x nc) 'constant', 'linear' or 'nonlinear'
-    diffusion -- ({{{}}} logically nc x nc x nc) 'constant' or 'nonlinear'
-    potential -- ({{}} logically nc x nc) 'u' or 'nonlinear'
-    reaction  -- ({{}} logically nc x nc) 'constant','linear', or 'nonlinear'
-    hamiltonian -- ({{}} logically nx x nc) 'linear' or 'nonlinear'
-    stencil   -- ([set(),] nc x nc) indicates jacobian block structure
-    variableNames -- (number of components) string describing the component
-
+    Note
+    ----
     These dictionaries indicate which coefficients are nonzero and how
     the non-zero coefficietns depend on the solution variables. The
     dictionaries will be used like sparse multi-dimensional
@@ -70,6 +79,11 @@ class TC_base:
     .. math::
 
     a_{i,j} = 1
+
+    Example
+    -------
+    Non-conservative advection example.
+
     """
     def __init__(self,
                  nc=2,
@@ -106,6 +120,7 @@ class TC_base:
         and archiving) and a structure defining the sparsity pattern
         of diffusion tensors may also be provided.
         """
+#        import pdb ; pdb.set_trace()
         self.nc = nc
         if variableNames == None:
             self.variableNames = ['u'+`i` for i in range(nc)]
@@ -936,19 +951,314 @@ class UnitCubeRotation(TC_base):
                                       c[('m',0)],c[('dm',0,0)],
                                       c[('f',0)],c[('df',0,0)])
 
-##\brief Incompressible Navier-Stokes equations
-#
-#The equations are formulated as
-#
-#\f{eqnarray*}
-#\nabla \cdot \mathbf{v} &=& 0 \\
-#\frac{\partial \left \mathbf{v}\right }{\partial t} + \nabla \cdot \left(\mathbf{v} \otimes \mathbf{v} - \nu \Delta \mathbf{f} \right) + \frac{\nabla p}{\rho}- \mathbf{g} &=& 0
-#\f}
-#
-#where \f$\mathbf{v}\f$ is the velocity, \f$p\f$ is the pressure, \f$\nu\f$ is the kinematic viscosity, \f$\rho\f$ is the density, and \f$\mathbf{g}\f$ is the gravitational acceleration.
-class NavierStokes(TC_base):
+class DiscreteAdvectionOperator(TC_base):
+    r""" A coefficient class to build the discrete advection operator.
+
+    This class defines the coefficients necessary to construct the
+    discrete advection operator :math:`N` where
+    
+    .. math::
+
+       n^{c}_{i,j} = \int_{T} (\mathbf{w}_{h} \phi_{j}) \cdot
+       \nabla \phi_{i} d T
+
+    for all :math:`T \in \Omega`, :math:`c = 0,...nc-1` and
+    :math:`phi^{c}_{i}`, `i=0,\cdot k-1` is a basis component for
+    :math:`c`.  Also note, :math:`\mathbf{w}_{h}` is a vector field 
+    (often the solution from the last non-linear iteration).
+    
+    Parameters
+    ----------
+    nd : int
+        The dimension of the physical domain
+    u : numpy array
+        An array of arrays with the advective field evaluated at the 
+        quadrature points.
     """
-    The coefficients for the incompressible Navier-Stokes equations.
+    from ctransportCoefficients import Advection_2D_Evaluate
+    from ctransportCoefficients import Advection_3D_Evaluate
+    def __init__(self,u,nd=2):
+        self.nd=nd
+        self.advection_field_u = numpy.copy(u[0])
+        self.advection_field_v = numpy.copy(u[1])
+        if self.nd==3:
+            self.advection_field_w = numpy.copy(u[2])
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if self.nd==2:
+            variableNames=['p','u','v']
+            advection = {0:{0:'linear',
+                            1:'linear',
+                            2:'linear'},
+                         1:{1:'nonlinear',
+                            2:'nonlinear'},
+                         2:{1:'nonlinear',
+                            2:'nonlinear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors={})
+            self.vectorComponents = [1,2]
+        if self.nd==3:
+            variableNames=['p','u','v','w']
+            advection = {0:{0:'linear',
+                            1:'linear',
+                            2:'linear',
+                            3:'linear'},
+                         1:{1:'nonlinear',
+                            2:'nonlinear',
+                            3:'nonlinear'},
+                         2:{1:'nonlinear',
+                            2:'nonlinear',
+                            3:'nonlinear'},
+                          3:{1:'nonlinear',
+                             2:'nonlinear',
+                             3:'nonlinear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents = [1,2,3]
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.Advection_2D_Evaluate(c[('u',0)],
+                                       self.advection_field_u,
+                                       self.advection_field_v,
+                                       c[('f',0)],
+                                       c[('f',1)],
+                                       c[('f',2)],
+                                       c[('df',0,0)],
+                                       c[('df',0,1)],
+                                       c[('df',0,2)],
+                                       c[('df',1,1)],
+                                       c[('df',1,2)],
+                                       c[('df',2,1)],
+                                       c[('df',2,2)])
+        elif self.nd==3:
+            self.Advection_3D_Evaluate(c[('u',0)],
+                                       self.advection_field_u,
+                                       self.advection_field_v,
+                                       self.advection_field_w,
+                                       c[('f',0)],
+                                       c[('f',1)],
+                                       c[('f',2)],
+                                       c[('f',3)],
+                                       c[('df',0,0)],
+                                       c[('df',0,1)],
+                                       c[('df',0,2)],
+                                       c[('df',0,3)],
+                                       c[('df',1,1)],
+                                       c[('df',1,2)],
+                                       c[('df',1,3)],
+                                       c[('df',2,1)],
+                                       c[('df',2,2)],
+                                       c[('df',2,3)],
+                                       c[('df',3,1)],
+                                       c[('df',3,2)],
+                                       c[('df',3,3)])
+
+
+class DiscreteTwoPhaseAdvectionOperator(TC_base):
+    r""" A coefficient class to build the discrete advection operator.
+
+    This class defines the coefficients necessary to construct the
+    discrete advection operator :math:`N` where
+    
+    .. math::
+
+       n^{c}_{i,j} = \int_{T} (\mathbf{w}_{h} \phi_{j}) \cdot
+       \nabla \phi_{i} d T
+
+    for all :math:`T \in \Omega`, :math:`c = 0,...nc-1` and
+    :math:`phi^{c}_{i}`, `i=0,\cdot k-1` is a basis component for
+    :math:`c`.  Also note, :math:`\mathbf{w}_{h}` is a vector field 
+    (often the solution from the last non-linear iteration).
+    
+    Parameters
+    ----------
+    nd : int
+        The dimension of the physical domain
+    u : numpy array
+        An array of arrays with the advective field evaluated at the 
+        quadrature points.
+    """
+    from ctransportCoefficients import TwoPhaseAdvection_2D_Evaluate
+    from ctransportCoefficients import TwoPhaseAdvection_3D_Evaluate
+    def __init__(self,
+                 u,
+                 nd=2,
+                 rho_0 = 1.0,
+                 nu_0 = 1.0,
+                 rho_1 = 1.0,
+                 nu_1 = 1.0,
+                 eps = 0.00000001,
+                 LS_model = None,
+                 phase_function = None):
+        self.nd=nd
+        self.advection_field_u = numpy.copy(u[0])
+        self.advection_field_v = numpy.copy(u[1])
+        if self.nd==3:
+            self.advection_field_w = numpy.copy(u[2])
+        self.eps = eps
+        self.rho_0 = rho_0
+        self.nu_0 = nu_0
+        self.rho_1 = rho_1
+        self.nu_1 = nu_1
+        self.LS_model = LS_model
+        self.phase_function = phase_function
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if self.nd==2:
+            variableNames=['p','u','v']
+            advection = {0:{0:'linear',
+                            1:'linear',
+                            2:'linear'},
+                         1:{1:'nonlinear',
+                            2:'nonlinear'},
+                         2:{1:'nonlinear',
+                            2:'nonlinear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors={})
+            self.vectorComponents = [1,2]
+        if self.nd==3:
+            variableNames=['p','u','v','w']
+            advection = {0:{0:'linear',
+                            1:'linear',
+                            2:'linear',
+                            3:'linear'},
+                         1:{1:'nonlinear',
+                            2:'nonlinear',
+                            3:'nonlinear'},
+                         2:{1:'nonlinear',
+                            2:'nonlinear',
+                            3:'nonlinear'},
+                          3:{1:'nonlinear',
+                             2:'nonlinear',
+                             3:'nonlinear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents = [1,2,3]
+    def attachModels(self,modelList):
+        if self.LS_model != None:
+            self.q_phi = modelList[self.LS_model].q[('u',0)]
+            self.ebqe_phi = modelList[self.LS_model].ebqe[('u',0)]
+            self.ebq_phi = None
+
+    def initializeQuadratureWithPhaseFunction(self,c):
+        self.q_phi = c[('u',0)].copy()
+        for i, element in enumerate(c['x']):
+            for j,pt in enumerate(c['x'][i]):
+                self.q_phi[i][j] = self.phase_function(pt)
+
+    def evaluate(self,t,c):
+        if self.phase_function != None:
+            self.initializeQuadratureWithPhaseFunction(c)
+
+        if c[('u',0)].shape == self.q_phi.shape:
+            phi = self.q_phi
+        else:
+            phi = self.ebq_phi
+            
+        if self.nd==2:
+            self.TwoPhaseAdvection_2D_Evaluate(self.eps,
+                                               self.rho_0,
+                                               self.nu_0,
+                                               self.rho_1,
+                                               self.nu_1,
+                                               phi,
+                                               c[('u',0)],
+                                               self.advection_field_u,
+                                               self.advection_field_v,
+                                               c[('f',0)],
+                                               c[('f',1)],
+                                               c[('f',2)],
+                                               c[('df',0,0)],
+                                               c[('df',0,1)],
+                                               c[('df',0,2)],
+                                               c[('df',1,1)],
+                                               c[('df',1,2)],
+                                               c[('df',2,1)],
+                                               c[('df',2,2)])
+        elif self.nd==3:
+            self.TwoPhaseAdvection_3D_Evaluate(self.eps,
+                                               self.rho_0,
+                                               self.nu_0,
+                                               self.rho_1,
+                                               self.nu_1,
+                                               phi,
+                                               c[('u',0)],
+                                               self.advection_field_u,
+                                               self.advection_field_v,
+                                               self.advection_field_w,
+                                               c[('f',0)],
+                                               c[('f',1)],
+                                               c[('f',2)],
+                                               c[('f',3)],
+                                               c[('df',0,0)],
+                                               c[('df',0,1)],
+                                               c[('df',0,2)],
+                                               c[('df',0,3)],
+                                               c[('df',1,1)],
+                                               c[('df',1,2)],
+                                               c[('df',1,3)],
+                                               c[('df',2,1)],
+                                               c[('df',2,2)],
+                                               c[('df',2,3)],
+                                               c[('df',3,1)],
+                                               c[('df',3,2)],
+                                               c[('df',3,3)])
+
+
+class NavierStokes(TC_base):
+    r""" The coefficients for the incompressible Navier-Stokes equations.
+
+    .. math::
+
+       \nabla \cdot \mathbf{v} = 0
+   
+    .. math::
+
+       \dfrac{\partial \mathbf{v} }{\partial t} + \nabla \cdot 
+       (\mathbf{v} \otimes \mathbf{v} - \nu \Delta \mathbf{f}) 
+       + \frac{\nabla p}{\rho}- \mathbf{g} = 0
+
+    where :math:`\mathbf{v}` is the velocity, :math:`p` is the pressure,
+    :math:`\nu` is the kinematic viscosity, :math:`\rho` is the density, 
+    and :math:`g` is the gravitational acceleration.
     """
     from ctransportCoefficients import NavierStokes_2D_Evaluate
     from ctransportCoefficients import NavierStokes_3D_Evaluate
@@ -965,17 +1275,23 @@ class NavierStokes(TC_base):
         hamiltonian={}
         if nd==2:
             variableNames=['p','u','v']
-            mass= {1:{1:'linear'},
+            mass= {0:{0:'linear'},
+                   1:{1:'linear'},
                    2:{2:'linear'}}
-            advection = {0:{1:'linear',
+            advection = {0:{0:'linear',
+                            1:'linear',
                             2:'linear'},
-                         1:{1:'nonlinear',
+                         1:{0:'nonlinear',
+                            1:'nonlinear',
                             2:'nonlinear'},
-                         2:{1:'nonlinear',
+                         2:{0:'nonlinear',
+                            1:'nonlinear',
                             2:'nonlinear'}}
-            diffusion  = {1:{1:{1:'constant'}},
+            diffusion  = {0:{0:{0:'constant'}},
+                          1:{1:{1:'constant'}},
                           2:{2:{2:'constant'}}}
-            potential= {1:{1:'u'},
+            potential= {0:{0:'u'},
+                        1:{1:'u'},
                         2:{2:'u'}}
             reaction = {1:{1:'constant'},
                         2:{2:'constant'}}
@@ -1329,7 +1645,7 @@ class ShallowWater(TC_base):
                                           c['x'],
                                           grad_b,
                                           c[('u',0)],
-                                          c[('u',1)],
+                                          c[('u',1)],
                                           c[('u',2)],
                                           c[('H',0)],
                                           c[('m',0)],
@@ -1456,6 +1772,7 @@ class DiscreteLaplaceOperator(TC_base):
                              variableNames,
                              sparseDiffusionTensors=sdInfo,
                              useSparseDiffusion=True)
+
             self.vectorComponents=[1,2]
         if nd==3:
             variableNames=['p','u','v','w']
@@ -1500,6 +1817,148 @@ class DiscreteLaplaceOperator(TC_base):
                                      c[('a',1,1)],
                                      c[('a',2,2)],
                                      c[('a',3,3)])
+
+class DiscreteTwoPhaseScaledLaplaceOperatorBase(TC_base):
+    r""" A coefficient base class for two-phase Laplace Operators.
+    """
+    from ctransportCoefficients import TwoPhaseInvScaledLaplace_2D_Evaluate
+    from ctransportCoefficients import TwoPhaseInvScaledLaplace_3D_Evaluate
+    def __init__(self,
+                 nd = 2,
+                 rho_0 = 1.0,
+                 nu_0 = 1.0,
+                 rho_1 = 1.0,
+                 nu_1 = 1.0,
+                 eps = 0.0000001,
+                 LS_model = None,
+                 phase_function = None):
+        self.nd = nd
+        self.LS_model = LS_model
+        self.phase_function = phase_function
+        self.eps = eps
+        self.rho_0 = rho_0
+        self.nu_0 = nu_0
+        self.rho_1 = rho_1
+        self.nu_1 = nu_1
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames=['p','u','v']
+            diffusion = {0:{0:{0:'constant'}},
+                         1:{1:{1:'constant'}},
+                         2:{2:{2:'constant'}}}
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
+                         2:{2:'u'}}
+            sdInfo    = {(0,0):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i')),
+                         (1,1):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i')),
+                         (2,2):(numpy.array([0,1,2],dtype='i'),
+                                numpy.array([0,1],dtype='i'))}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors=sdInfo,
+                             useSparseDiffusion=True)
+
+            self.vectorComponents=[1,2]
+        if nd==3:
+            variableNames=['p','u','v','w']
+            diffusion ={0:{0:{0:'constant'}},
+                        1:{1:{1:'constant'}},
+                        2:{2:{2:'constant'}},
+                        3:{3:{3:'constant'}}}
+            potential = {0:{0:'u'},
+                         1:{1:'u'},
+                         2:{2:'u'},
+                         3:{3:'u'}}
+            sdInfo  = {(0,0):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (1,1):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (2,2):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i')),
+                       (3,3):(numpy.array([0,1,2,3],dtype='i'),numpy.array([0,1,2],dtype='i'))}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors=sdInfo,
+                             useSparseDiffusion=True)
+            self.vectorComponents=[1,2,3]
+
+    def attachModels(self,modelList):
+        if self.LS_model != None:
+            self.q_phi = modelList[self.LS_model].q[('u',0)]
+            self.ebqe_phi = modelList[self.LS_model].ebqe[('u',0)]
+            self.ebq_phi = None
+
+    def initializeQuadratureWithPhaseFunction(self,c):
+        self.q_phi = c[('u',0)].copy()
+        for i, element in enumerate(c['x']):
+            for j,pt in enumerate(c['x'][i]):
+                self.q_phi[i][j] = self.phase_function(pt)
+
+    @abc.abstractmethod
+    def evaluate(self,t,c):
+        """Evaluates the coefficients. """
+
+class DiscreteTwoPhaseInvScaledLaplaceOperator(DiscreteTwoPhaseScaledLaplaceOperatorBase):
+    r""" This class creates an inverse scaled two-phase operator for the Laplace Operator.
+    """
+    from ctransportCoefficients import TwoPhaseInvScaledLaplace_2D_Evaluate
+    from ctransportCoefficients import TwoPhaseInvScaledLaplace_3D_Evaluate
+    def evaluate(self,t,c):
+        if self.phase_function != None:
+            self.initializeQuadratureWithPhaseFunction(c)
+            
+        if c[('u',0)].shape == self.q_phi.shape:
+            phi = self.q_phi
+        else:
+            phi = self.ebq_phi
+
+        if self.nd==2:
+            self.TwoPhaseInvScaledLaplace_2D_Evaluate(self.eps,
+                                                      self.rho_0,
+                                                      self.nu_0,
+                                                      self.rho_1,
+                                                      self.nu_1,
+                                                      phi,
+                                                      c[('u',0)],
+                                                      c[('u',1)],
+                                                      c[('u',2)],
+                                                      c[('a',0,0)],
+                                                      c[('a',1,1)],
+                                                      c[('a',2,2)])
+
+        if self.nd==3:
+            self.TwoPhaseInvScaledLaplace_3D_Evaluate(self.eps,
+                                                      self.rho_0,
+                                                      self.nu_0,
+                                                      self.rho_1,
+                                                      self.nu_1,
+                                                      phi,
+                                                      c[('u',0)],
+                                                      c[('u',1)],
+                                                      c[('u',2)],
+                                                      c[('u',3)],
+                                                      c[('a',0,0)],
+                                                      c[('a',1,1)],
+                                                      c[('a',2,2)],
+                                                      c[('a',3,3)])
 
 ##\brief Incompressible Stokes equations
 #
@@ -1637,6 +2096,7 @@ class Stokes(TC_base):
                                     c[('dH',1,0)],
                                     c[('H',2)],
                                     c[('dH',2,0)])
+ #           pdb.set_trace()
         elif self.nd==3:
             self.Stokes_3D_Evaluate(self.rho,
                                     self.nu,
@@ -2109,7 +2569,8 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
         hamiltonian={}
         if nd==2:
             variableNames=['p','u','v']
-            mass= {1:{1:'linear'},
+            mass= {0:{0:'linear'},
+                   1:{1:'linear'},
                    2:{2:'linear'}}
             advection = {0:{0:'linear',
                             1:'linear',
@@ -2120,9 +2581,12 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                          2:{0:'nonlinear',
                             1:'nonlinear',
                             2:'nonlinear'}}
-            diffusion  = {1:{1:{1:'constant'},2:{2:'constant'}},
+            diffusion  = {0:{0:{0:'constant'}},
+                          1:{1:{1:'constant'},2:{2:'constant'}},
                           2:{2:{2:'constant'},1:{1:'constant'}}}
-            sdInfo  = {(1,1):(numpy.array([0,1,2],dtype='i'),
+            sdInfo  = {(0,0):(numpy.array([0,1,2],dtype='i'),
+                             numpy.array([0,1],dtype='i')),
+                       (1,1):(numpy.array([0,1,2],dtype='i'),
                              numpy.array([0,1],dtype='i')),
                        (1,2):(numpy.array([0,0,1],dtype='i'),
                               numpy.array([0],dtype='i')),
@@ -2130,7 +2594,8 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                               numpy.array([0,1],dtype='i')),
                        (2,1):(numpy.array([0,1,1],dtype='i'),
                               numpy.array([1],dtype='i'))}
-            potential= {1:{1:'u'},
+            potential= {0:{0:'u'},
+                        1:{1:'u'},
                         2:{2:'u'}}
             reaction = {0:{0:'constant'},
                         1:{1:'nonlinear',2:'nonlinear'},
@@ -2345,6 +2810,7 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                                                                   c[('dH',1,0)],
                                                                   c[('H',2)],
                                                                   c[('dH',2,0)])
+
             else:
                 self.TwophaseNavierStokes_ST_LS_SO_2D_Evaluate(self.eps_density,
                                                            self.eps_viscosity,
@@ -6387,6 +6853,8 @@ class PoissonEquationCoefficients(TC_base):
             advection[i] = {i : 'constant'} #now include for gravity type terms
             potential[i] = {i : 'u'}
         #end i
+#        import pdb
+#        pdb.set_trace()
         TC_base.__init__(self,
                          nc,
                          mass,
@@ -6394,7 +6862,8 @@ class PoissonEquationCoefficients(TC_base):
                          diffusion,
                          potential,
                          reaction,
-                         hamiltonian)
+                         hamiltonian,
+                         sparseDiffusionTensors={} )
     def initializeElementQuadrature(self,t,cq):
         nd = self.nd
         for ci in range(self.nc):
@@ -10514,3 +10983,412 @@ class SinglePhaseDarcyCoefficients(TC_base):
     def evaluate(self,t,c):
         pass #need to put in eval for time varying coefficients
     #end def
+
+class DiscreteMassMatrix(TC_base):
+    r"""Coefficients class for the discrete Mass Operator.
+    
+    This class defines the coefficients necessary to construct the
+    discrete mass operator :math:`A` where
+
+    .. math::
+    
+        a^{c}_{i,j} = \int_{T} \phi^{c}_{i} \phi^{c}_{j} dT
+
+    for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
+    :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
+    """
+    from ctransportCoefficients import Mass_2D_Evaluate
+    from ctransportCoefficients import Mass_3D_Evaluate
+    def __init__(self,rho=1.0,nd=2):
+        self.rho = rho
+        self.nd = nd
+        mass = {}
+        advection= {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames = ['p','u','v']
+            mass = {0:{0:'linear'},
+                    1:{1:'linear'},
+                    2:{2:'linear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors={})
+            self.vectorComponents = [1,2]
+        elif nd==3:
+            variableNames = ['p','u','v','w']
+            mass = {0:{0:'linear'},
+                    1:{1:'linear'},
+                    2:{2:'linear'},
+                    3:{3:'linear'}}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents=[1,2,3]
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.Mass_2D_Evaluate(self.rho,
+                                  c[('u',0)],
+                                  c[('u',1)],
+                                  c[('u',2)],
+                                  c[('m',0)],
+                                  c[('m',1)],
+                                  c[('m',2)],
+                                  c[('dm',0,0)],
+                                  c[('dm',1,1)],
+                                  c[('dm',2,2)])
+        elif self.nd==3:
+            self.Mass_3D_Evaluate(self.rho,
+                                  c[('u',0)],
+                                  c[('u',1)],
+                                  c[('u',2)],
+                                  c[('u',3)],
+                                  c[('m',0)],
+                                  c[('m',1)],
+                                  c[('m',2)],
+                                  c[('m',3)],
+                                  c[('dm',0,0)],
+                                  c[('dm',1,1)],
+                                  c[('dm',2,2)],
+                                  c[('dm',3,3)])
+            
+class DiscreteTwoPhaseMassMatrix(TC_base):
+    r"""Coefficients class for the discrete Mass Operator.
+    
+    This class defines the coefficients necessary to construct the
+    discrete mass operator :math:`A` where
+
+    .. math::
+    
+        a^{c}_{i,j} = \int_{T} \phi^{c}_{i} \phi^{c}_{j} dT
+
+    for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
+    :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
+    """
+    from ctransportCoefficients import TwoPhaseMass_2D_Evaluate
+    from ctransportCoefficients import TwoPhaseMass_3D_Evaluate
+    def __init__(self,
+                 nd = 2,
+                 rho_0 = 1.0,
+                 nu_0 = 1.0,
+                 rho_1 = 1.0,
+                 nu_1 = 1.0,
+                 eps = 0.0000001,
+                 LS_model = None,
+                 phase_function = None):
+        self.nd = nd
+        self.LS_model = LS_model
+        self.phase_function = phase_function
+        self.eps = eps
+        self.rho_0 = rho_0
+        self.nu_0 = nu_0
+        self.rho_1 = rho_1
+        self.nu_1 = nu_1
+        mass = {}
+        advection= {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames = ['p','u','v']
+            mass = {0:{0:'linear'},
+                    1:{1:'linear'},
+                    2:{2:'linear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors={})
+            self.vectorComponents = [1,2]
+        elif nd==3:
+            variableNames = ['p','u','v','w']
+            mass = {0:{0:'linear'},
+                    1:{1:'linear'},
+                    2:{2:'linear'},
+                    3:{3:'linear'}}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents=[1,2,3]
+            
+    def attachModels(self,modelList):
+        if self.LS_model != None:
+            self.q_phi = modelList[self.LS_model].q[('u',0)]
+            self.ebqe_phi = modelList[self.LS_model].ebqe[('u',0)]
+            self.ebq_phi = None
+
+    def initializeQuadratureWithPhaseFunction(self,c):
+        self.q_phi = c[('u',0)].copy()
+        for i,element in enumerate(c['x']):
+            for j,pt in enumerate(c['x'][i]):
+                self.q_phi[i][j] = self.phase_function(pt)
+    
+    def evaluate(self,t,c):
+        if self.phase_function != None:
+            self.initializeQuadratureWithPhaseFunction(c)
+            
+        if c[('u',0)].shape == self.q_phi.shape:
+            phi = self.q_phi
+        else:
+            phi = self.ebq_phi
+
+        if self.nd==2:
+            self.TwoPhaseMass_2D_Evaluate(self.eps,
+                                          self.rho_0,
+                                          self.nu_0,
+                                          self.rho_1,
+                                          self.nu_1,
+                                          phi,
+                                          c[('u',0)],
+                                          c[('u',1)],
+                                          c[('u',2)],
+                                          c[('m',0)],
+                                          c[('m',1)],
+                                          c[('m',2)],
+                                          c[('dm',0,0)],
+                                          c[('dm',1,1)],
+                                          c[('dm',2,2)])
+
+        elif self.nd==3:
+            self.TwoPhaseMass_3D_Evaluate(self.eps,
+                                          self.rho_0,
+                                          self.nu_0,
+                                          self.rho_1,
+                                          self.nu_1,
+                                          phi,
+                                          c[('u',0)],
+                                          c[('u',1)],
+                                          c[('u',2)],
+                                          c[('u',3)],
+                                          c[('m',0)],
+                                          c[('m',1)],
+                                          c[('m',2)],
+                                          c[('m',3)],
+                                          c[('dm',0,0)],
+                                          c[('dm',1,1)],
+                                          c[('dm',2,2)],
+                                          c[('dm',3,3)])
+
+class DiscreteTwoPhaseMassMatrix_mu(DiscreteTwoPhaseMassMatrix):
+    r"""
+    ARB TODO - This along side the DiscreteTwoPhaseMassMatrix should
+    be refactored along with the single-phase mass matrix.
+    Currently the evaluate method is being overriden to define a 
+    different inner product calculation.
+    """
+    from ctransportCoefficients import TwoPhaseMass_mu_2D_Evaluate
+    from ctransportCoefficients import TwoPhaseMass_mu_3D_Evaluate
+    def evaluate(self,t,c):
+        if self.phase_function != None:
+            self.initializeQuadratureWithPhaseFunction(c)
+            
+        if c[('u',0)].shape == self.q_phi.shape:
+            phi = self.q_phi
+        else:
+            phi = self.ebq_phi
+
+        if self.nd==2:
+            self.TwoPhaseMass_mu_2D_Evaluate(self.eps,
+                                             self.rho_0,
+                                             self.nu_0,
+                                             self.rho_1,
+                                             self.nu_1,
+                                             phi,
+                                             c[('u',0)],
+                                             c[('u',1)],
+                                             c[('u',2)],
+                                             c[('m',0)],
+                                             c[('m',1)],
+                                             c[('m',2)],
+                                             c[('dm',0,0)],
+                                             c[('dm',1,1)],
+                                             c[('dm',2,2)])
+
+        elif self.nd==3:
+            self.TwoPhaseMass_mu_3D_Evaluate(self.eps,
+                                             self.rho_0,
+                                             self.nu_0,
+                                             self.rho_1,
+                                             self.nu_1,
+                                             phi,
+                                             c[('u',0)],
+                                             c[('u',1)],
+                                             c[('u',2)],
+                                             c[('u',3)],
+                                             c[('m',0)],
+                                             c[('m',1)],
+                                             c[('m',2)],
+                                             c[('m',3)],
+                                             c[('dm',0,0)],
+                                             c[('dm',1,1)],
+                                             c[('dm',2,2)],
+                                             c[('dm',3,3)])
+
+            
+class DiscreteTwoPhaseInvScaledMassMatrix(DiscreteTwoPhaseMassMatrix):
+    r"""
+    ARB TODO - This along side the DiscreteTwoPhaseMassMatrix should
+    be refactored along with the single-phase mass matrix.
+    Currently the evaluate method is being overriden to define a 
+    different inner product calculation.
+    """
+    from ctransportCoefficients import TwoPhaseInvScaledMass_2D_Evaluate
+    from ctransportCoefficients import TwoPhaseInvScaledMass_3D_Evaluate
+    def evaluate(self,t,c):
+        if self.phase_function != None:
+            self.initializeQuadratureWithPhaseFunction(c)
+            
+        if c[('u',0)].shape == self.q_phi.shape:
+            phi = self.q_phi
+        else:
+            phi = self.ebq_phi
+
+        if self.nd==2:
+            self.TwoPhaseInvScaledMass_2D_Evaluate(self.eps,
+                                                   self.rho_0,
+                                                   self.nu_0,
+                                                   self.rho_1,
+                                                   self.nu_1,
+                                                   phi,
+                                                   c[('u',0)],
+                                                   c[('u',1)],
+                                                   c[('u',2)],
+                                                   c[('m',0)],
+                                                   c[('m',1)],
+                                                   c[('m',2)],
+                                                   c[('dm',0,0)],
+                                                   c[('dm',1,1)],
+                                                   c[('dm',2,2)])
+
+        elif self.nd==3:
+            self.TwoPhaseInvScaledMass_3D_Evaluate(self.eps,
+                                                   self.rho_0,
+                                                   self.nu_0,
+                                                   self.rho_1,
+                                                   self.nu_1,
+                                                   phi,
+                                                   c[('u',0)],
+                                                   c[('u',1)],
+                                                   c[('u',2)],
+                                                   c[('u',3)],
+                                                   c[('m',0)],
+                                                   c[('m',1)],
+                                                   c[('m',2)],
+                                                   c[('m',3)],
+                                                   c[('dm',0,0)],
+                                                   c[('dm',1,1)],
+                                                   c[('dm',2,2)],
+                                                   c[('dm',3,3)])
+            
+class DiscreteBOperator(TC_base):
+    r"""Coefficients class for the discrete B Operator.
+    
+    This class defines the coefficients necessary to construct
+    this discrete Saddle Point operator :math:`B`
+    
+    .. math::
+
+        b_{i,j} = \int_{T} \mathbf{u} \cdot \nabla q dT
+
+    for all :math:`T \in \Omega` for 
+    :math:`\mathbf{u} = \begin{pmatrix} u \\ v \\ w \end{pmatrix}`
+    and :math:`q` is the pressure.
+    """
+    from ctransportCoefficients import B_2D_Evaluate
+    from ctransportCoefficients import B_3D_Evaluate
+    def __init__(self,nd=2):
+        self.nd = nd
+        mass = {}
+        advection= {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames = ['p','u','v']
+            advection = {0:{1:'linear',
+                            2:'linear'}}
+            hamiltonian = {1:{0:'linear'},
+                           2:{0:'linear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectoComponents=[1,2]
+        elif nd==3:
+            variableNames=['p','u','v','w']
+            advection = {0:{1:'linear',
+                            2:'linear'}}
+            hamiltonian = {1:{0:'linear'},
+                           2:{0:'linear'},
+                           3:{0:'linear'}}
+            TC_basi.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.B_2D_Evaluate(c[('u',0)],
+                               c[('grad(u)',0)],
+                               c[('u',1)],
+                               c[('u',2)],
+                               c[('f',0)],
+                               c[('df',0,1)],
+                               c[('df',0,2)],
+                               c[('H',1)],
+                               c[('H',2)],
+                               c[('dH',1,0)],
+                               c[('dH',2,0)])
+        elif self.nd==3:
+            self.B_3D_Evaluate(c[('u',0)],
+                               c[('grad(u)',0)],
+                               c[('u',1)],
+                               c[('u',2)],
+                               c[('u',3)],
+                               c[('f',0)],
+                               c[('df',0,1)],
+                               c[('df',0,2)],
+                               c[('df',0,3)],
+                               c[('H',1)],
+                               c[('H',2)],
+                               c[('H',3)],
+                               c[('dH',1,0)],
+                               c[('dH',2,0)],
+                               c[('dH',3,0)])

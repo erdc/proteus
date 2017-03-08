@@ -1,4 +1,9 @@
 *.idea
+*.pov
+*.edge
+*.neig
+*.m
+*.mesh
 *.so
 *.csv
 *.pyc
