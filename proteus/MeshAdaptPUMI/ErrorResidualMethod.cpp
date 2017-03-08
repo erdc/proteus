@@ -876,8 +876,10 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
     char namebuffer[20];
     sprintf(namebuffer,"err_reg_%i",nEstimate);
     apf::writeVtkFiles(namebuffer, m);
-    target_error = total_error*2; //this is a hack to prevent adapting
+    //target_error = total_error*2; //this is a hack to prevent adapting
+    THRESHOLD = total_error*2;
     nEstimate++;
+    removeBCData();
   }
 
   m->end(iter);
