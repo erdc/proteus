@@ -1618,7 +1618,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur) :
     def setUp(self, global_ksp):
         # Step-1: build the necessary operators
         self.Qp_rho = self.operator_constructor.getTwoPhaseQp_rho()
-        self.Fp_rho = self.operator_constructor.getTwoPhaseCp_rho()
+        self.Np_rho = self.operator_constructor.getTwoPhaseCp_rho()
         self.Ap_invScaledRho = self.operator_constructor.getTwoPhaseInvScaledAp()
         self.Qp_invScaledVis = self.operator_constructor.getTwoPhaseInvScaledQp()
 
@@ -1631,7 +1631,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur) :
         self.matcontext_inv = TwoPhase_PCDInv_shell(self.Qp_invScaledVis,
                                                     self.Qp_rho,
                                                     self.Ap_invScaledRho,
-                                                    self.Fp_rho)
+                                                    self.Np_rho)
         self.TP_PCDInv_shell.setPythonContext(self.matcontext_inv)
         self.TP_PCDInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
