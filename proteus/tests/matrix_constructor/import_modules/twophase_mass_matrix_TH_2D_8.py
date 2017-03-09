@@ -1,19 +1,17 @@
 from proteus.iproteus import *
-from proteus import *
 from proteus import iproteus as ip
 from proteus import default_p as p
 from proteus import default_n as n
 from proteus import default_s,default_so
+import numpy
 import proteus as pr
 
 reload(default_p)
 reload(default_n)
 reload(default_so)
 
-import numpy
-
 p.nd = 2
-p.name = "Advection_matrix_test"
+p.name = "TwoPhase_mass_matrix_test"
 
 p.x0 = [-1.0,-1.0]
 p.L = [2,2]
@@ -35,11 +33,13 @@ p.advectiveFluxBoundaryConditions = {}
 p.diffusiveFluxBoundaryConditions = {}
 p.periodicDirichletConditions = None
 
-_u = numpy.ones((8,6))
-_v = numpy.ones((8,6))
-_vec = [_u,_v]
-
-p.coefficients = pr.TransportCoefficients.NavierStokes()
+phase_func = lambda x: x[0]
+p.coefficients = pr.TransportCoefficients.DiscreteTwoPhaseInvScaledMassMatrix(p.nd,
+                                                                              rho_0 = 1.0,
+                                                                              nu_0 = 1.0,
+                                                                              rho_1 = 1.0,
+                                                                              nu_1 = 2.0,
+                                                                              phase_function = phase_func)
 
 ############################
 
@@ -56,7 +56,7 @@ n.elementQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd,4)
 n.elementBoundaryQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd-1,4)
 n.nn = 3
 n.nLevels = 1
-n.quads = False
+n.quad = False
 n.subgridError = None
 n.shockCapturing = None
 n.multilevelNonlinearSolver = pr.NonlinearSolvers.Newton
@@ -77,5 +77,6 @@ so.name = p.name
 so.sList=[default_s]
 
 ########################################################################
+from proteus import *
 opts = None
 ns = NumericalSolution.NS_base(so,[p],[n],so.sList,ip.opts)
