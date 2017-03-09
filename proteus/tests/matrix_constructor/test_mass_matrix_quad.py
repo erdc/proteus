@@ -12,15 +12,16 @@ import inspect
 import numpy
 
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
-import mass_matrix_reference_C0P1_2D as mm_2d_C0P1
-import mass_matrix_reference_TH_2D as mm_2d_TH
-import twophase_mass_matrix_TH_2D_8 as tp_mm_2d_TH
+import singlephase_mass_matrix_THQuad_2D_4 as sp_mm_2d_THQuad
+import twophase_mass_matrix_THQuad_2D_4 as tp_mm_2d_THQuad
 
 class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
     """ Verify construction of 2D Mass Matrix using transport coefficients """
 
     def setup_method(self):
         """ Initialize the test problem """
+        reload(sp_mm_2d_THQuad)
+        reload(tp_mm_2d_THQuad)
         self._setRelativePath()
         
     def teardown_method(self):
@@ -37,46 +38,10 @@ class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
         self.scriptdir = os.path.dirname(__file__)
 
     def test_1(self):
-        """ An initial test of the coefficient class. """
-        reload(mm_2d_C0P1)
-        self.mass_matrix_object = mm_2d_C0P1.ns
-        self.mass_matrix_object.modelList[0].levelModelList[0].calculateCoefficients()
-        rowptr, colind, nzval = self.mass_matrix_object.modelList[0].levelModelList[0].jacobian.getCSRrepresentation()
-        self.mass_matrix_object.modelList[0].levelModelList[0].scale_dt = False
-        self.Asys_rowptr = rowptr.copy()
-        self.Asys_colptr = colind.copy()
-        self.Asys_nzval = nzval.copy()
-        nn = len(self.Asys_rowptr)-1
-        self.Asys = LinearAlgebraTools.SparseMatrix(nn,nn,
-                                                    self.Asys_nzval.shape[0],
-                                                    self.Asys_nzval,
-                                                    self.Asys_colptr,
-                                                    self.Asys_rowptr)
-        self.petsc4py_A = self.mass_matrix_object.modelList[0].levelModelList[0].getMassJacobian(self.Asys)
-        mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        rel_path = "comparison_files/mass_reference_c0p1_2D.txt"
-        comparison_mat = numpy.loadtxt(os.path.join(self.scriptdir,rel_path))
-        assert numpy.allclose(mass_mat,comparison_mat)
-
-    def test_2(self):
-        """ Tests the attachMassOperator function in one-level-transport """
-        reload(mm_2d_C0P1)
-        self.mass_matrix_object = mm_2d_C0P1.ns
-        mm = self.mass_matrix_object.modelList[0].levelModelList[0]
-        op_constructor = LinearSolvers.OperatorConstructor(mm)
-        op_constructor.attachMassOperator()
-        mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.MassOperator)
-        rel_path = "comparison_files/mass_reference_c0p1_2D.txt"
-        comparison_mat = numpy.loadtxt(os.path.join(self.scriptdir,rel_path))
-        assert numpy.allclose(mass_mat,comparison_mat)
-
-    def test_3(self):
         """ Tests mass matrix construction for TH elements. """
-        reload(mm_2d_TH)
-        self.mass_matrix_object = mm_2d_TH.ns
+        self.mass_matrix_object = sp_mm_2d_THQuad.ns
         self.mass_matrix_object.modelList[0].levelModelList[0].calculateCoefficients()
         rowptr, colind, nzval = self.mass_matrix_object.modelList[0].levelModelList[0].jacobian.getCSRrepresentation()
-        self.mass_matrix_object.modelList[0].levelModelList[0].scale_dt = False
         self.Asys_rowptr = rowptr.copy()
         self.Asys_colptr = colind.copy()
         self.Asys_nzval = nzval.copy()
@@ -88,16 +53,13 @@ class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.mass_matrix_object.modelList[0].levelModelList[0].getMassJacobian(self.Asys)
         mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-#        import pdb ; pdb.set_trace()
-        rel_path = "comparison_files/mass_reference_TH_2D.npy"
+        rel_path = "comparison_files/single_phase_THQuad_4_expected.data"
         comparison_mat = numpy.load(os.path.join(self.scriptdir,rel_path))
         assert numpy.allclose(mass_mat,comparison_mat)
 
-    def test_4(self):
-        """ Tests mass matrix construction for TH elements.
-        ARB TODO - this test needs to be moved to a different file because its testing on a larger mesh"""
-        reload(tp_mm_2d_TH)
-        self.mass_matrix_object = tp_mm_2d_TH.ns
+    def test_2(self):
+        """ Tests mass matrix construction for TH elements. """
+        self.mass_matrix_object = tp_mm_2d_THQuad.ns
         self.mass_matrix_object.modelList[0].levelModelList[0].calculateCoefficients()
         rowptr, colind, nzval = self.mass_matrix_object.modelList[0].levelModelList[0].jacobian.getCSRrepresentation()
         self.Asys_rowptr = rowptr.copy()
@@ -111,7 +73,7 @@ class TestMassConstruction2D(proteus.test_utils.TestTools.SimulationTest):
                                                     self.Asys_rowptr)
         self.petsc4py_A = self.mass_matrix_object.modelList[0].levelModelList[0].getMassJacobian(self.Asys)
         mass_mat = LinearAlgebraTools.superlu_sparse_2_dense(self.petsc4py_A)
-        rel_path = "comparison_files/two_phase_mass_matrix_expected_mesh_8.data"
+        rel_path = "comparison_files/two_phase_THQuad_4_expected.data"
         comparison_mat = numpy.load(os.path.join(self.scriptdir,rel_path))
         assert numpy.allclose(mass_mat,comparison_mat)
 

@@ -778,6 +778,10 @@ class KSP_petsc4py(LinearSolver):
                 logEvent("NAHeader Preconditioner Qp" )
                 self.preconditioner = NavierStokes3D_Qp(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
+            elif Preconditioner == NavierStokes_TwoPhaseQp:
+                logEvent("NAHeader Preconditioner TwoPhaseQp" )
+                self.preconditioner = NavierStokes_TwoPhaseQp(par_L,prefix,self.bdyNullSpace)
+                self.pc = self.preconditioner.pc
             elif Preconditioner == NavierStokes3D_PCD:
                 logEvent("NAHeader Preconditioner PCD" )
                 self.preconditioner = NavierStokes3D_PCD(par_L,prefix,self.bdyNullSpace)
@@ -786,9 +790,13 @@ class KSP_petsc4py(LinearSolver):
                 logEvent("NAHeader Preconditioner LSC" )
                 self.preconditioner = NavierStokes3D_LSC(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
-            elif Preconditioner == NavierStokes_Yosida:
-                logEvent("NAHeader Preconditioner Yosida" )
-                self.preconditioner = NavierStokes_Yosida(par_L,prefix,self.bdyNullSpace)
+            elif Preconditioner == NavierStokes_TwoPhaseLSC:
+                logEvent("NAHeader Preconditioner TwoPhaseLSC" )
+                self.preconditioner = NavierStokes_TwoPhaseLSC(par_L,prefix,self.bdyNullSpace)
+                self.pc = self.preconditioner.pc
+            elif Preconditioner == NavierStokes_TwoPhasePCD:
+                logEvent("NAHeader Preconditioner TwoPhasePCD" )
+                self.preconditioner = NavierStokes_TwoPhasePCD(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleNavierStokes2D:
                 self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
@@ -799,7 +807,7 @@ class KSP_petsc4py(LinearSolver):
             elif Preconditioner == NavierStokesPressureCorrection:
                 self.preconditioner = NavierStokesPressureCorrection(par_L)
                 self.pc = self.preconditioner.pc
-        
+
 
 class SchurOperatorConstructor:
     """ Generate matrices for use in Schur complement preconditioner operators. 
@@ -842,12 +850,80 @@ class SchurOperatorConstructor:
         Qp : matrix
             The pressure mass matrix.
         """
-        self.Qsys_petsc4py = self._massMatrix()
-        self.Qp = self.Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
-                                                  self.linear_smoother.isp)
+        Qsys_petsc4py = self._massMatrix()
+        self.Qp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                             self.linear_smoother.isp)
         if output_matrix==True:
             self._exportMatrix(self.Qp,"Qp")
         return self.Qp
+
+    def getTwoPhaseQp_rho(self,
+                          output_matrix = False,
+                          phase_function = None):
+        """ Return the two-phase pressure mass matrix.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Flag for weather matrix should be output.
+        phase_function : lambda
+            Optional function describing the fluid phases.
+        inv_scaled : bool
+            Determines whether the mass matrix should be 
+            scaled by the viscosity or the inverse of the
+            viscosity.
+
+        Returns
+        -------
+        Qp : matrix
+           A two-phase pressure mass matrix.
+        """
+        if self.L.pde.coefficients.which_region != None:
+            self._phase_function = self.L.pde.coefficients.which_region
+
+        Qsys_petsc4py = self._TPMassMatrix()
+        self.TPQp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                               self.linear_smoother.isp)
+
+        if output_matrix == True:
+            self._exportMatrix(self.TPQp)
+
+        return self.TPQp
+    
+    def getTwoPhaseInvScaledQp(self,
+                               output_matrix = False,
+                               phase_function = None):
+        """ Return the two-phase pressure mass matrix
+        scaled with the inverse of the viscosity.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Flag for weather matrix should be output.
+        phase_function : lambda
+            Optional function describing the fluid phases.
+        inv_scaled : bool
+            Determines whether the mass matrix should be 
+            scaled by the viscosity or the inverse of the
+            viscosity.
+
+        Returns
+        -------
+        Qp : matrix
+           A two-phase pressure mass matrix.
+        """
+        if self.L.pde.coefficients.which_region != None:
+            self._phase_function = self.L.pde.coefficients.which_region
+
+        Qsys_petsc4py = self._TPInvScaledMassMatrix()
+        self.TPInvScaledQp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                                        self.linear_smoother.isp)
+
+        if output_matrix == True:
+            self._exportMatrix(self.TPInvScaledQp)
+
+        return self.TPInvScaledQp
+
 
     def getQv(self,output_matrix=False):
         """ Return the velocity mass matrix Qv.
@@ -863,6 +939,54 @@ class SchurOperatorConstructor:
             The velocity mass matrix.
         """
         Qsys_petsc4py = self._massMatrix()
+        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+                                             self.linear_smoother.isv)
+        if output_matrix==True:
+            self._exportmatrix(self.Qv,'Qv')
+
+        return self.Qv
+
+    def getTPQv(self,output_matrix=False):
+        """ Return the velocity mass matrix Qv.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether the matrix should be exported.
+        
+        Returns
+        -------
+        Qv : matrix
+            The velocity mass matrix.
+        """
+        if self.L.pde.coefficients.which_region != None:
+            self._phase_function = self.L.pde.coefficients.which_region
+
+        Qsys_petsc4py = self._TPMassMatrix()
+        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+                                             self.linear_smoother.isv)
+        if output_matrix==True:
+            self._exportmatrix(self.Qv,'Qv')
+
+        return self.Qv
+
+    def getTPQv_mu(self,output_matrix=False):
+        """ Return the velocity mass matrix Qv.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether the matrix should be exported.
+        
+        Returns
+        -------
+        Qv : matrix
+            The velocity mass matrix.
+        """
+        if self.L.pde.coefficients.which_region != None:
+            self._phase_function = self.L.pde.coefficients.which_region
+
+        Qsys_petsc4py = self._TPMassMatrix_mu()
         self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
                                              self.linear_smoother.isv)
         if output_matrix==True:
@@ -889,6 +1013,41 @@ class SchurOperatorConstructor:
         if output_matrix==True:
             self._exportmatrix(self.Ap,'Ap')
         return self.Ap
+
+    def getTwoPhaseInvScaledAp(self,
+                               output_matrix = False,
+                               phase_function = None):
+        """ Return the two-phase pressure laplacian scaled with the
+        inverse of the viscosity.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Flag for weather matrix should be output.
+        phase_function : lambda
+            Optional function describing the fluid phases.
+        inv_scaled : bool
+            Determines whether the mass matrix should be 
+            scaled by the viscosity or the inverse of the
+            viscosity.
+
+        Returns
+        -------
+        Qp : matrix
+           A two-phase pressure mass matrix.
+        """
+        if self.L.pde.coefficients.which_region != None:
+            self._phase_function = self.L.pde.coefficients.which_region
+
+        Qsys_petsc4py = self._getTPInvScaledLaplace()
+        self.TPInvScaledAp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                                        self.linear_smoother.isp)
+
+        if output_matrix == True:
+            self._exportMatrix(self.TPInvScaledQp)
+
+        return self.TPInvScaledAp
+
 
     def getAv(self,output_matrix=False):
         """ Return the Laplacian velocity matrix Av.
@@ -963,6 +1122,39 @@ class SchurOperatorConstructor:
 
         return self.Cp
 
+    def getTwoPhaseCp_rho(self,output_matrix=True):
+        """
+        Return a two-phase convection matrix for the pressure.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether matrix should be exported.
+
+        Returns
+        -------
+        Cp : matrix
+             The convection-diffusion pressure matrix.
+
+        Notes
+        ----
+        While I've tested this function, this may still contain a bug.
+        Needs to be refactored.
+        """
+        #modify the diffusion term in the mass equation so the p-p block is Fp
+        # First generate the advection part of Fp
+        self._u = numpy.copy(self.L.pde.q[('u',1)])
+        self._v = numpy.copy(self.L.pde.q[('u',2)])
+        self._advectiveField = [self._u,self._v]
+        Cp_sys_petsc4py = self._getTwoPhaseAdvection()
+        self.TPCp = Cp_sys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                                 self.linear_smoother.isp)
+        if output_matrix==True:
+            self._exportMatrix(self.TPCp,'Cp')
+
+        return self.TPCp
+
+    
     def getB(self,output_matrix=False):
         """ Create the B operator.
 
@@ -1053,6 +1245,43 @@ class SchurOperatorConstructor:
         self.opBuilder.attachMassOperator()
         return superlu_2_petsc4py(self.opBuilder.MassOperator)
 
+    def _TPMassMatrix(self):
+        """ Generates a two phase mass matrix.
+
+        Returns
+        -------
+        Qsys : matrix
+            The two-phase mass matrix.
+
+        """
+        self.opBuilder.attachTwoPhaseMassOperator(phase_function = self._phase_function)
+        return superlu_2_petsc4py(self.opBuilder.TPMassOperator)
+
+    def _TPMassMatrix_mu(self):
+        """ Generates a two phase mass matrix scaled by the dynamic viscosity.
+
+        Returns
+        -------
+        Qsys : matrix
+            The two-phase mass matrix.
+
+        """
+        self.opBuilder.attachTwoPhaseMassOperator_mu(phase_function = self._phase_function)
+        return superlu_2_petsc4py(self.opBuilder.TPMassOperator)
+
+
+    def _TPInvScaledMassMatrix(self):
+        """ Generates a two phase mass matrix scaled by the inverse of the viscosity.
+
+        Returns
+        -------
+        Qsys : matrix
+            The two-phase mass matrix.
+
+        """
+        self.opBuilder.attachTwoPhaseInvScaledMassOperator(phase_function = self._phase_function)
+        return superlu_2_petsc4py(self.opBuilder.TPInvScaledMassOperator)
+    
     def _getLaplace(self,output_matrix=False):
         """ Return the Laplacian pressure matrix Ap.
 
@@ -1070,6 +1299,23 @@ class SchurOperatorConstructor:
         """
         self.opBuilder.attachLaplaceOperator()
         return superlu_2_petsc4py(self.opBuilder.LaplaceOperator)
+
+    def _getTPInvScaledLaplace(self,output_matrix=False):
+        """ Return the Laplacian pressure matrix Ap.
+
+        Parameters
+        ----------
+        output_matrix : bool
+            Determine whether matrix should be exported.
+
+        Returns
+        -------
+        A : matrix
+            The Laplacian  matrix.
+
+        """
+        self.opBuilder.attachTPInvScaledLaplaceOperator(phase_function = self._phase_function)
+        return superlu_2_petsc4py(self.opBuilder.TPInvScaledLaplaceOperator)
     
     def _getAdvection(self,output_matrix=False):
         """ Return the advection matrix Fp.
@@ -1081,6 +1327,16 @@ class SchurOperatorConstructor:
         """
         self.opBuilder.attachAdvectionOperator(self._advectiveField)
         return superlu_2_petsc4py(self.opBuilder.AdvectionOperator)
+
+    def _getTwoPhaseAdvection(self,output_matrix=False):
+        """ Returns the two-phase advection matrix TPCp.
+
+        Returns
+        -------
+        TPCp : petsc4py matrix
+        """
+        self.opBuilder.attachTPAdvectionOperator(self._advectiveField, phase_function = self._phase_function)
+        return superlu_2_petsc4py(self.opBuilder.TPAdvectionOperator)
 
     def _getB(self,output_matrix=False):
         """ Return the discrete B-operator.
@@ -1297,7 +1553,7 @@ class NavierStokesSchur(SchurPrecon):
 
     def setUp(self,global_ksp=None):
         """
-        Set up the NaverStokesSchur preconditioner.  
+        Set up the NavierStokesSchur preconditioner.  
 
         Nothing needs to be done here for a generic NSE preconditioner. 
         Preconditioner arguments can be set with PETSc command line.
@@ -1410,6 +1666,45 @@ class NavierStokes3D_Qp(NavierStokesSchur) :
 #            import pdb ; pdb.set_trace() 
             self._setConstantPressureNullSpace(global_ksp)
 
+class NavierStokes_TwoPhaseQp(NavierStokesSchur):
+    """A two-phase pressure mass matrix preconditioner """
+    def __init__(self, L, prefix=None, bdyNullSpace=False):
+        """
+        Initialize the two-phase pressure mass matrix preconditioner.
+
+        Parameters
+        ----------
+        L - petsc4py matrix
+        """
+        NavierStokesSchur.__init__(self, L, prefix, bdyNullSpace)
+
+    def setUp(self, global_ksp, S_hat = False):
+        """  Attach the two-phase pressure mass matrix to preconditioner.
+        
+        Parameters
+        ----------
+        global_ksp : PETSc KSP object
+        S_hat : bool
+        """
+        self.twoPhaseQp = self.operator_constructor.getTwoPhaseInvScaledQp()
+        L_sizes = self.twoPhaseQp.size
+        L_range = self.twoPhaseQp.owner_range
+
+        self.twoPhaseQpInv = p4pyPETSc.Mat().create()
+        self.twoPhaseQpInv.setSizes(L_sizes)
+        self.twoPhaseQpInv.setType('python')
+        self.matcontext_inv = MatrixInvShell(self.twoPhaseQp)
+        self.twoPhaseQpInv.setPythonContext(self.matcontext_inv)
+        self.twoPhaseQpInv.setUp()
+
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace == True:
+            self._setConstantPressureNullSpace(global_ksp)
+        
 class NavierStokes3D_PCD(NavierStokesSchur) :
     def __init__(self,L,prefix=None,bdyNullSpace=False):
         """
@@ -1464,6 +1759,53 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
 #            self._setConstantPressureNullSpace(global_ksp)
 
+class NavierStokes_TwoPhasePCD(NavierStokesSchur) :
+    def __init__(self, L, prefix=None, bdyNullSpace=False):
+        """
+        Initialize the two-phase PCD preconditioning class.
+
+        Parameters
+        ----------
+        L : 
+        prefix :
+
+        """
+        NavierStokes3D.__init__(self, L, prefix, bdyNullSpace)
+
+    def setUp(self, global_ksp):
+        # Step-1: build the necessary operators
+        self.Qp_rho = self.operator_constructor.getTwoPhaseQp_rho()
+        self.Np_rho = self.operator_constructor.getTwoPhaseCp_rho()
+        self.Ap_invScaledRho = self.operator_constructor.getTwoPhaseInvScaledAp()
+        self.Qp_invScaledVis = self.operator_constructor.getTwoPhaseInvScaledQp()
+
+        L_sizes = self.Qp_rho.size
+        
+        L_range = self.Qp_rho.owner_range
+        self.TP_PCDInv_shell = p4pyPETSc.Mat().create()
+        self.TP_PCDInv_shell.setSizes(L_sizes)
+        self.TP_PCDInv_shell.setType('python')
+        self.matcontext_inv = TwoPhase_PCDInv_shell(self.Qp_invScaledVis,
+                                                    self.Qp_rho,
+                                                    self.Ap_invScaledRho,
+                                                    self.Np_rho)
+        self.TP_PCDInv_shell.setPythonContext(self.matcontext_inv)
+        self.TP_PCDInv_shell.setUp()
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace == True:
+            nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                               vectors = (),
+                                               constant = True)
+#            import pdb ; pdb.set_trace()
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
+            global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
+#            self._setConstantPressureNullSpace(global_ksp)
+
+
+
 class NavierStokes3D_LSC(NavierStokesSchur) :
     def __init__(self,L,prefix=None,bdyNullSpace=False):
         """ Initialize the least squares commutator preconditioning class.
@@ -1503,60 +1845,40 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
                                                constant = True)
             self._setConstantPressureNullSpace(global_ksp)
 
-class NavierStokes_Yosida(NavierStokesSchur):
+
+class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
     def __init__(self,L,prefix=None,bdyNullSpace=False):
-        """ Initialize the Yosida preconditioner.
+        """ Initialize the two-phase least squares commutator preconditioning
+        class.
 
         Parameters
         ----------
-        L :
+        L : 
         prefix :
         """
         NavierStokesSchur.__init__(self,L,prefix,bdyNullSpace)
 
     def setUp(self,global_ksp):
-        """ Configure PETSc's KSP object with the Yosida preconditioner.
+        self.two_phase_Qv = self.operator_constructor.getTPQv_mu()
+        self.Qv_hat = p4pyPETSc.Mat().create()
+        self.Qv_hat.setSizes(self.two_phase_Qv.getSizes())
+        self.Qv_hat.setType('aij')
+        self.Qv_hat.setUp()
+        self.Qv_hat.setDiagonal(self.two_phase_Qv.getDiagonal())
+        
+        self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
+        self.F = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
 
-        Parameters
-        ----------
-        global_ksp :
-        """
-        # 3. Build a scaled pressure mass matrix for a preconditioner
-        self.Qp = self.operator_constructor.getQp()
-        self.Qp.scale(1./self.L.pde.coefficients.nu)
-        L_sizes = self.Qp.size
-        L_range = self.Qp.owner_range
-        # Setup a PETSc shell for the inverse Qp operator
-        self.QpInv_shell = p4pyPETSc.Mat().create()
-        self.QpInv_shell.setSizes(L_sizes)
-        self.QpInv_shell.setType('python')
-        self.matcontext_inv = MatrixInvShell(self.Qp)
-        self.QpInv_shell.setPythonContext(self.matcontext_inv)
-        self.QpInv_shell.setUp()
-        # 1. Get required operators
-        tildeA = self.operator_constructor.getTildeA()
-        B = self.operator_constructor.getB()
-        # 3. Build a PETSc shell for the yosida operator
-        self.yosida_shell = p4pyPETSc.Mat().create()
-        self.yosida_shell.setSizes(L_sizes)
-        self.yosida_shell.setType('python')
-        self.matcontext = B_Ainv_Bt_shell(tildeA,B)
-        self.yosida_shell.setPythonContext(self.matcontext)
-        self.yosida_shell.setUp()
-        # Attach shells to KSP object
-
+        self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.F)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()        
-
-        global_ksp.pc.getFieldSplitSubKSP()[1].setOperators(self.yosida_shell,
-                                                            self.yosida_shell)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
         self._setSchurlog(global_ksp)
-        self.bdyNullSpace=False
-        # if self.bdyNullSpace == True:
-        #     self._setConstantPressureNullSpace(global_ksp)
-
-
+        if self.bdyNullSpace == True:
+            nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                               vectors = (),
+                                               constant = True)
+            self._setConstantPressureNullSpace(global_ksp)
 
 class SimpleDarcyFC:
     def __init__(self,L):
@@ -2595,7 +2917,7 @@ class OperatorConstructor:
         self.advectionOperatorAttached = False
         self.BOperatorAttached = False
 
-    def attachMassOperator(self,rho=1.,recalculate=False):
+    def attachMassOperator(self, rho=1., recalculate=False):
         """Create a discrete Mass Operator matrix. """
 #        import pdb ; pdb.set_trace()
         self._mass_val = self.OLT.nzval.copy()
@@ -2630,6 +2952,177 @@ class OperatorConstructor:
         self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.MassOperator)
         self.massOperatorAttached = True
 
+    def attachTwoPhaseMassOperator_mu(self,recalculate=False, phase_function = None):
+        """Create a discrete Mass Operator matrix. """
+        self._mass_val = self.OLT.nzval.copy()
+        
+        _rho_0 = self.OLT.coefficients.rho_0
+        _rho_1 = self.OLT.coefficients.rho_1
+        _nu_0 = self.OLT.coefficients.nu_0
+        _nu_1 = self.OLT.coefficients.nu_1
+        
+        self._mass_val.fill(0.)
+        self.TPMassOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                      self.OLT.nFreeVDOF_global,
+                                      self.OLT.nnz,
+                                      self._mass_val,
+                                      self.OLT.colind,
+                                      self.OLT.rowptr)
+        _nd = self.OLT.coefficients.nd
+        if self.OLT.coefficients.rho != None:
+            _rho = self.OLT.coefficients.rho
+
+        if phase_function == None:
+            self.MassOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseMassMatrix_mu(nd = _nd,
+                                                                                         rho_0 = _rho_0,
+                                                                                         nu_0 = _nu_0,
+                                                                                         rho_1 = _rho_1,
+                                                                                         nu_1 = _nu_1,
+                                                                                         LS_model = _phase_func)
+        else:
+            self.MassOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseMassMatrix_mu(nd = _nd,
+                                                                                         rho_0 = _rho_0,
+                                                                                         nu_0 = _nu_0,
+                                                                                         rho_1 = _rho_1,
+                                                                                         nu_1 = _nu_1,
+                                                                                         phase_function = phase_function)
+            
+        _t = 1.0
+
+        Mass_q = {}
+        self._allocateTwoPhaseMassOperatorQStorageSpace(Mass_q)
+        self._calculateQuadratureValues(Mass_q)
+        if _nd == 2:
+            self.MassOperatorCoeff.evaluate(_t,Mass_q)
+        self._calculateTwoPhaseMassOperatorQ(Mass_q)
+        
+        Mass_Jacobian = {}
+        self._allocateMatrixSpace(self.MassOperatorCoeff,
+                                  Mass_Jacobian)
+
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            for cj in cjDict:
+                cfemIntegrals.updateMassJacobian_weak(Mass_q[('dm',ci,cj)],
+                                                      Mass_q[('vXw*dV_m',cj,ci)],
+                                                      Mass_Jacobian[ci][cj])
+
+        self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.TPMassOperator)
+        self.massOperatorAttached = True
+
+
+    def attachTwoPhaseMassOperator(self,recalculate=False, phase_function = None):
+        """Create a discrete Mass Operator matrix. """
+        self._mass_val = self.OLT.nzval.copy()
+        
+        _rho_0 = self.OLT.coefficients.rho_0
+        _rho_1 = self.OLT.coefficients.rho_1
+        _nu_0 = self.OLT.coefficients.nu_0
+        _nu_1 = self.OLT.coefficients.nu_1
+        
+        self._mass_val.fill(0.)
+        self.TPMassOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                      self.OLT.nFreeVDOF_global,
+                                      self.OLT.nnz,
+                                      self._mass_val,
+                                      self.OLT.colind,
+                                      self.OLT.rowptr)
+        _nd = self.OLT.coefficients.nd
+        if self.OLT.coefficients.rho != None:
+            _rho = self.OLT.coefficients.rho
+
+        if phase_function == None:
+            self.MassOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseMassMatrix(nd = _nd,
+                                                                                      rho_0 = _rho_0,
+                                                                                      nu_0 = _nu_0,
+                                                                                      rho_1 = _rho_1,
+                                                                                      nu_1 = _nu_1,
+                                                                                      LS_model = _phase_func)
+        else:
+            self.MassOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseMassMatrix(nd = _nd,
+                                                                                      rho_0 = _rho_0,
+                                                                                      nu_0 = _nu_0,
+                                                                                      rho_1 = _rho_1,
+                                                                                      nu_1 = _nu_1,
+                                                                                      phase_function = phase_function)
+            
+        _t = 1.0
+
+        Mass_q = {}
+        self._allocateTwoPhaseMassOperatorQStorageSpace(Mass_q)
+        self._calculateQuadratureValues(Mass_q)
+        if _nd == 2:
+            self.MassOperatorCoeff.evaluate(_t,Mass_q)
+        self._calculateTwoPhaseMassOperatorQ(Mass_q)
+        
+        Mass_Jacobian = {}
+        self._allocateMatrixSpace(self.MassOperatorCoeff,
+                                  Mass_Jacobian)
+
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            for cj in cjDict:
+                cfemIntegrals.updateMassJacobian_weak(Mass_q[('dm',ci,cj)],
+                                                      Mass_q[('vXw*dV_m',cj,ci)],
+                                                      Mass_Jacobian[ci][cj])
+
+        self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.TPMassOperator)
+        self.massOperatorAttached = True
+
+    def attachTwoPhaseInvScaledMassOperator(self, recalculate=False, phase_function = None):
+        """Create a discrete Mass Operator matrix. """
+        self._mass_val = self.OLT.nzval.copy()
+        
+        _rho_0 = self.OLT.coefficients.rho_0
+        _rho_1 = self.OLT.coefficients.rho_1
+        _nu_0 = self.OLT.coefficients.nu_0
+        _nu_1 = self.OLT.coefficients.nu_1
+        
+        self._mass_val.fill(0.)
+        self.TPInvScaledMassOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                                 self.OLT.nFreeVDOF_global,
+                                                 self.OLT.nnz,
+                                                 self._mass_val,
+                                                 self.OLT.colind,
+                                                 self.OLT.rowptr)
+        _nd = self.OLT.coefficients.nd
+        if self.OLT.coefficients.rho != None:
+            _rho = self.OLT.coefficients.rho
+
+        if phase_function == None:
+            self.MassOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseInvScaledMassMatrix(nd = _nd,
+                                                                                               rho_0 = _rho_0,
+                                                                                               nu_0 = _nu_0,
+                                                                                               rho_1 = _rho_1,
+                                                                                               nu_1 = _nu_1,
+                                                                                               LS_model = _phase_func)
+        else:
+            self.MassOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseInvScaledMassMatrix(nd = _nd,
+                                                                                               rho_0 = _rho_0,
+                                                                                               nu_0 = _nu_0,
+                                                                                               rho_1 = _rho_1,
+                                                                                               nu_1 = _nu_1,
+                                                                                               phase_function = phase_function)
+            
+        _t = 1.0
+
+        Mass_q = {}
+        self._allocateTwoPhaseMassOperatorQStorageSpace(Mass_q)
+        self._calculateQuadratureValues(Mass_q)
+        if _nd == 2:
+            self.MassOperatorCoeff.evaluate(_t,Mass_q)
+        self._calculateTwoPhaseMassOperatorQ(Mass_q)
+        
+        Mass_Jacobian = {}
+        self._allocateMatrixSpace(self.MassOperatorCoeff,
+                                  Mass_Jacobian)
+
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            for cj in cjDict:
+                cfemIntegrals.updateMassJacobian_weak(Mass_q[('dm',ci,cj)],
+                                                      Mass_q[('vXw*dV_m',cj,ci)],
+                                                      Mass_Jacobian[ci][cj])
+
+        self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.TPInvScaledMassOperator)
+ 
     def attachLaplaceOperator(self,nu=1.0):
         """ Create a Discrete Laplace Operator matrix."""
         self._laplace_val = self.OLT.nzval.copy()
@@ -2679,6 +3172,80 @@ class OperatorConstructor:
                              self.LaplaceOperator)
         self.laplaceOperatorAttached = True
 
+    def attachTPInvScaledLaplaceOperator(self, phase_function = None):
+        """ Create a Discrete Laplace Operator matrix."""
+        self._laplace_val = self.OLT.nzval.copy()
+
+        _rho_0 = self.OLT.coefficients.rho_0
+        _rho_1 = self.OLT.coefficients.rho_1
+        _nu_0 = self.OLT.coefficients.nu_0
+        _nu_1 = self.OLT.coefficients.nu_1
+
+        
+        self.TPInvScaledLaplaceOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                                    self.OLT.nFreeVDOF_global,
+                                                    self.OLT.nnz,
+                                                    self._laplace_val,
+                                                    self.OLT.colind,
+                                                    self.OLT.rowptr)
+        _nd = self.OLT.coefficients.nd
+        if self.OLT.coefficients.nu != None:
+            _nu = self.OLT.coefficients.nu
+
+        if phase_function == None:
+            self.LaplaceOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseInvScaledLaplaceOperator(nd=_nd,
+                                                                                                       rho_0 = _rho_0,
+                                                                                                       nu_0 = _nu_0,
+                                                                                                       rho_1 = _rho_1,
+                                                                                                       nu_1 = _nu_1,
+                                                                                                       LS_model = _phase_func)
+        else:
+            self.LaplaceOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseInvScaledLaplaceOperator(nd=_nd,
+                                                                                                       rho_0 = _rho_0,
+                                                                                                       nu_0 = _nu_0,
+                                                                                                       rho_1 = _rho_1,
+                                                                                                       nu_1 = _nu_1,
+                                                                                                       phase_function = phase_function)
+
+            
+        _t = 1.0
+
+        Laplace_phi = {}
+        Laplace_dphi = {}
+        self._initializeLaplacePhiFunctions(Laplace_phi,Laplace_dphi)
+        self._initializeSparseDiffusionTensor(self.LaplaceOperatorCoeff)
+
+        Laplace_q = {}
+        self._allocateLaplaceOperatorQStorageSpace(Laplace_q)
+        self._calculateQuadratureValues(Laplace_q)
+        if _nd==2:
+            self.LaplaceOperatorCoeff.evaluate(_t,Laplace_q)
+        self._calculateLaplaceOperatorQ(Laplace_q)
+        
+        Laplace_Jacobian = {}
+        self._allocateMatrixSpace(self.LaplaceOperatorCoeff,
+                                  Laplace_Jacobian)
+
+        for ci,ckDict in self.LaplaceOperatorCoeff.diffusion.iteritems():
+            for ck,cjDict in ckDict.iteritems():
+                for cj in set(cjDict.keys()+self.LaplaceOperatorCoeff.potential[ck].keys()):
+                    cfemIntegrals.updateDiffusionJacobian_weak_sd(self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][0],
+                                                                  self.LaplaceOperatorCoeff.sdInfo[(ci,ck)][1],
+                                                                  self.OLT.phi[ck].femSpace.dofMap.l2g, #??!!??
+                                                                  Laplace_q[('a',ci,ck)],
+                                                                  Laplace_q[('da',ci,ck,cj)],
+                                                                  Laplace_q[('grad(phi)',ck)],
+                                                                  Laplace_q[('grad(w)*dV_a',ck,ci)],
+                                                                  Laplace_dphi[(ck,cj)].dof,
+                                                                  self._operatorQ[('v',cj)],
+                                                                  self._operatorQ[('grad(v)',cj)],
+                                                                  Laplace_Jacobian[ci][cj])
+        self._createOperator(self.LaplaceOperatorCoeff,
+                             Laplace_Jacobian,
+                             self.TPInvScaledLaplaceOperator)
+        self.laplaceOperatorAttached = True
+
+
 
     def attachAdvectionOperator(self,advective_field):
         """Attach a Discrete Advection Operator to the Transport class.
@@ -2722,6 +3289,73 @@ class OperatorConstructor:
                              Advection_Jacobian,
                              self.AdvectionOperator)
         self.advectionOperatorAttached = True
+
+    def attachTPAdvectionOperator(self,advective_field,phase_function=None):
+        """Attach a Discrete Advection Operator to the Transport class.
+        
+        Arguments
+        ---------
+        advective_field : numpy array
+            numpy array of the advection field.
+        """
+        self._advective_field = advective_field
+        self._advection_val = self.OLT.nzval.copy()
+        self._advection_val.fill(0.)
+
+        _rho_0 = self.OLT.coefficients.rho_0
+        _rho_1 = self.OLT.coefficients.rho_1
+        _nu_0 = self.OLT.coefficients.nu_0
+        _nu_1 = self.OLT.coefficients.nu_1
+        
+        self.TPAdvectionOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                             self.OLT.nFreeVDOF_global,
+                                             self.OLT.nnz,
+                                             self._advection_val,
+                                             self.OLT.colind,
+                                             self.OLT.rowptr)
+        _nd = self.OLT.coefficients.nd
+
+        if phase_function == None:
+            self.AdvectionOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseAdvectionOperator(u = self._advective_field,
+                                                                                                  nd = _nd,
+                                                                                                  rho_0 = _rho_0,
+                                                                                                  nu_0 = _nu_0,
+                                                                                                  rho_1 = _rho_1,
+                                                                                                  nu_1 = _nu_1,
+                                                                                                  LS_model = _phase_func)
+        else:
+            self.AdvectionOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseAdvectionOperator(u = self._advective_field,
+                                                                                                  nd = _nd,
+                                                                                                  rho_0 = _rho_0,
+                                                                                                  nu_0 = _nu_0,
+                                                                                                  rho_1 = _rho_1,
+                                                                                                  nu_1 = _nu_1,
+                                                                                                  phase_function = phase_function)
+
+        _t = 1.0
+
+        Advection_q = {}
+        self._allocateAdvectionOperatorQStorageSpace(Advection_q)
+        self._calculateQuadratureValues(Advection_q)
+        if _nd==2:
+            self.AdvectionOperatorCoeff.evaluate(_t,Advection_q)
+        self._calculateAdvectionOperatorQ(Advection_q)
+
+        Advection_Jacobian = {}
+        self._allocateMatrixSpace(self.AdvectionOperatorCoeff,
+                                  Advection_Jacobian)
+        
+        for ci,ckDict in self.AdvectionOperatorCoeff.advection.iteritems():
+            for ck in ckDict:
+                cfemIntegrals.updateAdvectionJacobian_weak_lowmem(Advection_q[('df',ci,ck)],
+                                                                  self._operatorQ[('v',ck)],
+                                                                  Advection_q[('grad(w)*dV_f',ci)],
+                                                                  Advection_Jacobian[ci][ck])
+        self._createOperator(self.AdvectionOperatorCoeff,
+                             Advection_Jacobian,
+                             self.TPAdvectionOperator)
+        self.advectionOperatorAttached = True
+
 
     def attachBOperator(self):
         """Attach a discrete B operator to the Operator Constructor """
@@ -2806,7 +3440,7 @@ class OperatorConstructor:
                                 'd')
 
         scalar_quad.allocate(Q)
-
+        
         self.OLT.u[0].femSpace.elementMaps.getJacobianValues(self.OLT.elementQuadraturePoints,
                                                              Q['J'],
                                                              Q['inverse(J)'],
@@ -2952,6 +3586,8 @@ class OperatorConstructor:
         trial_shape_quad = StorageSet(shape={})
         trial_shape_X_test_shape_quad = StorageSet(shape={})
         tensor_quad = StorageSet(shape={})
+        # TODO - ARB : I don't think the 3 is necessary here...It created a
+        # confusing bug in the 2-phase problem...Need to investigate.
         scalar_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
                                         self.OLT.nQuadraturePoints_element,
                                         3))
@@ -2990,7 +3626,50 @@ class OperatorConstructor:
 
         scalar_quad.allocate(Q)
 
+    def _allocateTwoPhaseMassOperatorQStorageSpace(self,Q):
+        """ Allocate space for mass operator values. """
+        test_shape_quad = StorageSet(shape={})
+        trial_shape_quad = StorageSet(shape={})
+        trial_shape_X_test_shape_quad = StorageSet(shape={})
+        tensor_quad = StorageSet(shape={})
+        points_quadrature = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                              self.OLT.nQuadraturePoints_element,
+                                              3))
+        scalar_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                        self.OLT.nQuadraturePoints_element))
 
+        points_quadrature |= set(['x'])
+        scalar_quad |= set([('u',ci) for ci in range(self.OLT.nc)])
+        scalar_quad |= set([('m',ci) for ci in self.MassOperatorCoeff.mass.keys()])
+        test_shape_quad |= set([('w*dV_m',ci) for ci in self.MassOperatorCoeff.mass.keys()])
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            trial_shape_X_test_shape_quad |= set([('vXw*dV_m',cj,ci) for cj in cjDict.keys()])
+        for ci,cjDict in self.MassOperatorCoeff.mass.iteritems():
+            scalar_quad |= set([('dm',ci,cj) for cj in cjDict.keys()])
+
+        for k in tensor_quad:
+            Q[k] = numpy.zeros(
+                (self.OLT.mesh.nElements_global,
+                 self.OLT.nQuadraturePoints_element,
+                 self.OLT.nSpace_global,
+                 self.OLT.nSpace_global),
+                'd')
+
+        for k in test_shape_quad:
+            Q[k] = numpy.zeros(
+                (self.OLT.mesh.nElements_global,
+                 self.OLT.nQuadraturePoints_element,
+                 self.OLT.nDOF_test_element[k[-1]]),
+                'd')
+
+        for k in trial_shape_X_test_shape_quad:
+            Q[k] = numpy.zeros((self.OLT.mesh.nElements_global,
+                                self.OLT.nQuadraturePoints_element,
+                                self.OLT.nDOF_trial_element[k[1]],
+                                self.OLT.nDOF_test_element[k[2]]),'d')
+
+        scalar_quad.allocate(Q)
+        points_quadrature.allocate(Q)
 
     def _allocateLaplaceOperatorQStorageSpace(self,Q):
         """Initialize the storage space for the Laplace operator vals. """
@@ -3002,6 +3681,11 @@ class OperatorConstructor:
                                          self.OLT.nSpace_global))
         gradients = StorageSet(shape={})
 
+        points_quadrature = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                              self.OLT.nQuadraturePoints_element,
+                                              3))
+
+        points_quadrature |= set(['x'])
         scalar_quad |= set([('u',ci) for ci in range(self.OLT.nc)])
         tensors_quad |= set([('a',ci,ci) for ci in range(self.OLT.nc)])
         tensors_quad |= set([('da',ci,ci,ci) for ci in range(self.OLT.nc)])
@@ -3030,10 +3714,15 @@ class OperatorConstructor:
                  self.OLT.nSpace_global),
                 'd')
 
+        points_quadrature.allocate(Q)
+
     def _allocateAdvectionOperatorQStorageSpace(self,Q):
         """Allocate storage space for the Advection operator values. """
         scalar_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
                                         self.OLT.nQuadraturePoints_element))
+        points_quadrature = StorageSet(shape=(self.OLT.mesh.nElements_global,
+                                              self.OLT.nQuadraturePoints_element,
+                                              3))
         vector_quad = StorageSet(shape=(self.OLT.mesh.nElements_global,
                                         self.OLT.nQuadraturePoints_element,
                                         self.OLT.nSpace_global))
@@ -3042,6 +3731,7 @@ class OperatorConstructor:
                                         self.OLT.nSpace_global))
         gradients = StorageSet(shape={})
 
+        points_quadrature |= set(['x'])
         scalar_quad |= set([('u',0)])
         vector_quad |= set([('f',ci) for ci in range(self.OLT.nc)])
         tensor_quad |= set([('df',0,0)])
@@ -3069,6 +3759,8 @@ class OperatorConstructor:
                  self.OLT.nDOF_test_element[k[-1]],
                  self.OLT.nSpace_global),
                 'd')
+
+        points_quadrature.allocate(Q)
 
     def _allocateBOperatorQStorageSpace(self,Q):
         """Allocate storage space for the B-operator matrix. """
@@ -3126,6 +3818,7 @@ class OperatorConstructor:
     def _calculateMassOperatorQ(self,Q):
         """ Calculate values for mass operator. """
         elementQuadratureDict = {}
+
         for ci in self.MassOperatorCoeff.mass.keys():
             elementQuadratureDict[('m',ci)] = self._elementQuadrature
         (elementQuadraturePoints,elementQuadratureWeights,
@@ -3141,6 +3834,38 @@ class OperatorConstructor:
                 cfemIntegrals.calculateShape_X_weightedShape(self._operatorQ[('v',ci[1])],
                                                              Q[('w*dV_m',ci[0])],
                                                              Q[('vXw*dV_m',ci[1],ci[0])])
+
+    def _calculateQuadratureValues(self,Q):
+        elementQuadratureDict = {}
+
+        elementQuadratureDict[('m',1)] = self._elementQuadrature
+
+        (elementQuadraturePoints,elementQuadratureWeights,
+         elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
+
+        self.OLT.u[0].femSpace.elementMaps.getValues(elementQuadraturePoints,
+                                                     Q['x'])
+    
+    def _calculateTwoPhaseMassOperatorQ(self,Q):
+        """ Calculate values for mass operator. """
+        elementQuadratureDict = {}
+        for ci in self.MassOperatorCoeff.mass.keys():
+            elementQuadratureDict[('m',ci)] = self._elementQuadrature
+        (elementQuadraturePoints,elementQuadratureWeights,
+         elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
+        for ci in range(self.OLT.nc):
+            if Q.has_key(('w*dV_m',ci)):
+                cfemIntegrals.calculateWeightedShape(elementQuadratureWeights[('m',ci)],
+                                                     self._operatorQ['abs(det(J))'],
+                                                     self._operatorQ[('w',ci)],
+                                                     Q[('w*dV_m',ci)])
+
+        for ci in zip(range(self.OLT.nc),range(self.OLT.nc)):
+                cfemIntegrals.calculateShape_X_weightedShape(self._operatorQ[('v',ci[1])],
+                                                             Q[('w*dV_m',ci[0])],
+                                                             Q[('vXw*dV_m',ci[1],ci[0])])
+        self.OLT.u[0].femSpace.elementMaps.getValues(elementQuadraturePoints,
+                                                     Q['x'])
 
     def _calculateLaplaceOperatorQ(self,Q):
         """Calculate quadrature values for Laplace operator. """
