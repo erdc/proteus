@@ -9,7 +9,7 @@ T=2.0
 L=(2.0,2.0)
 g = 1.0
 nu= 1.0e-8#1.0e-3#0.1
-H0=1.0E-10
+H0=0.0E-14
 HH=2.0
 shock=True
 domain = RectangularDomain(L=L)

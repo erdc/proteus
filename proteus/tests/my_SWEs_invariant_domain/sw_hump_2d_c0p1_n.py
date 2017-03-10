@@ -3,11 +3,12 @@ from proteus.default_n import *
 from sw_hump_2d_p import *
 
 #use_EV_stabilization=True
-use_invariant_domain_stabilization=True
+use_first_order_flatB_GP_stabilization=True
 #timeIntegration = SSP33
-timeIntegration = BackwardEuler_cfl
+#timeIntegration = BackwardEuler_cfl
+timeIntegration = EdgeBased_ForwardEuler
 stepController = Min_dt_controller
-runCFL=0.1
+runCFL=0.75
 rtol_u[0] = 1.0e-4
 rtol_u[1] = 1.0e-4
 rtol_u[2] = 1.0e-4
@@ -22,8 +23,8 @@ elementQuadrature = SimplexGaussQuadrature(nd,3)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
 multilevelNonlinearSolver  = Newton
-
-levelNonlinearSolver = Newton
+levelNonlinearSolver = ExplicitLumpedMassMatrixSolver
+#levelNonlinearSolver = Newton
 
 fullNewtonFlag = False #NOTE: False just if the method is explicit
 nDTout=100

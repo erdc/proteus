@@ -390,6 +390,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global={}
         self.ebqe={}
         self.phi_ip={}
+        self.edge_based_cfl = numpy.zeros(self.u[0].dof.shape)
         #Old DOFs
         #NOTE (Mql): It is important to link h_dof_old by reference with u[0].dof (and so on).
         # This is because  I need the initial condition to be passed to them as well (before calling calculateResidual). 
@@ -401,7 +402,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hu_dof_old = self.u[1].dof
         self.hv_dof_old = self.u[2].dof
         #Vector for mass matrix
-        self.lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d')
+        self.lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d') #NOTE: important to init with zeros
         #mesh
         self.h_dof_sge = self.u[0].dof.copy()
         self.hu_dof_sge = self.u[1].dof.copy()
@@ -514,6 +515,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
         self.setupFieldStrides()
 
+        #hEps: this is use to regularize the flux and re-define the dry states
+        self.hEps=None
         #Global C Matrices (mql)
         self.cterm_global=None
         self.cterm_transpose_global=None
@@ -618,7 +621,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if 'use_first_order_flatB_GP_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_first_order_flatB_GP
-            self.calculateJacobian = self.sw2d.calculateJacobian_first_order_flatB_GP
+            self.calculateJacobian = self.sw2d.calculateJacobian_GP
         elif 'use_EV_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_cell_based_entropy_viscosity
             self.calculateJacobian = self.sw2d.calculateJacobian_cell_based_entropy_viscosity
@@ -630,7 +633,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-
+        #COMPUTE hEps
+        if self.hEps is None: 
+            eps=10E-16
+            self.hEps = eps*(self.u[0].dof.max() - self.u[0].dof.min())
         #COMPUTE C MATRIX 
         if self.cterm_global is None:
             #since we only need cterm_global to persist, we can drop the other self.'s
@@ -808,6 +814,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #import pdb
         #pdb.set_trace()
+
         self.calculateResidual(
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -923,7 +930,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             numDOFsPerEqn,
             rowptr_cMatrix,
             colind_cMatrix, 
-            self.lumped_mass_matrix)
+            self.lumped_mass_matrix, 
+            self.edge_based_cfl, 
+            self.hEps)
 
         #import pdb
         #pdb.set_trace()
@@ -932,10 +941,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                      r[self.offset[cj]+self.stride[cj]*dofN] = 0
 
-
-
         cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
-        logEvent("Maximum CFL = " + str(cflMax),level=2)
+        logEvent("...   Maximum Cell Based CFL = " + str(cflMax),level=2)
+
+        edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
+        logEvent("...   Maximum Edge Based CFL = " + str(edge_based_cflMax),level=2)
 
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
