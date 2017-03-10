@@ -357,6 +357,25 @@ class BackwardEuler_cfl(BackwardEuler):
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
 
+class EdgeBased_ForwardEuler(BackwardEuler_cfl):
+    def __init__(self,transport,runCFL=0.9,integrateInterpolationPoints=False):
+        BackwardEuler.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
+        self.runCFL=runCFL
+        self.dtLast=None
+        self.dtRatioMax = 2.0
+        assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
+        self.edge_based_cfl = transport.edge_based_cfl
+        self.isAdaptive=True
+    def choose_dt(self):
+        maxCFL = 1.0e-6
+        maxCFL = max(maxCFL,globalMax(self.edge_based_cfl.max()))
+        self.dt = self.runCFL/maxCFL
+        if self.dtLast == None:
+            self.dtLast = self.dt
+        if self.dt/self.dtLast  > self.dtRatioMax:
+            self.dt = self.dtLast*self.dtRatioMax
+        self.t = self.tLast + self.dt
+
 class SSP33(BackwardEuler_cfl):
     def __init__(self,transport,runCFL=0.9,integrateInterpolationPoints=False):
         BackwardEuler.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
