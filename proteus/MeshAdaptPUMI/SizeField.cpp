@@ -579,7 +579,11 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     double h_old;
     double h_new;
     element = apf::createMeshElement(m,reg);
-    h_old = pow(apf::measure(element)*6*sqrt(2),1.0/3.0); //edge of a regular tet
+    
+    if(m->getDimension() ==2)
+      h_old = sqrt(apf::measure(element)*4/sqrt(3));
+    else
+      h_old = pow(apf::measure(element)*6*sqrt(2),1.0/3.0); //edge of a regular tet
     apf::getVector(err_reg,reg,0,err_vect);
     err_curr = err_vect[0];
     errRho_curr = apf::getScalar(errRho_reg,reg,0);
