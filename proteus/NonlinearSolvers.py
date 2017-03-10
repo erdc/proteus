@@ -359,7 +359,7 @@ class NonlinearSolver:
 
 class Newton(NonlinearSolver):
     """
-    A simple iterative solver that is Newton's method
+    A simple iterative solver that is Newtons method
     if you give it the right Jacobian
     """
 
@@ -627,6 +627,42 @@ class Newton(NonlinearSolver):
         logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
+
+class ExplicitLumpedMassMatrixSolver(Newton):
+    """
+     This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        import Viewers
+        memory()
+        r=self.solveInitialize(u,r,b)
+        self.norm_r0 = self.norm(r)
+        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+                 % (0,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)            
+
+        # solve system. Solve better via lumped_mass_matrix?
+        if self.updateJacobian or self.fullNewton:
+            self.updateJacobian = False
+            self.F.getJacobian(self.J)
+            self.linearSolver.prepare(b=r)
+        self.du[:]=0.0
+        self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+        u-=self.du
+        
+        #numDOFsPerEqn = self.F.lumped_mass_matrix.size
+        #u[0:numDOFsPerEqn] -= r[0:numDOFsPerEqn]/self.F.lumped_mass_matrix[:]
+        #u[numDOFsPerEqn:2*numDOFsPerEqn] -= r[numDOFsPerEqn:2*numDOFsPerEqn]/self.F.lumped_mass_matrix[:]
+        #u[2*numDOFsPerEqn:3*numDOFsPerEqn] -= r[2*numDOFsPerEqn:3*numDOFsPerEqn]/self.F.lumped_mass_matrix[:]
+
+        self.computeResidual(u,r,b)
+        self.norm_r = self.norm(r)
+        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+                 % (1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+        logEvent(memory("Newton","Newton"),level=4)
+
 
 import deim_utils
 class POD_Newton(Newton):
@@ -2701,10 +2737,12 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                      maxLSits=100,
                                      parallelUsesFullOverlap = True,
                                      nonlinearSolverNorm = l2Norm):
-    if (multilevelNonlinearSolverType == Newton or
-        multilevelNonlinearSolverType == NLJacobi or
-        multilevelNonlinearSolverType == NLGaussSeidel or
-        multilevelNonlinearSolverType == NLStarILU):
+    if (levelNonlinearSolverType == ExplicitLumpedMassMatrixSolver):
+        levelNonlinearSolverType = ExplicitLumpedMassMatrixSolver
+    elif (multilevelNonlinearSolverType == Newton or
+          multilevelNonlinearSolverType == NLJacobi or
+          multilevelNonlinearSolverType == NLGaussSeidel or
+          multilevelNonlinearSolverType == NLStarILU):
         levelNonlinearSolverType = multilevelNonlinearSolverType
     nLevels = len(nonlinearOperatorList)
     multilevelNonlinearSolver=None
