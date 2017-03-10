@@ -53,11 +53,16 @@ apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face)
   apf::Vector3 normal;
   apf::Adjacent verts;
   mesh->getAdjacent(face,0,verts);
-  apf::Vector3 vtxs[verts.getSize()];
+  //apf::Vector3 vtxs[verts.getSize()];
+  apf::Vector3 vtxs[3];
   for(int i=0;i<verts.getSize();i++){
     mesh->getPoint(verts[i],0,vtxs[i]); 
   } 
   apf::Vector3 a,b;
+  if(mesh->getDimension()==2){
+    vtxs[2] = vtxs[0];
+    vtxs[2][2] = 1.0; 
+  }
   a = vtxs[1]-vtxs[0];
   b = vtxs[2]-vtxs[0];
   normal = apf::cross(a,b);
@@ -118,6 +123,56 @@ bool isInTet(apf::Mesh* mesh, apf::MeshEntity* ent, apf::Vector3 pt)
   if(uvw[0] >= 0 && uvw[1] >=0 && uvw[2] >=0 && (uvw[0]+uvw[1]+uvw[2])<=1) isin = 1;
   return isin;
 }
+
+bool isInSimplex(apf::Mesh* mesh, apf::MeshEntity* ent, apf::Vector3 pt, int dim)
+//Function used to test if a point pt is inside the tetrahedron ent
+//Returns a boolean: 1 if is in tet, 0 if not
+{
+  bool isin=0;
+  int numverts = dim+1;
+  apf::Adjacent verts;
+  mesh->getAdjacent(ent,0,verts);
+  apf::Vector3 vtxs[numverts];
+  for(int i=0;i<numverts;i++){
+    mesh->getPoint(verts[i],0,vtxs[i]); 
+  } 
+  apf::Vector3 c[numverts];
+  if(dim==2){
+    c[0] = vtxs[1]-vtxs[0];
+    c[1] = vtxs[2]-vtxs[0];
+    c[2] = pt-vtxs[0];
+  }
+  else if(dim==3){
+    c[0] = vtxs[1]-vtxs[0];
+    c[1] = vtxs[2]-vtxs[0];
+    c[2] = vtxs[3]-vtxs[0];
+    c[3] = pt-vtxs[0];
+  }
+
+  apf::Matrix3x3 K,Kinv;
+  apf::Vector3 F;
+  for(int i=0;i<dim;i++){
+    for(int j=0;j<dim;j++){
+      K[i][j] = getDotProduct(c[i],c[j]);
+    }
+    F[i] = getDotProduct(c[dim],c[i]);
+  }
+  if(dim==2)
+    K[2][2] = 1.0;
+  Kinv = invert(K);
+  apf::DynamicMatrix Kinv_dyn = apf::fromMatrix(Kinv);
+  apf::DynamicVector F_dyn = apf::fromVector(F);
+  apf::DynamicVector uvw; //result
+  apf::multiply(Kinv_dyn,F_dyn,uvw);
+  if(dim==2){
+    if(uvw[0] >= 0 && uvw[1] >=0 && (uvw[0]+uvw[1])<=1) isin = 1;
+  }
+  else{
+    if(uvw[0] >= 0 && uvw[1] >=0 && uvw[2] >=0 && (uvw[0]+uvw[1]+uvw[2])<=1) isin = 1;
+  }
+  return isin;
+}
+
 
 /*
 double a_k(apf::Matrix3x3 u, apf::Matrix3x3 v,double nu){
@@ -229,7 +284,7 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
             a_rho_term += visc_val*(grad_vel[i][j]+grad_vel[j][i])*shpval[s]*grad_density[j]/(density);
             c_term += -shpval[s]*grad_vel[i][j]*vel_vect[j];///density;
           }
-          temp_vect[s] = force+pressure_force+a_term+c_term;
+          temp_vect[s] = force+pressure_force+a_term+c_term; 
           //temp_vect[s] = force+pressure_force+a_rho_term+b_rho_term+a_term+c_term;
           temp_vect[s] = temp_vect[s]*weight;
         } //end loop over number of shape functions
@@ -257,7 +312,11 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
   if(comm_rank==0)
     std::cerr<<"Begin computeDiffusiveFlux()"<<std::endl;
   int numbqpt, nshl;
-  int hier_off = 4;
+  int hier_off;
+  if(nsd==2)
+    hier_off=3;
+  else if(nsd==3)
+    hier_off=4;
   apf::MeshEntity* bent,*ent;
   apf::MeshIterator* iter = m->begin(nsd-1); //loop over faces
 
@@ -320,11 +379,13 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
       bent = adjFaces[adjcount];
       normal=getFaceNormal(m,bent);
       centerdir=apf::getLinearCentroid(m,ent)-apf::getLinearCentroid(m,bent);
-      if(isInTet(m,ent,apf::project(normal,centerdir)*centerdir.getLength()+apf::getLinearCentroid(m,bent)))
+      //if(isInTet(m,ent,apf::project(normal,centerdir)*centerdir.getLength()+apf::getLinearCentroid(m,bent)))
+      if(isInSimplex(m,ent,apf::project(normal,centerdir).normalize()*centerdir.getLength()+apf::getLinearCentroid(m,bent),nsd)){
         orientation = 1;
-      else
+      }
+      else{
         orientation = 0;
-//      apf::getOrientation(m,ent,bent,adjcount,orientation,0);
+      }
 
       //begin calculation of flux
       b_elem = apf::createMeshElement(m,bent);
@@ -457,7 +518,11 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, doub
     //Shape functions of the region and not the boundaries
     nshl=apf::countElementNodes(err_shape,m->getType(ent));
     shpval_temp.allocate(nshl);
-    int hier_off = 4;
+    int hier_off;
+    if(nsd==2)
+      hier_off=3;
+    else if(nsd==3)
+      hier_off=4;
     nshl= nshl-hier_off;
     shpval.allocate(nshl);
     elem_shape = err_shape->getEntityShape(m->getType(ent));
@@ -472,7 +537,8 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, doub
       normal=getFaceNormal(m,bent);
       centerdir=apf::getLinearCentroid(m,ent)-apf::getLinearCentroid(m,bent);
       int orientation = 0;
-      if(isInTet(m,ent,apf::project(normal,centerdir)*centerdir.getLength()+apf::getLinearCentroid(m,bent))){
+      
+      if(isInSimplex(m,ent,apf::project(normal,centerdir).normalize()*centerdir.getLength()+apf::getLinearCentroid(m,bent),nsd)){
             normal = normal*-1.0; //normal needs to face the other direction
             orientation=1;
       }
@@ -493,7 +559,6 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, doub
       int numbqpt = apf::countIntPoints(b_elem,int_order); 
       flux = (double*) calloc(numbqpt*nsd*2,sizeof(double));
       m->getDoubleTag(bent,diffFlux,flux);
-
       for(int l=0; l<numbqpt;l++){
         apf::getIntPoint(b_elem,int_order,l,bqpt);
         bqptshp=apf::boundaryToElementXi(m,bent,ent,bqpt); 
@@ -543,7 +608,7 @@ void setErrorField(apf::Field* estimate,Vec coef,apf::MeshEntity* ent,int nsd,in
     //Copy coefficients onto field
     apf::Adjacent adjvert;
     m->getAdjacent(ent,0,adjvert);
-    for(int idx=0;idx<4;idx++){
+    for(int idx=0;idx<adjvert.getSize();idx++){
       double coef_sub[3]={0,0,0};
       apf::setVector(estimate,adjvert[idx],0,&coef_sub[0]);
     }
@@ -566,7 +631,7 @@ void MeshAdaptPUMIDrvr::removeBCData()
 {
   if(comm_rank==0) std::cout<<"Start removing BC tags/data"<<std::endl;
   apf::MeshEntity* ent;   
-  apf::MeshIterator* fIter = m->begin(2);
+  apf::MeshIterator* fIter = m->begin(nsd-1);
   while(ent=m->iterate(fIter))
   {
     if(has_gBC && m->hasTag(ent,BCtag)){
@@ -666,8 +731,8 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
   while(ent = m->iterate(iter)){ //loop through all elements
     
     elem_type = m->getType(ent);
-    if(elem_type != m->TET){
-      std::cout<<"Not a Tet present"<<std::endl;
+    if(elem_type != m->TET || elem_type != m->TRI){
+      std::cout<<"Not a Tri or Tet present"<<std::endl;
       exit(0); 
     }
     element = apf::createMeshElement(m,ent);
@@ -681,7 +746,11 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
     shgval.allocate(nshl);
     shpval_temp.allocate(nshl);
 
-    int hier_off = 4; //there is an offset that needs to be made to isolate the hierarchic edge modes
+    int hier_off;//there is an offset that needs to be made to isolate the hierarchic edge modes
+    if(nsd ==2)
+      hier_off=3;
+    else if(nsd==3)
+      hier_off= 4; 
     nshl = nshl - hier_off;
 
     shpval.allocate(nshl);   shgval_copy.allocate(nshl); shdrv.allocate(nshl);
@@ -705,6 +774,8 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
       apf::getIntPoint(element,int_order,k,qpt); //get a quadrature point and store in qpt
       apf::getJacobian(element,qpt,J); //evaluate the Jacobian at the quadrature point
       J = apf::transpose(J); //Is PUMI still defined in this way?
+      if(nsd==2)
+        J[2][2] = 1.0; //this is necessary to avoid singular matrix
       invJ = invert(J);
       Jdet=fabs(apf::getJacobianDeterminant(J,nsd)); 
       weight = apf::getIntWeight(element,int_order,k);
