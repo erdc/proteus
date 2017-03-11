@@ -731,7 +731,7 @@ void MeshAdaptPUMIDrvr::get_local_error(double &total_error)
   while(ent = m->iterate(iter)){ //loop through all elements
     
     elem_type = m->getType(ent);
-    if(elem_type != m->TET || elem_type != m->TRI){
+    if(!(elem_type != 4 || elem_type != 2)){ //2|TRI, 4|TET
       std::cout<<"Not a Tri or Tet present"<<std::endl;
       exit(0); 
     }
