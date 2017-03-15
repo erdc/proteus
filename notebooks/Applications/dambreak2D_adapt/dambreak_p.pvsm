@@ -2441,10 +2441,10 @@
     </Proxy>
     <Proxy group="sources" type="XdmfReader" id="5021" servers="1">
       <Property name="FileNameInfo" id="5021.FileNameInfo" number_of_elements="1">
-        <Element index="0" value="/home/alvin/Projects/proteus/proteus/notebooks/Applications/dambreak2D_adapt/dambreak_p_complete.xmf"/>
+        <Element index="0" value="./dambreak_p_complete.xmf"/>
       </Property>
       <Property name="FileNames" id="5021.FileNames" number_of_elements="1">
-        <Element index="0" value="/home/alvin/Projects/proteus/proteus/notebooks/Applications/dambreak2D_adapt/dambreak_p_complete.xmf"/>
+        <Element index="0" value="./dambreak_p_complete.xmf"/>
         <Domain name="files" id="5021.FileNames.files"/>
       </Property>
       <Property name="TimestepValues" id="5021.TimestepValues" number_of_elements="10">
