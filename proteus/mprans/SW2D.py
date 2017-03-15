@@ -603,6 +603,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                    compKernelFlag)
         try_supg = False
         try_entropy_viscosity = False
+        try_invariant_domain = False
         if options != None and 'try_supg_stabilization' in dir(options):
             try_supg = options.try_supg_stabilization
             logEvent("setting try_supg_stabilization from options= {0}".format(try_supg),level=1)

@@ -120,7 +120,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       int* csrColumnOffsets_DofLoops,
 			       double* lumped_mass_matrix,
 			       double* edge_based_cfl, 
-			       double hEps)
+			       double hEps, 
+			       int recompute_lumped_mass_matrix)
         void calculateResidual_cell_based_entropy_viscosity(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -235,7 +236,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       int* csrColumnOffsets_DofLoops,
 			       double* lumped_mass_matrix,
 			       double* edge_based_cfl,
-			       double hEps)	
+			       double hEps,
+			       int recompute_lumped_mass_matrix)	
         void calculateResidual_first_order_flatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -350,8 +352,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       int* csrColumnOffsets_DofLoops,
 			       double* lumped_mass_matrix,
 			       double* edge_based_cfl,
-			       double hEps)	
-        void calculateResidual_first_order_NonFlatB_GP(double* mesh_trial_ref,
+			       double hEps,
+			       int recompute_lumped_mass_matrix)	
+        void calculateResidual_second_order_flatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
                                double* mesh_velocity_dof,
@@ -465,7 +468,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       int* csrColumnOffsets_DofLoops,
 			       double* lumped_mass_matrix,
 			       double* edge_based_cfl,
-			       double hEps)
+			       double hEps,
+			       int recompute_lumped_mass_matrix)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -935,7 +939,8 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray csrColumnOffsets_DofLoops,
 			 numpy.ndarray lumped_mass_matrix,
 			 numpy.ndarray edge_based_cfl, 
-			 double hEps):
+			 double hEps, 
+			 int recompute_lumped_mass_matrix):
        self.thisptr.calculateResidual(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1053,7 +1058,8 @@ cdef class cSW2DCV_base:
 	    <int*> csrColumnOffsets_DofLoops.data,
 	    <double*> lumped_mass_matrix.data,
 	    <double*> edge_based_cfl.data, 
-	    hEps)	
+	    hEps, 
+	    recompute_lumped_mass_matrix)	
    def calculateResidual_cell_based_entropy_viscosity(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -1169,7 +1175,8 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray csrColumnOffsets_DofLoops,
 			 numpy.ndarray lumped_mass_matrix,
 			 numpy.ndarray edge_based_cfl, 
-			 double hEps):	
+			 double hEps, 
+			 int recompute_lumped_mass_matrix):	
        self.thisptr.calculateResidual_cell_based_entropy_viscosity(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1287,7 +1294,8 @@ cdef class cSW2DCV_base:
 	    <int*> csrColumnOffsets_DofLoops.data,
 	    <double*> lumped_mass_matrix.data,
 	    <double*> edge_based_cfl.data, 
-	    hEps)
+	    hEps, 
+	    recompute_lumped_mass_matrix)
    def calculateResidual_first_order_flatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -1403,7 +1411,8 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray csrColumnOffsets_DofLoops,
 			 numpy.ndarray lumped_mass_matrix,
 			 numpy.ndarray edge_based_cfl, 
-			 double hEps):	
+			 double hEps, 
+			 int recompute_lumped_mass_matrix):	
        self.thisptr.calculateResidual_first_order_flatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1521,9 +1530,10 @@ cdef class cSW2DCV_base:
 	    <int*> csrColumnOffsets_DofLoops.data,
 	    <double*> lumped_mass_matrix.data,
 	    <double*> edge_based_cfl.data, 
-	    hEps)
+	    hEps, 
+	    recompute_lumped_mass_matrix)
 
-   def calculateResidual_first_order_NonFlatB_GP(self,
+   def calculateResidual_second_order_flatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
                          numpy.ndarray mesh_dof,
@@ -1638,8 +1648,9 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray csrColumnOffsets_DofLoops,
 			 numpy.ndarray lumped_mass_matrix,
 			 numpy.ndarray edge_based_cfl, 
-			 double hEps):
-       self.thisptr.calculateResidual_first_order_NonFlatB_GP(#element
+			 double hEps, 
+			 int recompute_lumped_mass_matrix):
+       self.thisptr.calculateResidual_second_order_flatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
             <double*> mesh_dof.data,
@@ -1756,7 +1767,8 @@ cdef class cSW2DCV_base:
 	    <int*> csrColumnOffsets_DofLoops.data,
 	    <double*> lumped_mass_matrix.data,
 	    <double*> edge_based_cfl.data, 
-	    hEps)
+	    hEps, 
+	    recompute_lumped_mass_matrix)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
