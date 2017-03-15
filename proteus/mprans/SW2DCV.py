@@ -402,6 +402,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.hu_dof_old = self.u[1].dof
         self.hv_dof_old = self.u[2].dof
         #Vector for mass matrix
+        self.recompute_lumped_mass_matrix=1
         self.lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d') #NOTE: important to init with zeros
         #mesh
         self.h_dof_sge = self.u[0].dof.copy()
@@ -621,6 +622,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if 'use_first_order_flatB_GP_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_first_order_flatB_GP
+            self.calculateJacobian = self.sw2d.calculateJacobian_GP
+        elif 'use_second_order_flatB_GP_stabilization' in dir(options):
+            self.calculateResidual = self.sw2d.calculateResidual_second_order_flatB_GP
             self.calculateJacobian = self.sw2d.calculateJacobian_GP
         elif 'use_EV_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_cell_based_entropy_viscosity
@@ -932,8 +936,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             colind_cMatrix, 
             self.lumped_mass_matrix, 
             self.edge_based_cfl, 
-            self.hEps)
+            self.hEps, 
+            self.recompute_lumped_mass_matrix)
 
+        #print r.min(), r.max()
+        #input("")
+        self.recompute_lumped_mass_matrix=1
+        if (self.recompute_lumped_mass_matrix==1):
+            logEvent("Recomputing the lumped mass matrix",level=1)
+        else:
+            logEvent("Not recomputing the lumped mass matrix",level=1)
         #import pdb
         #pdb.set_trace()
 	if self.forceStrongConditions:#
