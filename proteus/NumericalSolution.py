@@ -650,7 +650,6 @@ class NS_base:  # (HasTraits):
 
         p0 = self.pList[0]
         n0 = self.nList[0]
-
         adaptMeshNow = False
         if (isinstance(p0.domain, Domain.PUMIDomain) and
             n0.adaptMesh and
@@ -843,6 +842,7 @@ class NS_base:  # (HasTraits):
                 save_dof=[]
                 for ci in range(lm.coefficients.nc):
                     save_dof.append( lm.u[ci].dof.copy())
+                    lm.u[ci].dof_last = lm.u[ci].dof.copy()
                 lm.setFreeDOF(lu)
                 for ci in range(lm.coefficients.nc):
                     assert((save_dof[ci] == lm.u[ci].dof).all())
