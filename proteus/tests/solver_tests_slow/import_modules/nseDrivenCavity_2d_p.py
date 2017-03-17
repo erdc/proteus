@@ -128,56 +128,7 @@ def getAdvFluxBCv(x,flag):
 
 #load dirichlet conditions, flux boundary conditions into the expected variables
 
-if RE_through_bdy:
-    dirichletConditions = {0:getDBCp,
-                           1:getDBCu_RE_through_bdy,
-                           2:getDBCv}
-else:
-    dirichletConditions = {0:getDBCp,
-                           1:getDBCu,
-                           2:getDBCv}
-
 Advectivefluxboundaryconditions =  {0:getAdvFluxBCp,
                                     1:getAdvFluxBCu,
                                     2:getAdvFluxBCv}
 boundaryCreatesNullSpace = True
-#diffusiveFluxBoundaryConditions = {0:{},
-#                                   1:{1:getDiffFluxBCu} ,
-#                                   2:{2:getDiffFluxBCv}}
-
-#fluxBoundaryConditions = {0:'setFlow'} #options are 'setFlow','noFlow','mixedFlow'
-# equation coefficient names
-#coefficients = TransportCoefficients.Stokes(g=[0.0,0.0,0.0],nd=nd,steady=True,weakBoundaryConditions=False)
-#coefficients = TransportCoefficients.NavierStokes(rho=1.0,nu=1.0,g=[0.0,0.0],nd=2)
-#from proteus.mprans import RANS2P
-#LevelModelType = RANS2P.LevelModel
-#coefficients = RANS2P.Coefficients(rho_0=1.0,rho_1=1.0, nu_0=1.0, nu_1=1.0,sigma=0.0,g=[0.0,0.0],nd=2, forceStrongDirichlet=False)
-
-if RE_through_bdy:
-    coefficients = TwophaseNavierStokes_ST_LS_SO(epsFact=0.0,
-                                                 sigma=0.0,
-                                                 rho_0=1.0,
-                                                 nu_0=1.0,
-                                                 rho_1=1.0,
-                                                 nu_1=1.0,
-                                                 g=[0.0,0.0],
-                                                 nd=2,
-                                                 LS_model=None,
-                                                 KN_model=None,
-                                                 epsFact_density=None,
-                                                 stokes=False);
-else:
-    coefficients = TwophaseNavierStokes_ST_LS_SO_VV(epsFact=0.0,
-                                                    rho_0=1.0,
-                                                    nu_0=1.0,
-                                                    rho_1=1.0,
-                                                    nu_1=1.0,
-                                                    g=[0.0,0.0],
-                                                    nd=2,
-                                                    LS_model=None,
-                                                    KN_model=None,
-                                                    epsFact_density=None,
-                                                    stokes=False);
-
-    
-coefficients.variableNames=['p','u','v']
