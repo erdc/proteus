@@ -1,0 +1,27 @@
+# use a Schur Complement for the first set of solves
+
+# set petsc ksp object and preconditioner
+-ksp_type fgmres
+-ksp_gmres_restart 500
+-ksp_atol 1e-20
+-ksp_rtol 1e-6
+-ksp_knoll
+-ksp_gmres_modifiedgramschmidt
+
+# pc options
+-pc_fieldsplit_type schur 
+-pc_fieldsplit_schur_fact_type upper
+
+# direct solver for velocity block - ksp options
+-fieldsplit_velocity_ksp_type preonly
+-fieldsplit_velocity_pc_type lu
+
+# pressure block options
+-fieldsplit_pressure_ksp_type preonly
+
+-innerPCDsolver_Ap_ksp_type cg
+-innerPCDsolver_Ap_pc_type hypre
+-innerPCDsolver_Ap_pc_hypre_type boomeramg
+
+-innerPCDsolver_Qp_ksp_type preonly
+-innerPCDsolver_Qp_pc_type lu

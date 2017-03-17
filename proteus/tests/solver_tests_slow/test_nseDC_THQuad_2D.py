@@ -36,19 +36,6 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         Profiling.openLog("proteus.log",10)
         Profiling.logAllProcesses = True
 
-    def teardown_method(self):
-        """Tear down function. """
-        FileList = ['proteus_default.log',
-                    'proteus.log',
-                    'rdomain.ele',
-                    'rdomain.edge',
-                    'rdomain.neig',
-                    'rdomain.node',
-                    'rdomain.poly',
-                    'drivenCavityNSETrial.h5',
-                    'drivenCavityNSETrial.xmf']
-        self.remove_files(FileList)
-
     def _runTest(self):
         self.ns = NumericalSolution.NS_base(self.so,
                                             self.pList,
@@ -93,6 +80,8 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
                                                                              KN_model=None,
                                                                              epsFact_density=None,
                                                                              stokes=False);
+
+        nseDrivenCavity_2d_p.coefficients.variableNames = ['p','u','v']
 
         nseDrivenCavity_2d_p.dirichletConditions = {0:nseDrivenCavity_2d_p.getDBCp,
                                                     1:nseDrivenCavity_2d_p.getDBCu,

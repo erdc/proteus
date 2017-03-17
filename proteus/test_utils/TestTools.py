@@ -422,6 +422,12 @@ class SimulationTest(BasicTest):
             if os.path.isfile(file):
                 os.remove(file)
 
+    def teardown_method(self):
+        extens = ('edge','ele','log','neig','node','poly','h5','xmf','prof0','info','m')
+        for currentFile in os.listdir('.'):
+            if any(currentFile.endswith(ext) for ext in extens):
+                os.remove(currentFile)
+
     def _setPETSc(self,petsc_file):
         """The function takes a file with petsc options and sets the options globally.
 
