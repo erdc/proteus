@@ -30,11 +30,14 @@ Example::
 """
 
 from math import cos, sin, sqrt
+import math
 import sys
 import numpy as np
 from proteus import BoundaryConditions as bc
 from .Profiling import logEvent
 from subprocess import check_call
+from proteus import Comm
+from copy import deepcopy
 
 
 class Shape(object):
@@ -447,6 +450,258 @@ class Cuboid(Shape):
                             [x+0.5*L, y+0.5*W, z+0.5*H],
                             [x+0.5*L, y-0.5*W, z+0.5*H]]
         self.volume = L*W*H
+
+
+
+
+class Sphere(Shape):
+    """
+    Class to create a 3D cuboid
+
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    dim: Optional[array_like]
+        Dimensions of the cuboid.
+    coords: Optional[array_like]
+        Coordinates of the centroid of the shape.
+    barycenter: Optional[array_like]
+        Coordinates of the barycenter.
+    """
+    count = 0
+
+    def __init__(self, domain, radius, coords=(0.,0.,0.), barycenter=None,
+                 nSectors=10):
+        super(Sphere, self).__init__(domain, nd=3)
+        self.__class__.count += 1
+        self.name = "sphere" + str(self.__class__.count)
+        self.radius = radius
+        self.coords = np.array(coords)
+        self.nSectors = nSectors
+        self.constructShape()
+        self.volumes = np.array([[[i for i in range(len(self.facets))]]])
+        # defining flags for boundary conditions
+        self.boundaryTags = bt = {'sphere': 1}
+        self.BC = {'sphere': self.BC_class(shape=self, name='sphere')}
+        self.BC_list = [self.BC['sphere']]
+        # self.BC = BCContainer(self.BC_dict)
+        if barycenter is None:
+            self.barycenter = np.array(coords)
+        else:
+            self.barycenter = np.array(barycenter)
+
+    def constructShape(self):
+        """
+        regualar nx,ny,nz cube packing with padding to boundary
+        returns domain size and boundary flags
+        """
+        coords=(0.,0.,0.)
+        n_domain_vertices = 8
+        radius = self.radius
+        coords = self.coords
+        nSectors = self.nSectors
+        diameter=2.0*radius
+        grain_centers  = {}
+        north_poles = {}
+        right_poles = {}
+        back_poles = {}
+        south_poles = {}
+        left_poles = {}
+        front_poles = {}
+
+        pad= -radius
+        noff= 0.
+        #cube boundary vertices
+        nN=0
+        nF=0
+        vertices=[]
+        facets=[]
+
+
+        nN = 0
+        #cube boundary facets
+        # sphereTag = 10
+        # boundaries = ['bottom','front','left','right','back','top']
+        # boundaryTags=dict([(key,i+1) for (i,key) in enumerate(boundaries)])
+        # boundaryTags['sphere']=sphereTag
+
+        nF = 0
+        #adding poles of grains to make sure those nodes are unique
+
+        #build sphere
+        grain_center = (noff*diameter, noff*diameter, noff*diameter)
+        north_pole = nN
+        vertices.append([coords[0]+noff*diameter,
+                        coords[1]+noff*diameter,
+                        coords[2]+noff*diameter+radius])
+        nN+=1
+        back_pole = nN
+        vertices.append([coords[0]+noff*diameter,
+                        coords[1]+noff*diameter+radius,
+                        coords[2]+noff*diameter])
+        nN+=1
+        right_pole = nN
+        vertices.append([coords[0]+noff*diameter+radius,
+                        coords[1]+noff*diameter,
+                        coords[2]+noff*diameter])
+        nN+=1
+        south_pole = nN
+        vertices.append([coords[0]+noff*diameter,
+                        coords[1]+noff*diameter,
+                        coords[2]+noff*diameter-radius])
+        nN+=1
+        front_pole = nN
+        vertices.append([coords[0]+noff*diameter,
+                        coords[1]+noff*diameter-radius,
+                        coords[2]+noff*diameter])
+        nN+=1
+
+        left_pole = nN
+        vertices.append([coords[0]+noff*diameter-radius,
+                        coords[1]+noff*diameter,
+                        coords[2]+noff*diameter])
+        nN+=1
+
+
+        hxi = radius/(math.sqrt(2.0)*float(nSectors));
+        heta = radius/(math.sqrt(2.0)*float(nSectors));
+    #now loop over grains
+        #top half  sphere nodes
+        top_nodes = {}
+        for ii in range(2*nSectors+1):
+            for jj in range(2*nSectors+1):
+                if (ii,jj) == (0,0):
+                    top_nodes[(ii,jj)] = left_pole
+                elif (ii,jj) == (2*nSectors,0):
+                    top_nodes[(ii,jj)] = back_pole
+                elif (ii,jj) == (2*nSectors,2*nSectors):
+                    top_nodes[(ii,jj)] = right_pole
+                elif (ii,jj) == (0,2*nSectors):
+                    top_nodes[(ii,jj)] = front_pole
+                elif (ii,jj) == (nSectors,nSectors):
+                    top_nodes[(ii,jj)] = north_pole
+                else:
+                    top_nodes[(ii,jj)] = nN
+                    #rotate  corners of ref square to line up with poles
+                    x0s = (jj-nSectors)*hxi
+                    y0s = (ii-nSectors)*heta
+                    r0s = math.sqrt(x0s**2 + y0s**2)
+                    theta0s = math.atan2(y0s,x0s)
+                    theta1s = theta0s - math.pi/4.0
+                    r1s = r0s
+                    x1s = r1s*math.cos(theta1s)
+                    y1s = r1s*math.sin(theta1s)
+                    #do each quadrant
+                    if x1s >= 0.0  and y1s >=0.0:
+                        rc = x1s + y1s
+                        thetac = theta1s
+                    elif x1s < 0.0 and y1s >=0.0:
+                        rc = y1s - x1s
+                        thetac = theta1s
+                    elif x1s <= 0.0 and y1s < 0.0:
+                        rc = -(x1s+y1s)
+                        thetac = theta1s
+                    else:
+                        rc = x1s - y1s
+                        thetac = theta1s
+                    eta = 0.5*math.pi*(radius-rc)/radius
+    #                         xc = rc*math.cos(thetac)
+    #                         yc = rc*math.sin(thetac)
+    #                         zc = math.sqrt(math.fabs(radius**2 - xc**2 - yc**2))
+                    xc = radius*math.cos(thetac)*math.cos(eta)
+                    yc = radius*math.sin(thetac)*math.cos(eta)
+                    zc = radius*math.sin(eta)
+                    #zc = math.sqrt(math.fabs(radius**2 - xc**2 - yc**2))
+                    #print xc,yc,zc,rc,radius**2 - xc**2 - yc**2
+                    #physical coordinates
+                    vertices.append([xc+grain_center[0],
+                                    yc+grain_center[1],
+                                    zc+grain_center[2]])
+                    nN+=1
+        #bottom half sphere nodes
+        bottom_nodes = {}
+        for ii in range(2*nSectors+1):
+            for jj in range(2*nSectors+1):
+                if (ii,jj) == (0,0):
+                    bottom_nodes[(ii,jj)] = left_pole
+                elif (ii,jj) == (2*nSectors,0):
+                    bottom_nodes[(ii,jj)] = back_pole
+                elif (ii,jj) == (2*nSectors,2*nSectors):
+                    bottom_nodes[(ii,jj)] = right_pole
+                elif (ii,jj) == (0,2*nSectors):
+                    bottom_nodes[(ii,jj)] = front_pole
+                elif (ii,jj) == (nSectors,nSectors):
+                    bottom_nodes[(ii,jj)] = south_pole
+                elif (ii in [0,2*nSectors] or
+                    jj in [0,2*nSectors]):#equator
+                    bottom_nodes[(ii,jj)] = top_nodes[(ii,jj)]
+                else:
+                    bottom_nodes[(ii,jj)] = nN
+                    #rotate  corners of ref square to line up with poles
+                    x0s = (jj-nSectors)*hxi
+                    y0s = (ii-nSectors)*heta
+                    r0s = math.sqrt(x0s**2 + y0s**2)
+                    theta0s = math.atan2(y0s,x0s)
+                    theta1s = theta0s - math.pi/4.0
+                    r1s = r0s
+                    x1s = r1s*math.cos(theta1s)
+                    y1s = r1s*math.sin(theta1s)
+                    #do each quadrant
+                    if x1s >= 0.0  and y1s >=0.0:
+                        rc = x1s + y1s
+                        thetac = theta1s
+                    elif x1s < 0.0 and y1s >=0.0:
+                        rc = y1s - x1s
+                        thetac = theta1s
+                    elif x1s <= 0.0 and y1s < 0.0:
+                        rc = -(x1s+y1s)
+                        thetac = theta1s
+                    else:
+                        rc = x1s - y1s
+                        thetac = theta1s
+                    eta = 0.5*math.pi*(radius-rc)/radius
+    #                         xc = rc*math.cos(thetac)
+    #                         yc = rc*math.sin(thetac)
+    #                         zc = -math.sqrt(math.fabs(radius**2 - xc**2 - yc**2))
+                    xc = radius*math.cos(thetac)*math.cos(eta)
+                    yc = radius*math.sin(thetac)*math.cos(eta)
+                    zc = -radius*math.sin(eta)
+                    #print xc,yc,zc
+                    #physical coordinates
+                    vertices.append([xc+grain_center[0],
+                                    yc+grain_center[1],
+                                    zc+grain_center[2]])
+                    nN+=1
+        for ii in range(2*nSectors):
+            for jj in range(2*nSectors):
+                if ((ii < nSectors and jj < nSectors) or
+                    (ii>=nSectors and  jj>=nSectors)):
+                    #top
+                    facets.append([[ top_nodes[(ii,jj)],top_nodes[(ii+1,jj)],top_nodes[(ii+1,jj+1)]] ])
+                    facets.append([[top_nodes[(ii,jj)],top_nodes[(ii+1,jj+1)],top_nodes[(ii,jj+1)]]])
+                    nF+=2
+                    #bottom
+                    facets.append([[ bottom_nodes[(ii,jj)],bottom_nodes[(ii+1,jj)],bottom_nodes[(ii+1,jj+1)]] ])
+                    facets.append([[ bottom_nodes[(ii,jj)],bottom_nodes[(ii+1,jj+1)],bottom_nodes[(ii,jj+1)] ]])
+                    nF+=2
+                else:
+                    #top
+                    facets.append([[ top_nodes[(ii,jj)],top_nodes[(ii+1,jj)],top_nodes[(ii,jj+1)] ]])
+                    facets.append([[ top_nodes[(ii+1,jj)],top_nodes[(ii+1,jj+1)],top_nodes[(ii,jj+1)] ]])
+                    nF+=2
+                    #bottom
+                    facets.append([[ bottom_nodes[(ii,jj)],bottom_nodes[(ii+1,jj)],bottom_nodes[(ii,jj+1)] ]])
+                    facets.append([[ bottom_nodes[(ii+1,jj)],bottom_nodes[(ii+1,jj+1)],bottom_nodes[(ii,jj+1)] ]])
+                    nF+=2
+        self.vertices = np.array(vertices)
+
+        self.vertexFlags = np.array([1]*len(vertices))
+        self.facets = np.array(facets)
+        self.facetFlags = np.array([1]*len(facets))
+        self.regions = np.array([self.coords])
+        self.regionFlags = np.array([1])
 
 
 class Rectangle(Shape):
@@ -938,7 +1193,12 @@ def _assembleGeometry(domain, BC_class):
             domain.regions += (shape.regions).tolist()
             domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
         if shape.facets is not None:
-            domain.facets += (facets+start_vertex).tolist()
+            facets = deepcopy(shape.facets.tolist())
+            for i, facet in enumerate(facets):
+                for j, subf in enumerate(facet):
+                    for k, v_nb in enumerate(subf):
+                        facets[i][j][k] = v_nb+shape.start_vertex
+            domain.facets += facets
             if shape.nd == 2:  # facet flags are actually region flags if 2D
                 domain.facetFlags += (shape.regionFlags+start_rflag).tolist()
             elif shape.nd == 3:
@@ -953,7 +1213,12 @@ def _assembleGeometry(domain, BC_class):
             if shape.holes_ind is not None:
                     domain.holes_ind += (np.array(shape.holes_ind)+shape.start_facet).tolist()
             if shape.facets is not None:
-                facets = (shape.facets+shape.start_vertex).tolist()
+                facets = deepcopy(shape.facets.tolist())
+                for i, facet in enumerate(facets):
+                    for j, subf in enumerate(facet):
+                        for k, v_nb in enumerate(subf):
+                            facets[i][j][k] = v_nb+shape.start_vertex
+                # facets = (shape.facets+shape.start_vertex).tolist()
                 f_to_remove = []
                 f_to_add = []
                 for i, facet in enumerate(shape.facets):
@@ -1052,18 +1317,18 @@ def _generateMesh(domain):
     # --------------------------- #
     # ----- MESH GENERATION ----- #
     # --------------------------- #
+    comm = Comm.get()
     mesh = domain.MeshOptions
-    if mesh.outputFiles['poly'] is True:
-        domain.writePoly(mesh.outputFiles_name)
-    if mesh.outputFiles['ply'] is True:
-        domain.writePLY(mesh.outputFiles_name)
-    if mesh.outputFiles['asymptote'] is True:
-        domain.writeAsymptote(mesh.outputFiles_name)
-    if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
-        domain.writeGeo(mesh.outputFiles_name)
-    mesh.setTriangleOptions()
-    logEvent("""Mesh generated using: tetgen -%s %s"""  %
-        (mesh.triangleOptions, domain.polyfile+".poly"))
+    if comm.isMaster():
+        if mesh.outputFiles['poly'] is True:
+            domain.writePoly(mesh.outputFiles_name)
+        if mesh.outputFiles['ply'] is True:
+            domain.writePLY(mesh.outputFiles_name)
+        if mesh.outputFiles['asymptote'] is True:
+            domain.writeAsymptote(mesh.outputFiles_name)
+        if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
+            domain.writeGeo(mesh.outputFiles_name)
+        mesh.setTriangleOptions()
 
 
 def getGmshPhysicalGroups(geofile):
