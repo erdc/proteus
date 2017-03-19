@@ -415,6 +415,10 @@ class BasicTest():
 class SimulationTest(BasicTest):
     """ A base class for simulation based tests. """
 
+    @classmethod
+    def _setRelativePath(self):
+        self.scriptdir = os.path.dirname(__file__)
+
     @staticmethod
     def remove_files(filelist):
         """Close a set of files. """
