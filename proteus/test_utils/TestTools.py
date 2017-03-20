@@ -416,8 +416,8 @@ class SimulationTest(BasicTest):
     """ A base class for simulation based tests. """
 
     @classmethod
-    def _setRelativePath(self):
-        self.scriptdir = os.path.dirname(__file__)
+    def _setRelativePath(self,input_file):
+        self.scriptdir = os.path.dirname(input_file)
 
     @staticmethod
     def remove_files(filelist):
@@ -430,7 +430,8 @@ class SimulationTest(BasicTest):
         extens = ('edge','ele','log','neig','node','poly','h5','xmf','prof0','info','m')
         for currentFile in os.listdir('.'):
             if any(currentFile.endswith(ext) for ext in extens):
-                os.remove(currentFile)
+                if os.path.isfile(currentFile):
+                    os.remove(currentFile)
 
     def _setPETSc(self,petsc_file):
         """The function takes a file with petsc options and sets the options globally.
@@ -438,6 +439,10 @@ class SimulationTest(BasicTest):
         petsc_file : str
             string with the location of the file
         """
+        # First, clear any existing PETSc options settings
+        for key in petsc4py.PETSc.Options().getAll():
+            petsc4py.PETSc.Options().delValue(key)
+        # Second, collect and add new PETSc options
         petsc_options = []
         with open(petsc_file) as petsc_file:
             data = petsc_file.readlines()
