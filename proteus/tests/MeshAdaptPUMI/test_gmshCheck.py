@@ -73,7 +73,70 @@ def test_gmshLoadAndAdapt(verbose=0):
     nElements_final = mesh.nElements_global
     ok(nElements_final>nElements_initial)
 
+def test_2DgmshLoadAndAdapt(verbose=0):
+    """Test for loading gmsh mesh through PUMI, estimating error and adapting for 
+    a 2D Couette flow case"""
+    testDir=os.path.dirname(os.path.abspath(__file__))
+    Model=testDir + '/Couette2D.null'
+    Mesh=testDir + '/Couette2D.msh'
+    domain = Domain.PUMIDomain(dim=2) #initialize the domain
+    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='ERM',maType='isotropic')
+    domain.PUMIMesh.loadModelAndMesh(Model, Mesh)
+    domain.faceList=[[14],[12],[11],[13]]
+
+    mesh = MeshTools.TriangularMesh()
+    mesh.cmesh = cmeshTools.CMesh()
+    comm = Comm.init()
+
+    nElements_initial = mesh.nElements_global
+    mesh.convertFromPUMI(domain.PUMIMesh, domain.faceList, parallel = comm.size() > 1, dim = domain.nd)
+
+    domain.PUMIMesh.transferFieldToPUMI("coordinates",mesh.nodeArray)
+
+    rho = numpy.array([998.2,998.2])
+    nu = numpy.array([1.004e-6, 1.004e-6])
+    g = numpy.asarray([0.0,0.0])
+    domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
+
+    #Couette Flow
+    Lz = 0.05
+    Uinf = 2e-3
+    #hard code solution
+    vector=numpy.zeros((mesh.nNodes_global,3),'d')
+    dummy = numpy.zeros(mesh.nNodes_global); 
+    vector[:,0] = Uinf*mesh.nodeArray[:,1]/Lz #v-velocity
+    vector[:,1] = dummy
+    vector[:,2] = dummy
+    domain.PUMIMesh.transferFieldToPUMI("velocity", vector)
+    del vector
+    del dummy
+
+    scalar=numpy.zeros((mesh.nNodes_global,1),'d')
+    domain.PUMIMesh.transferFieldToPUMI("p", scalar)
+
+    scalar[:,0] = mesh.nodeArray[:,1]
+    domain.PUMIMesh.transferFieldToPUMI("phi", scalar)
+    del scalar
+
+    scalar = numpy.zeros((mesh.nNodes_global,1),'d')+1.0
+    domain.PUMIMesh.transferFieldToPUMI("vof", scalar)
+
+    errorTotal=domain.PUMIMesh.get_local_error()
+    ok(errorTotal<1e-14)
+
+    ok(domain.PUMIMesh.willAdapt(),1)
+
+    domain.PUMIMesh.adaptPUMIMesh()
+    
+    mesh = MeshTools.TriangularMesh()
+    mesh.convertFromPUMI(domain.PUMIMesh,
+                     domain.faceList,
+                     parallel = comm.size() > 1,
+                     dim = domain.nd)
+    nElements_final = mesh.nElements_global
+    ok(nElements_final>nElements_initial)
+
 if __name__ == '__main__':
     import nose
-    nose.main(defaultTest='test_gmshCheck:test_gmshLoadAndAdapt')
+    nose.main(defaultTest='test_gmshCheck:test_gmshLoadAndAdapt,test_gmshCheck:test_2DgmshLoadAndAdapt')
 
