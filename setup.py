@@ -432,7 +432,8 @@ setup(name='proteus',
                    ['proteus/tests/MeshAdaptPUMI/cube0.smb',
                     'proteus/tests/MeshAdaptPUMI/cube.dmg',
                     'proteus/tests/MeshAdaptPUMI/Couette.null',
-                    'proteus/tests/MeshAdaptPUMI/Couette.msh'])
+                    'proteus/tests/MeshAdaptPUMI/Couette.msh',
+                    'proteus/tests/MeshAdaptPUMI/Couette2D.msh'])
       ],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/povgen.py',
                  'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
