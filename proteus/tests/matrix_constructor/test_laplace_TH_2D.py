@@ -23,22 +23,7 @@ class TestLaplaceConstruction2D(proteus.test_utils.TestTools.SimulationTest):
         """ Initialize the test problem """
         reload(L_2d)
         self.Laplace_object = L_2d.ns
-        self._setRelativePath()
-        
-    def teardown_method(self):
-        """ Tear down function """
-        FileList = ['Laplace_matrix_test.xmf',
-                    'Laplace_matrix_test.h5',
-                    'proteus.log',
-                    'rdomain.poly',
-                    "reference_triangle_2d.ele",
-                    "reference_triangle_2d.node",
-                    "reference_triangle_2d.face",
-                    "reference_triangle_2d.poly"]
-        self.remove_files(FileList)
-
-    def _setRelativePath(self):
-        self.scriptdir = os.path.dirname(__file__)
+        self._setRelativePath(__file__)
 
     def test_1(self):
         """ Tests the attachMassOperator function in one-level-transport """
