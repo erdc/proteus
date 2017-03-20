@@ -90,6 +90,7 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);
+  PCU_Comm_Free();
 #ifdef PROTEUS_USE_SIMMETRIX
   SimModel_stop();
   Sim_unregisterAllKeys();
