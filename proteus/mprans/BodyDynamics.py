@@ -659,7 +659,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             self.record_dict['ang_vy'] = ['ang_vel', 1]
             self.record_dict['ang_vz'] = ['ang_vel', 2]
         if inertia is True:
-            self.record_dict['intertia'] = ['inertia', None]
+            self.record_dict['inertia'] = ['inertia', None]
 
         if filename is None:
             self.record_filename = 'record_' + self.name + '.csv'
@@ -740,8 +740,8 @@ class CaissonBody(RigidBody):
     def __init__(self, shape, substeps):
         super(CaissonBody, self).__init__(shape, substeps)
         # friciton module parameter used for switching to dynamic motion cases
-        self.fromDynamic_toStatic = False
-        self.last_fromDynamic_toStatic = False
+        self.sliding = False
+        self.sliding_last = False
         # friction and overturning parameters to be initialised
         self.pivot_friction = np.zeros(3)
         self.last_pivot_friction = np.zeros(3)
@@ -757,6 +757,10 @@ class CaissonBody(RigidBody):
         self.uy = 0.0
         self.last_ux = 0.0
         self.last_uy = 0.0
+        self.uxEl = 0.0
+        self.last_uxEl = 0.0
+        self.uxPl = 0.0
+        self.last_uxPl = 0.0        
 
 
     def calculate_init(self):
@@ -801,13 +805,15 @@ class CaissonBody(RigidBody):
         self.last_M[:] = self.M
         # friciton and overturning
         self.cV_last[:] = self.cV
-        self.last_fromDynamic_toStatic = self.fromDynamic_toStatic
+        self.sliding_last=self.sliding
         self.last_pivot_friction = self.pivot_friction
         self.last_Mp[:] = self.Mp
         self.last_rp = self.rp
         self.last_ux = self.ux
         self.last_uy = self.uy
-
+        self.last_uxEl = self.uxEl
+        self.last_uxPl = self.uxPl
+                
 
     def step(self, dt, substeps=20):
         """
@@ -1019,28 +1025,6 @@ class CaissonBody(RigidBody):
         self.acceleration = np.zeros(3)
 
         #---------------------------------------------------------------
-        def static_case(self, sign, Fx, Fv, mass, m):
-            """
-            Set a static friction.
-            Parameters
-            ----------
-            sign : It's function of horizontal force.
-                It's used to calculate frictional force.
-            Fx : Total horizontal force from rigid body calculation (wave loading).
-            Fy : Total vertical force from rigid body calculation (wave loading + weight of the body).
-            mass : Mass of the rigid body.
-            m : static friction factor.
-            """
-            Ftan = -sign*m*abs(Fv)
-            if abs(Fx)<abs(Ftan):
-                self.acceleration = np.zeros(3)
-                self.velocity = np.zeros(3)
-                self.h[:] = np.zeros(3)
-            else:
-                dynamic_case(self, sign_static, Fx, Fv, mass, m=self.m_dynamic)
-            self.fromDynamic_toStatic = False
-
-        #---------------------------------------------------------------
         def dynamic_case(self, sign, Fx, Fv, mass, m):
             """
             Set a dynamic friction.
@@ -1059,32 +1043,56 @@ class CaissonBody(RigidBody):
             Ky = self.Ky
             Cx = self.Cx
             Cy = self.Cy
-            # Frictional force
-            Ftan = -sign*m*abs(Fv)
-            Fh=Fx+Ftan
-            # Motion in y-axis only in case of Fy>0 (Caisson cannot break the mound!)
-            if Fv < 0.0:
-                Fv = 0.0
-                Cy = 0.0
-                Ky = 0.0
+            
+            # initial condition on displacement, velocity and acceleration
+            ux0 = self.last_uxEl                                                          # x-axis displacement
+            uy0 = self.last_position[1] - self.init_barycenter[1]                         # y-axis displacement            
+            vx0 = self.last_velocity[0]                                                   # x-axis velocity
+            vy0 = self.last_velocity[1]                                                   # y-axis velocity
+            
+            # Frictional force            
+            PL=0.0
+            EL=0.0
+            reactionx = -(Kx*ux0)
+            reactiony = -(Ky*uy0)
+            Ftan = -sign*m*abs(reactiony)
+            if Ftan == 0.0:
+                Ftan = -sign*m*abs(Fv)
 
-            # initial condition
-            ux0 = self.last_position[0] - self.init_barycenter[0]      # x-axis displacement
-            uy0 = self.last_position[1] - self.init_barycenter[1]      # y-axis displacement            
-            vx0 = self.last_velocity[0]                                # x-axis velocity
-            vy0 = self.last_velocity[1]                                # y-axis velocity
-
-            if Kx*ux0 < Ftan :
-                Fh=Fx
-            else:
-                Fh=Fx+Ftan
+            if self.sliding == True:
+                # plastic displacement
                 Kx=0.0
                 Cx=0.0
-            
-            ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass                        # x-axis acceleration
-            ay0 = (Fv - Cy*vy0 - Ky*uy0) / mass                        # y-axis acceleration
+                EL=0.0
+                PL=1.0
+                Fh=Fx+Ftan
+                self.sliding=True
+            elif abs(reactionx)>abs(Ftan) and (reactionx)*vx0 < 0.:
+                # plastic displacement
+                Kx=0.0
+                Cx=0.0
+                EL=0.0
+                PL=1.0
+                Fh=Fx+Ftan
+                self.sliding=True
+            else:
+                # elastic displacement
+                EL=1.0
+                PL=0.0
+                Fh=Fx
+                self.sliding=False
 
-	        # solving numerical scheme
+            # Motion in y-axis only in case of Fy>0 (Caisson cannot break the mound!)
+            #if Fv < 0.0:
+            #    Fv = 0.0
+            #    Cy = 0.0
+            #    Ky = 0.0
+
+            # initial condition acceleration
+            ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass                                           # x-axis acceleration
+            ay0 = (Fv - Cy*vy0 - Ky*uy0) / mass                                           # y-axis acceleration
+
+	    # solving numerical scheme
             if self.scheme == 'Runge_Kutta':
                 for ii in range(substeps):
                     ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0, dt=dt_sub, substeps=substeps, F=Fh, K=Kx, C=Cx, m=mass, velCheck=True)
@@ -1092,17 +1100,22 @@ class CaissonBody(RigidBody):
 	        
             # When horizontal velocity changes sign, 0-condition is passed
             # Loop must start from static case again
-	        self.fromDynamic_toStatic = False
-            if (self.velocity[0]*vx) < 0.0:
-                self.fromDynamic_toStatic = True
+            #self.sliding = False
+            if (vx0*vx) < 0.0 and self.sliding == True:
+                self.sliding = False
 
             # used for storing values of displacements through timesteps
             self.ux = ux
             self.uy = uy
+            dx = self.ux - ux0
+            dy = self.uy - uy0
+            self.uxEl = dx*EL + self.last_uxEl   # updating elastic displacement
+            self.uxPl = dx*PL + self.last_uxPl   # updating plastic displacement
+
 
             # final values
-            self.h[0] = self.ux - (self.last_position[0] - self.init_barycenter[0])
-            self.h[1] = self.uy - (self.last_position[1] - self.init_barycenter[1])
+            self.h[0] = dx 
+            self.h[1] = dy
             self.velocity[0] = vx
             self.velocity[1] = vy
             self.acceleration[0] = ax
@@ -1113,16 +1126,19 @@ class CaissonBody(RigidBody):
 
         if (Fv*gv)>0:
         #--- Friction module, static case
-            if self.last_velocity[0] == 0.0 or self.last_fromDynamic_toStatic ==True:
-                static_case(self, sign_static, Fx, Fv, mass, m=self.m_static)
+            if self.sliding ==False:
+                sign=sign_static
+                m=self.m_static                
         #--- Friction module, dynamic case
             else :
-                dynamic_case(self, sign_dynamic, Fx, Fv, mass, m=self.m_dynamic)
+                sign=sign_dynamic
+                m=self.m_dynamic
+            dynamic_case(self, sign, Fx, Fv, mass, m)
 
         if (Fv*gv)<0:
         #--- Floating module, static case
-            if self.last_velocity[0] == 0.0  or self.last_fromDynamic_toStatic ==True:
-                static_case(self, sign_static, Fx, Fv, mass, m=0.0)
+            if self.last_velocity[0] == 0.0  or self.sliding ==False:
+                dynamic_case(self, sign_static, Fx, Fv, mass, m=0.0)
         #--- Floating module, dynamic case
             else :
                 dynamic_case(self, sign_dynamic, Fx, Fv, mass, m=0.0)
@@ -1156,12 +1172,13 @@ class CaissonBody(RigidBody):
             """
 
             if floating == True:
-                self.pivot_friction = self.Shape.barycenter
+                self.barycenter = self.last_position
+                self.pivot_friction = self.barycenter
             else: # medium point in the bottom of the caisson between vertex1 and vertex2
                 self.pivot_friction = np.array((0.5*(self.cV[0][0]+self.cV[1][0]), 0.5*(self.cV[0][1]+self.cV[1][1]), 0.0), dtype=float)
 
             # angular acceleration from moment
-            self.rp = (self.pivot_friction-self.Shape.barycenter)
+            self.rp = (self.pivot_friction-self.barycenter)
             rpx, rpy, rpz = self.rp
             Fx, Fy, Fz = self.F
             Mpivot = np.array([(rpy*Fz-rpz*Fy), -(rpx*Fz-rpz*Fx), (rpx*Fy-rpy*Fx)]) # moment transformation calculated in pivot
@@ -1187,12 +1204,12 @@ class CaissonBody(RigidBody):
             vrz0 = self.last_ang_vel[2]                             # angular velocity
             arz0 = (Mp[2] - Crot*vrz0 - Krot*rz0) / inertia         # angular acceleration
 
-	        # solving numerical scheme
+            # solving numerical scheme
             if self.scheme == 'Runge_Kutta':
                 rz, vrz, arz = runge_kutta(u0=rz0, v0=vrz0, a0=arz0, dt=dt_sub, substeps=substeps, F=Mp[2], K=Krot, C=Crot, m=inertia, velCheck=False)
             
             # final values
-	        self.ang_disp[2] = rz - atan2(self.last_rotation[0, 1], self.last_rotation[0, 0])
+            self.ang_disp[2] = rz - atan2(self.last_rotation[0, 1], self.last_rotation[0, 0])
             self.ang_vel[2] = vrz
             self.ang_acc[2] = arz
 
@@ -1235,6 +1252,99 @@ class CaissonBody(RigidBody):
                 else:
                     calculate_rotation(self, floating=True, h=0)     # ----> caisson up the rubble mound: FLOATING CASE I calculate normally rotation on barycenter!!!
 
+
+    def setRecordValues(self, filename=None, all_values=False, pos=False,
+                        rot=False, ang_disp=False, F=False, M=False,
+                        inertia=False, vel=False, acc=False, ang_vel=False, ang_acc=False, elasticPlastic=False):
+        """
+        Sets the rigid body attributes that are to be recorded in a csv file
+        during the simulation.
+        Parameters
+        ----------
+        filename: Optional[string]
+            Name of file, if not set, the file will be named as follows:
+            'record_[shape.name].csv'
+        all_values: bool
+            Set to True to record all values listed below.
+        time: bool
+            Time of recorded row (default: True).
+        pos: bool
+            Position of body (default: False. Set to True to record).
+        rot: bool
+            Rotation of body (default: False. Set to True to record).
+        ang_disp: array
+            Angular displecement calculated during rigid body calculation step.
+            Applied on the body in order to make it rotating.
+        F: bool
+            Forces applied on body (default: False. Set to True to record).
+        M: bool
+            Moments applied on body (default: False. Set to True to record).
+        inertia: bool
+            Inertia of body (default: False. Set to True to record).
+        vel: bool
+            Velocity of body (default: False. Set to True to record).
+        acc: bool
+            Acceleration of body (default: False. Set to True to record).
+        ang_vel: array
+            Angular velocity of body (default: False. Set to True to record).
+        ang_acc: bool
+            Angular acceleration of body (default: False. Set to True to record).
+        Notes
+        -----
+        To add another value manually, add to dictionary self.record_dict:
+        key: header of the column in .csv
+        value: list of length 2: [variable name, index within variable]
+                                                 (if no index, use None)
+        e.g. self.record_dict['m']['mass', None]
+        """
+        if all_values is True:
+            pos = rot = F = M = acc = vel = ang_acc = ang_vel = elasticPlastic = True
+        if pos is True:
+            self.record_dict['x'] = ['last_position', 0]
+            self.record_dict['y'] = ['last_position', 1]
+            self.record_dict['z'] = ['last_position', 2]
+        if rot is True:
+            self.record_dict['rx'] = ['last_rotation_euler', 0]
+            self.record_dict['ry'] = ['last_rotation_euler', 1]
+            self.record_dict['rz'] = ['last_rotation_euler', 2]
+        if F is True:
+            self.record_dict['Fx'] = ['F', 0]
+            self.record_dict['Fy'] = ['F', 1]
+            self.record_dict['Fz'] = ['F', 2]
+            Fx = Fy = Fz = True
+        if M is True:
+            self.record_dict['Mx'] = ['M', 0]
+            self.record_dict['My'] = ['M', 1]
+            self.record_dict['Mz'] = ['M', 2]
+        if acc is True:
+            self.record_dict['ax'] = ['acceleration', 0]
+            self.record_dict['ay'] = ['acceleration', 1]
+            self.record_dict['az'] = ['acceleration', 2]
+        if vel is True:
+            self.record_dict['vx'] = ['velocity', 0]
+            self.record_dict['vy'] = ['velocity', 1]
+            self.record_dict['vz'] = ['velocity', 2]
+        if ang_acc is True:
+            self.record_dict['ang_ax'] = ['ang_acc', 0]
+            self.record_dict['ang_ay'] = ['ang_acc', 1]
+            self.record_dict['ang_az'] = ['ang_acc', 2]
+        if ang_vel is True:
+            self.record_dict['ang_vx'] = ['ang_vel', 0]
+            self.record_dict['ang_vy'] = ['ang_vel', 1]
+            self.record_dict['ang_vz'] = ['ang_vel', 2]
+        if inertia is True:
+            self.record_dict['inertia'] = ['inertia', None]
+        if elasticPlastic is True:
+            self.record_dict['uxElastic']=['uxEl', None]
+            self.record_dict['uxPlastic']=['uxPl', None]
+            self.record_dict['uy']=['uy', None]
+
+        if filename is None:
+            self.record_filename = 'record_' + self.name + '.csv'
+        else:
+            self.record_filename = filename + '.csv'
+        self.record_file = os.path.join(Profiling.logDir, self.record_filename)
+        
 
 
 class paddleBody(RigidBody):
