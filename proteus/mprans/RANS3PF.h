@@ -964,7 +964,7 @@ namespace proteus
 	  particle_netForces[i*3+1] += force_y;
 	  particle_netForces[i*3+2] += force_z;
 	  particle_netMoments[i*3+0] += (r_y*force_z - r_z*force_y);
-	  particle_netMoments[i*3+1] += (r_z*force_s - r_x*force_z);
+	  particle_netMoments[i*3+1] += (r_z*force_x - r_x*force_z);
 	  particle_netMoments[i*3+2] += (r_x*force_y - r_y*force_x);
 	}
       mom_u_source += C*(u-u_s);
