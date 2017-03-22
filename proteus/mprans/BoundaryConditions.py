@@ -93,6 +93,12 @@ class BC_RANS(BC_Base):
 
     def setTank(self):
         b_or = self._b_or
+        self.u_stress.uOfXT = 0.
+        self.v_stress.uOfXT = 0.
+        self.w_stress.uOfXT = 0.
+        self.hx_dirichlet.resetBC()
+        self.hy_dirichlet.resetBC()
+        self.hz_dirichlet.resetBC()
         if b_or[0] == 1 or b_or[0] == -1:
             self.hx_dirichlet.setConstantBC(0.)
             self.u_stress.uOfXT = None
