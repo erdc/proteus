@@ -19,7 +19,9 @@ from cython.operator cimport dereference as deref
 
 
 cdef extern from "ChMoorings.h":
-    cdef cppclass ChSystemDEM
+    cdef cppclass ChSystemDEM:
+        double GetStep()
+        void SetupInitial()
     cdef cppclass ChMesh:
         void SetAutomaticGravity(bool mg, int num_points=1)
     cdef cppclass cppMesh:
@@ -118,6 +120,7 @@ cdef extern from "ChRigidBody.h":
 
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppRigidBody:
+        shared_ptr[ChBody] body
         double mass
         ChVector pos
         ChVector pos_last
@@ -140,7 +143,6 @@ cdef extern from "ChRigidBody.h":
         ChVector F_last
         ChVector M
         ChVector M_last
-        ChBody body
         cppRigidBody(cppSystem* system, double* position,
                      double* rotq, double mass, double* inertia,
                      double* free_x, double* free_r)
@@ -577,9 +579,12 @@ cdef class RigidBody:
         Records values of rigid body attributes at each time step in a csv file.
         """
         self.record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name + '.csv')
-        t_last = self.system.model.stepController.t_model_last
-        dt_last = self.system.model.levelModelList[-1].dt_last
-        t = t_last-dt_last
+        if self.system.model is not None:
+            t_last = self.system.model.stepController.t_model_last
+            dt_last = self.system.model.levelModelList[-1].dt_last
+            t = t_last-dt_last
+        else:
+            t = self.system.thisptr.system.GetStep()
         t_prot = Profiling.time()-Profiling.startTime
         values_towrite = [t, t_prot]
         if t == 0:
@@ -650,13 +655,16 @@ cdef class System:
     def attachAuxiliaryVariables(self,avDict):
         pass
 
-    def calculate(self):
-        try:
-            self.proteus_dt = self.model.levelModelList[-1].dt_last
-        except:
-            self.proteus_dt = self.dt_init
-        for body in self.bodies:
-            body.prestep()
+    def calculate(self, proteus_dt=None):
+        if self.model is not None:
+            try:
+                self.proteus_dt = self.model.levelModelList[-1].dt_last
+            except:
+                self.proteus_dt = self.dt_init
+        elif proteus_dt is not None:
+            self.proteus_dt = proteus_dt
+        else:
+            sys.exit('no time step set')
         if self.model is not None:
             self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         for mooring in self.moorings:
@@ -677,6 +685,9 @@ cdef class System:
             self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         for body in self.bodies:
             body.calculate_init()
+        for mooring in self.moorings:
+            mooring.calculate_init()
+        self.thisptr.system.SetupInitial()
 
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
@@ -860,6 +871,9 @@ cdef class Moorings:
         if self.System.model is not None:
             self.setExternalForces()
 
+    def poststep(self):
+        pass
+
     def setNodesPositionFunction(self, function):
         """Function to build nodes
 
@@ -868,17 +882,31 @@ cdef class Moorings:
         """
         self.nodes_function = function
 
-    def fixFrontNode(self, bool val):
-        deref(self.thisptr.nodes.front()).SetFixed(val)
+    def fixFrontNode(self, bool fixed):
+        """Fix front node of cable
 
-    def fixBackNode(self, bool val):
-        deref(self.thisptr.nodes.back()).SetFixed(val)
+        Parameters
+        ----------
+        fixed: bool
+            Fixes node if True
+        """
+        deref(self.thisptr.nodes.front()).SetFixed(fixed)
 
-    # def attachBackNodeToBody(self, RigidBody body):
-    #     self.thisptr.attachBackNodeToBody(body.thisptr.body)
+    def fixBackNode(self, bool fixed):
+        """Fix back node of cable
 
-    # def attachFrontNodeToBody(self, RigidBody body):
-    #     self.thisptr.attachFrontNodeToBody(body.thisptr.body)
+        Parameters
+        ----------
+        fixed: bool
+            Fixes node if True
+        """
+        deref(self.thisptr.nodes.back()).SetFixed(fixed)
+
+    def attachBackNodeToBody(self, RigidBody body):
+        self.thisptr.attachBackNodeToBody(body.thisptr.body)
+
+    def attachFrontNodeToBody(self, RigidBody body):
+        self.thisptr.attachFrontNodeToBody(body.thisptr.body)
 
     def setNodesPosition(self):
         cdef ChVector[double] vec
@@ -893,6 +921,13 @@ cdef class Moorings:
                 x, y, z = self.nodes_function(L0+ds*j)
                 vec = ChVector[double](x, y, z)
                 deref(self.thisptr.cables[i]).mvecs.push_back(vec)
+
+    def getNodesPosition(self):
+        pos = np.zeros(( self.thisptr.nodes.size(),3 ))
+        for i in range(self.thisptr.nodes.size()):
+            vec = deref(self.thisptr.nodes[i]).GetPos()
+            pos[i] = [vec.x(), vec.y(), vec.z()]
+        return pos
 
     def setExternalForces(self):
         # get velocity at nodes
