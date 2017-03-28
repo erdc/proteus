@@ -1050,15 +1050,26 @@ class CaissonBody(RigidBody):
             vx0 = self.last_velocity[0]                                                   # x-axis velocity
             vy0 = self.last_velocity[1]                                                   # y-axis velocity
             
+
+            # calculation on the vertical direction for frictional force
+            # solving numerical scheme
+            ay0 = (Fv - Cy*vy0 - Ky*uy0) / mass
+            if self.scheme == 'Runge_Kutta':
+                for ii in range(substeps):
+                    uy, vy, ay = runge_kutta(u0=uy0, v0=vy0, a0=ay0,
+                                             dt=dt_sub, substeps=substeps,
+                                             F=Fv, K=Ky, C=Cy, m=mass, velCheck=False)
+            
             # Frictional force            
             PL=0.0
             EL=0.0
             reactionx = -(Kx*ux0)
-            reactiony = -(Ky*uy0)
+            reactiony = -(Ky*uy)
             Ftan = -sign*m*abs(reactiony)
             if Ftan == 0.0:
                 Ftan = -sign*m*abs(Fv)
 
+            # check on the status of the body
             if self.sliding == True:
                 # plastic displacement
                 Kx=0.0
@@ -1082,21 +1093,15 @@ class CaissonBody(RigidBody):
                 Fh=Fx
                 self.sliding=False
 
-            # Motion in y-axis only in case of Fy>0 (Caisson cannot break the mound!)
-            #if Fv < 0.0:
-            #    Fv = 0.0
-            #    Cy = 0.0
-            #    Ky = 0.0
-
-            # initial condition acceleration
-            ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass                                           # x-axis acceleration
-            ay0 = (Fv - Cy*vy0 - Ky*uy0) / mass                                           # y-axis acceleration
-
+            # initial condition acceleration 
 	    # solving numerical scheme
+	    ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass 
             if self.scheme == 'Runge_Kutta':
                 for ii in range(substeps):
-                    ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0, dt=dt_sub, substeps=substeps, F=Fh, K=Kx, C=Cx, m=mass, velCheck=True)
-                    uy, vy, ay = runge_kutta(u0=uy0, v0=vy0, a0=ay0, dt=dt_sub, substeps=substeps, F=Fv, K=Ky, C=Cy, m=mass, velCheck=False)
+                    ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0,
+                                             dt=dt_sub, substeps=substeps,
+                                             F=Fh, K=Kx, C=Cx, m=mass, velCheck=True)
+                    
 	        
             # When horizontal velocity changes sign, 0-condition is passed
             # Loop must start from static case again
@@ -1111,7 +1116,6 @@ class CaissonBody(RigidBody):
             dy = self.uy - uy0
             self.uxEl = dx*EL + self.last_uxEl   # updating elastic displacement
             self.uxPl = dx*PL + self.last_uxPl   # updating plastic displacement
-
 
             # final values
             self.h[0] = dx 
