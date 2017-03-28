@@ -945,12 +945,16 @@ class Tank2D(ShapeRANS):
     def _constructFacets(self):
         facets = [[[0, 1, 2, 3]]]
         facetFlags = [1]
+        added_vertices = 0
+        added_facets = 0
         if self.spongeLayers['x-']:
             facets += [[[3, 0, 4, 5]]]
-            facetFlags += [2]
-        if self.spongeLayers['x-']:
-            facets += [[[2, 1, 6, 7]]]
-            facetFlags += [3]
+            facetFlags += [2+added_facets]
+            added_vertices += 2
+            added_facets += 1
+        if self.spongeLayers['x+']:
+            facets += [[[2, 1, added_vertices+4, added_vertices+5]]]
+            facetFlags += [2+added_facets]
         return facets, facetFlags
 
 
@@ -1875,6 +1879,13 @@ def assembleAuxiliaryVariables(domain):
             body.i_end = start_flag+1+len(shape.BC_list)
         # ----------------------------
         # ABSORPTION/GENERATION ZONES
+        if 'ChRigidBody' in shape.auxiliaryVariables.keys():
+            body = shape.auxiliaryVariables['ChRigidBody']
+            for boundcond in shape.BC_list:
+                boundcond.setChMoveMesh(body)
+            body.i_start = start_flag+1
+            body.i_end = start_flag+1+len(shape.BC_list)
+
         if 'RelaxZones' in shape.auxiliaryVariables.keys():
             if not zones_global:
                 aux['twp'] += [bc.RelaxationZoneWaveGenerator(zones_global,
