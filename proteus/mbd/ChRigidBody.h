@@ -1,4 +1,6 @@
 #include "chrono/physics/ChSystemDEM.h"
+#include "chrono/timestepper/ChTimestepper.h"
+#include "chrono/solver/ChSolverMINRES.h"
 #include <memory>
 #include <iostream>
 #include <fstream>
@@ -13,7 +15,7 @@ class cppSystem {
   double chrono_dt;
   std::string directory;
   cppSystem(double* gravity);
-  void step(double proteus_dt);
+  void step(double proteus_dt, int n_substeps);
   void setChTimeStep(double dt);
   void recordBodyList();
   void setGravity(double* gravity);
@@ -87,14 +89,19 @@ gravity(gravity)
   directory = "./";
   // SOLVER OPTIONS
   system.SetSolverType(ChSolver::Type::MINRES);  // SOLVER_MINRES: good convergence, supports FEA, does not support DVI yet
+  auto msolver = std::static_pointer_cast<ChSolverMINRES>(system.GetSolver());
+  msolver->SetDiagonalPreconditioning(true);
   system.SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems
-  system.SetMaxItersSolverSpeed(200);  // max iteration for iterative solvers
-  system.SetMaxItersSolverStab(200);  // max iteration for stabilization (iterative solvers)
-  system.SetTolForce(1e-10); // default: 0.001
-  system.SetMaxiter(200); // default: 6. Max constraints to reach tolerance on constraints.
-  system.SetTol(1e-10); // default: 0.0002. Tolerance for keeping constraints together.
+  system.SetMaxItersSolverSpeed(100);  // max iteration for iterative solvers
+  system.SetMaxItersSolverStab(100);  // max iteration for stabilization (iterative solvers)
+  system.SetTolForce(1e-14); // default: 0.001
+  //system.SetMaxiter(200); // default: 6. Max constraints to reach tolerance on constraints.
+  //system.SetTol(1e-10); // default: 0.0002. Tolerance for keeping constraints together.
   //system.SetIntegrationType(ChSystemDEM::INT_HHT); // used before: ChSystemDEM::INT_EULER_IMPLICIT_LINEARIZED
   system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED); // used before: ChSystemDEM::INT_EULER_IMPLICIT_LINEARIZED
+  if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system.GetTimestepper())) {
+    mystepper->SetAlpha(-0.2);
+  }
   //system.SetTimestepper(std::make_shared<ChTimestepperEulerImplicitLinearized>());  // default: fast, 1st order
 }
 
@@ -104,25 +111,28 @@ void cppSystem::setGravity(double* gravity)
   system.Set_G_acc(ChVector<>(gravity[0], gravity[1], gravity[2]));
 }
 
-void cppSystem::step(double proteus_dt)
+void cppSystem::step(double proteus_dt, int n_substeps=1)
 {
-//    double dt2 = proteus_dt/200;
-//    for (int i = 0; i < 200; ++i) {
-//      system.DoStepDynamics(dt2);
-//    }
-  double t = chrono_dt;
-  if (t > proteus_dt) {
-      system.DoStepDynamics(proteus_dt);
-    }
-  else {
-      while (t <= proteus_dt) {
-          system.DoStepDynamics(chrono_dt);
-          t += chrono_dt;
-      }
-      if (t != proteus_dt) {  // means t went above dt, need last time step
-          system.DoStepDynamics(proteus_dt-(t-chrono_dt));
-  }
-  }
+  /* double substeps = proteus_dt/chrono_dt+0.5; //+0.5 for rounding n substeps */
+
+  /* int n_substeps = (int)substeps; */
+    double dt2 = proteus_dt/(double)n_substeps;
+   for (int i = 0; i < n_substeps; ++i) {
+     system.DoStepDynamics(dt2);
+   }
+  /* double t = chrono_dt; */
+  /* if (t > proteus_dt) { */
+  /*     system.DoStepDynamics(proteus_dt); */
+  /*   } */
+  /* else { */
+  /*     while (t <= proteus_dt) { */
+  /*         system.DoStepDynamics(chrono_dt); */
+  /*         t += chrono_dt; */
+  /*     } */
+  /*     if (t != proteus_dt) {  // means t went above dt, need last time step */
+  /*         system.DoStepDynamics(proteus_dt-(t-chrono_dt)); */
+  /* } */
+  /* } */
 }
 
 void cppSystem::recordBodyList() {
