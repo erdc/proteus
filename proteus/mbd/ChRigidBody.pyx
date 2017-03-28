@@ -21,9 +21,23 @@ from cython.operator cimport dereference as deref
 cdef extern from "ChMoorings.h":
     cdef cppclass ChSystemDEM:
         double GetStep()
+        double GetChTime()
         void SetupInitial()
     cdef cppclass ChMesh:
         void SetAutomaticGravity(bool mg, int num_points=1)
+    cdef cppclass ChMaterialSurfaceDEM:
+        void SetYoungModulus(float val)
+        void SetPoissonRatio(float val)
+        void SetSfriction(float val)
+        void SetKfriction(float val)
+        void SetFriction(float val)
+        void SetRestitution(float val)
+        void SetAdhesion(float val)
+        void SetAdhesionMultDMT(float val)
+        void SetKn(float val)
+        void SetKt(float val)
+        void SetGn(float val)
+        void SetGt(float val)
     cdef cppclass cppMesh:
         shared_ptr[ChMesh] mesh
         void SetAutomaticGravity(bool val)
@@ -56,12 +70,17 @@ cdef extern from "ChMoorings.h":
         void buildMesh()
         void updateDragForces()
         void updateBuoyancyForces()
+    cdef cppclass ChLinkPointFrame:
+        ChVector GetReactionOnNode()
     cdef cppclass cppMultiSegmentedCable:
         ChSystemDEM& system
         ChMesh& mesh
         vector[shared_ptr[cppCable]] cables
         vector[shared_ptr[ChNodeFEAxyzDD]] nodes
         vector[shared_ptr[ChElementBeamANCF]] elems
+        shared_ptr[ChLinkPointFrame] constraint_back
+        shared_ptr[ChLinkPointFrame] constraint_front
+        void buildNodes()
         void buildCable()
         # void setVelocityAtNodes(double* fluid_velocity)
         void attachFrontNodeToBody(shared_ptr[ChBody])
@@ -77,15 +96,17 @@ cdef extern from "ChMoorings.h":
                                          vector[double] rho,
                                          vector[double] E
         )
-    # cdef cppclass cppSurfaceBoxNodesCloud:
-    #     ChSystemDEM& system
-    #     ChVector position
-    #     ChVector dimensions
-    #     void setNodesSize(double size)
-    # cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ChSystemDEM& system,
-    #                                             shared_ptr[ChMesh] mesh,
-    #                                             ChVector position,
-    #                                             ChVector dimensions)
+    cdef cppclass ChBodyEasyBox
+    cdef cppclass cppSurfaceBoxNodesCloud:
+        ChSystemDEM& system
+        ChVector position
+        ChVector dimensions
+        shared_ptr[ChBodyEasyBox] body;
+        void setNodesSize(double size)
+    cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ChSystemDEM& system,
+                                                shared_ptr[ChMesh] mesh,
+                                                ChVector position,
+                                                ChVector dimensions)
 
 cdef extern from "ChRigidBody.h":
     cdef cppclass ChVector[double]:
@@ -111,7 +132,7 @@ cdef extern from "ChRigidBody.h":
     cdef cppclass cppSystem:
         ChSystemDEM system
         void DoStepDynamics(dt)
-        void step(double proteus_dt)
+        void step(double proteus_dt, int n_substeps)
         void recordBodyList()
         void setChTimeStep(double dt)
         void setGravity(double* gravity)
@@ -213,8 +234,8 @@ cdef class RigidBody:
       # np.ndarray free_r
       # np.ndarray free_x
     def __cinit__(self,
-                  shape,
                   System system,
+                  shape=None,
                   np.ndarray center=None,
                   np.ndarray rot=np.array([1.,0.,0.,0.]),
                   double mass=1.,
@@ -223,11 +244,15 @@ cdef class RigidBody:
                   np.ndarray free_r=np.array([1.,1.,1.])):
         self.system = system
         self.Shape = shape
-        self.nd = shape.nd
+        if shape is not None:
+            self.nd = shape.nd
         self.system.addBody(self)
         self.record_dict = OrderedDict()
         if center is None:
-            center = np.array(shape.barycenter)
+            if shape is not None:
+                center = np.array(shape.barycenter)
+            else:
+                center = np.array([0., 0., 0.])
         self.thisptr = newRigidBody(system.thisptr,
                                     <double*> center.data,
                                     <double*> rot.data,
@@ -235,12 +260,20 @@ cdef class RigidBody:
                                     <double*> inertia.data,
                                     <double*> free_x.data,
                                     <double*> free_r.data)
-        if 'ChRigidBody' not in shape.auxiliaryVariables:
-            shape.auxiliaryVariables['ChRigidBody'] = self
-        self.setName(shape.name)
+        if shape is not None:
+            if 'ChRigidBody' not in shape.auxiliaryVariables:
+                shape.auxiliaryVariables['ChRigidBody'] = self
+                self.setName(shape.name)
         self.F_prot = np.zeros(3)
         self.M_prot = np.zeros(3)
         self.prescribed_motion_function = None
+
+    def attachShape(self, shape):
+        assert self.Shape is None, 'Shape '+self.Shape.name+' was already attached'
+        self.Shape = shape
+        if 'ChRigidBody' not in shape.auxiliaryVariables:
+            shape.auxiliaryVariables['ChRigidBody'] = self
+
 
     def set_indices(self, i_start, i_end):
         self.i_start = i_start
@@ -422,7 +455,8 @@ cdef class RigidBody:
 
     def calculate_init(self):
         # barycenter0 used for moment calculations
-        self.barycenter0 = self.Shape.barycenter.copy()
+        if self.Shape is not None:
+            self.barycenter0 = self.Shape.barycenter.copy()
         # get the initial values for F and M
         cdef np.ndarray zeros = np.zeros(3)
         self.setExternalForces(zeros, zeros)
@@ -578,13 +612,16 @@ cdef class RigidBody:
         """
         Records values of rigid body attributes at each time step in a csv file.
         """
-        self.record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name + '.csv')
+        if self.Shape is not None:
+            self.record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name + '.csv')
+        else:
+            self.record_file = os.path.join(Profiling.logDir, 'record_' + 'body' + '.csv')
         if self.system.model is not None:
             t_last = self.system.model.stepController.t_model_last
             dt_last = self.system.model.levelModelList[-1].dt_last
             t = t_last-dt_last
         else:
-            t = self.system.thisptr.system.GetStep()
+            t = self.system.thisptr.system.GetChTime()
         t_prot = Profiling.time()-Profiling.startTime
         values_towrite = [t, t_prot]
         if t == 0:
@@ -665,13 +702,21 @@ cdef class System:
             self.proteus_dt = proteus_dt
         else:
             sys.exit('no time step set')
+        Profiling.logEvent('Solving Chrono system for dt='+str(self.proteus_dt))
+        print('Solving Chrono system for dt='+str(self.proteus_dt))
         if self.model is not None:
             self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         for mooring in self.moorings:
             mooring.prestep()
+        for body in self.bodies:
+            body.prestep()
         self.step(self.proteus_dt)
         for body in self.bodies:
             body.poststep()
+        for mooring in self.moorings:
+            mooring.poststep()
+        Profiling.logEvent('Solved Chrono system to t='+str(self.thisptr.system.GetChTime()))
+        print('Solved Chrono system to t='+str(self.thisptr.system.GetChTime()))
         #self.recordBodyList()
 
     def calculate_init(self):
@@ -705,7 +750,8 @@ cdef class System:
         self.thisptr.setGravity(<double*> gravity.data)
 
     def step(self, double dt):
-        self.thisptr.step(<double> dt)
+        steps = max(int(dt/self.chrono_dt), 1)
+        self.thisptr.step(<double> dt, n_substeps=steps)
 
     def addBody(self, body):
         self.bodies += [body]
@@ -796,14 +842,19 @@ cdef class Mesh:
     def setAutomaticGravity(self, bool val):
         self.thisptr.SetAutomaticGravity(val)
 
-# cdef class SurfaceBoxNodesCloud:
-#     cdef cppSurfaceBoxNodesCloud * thisptr
-#     def __cinit__(self, System system, Mesh mesh, np.ndarray position, np.ndarray dimensions):
-#         cdef ChVector[double] pos = ChVector[double](position[0], position[1], position[2])
-#         cdef ChVector[double] dim = ChVector[double](dimensions[0], dimensions[1], dimensions[2])
-#         self.thisptr = newSurfaceBoxNodesCloud(system.thisptr.system, mesh.thisptr.mesh, pos, dim)
-#     def setNodesSize(self, double size):
-#         self.thisptr.setNodesSize(size)
+cdef class SurfaceBoxNodesCloud:
+    cdef cppSurfaceBoxNodesCloud * thisptr
+    def __cinit__(self, System system, Mesh mesh, np.ndarray position, np.ndarray dimensions):
+        cdef ChVector[double] pos = ChVector[double](position[0], position[1], position[2])
+        cdef ChVector[double] dim = ChVector[double](dimensions[0], dimensions[1], dimensions[2])
+        self.thisptr = newSurfaceBoxNodesCloud(system.thisptr.system,
+                                               mesh.thisptr.mesh,
+                                               pos,
+                                               dim)
+        # self.System.addBody(self)
+    def setNodesSize(self, double size):
+        self.thisptr.setNodesSize(size)
+
 
 cdef class Moorings:
     cdef cppMultiSegmentedCable * thisptr
@@ -814,6 +865,11 @@ cdef class Moorings:
       object Mesh
       int nd
       object nodes_function
+      RigidBody body_front
+      RigidBody body_back
+      bool front_body
+      bool back_body
+      bool nodes_built
     def __cinit__(self,
                   System system,
                   Mesh mesh,
@@ -826,7 +882,6 @@ cdef class Moorings:
         self.System.addMoorings(self)
         self.nd = self.System.nd
         self.Mesh = mesh
-        self.System.addBody(self)
         cdef vector[double] vec_length
         cdef vector[int] vec_nb_elems
         cdef vector[double] vec_d
@@ -847,9 +902,23 @@ cdef class Moorings:
                                    vec_E
                                    )
         self.nodes_function = lambda s: (s, s, s)
+        self.nodes_built = False
 
     def _recordValues(self):
         self.record_file = os.path.join(Profiling.logDir, 'record_moorings.csv')
+        if self.system.model is not None:
+            t_last = self.system.model.stepController.t_model_last
+            dt_last = self.system.model.levelModelList[-1].dt_last
+            t = t_last-dt_last
+        else:
+            t = self.system.thisptr.system.GetChTime()
+        if t == 0:
+            headers = ['t', 't_prot']
+            for i in len(self.thisptr.nodes.size()):
+                headers += ['x'+str(i), 'y'+str(i), 'z'+str(i)]
+            with open(self.record_file, 'w') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(headers)
         row = []
         for i in range(self.thisptr.nodes.size()):
             vec = deref(self.thisptr.nodes[i]).GetPos()
@@ -861,11 +930,28 @@ cdef class Moorings:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(row)
 
+    def getTensionBack(self):
+        cdef ChVector T
+        if self.thisptr.constraint_back:
+            T = deref(self.thisptr.constraint_back).GetReactionOnNode()
+            return ChVector_to_npArray(T)
+        else:
+            return np.zeros(3)
+
+    def getTensionFront(self):
+        cdef ChVector T
+        if self.thisptr.constraint_front:
+            T = deref(self.thisptr.constraint_front).GetReactionOnNode()
+            return ChVector_to_npArray(T)
+        else:
+            return np.zeros(3)
+
     def calculate_init(self):
         # build position vector of nodes (for each segment)
-        self.setNodesPosition()
+        # self.setNodesPosition()
         # build cable (nodes, elements, etc)
         self.thisptr.buildCable()
+
 
     def prestep(self):
         if self.System.model is not None:
@@ -890,6 +976,7 @@ cdef class Moorings:
         fixed: bool
             Fixes node if True
         """
+        assert self.nodes_built is True, 'call buildNodes() before calling this function'
         deref(self.thisptr.nodes.front()).SetFixed(fixed)
 
     def fixBackNode(self, bool fixed):
@@ -900,12 +987,15 @@ cdef class Moorings:
         fixed: bool
             Fixes node if True
         """
+        assert self.nodes_built is True, 'call buildNodes() before calling this function'
         deref(self.thisptr.nodes.back()).SetFixed(fixed)
 
     def attachBackNodeToBody(self, RigidBody body):
+        assert self.nodes_built is True, 'call buildNodes() before calling this function'
         self.thisptr.attachBackNodeToBody(body.thisptr.body)
 
     def attachFrontNodeToBody(self, RigidBody body):
+        assert self.nodes_built is True, 'call buildNodes() before calling this function'
         self.thisptr.attachFrontNodeToBody(body.thisptr.body)
 
     def setNodesPosition(self):
@@ -921,6 +1011,11 @@ cdef class Moorings:
                 x, y, z = self.nodes_function(L0+ds*j)
                 vec = ChVector[double](x, y, z)
                 deref(self.thisptr.cables[i]).mvecs.push_back(vec)
+        self.buildNodes()
+
+    def buildNodes(self):
+        self.thisptr.buildNodes()
+        self.nodes_built = True
 
     def getNodesPosition(self):
         pos = np.zeros(( self.thisptr.nodes.size(),3 ))

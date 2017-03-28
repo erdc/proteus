@@ -8,7 +8,7 @@
 #include "chrono/physics/ChSystem.h"
 #include "chrono/physics/ChSystemDEM.h"
 #include "chrono/physics/ChLoadContainer.h"
-/* #include "chrono/physics/ChBodyEasy.h" */
+#include "chrono/physics/ChBodyEasy.h"
 #include "chrono_fea/ChElementBeamANCF.h"
 #include "chrono_fea/ChMesh.h"
 #include "chrono_fea/ChLinkPointPoint.h"
@@ -74,11 +74,17 @@ public:
 	std::vector<std::shared_ptr<ChNodeFEAxyzDD>> nodes;  // array nodes coordinates and direction
 	std::vector<ChVector<>> fluid_velocity;
 	std::vector<std::shared_ptr<ChElementBeamANCF>> elems;  // array of elements */
+  std::shared_ptr<ChLinkPointFrame> constraint_front;
+  std::shared_ptr<ChLinkPointFrame> constraint_back;
+  std::shared_ptr<ChBody> body_back;
+  std::shared_ptr<ChBody> body_front;
+  bool nodes_built;
 	cppMultiSegmentedCable(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, std::vector<double> length,
 		std::vector<int> nb_nodes, std::vector<double> d, std::vector<double> rho, std::vector<double> E);
 	void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
 	void updateDragForces();
 	std::vector<std::shared_ptr<ChVector<double>>> getNodalPositions();
+  void buildNodes();
 	void buildCable();  // builds the multi-segmented cable
 	void getForceFairlead();
 
@@ -123,6 +129,7 @@ cppMultiSegmentedCable::cppMultiSegmentedCable(
 	rho(rho),
 	E(E)
 {
+  nodes_built = false;
 	std::shared_ptr<cppCable> segment;
 	double L0 = 0;
 	for (int i = 0; i < length.size(); ++i) {
@@ -132,15 +139,28 @@ cppMultiSegmentedCable::cppMultiSegmentedCable(
 	}
 }
 
+void cppMultiSegmentedCable::buildNodes() {
+	nodes.clear();
+	for (int i = 0; i < cables.size(); ++i) {
+		cables[i]->buildNodes();
+    nodes.insert(nodes.end(), cables[i]->nodes.begin(), cables[i]->nodes.end());
+  }
+  nodes_built = true;
+}
+
 void cppMultiSegmentedCable::buildCable() {
 	/* builds all cable segments and updates their link
 	(no duplicate node added to mesh) */
-	nodes.clear();
+  if (nodes_built == false) {
+    nodes.clear();
+  }
 	elems.clear();
 	for (int i = 0; i < cables.size(); ++i) {
 		cables[i]->buildMaterials();
-		cables[i]->buildNodes();
-		nodes.insert(nodes.end(), cables[i]->nodes.begin(), cables[i]->nodes.end());
+    if (nodes_built == false) {
+      cables[i]->buildNodes();
+      nodes.insert(nodes.end(), cables[i]->nodes.begin(), cables[i]->nodes.end());
+    }
 		cables[i]->buildElements();
 		cables[i]->buildMesh();
 		if (i>0) {
@@ -149,6 +169,20 @@ void cppMultiSegmentedCable::buildCable() {
 			system.Add(con1);
 		}
 	}
+  // contact model
+  auto material = std::make_shared<ChMaterialSurfaceDEM>();
+  material->SetYoungModulus(2e4);
+  material->SetFriction(0.3f);
+  material->SetRestitution(0.2f);
+  material->SetAdhesion(0);
+  auto contact_cloud = std::make_shared<ChContactSurfaceNodeCloud>();
+  mesh->AddContactSurface(contact_cloud);
+  // Must use this to 'populate' the contact surface.
+  // Use larger point size to match beam section radius
+  contact_cloud->AddAllNodes(0.01);
+
+  // Use our DEM surface material properties
+  contact_cloud->SetMaterialSurface(material);
 
 }
 
@@ -186,12 +220,16 @@ void cppMultiSegmentedCable::attachBackNodeToBody(std::shared_ptr<ChBody> body) 
 	auto constraint = std::make_shared<ChLinkPointFrame>();
 	constraint->Initialize(nodes.back(), body);
 	system.Add(constraint);
+  constraint_back = constraint;
+  body_back = body;
 };
 
 void cppMultiSegmentedCable::attachFrontNodeToBody(std::shared_ptr<ChBody> body) {
 	auto constraint = std::make_shared<ChLinkPointFrame>();
 	constraint->Initialize(nodes.front(), body);
 	system.Add(constraint);
+  constraint_front = constraint;
+  body_front = body;
 };
 
 cppCable::cppCable(
@@ -427,56 +465,69 @@ cppMesh * newMesh(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh) {
 
 
 
-/* class cppSurfaceBoxNodesCloud { */
-/*   ChSystemDEM& system; */
-/*   std::shared_ptr<ChMesh>; */
-/*   ChVector<> position; */
-/*   ChVector<> dimensions; */
-/*   std::shared_ptr<ChBodyEasyBox> box; */
-/*   std::shared_ptr<ChMaterialSurfaceDEM> material; */
-/*   std::shared_ptr<ChContactSurfaceNodeCloud> contact_cloud; */
-/*   cppSurfaceBoxNodesCloud(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, Chvector position, ChVector dimensions); */
-/*   void setNodesSize(double size); */
-/* } */
+class cppSurfaceBoxNodesCloud {
+ public:
+  ChSystemDEM& system;
+  std::shared_ptr<ChMesh> mesh;
+  ChVector<> position;
+  ChVector<> dimensions;
+  std::shared_ptr<ChBodyEasyBox> box;
+  std::shared_ptr<ChMaterialSurfaceDEM> material;
+  std::shared_ptr<ChContactSurfaceNodeCloud> contact_cloud;
+  cppSurfaceBoxNodesCloud(ChSystemDEM& system,
+                          std::shared_ptr<ChMesh> mesh,
+                          ChVector<> position,
+                          ChVector<> dimensions);
+  void setNodesSize(double size);
+};
 
-/* cppSurfaceBoxNodesCloud::cppSurfaceBoxNodesCloud(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, Chvector position, ChVector dimensions) { */
-/* 	// Create a surface material to be shared with some objects */
-/*   system = system; */
-/* 	material = std::make_shared<ChMaterialSurfaceDEM>(); */
-/* 	material->SetYoungModulus(2e4); */
-/* 	material->SetFriction(0.3f); */
-/* 	material->SetRestitution(0.2f); */
-/* 	material->SetAdhesion(0); */
-/* 	contact_cloud = std::make_shared<ChContactSurfaceNodeCloud>(); */
-/*   mesh = mesh; */
-/* 	mesh->AddContactSurface(contact_cloud); */
-/* 	// Must use this to 'populate' the contact surface.  */
-/* 	// Use larger point size to match beam section radius */
-/* 	contact_cloud->AddAllNodes(0.001); */
+cppSurfaceBoxNodesCloud::cppSurfaceBoxNodesCloud(ChSystemDEM& system,
+                                                 std::shared_ptr<ChMesh> mesh,
+                                                 ChVector<> position,
+                                                 ChVector<> dimensions) :
+  system(system),
+	mesh(mesh),
+	position(position),
+	dimensions(dimensions)
+{
+	// Create a surface material to be shared with some objects
+	material = std::make_shared<ChMaterialSurfaceDEM>();
+	material->SetYoungModulus(2e4);
+	material->SetFriction(0.3f);
+	material->SetRestitution(0.2f);
+	material->SetAdhesion(0);
+	contact_cloud = std::make_shared<ChContactSurfaceNodeCloud>();
+	mesh->AddContactSurface(contact_cloud);
+	// Must use this to 'populate' the contact surface.
+	// Use larger point size to match beam section radius
+	contact_cloud->AddAllNodes(0.01);
 
-/* 	// Use our DEM surface material properties  */
-/* 	contact_cloud->SetMaterialSurface(material); */
+	// Use our DEM surface material properties
+	contact_cloud->SetMaterialSurface(material);
 
-/* 	box = std::make_shared<ChBodyEasyBox>( */
-/*     dimensions.x(), dimensions.y(), dimensions.z(),  // x,y,z size */
-/* 		1000,       // density */
-/* 		true,       // visible */
-/* 		true        // collide */
-/* 		); */
+  GetLog() << dimensions;
+	box = std::make_shared<ChBodyEasyBox>(
+    dimensions.x(), dimensions.y(), dimensions.z(),  // x,y,z size
+		1000,       // density
+		true       // collide
+		);
 
-/* 	system.Add(box); */
+	system.Add(box);
 
-/* 	box->SetBodyFixed(true); */
-/* 	box->SetPos(position); */
+	box->SetBodyFixed(true);
+	box->SetPos(position);
 
-/* 	// Use our DEM surface material properties  */
-/* 	box->SetMaterialSurface(mysurfmaterial); */
-/* } */
+	// Use our DEM surface material properties
+	box->SetMaterialSurface(material);
+};
 
-/* void SurfaceBoxNodesCloud::setNodesSize(double size) { */
-/*   contact_cloud->AddAllNodes(size); */
-/* } */
+void cppSurfaceBoxNodesCloud::setNodesSize(double size) {
+  contact_cloud->AddAllNodes(size);
+}
 
-/* cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, ChVector<> position, ChVector<> dimensions) { */
-/* 	return new cppSurfaceBoxNodesCloud(system, mesh, position, dimensions); */
-/* } */
+cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ChSystemDEM& system,
+                                                  std::shared_ptr<ChMesh> mesh,
+                                                  ChVector<> position,
+                                                  ChVector<> dimensions) {
+	return new cppSurfaceBoxNodesCloud(system, mesh, position, dimensions);
+}
