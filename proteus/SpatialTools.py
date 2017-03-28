@@ -34,6 +34,7 @@ import sys
 import numpy as np
 from proteus import BoundaryConditions as bc
 from .Profiling import logEvent
+from subprocess import check_call
 
 
 class Shape(object):
@@ -70,8 +71,10 @@ class Shape(object):
         self.facets = None
         self.facetFlags = None
         self.regions = None
+        self.volumes = None
         self.regionFlags = None
         self.holes = None
+        self.holes_ind = None
         self.barycenter = np.zeros(3)
         self.coords = None  # Only used for predefined shapes
                             # (can be different from barycenter)
@@ -79,6 +82,7 @@ class Shape(object):
         self.boundaryTags = None
         self.b_or = None  # boundary orientation
         self.volume = None
+        self.children = {}
         self.BC_list = []
 
     def _checkFlags(self, flagSet):
@@ -171,6 +175,43 @@ class Shape(object):
             'must have the same length'
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
+
+    def setChildShape(self, shape, ind=0):
+        """
+        Indicates that a shape is contained in this shape
+        (this function or setParentShape is necessary for gmsh)
+
+        Parameters
+        ----------
+        shape: proteus.SpatialTools.Shape
+            child of this shape
+        ind: int
+            parent (current) shape's local index of volume (3D) or facet (2D)
+            containing the child shape
+        """
+        if self.children.has_key(ind):
+            self.children[ind] += [shape]
+        else:
+            self.children[ind] = [shape]
+
+    def setParentShape(self, shape, ind=0):
+        """
+        Indicates that this shape is within another shape
+        (this function or setChildShape is necessary for gmsh)
+        Sets the shape within 
+
+        Parameters
+        ----------
+        shape: proteus.SpatialTools.Shape
+            the parent of this shape
+        ind: int
+            parent shape's local index of volume (3D) or facet (2D) containing
+            the child (current) shape
+        """
+        if shape.children.has_key(ind):
+            shape.children[ind] += [self]
+        else:
+            shape.children[ind] = [self]
 
     def setHoles(self, holes):
         """
@@ -345,6 +386,7 @@ class Cuboid(Shape):
                               [-1., 0.,  0.],
                               [0.,  0.,  1.]])
         self.regions = np.array([[x, y, z]])
+        self.volumes = np.array([[[0, 1, 2, 3, 4, 5]]])
         # defining flags for boundary conditions
         self.boundaryTags = bt = {'z-': 1,
                                   'y+': 2,
@@ -446,6 +488,7 @@ class Rectangle(Shape):
                               [0., 1.],
                               [-1., 0.]])
         self.regions = np.array([[x, y]])
+        self.facets = np.array([[[0, 1, 2, 3]]])
         self.boundaryTags = bt = {'y-': 1,
                                   'x+': 2,
                                   'y+': 3,
@@ -455,6 +498,7 @@ class Rectangle(Shape):
         self.vertexFlags = np.array([bt['y-'], bt['y-'], bt['y+'],
                                      bt['y+']])  # y-, y-, y+, y+
         self.regionFlags = np.array([1])
+        self.facetFlags = self.regionFlags
         self.BC = {'y-': self.BC_class(shape=self, name='y-',
                                        b_or=self.b_or, b_i=0),
                    'x+': self.BC_class(shape=self, name='x+',
@@ -595,6 +639,8 @@ class CustomShape(Shape):
         Array of region coordinates.
     regionFlags: array_like
         Array of region flags (used for boundary conditions)
+    volumes: array_like
+        Surface loops describing volumes (used for gmsh)
     holes: array_like
         Array of holes coordinates (unmeshed regions)
     boundaryTags: dict
@@ -607,13 +653,13 @@ class CustomShape(Shape):
     def __init__(self, domain, barycenter=None, vertices=None,
                  vertexFlags=None, segments=None, segmentFlags=None,
                  facets=None, facetFlags=None, holes=None, regions=None,
-                 regionFlags=None, boundaryTags=None,
+                 regionFlags=None, volumes=None, boundaryTags=None,
                  boundaryOrientations=None):
         super(CustomShape, self).__init__(domain, nd=len(vertices[0]))
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
         self._checkFlags(boundaryTags.values())
-        self.boundaryTgs = boundaryTags
+        self.boundaryTags = boundaryTags
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)
         if segments:
@@ -624,6 +670,8 @@ class CustomShape(Shape):
             self.facetFlags = np.array(facetFlags)
         if holes is not None:
             self.holes = np.array(holes)
+        if volumes is not None:
+            self.volumes = np.array(volumes)
         if regions is not None:
             self._checkFlags(regionFlags)
             self.regions = np.array(regions)
@@ -662,6 +710,7 @@ class ShapeSTL(Shape):
         self.vertices, self.facets, self.facetnormals = getInfoFromSTL(self.filename)
         self.facetFlags = np.ones(len(self.facets))
         self.vertexFlags = np.ones(len(self.vertices))
+        self.volumes = np.array([[[i for i in range(len(self.facets))]]])
         self.boundaryTags = {'stl': 1}
         self.BC = {'stl': self.BC_class(shape=self, name='stl')}
         self.BC_list = [self.BC['stl']]
@@ -899,6 +948,9 @@ def _assembleGeometry(domain, BC_class):
     domain.holes = []
     domain.regions = []
     domain.regionFlags = []
+    domain.volumes = []
+    domain.boundaryTags = {}
+    domain.reversed_boundaryTags = {}
     # BC at flag 0
     domain.bc = [BC_class(nd=domain.nd)]
     # domain.bc[0].setNonMaterial()
@@ -910,8 +962,18 @@ def _assembleGeometry(domain, BC_class):
         # --------------------------- #
         # ----- DOMAIN GEOMETRY ----- #
         # --------------------------- #
-        start_flag = len(domain.bc)-1
-        start_vertex = len(domain.vertices)
+        start_flag = shape.start_flag = len(domain.bc)-1
+        start_vertex = shape.start_vertex = len(domain.vertices)
+        start_segment = shape.start_segment = len(domain.segments)
+        start_facet = shape.start_facet = len(domain.facets)
+        if shape.boundaryTags:
+            for tag, value in shape.boundaryTags.iteritems():
+                new_tag = shape.name+'_'+str(tag)
+                new_flag = value+start_flag
+                domain.boundaryTags[new_tag] = new_flag
+                domain.reversed_boundaryTags[new_flag] = new_tag
+                domain.BCbyFlag[new_flag] = shape.BC[tag]
+                domain.BC[new_tag] = shape.BC[tag]
         if domain.regionFlags:
             start_rflag = max(domain.regionFlags)
         else:
@@ -953,14 +1015,108 @@ def _assembleGeometry(domain, BC_class):
         if shape.segments is not None:
             domain.segments += (segments+start_vertex).tolist()
             domain.segmentFlags += (shape.segmentFlags+start_flag).tolist()
-        if shape.facets is not None:
-            domain.facets += (facets+start_vertex).tolist()
-            domain.facetFlags += (shape.facetFlags+start_flag).tolist()
         if shape.regions is not None:
             domain.regions += (shape.regions).tolist()
             domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
+        if shape.facets is not None:
+            domain.facets += (facets+start_vertex).tolist()
+            if shape.nd == 2:  # facet flags are actually region flags if 2D
+                domain.facetFlags += (shape.regionFlags+start_rflag).tolist()
+            elif shape.nd == 3:
+              domain.facetFlags += (shape.facetFlags+start_flag).tolist()
         if shape.holes is not None:
             domain.holes += (shape.holes).tolist()
+    
+    domain.holes_ind = []
+    if domain.nd == 2 and shape.facets is not None:
+        domain.facets = []
+        for shape in domain.shape_list:
+            if shape.holes_ind is not None:
+                    domain.holes_ind += (np.array(shape.holes_ind)+shape.start_facet).tolist()
+            if shape.facets is not None:
+                facets = (shape.facets+shape.start_vertex).tolist()
+                f_to_remove = []
+                f_to_add = []
+                for i, facet in enumerate(shape.facets):
+                    if i in shape.children.keys():
+                        for child in shape.children[i]:
+                            child_seg = {}
+                            child_facs = []
+                            for child_fac in child.facets:
+                                fac = child_fac[0].tolist()
+                                for j, v in enumerate(fac):
+                                    if (fac[j-1], fac[j]) in child_seg:
+                                        fn = child_seg[(fac[j-1], fac[j])]
+                                        f_to_merge = child.facets[fn][0].tolist()
+                                        # reverse list
+                                        f_to_merge = f_to_merge[::-1] 
+                                        # shift lists
+                                        f_to_merge = list(deque(f_to_merge).rotate(-f_to_merge.index(fac[j-1])))
+                                        fac = list(deque(fac).rotate(-fac.index(fac[j])))
+                                        new_f = fac[:-1]+f_to_merge[:-1]
+                                        new_f = fac[:fac.index(fac[j-1])]+f_to_merge
+                                        f_to_remove += [fn]
+                                        f_to_add += [new_f]
+                                    elif (fac[j], fac[j-1]) in child_seg:
+                                        fn = child_seg[(fac[j], fac[i-1])]
+                                        f_to_merge = child.facets[fn][0].tolist()
+                                        # shift lists
+                                        f_to_merge = list(deque(f_to_merge).rotate(-f_to_merge.index(fac[j-1])))
+                                        fac = list(deque(fac).rotate(-fac.index(fac[j])))
+                                        new_f = fac[:-1]+f_to_merge[:-1]
+                                        new_f = fac[:fac.index(fac[j-1])]+f_to_merge
+                                        f_to_remove += [fn, j]
+                                        f_to_add += [new_f]
+                                    else:
+                                        child_seg[(fac[j-1], fac[j])] = j
+                            facets2 = [f.tolist()[0] for k, f in enumerate(child.facets) if k not in f_to_remove]
+                            if f_to_add:
+                                facets2 += [f_to_add]
+                        new_facets = np.array(facets2)+child.start_vertex
+                        facets[i] += (new_facets).tolist()
+                domain.facets += facets
+
+
+    elif domain.nd == 3 and shape.volumes is not None:
+        for shape in domain.shape_list:
+            shape.start_volume = len(domain.volumes)
+            if shape.holes_ind is not None:
+                domain.holes_ind += (np.array(shape.holes_ind)+shape.start_volume).tolist()
+            if shape.volumes is not None:
+                volumes = (shape.volumes+shape.start_facet).tolist()
+                volumes_to_remove = []
+                for i, volume in enumerate(volumes):
+                    # add holes to volumes
+                    if shape.children.has_key(i):
+                        for child in shape.children[i]:
+                            child_vols = []
+                            child_facets = []  # facets in volumes
+                            for child_vol in child.volumes:
+                                # don't need holes of child volumes, only outer shells:
+                                child_vols += [(child_vol[0]+child.start_facet).tolist()]
+                            if len(child_vols) > 1:
+                                # merge volumes that share a facet
+                                inter = np.intersect1d(*child_vols)
+                                new_child_vols = list(child_vols)
+                                for f in inter:
+                                    ind_to_remove = set()
+                                    merged = []
+                                    for ind, vol in enumerate(child_vols):
+                                        if f in vol:
+                                            ind_to_remove.add(ind)
+                                            merged += vol
+                                    for ind in sorted(ind_to_remove, reverse=True):
+                                        child_vols.remove(ind)
+                                    merged.remove(f)
+                                    child_vols += [merged]
+                        volume += child_vols
+                    if shape.holes_ind is not None and i in shape.holes_ind:
+                        volumes_to_remove += [i]
+                volumes2 = [vol for i, vol in enumerate(volumes) if i not in volumes_to_remove]
+                domain.volumes += volumes2
+
+
+
         domain.getBoundingBox()
 
 
@@ -979,12 +1135,37 @@ def _generateMesh(domain):
     # --------------------------- #
     mesh = domain.MeshOptions
     if mesh.outputFiles['poly'] is True:
-        domain.writePoly(mesh.outputFiles['name'])
+        domain.writePoly(mesh.outputFiles_name)
     if mesh.outputFiles['ply'] is True:
-        domain.writePLY(mesh.outputFiles['name'])
+        domain.writePLY(mesh.outputFiles_name)
     if mesh.outputFiles['asymptote'] is True:
-        domain.writeAsymptote(mesh.outputFiles['name'])
+        domain.writeAsymptote(mesh.outputFiles_name)
+    if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
+        domain.writeGeo(mesh.outputFiles_name)
     mesh.setTriangleOptions()
     logEvent("""Mesh generated using: tetgen -%s %s"""  %
         (mesh.triangleOptions, domain.polyfile+".poly"))
 
+
+def getGmshPhysicalGroups(geofile):
+    boundaryTags = {}
+    import re
+    # gmsh_cmd = "gmsh {0:s} -0".format(geofile)
+    # check_call(gmsh_cmd, shell=True)
+    with open(geofile, 'r') as f:
+        for line in f:
+            if line.startswith("Physical "):
+                words = line.lstrip().split('=', 1)
+                tagflag = re.search(r'\((.*?)\)', words[0]).group(1).split(',')
+                if len(tagflag) == 2:
+                    tag = str(tagflag[0][2:-2])
+                    boundaryTags[tag] = None  # add empty BC holder
+                    flag = int(tagflag[1])
+                    print tagflag
+                else:
+                    try:
+                        flag = tag = int(tagflag[0])
+                    except:
+                        flag = tag = tagflag[0]
+                boundaryTags[tag] = flag  # add empty BC holder
+    return boundaryTags
