@@ -664,6 +664,8 @@ class SimulationProcessor:
           synchronize Norms L*error*AF[,2] functions used to calculate error
           setup to work in parallel
         """
+                
+        #mlvt.levelModelList[-1].getResidual(mlvt.uList[0],mlvt.rList[0])
         p = self.pFile; n = self.nFile
         for il,m in enumerate(mlvt.levelModelList):
             self.simulationData['spatialMesh'][il]['nNodes_global'].append(m.mesh.nNodes_global)
@@ -715,7 +717,10 @@ class SimulationProcessor:
                     if ci in self.flags['components']:
                         if not hasAnalyticalSolution[ci]:
                             udense     = mlvt.levelModelList[-1].q[('u',ci)]
-                            gradu_dense= mlvt.levelModelList[-1].q[('grad(u)',ci)]
+                            try:
+                                gradu_dense= mlvt.levelModelList[-1].q[('grad(u)',ci)]
+                            except:
+                                gradu_dense=None
                         if not hasAnalyticalSolutionVelocity[ci] and 'velocity' in self.flags['errorQuantities']:
                             veldense = mlvt.levelModelList[-1].q[('velocity',ci)]
                         mFine = mlvt.levelModelList[-1]
@@ -1813,8 +1818,11 @@ def projectToFinestLevel(mlTransport,level,tsim=0.0,verbose=0):
     coefficients = mlTransport.levelModelList[-1].coefficients
     uqprojFine = [numpy.zeros(mlTransport.levelModelList[-1].q[('u',ci)].shape,'d')
                   for ci in range(coefficients.nc)]
-    graduqProjFine = [numpy.zeros(mlTransport.levelModelList[-1].q[('grad(u)',ci)].shape,'d')
-                      for ci in range(coefficients.nc)]
+    try:
+        graduqProjFine = [numpy.zeros(mlTransport.levelModelList[-1].q[('grad(u)',ci)].shape,'d')
+                          for ci in range(coefficients.nc)]
+    except:
+        graduqProjFine = None
     uproj  = [[FemTools.FiniteElementFunction(m.u[ci].femSpace) for m in mlTransport.levelModelList]
               for ci in range(coefficients.nc)]
     mFine = mlTransport.levelModelList[-1]
@@ -1833,14 +1841,16 @@ def projectToFinestLevel(mlTransport,level,tsim=0.0,verbose=0):
                 #dirichlet conditions
             #lf up to fine
             uproj[ci][-1].getValues(mFine.q['v',ci],uqprojFine[ci])
-            uproj[ci][-1].getGradientValues(mFine.q['grad(v)',ci],graduqProjFine[ci])
+            if graduqProjFine is not None:
+                uproj[ci][-1].getGradientValues(mFine.q['grad(v)',ci],graduqProjFine[ci])
             #mwf debug
             #from proteusGraphical import vtkViewers
             #import pdb
             #pdb.set_trace()
         else: #already on fine
             uqprojFine[ci].flat[:] = mFine.q[('u',ci)].flat[:]
-            graduqProjFine[ci].flat[:] = mFine.q[('grad(u)',ci)].flat[:]
+            if graduqProjFine is not None:
+                graduqProjFine[ci].flat[:] = mFine.q[('grad(u)',ci)].flat[:]
         #else
     #ci
     if verbose > 2:

@@ -80,6 +80,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     The coefficients for the shallow water equations
     """
     def __init__(self,
+                 bathymetry,
                  nu=1.004e-6,
                  g=9.8,
                  nd=2,
@@ -88,6 +89,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useRBLES=0.0,
 		 useMetrics=0.0,
                  modelIndex=0):
+        self.bathymetry = bathymetry 
         self.useRBLES=useRBLES
         self.useMetrics=useMetrics
         self.sd=sd
@@ -146,7 +148,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model = modelList[self.modelIndex]
         #pass
     def initializeMesh(self,mesh):
-        pass
+        x = mesh.nodeArray[:,0]
+        y = mesh.nodeArray[:,1]
+        self.b.dof = self.bathymetry[0]([x,y])
     def initializeElementQuadrature(self,t,cq):
         pass
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
@@ -408,9 +412,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.h_dof_sge = self.u[0].dof.copy()
         self.hu_dof_sge = self.u[1].dof.copy()
         self.hv_dof_sge = self.u[2].dof.copy()
+        self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
         self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
         self.ebq_global[('totalFlux',0)] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebq_global[('velocityAverage',0)] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
+        self.q[('dV_u',0)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('dV_u',1)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('dV_u',2)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('u',1)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('u',2)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
@@ -626,6 +634,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         elif 'use_second_order_flatB_GP_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_second_order_flatB_GP
             self.calculateJacobian = self.sw2d.calculateJacobian_GP
+        elif 'use_second_order_NonFlatB_GP_stabilization' in dir(options):
+            self.calculateResidual = self.sw2d.calculateResidual_second_order_NonFlatB_GP
+            self.calculateJacobian = self.sw2d.calculateJacobian_GP
         elif 'use_EV_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_cell_based_entropy_viscosity
             self.calculateJacobian = self.sw2d.calculateJacobian_cell_based_entropy_viscosity
@@ -639,7 +650,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         #COMPUTE hEps
         if self.hEps is None: 
-            eps=10E-16
+            eps=1E-14
             self.hEps = eps*(self.u[0].dof.max() - self.u[0].dof.min())
         #COMPUTE C MATRIX 
         if self.cterm_global is None:
@@ -789,6 +800,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr_cMatrix, colind_cMatrix, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         numDOFsPerEqn = self.u[0].dof.size #(mql): I am assuming all variables live on the same FE space
+        numNonZeroEntries = len(Cx)
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -819,6 +831,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #import pdb
         #pdb.set_trace()
 
+        #Make sure that the water height is positive (before computing the residual)
+        assert self.u[0].dof.min() >= 0, ("Negative water height: ", self.u[0].dof.min())
         self.calculateResidual(
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -932,15 +946,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             CTx, 
             CTy,
             numDOFsPerEqn,
+            numNonZeroEntries,
             rowptr_cMatrix,
             colind_cMatrix, 
             self.lumped_mass_matrix, 
             self.edge_based_cfl, 
+            self.timeIntegration.runCFL,
             self.hEps, 
-            self.recompute_lumped_mass_matrix)
+            self.recompute_lumped_mass_matrix, 
+            self.q[('u',0)], 
+            self.q[('u',1)], 
+            self.q[('u',2)])
 
-        #print r.min(), r.max()
-        #input("")
         self.recompute_lumped_mass_matrix=1
         if (self.recompute_lumped_mass_matrix==1):
             logEvent("Recomputing the lumped mass matrix",level=1)
@@ -953,8 +970,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                      r[self.offset[cj]+self.stride[cj]*dofN] = 0
 
-        cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
-        logEvent("...   Maximum Cell Based CFL = " + str(cflMax),level=2)
+        self.timeIntegration.dt=self.timeIntegration.runCFL/globalMax(self.edge_based_cfl.max())
+        logEvent("...   Time step = " + str(self.timeIntegration.dt),level=2)
+
+        #cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
+        #logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax),level=2)
 
         edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
         logEvent("...   Maximum Edge Based CFL = " + str(edge_based_cflMax),level=2)
@@ -1102,6 +1122,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         if self.postProcessing:
             self.tmpvt.calculateElementQuadrature()
+        self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,self.q['x'])
         self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)

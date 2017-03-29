@@ -5535,7 +5535,9 @@ class OneLevelTransport(NonlinearEquation):
             def __init__(self,ci,r):
                 self.dof=r
                 self.name=res_name_base+'{0}'.format(ci)
-        for ci in range(self.coefficients.nc):
+
+        # for ci in range(self.coefficients.nc):
+        for ci in range(len(res_dict)):
             self.u[ci].femSpace.writeFunctionXdmf(archive,dummy(ci,res_dict[ci]),tCount)
 
 

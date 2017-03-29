@@ -855,13 +855,18 @@ class NS_base:  # (HasTraits):
                                 logEvent("FIRST hacked STAGE of SSP33",level=3)
                                 #save DOFs from previous time step
                                 
-                                if (model.levelModelList[0].timeIntegration is not None and  
-                                    model.levelModelList[0].timeIntegration.use_SSP33): 
-                                    unm1 = numpy.copy(model.levelModelList[0].coefficients.u_dof_old)
-                                    unm1_quad = numpy.copy(model.levelModelList[0].timeIntegration.m_last[0]) #assuming porosity=1
+                                #if (model.levelModelList[0].timeIntegration is not None and  
+                                 #   model.levelModelList[0].timeIntegration.use_SSP33): 
+                                if (False):
+                                    #unm1 = numpy.copy(model.levelModelList[0].coefficients.u_dof_old)
+                                    #unm1 = numpy.copy(model.uList[0]) 
+                                    hnm1 = numpy.copy(model.levelModelList[0].h_dof_old)
+                                    hunm1 = numpy.copy(model.levelModelList[0].hu_dof_old)
+                                    hvnm1 = numpy.copy(model.levelModelList[0].hv_dof_old)
+                                    #unm1_quad = numpy.copy(model.levelModelList[0].timeIntegration.m_last[0]) #assuming porosity=1
                                 #update BETA. timeIntegration.m_last[0] = unm1 at quad points. 
                                 #solve forward euler for current stage
-                                model.stepController.setInitialGuess(model.uList,model.rList)
+                                #model.stepController.setInitialGuess(model.uList,model.rList) #TMP: uncomment
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
@@ -870,7 +875,9 @@ class NS_base:  # (HasTraits):
                                  #   model.levelModelList[0].timeIntegration.use_SSP33):
                                 if (False): #NOTE: I USE FORWARD EULER WHILE DEVELOPING SPATIAL DISCRETIZATIONS
                                     #get stage 1 solution
-                                    uStage1 = numpy.copy(model.uList[0])
+                                    hStage1 = numpy.copy(model.levelModelList[0].h_dof)
+                                    huStage1 = numpy.copy(model.levelModelList[0].hu_dof)
+                                    hvStage1 = numpy.copy(model.levelModelList[0].hv_dof)
                                     ####################
                                     ### SECOND STAGE ###
                                     ####################
@@ -878,19 +885,27 @@ class NS_base:  # (HasTraits):
                                     #overwrite initial guess for Newtons Method
                                     #model.uList[0] = numpy.copy(uStage1) #not necessary
                                     #set input for second stage. INPUT: solution from first stage
-                                    model.levelModelList[0].coefficients.u_dof_old = numpy.copy(uStage1)
+                                    model.levelModelList[0].h_dof_old = numpy.copy(hStage1)
+                                    model.levelModelList[0].hu_dof_old = numpy.copy(huStage1)
+                                    model.levelModelList[0].hv_dof_old = numpy.copy(hvStage1)
                                     # to update BETA. timeIntegration.m_last[0] = uStage1 at quad points
-                                    model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[0].q[('m',0)])
+                                    #model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[0].q[('m',0)])
                                     #solve forward euler for current stage
-                                    model.stepController.setInitialGuess(model.uList,model.rList)
+                                    #model.stepController.setInitialGuess(model.uList,model.rList)
                                     solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                                 rList=model.rList,
                                                                                 par_uList=model.par_uList,
                                                                                 par_rList=model.par_rList)
                                     #get stage 2 solution
-                                    uStage2 = numpy.copy(model.uList[0])
-                                    uStage2 *= 1./4
-                                    uStage2 += 3./4*unm1
+                                    hStage2 = numpy.copy(model.levelModelList[0].h_dof)
+                                    hStage2 *= 1./4
+                                    hStage2 += 3./4*hnm1
+                                    huStage2 = numpy.copy(model.levelModelList[0].hu_dof)
+                                    huStage2 *= 1./4
+                                    huStage2 += 3./4*hunm1
+                                    hvStage2 = numpy.copy(model.levelModelList[0].hv_dof)
+                                    hvStage2 *= 1./4
+                                    hvStage2 += 3./4*hvnm1
                                     ###################
                                     ### THIRD STAGE ###
                                     ###################
@@ -898,30 +913,43 @@ class NS_base:  # (HasTraits):
                                     #overwrite initial guess for Newtons Method
                                     #model.uList[0] = numpy.copy(uStage2) #not necessary
                                     #set input for third stage. INPUT: solution from second stage
-                                    model.levelModelList[0].coefficients.u_dof_old = numpy.copy(uStage2)
+                                    model.levelModelList[0].h_dof_old = numpy.copy(hStage2)
+                                    model.levelModelList[0].hu_dof_old = numpy.copy(huStage2)
+                                    model.levelModelList[0].hv_dof_old = numpy.copy(hvStage2)
                                     # to update BETA. timeIntegration.m_last[0] = uStage 2 at quad points
-                                    model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[0].q[('m',0)])
-                                    model.levelModelList[0].timeIntegration.m_last[0] *= 1./4
-                                    model.levelModelList[0].timeIntegration.m_last[0] += 3./4*unm1_quad
+                                    #model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[0].q[('m',0)])
+                                    #model.levelModelList[0].timeIntegration.m_last[0] *= 1./4
+                                    #model.levelModelList[0].timeIntegration.m_last[0] += 3./4*unm1_quad
                                     #solve forward euler for current stage
-                                    model.stepController.setInitialGuess(model.uList,model.rList)
+                                    #model.stepController.setInitialGuess(model.uList,model.rList)
                                     solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                                 rList=model.rList,
                                                                                 par_uList=model.par_uList,
                                                                                 par_rList=model.par_rList)
                                     #get stage 3 solution
-                                    uStage3 = numpy.copy(model.uList[0])
-                                    uStage3 *= 2./3
-                                    uStage3 += 1./3*unm1
+                                    hStage3 = numpy.copy(model.levelModelList[0].h_dof)
+                                    hStage3 *= 2./3
+                                    hStage3 += 1./3*hnm1
+                                    huStage3 = numpy.copy(model.levelModelList[0].hu_dof)
+                                    huStage3 *= 2./3
+                                    huStage3 += 1./3*hunm1
+                                    hvStage3 = numpy.copy(model.levelModelList[0].hv_dof)
+                                    hvStage3 *= 2./3
+                                    hvStage3 += 1./3*hvnm1
                                     # restore solution at previous time step
-                                    model.levelModelList[0].coefficients.u_dof_old = numpy.copy(unm1)
+                                    model.levelModelList[0].h_dof_old = numpy.copy(hnm1)
+                                    model.levelModelList[0].hu_dof_old = numpy.copy(hunm1)
+                                    model.levelModelList[0].hv_dof_old = numpy.copy(hvnm1)
                                     # get solution at next time step 
-                                    model.levelModelList[0].u[0].dof = numpy.copy(uStage3)
+                                    model.levelModelList[0].u[0].dof = numpy.copy(hStage3)
+                                    model.levelModelList[0].u[1].dof = numpy.copy(huStage3)
+                                    model.levelModelList[0].u[2].dof = numpy.copy(hvStage3)
+
                                     # to update BETA. timeIntegration.m_last[0] = unm1 at quad points
-                                    model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(unm1_quad)
+                                    #model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(unm1_quad)
                                     # update residual and q_u, q_m 
-                                    model.levelModelList[0].getResidual(numpy.copy(uStage3),
-                                                                        model.levelModelList[0].globalResidualDummy)
+                                    #model.levelModelList[0].getResidual(numpy.copy(uStage3),
+                                    #                                   model.levelModelList[0].globalResidualDummy)
                                 # FINISHED hacked SSP33 implementation (MQL)
                                 Profiling.memory("solver.solveMultilevel")
                                 if self.opts.wait:
@@ -1120,7 +1148,33 @@ class NS_base:  # (HasTraits):
             logEvent("Writing initial quantity of interest at DOFs for = "+model.name,level=3)
         except:
             pass        
-            
+
+        #Write bathymetry for Shallow water equations (MQL)
+        try:
+            bathymetry = {}
+            bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   bathymetry,
+                                                                   res_name_base='bathymetry')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass        
+
+        #write eta=h+bathymetry for SWEs (MQL)
+        try:
+            eta = {}
+            eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   eta,
+                                                                   res_name_base='eta')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass        
+
         #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}
@@ -1198,6 +1252,32 @@ class NS_base:  # (HasTraits):
                                                                    quantDOFs,
                                                                    res_name_base='quantDOFs_for_'+model.name)
             logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass        
+
+        #Write bathymetry for Shallow water equations (MQL)
+        try:
+            bathymetry = {}
+            bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   bathymetry,
+                                                                   res_name_base='bathymetry')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass        
+
+        #write eta=h+bathymetry for SWEs (MQL)
+        try:
+            eta = {}
+            eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   eta,
+                                                                   res_name_base='eta')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
         except:
             pass        
 
