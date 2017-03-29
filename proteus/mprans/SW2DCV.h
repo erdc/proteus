@@ -34,11 +34,8 @@
 #define phiDDiff1(g,h1k,h2k,hL,hR,uL,uR) ( (phiDiff(g,h1k,h2k,hL,hR,uL,uR) - phip(g,h1k,hL,hR))/(h2k-h1k) )
 #define phiDDiff2(g,h1k,h2k,hL,hR,uL,uR) ( (phip(g,h2k,hL,hR) - phiDiff(g,h1k,h2k,hL,hR,uL,uR))/(h2k-h1k) )
 
-#define hd(g,h1k,h2k,hL,hR,uL,uR) ( h1k-2*phi(g,h1k,hL,hR,uL,uR)/(phip(g,h1k,hL,hR)+sqrt(std::pow(phip(g,h1k,hL,hR),2)-4*phi(g,h1k,hL,hR,uL,uR)*phiDDiff1(g,h1k,h2k,hL,hR,uL,uR))) )
-#define hu(g,h1k,h2k,hL,hR,uL,uR) ( h2k-2*phi(g,h2k,hL,hR,uL,uR)/(phip(g,h2k,hL,hR)+sqrt(std::pow(phip(g,h2k,hL,hR),2)-4*phi(g,h2k,hL,hR,uL,uR)*phiDDiff2(g,h1k,h2k,hL,hR,uL,uR))) )
-
-//#define hd(g,h1k,h2k,hL,hR,uL,uR) ( h1k-2*phi(g,h1k,hL,hR,uL,uR))
-
+#define hStarLFromQuadPhiFromAbove(g,hStarL,hStarR,hL,hR,uL,uR) ( hStarL-2*phi(g,hStarL,hL,hR,uL,uR)/(phip(g,hStarL,hL,hR)+sqrt(std::pow(phip(g,hStarL,hL,hR),2)-4*phi(g,hStarL,hL,hR,uL,uR)*phiDDiff1(g,hStarL,hStarR,hL,hR,uL,uR))) )
+#define hStarRFromQuadPhiFromBelow(g,hStarL,hStarR,hL,hR,uL,uR) ( hStarR-2*phi(g,hStarR,hL,hR,uL,uR)/(phip(g,hStarR,hL,hR)+sqrt(std::pow(phip(g,hStarR,hL,hR),2)-4*phi(g,hStarR,hL,hR,uL,uR)*phiDDiff2(g,hStarL,hStarR,hL,hR,uL,uR))) )
 
 namespace proteus
 {
@@ -161,13 +158,19 @@ namespace proteus
 				   double* CTy,
 				   // PARAMETERS FOR EDGE BASED STABILIZATION 
 				   int numDOFsPerEqn,
+				   int NNZ,
 				   int* csrRowIndeces_DofLoops,
 				   int* csrColumnOffsets_DofLoops,
 				   // FOR EDGE BASED METHODS
 				   double* lumped_mass_matrix, 
 				   double* edge_based_cfl, 
+				   double cfl_run,
 				   double hEps, 
-				   int recompute_lumped_mass_matrix
+				   int recompute_lumped_mass_matrix,
+				   // SAVE SOLUTION (mql)
+				   double* hnp1_at_quad_point,
+				   double* hunp1_at_quad_point,
+				   double* hvnp1_at_quad_point
 				   )=0;
     virtual void calculateResidual_cell_based_entropy_viscosity(//element
 								double* mesh_trial_ref,
@@ -284,13 +287,19 @@ namespace proteus
 								double* CTy,
 								// PARAMETERS FOR EDGE BASED STABILIZATION
 								int numDOFsPerEqn,
+								int NNZ,
 								int* csrRowIndeces_DofLoops,
 								int* csrColumnOffsets_DofLoops,
 								// LUMPED MASS MATRIX
 								double* lumped_mass_matrix,
 								double* edge_based_cfl,
+								double cfl_run,
 								double hEps,
-								int recompute_lumped_mass_matrix
+								int recompute_lumped_mass_matrix,
+								// SAVE SOLUTION (mql)
+								double* hnp1_at_quad_point,
+								double* hunp1_at_quad_point,
+								double* hvnp1_at_quad_point
 								)=0;
     virtual void calculateResidual_first_order_flatB_GP(//element
 					    double* mesh_trial_ref,
@@ -407,13 +416,19 @@ namespace proteus
 					    double* CTy,
 					    // PARAMETERS FOR EDGE BASED STABILIZATION
 					    int numDOFsPerEqn,
+					    int NNZ,
 					    int* csrRowIndeces_DofLoops,
 					    int* csrColumnOffsets_DofLoops,
 					    // LUMPED MASS MATRIX
 					    double* lumped_mass_matrix,
 					    double* edge_based_cfl,
+					    double cfl_run,
 					    double hEps,
-					    int recompute_lumped_mass_matrix
+					    int recompute_lumped_mass_matrix,
+					    // SAVE SOLUTION (mql)
+					    double* hnp1_at_quad_point,
+					    double* hunp1_at_quad_point,
+					    double* hvnp1_at_quad_point
 					    )=0;
     virtual void calculateResidual_second_order_flatB_GP(//element
 					       double* mesh_trial_ref,
@@ -530,13 +545,148 @@ namespace proteus
 					       double* CTy,
 					       // PARAMETERS FOR EDGE BASED STABILIZATION
 					       int numDOFsPerEqn,
+					       int NNZ,
 					       int* csrRowIndeces_DofLoops,
 					       int* csrColumnOffsets_DofLoops,
 					       // LUMPED MASS MATRIX
 					       double* lumped_mass_matrix,
 					       double* edge_based_cfl, 
+					       double cfl_run,
 					       double hEps,
-					       int recompute_lumped_mass_matrix
+					       int recompute_lumped_mass_matrix,
+					       // SAVE SOLUTION (mql)
+					       double* hnp1_at_quad_point,
+					       double* hunp1_at_quad_point,
+					       double* hvnp1_at_quad_point
+					       )=0;
+    virtual void calculateResidual_second_order_NonFlatB_GP(//element
+					       double* mesh_trial_ref,
+					       double* mesh_grad_trial_ref,
+					       double* mesh_dof,
+					       double* mesh_velocity_dof,
+					       double MOVING_DOMAIN,//0 or 1
+					       int* mesh_l2g,
+					       double* dV_ref,
+					       double* h_trial_ref,
+					       double* h_grad_trial_ref,
+					       double* h_test_ref,
+					       double* h_grad_test_ref,
+					       double* vel_trial_ref,
+					       double* vel_grad_trial_ref,
+					       double* vel_test_ref,
+					       double* vel_grad_test_ref,
+					       //element boundary
+					       double* mesh_trial_trace_ref,
+					       double* mesh_grad_trial_trace_ref,
+					       double* dS_ref,
+					       double* h_trial_trace_ref,
+					       double* h_grad_trial_trace_ref,
+					       double* h_test_trace_ref,
+					       double* h_grad_test_trace_ref,
+					       double* vel_trial_trace_ref,
+					       double* vel_grad_trial_trace_ref,
+					       double* vel_test_trace_ref,
+					       double* vel_grad_test_trace_ref,					 
+					       double* normal_ref,
+					       double* boundaryJac_ref,
+					       //physics
+					       double* elementDiameter,
+					       int nElements_global,
+					       double useRBLES,
+					       double useMetrics, 
+					       double alphaBDF,
+					       double nu,
+					       double g,
+					       int* h_l2g, 
+					       int* vel_l2g, 
+					       double* h_dof_old_old, 
+					       double* hu_dof_old_old, 
+					       double* hv_dof_old_old,
+					       double* h_dof_old, 
+					       double* hu_dof_old, 
+					       double* hv_dof_old,
+					       double* b_dof,
+					       double* h_dof, 
+					       double* hu_dof, 
+					       double* hv_dof,
+					       double* h_dof_sge, 
+					       double* hu_dof_sge, 
+					       double* hv_dof_sge,
+					       double* q_mass_acc,
+					       double* q_mom_hu_acc,
+					       double* q_mom_hv_acc,
+					       double* q_mass_adv,
+					       double* q_mass_acc_beta_bdf,
+					       double* q_mom_hu_acc_beta_bdf, 
+					       double* q_mom_hv_acc_beta_bdf,
+					       double* q_velocity_sge,
+					       double* q_cfl,
+					       double* q_numDiff_h,
+					       double* q_numDiff_hu, 
+					       double* q_numDiff_hv,
+					       double* q_numDiff_h_last, 
+					       double* q_numDiff_hu_last, 
+					       double* q_numDiff_hv_last,
+					       int* sdInfo_hu_hu_rowptr,
+					       int* sdInfo_hu_hu_colind,			      
+					       int* sdInfo_hu_hv_rowptr,
+					       int* sdInfo_hu_hv_colind,
+					       int* sdInfo_hv_hv_rowptr,
+					       int* sdInfo_hv_hv_colind,
+					       int* sdInfo_hv_hu_rowptr,
+					       int* sdInfo_hv_hu_colind,
+					       int offset_h, 
+					       int offset_hu, 
+					       int offset_hv,
+					       int stride_h, 
+					       int stride_hu, 
+					       int stride_hv,
+					       double* globalResidual,
+					       int nExteriorElementBoundaries_global,
+					       int* exteriorElementBoundariesArray,
+					       int* elementBoundaryElementsArray,
+					       int* elementBoundaryLocalElementBoundariesArray,
+					       int* isDOFBoundary_h,
+					       int* isDOFBoundary_hu,
+					       int* isDOFBoundary_hv,
+					       int* isAdvectiveFluxBoundary_h,
+					       int* isAdvectiveFluxBoundary_hu,
+					       int* isAdvectiveFluxBoundary_hv,
+					       int* isDiffusiveFluxBoundary_hu,
+					       int* isDiffusiveFluxBoundary_hv,
+					       double* ebqe_bc_h_ext,
+					       double* ebqe_bc_flux_mass_ext,
+					       double* ebqe_bc_flux_mom_hu_adv_ext,
+					       double* ebqe_bc_flux_mom_hv_adv_ext,
+					       double* ebqe_bc_hu_ext,
+					       double* ebqe_bc_flux_hu_diff_ext,
+					       double* ebqe_penalty_ext,
+					       double* ebqe_bc_hv_ext,
+					       double* ebqe_bc_flux_hv_diff_ext,
+					       double* q_velocity,
+					       double* ebqe_velocity,
+					       double* flux,
+					       double* elementResidual_h,
+					       // C matrices
+					       double* Cx, 
+					       double* Cy,
+					       double* CTx,
+					       double* CTy,
+					       // PARAMETERS FOR EDGE BASED STABILIZATION
+					       int numDOFsPerEqn,
+					       int NNZ,
+					       int* csrRowIndeces_DofLoops,
+					       int* csrColumnOffsets_DofLoops,
+					       // LUMPED MASS MATRIX
+					       double* lumped_mass_matrix,
+					       double* edge_based_cfl, 
+					       double cfl_run,
+					       double hEps,
+					       int recompute_lumped_mass_matrix,
+					       // SAVE SOLUTION (mql)
+					       double* hnp1_at_quad_point,
+					       double* hunp1_at_quad_point,
+					       double* hvnp1_at_quad_point
 					       )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
@@ -1326,7 +1476,7 @@ namespace proteus
       double maxWaveSpeedSharpInitialGuess(double g, double nx, double ny,
 					   double hL, double huL, double hvL, 
 					   double hR, double huR, double hvR, 
-					   double hEps) 
+					   double hEps, bool debugging) 
     {
       double lambda1, lambda3;
       //1-eigenvalue: uL-sqrt(g*hL)
@@ -1337,6 +1487,15 @@ namespace proteus
       double velL = 2*hL/(hL*hL+std::pow(fmax(hL,hEps),2))*hVelL;
       double velR = 2*hR/(hR*hR+std::pow(fmax(hR,hEps),2))*hVelR;
 
+      if (debugging)
+	std::cout << "hL, hR, hVelL, hVelR, velL, velR: "
+		  << hL << "\t"
+		  << hR << "\t"
+		  << hVelL <<  "\t"
+		  << hVelR <<  "\t"
+		  << velL <<  "\t"
+		  << velR <<  "\t"
+		  << std::endl;
       // CHECK IF BOTH STATES ARE DRY: 
       if (hL==0 && hR==0) 
 	{
@@ -1352,19 +1511,39 @@ namespace proteus
 	{
 	  lambda1 = velL-sqrt(g*hL);
 	  lambda3 = velL+2*sqrt(g*hL);
+	  if (debugging)
+	    {
+	      std::cout << "hR=0" << std::endl;
+	      std::cout << lambda1 << "\t" << lambda3 << std::endl;
+	    }
 	}
       else // both states are wet
-	{
-	  double x0 = std::pow(2*sqrt(2)-1,2);
+	{	  
+	  double x0 = std::pow(2.*sqrt(2.)-1.,2.);
 	  double hMin = fmin(hL,hR);
 	  double hMax = fmax(hL,hR);
 	  
 	  double hStar;
 	  double fMin = phi(g,x0*hMin,hL,hR,velL,velR);
 	  double fMax = phi(g,x0*hMax,hL,hR,velL,velR);
-	  
+
+	  if (debugging)
+	    std::cout << "hMin, hMax, fMin, fMax: "
+		      << hMin << ", " << hMax << ", "
+		      << fMin << ", " << fMax 
+		      << std::endl;
+	  	 
 	  if (0 <= fMin)
-	    hStar = std::pow(velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR)),2)/16/g;
+	    {
+	      hStar = std::pow(fmax(0.,velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR))),2)/16./g;
+	      if (debugging)
+		{
+		  std::cout << "h* = " << hStar << std::endl;
+		  lambda1 = nu1(g,hStar,hL,velL);
+		  lambda3 = nu3(g,hStar,hR,velR);
+		  std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3 << std::endl;
+		} 
+	    }
 	  else if (0 <= fMax)
 	    hStar = std::pow(-sqrt(2*hMin)+sqrt(3*hMin+2*sqrt(2*hMin*hMax)+sqrt(2./g)*(velL-velR)*sqrt(hMin)),2);
 	  else // fMax < 0
@@ -1379,7 +1558,8 @@ namespace proteus
     inline 
       double maxWaveSpeedIterativeProcess(double g, double nx, double ny,
 					  double hL, double huL, double hvL, 
-					  double hR, double huR, double hvR) 
+					  double hR, double huR, double hvR, 
+					  double hEps, bool verbose) 
     {
       double tol = 1E-15;
       //1-eigenvalue: uL-sqrt(g*hL)
@@ -1387,119 +1567,160 @@ namespace proteus
       
       double hVelL = nx*huL + ny*hvL;
       double hVelR = nx*huR + ny*hvR;
-      double velL = hVelL/hL;
-      double velR = hVelR/hR;
-      
-      // Start computing lambda1 and lambda3 as if we have a 1- and 3-rarefactions 
-      double lambda1 = velL - sqrt(g*hL);
-      double lambda3 = velR + sqrt(g*hR);
+      double velL = 2*hL/(hL*hL+std::pow(fmax(hL,hEps),2))*hVelL;
+      double velR = 2*hR/(hR*hR+std::pow(fmax(hR,hEps),2))*hVelR;
 
-      ////////////////////
-      // ESTIMATE hStar //
-      ////////////////////
-      // Initial estimate of hStar0 from above. 
-      // This is computed via phiR(h) >= phi(h) ---> hStar0 >= hStar
-      // See equation (17) in notes
-      double hStar0 = std::pow(velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR)),2)/16/g;
-      double hStar = hStar0;
+      double lambda1, lambda3;     
 
-      /////////////////////////////////
-      // ALGORITHM 1: Initialization // 
-      /////////////////////////////////
-      // Requires: tol
-      // Ensures: h10, h20
-      double h1k, h2k;
-      double hMin = fmin(hL,hR);
-      double phi_min = phi(g,hMin,hL,hR,velL,velR);
-      if (phi_min >= 0) // This is a 1- and 3-rarefactions situation 
-	return fmax(fabs(lambda1),fabs(lambda3));
-
-      double hMax = fmax(hL,hR); 
-      double phi_max = phi(g,hMax,hL,hR,velL,velR);
-      if (phi_max == 0) // if hMax "hits" hStar (very unlikely)
+      // CHECK IF BOTH STATES ARE DRY: 
+      if (hL==0 && hR==0) 
 	{
-	  hStar = hMax;	 	  
-	  lambda1 = nu1(g,hStar,hL,velL);
-	  lambda3 = nu3(g,hStar,hR,velR);
+	  lambda1=0.;
+	  lambda3=0.;
+	  return 0.;
+	}
+      else if (hL==0) // left dry state 
+	{
+	  lambda1 = velR-2*sqrt(g*hR);
+	  lambda3 = velR+sqrt(g*hR);
 	  return fmax(fabs(lambda1),fabs(lambda3));
 	}
-      if (phi_max < 0) // This is a 1- and 3-shock situation 
+      else if (hR==0) // right dry state
 	{
-	  h1k = hMax;
-	  h2k = hStar0;
+	  lambda1 = velL-sqrt(g*hL);
+	  lambda3 = velL+2*sqrt(g*hL);
+	  return fmax(fabs(lambda1),fabs(lambda3));
 	}
-      else // Here we have one shock and one rarefaction 
+      else
 	{
-	  h1k = hMin;
-	  h2k = fmin(hMax,hStar0);
-	}      
-
-      // improve estimate from below via one newton step (not required)
-      //h1k = fmax(h1k,h2k-phi(g,h2k,hL,hR,velL,velR)/phip(g,h2k,hL,hR));
-      // COMPUTE lambdaMin0 and lambdaMax0
-      double nu11 = nu1(g,h2k,hL,velL);
-      double nu12 = nu1(g,h1k,hL,velL);
-      double nu31 = nu3(g,h1k,hR,velR);
-      double nu32 = nu3(g,h2k,hR,velR);
-
-      double lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
-      double lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
-
-      // CHECK IF TOL IS SATISFIED. O.W. GOT TO ALGORITHM 2 //
-      if (lambdaMin > 0 && lambdaMax/lambdaMin - 1 <= tol)
-	return lambdaMax;
-      else // Proceed to algorithm 2
-	{
-	  ///////////////////////////////////////////
-	  // ALGORITHM 2: ESTIMATION OF LAMBDA MAX //
-	  ///////////////////////////////////////////
-	  // Requires: h10, h20
-	  // Ensures: lambdaMax
-	  int aux_counter = 0;
-	  while (true)
+	  ////////////////////
+	  // ESTIMATE hStar //
+	  ////////////////////
+	  // Initial estimate of hStar0 from above. 
+	  // This is computed via phiR(h) >= phi(h) ---> hStar0 >= hStar
+	  double hStar0 = 1;
+	  double hStar = hStar0;
+	  
+	  /////////////////////////////////
+	  // ALGORITHM 1: Initialization // 
+	  /////////////////////////////////
+	  // Requires: tol
+	  // Ensures: hStarL, hStarR
+	  double hStarL, hStarR;
+	  double hMin = fmin(hL,hR);
+	  double hMax = fmin(hL,hR);
+	  double phiMin = phi(g,hMin,hL,hR,velL,velR);
+	  double phiMax = phi(g,hMax,hL,hR,velL,velR);
+	  if (0 <= phiMin) 
 	    {
-	      aux_counter++;
-	      // Start having lambdaMin and lambdaMax
-	      // Check if current lambdaMin and lambdaMax satisfy the tolerance
-	      if (lambdaMin > 0 && lambdaMax/lambdaMin - 1 <= tol)
-		return lambdaMax;
-	      // Check for round off error
-	      if (phi(g,h1k,hL,hR,velL,velR) > 0 || phi(g,h2k,hL,hR,velL,velR) < 0)
-		return lambdaMax;
+	      // This is a 1- and 3-rarefactions situation. We know the solution in this case
+	      lambda1 = velL - sqrt(g*hL);
+	      lambda3 = velR + sqrt(g*hR);
 
-	      // Compute new estimates on h1k and h2k
-	      // NOTE (MQL): h1k and h2k must be computed using the old values of h1k and h2k. 
-	      // So don't change the order to compute h1k and h2k or define h2k_old
-	      double h1k_old = h1k;
-	      h1k = hd(g,h1k_old,h2k,hL,hR,velL,velR);
-	      h2k = hu(g,h1k_old,h2k,hL,hR,velL,velR);
-	      	      
-	      // Compute lambdaMax and lambdaMin
-	      nu11 = nu1(g,h2k,hL,velL);
-	      nu12 = nu1(g,h1k,hL,velL);
-	      nu31 = nu3(g,h1k,hR,velR);
-	      nu32 = nu3(g,h2k,hR,velR);
+	      std::cout << "lambda Min, lambda Max: "
+			<< lambda1 << ", " << lambda3
+			<< std::endl;
 
-	      lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
-	      lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
+	      return fmax(fabs(lambda1),fabs(lambda3));
+	    }
+	  if (phiMax == 0) // if hMax "hits" hStar (very unlikely)
+	    {
+	      hStar = hMax;	 	  
+	      lambda1 = nu1(g,hStar,hL,velL);
+	      lambda3 = nu3(g,hStar,hR,velR);
+	      return fmax(fabs(lambda1),fabs(lambda3));
+	    }
+	  double hStarTwoRarefactions = std::pow(velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR)),2)/16/g;
+	  if (phiMax < 0) // This is a 1- and 3-shock situation 
+	    {
+	      hStarL = hMax;
+	      hStarR = hStarTwoRarefactions;
+	    }
+	  else // Here we have one shock and one rarefaction 
+	    {
+	      hStarL = hMin;
+	      hStarR = fmin(hMax,hStarTwoRarefactions);
+	    }      
 
-	      if (aux_counter>1000) //TMP
+	  // improve estimate from below via one newton step (not required)
+	  hStarL = fmax(hStarL,hStarR-phi(g,hStarR,hL,hR,velL,velR)/phip(g,hStarR,hL,hR));
+	  // COMPUTE lambdaMin0 and lambdaMax0
+	  double nu11 = nu1(g,hStarR,hL,velL);
+	  double nu12 = nu1(g,hStarL,hL,velL);
+	  double nu31 = nu3(g,hStarL,hR,velR);
+	  double nu32 = nu3(g,hStarR,hR,velR);
+	  
+	  double lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
+	  double lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
+	  
+	  if (verbose) 
+	    {
+	      std::cout << "hStarL, hStarR: " << hStarL << ", " << hStarR << "\t"
+			<< "lambda Min, lambda Max: "
+			<< lambdaMin << ", " << lambdaMax 
+			<< std::endl;
+	    }
+	  // CHECK IF TOL IS SATISFIED. O.W. GOT TO ALGORITHM 2 //
+	  if (lambdaMin > 0 && lambdaMax/lambdaMin - 1 <= tol)
+	    return lambdaMax;
+	  else // Proceed to algorithm 2
+	    {
+	      ///////////////////////////////////////////
+	      // ALGORITHM 2: ESTIMATION OF LAMBDA MAX //
+	      ///////////////////////////////////////////
+	      // Requires: hStarL, hStarR
+	      // Ensures: lambdaMax
+	      int aux_counter = 0;
+	      while (true)
 		{
-		  std::cout << "**** AUX COUNTER > 1000... aborting!" << std::endl;
-		  std::cout << "**** Initial guess hStar: " << hStar0 << std::endl;
-
-		  hStar = hStar0;
-		  lambda1 = nu1(g,hStar,hL,velL);
-		  lambda3 = nu3(g,hStar,hR,velR);
-		  std::cout << "**** Initial estimate of max wave speed: " 
-			    << fmax(fabs(lambda1),fabs(lambda3)) << std::endl;
-
-		  abort();
+		  aux_counter++;
+		  // Start having lambdaMin and lambdaMax
+		  // Check if current lambdaMin and lambdaMax satisfy the tolerance
+		  if (verbose)
+		    {
+		      std::cout << lambdaMin << ", " << lambdaMax << std::endl;
+		    }
+		  if (lambdaMin > 0 && lambdaMax/lambdaMin - 1 <= tol)
+		    return lambdaMax;
+		  // Check for round off error
+		  if (phi(g,hStarL,hL,hR,velL,velR) > 0 || phi(g,hStarR,hL,hR,velL,velR) < 0)
+		    return lambdaMax;
+		  
+		  // Save old estimates of hStar
+		  double hStarL_old = hStarL;
+		  double hStarR_old = hStarR;
+		  // Compute new estimates on hStarL and hStarR
+		  // NOTE (MQL): hStarL and hStarR must be computed using the old values 
+		  hStarL = hStarLFromQuadPhiFromAbove(g,hStarL_old,hStarR_old,hL,hR,velL,velR);
+		  hStarR = hStarRFromQuadPhiFromBelow(g,hStarL_old,hStarR_old,hL,hR,velL,velR);
+		  
+		  // Compute lambdaMax and lambdaMin
+		  nu11 = nu1(g,hStarR,hL,velL);
+		  nu12 = nu1(g,hStarL,hL,velL);
+		  nu31 = nu3(g,hStarL,hR,velR);
+		  nu32 = nu3(g,hStarR,hR,velR);
+		  
+		  lambdaMin = fmax(fmax(nu31,0), fmax(-nu12,0));
+		  lambdaMax = fmax(fmax(nu32,0), fmax(-nu11,0));
+		  
+		  if (aux_counter>1000) //TMP
+		    {
+		      std::cout << "**** AUX COUNTER > 1000... aborting!" << std::endl;
+		      std::cout << "**** Initial guess hStar: " << hStar0 << std::endl;
+		      
+		      hStar = hStar0;
+		      lambda1 = nu1(g,hStar,hL,velL);
+		      lambda3 = nu3(g,hStar,hR,velR);
+		      std::cout << "**** Initial estimate of max wave speed: " 
+				<< fmax(fabs(lambda1),fabs(lambda3)) << std::endl;
+		      
+		      abort();
+		    }
+		  //else
+		  //{
+		  //  std::cout << "*****... AUX COUNTER: " << aux_counter << std::endl; //TMP 
+		  //}
 		}
-	      //else
-	      //{
-	      //  std::cout << "*****... AUX COUNTER: " << aux_counter << std::endl; //TMP 
-	      //}
 	    }
 	}
     }
@@ -1991,13 +2212,19 @@ namespace proteus
 			   double* CTy,
 			   // PARAMETERS FOR EDGE BASED STABILIZATION 
 			   int numDOFsPerEqn,
+			   int NNZ,
 			   int* csrRowIndeces_DofLoops,
 			   int* csrColumnOffsets_DofLoops,
 			   // LUMPED MASS MATRIX
 			   double* lumped_mass_matrix,
 			   double* edge_based_cfl,
+			   double cfl_run,
 			   double hEps,
-			   int recompute_lumped_mass_matrix)
+			   int recompute_lumped_mass_matrix,
+			   // SAVE SOLUTION (mql)
+			   double* hnp1_at_quad_point,
+			   double* hunp1_at_quad_point,
+			   double* hvnp1_at_quad_point)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -2947,13 +3174,19 @@ namespace proteus
 							double* CTy,
 							// PARAMETERS FOR EDGE BASED STABILIZATION 
 							int numDOFsPerEqn,
+							int NNZ,
 							int* csrRowIndeces_DofLoops,
 							int* csrColumnOffsets_DofLoops,
 							// LUMPED MASS MATRIX
 							double* lumped_mass_matrix,
 							double* edge_based_cfl,
+							double cfl_run,
 							double hEps,
-							int recompute_lumped_mass_matrix)
+							int recompute_lumped_mass_matrix, 
+							// SAVE SOLUTION (mql)
+							double* hnp1_at_quad_point,
+							double* hunp1_at_quad_point,
+							double* hvnp1_at_quad_point)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
       // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
@@ -3407,13 +3640,19 @@ namespace proteus
 				    double* CTy,
 				    // PARAMETERS FOR EDGE BASED STABILIZATION 
 				    int numDOFsPerEqn,
+				    int NNZ,
 				    int* csrRowIndeces_DofLoops,
 				    int* csrColumnOffsets_DofLoops,
 				    // LUMPED MASS MATRIX
 				    double* lumped_mass_matrix,
 				    double* edge_based_cfl,
+				    double cfl_run,
 				    double hEps,
-				    int recompute_lumped_mass_matrix)
+				    int recompute_lumped_mass_matrix,
+				    // SAVE SOLUTION (mql)
+				    double* hnp1_at_quad_point,
+				    double* hunp1_at_quad_point,
+				    double* hvnp1_at_quad_point)
     {
       double dt = 1./alphaBDF; 
       ////////////////
@@ -3480,6 +3719,7 @@ namespace proteus
 		  //save velocity at quadrature points for other models to use
 		  q_velocity[eN_k_nSpace+0] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hu;
 		  q_velocity[eN_k_nSpace+1] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hv;
+		  hnp1_at_quad_point[eN_k] = h;
 		  // calculatte CFL
 		  calculateCFL(elementDiameter[eN],
 			       g,
@@ -3501,7 +3741,6 @@ namespace proteus
 		}
 	    }
 	}
-
 
       //////////////////
       // Loop on DOFs //
@@ -3549,12 +3788,12 @@ namespace proteus
 		  //dLij =  fmax(maxWaveSpeedIterativeProcess(g,nxij,nyij,
 		  //		    hi,hui,hvi,hj,huj,hvj)*cij_norm,
 		  //   maxWaveSpeedIterativeProcess(g,nxji,nyji,
-		  //		    hj,huj,hvj,hi,hui,hvi)*cji_norm);
+		  //	    hj,huj,hvj,hi,hui,hvi)*cji_norm);
 		  dLij =  fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
-							     hi,hui,hvi,hj,huj,hvj,hEps)*cij_norm,
+							     hi,hui,hvi,hj,huj,hvj,hEps,false)*cij_norm,
 			       maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
-							     hj,huj,hvj,hi,hui,hvi,hEps)*cji_norm);
-		  
+							     hj,huj,hvj,hi,hui,hvi,hEps,false)*cji_norm);
+		 
 		  ith_dissipative_term1 += dLij*(hj-hi);
 		  ith_dissipative_term2 += dLij*(huj-hui);
 		  ith_dissipative_term3 += dLij*(hvj-hvi);
@@ -3690,13 +3929,19 @@ namespace proteus
 				       double* CTy,
 				       // PARAMETERS FOR EDGE BASED STABILIZATION 
 				       int numDOFsPerEqn,
+				       int NNZ,
 				       int* csrRowIndeces_DofLoops,
 				       int* csrColumnOffsets_DofLoops,
 				       // LUMPED MASS MATRIX
 				       double* lumped_mass_matrix,
 				       double* edge_based_cfl,
+				       double cfl_run,
 				       double hEps,
-				       int recompute_lumped_mass_matrix)
+				       int recompute_lumped_mass_matrix, 
+				       // SAVE SOLUTION (mql)
+				       double* hnp1_at_quad_point,
+				       double* hunp1_at_quad_point,
+				       double* hvnp1_at_quad_point)
     {
       double dt = 1./alphaBDF; 
       ////////////////
@@ -3763,6 +4008,9 @@ namespace proteus
 		  //save velocity at quadrature points for other models to use
 		  q_velocity[eN_k_nSpace+0] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hu;
 		  q_velocity[eN_k_nSpace+1] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hv;
+		  hnp1_at_quad_point[eN_k] = h;
+		  hunp1_at_quad_point[eN_k] = hu;
+		  hvnp1_at_quad_point[eN_k] = hv;
 		  // calculatte CFL
 		  calculateCFL(elementDiameter[eN],
 			       g,
@@ -3802,8 +4050,16 @@ namespace proteus
 	      alphai_numerator += (hj-hi);
 	      alphai_denominator += std::abs(hj-hi);
 	    }
-	  alphai = std::abs(alphai_numerator)/(alphai_denominator+1E-14);
-	  if (POWER_SMOOTHNESS_INDICATOR==1)
+	  if (hi < hEps)
+	    alphai = 1.;
+	  else
+	    {
+	      if (alphai_denominator==0)
+		alphai = 1.;
+	      else 
+		alphai = std::abs(alphai_numerator)/alphai_denominator;
+	    }
+	  if (POWER_SMOOTHNESS_INDICATOR==0)
 	    psi[i] = 1.0;
 	  else
 	    psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
@@ -3853,15 +4109,15 @@ namespace proteus
 		  double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
 
 		  //dLij =  fmax(maxWaveSpeedIterativeProcess(g,nxij,nyij,
-		  //		    hi,hui,hvi,hj,huj,hvj)*cij_norm,
-		  //   maxWaveSpeedIterativeProcess(g,nxji,nyji,
-		  //		    hj,huj,hvj,hi,hui,hvi)*cji_norm);
+		  //				    hi,hui,hvi,hj,huj,hvj)*cij_norm,
+		  //       maxWaveSpeedIterativeProcess(g,nxji,nyji,
+		  //				    hj,huj,hvj,hi,hui,hvi)*cji_norm);
 		  dLij =  fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
-							     hi,hui,hvi,hj,huj,hvj,hEps)*cij_norm,
+							     hi,hui,hvi,hj,huj,hvj,hEps,false)*cij_norm,
 			       maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
-							     hj,huj,hvj,hi,hui,hvi,hEps)*cji_norm);
+							     hj,huj,hvj,hi,hui,hvi,hEps,false)*cji_norm);
 		  dLij *= std::max(psi[i],psi[j]); 
-
+		  
 		  ith_dissipative_term1 += dLij*(hj-hi);
 		  ith_dissipative_term2 += dLij*(huj-hui);
 		  ith_dissipative_term3 += dLij*(hvj-hvi);
@@ -3881,6 +4137,842 @@ namespace proteus
 	  edge_based_cfl[i] = 4*fabs(dLii)/mi;
 	}
     }
+
+    void calculateResidual_second_order_NonFlatB_GP(//element
+				       double* mesh_trial_ref,
+				       double* mesh_grad_trial_ref,
+				       double* mesh_dof,
+				       double* mesh_velocity_dof,
+				       double MOVING_DOMAIN,
+				       int* mesh_l2g,
+				       double* dV_ref,
+				       double* h_trial_ref,
+				       double* h_grad_trial_ref,
+				       double* h_test_ref,
+				       double* h_grad_test_ref,
+				       double* vel_trial_ref,
+				       double* vel_grad_trial_ref,
+				       double* vel_test_ref,
+				       double* vel_grad_test_ref,
+				       //element boundary
+				       double* mesh_trial_trace_ref,
+				       double* mesh_grad_trial_trace_ref,
+				       double* dS_ref,
+				       double* h_trial_trace_ref,
+				       double* h_grad_trial_trace_ref,
+				       double* h_test_trace_ref,
+				       double* h_grad_test_trace_ref,
+				       double* vel_trial_trace_ref,
+				       double* vel_grad_trial_trace_ref,
+				       double* vel_test_trace_ref,
+				       double* vel_grad_test_trace_ref,					 
+				       double* normal_ref,
+				       double* boundaryJac_ref,
+				       //physics
+				       double* elementDiameter,
+				       int nElements_global,
+				       double useRBLES,
+				       double useMetrics, 
+				       double alphaBDF,
+				       double nu,
+				       double g,
+				       int* h_l2g, 
+				       int* vel_l2g, 
+				       double* h_dof_old_old, 
+				       double* hu_dof_old_old, 
+				       double* hv_dof_old_old, 
+				       double* h_dof_old, 
+				       double* hu_dof_old, 
+				       double* hv_dof_old, 
+				       double* b_dof, 
+				       double* h_dof, 
+				       double* hu_dof, 
+				       double* hv_dof, 
+				       double* h_dof_sge, 
+				       double* hu_dof_sge, 
+				       double* hv_dof_sge, 
+				       double* q_mass_acc,
+				       double* q_mom_hu_acc,
+				       double* q_mom_hv_acc,
+				       double* q_mass_adv,
+				       double* q_mass_acc_beta_bdf,
+				       double* q_mom_hu_acc_beta_bdf, 
+				       double* q_mom_hv_acc_beta_bdf,
+				       double* q_velocity_sge,
+				       double* q_cfl,
+				       double* q_numDiff_h, 
+				       double* q_numDiff_hu, 
+				       double* q_numDiff_hv, 
+				       double* q_numDiff_h_last,
+				       double* q_numDiff_hu_last, 
+				       double* q_numDiff_hv_last,
+				       int* sdInfo_hu_hu_rowptr,
+				       int* sdInfo_hu_hu_colind,			      
+				       int* sdInfo_hu_hv_rowptr,
+				       int* sdInfo_hu_hv_colind,
+				       int* sdInfo_hv_hv_rowptr,
+				       int* sdInfo_hv_hv_colind,
+				       int* sdInfo_hv_hu_rowptr,
+				       int* sdInfo_hv_hu_colind,
+				       int offset_h, 
+				       int offset_hu, 
+				       int offset_hv, 
+				       int stride_h, 
+				       int stride_hu, 
+				       int stride_hv,
+				       double* globalResidual,
+				       int nExteriorElementBoundaries_global,
+				       int* exteriorElementBoundariesArray,
+				       int* elementBoundaryElementsArray,
+				       int* elementBoundaryLocalElementBoundariesArray,
+				       int* isDOFBoundary_h,
+				       int* isDOFBoundary_hu,
+				       int* isDOFBoundary_hv,
+				       int* isAdvectiveFluxBoundary_h,
+				       int* isAdvectiveFluxBoundary_hu,
+				       int* isAdvectiveFluxBoundary_hv,
+				       int* isDiffusiveFluxBoundary_hu,
+				       int* isDiffusiveFluxBoundary_hv,
+				       double* ebqe_bc_h_ext,
+				       double* ebqe_bc_flux_mass_ext,
+				       double* ebqe_bc_flux_mom_hu_adv_ext,
+				       double* ebqe_bc_flux_mom_hv_adv_ext,
+				       double* ebqe_bc_hu_ext,
+				       double* ebqe_bc_flux_hu_diff_ext,
+				       double* ebqe_penalty_ext,
+				       double* ebqe_bc_hv_ext,
+				       double* ebqe_bc_flux_hv_diff_ext,
+				       double* q_velocity,
+				       double* ebqe_velocity,
+				       double* flux,
+				       double* elementResidual_h_save,
+				       // C matrices
+				       double* Cx, 
+				       double* Cy,
+				       double* CTx,
+				       double* CTy,
+				       // PARAMETERS FOR EDGE BASED STABILIZATION 
+				       int numDOFsPerEqn,
+				       int NNZ,
+				       int* csrRowIndeces_DofLoops,
+				       int* csrColumnOffsets_DofLoops,
+				       // LUMPED MASS MATRIX
+				       double* lumped_mass_matrix,
+				       double* edge_based_cfl,
+				       double cfl_run,
+				       double hEps,
+				       int recompute_lumped_mass_matrix, 
+				       // SAVE SOLUTION (mql)
+				       double* hnp1_at_quad_point,
+				       double* hunp1_at_quad_point,
+				       double* hvnp1_at_quad_point)
+    {
+      double min_h = 1E10;
+      ////////////////
+      // CELL LOOPS //
+      ////////////////
+      // To compute: 
+      //      * lumped_mass_matrix
+      //      * Cell based CFL
+      //      * velocity at quad points for other models 
+      // init lumped mass matrix to zero
+      if (recompute_lumped_mass_matrix==1)
+	{
+	  for (int i=0; i<numDOFsPerEqn; i++)
+	    lumped_mass_matrix[i] = 0;
+	  for(int eN=0;eN<nElements_global;eN++)
+	    {
+	      //declare local storage for element residual and initialize
+	      register double element_lumped_mass_matrix[nDOF_test_element];
+	      for (int i=0;i<nDOF_test_element;i++)
+		element_lumped_mass_matrix[i]=0.0;
+	      //
+	      //loop over quadrature points and compute integrands
+	      //
+	      for(int k=0;k<nQuadraturePoints_element;k++)
+		{
+		  //compute indices and declare local storage
+		  register int eN_k = eN*nQuadraturePoints_element+k,
+		    eN_k_nSpace = eN_k*nSpace,
+		    eN_nDOF_trial_element = eN*nDOF_trial_element;
+		  register double 
+		    h=0.0,hu=0.0,hv=0.0, // solution at current time
+		    jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		    h_test_dV[nDOF_trial_element],
+		    dV,x,y,xt,yt;
+		  //get jacobian, etc for mapping reference element
+		  ck.calculateMapping_element(eN,
+					      k,
+					      mesh_dof,
+					      mesh_l2g,
+					      mesh_trial_ref,
+					      mesh_grad_trial_ref,
+					      jac,
+					      jacDet,
+					      jacInv,
+					      x,y);
+		  //get the physical integration weight
+		  dV = fabs(jacDet)*dV_ref[k];
+		  //get the solution at current time. This is to compute velocity for other models
+		  ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
+		  ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
+		  ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
+		  //precalculate test function products with integration weights
+		  for (int j=0;j<nDOF_trial_element;j++)
+		      h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
+		  //save velocity at quadrature points for other models to use
+		  q_velocity[eN_k_nSpace+0] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hu;
+		  q_velocity[eN_k_nSpace+1] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hv;
+		  hnp1_at_quad_point[eN_k] = h;
+		  hunp1_at_quad_point[eN_k] = hu;
+		  hvnp1_at_quad_point[eN_k] = hv;
+		  //update element residual. Part about the lumped mass matrix 
+		  for(int i=0;i<nDOF_test_element;i++)
+		    element_lumped_mass_matrix[i] += h_test_dV[i];
+		}
+	      // distribute
+	      for(int i=0;i<nDOF_test_element;i++)
+		{
+		  register int eN_i=eN*nDOF_test_element+i;
+		  int h_gi = h_l2g[eN_i]; //global i-th index for h
+		  lumped_mass_matrix[h_gi]  += element_lumped_mass_matrix[i];	  
+		}
+	      // COMPUTE MIN h //
+	      min_h = fmin(min_h,elementDiameter[eN]);
+	    }
+	} // end of computing lumped mass matrix
+      
+      ///////////////////////////////////////////
+      // COMPUTE SMOOTHNESS INDICATOR and dLij //
+      ///////////////////////////////////////////
+      // Smoothness indicator is based on the solution. psi_i = psi_i(alpha_i); 
+      // alpha_i = |sum(uj-ui)|/sum|uj-ui|
+      int ij = 0;
+      double max_cfl = 0.;
+      register double psi[numDOFsPerEqn], dL[NNZ];
+      for (int i=0; i<numDOFsPerEqn; i++)
+	{
+	  double alphai, alphai_numerator=0, alphai_denominator=0; // smoothness indicator of solution
+	  double hi = h_dof_old[i]; // solution at time tn for the ith DOF
+	  double hui = hu_dof_old[i]; 
+	  double hvi = hv_dof_old[i]; 
+	  double Zi = b_dof[i];
+	  double dLii = 0.;
+
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    { //loop in j (sparsity pattern)
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double hj = h_dof_old[j]; // solution at time tn for the jth DOF
+	      double huj = hu_dof_old[j];
+	      double hvj = hv_dof_old[j];
+	      double Zj = b_dof[j];
+
+	      //////////////////////////////////
+	      // COMPUTE SMOOTHNESS INDICATOR //
+	      //////////////////////////////////
+	      alphai_numerator += (hj-hi);
+	      alphai_denominator += std::abs(hj-hi);
+
+	      ///////////////////////////
+	      // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
+	      ///////////////////////////
+	      double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
+	      double huStarij = (hi <= hEps ? 0. : hui*hStarij/hi);
+	      double hvStarij = (hi <= hEps ? 0. : hvi*hStarij/hi);
+	      
+	      double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
+	      double huStarji = (hj <= hEps ? 0. : huj*hStarji/hj);
+	      double hvStarji = (hj <= hEps ? 0. : hvj*hStarji/hj);
+
+	      //////////////////
+	      // COMPUTE dLij // 
+	      //////////////////
+	      // NOTE: I don't have anything in the entry dLij when i=j
+	      if (i != j)
+		{		 
+		  // compute dLij
+		  double cij_norm = sqrt(Cx[ij]*Cx[ij] + Cy[ij]*Cy[ij]);
+		  double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
+		  
+		  double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
+		  double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
+		  
+		  //dissipative terms for flux
+		  dL[ij] = fmax(fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+								   hi,hui,hvi,
+								   hStarji,huStarji,hvStarji,
+								   hEps,false),
+				     maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+								   hi,hui,hvi, 
+								   hStarij,huStarij,hvStarij,
+								   hEps,false))*cij_norm,
+				fmax(maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+								   hj,huj,hvj, 
+								   hStarij,huStarij,hvStarij,
+								   hEps,false),
+				     maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+								   hj,huj,hvj, 
+								   hStarji,huStarji,hvStarji,
+								   hEps,false))*cji_norm);  
+		  /*
+		  // for debugging
+		  if (dL[ij] > 100)
+		    {		      
+		      std::cout << "dLij: " << dL[ij] << std::endl;
+		      std::cout << "hi, hui, hvi: " 
+				<< hi << ", " 
+				<< hui << ", " 
+				<< hvi << std::endl;
+		      std::cout << "hj, huj, hvj: " 
+				<< hj << ", " 
+				<< huj << ", " 
+				<< hvj << std::endl;
+		      std::cout << "hStarij, huStarij, hvStarij: " 
+				<< hStarij << ", " 
+				<< huStarij << ", " 
+				<< hvStarij << std::endl;
+		      std::cout << "hStarji, huStarji, hvStarji: " 
+				<< hStarji << ", " 
+				<< huStarji << ", " 
+				<< hvStarji << std::endl;
+		      std::cout << "*************************" << std::endl;
+		      std::cout << maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+								 hi,hui,hvi,
+								 hStarji,huStarji,hvStarji,
+								 hEps,true)
+				<< std::endl;
+		      std::cout << "*************************" << std::endl;
+		      std::cout << maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+								 hi,hui,hvi, 
+								 hStarij,huStarij,hvStarij,
+								 hEps,true)
+				<< std::endl;
+		      std::cout << "*************************" << std::endl;
+		      std::cout << maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+								 hj,huj,hvj, 
+								 hStarij,huStarij,hvStarij,
+								 hEps,true)
+				<< std::endl;
+		      std::cout << "*************************" << std::endl;
+		      std::cout << maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+								 hj,huj,hvj, 
+								 hStarji,huStarji,hvStarji,
+								 hEps,true)
+				<< std::endl;
+		      std::cout << "*************************" << std::endl;
+		      abort();
+		      }
+		  */
+		  dLii -= dL[ij];
+		}
+	      //update ij
+	      ij+=1;
+	    }
+	  double mi = lumped_mass_matrix[i];
+	  // calculate edge based CFL
+	  edge_based_cfl[i] = 2*fabs(dLii)/mi;
+	  max_cfl = fmax(max_cfl,edge_based_cfl[i]);
+	  if (hi < hEps)
+	    alphai = 1.;
+	  else
+	    {
+	      if (alphai_denominator==0)
+		alphai = 1.;
+	      else 
+		alphai = std::abs(alphai_numerator)/alphai_denominator;
+	    }
+	  if (POWER_SMOOTHNESS_INDICATOR==0)
+	    psi[i] = 1.0;
+	  else
+	    psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+	}
+      //////////////////////
+      // CHOOSE TIME STEP //
+      //////////////////////
+      //double dt = cfl_run/max_cfl;
+      //double dt = 0.1*min_h;
+      double dt = 1./alphaBDF; 
+
+      //////////////////
+      // Loop on DOFs // to compute flux and dissipative terms
+      //////////////////
+      ij = 0;
+      for (int i=0; i<numDOFsPerEqn; i++)
+	{
+	  double hi = h_dof_old[i];
+	  double hui = hu_dof_old[i];
+	  double hvi = hv_dof_old[i];	  
+	  double Zi = b_dof[i];
+	  
+	  double ui = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hui;
+	  double vi = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hvi;
+
+	  // regularization of 1/hi 
+	  double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2));
+
+	  double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
+	  double ith_dissipative_term1=0., ith_dissipative_term2=0., ith_dissipative_term3=0.;
+	  double ith_well_balancing_term1=0., ith_well_balancing_term2=0., ith_well_balancing_term3=0.;
+	  double aux1_to_compute_hnp1=0., aux2_to_compute_hnp1=0.;
+
+	  // loop over the sparsity pattern of the i-th DOF
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double hj = h_dof_old[j];
+	      double huj = hu_dof_old[j];
+	      double hvj = hv_dof_old[j];
+	      double Zj = b_dof[j];
+	      double uj = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2))*huj;
+	      double vj = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2))*hvj;
+
+	      // regularization of 1/hj
+	      double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2));
+
+	      // Nodal projection of fluxes
+	      ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
+	      ith_flux_term2 += ( huj*huj*one_over_hjReg*Cx[ij] + huj*hvj*one_over_hjReg*Cy[ij] 
+				  + g*hi*(hj+Zj)*Cx[ij] );
+	      ith_flux_term3 += ( huj*hvj*one_over_hjReg*Cx[ij] + hvj*hvj*one_over_hjReg*Cy[ij] 
+				  + g*hi*(hj+Zj)*Cy[ij] );
+
+	      // Dissipative term
+	      double muij = 0.;
+	      if (i != j) // This is not necessary. See formula for ith_dissipative_terms
+		{
+		  ///////////////////////////
+		  // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
+		  ///////////////////////////
+		  double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
+		  double huStarij = (hi <= hEps ? 0. : hui*hStarij/hi);
+		  double hvStarij = (hi <= hEps ? 0. : hvi*hStarij/hi);
+		  
+		  double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
+		  double huStarji = (hj <= hEps ? 0. : huj*hStarji/hj);
+		  double hvStarji = (hj <= hEps ? 0. : hvj*hStarji/hj);
+		  
+		  //dissipative terms for well balancing
+		  muij = fmax(fmax(0.,-(ui*Cx[ij] + vi*Cy[ij])),fmax(0,(uj*Cx[ij] + vj*Cy[ij])));
+		  muij *= std::max(psi[i],psi[j]);
+		  // compute dissipative terms for well balancing for second and third equations
+		  ith_well_balancing_term1 += muij*(hj-hStarji-(hi-hStarij));
+		  ith_well_balancing_term2 += muij*(huj-huStarji-(hui-huStarij));
+		  ith_well_balancing_term3 += muij*(hvj-hvStarji-(hvi-hvStarij));
+
+		  // compute dissipative terms for second and third equations
+		  dL[ij] *= std::max(psi[i],psi[j]);
+		  ith_dissipative_term1 += dL[ij]*(hStarji-hStarij);
+		  ith_dissipative_term2 += dL[ij]*(huStarji-huStarij);
+		  ith_dissipative_term3 += dL[ij]*(hvStarji-hvStarij);
+
+		  // compute aux quantities for first equation 
+		  // aux1 = Veli*Cii + sum_j[ muij + (dLij-muij)*hStarij/hi ]
+		  // aux2 = sum_j[ (muij-Velj*Cij)*hj + (dLij-muij)*hStarji ] >= 0
+		  aux1_to_compute_hnp1 += muij + (hi == 0. ? 0. : (dL[ij] - muij)*hStarij/hi);
+		  aux2_to_compute_hnp1 += (muij - (uj*Cx[ij] + vj*Cy[ij]))*hj + (dL[ij] - muij)*hStarji;
+		}
+	      else // i==j
+		{
+		  aux1_to_compute_hnp1 += (ui*Cx[ij] + vi*Cy[ij])*hi;
+		}
+	      // update ij
+	      ij+=1;
+	    }
+	  double mi = lumped_mass_matrix[i];
+
+	  //if (1 - dt/mi*aux1_to_compute_hnp1 < 0)
+	  //{
+	  //  std::cout << "aux1 < 0: " << 1-dt/mi*aux1_to_compute_hnp1 << std::endl;
+	  //  std::cout << "dt, cfl: " << dt << "\t" << edge_based_cfl[i] << std::endl;
+	  //  abort();
+	  //}
+
+	  // compute residual
+	  double hinp1 = hi*(1 - dt/mi*aux1_to_compute_hnp1) + dt/mi*aux2_to_compute_hnp1;
+	  globalResidual[offset_h+stride_h*i] = fmax(0.,hinp1);	 
+	  //globalResidual[offset_h+stride_h*i] = hinp1;	 
+	  //globalResidual[offset_h+stride_h*i] = hi - dt/mi*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
+
+	  globalResidual[offset_hu+stride_hu*i] = hui - dt/mi*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2);
+	  globalResidual[offset_hv+stride_hv*i] = hvi - dt/mi*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3);
+	}
+    }
+
+    /*
+    void calculateResidual_second_order_NonFlatB_GP(//element
+				       double* mesh_trial_ref,
+				       double* mesh_grad_trial_ref,
+				       double* mesh_dof,
+				       double* mesh_velocity_dof,
+				       double MOVING_DOMAIN,
+				       int* mesh_l2g,
+				       double* dV_ref,
+				       double* h_trial_ref,
+				       double* h_grad_trial_ref,
+				       double* h_test_ref,
+				       double* h_grad_test_ref,
+				       double* vel_trial_ref,
+				       double* vel_grad_trial_ref,
+				       double* vel_test_ref,
+				       double* vel_grad_test_ref,
+				       //element boundary
+				       double* mesh_trial_trace_ref,
+				       double* mesh_grad_trial_trace_ref,
+				       double* dS_ref,
+				       double* h_trial_trace_ref,
+				       double* h_grad_trial_trace_ref,
+				       double* h_test_trace_ref,
+				       double* h_grad_test_trace_ref,
+				       double* vel_trial_trace_ref,
+				       double* vel_grad_trial_trace_ref,
+				       double* vel_test_trace_ref,
+				       double* vel_grad_test_trace_ref,					 
+				       double* normal_ref,
+				       double* boundaryJac_ref,
+				       //physics
+				       double* elementDiameter,
+				       int nElements_global,
+				       double useRBLES,
+				       double useMetrics, 
+				       double alphaBDF,
+				       double nu,
+				       double g,
+				       int* h_l2g, 
+				       int* vel_l2g, 
+				       double* h_dof_old_old, 
+				       double* hu_dof_old_old, 
+				       double* hv_dof_old_old, 
+				       double* h_dof_old, 
+				       double* hu_dof_old, 
+				       double* hv_dof_old, 
+				       double* b_dof, 
+				       double* h_dof, 
+				       double* hu_dof, 
+				       double* hv_dof, 
+				       double* h_dof_sge, 
+				       double* hu_dof_sge, 
+				       double* hv_dof_sge, 
+				       double* q_mass_acc,
+				       double* q_mom_hu_acc,
+				       double* q_mom_hv_acc,
+				       double* q_mass_adv,
+				       double* q_mass_acc_beta_bdf,
+				       double* q_mom_hu_acc_beta_bdf, 
+				       double* q_mom_hv_acc_beta_bdf,
+				       double* q_velocity_sge,
+				       double* q_cfl,
+				       double* q_numDiff_h, 
+				       double* q_numDiff_hu, 
+				       double* q_numDiff_hv, 
+				       double* q_numDiff_h_last,
+				       double* q_numDiff_hu_last, 
+				       double* q_numDiff_hv_last,
+				       int* sdInfo_hu_hu_rowptr,
+				       int* sdInfo_hu_hu_colind,			      
+				       int* sdInfo_hu_hv_rowptr,
+				       int* sdInfo_hu_hv_colind,
+				       int* sdInfo_hv_hv_rowptr,
+				       int* sdInfo_hv_hv_colind,
+				       int* sdInfo_hv_hu_rowptr,
+				       int* sdInfo_hv_hu_colind,
+				       int offset_h, 
+				       int offset_hu, 
+				       int offset_hv, 
+				       int stride_h, 
+				       int stride_hu, 
+				       int stride_hv,
+				       double* globalResidual,
+				       int nExteriorElementBoundaries_global,
+				       int* exteriorElementBoundariesArray,
+				       int* elementBoundaryElementsArray,
+				       int* elementBoundaryLocalElementBoundariesArray,
+				       int* isDOFBoundary_h,
+				       int* isDOFBoundary_hu,
+				       int* isDOFBoundary_hv,
+				       int* isAdvectiveFluxBoundary_h,
+				       int* isAdvectiveFluxBoundary_hu,
+				       int* isAdvectiveFluxBoundary_hv,
+				       int* isDiffusiveFluxBoundary_hu,
+				       int* isDiffusiveFluxBoundary_hv,
+				       double* ebqe_bc_h_ext,
+				       double* ebqe_bc_flux_mass_ext,
+				       double* ebqe_bc_flux_mom_hu_adv_ext,
+				       double* ebqe_bc_flux_mom_hv_adv_ext,
+				       double* ebqe_bc_hu_ext,
+				       double* ebqe_bc_flux_hu_diff_ext,
+				       double* ebqe_penalty_ext,
+				       double* ebqe_bc_hv_ext,
+				       double* ebqe_bc_flux_hv_diff_ext,
+				       double* q_velocity,
+				       double* ebqe_velocity,
+				       double* flux,
+				       double* elementResidual_h_save,
+				       // C matrices
+				       double* Cx, 
+				       double* Cy,
+				       double* CTx,
+				       double* CTy,
+				       // PARAMETERS FOR EDGE BASED STABILIZATION 
+				       int numDOFsPerEqn,
+				       int NNZ,
+				       int* csrRowIndeces_DofLoops,
+				       int* csrColumnOffsets_DofLoops,
+				       // LUMPED MASS MATRIX
+				       double* lumped_mass_matrix,
+				       double* edge_based_cfl,
+				       double cfl_run,
+				       double hEps,
+				       int recompute_lumped_mass_matrix, 
+				       // SAVE SOLUTION (mql)
+				       double* hnp1_at_quad_point,
+				       double* hunp1_at_quad_point,
+				       double* hvnp1_at_quad_point)
+    {
+    double dt = 1./alphaBDF; 
+      ////////////////
+      // CELL LOOPS //
+      ////////////////
+      // To compute: 
+      //      * lumped_mass_matrix
+      //      * Cell based CFL
+      //      * velocity at quad points for other models 
+      // init lumped mass matrix to zero
+      if (recompute_lumped_mass_matrix==1)
+	{
+	  for (int i=0; i<numDOFsPerEqn; i++)
+	    lumped_mass_matrix[i] = 0;
+	  for(int eN=0;eN<nElements_global;eN++)
+	    {
+	      //declare local storage for element residual and initialize
+	      register double element_lumped_mass_matrix[nDOF_test_element];
+	      for (int i=0;i<nDOF_test_element;i++)
+		element_lumped_mass_matrix[i]=0.0;
+	      //
+	      //loop over quadrature points and compute integrands
+	      //
+	      for(int k=0;k<nQuadraturePoints_element;k++)
+		{
+		  //compute indices and declare local storage
+		  register int eN_k = eN*nQuadraturePoints_element+k,
+		    eN_k_nSpace = eN_k*nSpace,
+		    eN_nDOF_trial_element = eN*nDOF_trial_element;
+		  register double 
+		    b=0.0,h=0.0,hu=0.0,hv=0.0, // solution at current time
+		    h_tn=0.0, hu_tn=0.0, hv_tn=0.0, // solution at tn
+		    jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		    h_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
+		    dV,x,y,xt,yt;
+		  //get jacobian, etc for mapping reference element
+		  ck.calculateMapping_element(eN,
+					      k,
+					      mesh_dof,
+					      mesh_l2g,
+					      mesh_trial_ref,
+					      mesh_grad_trial_ref,
+					      jac,
+					      jacDet,
+					      jacInv,
+					      x,y);
+		  //get the physical integration weight
+		  dV = fabs(jacDet)*dV_ref[k];
+		  //get the solution at current time. This is to compute velocity for other models
+		  ck.valFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],b);
+		  ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
+		  ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
+		  ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
+		  //get the solution at time tn (old time). This is needed to compute the CFL
+		  ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_tn);
+		  ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_tn);
+		  ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_tn);
+		  //precalculate test function products with integration weights
+		  for (int j=0;j<nDOF_trial_element;j++)
+		    {
+		      h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
+		      vel_test_dV[j] = vel_test_ref[k*nDOF_trial_element+j]*dV;
+		    }
+		  //save velocity at quadrature points for other models to use
+		  q_velocity[eN_k_nSpace+0] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hu;
+		  q_velocity[eN_k_nSpace+1] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hv;
+		  hnp1_at_quad_point[eN_k] = h;
+		  hunp1_at_quad_point[eN_k] = hu;
+		  hvnp1_at_quad_point[eN_k] = hv;
+		  // calculatte CFL
+		  calculateCFL(elementDiameter[eN],
+			       g,
+			       h_tn,
+			       hu_tn,
+			       hv_tn,
+			       hEps,
+			       q_cfl[eN_k]);
+		  //update element residual. Part about the lumped mass matrix 
+		  for(int i=0;i<nDOF_test_element;i++)
+		    element_lumped_mass_matrix[i] += h_test_dV[i];
+		}
+	      // distribute
+	      for(int i=0;i<nDOF_test_element;i++)
+		{
+		  register int eN_i=eN*nDOF_test_element+i;
+		  int h_gi = h_l2g[eN_i]; //global i-th index for h
+		  lumped_mass_matrix[h_gi]  += element_lumped_mass_matrix[i];	  
+		}
+	    }
+	} // end of computing lumped mass matrix
+
+      //////////////////////////////////
+      // COMPUTE SMOOTHNESS INDICATOR // and // Star Solution
+      //////////////////////////////////
+      // Smoothness indicator is based on the solution. psi_i = psi_i(alpha_i); 
+      // alpha_i = |sum(uj-ui)|/sum|uj-ui|
+      // HStar[ij] = fmax(0., hi + Zi - fmax(Zi,Zj)), and so on
+      register double hStar[NNZ], huStar[NNZ], hvStar[NNZ], hStarT[NNZ], huStarT[NNZ], hvStarT[NNZ];
+      int ij = 0;
+      register double psi[numDOFsPerEqn];
+      for (int i=0; i<numDOFsPerEqn; i++)
+	{
+	  double alphai, alphai_numerator=0, alphai_denominator=0; // smoothness indicator of solution
+	  double hi = h_dof_old[i]; // solution at time tn for the ith DOF
+	  double hui = hu_dof_old[i]; 
+	  double hvi = hv_dof_old[i]; 
+	  double Zi = b_dof[i]; // bathymetry
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    { //loop in j (sparsity pattern)
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double hj = h_dof_old[j]; // solution at time tn for the jth DOF
+	      double huj = hu_dof_old[j];
+	      double hvj = hv_dof_old[j];
+	      alphai_numerator += (hj-hi);
+	      alphai_denominator += std::abs(hj-hi);
+	      // compute h, hu and hv stars
+	      double Zj = b_dof[j];
+	      hStar[ij] = fmax(0., hi + Zi - fmax(Zi,Zj));
+	      huStar[ij] = (hi == 0. ? 0. : hui*hStar[ij]/hi);
+	      hvStar[ij] = (hi == 0. ? 0. : hvi*hStar[ij]/hi);
+	      // compute Transpose of star matrices
+	      hStarT[ij] = fmax(0., hj + Zj - fmax(Zi,Zj));
+	      huStarT[ij] = (hj == 0. ? 0. : huj*hStarT[ij]/hj);
+	      hvStarT[ij] = (hj == 0. ? 0. : hvj*hStarT[ij]/hj);
+	      //update ij
+	      ij+=1;
+	    }
+	  if (hi < hEps)
+	    alphai = 1.;
+	  else
+	    {
+	      if (alphai_denominator==0)
+		alphai = 1.;
+	      else 
+		alphai = std::abs(alphai_numerator)/alphai_denominator;
+	    }
+	  if (POWER_SMOOTHNESS_INDICATOR==0)
+	    psi[i] = 1.0;
+	  else
+	    psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+	  
+	  //std::cout << psi[i] << std::endl;
+	}
+
+      //////////////////
+      // Loop on DOFs //
+      //////////////////
+      ij = 0;
+      for (int i=0; i<numDOFsPerEqn; i++)
+	{
+	  double hi = h_dof_old[i];
+	  double hui = hu_dof_old[i];
+	  double hvi = hv_dof_old[i];
+	  
+	  double ui = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hui;
+	  double vi = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hvi;
+	  // regularization of 1/hi 
+	  double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2));
+
+	  double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
+	  double ith_dissipative_term1=0., ith_dissipative_term2=0., ith_dissipative_term3=0.;
+	  double ith_well_balancing_term1=0., ith_well_balancing_term2=0., ith_well_balancing_term3=0.;
+	  
+	  double dLii = 0;
+	  // loop over the sparsity pattern of the i-th DOF
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double hj = h_dof_old[j];
+	      double huj = hu_dof_old[j];
+	      double hvj = hv_dof_old[j];
+	      double Zj = b_dof[j];
+	      double uj = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2))*huj;
+	      double vj = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2))*hvj;
+
+	      // regularization of 1/hj
+	      double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2));
+
+	      // Nodal projection of fluxes
+	      ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
+	      ith_flux_term2 += ( huj*huj*one_over_hjReg*Cx[ij] + huj*hvj*one_over_hjReg*Cy[ij] 
+				  + g*hi*(hj+Zj)*Cx[ij] );
+	      ith_flux_term3 += ( huj*hvj*one_over_hjReg*Cx[ij] + hvj*hvj*one_over_hjReg*Cy[ij] 
+				  + g*hi*(hj+Zj)*Cy[ij] );
+
+	      // Dissipative term
+	      double dLij = 0., muij = 0.;
+	      if (i != j) // This is not necessary. See formula for ith_dissipative_terms
+		{
+		  // norm of the C and C transpose matrices
+		  double cij_norm = sqrt(Cx[ij]*Cx[ij] + Cy[ij]*Cy[ij]);
+		  double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
+
+		  double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
+		  double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
+
+		  //dissipative terms for flux
+		  dLij = fmax(fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+		  					  hi,hui,hvi, 
+		  					  hStarT[ij],huStarT[ij],hvStarT[ij],
+		  					  hEps),
+		  	   maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+		  					  hi,hui,hvi, 
+		  					  hStar[ij],huStar[ij],hvStar[ij],
+		  					  hEps))*cij_norm,
+		        fmax(maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+		  					  hj,huj,hvj, 
+		  					  hStar[ij],huStar[ij],hvStar[ij],
+		  					  hEps),
+		  	   maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+		  					  hj,huj,hvj, 
+		  					  hStarT[ij],huStarT[ij],hvStarT[ij],
+		  					  hEps))*cji_norm);  
+		  //dLij =  fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij,
+		  //				     hi,hui,hvi,hj,huj,hvj,hEps)*cij_norm,
+		  //       maxWaveSpeedSharpInitialGuess(g,nxji,nyji,
+		  //				     hj,huj,hvj,hi,hui,hvi,hEps)*cji_norm);
+		  dLij *= std::max(psi[i],psi[j]);
+		  ith_dissipative_term1 += dLij*(hStarT[ij]-hStar[ij]); 
+		  ith_dissipative_term2 += dLij*(huStarT[ij]-huStar[ij]);
+		  ith_dissipative_term3 += dLij*(hvStarT[ij]-hvStar[ij]);
+
+		  //dissipative terms for well balancing
+		  muij = fmax(fmax(0.,-(ui*nxij + vi*nyij)),fmax(0,(uj*nxij + vj*nyij)))*cij_norm;
+		  muij *= std::max(psi[i],psi[j]);
+
+		  ith_well_balancing_term1 += muij*(hj-hStarT[ij]-(hi-hStar[ij]));
+		  ith_well_balancing_term2 += muij*(huj-huStarT[ij]-(hui-huStar[ij]));
+		  ith_well_balancing_term3 += muij*(hvj-hvStarT[ij]-(hvi-hvStar[ij]));
+
+		  // compute dLii (for debugging and selecting time step) 
+		  dLii -= dLij;
+		}
+	      // update ij
+	      ij+=1;
+	    }
+	  double mi = lumped_mass_matrix[i];
+	  // compute residual
+	  globalResidual[offset_h+stride_h*i]   = mi*(h_dof[i] - hi) + dt*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
+	  globalResidual[offset_hu+stride_hu*i] = mi*(hu_dof[i] - hui) + dt*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2);
+	  globalResidual[offset_hv+stride_hv*i] = mi*(hv_dof[i] - hvi) + dt*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3);
+	  // calculate edge based CFL
+	  edge_based_cfl[i] = 2*fabs(dLii)/mi;
+	}
+    }
+     */
 
     void calculateJacobian(//element
 			   double* mesh_trial_ref,
