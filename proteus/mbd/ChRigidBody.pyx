@@ -1104,7 +1104,7 @@ cdef class Moorings:
                     #acc_arr = (vel_arr-fluid_velocity_array_previous[i])/dt+vel_arr*vel_grad_arr
                     #arr[:self.nd] = self.System.findFluidVelocityAtCoords(coords[:self.nd])
                     self.fluid_velocity_array[i] = vel_arr
-                    vel = ch.ChVector[double](arr[0], arr[1], arr[2])
+                    vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
                     fluid_velocity.push_back(vel)
                 elif fluid_velocity_array is not None:
                     vel = ch.ChVector[double](self.fluid_velocity_array[i][0], fluid_velocity_array[i][1], fluid_velocity_array[i][2])
