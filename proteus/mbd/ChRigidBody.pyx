@@ -16,121 +16,68 @@ from libcpp.memory cimport (shared_ptr,
                             make_shared)
 from collections import OrderedDict
 from cython.operator cimport dereference as deref
+cimport ChronoHeaders as ch
 
 
 cdef extern from "ChMoorings.h":
-    cdef cppclass ChSystemDEM:
-        double GetStep()
-        double GetChTime()
-        void SetupInitial()
-    cdef cppclass ChMesh:
-        void SetAutomaticGravity(bool mg, int num_points=1)
-    cdef cppclass ChMaterialSurfaceDEM:
-        void SetYoungModulus(float val)
-        void SetPoissonRatio(float val)
-        void SetSfriction(float val)
-        void SetKfriction(float val)
-        void SetFriction(float val)
-        void SetRestitution(float val)
-        void SetAdhesion(float val)
-        void SetAdhesionMultDMT(float val)
-        void SetKn(float val)
-        void SetKt(float val)
-        void SetGn(float val)
-        void SetGt(float val)
     cdef cppclass cppMesh:
-        shared_ptr[ChMesh] mesh
+        shared_ptr[ch.ChMesh] mesh
         void SetAutomaticGravity(bool val)
-    cppMesh * newMesh(ChSystemDEM&, shared_ptr[ChMesh])
-    cdef cppclass ChNodeFEAxyzDD:
-        const ChVector& GetPos()
-        void SetPos (const ChVector &mpos)
-        const ChVector& GetPos_dt()
-        void SetPos_dt (const ChVector &mposdt)
-        const ChVector& GetPos_dtdt()
-        void SetPos_dtdt (const ChVector &mposdtdt)
-        void SetFixed(bool mev)
-    cdef cppclass ChElementBeamANCF:
-        void SetNodes(shared_ptr[ChNodeFEAxyzDD] nodeA, shared_ptr[ChNodeFEAxyzDD] nodeB, shared_ptr[ChNodeFEAxyzDD] nodeC)
-        void SetDimensions(double lenX, double beam_h, double beam_w)
-        shared_ptr[ChNodeFEAxyzDD] GetNodeA()
-        shared_ptr[ChNodeFEAxyzDD] GetNodeB()
-        shared_ptr[ChNodeFEAxyzDD] GetNodeC()
-        void setAlphaDamp(double a)
+    cppMesh * newMesh(ch.ChSystemDEM&, shared_ptr[ch.ChMesh])
     cdef cppclass cppCable:
-        ChSystemDEM& system
-        ChMesh& mesh
+        ch.ChSystemDEM& system
+        ch.ChMesh& mesh
         double L0
         double length
         int nb_elems
-        vector[ChVector] mvecs
+        vector[ch.ChVector] mvecs
         void buildNodes()
         void buildMaterials()
         void buildElements()
         void buildMesh()
         void updateDragForces()
         void updateBuoyancyForces()
-    cdef cppclass ChLinkPointFrame:
-        ChVector GetReactionOnNode()
     cdef cppclass cppMultiSegmentedCable:
-        ChSystemDEM& system
-        ChMesh& mesh
+        ch.ChSystemDEM& system
+        ch.ChMesh& mesh
         vector[shared_ptr[cppCable]] cables
-        vector[shared_ptr[ChNodeFEAxyzDD]] nodes
-        vector[shared_ptr[ChElementBeamANCF]] elems
-        shared_ptr[ChLinkPointFrame] constraint_back
-        shared_ptr[ChLinkPointFrame] constraint_front
+        vector[shared_ptr[ch.ChNodeFEAxyzDD]] nodes
+        vector[shared_ptr[ch.ChElementBeamANCF]] elems
+        shared_ptr[ch.ChLinkPointFrame] constraint_back
+        shared_ptr[ch.ChLinkPointFrame] constraint_front
         void buildNodes()
         void buildCable()
         # void setVelocityAtNodes(double* fluid_velocity)
-        void attachFrontNodeToBody(shared_ptr[ChBody])
-        void attachBackNodeToBody(shared_ptr[ChBody])
+        void attachFrontNodeToBody(shared_ptr[ch.ChBody])
+        void attachBackNodeToBody(shared_ptr[ch.ChBody])
         void updateDragForces()
+        void applyForces()
         void updateBuoyancyForces()
-        void setFluidVelocityAtNodes(vector[ChVector] fluid_velocity)
-    cppMultiSegmentedCable * newMoorings(ChSystemDEM& system,
-                                         shared_ptr[ChMesh] mesh,
+        void setFluidVelocityAtNodes(vector[ch.ChVector] fluid_velocity)
+        void setFluidDensityAtNodes(vector[double] fluid_density)
+        void setContactMaterial(shared_ptr[ch.ChMaterialSurfaceDEM] material)
+    cppMultiSegmentedCable * newMoorings(ch.ChSystemDEM& system,
+                                         shared_ptr[ch.ChMesh] mesh,
                                          vector[double] length,
                                          vector[int] nb_elems,
                                          vector[double] d,
                                          vector[double] rho,
                                          vector[double] E
         )
-    cdef cppclass ChBodyEasyBox
     cdef cppclass cppSurfaceBoxNodesCloud:
-        ChSystemDEM& system
-        ChVector position
-        ChVector dimensions
-        shared_ptr[ChBodyEasyBox] body;
+        ch.ChSystemDEM& system
+        ch.ChVector position
+        ch.ChVector dimensions
+        shared_ptr[ch.ChBodyEasyBox] body;
         void setNodesSize(double size)
-    cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ChSystemDEM& system,
-                                                shared_ptr[ChMesh] mesh,
-                                                ChVector position,
-                                                ChVector dimensions)
-
-cdef extern from "ChRigidBody.h":
-    cdef cppclass ChVector[double]:
-        double x()
-        double y()
-        double z()
-        ChVector(double x, double y, double z)
-        ChVector()
-    cdef cppclass ChQuaternion[double]:
-        double e0()
-        double e1()
-        double e2()
-        double e3()
-    cdef cppclass ChMatrix33[double]:
-        ChVector Get_A_Xaxis()
-        ChVector Get_A_Yaxis()
-        ChVector Get_A_Zaxis()
-    cdef cppclass ChSystem
-    cdef cppclass ChBody:
-        void SetRot(ChQuaternion &rot)
+    cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ch.ChSystemDEM& system,
+                                                shared_ptr[ch.ChMesh] mesh,
+                                                ch.ChVector position,
+                                                ch.ChVector dimensions)
 
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppSystem:
-        ChSystemDEM system
+        ch.ChSystemDEM system
         void DoStepDynamics(dt)
         void step(double proteus_dt, int n_substeps)
         void recordBodyList()
@@ -138,32 +85,30 @@ cdef extern from "ChRigidBody.h":
         void setGravity(double* gravity)
         void setDirectory(string directory)
     cppSystem * newSystem(double* gravity)
-
-cdef extern from "ChRigidBody.h":
     cdef cppclass cppRigidBody:
-        shared_ptr[ChBody] body
+        shared_ptr[ch.ChBody] body
         double mass
-        ChVector pos
-        ChVector pos_last
-        ChVector vel
-        ChVector vel_last
-        ChVector acc
-        ChVector acc_last
-        ChVector angvel
-        ChVector angvel_last
-        ChVector angacc
-        ChVector angacc_last
+        ch.ChVector pos
+        ch.ChVector pos_last
+        ch.ChVector vel
+        ch.ChVector vel_last
+        ch.ChVector acc
+        ch.ChVector acc_last
+        ch.ChVector angvel
+        ch.ChVector angvel_last
+        ch.ChVector angacc
+        ch.ChVector angacc_last
         # ChVector inertia
-        ChMatrix33 rotm
-        ChMatrix33 rotm_last
-        ChQuaternion rotq
-        ChQuaternion rotq_last
+        ch.ChMatrix33 rotm
+        ch.ChMatrix33 rotm_last
+        ch.ChQuaternion rotq
+        ch.ChQuaternion rotq_last
         # double* free_x
         # double* free_r
-        ChVector F
-        ChVector F_last
-        ChVector M
-        ChVector M_last
+        ch.ChVector F
+        ch.ChVector F_last
+        ch.ChVector M
+        ch.ChVector M_last
         cppRigidBody(cppSystem* system, double* position,
                      double* rotq, double mass, double* inertia,
                      double* free_x, double* free_r)
@@ -814,13 +759,13 @@ cdef class System:
 # ctypedef np.ndarray vecarray(ChVector)
 
 # ctypedef np.ndarray (*ChVector_to_npArray) (ChVector)
-cdef np.ndarray ChVector_to_npArray(ChVector &myvec):
+cdef np.ndarray ChVector_to_npArray(ch.ChVector &myvec):
     return np.array([myvec.x(), myvec.y(), myvec.z()])
 
-cdef np.ndarray ChQuaternion_to_npArray(ChQuaternion &quat):
+cdef np.ndarray ChQuaternion_to_npArray(ch.ChQuaternion &quat):
     return np.array([quat.e0(), quat.e1(), quat.e2(), quat.e3()])
 
-cdef np.ndarray ChMatrix33_to_npArray(ChMatrix33 &mat):
+cdef np.ndarray ChMatrix33_to_npArray(ch.ChMatrix33 &mat):
     return np.array([[mat.Get_A_Xaxis().x(), mat.Get_A_Xaxis().y(), mat.Get_A_Xaxis().z()],
                      [mat.Get_A_Yaxis().x(), mat.Get_A_Yaxis().y(), mat.Get_A_Yaxis().z()],
                      [mat.Get_A_Zaxis().x(), mat.Get_A_Zaxis().y(), mat.Get_A_Zaxis().z()]])
@@ -837,7 +782,7 @@ cdef np.ndarray ChMatrix33_to_npArray(ChMatrix33 &mat):
 cdef class Mesh:
     cdef cppMesh * thisptr
     def __cinit__(self, System system):
-        cdef shared_ptr[ChMesh] mesh = make_shared[ChMesh]()
+        cdef shared_ptr[ch.ChMesh] mesh = make_shared[ch.ChMesh]()
         self.thisptr = newMesh(system.thisptr.system, mesh)
     def setAutomaticGravity(self, bool val):
         self.thisptr.SetAutomaticGravity(val)
@@ -845,8 +790,8 @@ cdef class Mesh:
 cdef class SurfaceBoxNodesCloud:
     cdef cppSurfaceBoxNodesCloud * thisptr
     def __cinit__(self, System system, Mesh mesh, np.ndarray position, np.ndarray dimensions):
-        cdef ChVector[double] pos = ChVector[double](position[0], position[1], position[2])
-        cdef ChVector[double] dim = ChVector[double](dimensions[0], dimensions[1], dimensions[2])
+        cdef ch.ChVector[double] pos = ch.ChVector[double](position[0], position[1], position[2])
+        cdef ch.ChVector[double] dim = ch.ChVector[double](dimensions[0], dimensions[1], dimensions[2])
         self.thisptr = newSurfaceBoxNodesCloud(system.thisptr.system,
                                                mesh.thisptr.mesh,
                                                pos,
@@ -870,6 +815,8 @@ cdef class Moorings:
       bool front_body
       bool back_body
       bool nodes_built
+      np.ndarray fluid_density_array
+      np.ndarray fluid_velocity_array
     def __cinit__(self,
                   System system,
                   Mesh mesh,
@@ -920,6 +867,7 @@ cdef class Moorings:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
         row = []
+        cdef ch.ChVector vec
         for i in range(self.thisptr.nodes.size()):
             vec = deref(self.thisptr.nodes[i]).GetPos()
             x = vec.x()
@@ -931,7 +879,7 @@ cdef class Moorings:
             writer.writerow(row)
 
     def getTensionBack(self):
-        cdef ChVector T
+        cdef ch.ChVector T
         if self.thisptr.constraint_back:
             T = deref(self.thisptr.constraint_back).GetReactionOnNode()
             return ChVector_to_npArray(T)
@@ -939,7 +887,7 @@ cdef class Moorings:
             return np.zeros(3)
 
     def getTensionFront(self):
-        cdef ChVector T
+        cdef ch.ChVector T
         if self.thisptr.constraint_front:
             T = deref(self.thisptr.constraint_front).GetReactionOnNode()
             return ChVector_to_npArray(T)
@@ -951,6 +899,11 @@ cdef class Moorings:
         # self.setNodesPosition()
         # build cable (nodes, elements, etc)
         self.thisptr.buildCable()
+        nb_nodes = self.thisptr.nodes.size()
+        if self.fluid_velocity_array is None:
+            self.fluid_velocity_array = np.zeros((nb_nodes, 3))
+        if self.fluid_density_array is None:
+            self.fluid_density_array = np.zeros(nb_nodes)+998.2
 
 
     def prestep(self):
@@ -998,8 +951,14 @@ cdef class Moorings:
         assert self.nodes_built is True, 'call buildNodes() before calling this function'
         self.thisptr.attachFrontNodeToBody(body.thisptr.body)
 
+    def getLengthElems(self):
+        lengths = np.zeros(self.thisptr.elems.size())
+        for i in range(self.thisptr.elems.size()):
+            lengths[i] = deref(self.thisptr.elems[i]).GetLengthX()
+        return lengths
+
     def setNodesPosition(self):
-        cdef ChVector[double] vec
+        cdef ch.ChVector[double] vec
         for i in range(self.thisptr.cables.size()):
             deref(self.thisptr.cables[i]).mvecs.clear()
             L0 = deref(self.thisptr.cables[i]).L0
@@ -1009,7 +968,7 @@ cdef class Moorings:
             ds = L/(nb_nodes-1)
             for j in range(nb_nodes):
                 x, y, z = self.nodes_function(L0+ds*j)
-                vec = ChVector[double](x, y, z)
+                vec = ch.ChVector[double](x, y, z)
                 deref(self.thisptr.cables[i]).mvecs.push_back(vec)
         self.buildNodes()
 
@@ -1024,24 +983,47 @@ cdef class Moorings:
             pos[i] = [vec.x(), vec.y(), vec.z()]
         return pos
 
-    def setExternalForces(self):
+    def setContactMaterial(self, ChMaterialSurfaceDEM mat):
+        self.thisptr.setContactMaterial(mat.sharedptr)
+
+    def setExternalForces(self, fluid_velocity_array=None, fluid_density_array=None):
+        """
+        Sets external forces acting on cables
+        Pass fluid velocity_array as argument only for debugging (must be an array as long as the number of nodes)
+        """
         # get velocity at nodes
         # cdef np.ndarray fluid_velocity = np.zeros((len(self.thisptr.nodes.size()), 3))
-        cdef vector[ChVector[double]] fluid_velocity
-        cdef ChVector[double] vel
-        for i in range(self.thisptr.nodes.size()):
-            vec = deref(self.thisptr.nodes[i]).GetPos()
-            x = vec.x()
-            y = vec.y()
-            z = vec.z()
-            coords = np.array([x, y, z])
-            arr = np.zeros(3)
-            arr[:self.nd] = self.System.findFluidVelocityAtCoords(coords[:self.nd])
-            vel = ChVector[double](arr[0], arr[1], arr[2])
-            fluid_velocity.push_back(vel)
-        self.thisptr.setFluidVelocityAtNodes(fluid_velocity)
-        # update drag forces
-        self.thisptr.updateDragForces()
+        if fluid_velocity_array is not None:
+            self.fluid_velocity_array = fluid_velocity_array
+        if fluid_density_array is not None:
+            self.fluid_density_array = fluid_density_array
+        cdef vector[ch.ChVector[double]] fluid_velocity
+        cdef ch.ChVector[double] vel
+        cdef vector[double] fluid_density
+        cdef double dens
+        if self.System.model is not None or (fluid_velocity_array is not None and fluid_density_array is not None):
+            for i in range(self.thisptr.nodes.size()):
+                if self.System.model is not None and fluid_velocity_array is None:
+                    vec = deref(self.thisptr.nodes[i]).GetPos()
+                    x = vec.x()
+                    y = vec.y()
+                    z = vec.z()
+                    coords = np.array([x, y, z])
+                    arr = np.zeros(3)
+                    arr[:self.nd] = self.System.findFluidVelocityAtCoords(coords[:self.nd])
+                    self.fluid_velocity_array[i] = arr
+                    vel = ch.ChVector[double](arr[0], arr[1], arr[2])
+                    fluid_velocity.push_back(vel)
+                elif fluid_velocity_array is not None:
+                    vel = ch.ChVector[double](self.fluid_velocity_array[i][0], fluid_velocity_array[i][1], fluid_velocity_array[i][2])
+                    fluid_velocity.push_back(vel)
+                    dens = self.fluid_density_array[i]
+                    fluid_density.push_back(dens)
+            self.thisptr.setFluidVelocityAtNodes(fluid_velocity)
+            self.thisptr.setFluidDensityAtNodes(fluid_density)
+            # update drag forces
+            self.thisptr.updateDragForces()
+            self.thisptr.applyForces()
         # update buoyancy forces
         # self.thisptr.updateBuoyancyForces()
         # update added mass forces
@@ -1112,3 +1094,84 @@ def getLocalElement(femSpace, coords, node):
                     return eN
     # no elements found
     return None
+
+cdef class ChMaterialSurfaceDEM:
+    cdef shared_ptr[ch.ChMaterialSurfaceDEM] sharedptr
+    def __cinit__(self):
+        self.sharedptr = make_shared[ch.ChMaterialSurfaceDEM]()
+    def SetYoungModulus(self, float val):
+        deref(self.sharedptr).SetYoungModulus(val)
+    def SetPoissonRatio(self, float val):
+        deref(self.sharedptr).SetPoissonRatio(val)
+    def SetSfriction(self, float val):
+        deref(self.sharedptr).SetSfriction(val)
+    def SetKfriction(self, float val):
+        deref(self.sharedptr).SetKfriction(val)
+    def SetFriction(self, float val):
+        deref(self.sharedptr).SetFriction(val)
+    def SetRestitution(self, float val):
+        deref(self.sharedptr).SetRestitution(val)
+    def SetAdhesion(self, float val):
+        deref(self.sharedptr).SetAdhesion(val)
+    def SetAdhesionMultDMT(self, float val):
+        deref(self.sharedptr).SetAdhesionMultDMT(val)
+    def SetKn(self, float val):
+        deref(self.sharedptr).SetKn(val)
+    def SetKt(self, float val):
+        deref(self.sharedptr).SetKt(val)
+    def SetGn(self, float val):
+        deref(self.sharedptr).SetGn(val)
+    def SetGt(self, float val):
+        deref(self.sharedptr).SetGt(val)
+
+cdef class ChContactSurfaceNodeCloud:
+    cdef shared_ptr[ch.ChContactSurfaceNodeCloud] sharedptr
+    def __cinit__(self):
+        self.sharedptr = make_shared[ch.ChContactSurfaceNodeCloud]()
+    def AddAllNodes(self, double point_radius=0.001):
+        deref(self.sharedptr).AddAllNodes(point_radius)
+
+cdef class ChVector:
+    cdef shared_ptr[ch.ChVector] sharedptr
+    def __cinit__(self, double x, double y, double z):
+        self.sharedptr = make_shared[ch.ChVector](x, y, z)
+    def x(self):
+        return deref(self.sharedptr).x()
+    def y(self):
+        return deref(self.sharedptr).y()
+    def z(self):
+        return deref(self.sharedptr).z()
+
+cdef class ChQuaternion:
+    cdef shared_ptr[ch.ChQuaternion] sharedptr
+    def __cinit__(self, double e0, double e1, double e2, double e3):
+        self.sharedptr = make_shared[ch.ChQuaternion](e0, e1, e2, e3)
+    def e0(self):
+        return deref(self.sharedptr).e0()
+    def e1(self):
+        return deref(self.sharedptr).e1()
+    def e2(self):
+        return deref(self.sharedptr).e2()
+    def e3(self):
+        return deref(self.sharedptr).e3()
+
+cdef class ChBody:
+    cdef shared_ptr[ch.ChBody] sharedptr
+    def __cinit__(self):
+        if type(self) is ChBody:
+            self.sharedptr = make_shared[ch.ChBody]()
+    def SetBodyFixed(self, bool state):
+        deref(self.sharedptr).SetBodyFixed(state)
+    def SetRot(self, ChQuaternion rot):
+        deref(self.sharedptr).SetRot(deref(rot.sharedptr))
+    def SetPos(self, ChVector mpos):
+        deref(self.sharedptr).SetPos(<ch.ChVector> deref(mpos.sharedptr))
+    def SetMaterialSurface(self, ChMaterialSurfaceDEM mat):
+        deref(self.sharedptr).SetMaterialSurface(<shared_ptr[ch.ChMaterialSurfaceBase]> mat.sharedptr)
+
+cdef class ChBodyEasyBox(ChBody):
+    cdef shared_ptr[ch.ChBodyEasyBox] sharedptr2
+    def __cinit__(self, System system, double Xsize, double Ysize, double Zsize, double mdensity, bool collide=True, bool visual_asset=False):
+        self.sharedptr2 = make_shared[ch.ChBodyEasyBox](Xsize, Ysize, Zsize, mdensity, collide, visual_asset)
+        self.sharedptr = <shared_ptr[ch.ChBody]> self.sharedptr2
+        system.thisptr.system.Add(<shared_ptr[ch.ChPhysicsItem]> self.sharedptr2)
