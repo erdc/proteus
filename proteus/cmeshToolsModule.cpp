@@ -832,7 +832,6 @@ static PyObject* cmeshToolsGenerateHexahedralMeshFromRectangularGrid(PyObject* s
   regularHexahedralMeshElements(nx,ny,nz,px,py,pz,MESH(cmesh));
   regularMeshNodes(nx,ny,nz,Lx,Ly,Lz,MESH(cmesh));
   constructElementBoundaryElementsArray_hexahedron(MESH(cmesh));
-  //cek hack just using this routine to flag element boundaries
   regularHexahedralToTetrahedralElementBoundaryMaterials(Lx,Ly,Lz,MESH(cmesh));
   Py_INCREF(Py_None); 
   return Py_None;
@@ -1199,6 +1198,14 @@ SparsityInfo_init(SparsityInfo *self, PyObject *args, PyObject *kwds)
   return 0;
 }
 
+static void
+SparsityInfo_dealloc(SparsityInfo *self)
+{
+  self->columnIndecesMap.clear();
+  self->columnOffsetsMap.clear();
+  self->ob_type->tp_free((PyObject*)self);
+}
+
 
 static PyObject* SparsityInfo_findNonzeros(SparsityInfo *self,
                                            PyObject *args)
@@ -1420,6 +1427,14 @@ static PyObject* SparsityInfo_findNonzeros(SparsityInfo *self,
             }
         }
     }
+  //debug
+//   for (std::map<int, std::set<int> >::iterator mit = self->columnIndecesMap.begin();mit != self->columnIndecesMap.end();mit++)
+//     {
+//       for(std::set<int>::iterator sit = mit->second.begin();sit!=mit->second.end();sit++)
+//         std::cout<<*sit<<'\t';
+//       std::cout<<std::endl;
+//     }
+
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -1754,7 +1769,7 @@ static PyObject* SparsityInfo_getCSR(SparsityInfo *self,
       max_nonzeros = std::max(max_nonzeros,rowptr_[I+1] - rowptr_[I]);
     }
   //std::cout<<"Proteus: Maximum nonzeros in any row is "<<max_nonzeros<<std::endl;
-  return Py_BuildValue("(O,O,i,O)",PyArray_Return(rowptr),PyArray_Return(colind),nnz,PyArray_Return(nzval));
+  return Py_BuildValue("(N,N,i,N)",PyArray_Return(rowptr),PyArray_Return(colind),nnz,PyArray_Return(nzval));
 }
 
 
@@ -1822,7 +1837,7 @@ static PyTypeObject SparsityInfoType = {
   "cmeshTools.SparsityInfo",             /*tp_name*/
   sizeof(SparsityInfo), /*tp_basicsize*/
   0,                         /*tp_itemsize*/
-  0,                         /*tp_dealloc*/
+  (destructor) SparsityInfo_dealloc,                         /*tp_dealloc*/
   0,                         /*tp_print*/
   0,                         /*tp_getattr*/
   0,                         /*tp_setattr*/

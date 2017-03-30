@@ -832,6 +832,20 @@ class MeshTetgenDomain(D_base):
         D_base.__init__(self,3,name=fileprefix)
         self.meshfile=fileprefix
 
+class PUMIDomain(D_base):
+  """
+  3d domains from PUMI mesh files
+
+  faceList -- defines face classification in simmetrix  mesh
+  PUMIMesh -- the MeshAdapt object
+  """
+  def __init__(self, name="PUMIDomain", dim=3):
+      D_base.__init__(self,dim,name)
+      self.faceList=[]
+      self.PUMIMesh=None
+      #
+      #it would be useful to define a dictionary mapping strings to faces
+      #boundariesTags={'bottom':3,'top':5,'front':1,'back':6,'left':2,'right':4}
 
 class PiecewiseLinearComplexDomain(D_base):
     """
