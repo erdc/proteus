@@ -33,6 +33,7 @@ from proteus.mprans import BoundaryConditions as bc
 from proteus.mprans import BodyDynamics as bd
 from proteus.SpatialTools import (Shape,
                                   Cuboid,
+                                  Sphere,
                                   Rectangle,
                                   Circle,
                                   CustomShape,
@@ -315,6 +316,7 @@ class ShapeRANS(Shape):
 # reassigning base/super class to access all functions from ShapeRANS and Shape
 Rectangle.__bases__ = (ShapeRANS,)
 Cuboid.__bases__ = (ShapeRANS,)
+Sphere.__bases__ = (ShapeRANS,)
 CustomShape.__bases__ = (ShapeRANS,)
 ShapeSTL.__bases__ = (ShapeRANS,)
 Circle.__bases__ = (ShapeRANS,)  
