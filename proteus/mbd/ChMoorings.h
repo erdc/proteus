@@ -53,7 +53,8 @@ public:
     void setFluidDensityAtNodes(std::vector<double> vof);
 	std::vector<std::shared_ptr<ChVector<double>>> getNodalPositions();
 	std::vector<ChVector<>> forces_drag;
-  std::vector<std::shared_ptr<ChLoadBeamWrenchDistributed>> elem_loads;
+  std::vector<std::shared_ptr<ChLoadBeamWrenchDistributed>> elems_loads_distributed;
+  std::vector<std::shared_ptr<ChLoadBeamWrench>> elems_loads;
 	void buildVectors();  // builds location vectors for the nodes
 	void buildNodes();  // builds the nodes for the mesh
 	void buildMaterials();  // builds the material to use for elements
@@ -404,15 +405,19 @@ void cppCable::buildElements() {
 	system.Add(loadcontainer);
 	// build elements
 	elems.clear();
-  elem_loads.clear();
+  elems_loads_distributed.clear();
+  elems_loads.clear();
   nb_nodes = nb_elems*2+1;
 	for (int i = 1; i < nb_nodes - 1; ++i) {
 		if (i % 2 != 0) {
 			auto element = std::make_shared<ChElementBeamANCF>();
-      auto load = std::make_shared<ChLoadBeamWrenchDistributed>(element);
+      auto load_distributed = std::make_shared<ChLoadBeamWrenchDistributed>(element);
+      auto load = std::make_shared<ChLoadBeamWrench>(element);
+      loadcontainer->Add(load_distributed);
       loadcontainer->Add(load);
 			elems.push_back(element);
-      elem_loads.push_back(load);
+          elems_loads_distributed.push_back(load_distributed);
+          elems_loads.push_back(load);
 			element->SetNodes(nodes[i - 1], nodes[i + 1], nodes[i]);
       double elem_length = (nodes[i]->GetPos()-nodes[i-1]->GetPos()).Length()+(nodes[i+1]->GetPos()-nodes[i]->GetPos()).Length();
 			element->SetDimensions(elem_length, d, d);
@@ -496,13 +501,22 @@ void cppCable::setDragForce() {
 void cppCable::applyForces() {
   ChVector<> F_drag;  // drag force per unit length
   ChVector<> F_buoyancy; // buoyancy force per unit length
+  ChVector<> F_buoyancy2; // buoyancy force
   ChVector<> F_total;  // total force per unit length
+  ChVector<> F_addedmass; // buoyancy force per unit length
+  double rho_f;  // density of fluid around cable element
+  double mass_f;  // mass of fluid displaced by cable element
   for (int i = 1; i < nodes.size()-1; ++i) {
       if (i % 2 != 0) {
+      rho_f = -(fluid_density[i-1]+fluid_density[i]+fluid_density[i+1])/3.;
+      mass_f = rho_f*A0*elems[i/2]->GetRestLength();
       F_drag = (forces_drag[i-1]+forces_drag[i]+forces_drag[i+1])/3;
       F_buoyancy = -(fluid_density[i-1]+fluid_density[i]+fluid_density[i+1])/3*A0*system.Get_G_acc();
-      F_total = F_drag+F_buoyancy;//+F_fluid
-      elem_loads[i/2]->loader.SetForcePerUnit(F_total);
+      //F_addedmass = Cm*mass_f*fluid_acceleration[i]-Ca*mass*(elems[i/2]->GetNodeA()->GetPos_dtdt()+elems[i/2]->GetNodeB()->GetPos_dtdt()+elems[i/2]->GetNodeC()->GetPos_dtdt())/3.;
+      F_total = F_drag;//+F_addedmass;//+F_buoyancy;//+F_fluid
+      elems_loads_distributed[i/2]->loader.SetForcePerUnit(F_total);
+      F_buoyancy = -mass_f*system.Get_G_acc();
+      elems_loads[i/2]->loader.SetForce(F_buoyancy);
         }
     }
   };
