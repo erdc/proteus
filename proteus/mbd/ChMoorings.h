@@ -32,28 +32,37 @@ public:
 	std::shared_ptr<ChMesh> mesh;  // mesh
 	int nb_nodes;   // number of nodes along cable
 	int nb_elems;   // number of nodes along cable
+  double Cd_axial;  // drag coeff in axial direction
+  double Cd_normal;  // drag coeff in normal direction
 	std::vector<ChVector<>> mvecs;  // vectors (nodes coordinates)
 	std::vector<ChVector<>> mvecs_middle;
 	std::vector<ChVector<>> mdirs;  // vectors (nodes coordinates)
 	std::shared_ptr<ChMaterialBeamANCF> mmaterial_cable;  // cable material
 	double d, rho, E, length;  // diameter, density, Young's modulus, length of cable
+    double A0; // unstretched diameter
 	double L0 = 0;  // initial length along cable
 	std::vector<std::shared_ptr<ChNodeFEAxyzDD>> nodes;  // array nodes coordinates and direction
 	std::vector<std::shared_ptr<ChElementBeamANCF>> elems;  // array of elements */
 	std::vector<double> elems_length;  // array of elements
+	std::vector<ChVector<>> fluid_velocity;
+	std::vector<double> fluid_density;
+    std::vector<double> nodes_density; // density of (cable-fluid) at nodes
 	cppCable(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, double length,
 		int nb_elems, double d, double rho, double E, double L0);  // constructor
 	void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
-	std::vector<ChVector<>> fluid_velocity;
+    void setFluidDensityAtNodes(std::vector<double> vof);
 	std::vector<std::shared_ptr<ChVector<double>>> getNodalPositions();
-	std::vector < std::shared_ptr<ChVector<>>> forces_drag;
+	std::vector<ChVector<>> forces_drag;
+  std::vector<std::shared_ptr<ChLoadBeamWrenchDistributed>> elem_loads;
 	void buildVectors();  // builds location vectors for the nodes
 	void buildNodes();  // builds the nodes for the mesh
 	void buildMaterials();  // builds the material to use for elements
 	void buildElements();  // builds the elements for the mesh
 	void buildMesh();  // builds the mesh
 	void setDragForce();  // calculates the drag force per nodes
-	void getBuoyancyForce();  // calculates buoyancy force
+  void applyForces();
+  void addNodestoContactCloud(std::shared_ptr<ChContactSurfaceNodeCloud> cloud);
+  void setDragCoefficients(double axial, double normal);
 };
 
 class cppMultiSegmentedCable {
@@ -67,12 +76,14 @@ public:
 	std::vector<int> nb_elems;   // number of nodes along cable
 	std::vector<ChVector<>> mvecs;  // vectors (nodes coordinates)
 	std::vector<std::shared_ptr<cppCable>> cables;
+	std::shared_ptr<ChMaterialSurfaceDEM> contact_material;  // mesh
 	std::vector<double>  d;
 	std::vector<double> rho;
 	std::vector<double> E;
 	std::vector<double> length;  // diameter, density, Young's modulus, length of cable
 	std::vector<std::shared_ptr<ChNodeFEAxyzDD>> nodes;  // array nodes coordinates and direction
 	std::vector<ChVector<>> fluid_velocity;
+	std::vector<double> fluid_density;
 	std::vector<std::shared_ptr<ChElementBeamANCF>> elems;  // array of elements */
   std::shared_ptr<ChLinkPointFrame> constraint_front;
   std::shared_ptr<ChLinkPointFrame> constraint_back;
@@ -82,7 +93,9 @@ public:
 	cppMultiSegmentedCable(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, std::vector<double> length,
 		std::vector<int> nb_nodes, std::vector<double> d, std::vector<double> rho, std::vector<double> E);
 	void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
+    void setFluidDensityAtNodes(std::vector<double> vof);
 	void updateDragForces();
+  void applyForces();
 	std::vector<std::shared_ptr<ChVector<double>>> getNodalPositions();
   void buildNodes();
 	void buildCable();  // builds the multi-segmented cable
@@ -90,6 +103,8 @@ public:
 
 	void attachBackNodeToBody(std::shared_ptr<ChBody> body);
 	void attachFrontNodeToBody(std::shared_ptr<ChBody> body);
+  void setContactMaterial(std::shared_ptr<ChMaterialSurfaceDEM> material);
+  void buildNodesCloud();
 };
 
 class cppMesh {
@@ -162,6 +177,7 @@ void cppMultiSegmentedCable::buildCable() {
       nodes.insert(nodes.end(), cables[i]->nodes.begin(), cables[i]->nodes.end());
     }
 		cables[i]->buildElements();
+      elems.insert(elems.end(), cables[i]->elems.begin(), cables[i]->elems.end());
 		cables[i]->buildMesh();
 		if (i>0) {
 			auto con1 = std::make_shared<ChLinkPointPoint>();
@@ -169,21 +185,7 @@ void cppMultiSegmentedCable::buildCable() {
 			system.Add(con1);
 		}
 	}
-  // contact model
-  auto material = std::make_shared<ChMaterialSurfaceDEM>();
-  material->SetYoungModulus(2e4);
-  material->SetFriction(0.3f);
-  material->SetRestitution(0.2f);
-  material->SetAdhesion(0);
-  auto contact_cloud = std::make_shared<ChContactSurfaceNodeCloud>();
-  mesh->AddContactSurface(contact_cloud);
-  // Must use this to 'populate' the contact surface.
-  // Use larger point size to match beam section radius
-  contact_cloud->AddAllNodes(0.01);
-
-  // Use our DEM surface material properties
-  contact_cloud->SetMaterialSurface(material);
-
+  buildNodesCloud();
 }
 
 
@@ -197,9 +199,27 @@ void cppMultiSegmentedCable::setFluidVelocityAtNodes(std::vector<ChVector<>> vel
 	}
 }
 
+void cppMultiSegmentedCable::setFluidDensityAtNodes(std::vector<double> vel) {
+	fluid_density = vel;
+	int node_nb = 0;
+	for (int i = 0; i < cables.size(); ++i) {
+		std::vector<double> fluid_dens(fluid_density.begin() + node_nb, fluid_density.begin() + node_nb + cables[i]->nodes.size());
+		cables[i]->setFluidDensityAtNodes(fluid_dens);
+		node_nb += cables[i]->nodes.size();
+	}
+}
+
+
 void cppMultiSegmentedCable::updateDragForces() {
 	for (int i = 0; i < cables.size(); ++i) {
 		cables[i]->setDragForce();
+	};
+}
+
+
+void cppMultiSegmentedCable::applyForces() {
+	for (int i = 0; i < cables.size(); ++i) {
+		cables[i]->applyForces();
 	};
 }
 
@@ -232,6 +252,24 @@ void cppMultiSegmentedCable::attachFrontNodeToBody(std::shared_ptr<ChBody> body)
   body_front = body;
 };
 
+void cppMultiSegmentedCable::setContactMaterial(std::shared_ptr<ChMaterialSurfaceDEM> material) {
+  contact_material = material;
+};
+
+void cppMultiSegmentedCable::buildNodesCloud() {
+  if (contact_material) {
+    auto contact_cloud = std::make_shared<ChContactSurfaceNodeCloud>();
+    mesh->AddContactSurface(contact_cloud);
+    // Use DEM surface material properties
+    contact_cloud->SetMaterialSurface(contact_material);
+    // add cable nodes to cloud
+    for (int i = 0; i < cables.size(); ++i) {
+      cables[i]->addNodestoContactCloud(contact_cloud);
+  }
+ }
+};
+
+
 cppCable::cppCable(
 	ChSystemDEM& system, // system in which the cable belong
 	std::shared_ptr<ChMesh> mesh, // mesh of the cable
@@ -251,6 +289,9 @@ cppCable::cppCable(
 	E(E),
 	L0(L0)
 {
+  Cd_axial = 1.15;  // studless chain
+  Cd_normal = 1.4;  // studless chain
+  A0 = d*d/4*M_PI;
 	// TO CHANGE !!!
 	//buildMaterials();
 	//buildVectors();
@@ -359,15 +400,19 @@ void cppCable::buildNodes() {
 }
 
 void cppCable::buildElements() {
-	// auto loadcontainer = std::make_shared<ChLoadContainer>();
-	// system.Add(loadcontainer);
+	auto loadcontainer = std::make_shared<ChLoadContainer>();
+	system.Add(loadcontainer);
 	// build elements
 	elems.clear();
+  elem_loads.clear();
   nb_nodes = nb_elems*2+1;
 	for (int i = 1; i < nb_nodes - 1; ++i) {
 		if (i % 2 != 0) {
 			auto element = std::make_shared<ChElementBeamANCF>();
+      auto load = std::make_shared<ChLoadBeamWrenchDistributed>(element);
+      loadcontainer->Add(load);
 			elems.push_back(element);
+      elem_loads.push_back(load);
 			element->SetNodes(nodes[i - 1], nodes[i + 1], nodes[i]);
       double elem_length = (nodes[i]->GetPos()-nodes[i-1]->GetPos()).Length()+(nodes[i+1]->GetPos()-nodes[i]->GetPos()).Length();
 			element->SetDimensions(elem_length, d, d);
@@ -396,15 +441,32 @@ void cppCable::setFluidVelocityAtNodes(std::vector<ChVector<>> vel) {
 	fluid_velocity = vel;
 }
 
+
+void cppCable::setFluidDensityAtNodes(std::vector<double> dens) {
+	fluid_density = dens;
+}
+
+void cppCable::setDragCoefficients(double axial, double normal) {
+  Cd_axial = axial;
+	Cd_normal = normal;
+}
+
 void cppCable::setDragForce() {
+    /*
+     * setFluidVelocityAtNodes and setFluidDensityAtNodes
+     * must be called before this function
+     */
 	ChVector<> u_ch;  // velocity from chrono
 	ChVector<> u_prot;  // velocity from proteus
 	ChVector<> u_rel;  // relative velocity of node with surrounding fluid
 	ChVector<> t_dir;  // tangent at node
-	ChVector<> Fd_trans;  // transversal drag force
-	ChVector<> Fd_tang;  // trangential drag force
+	ChVector<> Fd_a;  // axial (tangential) drag force
+	ChVector<> Fd_n;  // normal(transversal) drag force
 	ChVector<> Fd;  // total drag force
+    ChVector<> Va;
+    ChVector<> Vn;
 	std::shared_ptr<ChVector<>> force_drag;
+    double rho_f;
 	// clear current drag forces
 	forces_drag.clear();
 	double length_elem = length / (nb_nodes - 1);
@@ -415,33 +477,41 @@ void cppCable::setDragForce() {
 		double uy_prot = fluid_velocity[i][1];
 		double uz_prot = fluid_velocity[i][2];
 		u_prot = ChVector<>(ux_prot, uy_prot, uz_prot);
-		u_rel = u_ch - u_prot;
+		u_rel = u_prot - u_ch;
 		// CAREFUL HERE: ChBeamElementANCF, GetD() does not give direction but normal
-		t_dir = nodes[i]->GetD();
+		t_dir = nodes[i]->GetD() % nodes[i]->GetDD();
 		// transverse drag coefficient
-		double C_dn = 0.;  // transversal drag coeff
-		double C_dt = 0.;  // tangential drag coeff
-		Fd_trans = 0.5*rho*C_dn*length_elem*((u_rel^t_dir)*t_dir - u_rel).Length()*((u_rel^t_dir)*t_dir - u_rel);
-		Fd_tang = 0.5*rho*C_dt*M_PI*length_elem*((-u_rel^t_dir)*t_dir).Length()*((-u_rel^t_dir)*t_dir);
-		Fd = Fd_trans + Fd_tang;
-		forces_drag.push_back(std::make_shared<ChVector<>>(Fd.x(), Fd.y(), Fd.z()));
+		/* double C_dn = 0.;  // transversal drag coeff */
+		/* double C_dt = 0.;  // tangential drag coeff */
+        rho_f = fluid_density[i];
+        Va = u_rel^t_dir*t_dir;
+        Vn = u_rel-Va;
+		Fd_a = 0.5*rho_f*Cd_axial*d*Va.Length()*Va;//(force per unit length)
+        Fd_n = 0.5*rho_f*Cd_normal*M_PI*d*Vn.Length()*Vn;//(force per unit length)
+		Fd = Fd_a + Fd_n;
+		forces_drag.push_back(Fd);
 	}
 }
 
-void cppCable::getBuoyancyForce() {
-	/*
-	Here probably use the SetDensity() attributes of element to set the new density
-	TO CHANGE !!!
-	*/
-	//double vof;  // get vof (from proteus)
-	//double rho_w;  // density of water (from proteus)
-	//double rho_a;  // density of air (from proteus)
-	//double rho_elem;  // density of elem
-	//for (int i = 0; i < elems.size(); ++i) {
-	//	rho_elem = rho - (rho_a*vof + rho_w*(1. - vof));
-	//	elems[i]->GetSection()->SetDensity(rho_elem);
-	//}
-}
+void cppCable::applyForces() {
+  ChVector<> F_drag;  // drag force per unit length
+  ChVector<> F_buoyancy; // buoyancy force per unit length
+  ChVector<> F_total;  // total force per unit length
+  for (int i = 1; i < nodes.size()-1; ++i) {
+      if (i % 2 != 0) {
+      F_drag = (forces_drag[i-1]+forces_drag[i]+forces_drag[i+1])/3;
+      F_buoyancy = -(fluid_density[i-1]+fluid_density[i]+fluid_density[i+1])/3*A0*system.Get_G_acc();
+      F_total = F_drag+F_buoyancy;//+F_fluid
+      elem_loads[i/2]->loader.SetForcePerUnit(F_total);
+        }
+    }
+  };
+
+void cppCable::addNodestoContactCloud(std::shared_ptr<ChContactSurfaceNodeCloud> cloud) {
+  for (int i = 0; i < nodes.size(); ++i) {
+    cloud->AddNode(nodes[i], d);
+      }
+};
 
 cppMultiSegmentedCable * newMoorings(
 	ChSystemDEM& system,
@@ -505,7 +575,6 @@ cppSurfaceBoxNodesCloud::cppSurfaceBoxNodesCloud(ChSystemDEM& system,
 	// Use our DEM surface material properties
 	contact_cloud->SetMaterialSurface(material);
 
-  GetLog() << dimensions;
 	box = std::make_shared<ChBodyEasyBox>(
     dimensions.x(), dimensions.y(), dimensions.z(),  // x,y,z size
 		1000,       // density
