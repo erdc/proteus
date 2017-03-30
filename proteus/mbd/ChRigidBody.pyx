@@ -678,6 +678,10 @@ cdef class System:
         for mooring in self.moorings:
             mooring.calculate_init()
         self.thisptr.system.SetupInitial()
+        for body in self.bodies:
+            body.poststep()
+        for mooring in self.moorings:
+            mooring.poststep()
 
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
@@ -708,6 +712,66 @@ cdef class System:
         comm = Comm.get()
         if comm.isMaster():
             self.thisptr.recordBodyList()
+
+    def findELementContainingCoords(self, coords):
+        comm = Comm.get().comm.tompi4py()
+        # get nearest node on each processor
+        nearest_node, nearest_node_distance = getLocalNearestNode(coords, self.nodes_kdtree)
+        # look for element containing coords on each processor (if it exists)
+        local_element = getLocalElement(self.femSpace_velocity, coords, nearest_node)
+        # check which processor has element (if any)
+        haveElement = int(local_element is not None)
+        if haveElement:
+            owning_proc = comm.rank
+        if local_element:
+            # NEXT LINE TO CHANGE
+            nd = self.nd
+            # get local coords
+            xi0 = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
+            xi = comm.bcast(xi0, owning_proc)
+            element = comm.bcast(local_element, owning_proc)
+            rank = comm.bcast(owning_proc, owning_proc)
+        return xi, element, rank
+
+    def getFluidVelocityLocalCoords(self, xi, element, rank):
+        """
+        Parameters
+        ----------
+        xi: 
+            local coords in element
+        element: int
+            element number (local to processor 'rank')
+        rank: int
+            rank of processor owning the element
+        """
+        comm = Comm.get().comm.tompi4py()
+        if comm.rank == rank:
+            u = self.u[1].getValue(element, xi)
+            u = comm.bcast(u, rank)
+            v = self.u[2].getValue(element, xi)
+            v = comm.bcast(v, rank)
+            if self.nd > 2:
+                w = self.u[3].getValue(element, xi)
+            if self.nd <= 2:
+                w = 0
+            # broadcast to all processors
+            w = comm.bcast(w, rank)
+        return u, v, w
+
+    def getFluidVelocityGradientLocalCoords(self, xi, element, rank):
+        comm = Comm.get().comm.tompi4py()
+        if comm.rank == rank:
+            u_grad = self.u_grad[1].getGradientValue(element, xi)
+            u_grad = comm.bcast(u_grad, rank)
+            v_grad = self.u[2].getGradientValue(element, xi)
+            v_grad = comm.bcast(v_grad, rank)
+            if self.nd > 2:
+                w_grad = self.u[3].getGradientValue(element, xi)
+            if self.nd <= 2:
+                w_grad = 0
+            # broadcast to all processors
+            w_grad = comm.bcast(w_grad, rank)
+        return u_grad, v_grad, w_grad
 
     def findFluidVelocityAtCoords(self, coords):
         """Finds solution from NS for velocity of fluid at given coordinates
@@ -817,6 +881,9 @@ cdef class Moorings:
       bool nodes_built
       np.ndarray fluid_density_array
       np.ndarray fluid_velocity_array
+      np.ndarray fluid_velocity_array_previous
+      np.ndarray fluid_acceleration_array
+      string name
     def __cinit__(self,
                   System system,
                   Mesh mesh,
@@ -850,30 +917,45 @@ cdef class Moorings:
                                    )
         self.nodes_function = lambda s: (s, s, s)
         self.nodes_built = False
+        self.name = 'record_moorings'
+
+    def setName(self, string name):
+        self.name = name
 
     def _recordValues(self):
-        self.record_file = os.path.join(Profiling.logDir, 'record_moorings.csv')
-        if self.system.model is not None:
-            t_last = self.system.model.stepController.t_model_last
-            dt_last = self.system.model.levelModelList[-1].dt_last
+        if self.System.model is not None:
+            t_last = self.System.model.stepController.t_model_last
+            dt_last = self.System.model.levelModelList[-1].dt_last
             t = t_last-dt_last
         else:
-            t = self.system.thisptr.system.GetChTime()
+            t = self.System.thisptr.system.GetChTime()
+        self.record_file = os.path.join(Profiling.logDir, self.name+'_pos.csv')
         if t == 0:
             headers = ['t', 't_prot']
-            for i in len(self.thisptr.nodes.size()):
+            for i in range(self.thisptr.nodes.size()):
                 headers += ['x'+str(i), 'y'+str(i), 'z'+str(i)]
             with open(self.record_file, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
         row = []
-        cdef ch.ChVector vec
-        for i in range(self.thisptr.nodes.size()):
-            vec = deref(self.thisptr.nodes[i]).GetPos()
-            x = vec.x()
-            y = vec.y()
-            z = vec.z()
-            row += [x, y, z]
+        positions = self.getNodesPosition()
+        for pos in positions:
+            row += [pos[0], pos[1], pos[2]]
+        with open(self.record_file, 'a') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(row)
+        self.record_file = os.path.join(Profiling.logDir, self.name+'_T.csv')
+        if t == 0:
+            headers = ['t', 't_prot']
+            for i in range(self.thisptr.nodes.size()):
+                headers += ['Tbx'+str(i), 'Tby'+str(i), 'Tbz'+str(i), 'Tfx'+str(i), 'Tfy'+str(i), 'Tfz'+str(i)]
+            with open(self.record_file, 'w') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(headers)
+        row = []
+        Tb = self.getTensionBack()
+        Tf = self.getTensionFront()
+        row = [Tb[0], Tb[1], Tb[2], Tf[0], Tf[1], Tf[2]]
         with open(self.record_file, 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(row)
@@ -902,6 +984,7 @@ cdef class Moorings:
         nb_nodes = self.thisptr.nodes.size()
         if self.fluid_velocity_array is None:
             self.fluid_velocity_array = np.zeros((nb_nodes, 3))
+            self.fluid_velocity_array_previous = np.zeros((nb_nodes, 3))
         if self.fluid_density_array is None:
             self.fluid_density_array = np.zeros(nb_nodes)+998.2
 
@@ -911,7 +994,9 @@ cdef class Moorings:
             self.setExternalForces()
 
     def poststep(self):
-        pass
+        comm = Comm.get()
+        if comm.isMaster():
+            self._recordValues()
 
     def setNodesPositionFunction(self, function):
         """Function to build nodes
@@ -993,6 +1078,7 @@ cdef class Moorings:
         """
         # get velocity at nodes
         # cdef np.ndarray fluid_velocity = np.zeros((len(self.thisptr.nodes.size()), 3))
+        self.fluid_velocity_array_previous[:] = self.fluid_velocity_array
         if fluid_velocity_array is not None:
             self.fluid_velocity_array = fluid_velocity_array
         if fluid_density_array is not None:
@@ -1009,9 +1095,15 @@ cdef class Moorings:
                     y = vec.y()
                     z = vec.z()
                     coords = np.array([x, y, z])
-                    arr = np.zeros(3)
-                    arr[:self.nd] = self.System.findFluidVelocityAtCoords(coords[:self.nd])
-                    self.fluid_velocity_array[i] = arr
+                    vel_arr = np.zeros(3)
+                    vel_grad_arr = np.zeros(3)
+                    xi, el, rank = self.System.findElementContainingCoords(coords[:self.nd])
+                    vel_arr[:] = self.System.getFluidVelocityLocalCoords(xi, el, rank)
+                    #vel_grad_arr[:] = self.System.getFluidVelocityGradientLocalCoords(xi, el, rank)
+                    # acc = du/dt+u.grad(u)
+                    #acc_arr = (vel_arr-fluid_velocity_array_previous[i])/dt+vel_arr*vel_grad_arr
+                    #arr[:self.nd] = self.System.findFluidVelocityAtCoords(coords[:self.nd])
+                    self.fluid_velocity_array[i] = vel_arr
                     vel = ch.ChVector[double](arr[0], arr[1], arr[2])
                     fluid_velocity.push_back(vel)
                 elif fluid_velocity_array is not None:
