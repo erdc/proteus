@@ -6084,3 +6084,245 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
                 continue
             intersections.update(((tuple(elementIntersections[0]), tuple(elementIntersections[1])),),)
     return intersections
+
+
+from proteus import default_n as dn
+from proteus import default_p as dp
+
+class MeshOptions:
+    """
+    Mesh options for the domain
+
+    Parameters
+    ----------
+    domain: proteus.Domain
+    """
+    def __init__(self, domain):
+        self.Domain = domain
+        self.he = 1.
+        self.use_gmsh = False
+        self.genMesh = dp.genMesh
+        self.outputFiles_name = 'mesh'
+        self.outputFiles = {'poly': True,     
+                            'ply': False,        
+                            'asymptote': False,
+                            'geo': False}
+        self.restrictFineSolutionToAllMeshes = dn.restrictFineSolutionToAllMeshes
+        self.parallelPartitioningType = dn.parallelPartitioningType
+        self.nLayersOfOverlapForParallel = dn.parallelPartitioningType
+        self.triangleOptions = dn.triangleOptions  # defined when setTriangleOptions called
+        self.nLevels = dn.nLevels
+        if domain is not None:
+            self.nd = domain.nd
+            if self.nd == 2:
+                self.triangle_string = 'VApq30Dena'
+            if self.nd == 3:
+                self.triangle_string = 'VApq1.35q12feena'
+        else:
+            self.triangle_string = None
+
+    def setElementSize(self, he):
+        """
+        Sets element size for uniform mesh.
+
+        Parameters
+        ----------
+        he: float
+            mesh characteristic element size
+        """
+        self.he = he
+
+    def setParallelPartitioningType(self, partitioning_type='node', layers_overlap=0):
+        """
+        Changes parallel partitioning type
+
+        Parameters
+        ----------
+        partitioning_type: Optional[str, int]
+            parallel partitioning type (default: 'node' (1))
+        layers: int
+            layers of overlap for paralllel (default: 0)
+        """
+        if partitioning_type == 'element' or partitioning_type == 0:
+            self.parallelPartitioningType = mpt.element
+        if partitioning_type == 'node' or partitioning_type == 1:
+            self.parallelPartitioningType = mpt.node
+        self.nLayersOfOverlapForParallel = layers_overlap
+
+    def setTriangleOptions(self, triangle_options=None):
+        """
+        Sets the trangle options
+
+        Parameters
+        ----------
+        triangle_options: Optional[str]
+            string for triangle options. If not passed, it will be
+            set with triangle_string attribute and 'he' value, with
+            default for 2D: he**2/2; default for 3D: he**3/6
+        """
+        if triangle_options is not None:
+            self.triangleOptions = triangle_options
+        else:
+            assert self.he is not None, 'Element size (he) must be set before setting triangle options'
+            assert self.triangle_string is not None, 'triangle_string must be set before setting triangle options'
+            if self.nd == 2:
+                self.triangleOptions = self.triangle_string + '%8.8f' \
+                                       % (self.he**2/2.,)
+            elif self.nd == 3:
+                self.triangleOptions = self.triangle_string + '%21.16e' \
+                                       % (self.he**3/6.,)
+
+    def setMeshGenerator(self, generator):
+        """
+        Indicates mesh generator to use
+
+        Parameters
+        ----------
+        generator: str
+            options: 'gmsh', 'triangle', 'tetgen'
+
+        (!) Only has an effect when setting to 'gmsh' in current 
+        implementation (triangle is default for 2D, tetgen for 3D)
+        """
+        generators = ['gmsh', 'triangle', 'tetgen']
+        assert generator in generators, 'Unknown mesh generator'
+        if generator == 'gmsh':
+            self.use_gmsh = True
+        else:
+            self.use_gmsh = False
+
+    def setOutputFiles(self, name='mesh', poly=True, ply=False, asymptote=False, geo=False):
+        """
+        Output files to be created 
+
+        Parameters
+        ----------
+        name: Optional[str]
+            name of the mesh files (prefix) (default: 'mesh')
+        poly: Optional[bool]
+            create a poly file
+        ply: Optional[bool]
+            create a ply file
+        asymptote: Optional[bool]
+            create an asymptote file
+        geo:
+            create a geofile
+        """
+        self.outputFiles_name = name
+        self.outputFiles['poly'] = poly
+        self.outputFiles['ply'] = ply
+        self.outputFiles['asymptote'] = asymptote
+        self.outputFiles['geo'] = gmsh
+
+
+def msh2triangle(fileprefix):
+    """
+    Converts a .msh file (Gmsh) to .ele .edge .node files (triangle)
+
+    Parameters
+    ----------
+    fileprefix: str
+        prefix of the .msh file (e.g. 'mesh' if file called 'mesh.msh')
+
+    """
+    mshfile = open(fileprefix+'.msh', 'r')
+    nodes = []
+    edges_msh = []
+    triangles = []
+    tetrahedra = []
+    triangle_nb = 0
+    edge_nb = 0
+    nd = 2
+    switch = None
+    switch_count = -1
+    logEvent('msh2triangle: getting nodes and elements')
+    for line in mshfile:
+        if 'Nodes' in line:
+            switch = 'nodes'
+            switch_count = -1
+        if 'Elements' in line:
+            switch = 'elements'
+            switch_count = -1
+        if switch == 'nodes' and switch_count >= 0:
+            words = line.split()
+            if switch_count == 0:
+                node_nb = int(words[0])
+            else:
+                nid = int(words[0])
+                if nd == 2:
+                    x, y, z = float(words[1]), float(words[2]), 0
+                elif nd == 3:
+                    x, y, z = float(words[1]), float(words[2]), float(words[3])
+                nodes += [[nid, x, y, z, 0]]
+        if switch == 'elements' and switch_count >= 0:
+            words = line.split()
+            if switch_count == 0:
+                el_nb = int(words[0])
+            else:
+                el_id = int(words[0])
+                el_type = int(words[1])
+                nb_tags = int(words[2])
+                if nb_tags == 2:
+                    flag = int(words[3])
+                else:
+                    flag = 0
+                s = 3+nb_tags # starting index on words for element info
+                if el_type == 1: # segment
+                    edge_nb += 1
+                    edges_msh += [[edge_nb, int(words[s]), int(words[s+1]), flag]]
+                elif el_type == 2: # triangle
+                    triangle_nb += 1
+                    triangles += [[triangle_nb, int(words[s]), int(words[s+1]), int(words[s+2]), flag]]
+                elif el_type == 15: # node
+                    nodes[el_id-1][4] = flag
+        switch_count += 1
+    mshfile.close()
+
+    # construct ALL edges with flags and add flags to nodes
+    edges_dict = {}
+    triangles = np.array(triangles)
+    edge_nb = 0
+    edges = []
+
+    logEvent('msh2triangle: constructing edges')
+    for triangle in triangles[:,1:4]:  # take only vertices index
+        for i in range(len(triangle)):
+            edge = Edge(edgeNumber=edge_nb, nodes=[triangle[i-1], triangle[i]])
+            edge_exist = bool(edges_dict.get(edge.nodes))
+            if not edge_exist:
+                edge_nb += 1
+                edges_dict[edge.nodes] = edge
+                edges += [[edge_nb, edge.nodes[0], edge.nodes[1], 0]]
+    logEvent('msh2triangle: updating edges and nodes flags')
+    edges = np.array(edges)
+    for edge in edges_msh:
+        edge_nodes = [edge[1], edge[2]]
+        edge_nodes.sort()
+        edge_nodes = tuple(edge_nodes)
+        edge_class = edges_dict.get(edge_nodes)
+        edges[edge_class.N, 3] = edge[3]
+        # ! edge nodes are indexed from 1 with gmsh
+        if nodes[edge[1]-1][-1] == 0:  # update node flags
+            nodes[edge[1]-1][-1] = edge[3]
+        if nodes[edge[2]-1][-1] == 0:  # update node flags
+            nodes[edge[1]-1][-1] = edge[3]
+
+    logEvent('msh2triangle: writing .node .ele .edge files')
+    header = '{0:d} {1:d} 0 1'.format(node_nb, nd)
+
+    if nd == 2:
+        nodes = np.array(nodes)
+        nodes = np.delete(nodes, 3, 1)
+        fmt = ['%d', '%f', '%f', '%d']
+    elif nd == 3:
+       fmt = ['%d', '%f', '%f', '%f', '%d']
+    np.savetxt(fileprefix+'.node', nodes, fmt=fmt, header=header, comments='')
+
+    header = '{0:d} 1'.format(edge_nb)
+    np.savetxt(fileprefix+'.edge', edges, fmt='%d', header=header, comments='')
+
+    if nd == 2:
+        header = '{0:d} 3 1'.format(triangle_nb)
+        np.savetxt(fileprefix+'.ele', triangles, fmt='%d', header=header, comments='')
+
+    logEvent('msh2triangle: finished converting .msh to triangle files')
