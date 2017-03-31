@@ -6005,8 +6005,8 @@ class FiniteElementFunction:
         """
         value = 0.0
         for i,psi in zip(
-            self.femSpace.finiteElements[eN].globalDOFNumbers,
-            self.femSpace.finiteElements[eN].localFunctionSpace.basis):
+            self.femSpace.dofMap.l2g[eN],
+            self.femSpace.elementMaps.localFunctionSpace.basis):
             value+=self.dof[i]*psi(xi)
         return value
     def getValues(self,

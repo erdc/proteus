@@ -6593,6 +6593,91 @@ static PyObject* flcbdfWrappersPartitionNodes(PyObject* self,
                        edgeNumbering_subdomain2global);
 }
 
+static PyObject* flcbdfWrappersConvertPUMIPartitionToPython(PyObject* self,
+							     PyObject* args)
+{
+  using namespace std;
+  PyObject *cmesh,*subdomain_cmesh,
+    *elementOffsets_subdomain_owned,
+    *elementNumbering_subdomain2global,
+    *elementNumbering_global2original,
+    *nodeOffsets_subdomain_owned,
+    *nodeNumbering_subdomain2global,
+    *nodeNumbering_global2original,
+    *elementBoundaryOffsets_subdomain_owned,
+    *elementBoundaryNumbering_subdomain2global,
+    *elementBoundaryNumbering_global2original,
+    *edgeOffsets_subdomain_owned,
+    *edgeNumbering_subdomain2global,
+    *edgeNumbering_global2original;
+  if (!PyArg_ParseTuple(args,
+                        "OO",
+                        &cmesh,
+                        &subdomain_cmesh))
+    return NULL;
+  MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
+  PETSC_COMM_WORLD = PROTEUS_COMM_WORLD;
+  int ierr,size,rank;
+  ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
+  ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
+
+  int dims[1];
+  //build handles to python arrays
+  dims[0] = size+1;
+  elementOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
+                                                           dims,
+                                                           PyArray_INT,
+                                                           (char*)MESH(cmesh).elementOffsets_subdomain_owned);
+  
+  dims[0] = MESH(cmesh).subdomainp->nElements_global;
+  elementNumbering_subdomain2global = PyArray_FromDimsAndData(1,
+                                                              dims,
+                                                              PyArray_INT,
+                                                              (char*)MESH(cmesh).elementNumbering_subdomain2global);
+  dims[0] = size+1;
+  nodeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
+                                                        dims,
+                                                        PyArray_INT,
+                                                        (char*)MESH(cmesh).nodeOffsets_subdomain_owned);
+  
+  dims[0] = MESH(cmesh).subdomainp->nNodes_global;
+  nodeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
+                                                           dims,
+                                                           PyArray_INT,
+                                                           (char*)MESH(cmesh).nodeNumbering_subdomain2global);
+  dims[0] = size+1;
+  elementBoundaryOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
+								   dims,
+								   PyArray_INT,
+								   (char*)MESH(cmesh).elementBoundaryOffsets_subdomain_owned);
+  
+  dims[0] = MESH(cmesh).subdomainp->nElementBoundaries_global;
+  elementBoundaryNumbering_subdomain2global = PyArray_FromDimsAndData(1,
+								      dims,
+								      PyArray_INT,
+								      (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
+  dims[0] = size+1;
+  edgeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
+							dims,
+							PyArray_INT,
+							(char*)MESH(cmesh).edgeOffsets_subdomain_owned);
+  
+  dims[0] = MESH(cmesh).subdomainp->nEdges_global;
+  edgeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
+							   dims,
+							   PyArray_INT,
+							   (char*)MESH(cmesh).edgeNumbering_subdomain2global);
+  return Py_BuildValue("OOOOOOOO",
+                       elementOffsets_subdomain_owned,
+                       elementNumbering_subdomain2global,
+                       nodeOffsets_subdomain_owned,
+                       nodeNumbering_subdomain2global,
+                       elementBoundaryOffsets_subdomain_owned,
+                       elementBoundaryNumbering_subdomain2global,
+                       edgeOffsets_subdomain_owned,
+                       edgeNumbering_subdomain2global);
+
+}                      
 static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
                                                              PyObject* args)
 {
@@ -7093,6 +7178,10 @@ static PyMethodDef flcbdfWrappersMethods[] = {
     flcbdfWrappersPartitionNodes,
     METH_VARARGS, 
     "partition the mesh using a node-based partitioning"},
+  {"convertPUMIPartitionToPython", 
+    flcbdfWrappersConvertPUMIPartitionToPython,
+    METH_VARARGS,
+    "Convert C structures to python for PUMI partitioned mesh"},
   { "partitionNodesFromTetgenFiles",
     flcbdfWrappersPartitionNodesFromTetgenFiles,
     METH_VARARGS, 
