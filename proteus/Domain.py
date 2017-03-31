@@ -5,9 +5,10 @@ A class hierarchy and tools for building domains of PDE's.
    :parts: 1
 """
 
+import sys
 import numpy as np
 from proteus.MeshTools import MeshParallelPartitioningTypes as mpt
-
+from .Profiling import logEvent
 
 class D_base:
     """
@@ -304,9 +305,21 @@ shipout();
         raise UserWarning("Xdmf output not implemented")
 
 def unitSimplex(nd=2):
+    """Builds a 2 or 3 dimension reference element.
+    
+    Parameters
+    ----------
+    nd : int
+        The elements dimension (must be 2 or 3)
+
+    Returns
+    -------
+    reference_element
     """
-    This helper function returns a 2 or 3 dimension Domain object representing the reference element.
-    """
+    if nd!=2 and nd!=3:
+        logEvent("ERROR - Reference element must have dimension 2 or 3")
+        sys.exit(1)
+
     if nd==2:
         return PlanarStraightLineGraphDomain(vertices=[[0. , 0.], 
                                                        [0. , 1.], 

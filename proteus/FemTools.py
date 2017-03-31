@@ -2373,6 +2373,16 @@ class ParametricMaps(ElementMaps):
         self.localFunctionSpace = localFunctionSpace
         self.meshDOFMap=NodalDOFMap(mesh)
         self.useC=True
+    def getBasisValuesIP(self, interpolationPoints):
+        n_xi = interpolationPoints.shape[0]
+        range_n_xi = range(n_xi)
+        self.psi_ip = numpy.zeros((n_xi,
+                                self.localFunctionSpace.dim),
+                               'd')
+        for k in range_n_xi:
+            for j in self.localFunctionSpace.range_dim:
+                self.psi_ip[k,j] = self.localFunctionSpace.basis[j](interpolationPoints[k])
+        return self.psi_ip
     def getBasisValuesRef(self,xiArray):
         n_xi = xiArray.shape[0]
         range_n_xi = range(n_xi)
@@ -2859,16 +2869,16 @@ class AffineMaps(ParametricMaps):
             n_x = xArray.shape[1]
             range_nx = range(n_x)
             grad_psi = numpy.zeros((self.localFunctionSpace.dim,
-                                      self.referenceElement.dim),
-                                     'd')
+                                    self.referenceElement.dim),
+                                   'd')
             dx = numpy.zeros((self.referenceElement.dim),
-                               'd')
+                             'd')
             jacobian = numpy.zeros((self.referenceElement.dim,
-                                      self.referenceElement.dim),
-                                     'd')
+                                    self.referenceElement.dim),
+                                   'd')
             inverseJacobian = numpy.zeros((self.referenceElement.dim,
-                                             self.referenceElement.dim),
-                                            'd')
+                                           self.referenceElement.dim),
+                                          'd')
             for j in self.localFunctionSpace.range_dim:
                 grad_psi[j,:] = self.localFunctionSpace.basisGradients[j](xiArray[0])
             for eN in range(self.mesh.nElements_global):
@@ -2893,16 +2903,16 @@ class AffineMaps(ParametricMaps):
                         x):
         xi=numpy.zeros((self.referenceElement.dim,),'d')
         grad_psi = numpy.zeros((self.localFunctionSpace.dim,
-                                  self.referenceElement.dim),
-                                 'd')
+                                self.referenceElement.dim),
+                               'd')
         dx = numpy.zeros((self.referenceElement.dim),
-                           'd')
+                         'd')
         jacobian = numpy.zeros((self.referenceElement.dim,
-                                  self.referenceElement.dim),
-                                 'd')
+                                self.referenceElement.dim),
+                               'd')
         inverseJacobian = numpy.zeros((self.referenceElement.dim,
-                                         self.referenceElement.dim),
-                                        'd')
+                                       self.referenceElement.dim),
+                                      'd')
         for j in self.localFunctionSpace.range_dim:
             grad_psi[j,:] = self.localFunctionSpace.basisGradients[j](xi)
         jacobian.flat[:]=0.0
@@ -3534,7 +3544,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
     def writeFunctionGnuplot(self,u,filename):
         import Gnuplot
         if self.referenceFiniteElement.referenceElement.dim == 1:
-            if self.viewer==None:
+            if self.viewer is None:
                 self.viewer = Gnuplot.Gnuplot()
                 #self.viewer("set terminal x11")
             self.viewer.plot(Gnuplot.Data(self.elementMaps.mesh.nodeArray[:,0],
@@ -3542,7 +3552,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
 
                                     title=filename))
         elif self.referenceFiniteElement.referenceElement.dim == 2:
-            if self.viewer==None:
+            if self.viewer is None:
                 self.viewer = Gnuplot.Gnuplot()
                 #self.viewer("set terminal x11")
             nx = sqrt(self.elementMaps.mesh.nNodes_global)
@@ -3572,7 +3582,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (self.mesh.globalMesh.nNodes_global,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+"_t"+str(tCount)
                     comm = Comm.get()
@@ -3592,7 +3602,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (self.mesh.nNodes_global,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
@@ -3603,7 +3613,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
                 SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
     def readFunctionXdmf(self,ar,u,tCount=0):
-        if ar.hdfFile != None:
+        if ar.hdfFile is not None:
             if ar.hdfFileGlb is not None:
                 map = self.mesh.globalMesh.nodeNumbering_subdomain2global
                 array=ar.hdfFileGlb.getNode("/",u.name+str(tCount))
@@ -3641,7 +3651,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     w_dof = uList[components[2]].dof
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
                         ar.create_dataset_sync(vectorName+"_t"+str(tCount),
@@ -3669,7 +3679,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     w_dof = uList[components[2]].dof
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                         ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
@@ -3694,7 +3704,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 ReferenceString="/Xdmf/Domain/Grid/Grid[%i]/Attribute[%i]/DataItem" % (tCount+1,ci+1)
                 component = SubElement(values,"DataItem",{"Reference":ReferenceString})
     def writeFunctionEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if u.isVector:
             if not append:
@@ -3727,7 +3737,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
         uOut.close()
         self.nOutput+=1
     def writeE2VectorFunctionEnsight(self,u,v,filename,nOutput,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -3745,7 +3755,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             cfemIntegrals.writeDOF_ZEROS(v.femSpace.dim,v.dim_dof,t,'%12.5e\n',uOut)
         uOut.close()
     def writeE2VectorFunctionHeaderEnsight(self,u,v,filename,nOutput,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -3755,7 +3765,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                           u.name+'2 '+filename+u.name+'2.vec****\n')
         caseOut.close()
     def writeE3VectorFunctionEnsight(self,u,v,w,filename,nOutput,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -3773,7 +3783,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             cfemIntegrals.writeDOF(w.femSpace.dim,w.dim_dof,t,'%12.5e\n',w.dof,uOut)
         uOut.close()
     def writeE3VectorFunctionHeaderEnsight(self,u,v,w,filename,nOutput,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -3783,7 +3793,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                           u.name+'2 '+filename+u.name+'2.vec****\n')
             caseOut.close()
     def writeFunctionHeaderEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if u.isVector:
             if not append:
@@ -3889,7 +3899,7 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (self.mesh.globalMesh.nNodes_global,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+"_t"+str(tCount)
                     ar.create_dataset_sync(u.name+"_t"+str(tCount),
@@ -3908,7 +3918,7 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (self.mesh.nNodes_global,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
@@ -3941,7 +3951,7 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     w_dof = uList[components[2]].dof
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
                         ar.create_dataset_sync(vectorName+"_t"+str(tCount),
@@ -3968,7 +3978,7 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                 else:
                     w_dof = uList[components[2]].dof
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                         ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
@@ -4220,7 +4230,7 @@ class DG_AffineP0_OnSimplexWithMonomialBasis(DG_AffinePolynomialsOnSimplexWithMo
     def writeMeshEnsight(self,filename,description=None):
         self.mesh.writeMeshEnsight(filename,description)
     def writeFunctionHeaderEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if u.isVector:
             if not append:
@@ -4238,7 +4248,7 @@ class DG_AffineP0_OnSimplexWithMonomialBasis(DG_AffinePolynomialsOnSimplexWithMo
                     caseOut.write('scalar per node: '+
                                   u.name+' '+filename+u.name+'_average.scl****\n')
     def writeFunctionEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if u.isVector:
             if not append:
@@ -4386,7 +4396,7 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                       'd')
         nodal_nDOF = numpy.zeros((self.elementMaps.mesh.nNodes_global,),
                                    'd')
-        if self.viewer==None:
+        if self.viewer is None:
             self.viewer = Gnuplot.Gnuplot()
             #self.viewer("set terminal x11")
         for t in u.range_dim_dof:
@@ -4434,7 +4444,7 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
     def writeMeshEnsight(self,filename,description=None):
         self.mesh.writeMeshEnsight(filename,description)
     def writeFunctionHeaderEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if u.isVector:
             if not append:
@@ -4452,7 +4462,7 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                     caseOut.write('scalar per node: '+
                                   u.name+' '+filename+u.name+'_average.scl****\n')
     def writeFunctionEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if u.isVector:
             if not append:
@@ -4617,7 +4627,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                       'd')
         nodal_nDOF = numpy.zeros((self.elementMaps.mesh.nNodes_global,),
                                    'd')
-        if self.viewer==None:
+        if self.viewer is None:
             self.viewer = Gnuplot.Gnuplot()
             #self.viewer("set terminal x11")
         #mwf for now just loop over vertices
@@ -4873,7 +4883,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 meshOut.write('%10i%10i%10i%10i%10i%10i%10i%10i%10i%10i\n' % tuple(nodes.values()))
         meshOut.close()
     def writeFunctionHeaderEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if u.isVector:
             if not append:
@@ -4896,7 +4906,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
         self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
 
     def writeFunctionEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         """
         For now only works for triangles
@@ -4994,7 +5004,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
         """
         old ensight printing
         """
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -5012,7 +5022,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             cfemIntegrals.writeDOF_ZEROS(v.femSpace.dim,v.dim_dof,t,'%12.5e\n',uOut)
         uOut.close()
     def writeE2VectorFunctionHeaderEnsight(self,u,v,filename,nOutput,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -5022,7 +5032,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                           u.name+'2 '+filename+u.name+'2.vec****\n')
         caseOut.close()
     def writeE3VectorFunctionEnsight(self,u,v,w,filename,nOutput,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -5040,7 +5050,7 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             cfemIntegrals.writeDOF(w.femSpace.dim,w.dim_dof,t,'%12.5e\n',w.dof,uOut)
         uOut.close()
     def writeE3VectorFunctionHeaderEnsight(self,u,v,w,filename,nOutput,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -5196,7 +5206,7 @@ class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                       'd')
         nodal_nDOF = numpy.zeros((self.elementMaps.mesh.nNodes_global,),
                                    'd')
-        if self.viewer==None:
+        if self.viewer is None:
             self.viewer = Gnuplot.Gnuplot()
             #mwf added terminal cmd
             self.viewer("set terminal x11")
@@ -5243,7 +5253,7 @@ class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                              binary=0,
                                              inline=0))
     def writeFunctionHeaderEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if u.isVector:
             if not append:
@@ -5277,7 +5287,7 @@ class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
         """
         For now only works for triangles
         """
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if u.isVector:
             #if not append:
@@ -5467,7 +5477,7 @@ class NC_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
         self.mesh.writeMeshEnsight(filename,description)
     def writeFunctionHeaderEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
         #for now plotting average and jump at nodes
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if u.isVector:
             if not append:
@@ -5489,7 +5499,7 @@ class NC_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                     caseOut.write('scalar per node: '+
                                   u.name+"_jump"+' '+filename+u.name+'_jump_max.scl****\n')
     def writeFunctionEnsight(self,u,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if u.isVector:
             if not append:
@@ -5946,8 +5956,11 @@ from LinearAlgebraTools import ParVec
 import Comm
 
 class FiniteElementFunction:
-    """
-    A member of a finite element space of scalar functions.
+    """  A member of a finite element space of scalar functions.
+
+    Arguments
+    ---------
+    finiteElementSpace : :class:`proteus.FemTools.ParametricFiniteElementSpace`
     """
     def __init__(self,finiteElementSpace,dof=None,dim_dof=1,name="no_name",isVector=False):
         self.name=name
@@ -5956,7 +5969,7 @@ class FiniteElementFunction:
         self.nDOF_global = self.femSpace.dim
         self.dim_dof = dim_dof
         self.range_dim_dof = range(self.dim_dof)
-        if dof != None:
+        if dof is not None:
             self.dof=dof
         else:
             self.dof = numpy.zeros((self.femSpace.dim*dim_dof),
@@ -5972,7 +5985,7 @@ class FiniteElementFunction:
         #mwf debug
 #        import pdb
 #        pdb.set_trace()
-        if self.useC and self.femSpace.referenceFiniteElement.interpolationConditions.projectFiniteElementFunctionFromInterpolationConditions_opt != None:
+        if self.useC and self.femSpace.referenceFiniteElement.interpolationConditions.projectFiniteElementFunctionFromInterpolationConditions_opt is not None:
             self.femSpace.referenceFiniteElement.interpolationConditions.projectFiniteElementFunctionFromInterpolationConditions_opt(self,interpolationValues)
         else:
             functionals = self.femSpace.referenceFiniteElement.interpolationConditions.functionalsQuadrature
@@ -5981,6 +5994,15 @@ class FiniteElementFunction:
                     dof_eN_i = functionals[i](interpolationValues[eN])
                     self.dof[self.femSpace.dofMap.l2g[eN,i]*self.dim_dof:self.femSpace.dofMap.l2g[eN,i]*self.dim_dof+self.dim_dof] = dof_eN_i
     def getValue(self,eN,xi):
+        """ Calculate the function value at a point on an element.
+
+        Arguments
+        ---------
+        eN : int
+            Global element number.
+        xi : point
+            Evaluation coordinate.
+        """
         value = 0.0
         for i,psi in zip(
             self.femSpace.finiteElements[eN].globalDOFNumbers,
@@ -6144,7 +6166,7 @@ class FiniteElementFunction:
     #we need to be able to get references to existing values for values at nodes for some calculations
     #like vtkVisualization, call structure is different that getValues because realy want internal storage to be modified
     def calculateValuesAtMeshNodes(self):
-        if self.meshNodeValues == None:
+        if self.meshNodeValues is None:
             self.meshNodeValues = numpy.zeros((self.femSpace.mesh.nNodes_global*self.dim_dof),'d')
         self.femSpace.getValuesAtMeshNodes(self.dof,self.meshNodeValues,self.isVector,self.dim_dof)
 
@@ -6153,7 +6175,7 @@ class FiniteElementFunction:
         """
         build data structure for parallel communication
         """
-        if self.femSpace.dofMap.dof_offsets_subdomain_owned == None:
+        if self.femSpace.dofMap.dof_offsets_subdomain_owned is None:
             logEvent("WARNING setupParallelCommunication not valid for %s must have parallel information for dofMap" % self,level=-1)
             return
         comm = Comm.get()
@@ -6214,7 +6236,7 @@ class DOFBoundaryConditions:
                 return hash(tuple(self.p))
             def __eq__(self,other):
                 return  enorm(self.p - other.p) <= self.h
-        if getPointwiseBoundaryConditions!=None and femSpace.strongDirichletConditions and not weakDirichletConditions:
+        if getPointwiseBoundaryConditions is not None and femSpace.strongDirichletConditions and not weakDirichletConditions:
             for eN in range(femSpace.elementMaps.mesh.nElements_global):
             # mesh = femSpace.elementMaps.mesh
             # for ebNE in range(mesh.nExteriorElementBoundaries_global):
@@ -6245,14 +6267,14 @@ class DOFBoundaryConditions:
                                 if gFlag != 1:
                                     logEvent("WARNING strong Dirichlet conditions do not enforce nonlinear bcs")
                                 p = None
-                                if getPeriodicBoundaryConditions != None:
+                                if getPeriodicBoundaryConditions is not None:
                                     p = getPeriodicBoundaryConditions(x,materialFlag)
-                                if p != None:
+                                if p is not None:
                                     if self.periodicDOFDict.has_key(ptuple(p)):
                                         self.periodicDOFDict[ptuple(p)].add(dofN)
                                     else:
                                         self.periodicDOFDict[ptuple(p)] = set([dofN])
-                                elif g != None:
+                                elif g is not None:
                                     self.DOFBoundaryConditionsDict[dofN] = g
                                     self.DOFBoundaryPointDict[dofN]=x
                                     self.DOFBoundaryMaterialFlag[dofN] = materialFlag
@@ -6280,9 +6302,9 @@ class DOFBoundaryConditions:
                         if gFlag != 1:
                             logEvent("WARNING strong Dirichlet conditions do not enforce nonlinear bcs")
                         p = None
-                        if getPeriodicBoundaryConditions != None:
+                        if getPeriodicBoundaryConditions is not None:
                             p = getPeriodicBoundaryConditions(x)
-                        if p != None:
+                        if p is not None:
                             #print "periodic DOF bc ",tuple(p)
                             if self.periodicDOFDict.has_key(ptuple(p)):
                                 self.periodicDOFDict[ptuple(p)].add(dofN)
@@ -6302,7 +6324,7 @@ class DOFBoundaryConditions:
                     #now also try setting Dirichlet boundary conditions using nodal id tags
                     nN_element = femSpace.referenceFiniteElement.interpolationConditions.quadrature2Node_element(k)
                     ##todo work out use cases where this matters
-                    if allowNodalMaterialBoundaryTypes and (nN_element != None and nN_element < femSpace.elementMaps.mesh.nNodes_element):
+                    if allowNodalMaterialBoundaryTypes and (nN_element is not None and nN_element < femSpace.elementMaps.mesh.nNodes_element):
                         try:
                             nN_global = femSpace.elementMaps.mesh.elementNodesArray[eN,nN_element]
                             materialFlag = femSpace.elementMaps.mesh.nodeMaterialTypes[nN_global]
@@ -6316,9 +6338,9 @@ class DOFBoundaryConditions:
                             if gFlag != 1:
                                 logEvent("WARNING strong Dirichlet conditions do not enforce nonlinear bcs")
                             p = None
-                            if getPeriodicBoundaryConditions != None:
+                            if getPeriodicBoundaryConditions is not None:
                                 p = getPeriodicBoundaryConditions(x,materialFlag)
-                            if p != None: #skip dof setting here
+                            if p is not None: #skip dof setting here
                                 pass#cek changed from break to pass/elif
                             elif g: #override elementBoundary condition
                                 self.DOFBoundaryConditionsDict[dofN] = g
@@ -6415,7 +6437,7 @@ class DOFBoundaryConditions_alt:
                 return hash(tuple(self.p))
             def __eq__(self,other):
                 return  enorm(self.p - other.p) < self.h
-        if getPointwiseBoundaryConditions!=None and femSpace.strongDirichletConditions and not weakDirichletConditions:
+        if getPointwiseBoundaryConditions is not None and femSpace.strongDirichletConditions and not weakDirichletConditions:
             for eN in range(femSpace.elementMaps.mesh.nElements_global):
             # mesh = femSpace.elementMaps.mesh
             # for ebNE in range(mesh.nExteriorElementBoundaries_global):
@@ -6446,14 +6468,14 @@ class DOFBoundaryConditions_alt:
                             if gFlag != 1:
                                 logEvent("WARNING strong Dirichlet conditions do not enforce nonlinear bcs")
                             p = None
-                            if getPeriodicBoundaryConditions != None:
+                            if getPeriodicBoundaryConditions is not None:
                                 p = getPeriodicBoundaryConditions(x,materialFlag)
-                            if p != None:
+                            if p is not None:
                                 if self.periodicDOFDict.has_key(ptuple(p)):
                                     self.periodicDOFDict[ptuple(p)].add(dofN)
                                 else:
                                     self.periodicDOFDict[ptuple(p)] = set([dofN])
-                            elif g != None:
+                            elif g is not None:
                                 self.DOFBoundaryConditionsDict[dofN] = g
                                 self.DOFBoundaryPointDict[dofN]=x
                                 self.DOFBoundaryMaterialFlag[dofN] = materialFlag
@@ -6514,11 +6536,11 @@ class FluxBoundaryConditions:
             materialFlag = mesh.elementBoundaryMaterialTypes[ebN]
             for k in range(nElementBoundaryQuadraturePoints_elementBoundary):
                 try:
-                    if getAdvectiveFluxBoundaryConditions != None:
+                    if getAdvectiveFluxBoundaryConditions is not None:
                         g = getAdvectiveFluxBoundaryConditions(x[ebNE,k],materialFlag)
                         if g:
                             self.advectiveFluxBoundaryConditionsDict[(ebNE,k)] = g
-                    if getStressFluxBoundaryConditions != None:
+                    if getStressFluxBoundaryConditions is not None:
                         g = getStressFluxBoundaryConditions(x[ebNE,k],materialFlag)
                         if g:
                             self.stressFluxBoundaryConditionsDict[(ebNE,k)] = g

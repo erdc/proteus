@@ -1,7 +1,7 @@
 #include "Python.h"
 #include "numpy/arrayobject.h"
 #include "postprocessing.h"
-/** \file cpostprocessingModule.h
+/** \file cpostprocessingModule.c
     \defgroup cpostprocessing cpostprocessing
     \brief Python interface to velocity postprocessing library
 */

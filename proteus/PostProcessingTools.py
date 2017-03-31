@@ -193,10 +193,9 @@ class VelocityPostProcessingAlgorithmBase:
     def computeGeometricInfo(self):
         pass
     def postprocess(self,verbose=0):
-        """
-        main functionality
-        generate post-processed velocity field for attached
-        VectorTransport object and store them in local dictionaries
+        """generate post-processed velocity field for attached VectorTransport
+        object and store them in local dictionaries
+
         """
         for ci in self.vtComponents:
             self.postprocess_component(ci,verbose=verbose)
@@ -209,18 +208,15 @@ class VelocityPostProcessingAlgorithmBase:
         """
         assert False, "must override postprocess_component"
     def evaluateElementVelocityField(self,x,ci):
-        """
-        evaluate velocity field assuming velocity_dofs already calculated
+        """evaluate velocity field assuming velocity_dofs already calculated
         for now assumes x shaped like nE x nq x 3
+
         """
         assert False, "must override postprocess"
         return None
     def removeBoundaryFluxesFromResidual(self,ci,flag_elementBoundaries=None):
-        """
-        remove boundary fluxes from element residuals
-        TODO:
-          get rid of temporary creation, just add a scalar argument like daxpy
-        """
+#        TODO:
+#         get rid of temporary creation, just add a scalar argument like daxpy
         flux = -1.0*self.vt.ebq_global[('totalFlux',ci)]
         if flag_elementBoundaries == None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(self.vt.mesh.exteriorElementBoundariesArray,
@@ -239,11 +235,8 @@ class VelocityPostProcessingAlgorithmBase:
                                                                       self.elementResidual[ci])
 
     def addBoundaryFluxesBackToResidual(self,ci,flag_elementBoundaries=None):
-        """
-        add boundary fluxes to element residuals
-        TODO
-           add scalar multiple for call like remove boundary fluxes
-        """
+#        TODO
+#           add scalar multiple for call like remove boundary fluxes
         flux = self.vt.ebq_global[('totalFlux',ci)]
         if flag_elementBoundaries == None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(self.vt.mesh.exteriorElementBoundariesArray,
@@ -266,10 +259,11 @@ class VelocityPostProcessingAlgorithmBase:
     def archiveVelocityValues(self,archive,t,tCount,initialPhase=False,meshChanged=False):
         """
         write out post processed velocity values as a finite element space
-        TODO
-           test
-           reuse data arrays
+
         """
+#        TODO
+#           test
+#           reuse data arrays
         self.velocityWriter.writeMeshXdmf_LowestOrderMixed(archive,
                                                            self.vt.mesh,
                                                            self.vt.nSpace_global,
@@ -380,13 +374,14 @@ class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
     #init
 
     def postprocess_component(self,ci,verbose=0):
-        """
-        compute velocity field in RT_0 assuming a potential field in P^1_{nc} has already been solved for
+        """compute velocity field in RT_0 assuming a potential field in
+        :math:`P^1_{nc}` has already been solved for
 
         Uses Chou and Tang approach for now, so averaged pressure is not correct
-        TODO:
-           cleanup use of mt,r
+
         """
+#        TODO:
+#           cleanup use of mt,r
         #mwf hack
         if not self.vt.q.has_key(('f',ci)):
             f_ci = self.dummy_p1nc[('f',ci)]
@@ -521,20 +516,24 @@ class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
 
 
 class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
-    """
-    Local Larson-Niklasson method with RT_0 representation for element velocities
-    This is not the correct postprocessing for optimized NS codes
+    """Local Larson-Niklasson method with RT_0 representation for element
+    velocities This is not the correct postprocessing for optimized NS
+    codes
 
     uses RT_0 representation in terms of local basis
-      \vec N_i = \frac{1}{d|E|}(\vec x - p_i)
-    where p_i is the vertex across from face i, |E| is the volume of the element,
-    and d is the space dimension
-    the degrees of freedom are V^i = \int_{e_i}\vec v\dot n_{i}\ds
 
-    TODO:
-      remove python loops in building mesh infrastructure or get rid of dependence
-        on these forms of node star info and use data structures in cmesh
+    .. math:
+
+      \vec N_i = \frac{1}{d|E|}(\vec x - p_i)
+
+    where :math:`p_i` is the vertex across from face i, :math:`|E|` is the volume of
+    the element, and d is the space dimension the degrees of freedom
+    are :math:`V^i = \int_{e_i}\vec v\dot n_{i}\ds`
+
     """
+#    TODO:
+#      remove python loops in building mesh infrastructure or get rid of dependence
+#        on these forms of node star info and use data structures in cmesh
     def __init__(self,vectorTransport=None,vtComponents=[0],omitFluxBoundaryNodes=True):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='pwl',
                                                      vectorTransport=vectorTransport,
@@ -733,9 +732,10 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
             self.testSpace = self.vt.u[self.vtComponents[0]].femSpace
     #init
     def postprocess_component(self,ci,verbose=0):
-        """
-        compute mass conservative velocity field following Larson and Niklasson assuming a P^k C0
-        Galerkin solution has already been found
+        """compute mass conservative velocity field following Larson and
+        Niklasson assuming a :math:`P^k C_0` Galerkin solution has already been
+        found
+
         """
         #must zero first time for average velocity
         self.nodeStarFactors[ci].setU(0.0)
@@ -851,7 +851,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
 
     def evaluateLocalVelocityRepresentation(self,ci):
         """
-        project to RT_0 velocity from element boundary fluxes
+        project to :math:`RT_0` velocity from element boundary fluxes
         """
         cpostprocessing.projectElementBoundaryVelocityToRT0fluxRep(self.vt.ebq[('dS_u',ci)],
                                                                    self.vt.ebq['n'],
@@ -1269,29 +1269,32 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
 
 
 class VPP_PWL_BDM(VPP_PWL_RT0):
-    """
-    Local Larson-Niklasson method with BDM1 representation for element velocities
-    This is not the correct postprocessing for optimized NS codes
+    """Local Larson-Niklasson method with BDM1 representation for element
+    velocities This is not the correct postprocessing for optimized NS
+    codes
 
     Only difference from VPP_PWL_RT0 should be steps for local velocity representation
-    This one uses  BDM_1 space which is [P^1]^d locally with continuous
+    This one uses  BDM_1 space which is :math:`[P^1]^d` locally with continuous
     linear fluxes on each face
     use standard basis
+
+    .. math::
+      
       \vec N_i = \lambda_{i/d}\vec e_{i%d}
-      That is the dofs are locally (say in 2d) [v^x_0,v^y_0,v^x_1,v^y_1,v^x_2,v^y_2]
+    
+    That is the dofs are locally (say in 2d) :math:`[v^x_0,v^y_0,v^x_1,v^y_1,v^x_2,v^y_2]`
 
     Have to use BDM projection to get degrees of freedom
 
-    TODO:
-      need additional code to compute velocities at ebq and ebq_global if desired
-      looks like ebq_global, ebqe may not be getting a good approximation if v.n=0 on boundary?
-        for example try LN_Example1 with no heterogeneity
-
-      Check what the problem is when running with numerical flux. mass balances are right
-        but getting strange convergence and error values. May need to check what is getting
-        added to ebq[('velocity',ci)] from numerical flux
-
     """
+#    TODO:
+#      need additional code to compute velocities at ebq and ebq_global if desired
+#      looks like ebq_global, ebqe may not be getting a good approximation if v.n=0 on boundary?
+#        for example try LN_Example1 with no heterogeneity
+#
+#      Check what the problem is when running with numerical flux. mass balances are right
+#        but getting strange convergence and error values. May need to check what is getting
+#        added to ebq[('velocity',ci)] from numerical flux
     from cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
     from cpostprocessing import solveLocalBDM1projection,getElementBDM1velocityValuesLagrangeRep
     def __init__(self,vectorTransport=None,vtComponents=[0]):
@@ -1856,7 +1859,7 @@ class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
                                                                    self.q[('conservationResidual',ci)],
                                                                    self.ebq_global[('velocity',ci)])
 
-        logEvent("Max local divergence (dgp1 enriched all elements) = %12.5e" % globalMax(max(numpy.absolute(self.q[('conservationResidual',ci)].flat))))
+        logEvent("Max local conservation (dgp1 enriched all elements) = %12.5e" % globalMax(max(numpy.absolute(self.q[('conservationResidual',ci)].flat))))
         divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.vt.ebqe['dS'],
                                                                 self.vt.ebqe[('velocity',ci)],
                                                                 self.vt.ebqe['n'],
@@ -1924,18 +1927,19 @@ class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
         return vx
 
 class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
-    """
-    Local Larson-Niklasson method with BDM1 representation for element velocities
-    for optimized parallel codes
+    """Local Larson-Niklasson method with BDM1 representation for element
+    velocities for optimized parallel codes
 
-    Only difference from VPP_PWL_RT0_OPT should be steps for local velocity representation
-    This one uses  BDM_1 space which is [P^1]^d locally with continuous
-    linear fluxes on each face
-    use standard basis
+    Only difference from VPP_PWL_RT0_OPT should be steps for local
+    velocity representation This one uses BDM_1 space which is :math:`[P^1]^d`
+    locally with continuous linear fluxes on each face use standard
+    basis
+
+    .. math::
+
       \vec N_i = \lambda_{i%(d+1)} \vec e_{i/(d+1)}
+
     Have to use BDM projection to get degrees of freedom
-
-
 
     """
     from cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
@@ -2054,19 +2058,24 @@ class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
 
 
 class VPP_PWC_RT0(VelocityPostProcessingAlgorithmBase):
-    """
-    Global piecewise constant Larson-Niklasson method with RT_0 representation for element velocities
+    """Global piecewise constant Larson-Niklasson method with :math:`RT_0`
+    representation for element velocities
 
     uses RT_0 representation in terms of local basis
-      \vec N_i = \frac{1}{d|E|}(\vec x - p_i)
-    where p_i is the vertex across from face i, |E| is the volume of the element,
-    and d is the space dimension
-    the degrees of freedom are V^i = \int_{e_i}\vec v\dot n_{i}\ds
 
-    TOOD:
-       make sure works with weak dirichlet conditions
-       remove python loops in building global Jacobian
+    .. math::
+
+      \vec N_i = \frac{1}{d|E|}(\vec x - p_i)
+
+    where :math:`p_i` is the vertex across from face :math:`i`,
+    :math:`|E|` is the volume of the element, and :math:`d` is the
+    space dimension the degrees of freedom are :math:`V^i =
+    \int_{e_i}\vec v\dot n_{i}\ds`
+
     """
+#    TOOD:
+#       make sure works with weak dirichlet conditions
+#       remove python loops in building global Jacobian
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='pwc',
                                                      vectorTransport=vectorTransport,
@@ -2158,9 +2167,9 @@ class VPP_PWC_RT0(VelocityPostProcessingAlgorithmBase):
 
         #
     def postprocess_component(self,ci,verbose=0):
-        """
-        compute mass conservative velocity field following Larson and Niklasson Global piecewise
-        constant correcction
+        """compute mass conservative velocity field following Larson and
+        Niklasson Global piecewise constant correcction
+
         """
         #compute initial element conservation residual for average velocity
         self.q[('conservationResidual',ci)].fill(0.0)
@@ -2236,8 +2245,8 @@ class VPP_PWC_RT0(VelocityPostProcessingAlgorithmBase):
 
 
     def evaluateLocalVelocityRepresentation(self,ci):
-        """
-        project to RT_0 velocity from element boundary fluxes
+        """project to :math:`RT_0` velocity from element boundary fluxes
+
         """
         cpostprocessing.projectElementBoundaryVelocityToRT0fluxRep(self.vt.ebq[('dS_u',ci)],
                                                                    self.vt.ebq['n'],
@@ -2267,19 +2276,23 @@ class VPP_PWC_RT0(VelocityPostProcessingAlgorithmBase):
 
 
 class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
-    """
-    Global piecewise constant Sun-Wheeler method with RT_0 representation for element velocities
+    """Global piecewise constant Sun-Wheeler method with :math:`RT_0`
+    representation for element velocities
 
     uses RT_0 representation in terms of local basis
-      \vec N_i = \frac{1}{d|E|}(\vec x - p_i)
-    where p_i is the vertex across from face i, |E| is the volume of the element,
-    and d is the space dimension
-    the degrees of freedom are V^i = \int_{e_i}\vec v\dot n_{i}\ds
 
-    TOOD:
-       make sure works with weak dirichlet conditions
-       remove python loops in building global Jacobian
+    .. math::
+
+      \vec N_i = \frac{1}{d|E|}(\vec x - p_i)
+
+    where :math:`p_i` is the vertex across from face i, :math:`|E|` is
+    the volume of the element, and d is the space dimension the
+    degrees of freedom are :math:`V^i = \int_{e_i}\vec v\dot n_{i}\ds`
+
     """
+#    TOOD:
+#       make sure works with weak dirichlet conditions
+#       remove python loops in building global Jacobian
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='sun-rt0',
                                                      vectorTransport=vectorTransport,
@@ -2411,9 +2424,9 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
 
         #
     def postprocess_component(self,ci,verbose=0):
-        """
-        compute mass conservative velocity field following Sun and Wheeler Global piecewise
-        constant correcction
+        """compute mass conservative velocity field following Sun and Wheeler
+        Global piecewise constant correcction
+
         """
         #compute initial element conservation residual for average velocity
         self.q[('conservationResidual',ci)].fill(0.0)
@@ -2493,8 +2506,8 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
 
 
     def evaluateLocalVelocityRepresentation(self,ci):
-        """
-        project to RT_0 velocity from element boundary fluxes
+        """project to :math:`RT_0` velocity from element boundary fluxes
+
         """
         cpostprocessing.projectElementBoundaryVelocityToRT0fluxRep(self.vt.ebq[('dS_u',ci)],
                                                                    self.vt.ebq['n'],
@@ -2507,9 +2520,9 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
                                                            self.q[('velocity_dofs',ci)],
                                                            self.q[('velocity',ci)])
     def evaluateElementVelocityField(self,x,ci):
-        """
-        evaluate velocity field assuming velocity_dofs already calculated
+        """evaluate velocity field assuming velocity_dofs already calculated
         for now assumes x shaped like nE x nq x 3
+
         """
         assert len(x.shape) == 3, "wrong shape for x= %s " % x.shape
         nE = x.shape[0]; nq = x.shape[1]; nd = self.vt.nSpace_global
@@ -2524,16 +2537,18 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
 
 
 class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
-    """
-    Local Sun-Wheeler "Gauss-Seidel" method with RT_0 representation for element velocities
+    """Local Sun-Wheeler "Gauss-Seidel" method with :math:`RT_0` representation
+    for element velocities
 
-    uses RT_0 representation in terms of local basis
+    uses :math:`RT_0` representation in terms of local basis
+
+    .. math::
+
       \vec N_i = \frac{1}{d|E|}(\vec x - p_i)
-    where p_i is the vertex across from face i, |E| is the volume of the element,
-    and d is the space dimension
-    the degrees of freedom are V^i = \int_{e_i}\vec v\dot n_{i}\ds
 
-    TODO:
+    where p_i is the vertex across from face i, :math:`|E|` is the
+    volume of the element, and d is the space dimension the degrees of
+    freedom are :math:`V^i = \int_{e_i}\vec v\dot n_{i}\ds`
 
     """
     def __init__(self,vectorTransport=None,vtComponents=[0]):
@@ -2591,8 +2606,9 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.vt.mesh.nElementBoundaries_element),dtype='i').reshape((self.vt.mesh.nElements_global,self.vt.mesh.nElementBoundaries_element))
 
     def postprocess_component(self,ci,verbose=0):
-        """
-        compute mass conservative velocity field following Sun and Wheeler local Gauss-Seidel
+        """compute mass conservative velocity field following Sun and Wheeler
+        local Gauss-Seidel
+
         """
         #compute initial element conservation residual for average velocity
         self.q[('conservationResidual',ci)].fill(0.0)
@@ -2672,8 +2688,8 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
 
 
     def evaluateLocalVelocityRepresentation(self,ci):
-        """
-        project to RT_0 velocity from element boundary fluxes
+        """project to :math:`RT_0` velocity from element boundary fluxes
+
         """
         cpostprocessing.projectElementBoundaryVelocityToRT0fluxRep(self.vt.ebq[('dS_u',ci)],
                                                                    self.vt.ebq['n'],
@@ -2703,8 +2719,9 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
 
 
 class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
-    """
-    Post process DG solution velocity by projecting boundary fluxes onto local RT0 space
+    """Post process DG solution velocity by projecting boundary fluxes
+    onto local :math:`RT_0` space
+
     """
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='dg',
@@ -2733,11 +2750,12 @@ class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
         self.evaluateLocalVelocityRepresentation(ci)
     def evaluateLocalVelocityRepresentation(self,ci):
         """
-        project to RT_0 velocity from element boundary fluxes
-        TODO:
-          Check if need to evaluate element boundary and global element boundary velocities (and exterior global element boundary  too?)
-          or if they are already evaluated with DG fluxes
+        project to :math:`RT_0` velocity from element boundary fluxes
+
         """
+#        TODO:
+#          Check if need to evaluate element boundary and global element boundary velocities (and exterior global element boundary  too?)
+#          or if they are already evaluated with DG fluxes
 
         cpostprocessing.projectElementBoundaryFluxToRT0fluxRep(self.vt.mesh.elementBoundaryElementsArray,
                                                                self.vt.mesh.elementBoundariesArray,
@@ -2784,19 +2802,20 @@ class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
         return vx
 
 class VPP_DG_BDM(VPP_DG_RT0):
-    """
-    Project DG solution onto BDM1 local representation
-    which is [P^1]^d locally with continuous
-    linear fluxes on each face
+    """Project DG solution onto BDM1 local representation which is
+    :math:`[P^1]^d` locally with continuous linear fluxes on each face
+
     use standard basis
+
+    .. math::
+
       \vec N_i = \lambda_{i%(d+1)} \vec e_{i/(d+1)}
+
     Have to use BDM projection to get degrees of freedom
 
-     TODO:
-      need additional code to compute velocities at ebq and ebq_global if desired
-
-
     """
+#     TODO:
+#      need additional code to compute velocities at ebq and ebq_global if desired
     from cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
     from cpostprocessing import solveLocalBDM1projectionFromFlux,getElementBDM1velocityValuesLagrangeRep
     def __init__(self,vectorTransport=None,vtComponents=[0]):
@@ -2875,12 +2894,12 @@ class VPP_DG_BDM(VPP_DG_RT0):
             self.computeBDM1projectionMatrices()
 
     def evaluateLocalVelocityRepresentation(self,ci):
+        """project to BDM velocity from element boundary fluxes
+
         """
-        project to BDM velocity from element boundary fluxes
-        TODO:
-          evaluate element boundary and global element boundary velocities (and exterior global element boundary  too?)
-          Check that they aren't already evaluated with DG fluxes
-        """
+#TODO:
+#          evaluate element boundary and global element boundary velocities (and exterior global element boundary  too?)
+#          Check that they aren't already evaluated with DG fluxes
         assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
         self.solveLocalBDM1projectionFromFlux(self.BDMprojectionMat_element,
                                               self.BDMprojectionMatPivots_element,
@@ -2911,12 +2930,11 @@ class VPP_DG_BDM(VPP_DG_RT0):
 
 
     def evaluateElementVelocityField(self,x,ci):
+        """evaluate velocity field assuming velocity_dofs already calculated
+        for now assumes x shaped like nE x nq x 3 
+
         """
-        evaluate velocity field assuming velocity_dofs already calculated
-        for now assumes x shaped like nE x nq x 3
-        TODO:
-           put python loops in c
-        """
+#        TODO: put python loops in c
         assert len(x.shape) == 3, "wrong shape for x= %s " % x.shape
         nE = x.shape[0]; nq = x.shape[1]; nd = self.vt.nSpace_global
         vx = numpy.zeros((nE,nq,nd),'d')
@@ -2951,14 +2969,16 @@ class VPP_POINT_EVAL(VelocityPostProcessingAlgorithmBase):
                                                      vtComponents=vtComponents)
 
     def postprocess_component(self,ci,verbose=0):
-        """
-        compute velocity field by just using point evaluation of trial solution
-        and coefficients
+        """compute velocity field by just using point evaluation of trial
+        solution and coefficients
+
+        .. math::
+
           v = -\ten{a}_h\grad \phi_h + \vec f_h
 
-         TODO
-           Include off diagonal potentials
         """
+#         TODO
+#           Include off diagonal potentials
         self.q[('velocity',ci)].fill(0.0)
         if self.vt.q.has_key(('a',ci,ci)):
             assert self.vt.q.has_key(('grad(phi)',ci))
@@ -3103,18 +3123,17 @@ class VPP_POINT_EVAL_GWVD(VelocityPostProcessingAlgorithmBase):
 #########################################################################
 #Begin trying "fixes" for material interface jumps
 class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
-    """
-    Local Larson-Niklasson method with RT_0 representation for element velocities
-    This version tries to address flux through low permeability interfaces by
-    manually setting boundaries with a 'large' jump in permeability and one of
-    these boundaries being 'small' to no flux
+    """Local Larson-Niklasson method with RT_0 representation for element
+    velocities This version tries to address flux through low
+    permeability interfaces by manually setting boundaries with a
+    'large' jump in permeability and one of these boundaries being
+    'small' to no flux
 
-
-    TODO:
-      get tolerances from coefficients?
-      remove python loops in building mesh infrastructure or get rid of dependence
-        on these forms of node star info and use data structures in cmesh
     """
+#    TODO:
+#      get tolerances from coefficients?
+#      remove python loops in building mesh infrastructure or get rid of dependence
+#        on these forms of node star info and use data structures in cmesh
     def __init__(self,vectorTransport=None,vtComponents=[0],jump_tol=1.0e4,min_tol=1.0e-5):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='pwl-ib-fix-0',
                                                      vectorTransport=vectorTransport,
@@ -3268,14 +3287,16 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
             self.setInteriorFluxBoundaries(ci)
     #init
     def setInteriorFluxBoundaries(self,ci):
-        """
-        Flag interior flux boundaries
+        """Flag interior flux boundaries
 
-        this version flags boundaries where |max(|a|_L)-max(|a|_R)|_{ebN} > jump_tol and min(max(|a|_L),max(|a|_R)) < min_tol
-        TODO:
-          put in off-diagional potentials (ie ('a',ci,cj) cj != ci)
-          put in c (once it works)
+        this version flags boundaries where
+        :math:`|max(|a|_L)-max(|a|_R)|_{ebN} > jump_{tol}` and
+        :math:`min(max(|a|_L),max(|a|_R)) < min_{tol}`
+
         """
+#        TODO:
+#          put in off-diagional potentials (ie ('a',ci,cj) cj != ci)
+#          put in c (once it works)
         if self.vt.q.has_key(('a',ci,ci)):
             for ebNI in range(self.vt.mesh.nInteriorElementBoundaries_global):
                 ebN = self.vt.mesh.interiorElementBoundariesArray[ebNI]
@@ -3302,9 +3323,10 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         """
         set interior flux boundary values
         this version sets interior flux boundaries to no flux
-        TODO:
-          put in c (once it works)
+
         """
+#        TODO:
+#          put in c (once it works)
         for ebNI in range(self.vt.mesh.nInteriorElementBoundaries_global):
             ebN = self.vt.mesh.interiorElementBoundariesArray[ebNI]
             if self.fluxElementBoundaries_global[ci][ebN] == 1:
@@ -3313,7 +3335,7 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
 
     def postprocess_component(self,ci,verbose=0):
         """
-        compute mass conservative velocity field following Larson and Niklasson assuming a P^k C0
+        compute mass conservative velocity field following Larson and Niklasson assuming a :math:`P^k C_0`
         Galerkin solution has already been found
         """
         #must zero first time for average velocity
@@ -3549,23 +3571,25 @@ import sys,os,copy,timeit
 TESTVPPTIMES = False #True
 
 class VelocityPostProcessor_Original:
-    """
-    accumulate basic functionality for post-processing velocity vields from
-    scalar potentials
+    """accumulate basic functionality for post-processing velocity vields
+    from scalar potentials
 
     stores values in quadrature dictonary corresponding to vt.q and vt.ebq_global
-    Allowed types:
-         p1-nc
-         pwl (default is rt0 local representation)
-         pwl-bdm
-         pwc (with rt0)
-         point-eval
-         sun-rt0
-         sun-gs-rt0
-    TO DO
-      Figure out how to use just dS_u quadrature rules
-      Put in projection to higher order mixed space?
+
+    Allowed types
+    p1-nc
+    pwl (default is rt0 local representation)
+    pwl-bdm
+    pwc (with rt0)
+    point-eval
+    sun-rt0
+    sun-gs-rt0
+
     """
+#    
+#    TO DO
+#      Figure out how to use just dS_u quadrature rules
+#      Put in projection to higher order mixed space?
     from cpostprocessing import postProcessRT0potentialFromP1nc,postProcessRT0potentialFromP1nc_sd
     from cpostprocessing import postProcessRT0velocityFromP1nc,postProcessRT0velocityFromP1nc_sd
     from cpostprocessing import getElementRT0velocityValues
@@ -4685,7 +4709,7 @@ class VelocityPostProcessor_Original:
                                                                    self.vt.ebq_global['n'],
                                                                    self.q[('conservationResidual',ci)],
                                                                    self.ebq_global[('velocity',ci)])
-        logEvent("Max local divergence (dgp1 enriched all elements) = %12.5e" % globalMax(max(numpy.absolute(self.q[('conservationResidual',ci)].flat))))
+        logEvent("Max local conservation (dgp1 enriched all elements) = %12.5e" % globalMax(max(numpy.absolute(self.q[('conservationResidual',ci)].flat))))
         divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.vt.ebqe['dS'],
                                                                 self.vt.ebqe[('velocity',ci)],
                                                                 self.vt.ebqe['n'],
@@ -4959,6 +4983,9 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
         """
         compute velocity field by just using point evaluation of trial solution
         and coefficients
+
+        .. math::
+
           v = -\ten{a}_h\grad \phi_h + \vec f_h
 
         """
