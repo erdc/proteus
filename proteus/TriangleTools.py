@@ -11,6 +11,7 @@ import numpy
 import triangleWrappers
 import TriangleUtils
 import TriangleFileUtils
+from Profiling import logEvent
 
 class TriangleBaseMesh:
     """A triangulation interface wrapper.
@@ -55,8 +56,8 @@ class TriangleBaseMesh:
         if self.baseFlags.find('v') >= 0:
             self.makeVoronoi = True
         if verbose > 0:
-            print """TriangleBaseMesh nbase=%d baseFlags= %s """ % (self.nbase,
-                                                                    self.baseFlags)
+            logEvent("""TriangleBaseMesh nbase=%d baseFlags= %s """ % (self.nbase,
+                                                                    self.baseFlags))
         #end if
         #keep track of last set of flags used to generate rep
         self.lastFlags = None
