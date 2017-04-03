@@ -440,7 +440,6 @@ class Newton(NonlinearSolver):
         u -- solution
         r -- F(u) - b
         """
-
         import Viewers
         memory()
         if self.linearSolver.computeEigenvalues:

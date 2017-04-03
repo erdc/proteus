@@ -365,10 +365,12 @@ class EdgeBased_ForwardEuler(BackwardEuler_cfl):
         self.dtRatioMax = 2.0
         assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
         self.edge_based_cfl = transport.edge_based_cfl
+        self.cell_based_cfl = transport.q[('cfl',0)]        
         self.isAdaptive=True
     def choose_dt(self):
         maxCFL = 1.0e-6
         maxCFL = max(maxCFL,globalMax(self.edge_based_cfl.max()))
+        #maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max()))
         self.dt = self.runCFL/maxCFL
         if self.dtLast == None:
             self.dtLast = self.dt

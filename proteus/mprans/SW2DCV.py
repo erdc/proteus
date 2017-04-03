@@ -640,6 +640,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         elif 'use_EV_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_cell_based_entropy_viscosity
             self.calculateJacobian = self.sw2d.calculateJacobian_cell_based_entropy_viscosity
+        elif 'use_second_order_NonFlatB_with_EV_stabilization' in dir(options):
+            self.calculateResidual = self.sw2d.calculateResidual_second_order_NonFlatB_with_EV
+            self.calculateJacobian = self.sw2d.calculateJacobian_second_order_NonFlatB_with_EV
+
         else:
             self.calculateResidual = self.sw2d.calculateResidual
             self.calculateJacobian = self.sw2d.calculateJacobian
@@ -973,8 +977,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeIntegration.dt=self.timeIntegration.runCFL/globalMax(self.edge_based_cfl.max())
         logEvent("...   Time step = " + str(self.timeIntegration.dt),level=2)
 
-        #cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
-        #logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax),level=2)
+        cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
+        logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax),level=2)
 
         edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
         logEvent("...   Maximum Edge Based CFL = " + str(edge_based_cflMax),level=2)
