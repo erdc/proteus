@@ -1582,6 +1582,7 @@ class OneLevelTransport(NonlinearEquation):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         import PostProcessingTools
+#        import pdb ; pdb.set_trace()
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage

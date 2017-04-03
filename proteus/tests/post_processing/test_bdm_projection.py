@@ -37,6 +37,7 @@ class TestBDM2Reference1():
         reload(bt_temp)
         self.transport_obj = bt_temp.ns.modelList[0].levelModelList[0]
         self.bdm2_obj = self.transport_obj.velocityPostProcessor.vpp_algorithms[0]
+        self._setRelativePath()
 
     def teardown_method(self,method):
         """Tear down the test problem. """
@@ -51,6 +52,9 @@ class TestBDM2Reference1():
             else:
                 pass
 
+    def _setRelativePath(self):
+        self.scriptdir = os.path.dirname(__file__)
+    
     def test_BDM2_reference_triangle(self):
         '''
         Test the construction of a BDM2 projection matrix and rhs
@@ -80,7 +84,8 @@ class TestBDM2Reference1():
         #    currently stored file should be correct.
 
         #    np.savetxt('bdm2_ref_proj_mat.txt', bdm2_obj.BDMprojectionMat_element[0])
-        comparison_matrix = np.loadtxt('./comparison_files/bdm2_ref_proj_mat.txt', dtype = float)
+        rel_path = "comparison_files/bdm2_ref_proj_mat.txt"
+        comparison_matrix = np.loadtxt(os.path.join(self.scriptdir,rel_path), dtype = float)
         assert np.allclose(comparison_matrix,self.bdm2_obj.BDMprojectionMat_element)
 
         # ******************** TEST RHS CONSTRUCTION *************************
@@ -109,8 +114,10 @@ class TestBDM2Reference1():
         assert np.allclose(comparison_rhs,test_rhs)
 
     def test_BDM2_reference_triangle_full_in_space(self):
-        bdm_bdy_values = np.load('./comparison_files/bdm_bdy_func_values.npy')
-        bdm_values = np.load('./comparison_files/bdm_func_values.npy')
+        rel_path_1 = "comparison_files/bdm_bdy_func_values.npy"
+        rel_path_2 = "comparison_files/bdm_func_values.npy"
+        bdm_bdy_values = np.load(os.path.join(self.scriptdir,rel_path_1))
+        bdm_values = np.load(os.path.join(self.scriptdir,rel_path_2))
         
         self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values.copy()
         self.bdm2_obj.q[('velocity',0)] = bdm_values.copy()
@@ -119,15 +126,18 @@ class TestBDM2Reference1():
         assert np.allclose(self.bdm2_obj.q[('velocity',0)],bdm_values)
 
     def test_BDM2_reference_triangle_full_not_in_space(self):
-        bdm_bdy_values = np.load('./comparison_files/bdm_bdy_func_values_trig.npy')
-        bdm_values = np.load('./comparison_files/bdm_func_values_trig.npy')
-
+        rel_path_1 = "comparison_files/bdm_bdy_func_values_trig.npy"
+        rel_path_2 = "comparison_files/bdm_func_values_trig.npy"
+        bdm_bdy_values = np.load(os.path.join(self.scriptdir,rel_path_1))
+        bdm_values = np.load(os.path.join(self.scriptdir,rel_path_2))
+        
         self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values
         self.bdm2_obj.q[('velocity',0)] = bdm_values
 
         self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
 
-        comparison_vec = np.load('./comparison_files/trig_velocity_rep.npy')
+        rel_path_3 = "comparison_files/trig_velocity_rep.npy"
+        comparison_vec = np.load(os.path.join(self.scriptdir,rel_path_3))
         assert np.allclose(self.bdm2_obj.q[('velocity',0)],comparison_vec)
 
 

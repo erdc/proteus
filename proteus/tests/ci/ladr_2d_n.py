@@ -20,3 +20,5 @@ linearSmoother = None
 l_atol_res = 1.0e-8
 parallelPartitioningType = MeshParallelPartitioningTypes.node
 nLayersOfOverlapForParallel = 1
+conservativeFlux =  None
+cfluxtag = None

@@ -37,6 +37,10 @@ class TestElementwiseFlux2D():
         reload(bt)
         self.transport_obj = bt.ns.modelList[0].levelModelList[0]
         self.bdm2_obj = self.transport_obj.velocityPostProcessor.vpp_algorithms[0]
+        self._setRelativePath()
+
+    def _setRelativePath(self):
+        self.scriptdir = os.path.dirname(__file__)
 
     def teardown_method(self,method):
         filenames = ['poisson_bdm1_test.h5', 'poisson_bdm1_test.xmf','reference_triangle.ele',
@@ -51,9 +55,11 @@ class TestElementwiseFlux2D():
                 pass
 
     def test_BDM2_reference_triangle_full_in_space(self):
-        bdm_bdy_values = np.load('./comparison_files/bdm_bdy_func_values_mesh_8.npy')
-        bdm_values = np.load('./comparison_files/bdm_func_values_mesh_8.npy')
-
+        rel_path_1 = "comparison_files/bdm_bdy_func_values_mesh_8.npy"
+        rel_path_2 = "comparison_files/bdm_func_values_mesh_8.npy"
+        bdm_bdy_values = np.load(os.path.join(self.scriptdir,rel_path_1))
+        bdm_values = np.load(os.path.join(self.scriptdir,rel_path_2))
+        
         self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values.copy()
         self.bdm2_obj.q[('velocity',0)] = bdm_values.copy()
         self.bdm2_obj.evaluateLocalVelocityRepresentation(0)
