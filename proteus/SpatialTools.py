@@ -1317,18 +1317,16 @@ def _generateMesh(domain):
     # --------------------------- #
     # ----- MESH GENERATION ----- #
     # --------------------------- #
-    comm = Comm.get()
     mesh = domain.MeshOptions
-    if comm.isMaster():
-        if mesh.outputFiles['poly'] is True:
-            domain.writePoly(mesh.outputFiles_name)
-        if mesh.outputFiles['ply'] is True:
-            domain.writePLY(mesh.outputFiles_name)
-        if mesh.outputFiles['asymptote'] is True:
-            domain.writeAsymptote(mesh.outputFiles_name)
-        if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
-            domain.writeGeo(mesh.outputFiles_name)
-        mesh.setTriangleOptions()
+    if mesh.outputFiles['poly'] is True:
+        domain.writePoly(mesh.outputFiles_name)
+    if mesh.outputFiles['ply'] is True:
+        domain.writePLY(mesh.outputFiles_name)
+    if mesh.outputFiles['asymptote'] is True:
+        domain.writeAsymptote(mesh.outputFiles_name)
+    if mesh.outputFiles['geo'] is True or mesh.use_gmsh is True:
+        domain.writeGeo(mesh.outputFiles_name)
+    mesh.setTriangleOptions()
 
 
 def getGmshPhysicalGroups(geofile):
