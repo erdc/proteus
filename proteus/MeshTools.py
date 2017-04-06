@@ -1526,6 +1526,79 @@ class Mesh:
             gnuplot.flush()
         raw_input('Please press return to continue... \n')
 
+    def convertFromPUMI(self, PUMIMesh, faceList, parallel=False, dim=3):
+        import cmeshTools
+        import MeshAdaptPUMI
+        import flcbdfWrappers
+        import Comm
+        comm = Comm.get()
+        self.cmesh = cmeshTools.CMesh()
+        if parallel:
+          self.subdomainMesh=self.__class__()
+          self.subdomainMesh.globalMesh = self
+          self.subdomainMesh.cmesh = cmeshTools.CMesh()
+          PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
+              self.subdomainMesh.cmesh)
+          for i in range(len(faceList)):
+            for j in range(len(faceList[i])):
+              PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh, i+1,
+                  faceList[i][j])
+          if dim == 3:
+            cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+            cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+          if dim == 2:
+            cmeshTools.allocateGeometricInfo_triangle(self.subdomainMesh.cmesh)
+            cmeshTools.computeGeometricInfo_triangle(self.subdomainMesh.cmesh)
+          self.buildFromCNoArrays(self.cmesh)
+          (self.elementOffsets_subdomain_owned,
+           self.elementNumbering_subdomain2global,
+           self.nodeOffsets_subdomain_owned,
+           self.nodeNumbering_subdomain2global,
+           self.elementBoundaryOffsets_subdomain_owned,
+           self.elementBoundaryNumbering_subdomain2global,
+           self.edgeOffsets_subdomain_owned,
+           self.edgeNumbering_subdomain2global) = (
+              flcbdfWrappers.convertPUMIPartitionToPython(self.cmesh,
+                  self.subdomainMesh.cmesh))
+          self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
+          self.subdomainMesh.nElements_owned = (
+              self.elementOffsets_subdomain_owned[comm.rank()+1] -
+              self.elementOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nNodes_owned = (
+              self.nodeOffsets_subdomain_owned[comm.rank()+1] -
+              self.nodeOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nElementBoundaries_owned = (
+              self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] -
+              self.elementBoundaryOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nEdges_owned = (
+              self.edgeOffsets_subdomain_owned[comm.rank()+1] -
+              self.edgeOffsets_subdomain_owned[comm.rank()])
+          comm.barrier()
+          par_nodeDiametersArray = (
+              ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
+                              bs=1,
+                              n=self.subdomainMesh.nNodes_owned,
+                              N=self.nNodes_global,
+                              nghosts = self.subdomainMesh.nNodes_global -
+                                        self.subdomainMesh.nNodes_owned,
+                              subdomain2global = 
+                                  self.nodeNumbering_subdomain2global))
+          par_nodeDiametersArray.scatter_forward_insert()
+          comm.barrier()
+        else:
+          PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
+          for i in range(len(faceList)):
+            for j in range(len(faceList[i])):
+              PUMIMesh.updateMaterialArrays(self.cmesh, i+1, faceList[i][j])
+          if dim == 3:
+            cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
+            cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
+          if dim == 2:
+            cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
+            cmeshTools.computeGeometricInfo_triangle(self.cmesh)
+          self.buildFromC(self.cmesh)
+        logEvent("meshInfo says : \n"+self.meshInfo())
+
 class MultilevelMesh(Mesh):
     """A hierchical multilevel mesh"""
     def __init__(self,levels=1):
@@ -2667,8 +2740,8 @@ class TetrahedralMesh(Mesh):
 Number of triangles  : %d
 Number of edges      : %d
 Number of nodes      : %d
-max(sigma_k)         : %d
-min(h_k)             : %d\n""" % (self.nElements_global,
+max(sigma_k)         : %f
+min(h_k)             : %f\n""" % (self.nElements_global,
                                   self.nElementBoundaries_global,
                                   self.nEdges_global,
                                   self.nNodes_global,
@@ -3613,6 +3686,16 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                 self.meshList[l].subdomainMesh = self.meshList[l]
                 logEvent(self.meshList[-1].meshInfo())
             self.buildArrayLists()
+
+    def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
+        import cmeshTools
+        self.meshList = []
+        self.meshList.append(mesh0)
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        self.buildFromC(self.cmultilevelMesh)
+        self.elementParents = None
+        self.elementChildren=[]
+
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools

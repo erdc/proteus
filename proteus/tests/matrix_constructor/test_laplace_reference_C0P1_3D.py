@@ -9,8 +9,8 @@ from proteus import LinearAlgebraTools
 import set_paths
 import os.path
 import numpy
-
 import laplace_template_C0P1_3D as tp_3D
+
 
 class TestLaplaceConstruction3D():
     """ Run tests to verify the construction of the 3D Laplace operator """
