@@ -1,6 +1,7 @@
 import sys
 import setuptools
 from distutils.core import setup, Extension
+from Cython.Build import cythonize
 from petsc4py.conf.petscconf import Extension as PetscExtension
 
 import numpy
@@ -23,7 +24,6 @@ cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","")
 cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","")
 cv["CFLAGS"] = cv["CFLAGS"].replace("-Wall","-w")
 cv["CFLAGS"] = cv["CFLAGS"].replace("-Wstrict-prototypes","")
-
 
 PROTEUS_PETSC_EXTRA_LINK_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_LINK_ARGS', [])
 PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_ARGS', [])
@@ -56,10 +56,27 @@ setup(name='proteus',
                   'proteus.tests.mesh_tests.import_modules',
                   'proteus.tests.linalgebra_tests',
                   'proteus.tests.single_phase_gw',
-                  'proteus.tests.poisson_2d',],
+                  'proteus.tests.poisson_2d',
+                  'proteus.MeshAdaptPUMI',
+                  'proteus.tests.MeshAdaptPUMI'],
       cmdclass = {'build_ext':build_ext},
       ext_package='proteus',
-      ext_modules=[Extension("mprans.Pres",['proteus/mprans/Pres.pyx'],
+      ext_modules=[Extension('MeshAdaptPUMI.MeshAdaptPUMI',
+                             sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
+                                        'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
+                                        'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
+                                        'proteus/MeshAdaptPUMI/DumpMesh.cpp',
+                                        'proteus/MeshAdaptPUMI/ErrorResidualMethod.cpp'],
+                             define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
+                             language='c++',
+                             include_dirs=[numpy.get_include(),'include',
+                                           'proteus']+
+                                           PROTEUS_SCOREC_INCLUDE_DIRS,
+                              library_dirs=PROTEUS_SCOREC_LIB_DIRS,
+                              libraries=PROTEUS_SCOREC_LIBS,
+                             extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS,
+                             extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
+                   Extension("mprans.Pres",['proteus/mprans/Pres.pyx'],
                              depends=['proteus/mprans/Pres.h', 'proteus/ModelFactory.h', 'proteus/CompKernel.h'],
                              language='c++',
                              include_dirs=[numpy.get_include(),'proteus']),
@@ -339,8 +356,8 @@ setup(name='proteus',
                                   libraries=['hdf5','stdc++','m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS+PROTEUS_HDF5_LIBS,
                                   extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
                                   extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS),
-                                  Extension("mprans.cNCLS",["proteus/mprans/cNCLS.pyx"],depends=["proteus/mprans/NCLS.h"], language="c++",
-                             include_dirs=[numpy.get_include(), 'proteus']),
+                    Extension("mprans.cNCLS",["proteus/mprans/cNCLS.pyx"],depends=["proteus/mprans/NCLS.h"], language="c++",
+                              include_dirs=[numpy.get_include(), 'proteus']),
                    Extension("mprans.cMCorr",["proteus/mprans/cMCorr.pyx"],depends=["proteus/mprans/MCorr.h"], define_macros=[('PROTEUS_LAPACK_H',PROTEUS_LAPACK_H),
                                             ('PROTEUS_LAPACK_INTEGER',PROTEUS_LAPACK_INTEGER),
                                             ('PROTEUS_BLAS_H',PROTEUS_BLAS_H)],language="c++",
@@ -419,7 +436,13 @@ setup(name='proteus',
                    ['proteus/tests/linalgebra_tests/sparse_mat_1.txt']),
                   (os.path.join(proteus_install_path,'tests','mesh_tests','comparison_files'),
                    ['proteus/tests/mesh_tests/comparison_files/poiseulle_xmf.output',
-                    'proteus/tests/mesh_tests/comparison_files/poiseulle_global_xmf.output'])
+                    'proteus/tests/mesh_tests/comparison_files/poiseulle_global_xmf.output']),
+                  (os.path.join(proteus_install_path,'tests','MeshAdaptPUMI'),
+                   ['proteus/tests/MeshAdaptPUMI/cube0.smb',
+                    'proteus/tests/MeshAdaptPUMI/cube.dmg',
+                    'proteus/tests/MeshAdaptPUMI/Couette.null',
+                    'proteus/tests/MeshAdaptPUMI/Couette.msh',
+                    'proteus/tests/MeshAdaptPUMI/Couette2D.msh'])
       ],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/povgen.py',
                  'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
