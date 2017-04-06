@@ -14,7 +14,8 @@ from Profiling import logEvent
 import time as tt
 import sys as sys
 
-__all__ = ['MonochromaticWaves',
+__all__ = ['Solirarywave',
+	    'MonochromaticWaves',
            'RandomWaves',
            'MultiSpectraRandomWaves',
            'DirectionalWaves',
@@ -687,13 +688,112 @@ def decompose_tseries(time,eta,dt):
     results.append(setup)
     return results
 
+class  SolitaryWave:
+    """
+    This class is used for generating 1st order solitary wave
+
+    Parameters
+    ----------
+    waveHeight: float
+            Regular wave height
+    mwl : float
+            Still water level
+    depth : float
+            Water depth
+    g : numpy.ndarray
+             Gravitational acceleration vector
+    waveDir : numpy.ndarray
+             Wave direction in vector form
+    trans : numpy.ndarray
+             Position vector of the peak              
+    fast : bool
+            Switch for optimised functions
+
+            """
+    def __init__(self,
+                 waveHeight,
+                 mwl,
+                 depth,
+                 g,
+                 waveDir,
+                 trans = np.zeros(3,"d"),
+                 fast = True):
+        
+        self.H = waveHeight
+        self.fast = fast
+        self.g = np.array(g)
+        self.waveDir =  setDirVector(np.array(waveDir))
+        self.vDir = setVertDir(g)
+        self.gAbs = sqrt(self.g[0]*self.g[0]+self.g[1]*self.g[1]+self.g[2]*self.g[2])
+        self.trans = trans
+        self.c =  np.sqrt(self.gAbs * (depth+self.H))
+        self.mwl = mwl
+        self.depth = depth
+        self.K = np.sqrt(3. *self.H/ (4. * self.depth))/self.depth
+        self.d2 = depth*depth
+        self.d3 = self.d2 * depth
+#Checking if g and waveDir are perpendicular
+        dirCheck(self.waveDir,self.vDir)
+
+    def eta(self,x,t):
+        """Calculates free surface elevation (SolitaryWave class)
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
+        """
+        phase = sum( (x[:]-self.trans[:])*self.waveDir[:])  - self.c * t 
+        a1 = self.K*phase
+        return  self.H*1.0/ cosh(a1)**2
+    def u(self,x,t):
+        """Calculates wave velocity vector (SolitaryWave class).
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
+        """
+
+
+        phase = sum( (x[:]-self.trans[:])*self.waveDir[:])  - self.c * t 
+        a1 =  cosh(self.K*phase*2.)	
+        a2 =  cosh(self.K*phase)
+
+        Z =  (self.vDir[0]*x[0] + self.vDir[1]*x[1]+ self.vDir[2]*x[2]) - self.mwl
+
+        Uhorz =  1.0 /(4.0 * self.depth**4 ) * np.sqrt(self.gAbs * self.depth) *  self.H *(
+            2.0 * self.d3 + self.d2 * self.H  + 12.0 * self.depth * self.H * Z + 6.0 *  self.H * Z**2.0 +
+            (2.0 * self.d3 - self.d2 * self.H - 6.0 * self.depth * self.H * Z - 3.0 * self.H * Z**2 ) * a1)/(a2)**4
+	
+        Uvert =   1.0 / ( 4.0 * np.sqrt(self.gAbs* self.depth) ) * np.sqrt(3.0) * self.gAbs * (self.H / self.depth**3.0)** 1.5  * (self.depth + Z)*(
+                2.0 * self.depth**3 - 7.0 * self.depth**2.0 * self.H + 10.0 * self.depth * self.H * Z + 5.0 * self.H * Z**2.0 +
+                (2.0 * self.depth**3.0 + self.depth**2.0 * self.H - 2.0 * self.depth * self.H * Z - self.H * Z**2.0)*
+                cosh(np.sqrt( 3.0 * self.H / self.depth**3.0) * phase ))/(
+                cosh(np.sqrt( 3.0 * self.H / ( 4.0 * self.depth**3.0))*
+                phase )   )** 4.0*( tanh( np.sqrt( 3.0 * self.H / ( 4.0 * self.depth**3.0))*phase ))
+        return self.waveDir*Uhorz + self.vDir*Uvert
 
 
 
 
 class  MonochromaticWaves:
     """
-    This class is used for generating regular waves in both linear and nonlinear regimes
+    This class is used for generating regular waves in both linear and nonlinear regimes. See Dean and Dalrymple 1994 for equations.
 
     Parameters
     ----------
