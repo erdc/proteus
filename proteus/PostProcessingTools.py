@@ -1452,11 +1452,21 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         ''' Calculate and set the BDM polynomial dimension
             input - degree
         '''
-        self.dim = (degree+1)*(degree+2)
-        self.boundary_dim = 3*(degree+1)
-        self.boundary_dim_per_edge = degree+1
-        self.interior_dim = self.dim - self.boundary_dim
+        if self.vt.nSpace_global == 2:
+            self.dim = (degree+1)*(degree+2)
+            self.boundary_dim_per_edge = degree+1
+            self.boundary_dim = 3*self.boundary_dim_per_edge
+            self.interior_dim = self.dim - self.boundary_dim
 
+        elif self.vt.nSpace_global == 3:
+            self.dim = (degree+1)*(degree+2)*(degree+3) / 2
+            self.boundary_dim_per_edge = degree*(degree+1)
+            self.boundary_dim = 4 * self.boundary_dim_per_edge
+            self.interior_dim = self.dim - self.boundary_dim
+            
+        else:
+            # Need to raise exception here.
+            pass
 
     def setInteriorTestSpace(self,degree):
         ''' This function sets the interior test space corresponding to the dimension
@@ -1491,11 +1501,20 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                       self.interiorTestGradients,
                                                       self.weightedInteriorTestGradients)
 
-    def sigmaBasisElement(self,component,point):
-        if component == 0:
-            return point[0] - point[0]**2 - 2*point[0]*point[1]
-        if component == 1:
-            return -point[1] + point[1]**2 + 2*point[0]*point[1]
+    def sigmaBasisElement(self,dim,component,point):
+        if dim == 2:
+            if component == 0:
+                return point[0] - point[0]**2 - 2*point[0]*point[1]
+            if component == 1:
+                return -point[1] + point[1]**2 + 2*point[0]*point[1]
+        if dim == 3:
+            pass
+
+    def get_num_sigmaBasisElements(self):
+        if self.vt.nSpace_global==2:
+            return 1
+        if self.vt.nSpace_global==3:
+            return 3
 
     def getInteriorDivFreeElement(self):
         '''
@@ -1513,8 +1532,10 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                   self.vt.nQuadraturePoints_element,
                                                   self.vt.nSpace_global),'d')
         for k in range(n_xi):
-            for j in [0,1]:
-                psi[k,j] = self.sigmaBasisElement(j,self.vt.elementQuadraturePoints[k])
+            for j in range(self.vt.nSpace_global):
+                psi[k,j] = self.sigmaBasisElement(self.vt.nSpace_global,
+                                                  j,
+                                                  self.vt.elementQuadraturePoints[k])
         # TODO - add C routines for the following functions (see FemTools.py getBasisValues for an example)
         # Start with populating interiorDivFreeElement 
         for eN in range(self.vt.mesh.nElements_global):

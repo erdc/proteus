@@ -2732,9 +2732,11 @@ void buildLocalBDM2projectionMatrices(int degree,
    ***********************************************************************/
 
   int eN,ebN,s,j,k,l,kp,irow,ibq,nSimplex;
+  int dof, dof_edge, boundary_dof;
   int TRANSPOSE_FOR_LAPACK=1;
   double pval, pvalx, pvaly;
   nSimplex = nSpace+1;
+  assert(degree == 2);
   assert(nVDOFs_element == nSpace*(nSpace*3));
 
   // ToDo - Think of some clever asserts to replace these with.
@@ -2742,13 +2744,23 @@ void buildLocalBDM2projectionMatrices(int degree,
   //  assert(nSimplex == nDOFs_test_element);
   
   int interiorPspace = nDOFs_trial_interior_element;
-  int boundaryPspace = degree+1; 
-  int edgeFlags[9] = {1,2,4,0,2,5,0,1,3}; 
-
-  // Specify the number of BDM degrees-of-freedom.
-  int dof = (degree+1)*(degree+2);
-  int boundary_dof = 3*(degree+1);
-  int edge_dof = degree+1 ;
+  int edgeFlags[9] = {1,2,4,0,2,5,0,1,3};
+  // TODO - feed edge flags into C through function 
+  
+  if (nSpace == 2){
+    dof = (degree+1)*(degree+2);
+    dof_edge = degree + 1;
+    boundary_dof = nElementBoundaries_element*dof_edge;
+  }
+  else if (nSpace == 3){
+    dof = (degree+1)*(degree+2)*(degree+3) / 2;
+    dof_edge = degree*(degree+1);
+    boundary_dof = nElementBoundaries_element*dof_edge;
+  }
+  else {
+    assert(1 == 0);
+  }
+  
   int interior_dof = dof - boundary_dof;
 
   // Begin populating the projection matrix
@@ -2760,16 +2772,16 @@ void buildLocalBDM2projectionMatrices(int degree,
 
       for (ebN = 0; ebN < nElementBoundaries_element; ebN++)
 	{
-	  for (s = 0; s < edge_dof; s++)
+	  for (s = 0; s < dof_edge; s++)
 	    {
-	      irow = ebN*boundaryPspace + s;
+	      irow = ebN*dof_edge + s;
 
 	      for (j = 0; j < dof; j++)
 		{
 
 		  k = j / nSpace;
 		  l = j % nSpace; 
-		  kp = edgeFlags[ebN*boundaryPspace+s];
+		  kp = edgeFlags[ebN*dof_edge+s];
 
 		  if (TRANSPOSE_FOR_LAPACK > 0)
 		    BDMprojectionMat_element[eN*dof*dof + irow + j*nVDOFs_element] = 0.;
