@@ -143,7 +143,7 @@ namespace proteus
       
      if(fast)
 	{
-	if(kAbs*Z > -PI_ || fast)
+	if(kAbs*Z > -PI_)
      	  {
 		 fastcosh(hype,kAbs, Z, fast); 
 
