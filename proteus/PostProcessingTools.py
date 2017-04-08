@@ -1385,7 +1385,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
 
 class VPP_PWL_BDM2(VPP_PWL_RT0):
     """
-    WIP - this class is intended to implement BDM2 elements in proteus
+    This class is intended to implement BDM2 elements in proteus
 
     """
     from cpostprocessing import buildLocalBDM2projectionMatrices,factorLocalBDM2projectionMatrices 
@@ -1421,6 +1421,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         self.setInteriorTestSpace(self.degree)        
         self.getInteriorTestGradients()
         self.getInteriorDivFreeElement()
+        self.setEdgeFlags()
         self.computeBDM2projectionMatrices()
         
 
@@ -1476,6 +1477,15 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
             self.interiorTestSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
         else:
             pass
+
+    def setEdgeFlags(self):
+        """This function sets the edge flags for the bdm2 loops """
+        if self.vt.nSpace_global == 2:
+            self.edgeFlags = numpy.array([1,2,4,0,2,5,0,1,3])
+        elif self.vt.nSpace_global == 3:
+            pass
+        else:
+            pass # This should be an assert.
 
     def getInteriorTestGradients(self):
         '''
@@ -1585,6 +1595,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                          self.weightedInteriorTestGradients,       # interior integrals - gradient part
                                                          self.weightedInteriorDivFreeElement,      # interior integrals - divFree part
                                                          self.piola_trial_function,                # interior integrals - divFree part
+                                                         self.edgeFlags,
                                                          self.BDMprojectionMat_element)            # projection matrix
 
         cpostprocessing.factorLocalBDM2projectionMatrices(self.BDMprojectionMat_element,

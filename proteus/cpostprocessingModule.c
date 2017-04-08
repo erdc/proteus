@@ -478,8 +478,11 @@ cpostprocessingBuildLocalBDM2projectionMatrices(PyObject* self,
 					      PyObject* args)
 {
   
-  PyObject *w_dS_f,*ebq_n,*ebq_v,*BDMmat_element,*q_basis_vals,*w_int_test_grads,*w_int_div_free,*piola_trial_fun,*degree;
-  if(!PyArg_ParseTuple(args,"OOOOOOOOO",
+  PyObject *w_dS_f,*ebq_n,*ebq_v,*BDMmat_element,*q_basis_vals,
+    *w_int_test_grads,*w_int_div_free,*piola_trial_fun,*degree,
+    *edgeFlags;
+  
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOO",
 		       &degree,
                        &w_dS_f,
                        &ebq_n,
@@ -488,6 +491,7 @@ cpostprocessingBuildLocalBDM2projectionMatrices(PyObject* self,
 		       &w_int_test_grads,
 		       &w_int_div_free,
 		       &piola_trial_fun,
+		       &edgeFlags,
 		       &BDMmat_element))
     return NULL;
 
@@ -501,6 +505,7 @@ cpostprocessingBuildLocalBDM2projectionMatrices(PyObject* self,
 				   SHAPE(ebq_v)[3],
 				   SHAPE(w_int_test_grads)[2],
 				   SHAPE(BDMmat_element)[1],
+				   DDATA(edgeFlags),
 				   DDATA(w_dS_f),
 				   DDATA(ebq_n),
 				   DDATA(ebq_v),

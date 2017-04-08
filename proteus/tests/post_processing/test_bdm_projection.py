@@ -76,7 +76,8 @@ class TestBDM2Reference1():
                                     self.bdm2_obj.q[('w',0)],     
                                     self.bdm2_obj.weightedInteriorTestGradients,  
                                     self.bdm2_obj.weightedInteriorDivFreeElement, 
-                                    self.bdm2_obj.piola_trial_function,           
+                                    self.bdm2_obj.piola_trial_function,
+                                    self.bdm2_obj.edgeFlags,
                                     self.bdm2_obj.BDMprojectionMat_element)        
 
         #    The following .savetxt command  generates the comparison output.  Be sure

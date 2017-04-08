@@ -2716,6 +2716,7 @@ void buildLocalBDM2projectionMatrices(int degree,
 				      int nDOFs_trial_boundary_element,
 				      int nDOFs_trial_interior_element,
 				      int nVDOFs_element,
+				      long *edgeFlags,
 				      double * w_dS_f,
 				      double * ebq_n,
 				      double * ebq_v,
@@ -2742,9 +2743,9 @@ void buildLocalBDM2projectionMatrices(int degree,
   // ToDo - Think of some clever asserts to replace these with.
   //  assert(nSimplex == nDOFs_trial_element);
   //  assert(nSimplex == nDOFs_test_element);
-  
+
   int interiorPspace = nDOFs_trial_interior_element;
-  int edgeFlags[9] = {1,2,4,0,2,5,0,1,3};
+  //  int edgeFlags[9] = {1,2,4,0,2,5,0,1,3};
   // TODO - feed edge flags into C through function 
   
   if (nSpace == 2){
@@ -2763,6 +2764,10 @@ void buildLocalBDM2projectionMatrices(int degree,
   
   int interior_dof = dof - boundary_dof;
 
+  int i;
+  for (i=0; i<9; i++){
+    printf("term in edge : %d\n",edgeFlags[i]);
+  }
   // Begin populating the projection matrix
 
   // Loop over elements of the triangulation
