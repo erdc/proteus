@@ -1469,6 +1469,12 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
             # Need to raise exception here.
             pass
 
+    def get_num_sigmaBasisElements(self):
+        if self.vt.nSpace_global==2:
+            return 1
+        if self.vt.nSpace_global==3:
+            return 3
+
     def setInteriorTestSpace(self,degree):
         ''' This function sets the interior test space corresponding to the dimension
         of the BDM space        
@@ -1483,7 +1489,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         if self.vt.nSpace_global == 2:
             self.edgeFlags = numpy.array([1,2,4,0,2,5,0,1,3])
         elif self.vt.nSpace_global == 3:
-            pass
+            self.edgeFlags = numpy.array([1,2,3,5,6,8, 0,2,3,6,7,9, 0,1,3,4,8,9, 0,1,2,4,5,7])
+            # Note - the numbers above should be correct but have not been tested.
         else:
             pass # This should be an assert.
 
@@ -1511,20 +1518,42 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                       self.interiorTestGradients,
                                                       self.weightedInteriorTestGradients)
 
-    def sigmaBasisElement(self,dim,component,point):
+    def sigmaBasisElement(self,dim,component,point,i=0):
         if dim == 2:
             if component == 0:
                 return point[0] - point[0]**2 - 2*point[0]*point[1]
             if component == 1:
                 return -point[1] + point[1]**2 + 2*point[0]*point[1]
         if dim == 3:
-            pass
-
-    def get_num_sigmaBasisElements(self):
-        if self.vt.nSpace_global==2:
-            return 1
-        if self.vt.nSpace_global==3:
-            return 3
+            if i == 0:
+                if component == 0:
+                    # -xy + xz
+                    return point[0]*(point[2] - point[1])
+                if component == 2:
+                    # xy - yz
+                    return point[1]*(point[0] - point[2])
+                if component == 3:
+                    # -xz + yz
+                    return point[2]*(point[1] - point[0])
+            if i == 1:
+                if component == 0:
+                    # 2xy - 2xz
+                    return 2*point[0]*(point[1] - point[2])
+                if component == 1:
+                    # y - 3xy - y*y
+                    return point[1]*(1 - 3*point[0] - point[1])
+                if component == 2:
+                    # -z + 3xz + z*z
+                    return point[2]*(point[2] + 3*point[0] - 1)
+            if i == 2:
+                if component == 0:
+                    # x - x*x - 2xy - xz
+                    return point[0]*(1 - point[0] - 2*point[1] - point[2])
+                if component == 1:
+                    # -y + 2xy + y*y + y*z
+                    return point[1]*(point[1] - 1 + 2*point[0] + point[2])
+                if component == 2:
+                    return 0
 
     def getInteriorDivFreeElement(self):
         '''
@@ -1532,57 +1561,68 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         Note - calculating this integral requires the use of the Piola transformation.
         '''
         n_xi = self.vt.nQuadraturePoints_element
-        psi = numpy.zeros((n_xi,
-                           self.vt.nSpace_global),'d')
+        psi = numpy.zeros((n_xi, self.vt.nSpace_global, self.get_num_sigmaBasisElements() ), 'd')
+        
         # start by calculating the interior DivFreeElements
         self.interiorDivFreeElement = numpy.zeros((self.vt.mesh.nElements_global,
-                                                  self.vt.nQuadraturePoints_element,
-                                                  self.vt.nSpace_global),'d')
+                                                   self.vt.nQuadraturePoints_element,
+                                                   self.vt.nSpace_global,
+                                                   self.get_num_sigmaBasisElements() ),'d')
+        
         self.weightedInteriorDivFreeElement = numpy.zeros((self.vt.mesh.nElements_global,
-                                                  self.vt.nQuadraturePoints_element,
-                                                  self.vt.nSpace_global),'d')
+                                                           self.vt.nQuadraturePoints_element,
+                                                           self.vt.nSpace_global,
+                                                           self.get_num_sigmaBasisElements() ),'d')
+
+        self.weightedInteriorDivFreeElement_0 = numpy.zeros((self.vt.mesh.nElements_global,
+                                                           self.vt.nQuadraturePoints_element,
+                                                           self.vt.nSpace_global,
+                                                           self.get_num_sigmaBasisElements() ),'d')
+
+
+        
         for k in range(n_xi):
             for j in range(self.vt.nSpace_global):
-                psi[k,j] = self.sigmaBasisElement(self.vt.nSpace_global,
-                                                  j,
-                                                  self.vt.elementQuadraturePoints[k])
+                for i in range(self.get_num_sigmaBasisElements() ):
+                    psi[k,j,i] = self.sigmaBasisElement(self.vt.nSpace_global,
+                                                        j,
+                                                        self.vt.elementQuadraturePoints[k],
+                                                        i)
+
         # TODO - add C routines for the following functions (see FemTools.py getBasisValues for an example)
-        # Start with populating interiorDivFreeElement 
+
+        # Populate interiorDivFreeElement 
         for eN in range(self.vt.mesh.nElements_global):
             for k in range(n_xi):
-                for j in [0,1]:
-                    self.interiorDivFreeElement[eN,k,j] = psi[k,j]
+                for j in range(self.vt.nSpace_global):
+                    for i in range(self.get_num_sigmaBasisElements()):
+                        self.interiorDivFreeElement[eN,k,j,i] = psi[k,j,i]
+        
         # Next, populate weightedInteriorDivFreeElement
         for eN in range(self.vt.mesh.nElements_global):
             for k in range(n_xi):
-                for j in [0,1]:
-                    # J_{T} \hat{p}
-                    self.weightedInteriorDivFreeElement[eN,k,j] = (self.interiorDivFreeElement[eN,k,0]*self.q['J'][eN][k][j][0] + 
-                                                                   self.interiorDivFreeElement[eN,k,1]*self.q['J'][eN][k][j][1])
-                    # 1/|J_{T}| multiplicative term
-                    self.weightedInteriorDivFreeElement[eN,k,j] *= 1./self.vt.q['abs(det(J))'][eN][k]
-                    # quadrature weight
-                    self.weightedInteriorDivFreeElement[eN,k,j] *= self.vt.q['dV'][eN][k]
-        # Second - need the Piola adjusted trial functions
+                for j in range(self.vt.nSpace_global):
+                    # Apply Jacobian matrix
+                    for h in range(self.vt.nSpace_global):
+                        for i in range(self.get_num_sigmaBasisElements()):
+                            self.weightedInteriorDivFreeElement[eN,k,j,i] += self.interiorDivFreeElement[eN,k,h,i]*self.q['J'][eN][k][j][h]
+                    for i in range(self.get_num_sigmaBasisElements()):
+                        # scale by Jacobian
+                        self.weightedInteriorDivFreeElement[eN,k,j,i] *= 1./self.vt.q['abs(det(J))'][eN][k]
+                        # scale with quadrature weight
+                        self.weightedInteriorDivFreeElement[eN,k,j,i] *= self.vt.q['dV'][eN][k]
+
+
         self.piola_trial_function = numpy.zeros((self.vt.mesh.nElements_global,
                                                   self.vt.nQuadraturePoints_element,
                                                   self.dim,
                                                   self.vt.nSpace_global),'d')
-#        num_component_basis_functions = len(self.q[('w',0)][0][0])
+        
         for eN in range(self.vt.mesh.nElements_global):
             for k in range(self.vt.nQuadraturePoints_element):
-                for i in range(self.dim):
-                    J_component = i%2
-                    basis_function_component = i/2
-                    if i%2==0:
-                        self.piola_trial_function[eN,k,i,0] = self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
-                        self.piola_trial_function[eN,k,i,1] = 0.
-                    else:
-                        self.piola_trial_function[eN,k,i,0] = 0.
-                        self.piola_trial_function[eN,k,i,1] = self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
-#                    self.piola_trial_function[eN,k,i,0] = self.q['J'][eN][k][0][J_component]*self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
-#                    self.piola_trial_function[eN,k,i,1] = self.q['J'][eN][k][1][J_component]*self.q[('w',self.BDMcomponent)][eN][k][basis_function_component]
-
+                for i in range(self.q[('w',self.BDMcomponent)].shape[2]):
+                    for j in range(self.vt.nSpace_global):
+                        self.piola_trial_function[eN,k,self.vt.nSpace_global*i+j,j] = self.q[('w',self.BDMcomponent)][eN][k][i]
 
 
     def computeBDM2projectionMatrices(self):
