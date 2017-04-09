@@ -1613,9 +1613,9 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
 
         for eN in range(self.vt.mesh.nElements_global):
             for k in range(self.vt.nQuadraturePoints_element):
-                for i in range(self.q[('w',self.BDMcomponent)].shape[2]):
+                for i in range(self.dim / self.vt.nSpace_global):
                     for j in range(self.vt.nSpace_global):
-                        self.piola_trial_function[eN,k,self.vt.nSpace_global*i+j,j] = self.q[('w',self.BDMcomponent)][eN][k][i]
+                        self.piola_trial_function[eN,k,i*self.vt.nSpace_global+j,j] = self.q[('w',self.BDMcomponent)][eN][k][i]
 
     def computeBDM2projectionMatrices(self):
         cpostprocessing.buildLocalBDM2projectionMatrices(self.degree,
