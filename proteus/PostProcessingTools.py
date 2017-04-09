@@ -1529,10 +1529,10 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                 if component == 0:
                     # -xy + xz
                     return point[0]*(point[2] - point[1])
-                if component == 2:
+                if component == 1:
                     # xy - yz
                     return point[1]*(point[0] - point[2])
-                if component == 3:
+                if component == 2:
                     # -xz + yz
                     return point[2]*(point[1] - point[0])
             if i == 1:
@@ -1560,6 +1560,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         Calculate and return the values of the divergence free interior test function.
         Note - calculating this integral requires the use of the Piola transformation.
         '''
+
         n_xi = self.vt.nQuadraturePoints_element
         psi = numpy.zeros((n_xi, self.vt.nSpace_global, self.get_num_sigmaBasisElements() ), 'd')
         
@@ -1573,13 +1574,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                            self.vt.nQuadraturePoints_element,
                                                            self.vt.nSpace_global,
                                                            self.get_num_sigmaBasisElements() ),'d')
-
-        self.weightedInteriorDivFreeElement_0 = numpy.zeros((self.vt.mesh.nElements_global,
-                                                           self.vt.nQuadraturePoints_element,
-                                                           self.vt.nSpace_global,
-                                                           self.get_num_sigmaBasisElements() ),'d')
-
-
         
         for k in range(n_xi):
             for j in range(self.vt.nSpace_global):
@@ -1588,7 +1582,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                         j,
                                                         self.vt.elementQuadraturePoints[k],
                                                         i)
-
         # TODO - add C routines for the following functions (see FemTools.py getBasisValues for an example)
 
         # Populate interiorDivFreeElement 
@@ -1617,13 +1610,12 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                   self.vt.nQuadraturePoints_element,
                                                   self.dim,
                                                   self.vt.nSpace_global),'d')
-        
+
         for eN in range(self.vt.mesh.nElements_global):
             for k in range(self.vt.nQuadraturePoints_element):
                 for i in range(self.q[('w',self.BDMcomponent)].shape[2]):
                     for j in range(self.vt.nSpace_global):
                         self.piola_trial_function[eN,k,self.vt.nSpace_global*i+j,j] = self.q[('w',self.BDMcomponent)][eN][k][i]
-
 
     def computeBDM2projectionMatrices(self):
         cpostprocessing.buildLocalBDM2projectionMatrices(self.degree,
