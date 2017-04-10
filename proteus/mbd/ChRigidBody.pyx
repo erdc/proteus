@@ -37,6 +37,8 @@ cdef extern from "ChMoorings.h":
         void buildMesh()
         void updateDragForces()
         void updateBuoyancyForces()
+        void setDragCoefficients(double Cd_axial, double Cd_normal)
+        void setAddedMassCoefficients(double Cd_axial, double Cd_normal)
     cdef cppclass cppMultiSegmentedCable:
         ch.ChSystemDEM& system
         ch.ChMesh& mesh
@@ -51,9 +53,11 @@ cdef extern from "ChMoorings.h":
         void attachFrontNodeToBody(shared_ptr[ch.ChBody])
         void attachBackNodeToBody(shared_ptr[ch.ChBody])
         void updateDragForces()
+        void updateAddedMassForces()
         void applyForces()
         void updateBuoyancyForces()
         void setFluidVelocityAtNodes(vector[ch.ChVector] fluid_velocity)
+        void setFluidAccelerationAtNodes(vector[ch.ChVector] fluid_acceleration)
         void setFluidDensityAtNodes(vector[double] fluid_density)
         void setContactMaterial(shared_ptr[ch.ChMaterialSurfaceDEM] material)
     cppMultiSegmentedCable * newMoorings(ch.ChSystemDEM& system,
@@ -150,6 +154,7 @@ cdef class RigidBody:
       object Shape
       int nd, i_start, i_end
       double dt
+      double width_2D
       object record_dict
       object prescribed_motion_function
       np.ndarray position
@@ -219,6 +224,8 @@ cdef class RigidBody:
         if 'ChRigidBody' not in shape.auxiliaryVariables:
             shape.auxiliaryVariables['ChRigidBody'] = self
 
+    def setWidth2D(self, width):
+        self.width_2D = width
 
     def set_indices(self, i_start, i_end):
         self.i_start = i_start
@@ -563,7 +570,10 @@ cdef class RigidBody:
             self.record_file = os.path.join(Profiling.logDir, 'record_' + 'body' + '.csv')
         if self.system.model is not None:
             t_last = self.system.model.stepController.t_model_last
-            dt_last = self.system.model.levelModelList[-1].dt_last
+            try:
+                dt_last = self.system.model.levelModelList[-1].dt_last
+            except:
+                dt_last = 0
             t = t_last-dt_last
         else:
             t = self.system.thisptr.system.GetChTime()
@@ -714,6 +724,21 @@ cdef class System:
             self.thisptr.recordBodyList()
 
     def findELementContainingCoords(self, coords):
+        """
+        Parameters
+        ----------
+        coords: array_like
+            global coordinates to look for
+
+        Returns
+        -------
+        xi:
+            local coordinates 
+        eN: int
+            (local) element number
+        rank: int
+            processor rank containing element
+        """
         comm = Comm.get().comm.tompi4py()
         # get nearest node on each processor
         nearest_node, nearest_node_distance = getLocalNearestNode(coords, self.nodes_kdtree)
@@ -724,8 +749,6 @@ cdef class System:
         if haveElement:
             owning_proc = comm.rank
         if local_element:
-            # NEXT LINE TO CHANGE
-            nd = self.nd
             # get local coords
             xi0 = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
             xi = comm.bcast(xi0, owning_proc)
@@ -864,6 +887,25 @@ cdef class SurfaceBoxNodesCloud:
     def setNodesSize(self, double size):
         self.thisptr.setNodesSize(size)
 
+# def linkMoorings(System system, Moorings mooringA, int nodeA_ind, Moorings mooringB, int nodeB_ind):
+#     """
+#     Parameters
+#     ----------
+#     system: System
+#         class instance of the System where to add link
+#     mooringA: Moorings
+#         class instance of first mooring cable (A)
+#     nodeA_ind: int
+#         index of node to be used as link on mooring cable A
+#     mooringB: Moorings
+#         class instance of second mooring cable (B)
+#     nodeB_ind: int
+#         index of node to be used as link on mooring cable B
+#     """
+#     cdef shared_ptr[ch.ChLinkPointPoint] link = make_shared[ch.ChLinkPointPoint]()
+#     deref(link).Initialize(<shared_ptr[ch.ChNodeFEAxyz]> mooringA.thisptr.nodes[nodeA_ind], <shared_ptr[ch.ChNodeFEAxyz]> mooringB.thisptr.nodes[nodeB_ind])
+#     system.thisptr.system.Add(<shared_ptr[ch.ChPhysicsItem]> link)
+
 
 cdef class Moorings:
     cdef cppMultiSegmentedCable * thisptr
@@ -985,8 +1027,10 @@ cdef class Moorings:
         if self.fluid_velocity_array is None:
             self.fluid_velocity_array = np.zeros((nb_nodes, 3))
             self.fluid_velocity_array_previous = np.zeros((nb_nodes, 3))
+        if self.fluid_acceleration_array is None:
+            self.fluid_acceleration_array = np.zeros((nb_nodes, 3))
         if self.fluid_density_array is None:
-            self.fluid_density_array = np.zeros(nb_nodes)+998.2
+            self.fluid_density_array = np.zeros(nb_nodes)
 
 
     def prestep(self):
@@ -1042,6 +1086,12 @@ cdef class Moorings:
             lengths[i] = deref(self.thisptr.elems[i]).GetLengthX()
         return lengths
 
+    def setDragCoefficients(self, double Cd_axial, double Cd_normal, int cable_nb):
+        deref(self.thisptr.cables[cable_nb]).setDragCoefficients(Cd_axial, Cd_normal)
+
+    def setAddedMassCoefficients(self, double Cd_axial, double Cd_normal, int cable_nb):
+        deref(self.thisptr.cables[cable_nb]).setAddedMassCoefficients(Cd_axial, Cd_normal)
+
     def setNodesPosition(self):
         cdef ch.ChVector[double] vec
         for i in range(self.thisptr.cables.size()):
@@ -1071,7 +1121,8 @@ cdef class Moorings:
     def setContactMaterial(self, ChMaterialSurfaceDEM mat):
         self.thisptr.setContactMaterial(mat.sharedptr)
 
-    def setExternalForces(self, fluid_velocity_array=None, fluid_density_array=None):
+    def setExternalForces(self, fluid_velocity_array=None, fluid_density_array=None,
+                          fluid_acceleration_array=None):
         """
         Sets external forces acting on cables
         Pass fluid velocity_array as argument only for debugging (must be an array as long as the number of nodes)
@@ -1083,43 +1134,77 @@ cdef class Moorings:
             self.fluid_velocity_array = fluid_velocity_array
         if fluid_density_array is not None:
             self.fluid_density_array = fluid_density_array
+        if fluid_acceleration_array is not None:
+            self.fluid_acceleration_array = fluid_acceleration_array
         cdef vector[ch.ChVector[double]] fluid_velocity
+        cdef vector[ch.ChVector[double]] fluid_acceleration
         cdef ch.ChVector[double] vel
+        cdef ch.ChVector[double] acc
         cdef vector[double] fluid_density
         cdef double dens
-        if self.System.model is not None or (fluid_velocity_array is not None and fluid_density_array is not None):
-            for i in range(self.thisptr.nodes.size()):
-                if self.System.model is not None and fluid_velocity_array is None:
-                    vec = deref(self.thisptr.nodes[i]).GetPos()
-                    x = vec.x()
-                    y = vec.y()
-                    z = vec.z()
-                    coords = np.array([x, y, z])
-                    vel_arr = np.zeros(3)
-                    vel_grad_arr = np.zeros(3)
-                    xi, el, rank = self.System.findElementContainingCoords(coords[:self.nd])
-                    vel_arr[:] = self.System.getFluidVelocityLocalCoords(xi, el, rank)
-                    #vel_grad_arr[:] = self.System.getFluidVelocityGradientLocalCoords(xi, el, rank)
-                    # acc = du/dt+u.grad(u)
-                    #acc_arr = (vel_arr-fluid_velocity_array_previous[i])/dt+vel_arr*vel_grad_arr
-                    #arr[:self.nd] = self.System.findFluidVelocityAtCoords(coords[:self.nd])
-                    self.fluid_velocity_array[i] = vel_arr
-                    vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
-                    fluid_velocity.push_back(vel)
-                elif fluid_velocity_array is not None:
-                    vel = ch.ChVector[double](self.fluid_velocity_array[i][0], fluid_velocity_array[i][1], fluid_velocity_array[i][2])
-                    fluid_velocity.push_back(vel)
-                    dens = self.fluid_density_array[i]
-                    fluid_density.push_back(dens)
-            self.thisptr.setFluidVelocityAtNodes(fluid_velocity)
-            self.thisptr.setFluidDensityAtNodes(fluid_density)
+        for i in range(self.thisptr.nodes.size()):
+            if self.System.model is not None:
+                vec = deref(self.thisptr.nodes[i]).GetPos()
+                x = vec.x()
+                y = vec.y()
+                z = vec.z()
+                coords = np.array([x, y, z])
+                vel_arr = np.zeros(3)
+                vel_grad_arr = np.zeros(3)
+                xi, el, rank = self.System.findElementContainingCoords(coords[:self.nd])
+                vel_arr[:] = self.System.getFluidVelocityLocalCoords(xi, el, rank)
+                #vel_grad_arr[:] = self.System.getFluidVelocityGradientLocalCoords(xi, el, rank)
+                # acc = du/dt+u.grad(u)
+                #acc_arr = (vel_arr-fluid_velocity_array_previous[i])/dt+vel_arr*vel_grad_arr
+                #arr[:self.nd] = self.System.findFluidVelocityAtCoords(coords[:self.nd])
+                self.fluid_velocity_array[i] = vel_arr
+                vel = ch.ChVector[double](vel_arr[0], vel_arr[1], vel_arr[2])
+                fluid_velocity.push_back(vel)
+            else:
+                vel = ch.ChVector[double](self.fluid_velocity_array[i][0], self.fluid_velocity_array[i][1], self.fluid_velocity_array[i][2])
+                fluid_velocity.push_back(vel)
+                acc = ch.ChVector[double](self.fluid_acceleration_array[i][0], self.fluid_acceleration_array[i][1], self.fluid_acceleration_array[i][2])
+                fluid_acceleration.push_back(acc)
+                dens = self.fluid_density_array[i]
+                fluid_density.push_back(dens)
+        self.thisptr.setFluidAccelerationAtNodes(fluid_acceleration)
+        self.thisptr.setFluidVelocityAtNodes(fluid_velocity)
+        self.thisptr.setFluidDensityAtNodes(fluid_density)
             # update drag forces
-            self.thisptr.updateDragForces()
-            self.thisptr.applyForces()
+        self.thisptr.updateDragForces()
+        self.thisptr.updateAddedMassForces()
+        self.thisptr.applyForces()
         # update buoyancy forces
         # self.thisptr.updateBuoyancyForces()
         # update added mass forces
         # self.thisptr.updateAddedMassForces()
+
+    def setFluidDensityAtNodes(self, density_array):
+        cdef vector[ch.ChVector[double]] fluid_velocity
+        cdef vector[ch.ChVector[double]] fluid_acceleration
+        cdef ch.ChVector[double] vel
+        cdef ch.ChVector[double] acc
+        cdef vector[double] fluid_density
+        cdef double dens
+        for d in density_array:
+            fluid_density.push_pback(d)
+        self.thisptr.setFluidDensityAtNodes(fluid_density)
+
+    def setFluidVelocityAtNodes(self, velocity_array):
+        cdef vector[ch.ChVector[double]] fluid_velocity
+        cdef ch.ChVector[double] vel
+        for v in velocity_array:
+            vel = ch.ChVector[double](v[0], v[1], v[2])
+            fluid_velocity.push_back(vel)
+        self.thisptr.setFluidVelocityAtNodes(fluid_velocity)
+
+    def setFluidAccelerationAtNodes(self, acceleration_array):
+        cdef vector[ch.ChVector[double]] fluid_acceleration
+        cdef ch.ChVector[double] acc
+        for a in acceleration_array:
+            acc = ch.ChVector[double](a[0], a[1], a[2])
+            fluid_acceleration.push_back(acc)
+        self.thisptr.setFluidAccelerationAtNodes(fluid_acceleration)
 
 
 def getLocalNearestNode(coords, kdtree):
@@ -1170,6 +1255,7 @@ def getLocalElement(femSpace, coords, node):
         patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
         # evaluate the inverse map for element eN (global to local)
         xi = femSpace.elementMaps.getInverseValue(eN, coords)
+        #J = femSpace.elementMaps.getJacobianValues(eN, )
         # query whether xi lies within the reference element
         if femSpace.elementMaps.referenceElement.onElement(xi):
             return eN
@@ -1260,6 +1346,13 @@ cdef class ChBody:
         deref(self.sharedptr).SetPos(<ch.ChVector> deref(mpos.sharedptr))
     def SetMaterialSurface(self, ChMaterialSurfaceDEM mat):
         deref(self.sharedptr).SetMaterialSurface(<shared_ptr[ch.ChMaterialSurfaceBase]> mat.sharedptr)
+
+# cdef class ChLinkPointPoint:
+#     cdef shared_ptr[ch.ChLinkPointPoint] sharedptr
+#     def __cinit__(self):
+#         self.sharedptr = make_shared[ch.ChLinkPointPoint]()
+#     def Initialize(shared_ptr[ChNodeFEAxyz] anodeA, shared_ptr[ChNodeFEAxyz])
+#         deref(self.sharedptr).Initialize(<shared_ptr[ch.ChNodeFEAxyz]> anodeA, <shared_ptr[ch.ChNodeFEAxyz]> anodeB)
 
 cdef class ChBodyEasyBox(ChBody):
     cdef shared_ptr[ch.ChBodyEasyBox] sharedptr2
