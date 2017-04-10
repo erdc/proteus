@@ -146,11 +146,11 @@ class MyCoefficients(VOF3P.Coefficients):
         ############
         # ROTATION #
         ############
-        #self.q_v[...,0]  = -2.0*pi*y
-        #self.q_v[...,1]  =  2.0*pi*x
+        self.q_v[...,0]  = -2.0*pi*(y-0.5)
+        self.q_v[...,1]  =  2.0*pi*(x-0.5)
 
-        #self.ebqe_v[...,0]  = -2.0*pi*y_boundary
-        #self.ebqe_v[...,1]  =  2.0*pi*x_boundary
+        self.ebqe_v[...,0]  = -2.0*pi*(y_boundary-0.5)
+        self.ebqe_v[...,1]  =  2.0*pi*(x_boundary-0.5)
         
         #DIVERGENCE OF VEOCITY
         #self.q_div_velocity = 0*x
@@ -159,14 +159,14 @@ class MyCoefficients(VOF3P.Coefficients):
         ###################
         # PERIODIC VORTEX #
         ###################
-        T=8
-        yy=y
-        xx=x
-        self.q_v[...,0] = -2*np.sin(pi*yy)*np.cos(pi*yy)*np.sin(pi*xx)**2*np.cos(pi*t/T)
-        self.q_v[...,1] = 2*np.sin(pi*xx)*np.cos(pi*xx)*np.sin(pi*yy)**2*np.cos(pi*t/T)
+        #T=8
+        #yy=y
+        #xx=x
+        #self.q_v[...,0] = -2*np.sin(pi*yy)*np.cos(pi*yy)*np.sin(pi*xx)**2*np.cos(pi*t/T)
+        #self.q_v[...,1] = 2*np.sin(pi*xx)*np.cos(pi*xx)*np.sin(pi*yy)**2*np.cos(pi*t/T)
         
-        self.ebqe_v[...,0]  = -2*np.sin(pi*y_boundary)*np.cos(pi*y_boundary)*np.sin(pi*x_boundary)**2*np.cos(pi*t/T)
-        self.ebqe_v[...,1]  =  2*np.sin(pi*x_boundary)*np.cos(pi*x_boundary)*np.sin(pi*y_boundary)**2*np.cos(pi*t/T)
+        #self.ebqe_v[...,0]  = -2*np.sin(pi*y_boundary)*np.cos(pi*y_boundary)*np.sin(pi*x_boundary)**2*np.cos(pi*t/T)
+        #self.ebqe_v[...,1]  =  2*np.sin(pi*x_boundary)*np.cos(pi*x_boundary)*np.sin(pi*y_boundary)**2*np.cos(pi*t/T)
         
         #DIVERGENCE OF VEOCITY
         self.q_div_velocity = 0*x

@@ -33,17 +33,17 @@ class init_cond:
         self.center  = center
     def uOfX(self,X):
         dx = X[0]-self.center[0]; dy = X[1]-self.center[1];
-        dBubble = self.radius - sqrt(dx**2 + dy**2)
+        #dBubble = self.radius - sqrt(dx**2 + dy**2)
 
         #Zalesak disk
-        #dBubble = 1.0*(sqrt(dx**2 + dy**2) <= self.radius) - 1.0*(sqrt(dx**2 + dy**2) > self.radius)
-        #xSlit1 = X[0] < self.center[0]+0.025
-        #xSlit2 = X[0] > self.center[0]-0.025
-        #xSlit = xSlit1 and xSlit2
-        #ySlit = X[1] < 0.75+0.1125
-        #slit = xSlit*ySlit
-        #if (slit==1):
-        #    dBubble = -1
+        dBubble = 1.0*(sqrt(dx**2 + dy**2) <= self.radius) - 1.0*(sqrt(dx**2 + dy**2) > self.radius)
+        xSlit1 = X[0] < self.center[0]+0.025
+        xSlit2 = X[0] > self.center[0]-0.025
+        xSlit = xSlit1 and xSlit2
+        ySlit = X[1] < 0.75+0.1125
+        slit = xSlit*ySlit
+        if (slit==1):
+            dBubble = -1
         return smoothedHeaviside(epsFactHeaviside*he,dBubble)#Heaviside(dBubble)
 
         # SMOOTH 
@@ -59,8 +59,8 @@ class init_cond:
 analyticalSolutions = None
 
 def getDBC(x,flag):
-    #return lambda x,t: 1.0
-    pass
+    return lambda x,t: 1.0
+    #pass
 
 dirichletConditions = {0:getDBC}
 
