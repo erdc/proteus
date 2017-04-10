@@ -462,7 +462,9 @@ namespace proteus
 	      maxi = std::max(maxi,soln[j]);
 	      
 	      // i-th row of flux correction matrix 
-	      FluxCorrectionMatrix[ij] = (((i==j) ? 1 : 0)*mi - MassMatrix[ij])*(solH[j]-soln[j] - (solHi-solni)) + dt*dL_minus_dC[ij]*(soln[j]-solni);
+	      FluxCorrectionMatrix[ij] = 
+		(((i==j) ? 1 : 0)*mi - MassMatrix[ij])*(solH[j]-soln[j] - (solHi-solni)) 
+		+ dt*dL_minus_dC[ij]*(soln[j]-solni);
 
 	      ///////////////////////
 	      // COMPUTE P VECTORS //
@@ -507,7 +509,6 @@ namespace proteus
 	  solH[i] = solL[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
 	}
     }
-
 
     /////
     void getInflowDOFs(
@@ -724,6 +725,8 @@ namespace proteus
 	      
 	  // Allocate and init to zero the Entropy residual vector
 	  register double EntResVector[numDOFs], entropy_residual;
+	  double entropy_normalization_factor=1.0;
+	  double entropy_max=-1.E10,entropy_min=1.E10,cell_entropy_mean,cell_volume,volume=0.,entropy_mean=0.;
 	  if (ENTROPY_VISCOSITY==1)
 	    for (int i=0; i<numDOFs; i++)
 	      EntResVector[i]=0.;	    
@@ -753,6 +756,8 @@ namespace proteus
 		    }
 		}
 	      //restart cell based quantities 
+	      cell_volume = 0;
+	      cell_entropy_mean = 0;
 	      entropy_residual = 0;
 	      //loop over quadrature points and compute integrands
 	      for  (int k=0;k<nQuadraturePoints_element;k++)
@@ -826,6 +831,11 @@ namespace proteus
 		      //velocity at tn for entropy viscosity
 		      vn[0] = velocity[eN_k_nSpace];
 		      vn[1] = velocity[eN_k_nSpace+1];
+		      // compute entropy min and max
+		      entropy_max = std::max(entropy_max,ENTROPY(un,uL,uR));
+		      entropy_min = std::min(entropy_min,ENTROPY(un,uL,uR));
+		      cell_entropy_mean += ENTROPY(un,uL,uR)*dV;
+		      cell_volume += dV;
 		      entropy_residual = 
 			(ENTROPY(un,uL,uR) - ENTROPY(unm1,uL,uR))/dt // time derivative
 			+ vn[0]*ENTROPY_GRAD(un,grad_un[0],uL,uR)+vn[1]*ENTROPY_GRAD(un,grad_un[1],uL,uR) // velocity * grad(entropy)
@@ -906,7 +916,13 @@ namespace proteus
 			+= elementTransposeTransport[i][j];
 		    }//j
 		}//i
+	      // distrbute stuff for entropy normalization factor
+	      volume+=cell_volume;
+	      entropy_mean += cell_entropy_mean;
 	    }//elements
+	  entropy_mean /= volume;
+	  entropy_normalization_factor = std::max(std::abs(entropy_max-entropy_mean),
+						  std::abs(entropy_min-entropy_mean));
 	      
 	  //////////////////////////////////////////////////////
 	  // ADD OUTFLOW BOUNDARY TERM TO TRANSPORT MATRICES //
@@ -1413,11 +1429,16 @@ namespace proteus
 			      
 			  // high-order (entropy viscosity) dissipative operator 
 			  double dEij = dLij;
+			  //if (ENTROPY_VISCOSITY==1)
+			  //{
+			  //  double alphai = std::abs(EntResVector[i])/MaxEntResVector[i];
+			  //  double alphaj = std::abs(EntResVector[j])/MaxEntResVector[j];
+			  //  dEij *= std::max(alphai,alphaj);
+			  //}
 			  if (ENTROPY_VISCOSITY==1)
 			    {
-			      double alphai = std::abs(EntResVector[i])/MaxEntResVector[i];
-			      double alphaj = std::abs(EntResVector[j])/MaxEntResVector[j];
-			      dEij *= std::max(alphai,alphaj);
+			      double EntResij = std::max(std::abs(EntResVector[i]),std::abs(EntResVector[j]));
+			      dEij = -std::min(-dLij,cE*EntResij/entropy_normalization_factor);
 			    }
 			      
 			  // artificial compression
