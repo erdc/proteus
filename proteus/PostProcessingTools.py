@@ -1755,8 +1755,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
             Set to true when the quadrature values for the velocity function are 
             already defined (this is typically used for testing).
         """
-        assert self.nDOFs_element[ci] == 2*self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
-
+        assert self.nDOFs_element[ci] == self.dim , "wrong size for BDM"
+            
         if self.degree >= 2 and velocity_field_set==False:
             for ci in self.vtComponents:
                 self.setInteriorVelocityValues(ci)
@@ -1772,7 +1772,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                           self.q[('velocity',ci)],
                           self.q[('velocity_dofs',ci)],
                           self.edgeFlags)
-
+        
         self.solveLocalBDM2projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,
 #                                      self.w_dS[ci],
@@ -1782,7 +1782,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                       self.ebq[('velocity',ci)],
                                       self.q[('velocity',ci)],
                                       self.q[('velocity_dofs',ci)])
-
+        
         cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.vt.q[('w',ci)],
                                                                 self.q[('velocity_dofs',ci)],
                                                                 self.vt.q[('velocity',ci)])
