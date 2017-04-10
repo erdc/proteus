@@ -2741,13 +2741,7 @@ void buildLocalBDM2projectionMatrices(int degree,
   assert(degree == 2);
   assert(nVDOFs_element == nSpace*(nSpace*3));
 
-  // ToDo - Think of some clever asserts to replace these with.
-  //  assert(nSimplex == nDOFs_trial_element);
-  //  assert(nSimplex == nDOFs_test_element);
-
   int interiorPspace = nDOFs_trial_interior_element;
-  //  int edgeFlags[9] = {1,2,4,0,2,5,0,1,3};
-  // TODO - feed edge flags into C through function 
   
   if (nSpace == 2){
     dof = (degree+1)*(degree+2);
@@ -2766,7 +2760,6 @@ void buildLocalBDM2projectionMatrices(int degree,
   }
   
   int interior_dof = dof - boundary_dof;
-
   // Begin populating the projection matrix
 
   // Loop over elements of the triangulation
@@ -2801,7 +2794,7 @@ void buildLocalBDM2projectionMatrices(int degree,
 		      	      ibq*nSpace+
 		      	      l]
 		      	*
-		      	w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+
+		      	w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary* nDOFs_test_element+
 		      	       ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+
 		      	       ibq*nDOFs_test_element+
 		      	       kp]
@@ -2824,13 +2817,7 @@ void buildLocalBDM2projectionMatrices(int degree,
 
       // **** Interior Integrals (two interior integrals come from gradients, one comes from div-free element) ****
 
-      // **** Gradient Integrals ****
-      printf("interiorPspace = %d, boundary_dof=%d  \n",
-	     interiorPspace,
-	     boundary_dof);
-
-      printf("dof = %d\n", dof);
-      
+      // **** Gradient Integrals ****      
       for (s = 0; s < interiorPspace-1; s++){
       	// Iterate over interior polynomial test space
       	irow = boundary_dof + s;
@@ -2953,7 +2940,7 @@ void factorLocalBDM2projectionMatrices(int nElements_global,
 {
   PROTEUS_LAPACK_INTEGER INFO=0;
   int eN,i,nVDOFs_element2;
-  PROTEUS_LAPACK_INTEGER pivots_element[12]; /*maximum size for local space is 12*/
+  PROTEUS_LAPACK_INTEGER pivots_element[30]; /*maximum size for local space is 12*/
   PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER) nVDOFs_element);
   nVDOFs_element2 = nVDOFs_element*nVDOFs_element;
   for (eN = 0; eN < nElements_global; eN++)
@@ -3072,8 +3059,10 @@ void buildBDM2rhs(int nElements_global,
 	          int nSpace,
 	          int nDOFs_test_element,
 	          int nVDOFs_element,
+		  int nDOFs_trial_interior_element,
 	          double * BDMprojectionMatFact_element,
 	          int* BDMprojectionMatPivots_element,
+		  long *edgeFlags,
 	          double * w_dS_f,
 	          double * ebq_n,
 		  double * w_interior_grads,
@@ -3103,54 +3092,59 @@ void buildBDM2rhs(int nElements_global,
 
   PROTEUS_LAPACK_INTEGER INFO=0,NRHS=1;
   char TRANS='N';
-  int eN,ebN,s,irow,kp,ibq,J,nSimplex,nVDOFs_element2;
+  int eN,ebN,s,irow,kp,ibq,j,dof_edge,num_div_free,boundary_dof,dof;
   double btmp,pvalx,pvaly;
-  PROTEUS_LAPACK_INTEGER pivots_element[12]; /*maximum size for local space is ???*/
+  PROTEUS_LAPACK_INTEGER pivots_element[30]; /*maximum size for local space is ???*/
   PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER) nVDOFs_element);
 
   // temporary variables...these will be added as inputs
   int degree = 2;
-  int boundaryPspace = degree + 1;
-  int interiorPspace = 3;
+  int interiorPspace = nDOFs_trial_interior_element;
 
-  // Specify the number of BDM degrees-of-freedom.
-  int dof = (degree+1)*(degree+2);
-  int boundary_dof = 3*(degree+1);
-  int edge_dof = degree+1 ;
-  int interior_dof = dof - boundary_dof;
+  if (nSpace == 2){
+      dof = (degree+1)*(degree+2);
+      dof_edge = degree + 1;
+      boundary_dof = nElementBoundaries_element*dof_edge;
+      num_div_free = 1;
+    }
+    else if (nSpace == 3){
+      dof = (degree+1)*(degree+2)*(degree+3) / 2;
+      dof_edge = degree*(degree+1);
+      boundary_dof = nElementBoundaries_element*dof_edge;
+      num_div_free = 3;
+    }
+    else {
+      assert(1 == 0);
+    }
 
-  int edgeFlags[9] = {1,2,4,0,2,5,0,1,3}; //This is an edge flags list
-
-  nSimplex = nSpace+1;
   assert(nVDOFs_element == dof);
   assert(BDMprojectionMatPivots_element);
-  nVDOFs_element2 = nVDOFs_element*nVDOFs_element;
 
   for (eN = 0; eN < nElements_global; eN++)
     {
       // Boundary Integrals
       for (ebN = 0; ebN < nElementBoundaries_element; ebN++)
   	{
-  	  for (s = 0; s < edge_dof; s++)
+  	  for (s = 0; s < dof_edge; s++)
   	    {
-  	      irow = ebN*boundaryPspace + s;
-	      kp = edgeFlags[ebN*boundaryPspace+s];
+  	      irow = ebN*dof_edge + s;
+	      kp = edgeFlags[ebN*dof_edge + s];
   	      btmp = 0.0;
 
   	      for (ibq = 0; ibq < nQuadraturePoints_elementBoundary; ibq++)
   		{
-  		  for (J = 0; J < nSpace; J++) {
+  		  for (j = 0; j < nSpace; j++) {
 
   		      btmp +=
   			ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
   			      ebN*nQuadraturePoints_elementBoundary*nSpace+
   			      ibq*nSpace+
-  			      J]
+  			      j]
   			*
   			ebq_velocity[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
   				     ebN*nQuadraturePoints_elementBoundary*nSpace+
   				     ibq*nSpace+
-  				     J]
+  				     j]
   			* w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+
   				 ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+
   				 ibq*nDOFs_test_element+
@@ -3164,81 +3158,55 @@ void buildBDM2rhs(int nElements_global,
       
       // interior gradient integrals
 
-      for (s = 0; s < interior_dof-1; s++){
+      for (s = 0; s < interiorPspace-1; s++){
 	// Iterate over interior polynomial test space      
-	  irow = nElementBoundaries_element*edge_dof + s;
+	  irow = boundary_dof + s;
 	  btmp = 0.0;
 	
 	  for (ibq=0; ibq < nQuadraturePoints_elementInterior; ibq++){
 	  // Iterate over quadrature points
-    
-	      pvalx = q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
-				 ibq*nSpace + 
-				 0]
-		* w_interior_grads[eN*2*interiorPspace*nQuadraturePoints_elementInterior+
-				   s*2 +
-				   ibq*2*interiorPspace];
 
-	      pvaly = q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
-				 ibq*nSpace + 
-				 1]
-		* w_interior_grads[eN*2*interiorPspace*nQuadraturePoints_elementInterior+
-				   s*2 +
-				   ibq*2*interiorPspace + 1];
-	
-	      btmp += pvalx + pvaly;
+	    for (j = 0 ; j < nSpace; j++){
 
+	    p1_velocity_dofs[eN*nVDOFs_element+irow] +=
+	      
+	      q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
+			 ibq*nSpace +
+			 j] *
+	      w_interior_grads[eN*nSpace*interiorPspace*nQuadraturePoints_elementInterior +
+			       s* nSpace +
+			       ibq * nSpace * interiorPspace + 
+			       j];
+	      }
+	    	
 	  }  /* end ibq */
-	  
-	  
-	    p1_velocity_dofs[eN*nVDOFs_element+irow] = btmp;
       }    /* end s */
 
-      // div free element
+      // div free elements
 
-      btmp = 0.0;
-
+      irow = boundary_dof + interiorPspace - 1;
+      for (s = 0 ; s < num_div_free ; s++){
+	p1_velocity_dofs[eN*nVDOFs_element + (irow + s) ] = 0.0 ;
+      }
+      
       for (ibq = 0; ibq < nQuadraturePoints_elementInterior; ibq++){
+	for (s = 0 ; s < num_div_free ; s++){
+	  for (j = 0 ; j < nSpace ; j++){
 
-	/* if (eN==1){ */
-
-	/* printf("q_velocity_x = %.4f, w_interior_divfree_x = %.4f, q_velocity_y = %.4f, w_interior_divfree_y = %.4f\n", */
-	/*        q_velocity[eN*nQuadraturePoints_elementInterior*nSpace + */
-	/* 		   ibq*nSpace +  0 ], */
-	/*        w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+ */
-	/* 			 ibq*nSpace +	  0 ], */
-	/*        q_velocity[eN*nQuadraturePoints_elementInterior*nSpace + */
-	/* 		   ibq*nSpace +   1 ], */
-        /*         w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+ */
-	/* 			   ibq*nSpace +   1 ] ); */
-	/* printf("idx_1 = %d, idx_2 = %d\n", */
-	/*        eN*nQuadraturePoints_elementInterior*nSpace +  ibq*nSpace +  0, */
-	/*        eN*nQuadraturePoints_elementInterior*nSpace +  ibq*nSpace +  1 ); */
-
-	/* } */
-
-	pvalx = q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
-			   ibq*nSpace + 
-			   0 ]
-	  *   w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+
-				 ibq*nSpace +
-				 0 ];
-
-	pvaly = q_velocity[eN*nQuadraturePoints_elementInterior*nSpace +
-			   ibq*nSpace + 
-			   1 ]	  * 	       
-                w_interior_divfree[eN*nQuadraturePoints_elementInterior*nSpace+
-				   ibq*nSpace +
-				   1 ];
+	    p1_velocity_dofs[eN*nVDOFs_element + (irow + s) ] += 
 	
-	      btmp += pvalx + pvaly;
- 
-	       //w_interior_divfree;
-       }
-
-      p1_velocity_dofs[eN*nVDOFs_element + (nVDOFs_element-1) ] = btmp;
-      
-      
+	      q_velocity[eN * nQuadraturePoints_elementInterior * nSpace +
+			 ibq * nSpace + 
+			 j ] *
+	      
+	      w_interior_divfree[eN * nQuadraturePoints_elementInterior * nSpace+
+				 ibq*nSpace +
+				 j * num_div_free +
+				 s ];
+	 }
+	}
+      }
+          
     }/*eN*/
 
 }

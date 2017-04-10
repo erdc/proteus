@@ -481,6 +481,7 @@ cpostprocessingBuildLocalBDM2projectionMatrices(PyObject* self,
   PyObject *w_dS_f,*ebq_n,*ebq_v,*BDMmat_element,*q_basis_vals,
     *w_int_test_grads,*w_int_div_free,*piola_trial_fun,*degree,
     *edgeFlags;
+  printf("HERE");
   
   if(!PyArg_ParseTuple(args,"OOOOOOOOOO",
 		       &degree,
@@ -624,12 +625,12 @@ cpostprocessingSolveLocalBDM2projection(PyObject* self,
 
 static PyObject*
 cpostprocessingBuildBDM2rhs(PyObject* self,
-				      PyObject* args)
+	                    PyObject* args)
 {
   
   PyObject *w_dS_f,*ebq_n,*ebq_velocity,*q_vdofs,*BDMmat_element,*BDMmatPivots_element,*q_velocity,
-    *w_interior_gradients, *w_interior_divfree;
-  if(!PyArg_ParseTuple(args,"OOOOOOOOO",
+    *w_interior_gradients, *w_interior_divfree, *edgeFlags;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOO",
 		       &BDMmat_element,
 		       &BDMmatPivots_element,
                        &w_dS_f,
@@ -638,7 +639,8 @@ cpostprocessingBuildBDM2rhs(PyObject* self,
 		       &w_interior_divfree,
                        &ebq_velocity,
 		       &q_velocity,
-		       &q_vdofs))
+		       &q_vdofs,
+		       &edgeFlags))
     return NULL;
 
   buildBDM2rhs(SHAPE(ebq_n)[0],
@@ -648,8 +650,10 @@ cpostprocessingBuildBDM2rhs(PyObject* self,
 	       SHAPE(ebq_n)[3],
 	       SHAPE(w_dS_f)[3],
 	       SHAPE(BDMmat_element)[1],
+	       SHAPE(w_interior_gradients)[2],
 	       DDATA(BDMmat_element),
 	       IDATA(BDMmatPivots_element),
+	       DDATA(edgeFlags),
 	       DDATA(w_dS_f),
 	       DDATA(ebq_n),
 	       DDATA(w_interior_gradients),

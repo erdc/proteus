@@ -1399,9 +1399,9 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
 
         # Question - the space is set indepenedently for the interior test functions.  Should this be the case for the trial functions as well?
         # at a minimum there should be an assert preventing the user from using Linear functions in the BDM2 projection.
-
+        
         for ci in self.vtComponents:
-            self.nDOFs_element[ci] = self.vt.nSpace_global*(self.vt.nSpace_global*3)  # BDM2 requires quadratic elements
+            self.nDOFs_element[ci] = self.dim  # BDM2 requires quadratic elements
             self.q[('velocity_dofs',ci)] = numpy.zeros((self.vt.mesh.nElements_global,self.nDOFs_element[ci]),'d')
             if ci != self.vtComponents[0] and self.q.has_key(('velocity_l2g',self.vtComponents[0])):
                 self.q[('velocity_l2g',ci)]  = self.q[('velocity_l2g',self.vtComponents[0])]
@@ -1618,6 +1618,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                         self.piola_trial_function[eN,k,i*self.vt.nSpace_global+j,j] = self.q[('w',self.BDMcomponent)][eN][k][i]
 
     def computeBDM2projectionMatrices(self):
+
         cpostprocessing.buildLocalBDM2projectionMatrices(self.degree,
                                                          self.vt.ebq[('w*dS_u',self.BDMcomponent)],
 #                                                         self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
@@ -1630,8 +1631,10 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                          self.edgeFlags,
                                                          self.BDMprojectionMat_element)            # projection matrix
 
+
         cpostprocessing.factorLocalBDM2projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
+
 
 
     def flagNeumannBoundaryEdges(self):
@@ -1767,7 +1770,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                           self.weightedInteriorDivFreeElement,
                           self.ebq[('velocity',ci)],
                           self.q[('velocity',ci)],
-                          self.q[('velocity_dofs',ci)])
+                          self.q[('velocity_dofs',ci)],
+                          self.edgeFlags)
 
         self.solveLocalBDM2projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,

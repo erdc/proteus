@@ -62,8 +62,7 @@ class TestBDM2Reference1():
         '''
 
         # ******************* TEST PROJECTION MATRIX CONSTRUCTION ************
-
-
+        
         # need to override factored BDM projection matrix
         self.bdm2_obj.BDMprojectionMat_element \
                          = np.zeros_like(self.bdm2_obj.BDMprojectionMat_element)
@@ -103,15 +102,14 @@ class TestBDM2Reference1():
                               self.bdm2_obj.weightedInteriorDivFreeElement,
                               self.bdm2_obj.ebq[('velocity',0)],
                               self.bdm2_obj.q[('velocity',0)],
-                              self.bdm2_obj.q[('velocity_dofs',0)])
+                              self.bdm2_obj.q[('velocity_dofs',0)],
+                              self.bdm2_obj.edgeFlags)
 
         test_rhs = self.bdm2_obj.q[('velocity_dofs',0)]
-
         comparison_rhs = np.array([ 3.33333333e-01,  3.33333333e-01,  1.33333333e+00,
                                    -1.66666667e-01, -1.66666667e-01, -6.66666667e-01,
                                    -1.66666667e-01, -1.66666667e-01, -6.66666667e-01,
                                    -1.00000000e+00,  5.00000000e-01,  4.33680869e-19])
-        
         assert np.allclose(comparison_rhs,test_rhs)
 
     def test_BDM2_reference_triangle_full_in_space(self):
