@@ -1526,7 +1526,7 @@ class Mesh:
             gnuplot.flush()
         raw_input('Please press return to continue... \n')
 
-    def convertFromPUMI(self, PUMIMesh, faceList, parallel=False, dim=3):
+    def convertFromPUMI(self, PUMIMesh, faceList,regList, parallel=False, dim=3):
         import cmeshTools
         import MeshAdaptPUMI
         import flcbdfWrappers
@@ -1541,8 +1541,11 @@ class Mesh:
               self.subdomainMesh.cmesh)
           for i in range(len(faceList)):
             for j in range(len(faceList[i])):
-              PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh, i+1,
+              PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,(dim-1), i+1,
                   faceList[i][j])
+          for i in range(len(regList)):
+            for j in range(len(regList[i])):
+              PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,dim, i+1, regList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
@@ -1589,7 +1592,10 @@ class Mesh:
           PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
           for i in range(len(faceList)):
             for j in range(len(faceList[i])):
-              PUMIMesh.updateMaterialArrays(self.cmesh, i+1, faceList[i][j])
+              PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), i+1, faceList[i][j])
+          for i in range(len(regList)):
+            for j in range(len(regList[i])):
+              PUMIMesh.updateMaterialArrays(self.cmesh,dim, i+1, regList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
@@ -4712,6 +4718,14 @@ class MultilevelTriangularMesh(MultilevelMesh):
                 self.meshList[l].subdomainMesh = self.meshList[l]
                 logEvent(self.meshList[-1].meshInfo())
             self.buildArrayLists()
+    def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
+        import cmeshTools
+        self.meshList = []
+        self.meshList.append(mesh0)
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        self.buildFromC(self.cmultilevelMesh)
+        self.elementParents = None
+        self.elementChildren=[]
 
     def refine(self):
         self.meshList.append(TriangularMesh())
