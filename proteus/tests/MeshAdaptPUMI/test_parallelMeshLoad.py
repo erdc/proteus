@@ -23,7 +23,7 @@ def test_parallelLoadPUMI(verbose=0):
     domain.PUMIMesh.loadModelAndMesh(Model, Mesh)
     mesh = MeshTools.TetrahedralMesh()
     mesh.cmesh = cmeshTools.CMesh()
-    mesh.convertFromPUMI(domain.PUMIMesh, domain.faceList, parallel = comm.size() > 1, dim = domain.nd)
+    mesh.convertFromPUMI(domain.PUMIMesh, domain.faceList, domain.regList,parallel = comm.size() > 1, dim = domain.nd)
     eq(mesh.nElements_global,8148)
     eq(mesh.nNodes_global,1880)
     eq(mesh.nEdges_global,11001)

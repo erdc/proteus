@@ -874,6 +874,7 @@ class PUMIDomain(D_base):
   def __init__(self, name="PUMIDomain", dim=3):
       D_base.__init__(self,dim,name)
       self.faceList=[]
+      self.regList=[]
       self.PUMIMesh=None
       #
       #it would be useful to define a dictionary mapping strings to faces
