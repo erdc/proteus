@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.test_utils.TestTools module &#8212; Proteus 1.2.0 documentation</title>
+    <title>proteus.test_utils.TestTools module &#8212; Proteus 1.3.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.2.0',
+        VERSION:     '1.3.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -56,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.3.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -140,6 +140,27 @@
 <span id="proteus-test-utils-testtools-module"></span><h1>proteus.test_utils.TestTools module<a class="headerlink" href="#module-proteus.test_utils.TestTools" title="Permalink to this headline">¶</a></h1>
 <p>Helper functions commonly used in tests.</p>
 <dl class="function">
+<dt id="proteus.test_utils.TestTools.get_include_dir">
+<code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">get_include_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.get_include_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.test_utils.TestTools.setup_profiling">
+<code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">setup_profiling</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.setup_profiling" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.test_utils.TestTools.silent_rm">
+<code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">silent_rm</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.silent_rm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="proteus.test_utils.TestTools.removeFiles">
+<code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">removeFiles</code><span class="sig-paren">(</span><em>filelist</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.removeFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a list of files.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="proteus.test_utils.TestTools.addSubFolders">
 <code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">addSubFolders</code><span class="sig-paren">(</span><em>currentframe</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.addSubFolders" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add import_modules and comparison_files to sys.path</p>
@@ -151,12 +172,6 @@
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="function">
-<dt id="proteus.test_utils.TestTools.closeFiles">
-<code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">closeFiles</code><span class="sig-paren">(</span><em>filelist</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.closeFiles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Close a set of files.</p>
 </dd></dl>
 
 <dl class="class">
@@ -228,7 +243,7 @@
 
 <dl class="method">
 <dt id="proteus.test_utils.TestTools.NumericResults.ipython_plot_newton_it">
-<code class="descname">ipython_plot_newton_it</code><span class="sig-paren">(</span><em>time_level</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.ipython_plot_newton_it" title="Permalink to this definition">¶</a></dt>
+<code class="descname">ipython_plot_newton_it</code><span class="sig-paren">(</span><em>time_level</em>, <em>axis=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.ipython_plot_newton_it" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the Newton iteration residual in a jupyter notebook.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -241,14 +256,56 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="proteus.test_utils.TestTools.NumericResults.get_newton_it_info">
+<code class="descname">get_newton_it_info</code><span class="sig-paren">(</span><em>time_level</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.get_newton_it_info" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Print the total number of iterations to converge for a given time-step</dt>
+<dd>and mesh level.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_level</strong> (<em>lst of tuples</em>) &#8211; A list of tuples with the data to be reported.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>return_data</strong></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">lst of tuples</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="proteus.test_utils.TestTools.NumericResults.ipython_plot_ksp_residual">
-<code class="descname">ipython_plot_ksp_residual</code><span class="sig-paren">(</span><em>time_level_it</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.ipython_plot_ksp_residual" title="Permalink to this definition">¶</a></dt>
+<code class="descname">ipython_plot_ksp_residual</code><span class="sig-paren">(</span><em>time_level_it</em>, <em>axis=False</em>, <em>user_legend=False</em>, <em>plot_relative=False</em>, <em>title=False</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.ipython_plot_ksp_residual" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the outer KSP residual in a jupyter notebook.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_level_it</strong> &#8211; </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.test_utils.TestTools.NumericResults.get_ksp_resid_it_info">
+<code class="descname">get_ksp_resid_it_info</code><span class="sig-paren">(</span><em>time_level</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.NumericResults.get_ksp_resid_it_info" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Collect the total number of iterations to converge for a given time-step</dt>
+<dd>and mesh level.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_level</strong> (<em>lst of tuples</em>) &#8211; A list of tuples with the data to be reported.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>return_data</strong></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">lst of tuples</td>
 </tr>
 </tbody>
 </table>
@@ -267,6 +324,62 @@
 </tbody>
 </table>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.test_utils.TestTools.BasicTest">
+<em class="property">class </em><code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">BasicTest</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.BasicTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for tests.</p>
+<dl class="classmethod">
+<dt id="proteus.test_utils.TestTools.BasicTest.setup_class">
+<em class="property">classmethod </em><code class="descname">setup_class</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.BasicTest.setup_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="proteus.test_utils.TestTools.BasicTest.teardown_class">
+<em class="property">classmethod </em><code class="descname">teardown_class</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.BasicTest.teardown_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.test_utils.TestTools.BasicTest.setup_method">
+<code class="descname">setup_method</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.BasicTest.setup_method" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.test_utils.TestTools.BasicTest.teardown_method">
+<code class="descname">teardown_method</code><span class="sig-paren">(</span><em>method</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.BasicTest.teardown_method" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.test_utils.TestTools.SimulationTest">
+<em class="property">class </em><code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">SimulationTest</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.SimulationTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.test_utils.TestTools.BasicTest" title="proteus.test_utils.TestTools.BasicTest"><code class="xref py py-class docutils literal"><span class="pre">proteus.test_utils.TestTools.BasicTest</span></code></a></p>
+<p>A base class for simulation based tests.</p>
+<dl class="staticmethod">
+<dt id="proteus.test_utils.TestTools.SimulationTest.remove_files">
+<em class="property">static </em><code class="descname">remove_files</code><span class="sig-paren">(</span><em>filelist</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.SimulationTest.remove_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close a set of files.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.test_utils.TestTools.SimulationTest.teardown_method">
+<code class="descname">teardown_method</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.SimulationTest.teardown_method" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="proteus.test_utils.TestTools.AirWaterVVTest">
+<em class="property">class </em><code class="descclassname">proteus.test_utils.TestTools.</code><code class="descname">AirWaterVVTest</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.AirWaterVVTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#proteus.test_utils.TestTools.SimulationTest" title="proteus.test_utils.TestTools.SimulationTest"><code class="xref py py-class docutils literal"><span class="pre">proteus.test_utils.TestTools.SimulationTest</span></code></a></p>
+<p>A test class for the air-water-vv module.</p>
+<dl class="method">
+<dt id="proteus.test_utils.TestTools.AirWaterVVTest.getPETScDir">
+<code class="descname">getPETScDir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/test_utils/TestTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.test_utils.TestTools.AirWaterVVTest.getPETScDir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

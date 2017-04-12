@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.NumericalSolution module &#8212; Proteus 1.2.0 documentation</title>
+    <title>proteus.NumericalSolution module &#8212; Proteus 1.3.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.2.0',
+        VERSION:     '1.3.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -56,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.2.0</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.3.1</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -169,6 +169,25 @@ NS -&gt; nsList [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&
 NS -&gt; lsList [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&quot;purple&quot;];
 NS -&gt; ar [arrowhead=&quot;normal&quot;, style=&quot;dashed&quot;, color=&quot;purple&quot;];
 }</p></object>
+<dl class="method">
+<dt id="proteus.NumericalSolution.NS_base.allocateModels">
+<code class="descname">allocateModels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.allocateModels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalSolution.NS_base.PUMI_estimateError">
+<code class="descname">PUMI_estimateError</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_estimateError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate the error using the classical element residual method by
+Ainsworth and Oden and generates a corresponding error field.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="proteus.NumericalSolution.NS_base.PUMI_adaptMesh">
+<code class="descname">PUMI_adaptMesh</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.PUMI_adaptMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses a computed error field to construct a size field and adapts
+the mesh using SCOREC tools (a.k.a. MeshAdapt)</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="proteus.NumericalSolution.NS_base.calculateSolution">
 <code class="descname">calculateSolution</code><span class="sig-paren">(</span><em>runName</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/NumericalSolution.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.NumericalSolution.NS_base.calculateSolution" title="Permalink to this definition">¶</a></dt>
