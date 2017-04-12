@@ -783,6 +783,7 @@ class NS_base:  # (HasTraits):
           mesh = MeshTools.TriangularMesh()
         mesh.convertFromPUMI(p0.domain.PUMIMesh,
                              p0.domain.faceList,
+                             p0.domain.regList,
                              parallel = self.comm.size() > 1,
                              dim = p0.domain.nd)
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
