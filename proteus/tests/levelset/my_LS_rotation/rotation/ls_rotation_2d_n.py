@@ -9,11 +9,11 @@ levelNonlinearSolver = Newton
 fullNewtonFlag = fullNewton
 updateJacobian = False
 
-timeIntegration = NCLS.RKEV # SSP33 #mwf right now need timeIntegration to be SSP33 to run
+timeIntegration = NCLS.RKEV # SSP33 
 #timeIntegration = BackwardEuler_cfl
 stepController = Min_dt_cfl_controller
 
-if timeIntegration_ncls == "SSP33": #mwf hack
+if timeIntegration_ncls == "SSP33": 
     timeOrder = 3
     nStagesTime = 3
 else:
