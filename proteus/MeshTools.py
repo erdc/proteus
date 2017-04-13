@@ -1245,9 +1245,10 @@ class Mesh:
 
     def buildMatlabMeshDataStructures(self,meshFileBase='meshMatlab',writeToFile=True):
         """
-        build array data structures for matlab finite element mesh representation
-        and write to a file to view and play with in matlatb. The current matlab support
-        is mostly for 2d, but this will return basic arrays for 1d and 3d too
+        build array data structures for matlab finite element mesh
+        representation and write to a file to view and play with in
+        matlatb. The current matlab support is mostly for 2d, but this
+        will return basic arrays for 1d and 3d too
 
         in matlab can then print mesh with
 
@@ -1268,6 +1269,7 @@ class Mesh:
              row 1 = x coord,
              row 2 = y coord for nodes in mesh
              row 3 = z coord for nodes in mesh ...
+
         edge matrix is [2*nd+3 x num faces]
           format:
              row 1  = start vertex number
@@ -1286,10 +1288,11 @@ class Mesh:
             ...
             row nd+1 = vertex 3 global number
             row 4 = triangle subdomain number
+
          where 1,2,3 is a local counter clockwise numbering of vertices in
            triangle
 
-         """
+        """
         matlabBase = 1
         nd = self.nNodes_element-1
         p = np.zeros((nd,self.nNodes_global),'d')
@@ -6221,17 +6224,17 @@ class MeshOptions:
         self.Domain = domain
         self.he = 1.
         self.use_gmsh = False
-        self.genMesh = dp.genMesh
+        self.genMesh = True
         self.outputFiles_name = 'mesh'
         self.outputFiles = {'poly': True,     
                             'ply': False,        
                             'asymptote': False,
                             'geo': False}
-        self.restrictFineSolutionToAllMeshes = dn.restrictFineSolutionToAllMeshes
-        self.parallelPartitioningType = dn.parallelPartitioningType
-        self.nLayersOfOverlapForParallel = dn.parallelPartitioningType
-        self.triangleOptions = dn.triangleOptions  # defined when setTriangleOptions called
-        self.nLevels = dn.nLevels
+        self.restrictFineSolutionToAllMeshes = False
+        self.parallelPartitioningType = MeshParallelPartitioningTypes.node
+        self.nLayersOfOverlapForParallel = 1
+        self.triangleOptions = "q30DenA" # defined when setTriangleOptions called
+        self.nLevels = 1
         if domain is not None:
             self.nd = domain.nd
             if self.nd == 2:
