@@ -469,7 +469,8 @@ void cppCable::buildElements() {
           elems_loads.push_back(load);
 			element->SetNodes(nodes[i - 1], nodes[i + 1], nodes[i]);
       double elem_length = (nodes[i]->GetPos()-nodes[i-1]->GetPos()).Length()+(nodes[i+1]->GetPos()-nodes[i]->GetPos()).Length();
-			element->SetDimensions(elem_length, d, d);
+      double d2 = sqrt(d*d-(d*d-CH_C_PI*d*d/4.));
+			element->SetDimensions(elem_length, d2, d2);
 			element->SetMaterial(mmaterial_cable);
 			element->SetAlphaDamp(0.0004);
 			element->SetGravityOn(true);
@@ -526,9 +527,9 @@ void cppCable::setDragForce() {
 	ChVector<> Fd_a;  // axial (tangential) drag force
 	ChVector<> Fd_n;  // normal(transversal) drag force
 	ChVector<> Fd;  // total drag force
-    ChVector<> Va;
-    ChVector<> Vn;
-    double rho_f;
+  ChVector<> Va;
+  ChVector<> Vn;
+  double rho_f;
 	// clear current drag forces
 	forces_drag.clear();
 	double length_elem = length / (nb_nodes - 1);

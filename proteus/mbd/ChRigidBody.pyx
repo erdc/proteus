@@ -88,6 +88,7 @@ cdef extern from "ChRigidBody.h":
         void setChTimeStep(double dt)
         void setGravity(double* gravity)
         void setDirectory(string directory)
+        void setTimestepperType(string tstype)
     cppSystem * newSystem(double* gravity)
     cdef cppclass cppRigidBody:
         shared_ptr[ch.ChBody] body
@@ -637,7 +638,7 @@ cdef class System:
         self.thisptr = newSystem(<double*> gravity.data)
         self.subcomponents = []
         self.dt_init = 0.001
-        self.model = None
+        self.model = model
         self.nd = nd
         self.build_kdtree = False
 
@@ -663,12 +664,15 @@ cdef class System:
             self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         for s in self.subcomponents:
             s.prestep()
+        comm = Comm.get()
+        print('before chrono timestep', comm.rank(), self.subcomponents[1].getTensionBack())
         self.step(self.proteus_dt)
+        print('after chrono timestep', comm.rank(), self.subcomponents[1].getTensionBack())
         for s in self.subcomponents:
             s.poststep()
         Profiling.logEvent('Solved Chrono system to t='+str(self.thisptr.system.GetChTime()))
         #self.recordBodyList()
-
+u
     def calculate_init(self):
         self.directory = str(Profiling.logDir)+'/'
         self.thisptr.setDirectory(self.directory)
@@ -683,6 +687,9 @@ cdef class System:
         self.thisptr.system.SetupInitial()
         for s in self.subcomponents:
             s.poststep()
+
+    def setTimestepperType(self, string tstype):
+        self.thisptr.setTimestepperType(tstype)
 
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
@@ -701,6 +708,8 @@ cdef class System:
 
     def step(self, double dt):
         steps = max(int(dt/self.chrono_dt), 1)
+        comm = Comm.get()
+        print('hi3', comm.rank(), dt, steps)
         self.thisptr.step(<double> dt, n_substeps=steps)
 
     def addSubcomponent(self, subcomponent):
