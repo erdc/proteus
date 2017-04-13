@@ -385,13 +385,17 @@ void cppCable::buildNodes() {
 	ChVector<> ref = ChVector<>(1., 0., 0.);
 	std::shared_ptr<ChNodeFEAxyzDD> node;
 	// first node
-	dir = mvecs[1] - mvecs[0];
+	dir = (mvecs[1] - mvecs[0]);
 	dir.Normalize();
 	//plane = dir.x()*(x - mvecs[0].x()) + dir.y()*(y - mvecs[0].y()) + dir.z()*(z - mvecs[0].z());
-	if (dir.x() == 1 && dir.y() == 0 && dir.z() == 0) {
-		ref = ChVector<>(0., 0., -1.);
+	if (dir.x() == 1) {
+    ref = ChVector<>(0., 0., -1.);
 		ref.Normalize();
 	}
+  else if (dir.x() == -1) {
+    ref = ChVector<>(0., 0., 1.);
+		ref.Normalize();
+  }
 	else {
 		ref = ChVector<>(1., 0., 0.);
 	}
@@ -406,10 +410,14 @@ void cppCable::buildNodes() {
 	for (int i = 1; i < nb_nodes - 1; ++i) {
 		dir = mvecs[i + 1] - mvecs[i - 1];
 		dir.Normalize();
-		if (dir.x() == 1 && dir.y() == 0 && dir.z() == 0) {
-			ref = ChVector<>(0., 0., -1.);
-			ref.Normalize();
-		}
+    if (dir.x() == 1) {
+      ref = ChVector<>(0., 0., -1.);
+      ref.Normalize();
+    }
+    else if (dir.x() == -1) {
+      ref = ChVector<>(0., 0., 1.);
+      ref.Normalize();
+    }
 		else {
 			ref = ChVector<>(1., 0., 0.);
 		}
@@ -422,10 +430,14 @@ void cppCable::buildNodes() {
 	}  // last node
 	dir = mvecs[nb_nodes - 1] - mvecs[nb_nodes - 2];
 	dir.Normalize();
-	if (dir.x() == 1 && dir.y() == 0 && dir.z() == 0) {
-		ref = ChVector<>(0., 0., -1.);
-		ref.Normalize();
-	}
+  if (dir.x() == 1) {
+    ref = ChVector<>(0., 0., -1.);
+    ref.Normalize();
+  }
+  else if (dir.x() == -1) {
+    ref = ChVector<>(0., 0., 1.);
+    ref.Normalize();
+  }
 	else {
 		ref = ChVector<>(1., 0., 0.);
 	}

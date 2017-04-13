@@ -823,19 +823,27 @@ class Cylinder(Shape):
         ang = arc/self.radius
         vert = []
         facets = []
+        segs = []
         for i in range(0, self.nPoints):
             vert += [[self.radius*cos(ang*i),
                       self.radius*sin(ang*i),
                       0]]
+            if i > 0:
+                segs += [[i-1, i]]
+        segs += [[i, 0]]
+        segs_bottom = np.array(segs)
         vert_bottom = np.array(vert)
         facets += [[[i for i in range(0, len(vert_bottom))]]]
         vert_top = np.array(vert)+h_offset
+        segs_top = np.array(segs)+len(vert) 
         nvb = len(vert_bottom)
         facets += [[[i+nvb for i in range(0, len(vert_top))]]]
         for i in range(len(vert_bottom)-1):
             facets += [[[i, i+1, i+nvb+1, i+nvb]]]
         facets += [[[i+1, 0, nvb, i+1+nvb]]]  # last facet
         self.vertices = np.vstack((vert_bottom, vert_top))-h_offset/2.+np.array(self.coords)
+        self.segments = np.vstack((segs_bottom, segs_top))
+        self.segmentFlags = np.array([1 for i in range(len(segs_bottom))]+[2 for i in range(len(segs_top))])
         self.facets = facets
         self.vertexFlags = np.array([1 for i in range(len(vert_bottom))]+[2 for i in range(len(vert_top))])
         self.facetFlags = np.array([1, 2]+[3 for i in range(len(self.facets)-2)])
