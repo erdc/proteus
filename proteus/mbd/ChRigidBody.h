@@ -1,11 +1,11 @@
 #include "chrono/physics/ChSystemDEM.h"
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/solver/ChSolverMINRES.h"
-#include <memory>
 #include <iostream>
 #include <fstream>
 using namespace chrono;
 using namespace std;
+
 
 
 class cppSystem {
@@ -20,6 +20,7 @@ class cppSystem {
   void recordBodyList();
   void setGravity(double* gravity);
   void setDirectory(std::string dir);
+  void setTimestepperType(std::string tstype);
 };
 
 
@@ -92,9 +93,9 @@ gravity(gravity)
   auto msolver = std::static_pointer_cast<ChSolverMINRES>(system.GetSolver());
   msolver->SetDiagonalPreconditioning(true);
   system.SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems
-  system.SetMaxItersSolverSpeed(100);  // max iteration for iterative solvers
-  system.SetMaxItersSolverStab(100);  // max iteration for stabilization (iterative solvers)
-  system.SetTolForce(1e-14); // default: 0.001
+  //system.SetMaxItersSolverSpeed(100);  // max iteration for iterative solvers
+  //system.SetMaxItersSolverStab(100);  // max iteration for stabilization (iterative solvers)
+  //system.SetTolForce(1e-14); // default: 0.001
   //system.SetMaxiter(200); // default: 6. Max constraints to reach tolerance on constraints.
   //system.SetTol(1e-10); // default: 0.0002. Tolerance for keeping constraints together.
   //system.SetIntegrationType(ChSystemDEM::INT_HHT); // used before: ChSystemDEM::INT_EULER_IMPLICIT_LINEARIZED
@@ -105,6 +106,18 @@ gravity(gravity)
   //system.SetTimestepper(std::make_shared<ChTimestepperEulerImplicitLinearized>());  // default: fast, 1st order
 }
 
+void cppSystem::setTimestepperType(std::string tstype) {
+  if (tstype == "HHT") {
+    system.SetTimestepperType(ChTimestepper::Type::HHT);
+    if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system.GetTimestepper())) {
+      mystepper->SetAlpha(-0.2);
+    }
+    else if (tstype == "Euler") {
+      system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
+    }
+    
+  }
+}
 
 void cppSystem::setGravity(double* gravity)
 {
@@ -113,26 +126,14 @@ void cppSystem::setGravity(double* gravity)
 
 void cppSystem::step(double proteus_dt, int n_substeps=1)
 {
-  /* double substeps = proteus_dt/chrono_dt+0.5; //+0.5 for rounding n substeps */
-
-  /* int n_substeps = (int)substeps; */
+  /* std::vector<std::shared_ptr<ChBody>>& bodylist = *system.Get_bodylist(); */
+  /* std::shared_ptr<ChBody> bod = bodylist[0]; */
+  /* GetLog() << "nan test2" << bod->GetPos() ; */
     double dt2 = proteus_dt/(double)n_substeps;
    for (int i = 0; i < n_substeps; ++i) {
+      /* GetLog() << dt2*i << " " << dt2 << " "  << i << " "<< n_substeps << bod->GetPos(); */
      system.DoStepDynamics(dt2);
    }
-  /* double t = chrono_dt; */
-  /* if (t > proteus_dt) { */
-  /*     system.DoStepDynamics(proteus_dt); */
-  /*   } */
-  /* else { */
-  /*     while (t <= proteus_dt) { */
-  /*         system.DoStepDynamics(chrono_dt); */
-  /*         t += chrono_dt; */
-  /*     } */
-  /*     if (t != proteus_dt) {  // means t went above dt, need last time step */
-  /*         system.DoStepDynamics(proteus_dt-(t-chrono_dt)); */
-  /* } */
-  /* } */
 }
 
 void cppSystem::recordBodyList() {
