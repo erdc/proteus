@@ -31,6 +31,8 @@ cdef extern from "ChMoorings.h":
     cdef cppclass ChNodeFEAxyzrot
     cdef cppclass ChNodeFEAxyzDD:
         const ChVector& GetPos()
+        const ChVector& GetD()
+        const ChVector& GetDD()
         void SetPos (const ChVector &mpos)
         const ChVector& GetPos_dt()
         void SetPos_dt (const ChVector &mposdt)
@@ -84,5 +86,6 @@ cdef extern from "ChMoorings.h":
         void SetRot(ChQuaternion &rot) except +
         void SetBodyFixed(bool state) except +
         void SetMaterialSurface(const shared_ptr[ChMaterialSurfaceBase] &mnewsurf) except +
+        void SetMass(double newmass)
     cdef cppclass ChBodyEasyBox(ChBody):
         ChBodyEasyBox(double Xsize, double Ysize, double Zsize, double mdensity, bool collide=False, bool visual_asset=True)
