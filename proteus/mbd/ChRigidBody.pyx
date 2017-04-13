@@ -196,7 +196,7 @@ cdef class RigidBody:
         self.Shape = shape
         if shape is not None:
             self.nd = shape.nd
-        self.system.addBody(self)
+        self.system.addSubcomponent(self)
         self.record_dict = OrderedDict()
         if center is None:
             if shape is not None:
@@ -283,7 +283,7 @@ cdef class RigidBody:
     def setConstraints(self, np.ndarray free_x, np.ndarray free_r):
         self.thisptr.setConstraints(<double*> free_x.data, <double*> free_r.data)
 
-    def setMass(self, mass):
+    def setMass(self, double mass):
         """
         Set mass of the shape.
         Parameters
@@ -291,7 +291,7 @@ cdef class RigidBody:
         mass: float
             mass of the body
         """
-        self.thisptr.mass = <double> mass
+        deref(self.thisptr.body).SetMass(mass)
 
     # def setInertiaTensor(self, It):
     #     """
@@ -621,8 +621,7 @@ cdef class RigidBody:
 cdef class System:
     cdef cppSystem * thisptr
     cdef public object model
-    cdef object bodies
-    cdef object moorings
+    cdef object subcomponents
     cdef public double dt_init
     cdef double proteus_dt
     cdef double chrono_dt
@@ -632,13 +631,15 @@ cdef class System:
     cdef object femSpace_velocity
     cdef object femSpace_pressure
     cdef object nodes_kdtree
+    cdef public:
+        bool build_kdtree
     def __cinit__(self, np.ndarray gravity, int nd=3):
         self.thisptr = newSystem(<double*> gravity.data)
-        self.bodies = []
-        self.moorings = []
+        self.subcomponents = []
         self.dt_init = 0.001
         self.model = None
         self.nd = nd
+        self.build_kdtree = False
 
     def attachModel(self, model, ar):
         self.model = model
@@ -658,40 +659,30 @@ cdef class System:
         else:
             sys.exit('no time step set')
         Profiling.logEvent('Solving Chrono system for dt='+str(self.proteus_dt))
-        print('Solving Chrono system for dt='+str(self.proteus_dt))
-        if self.model is not None:
+        if self.model is not None and self.build_kdtree is True:
             self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
-        for mooring in self.moorings:
-            mooring.prestep()
-        for body in self.bodies:
-            body.prestep()
+        for s in self.subcomponents:
+            s.prestep()
         self.step(self.proteus_dt)
-        for body in self.bodies:
-            body.poststep()
-        for mooring in self.moorings:
-            mooring.poststep()
+        for s in self.subcomponents:
+            s.poststep()
         Profiling.logEvent('Solved Chrono system to t='+str(self.thisptr.system.GetChTime()))
-        print('Solved Chrono system to t='+str(self.thisptr.system.GetChTime()))
         #self.recordBodyList()
 
     def calculate_init(self):
         self.directory = str(Profiling.logDir)+'/'
         self.thisptr.setDirectory(self.directory)
-        if self.model is not None:
+        if self.model is not None and self.build_kdtree is True:
             self.u = self.model.levelModelList[-1].u
             # finite element space (! linear for p, quadratic for velocity)
             self.femSpace_velocity = self.u[1].femSpace
             self.femSpace_pressure = self.u[0].femSpace
             self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
-        for body in self.bodies:
-            body.calculate_init()
-        for mooring in self.moorings:
-            mooring.calculate_init()
+        for s in self.subcomponents:
+            s.calculate_init()
         self.thisptr.system.SetupInitial()
-        for body in self.bodies:
-            body.poststep()
-        for mooring in self.moorings:
-            mooring.poststep()
+        for s in self.subcomponents:
+            s.poststep()
 
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
@@ -712,11 +703,8 @@ cdef class System:
         steps = max(int(dt/self.chrono_dt), 1)
         self.thisptr.step(<double> dt, n_substeps=steps)
 
-    def addBody(self, body):
-        self.bodies += [body]
-
-    def addMoorings(self, moorings):
-        self.moorings += [moorings]
+    def addSubcomponent(self, subcomponent):
+        self.subcomponents += [subcomponent]
 
     def recordBodyList(self):
         comm = Comm.get()
@@ -921,6 +909,7 @@ cdef class Moorings:
       bool front_body
       bool back_body
       bool nodes_built
+      bool external_forces_from_ns
       np.ndarray fluid_density_array
       np.ndarray fluid_velocity_array
       np.ndarray fluid_velocity_array_previous
@@ -935,7 +924,7 @@ cdef class Moorings:
                   np.ndarray rho,
                   np.ndarray E):
         self.System = system
-        self.System.addMoorings(self)
+        self.System.addSubcomponent(self)
         self.nd = self.System.nd
         self.Mesh = mesh
         cdef vector[double] vec_length
@@ -960,6 +949,7 @@ cdef class Moorings:
         self.nodes_function = lambda s: (s, s, s)
         self.nodes_built = False
         self.name = 'record_moorings'
+        self.external_forces_from_ns = False
 
     def setName(self, string name):
         self.name = name
@@ -967,10 +957,14 @@ cdef class Moorings:
     def _recordValues(self):
         if self.System.model is not None:
             t_last = self.System.model.stepController.t_model_last
-            dt_last = self.System.model.levelModelList[-1].dt_last
+            try:
+                dt_last = self.System.model.levelModelList[-1].dt_last
+            except:
+                dt_last = 0
             t = t_last-dt_last
         else:
             t = self.System.thisptr.system.GetChTime()
+        t_prot = Profiling.time()-Profiling.startTime
         self.record_file = os.path.join(Profiling.logDir, self.name+'_pos.csv')
         if t == 0:
             headers = ['t', 't_prot']
@@ -979,7 +973,7 @@ cdef class Moorings:
             with open(self.record_file, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
-        row = []
+        row = [t, t_prot]
         positions = self.getNodesPosition()
         for pos in positions:
             row += [pos[0], pos[1], pos[2]]
@@ -989,15 +983,16 @@ cdef class Moorings:
         self.record_file = os.path.join(Profiling.logDir, self.name+'_T.csv')
         if t == 0:
             headers = ['t', 't_prot']
-            for i in range(self.thisptr.nodes.size()):
-                headers += ['Tbx'+str(i), 'Tby'+str(i), 'Tbz'+str(i), 'Tfx'+str(i), 'Tfy'+str(i), 'Tfz'+str(i)]
+            # for i in range(self.thisptr.nodes.size()):
+            #     headers += ['Tbx'+str(i), 'Tby'+str(i), 'Tbz'+str(i), 'Tfx'+str(i), 'Tfy'+str(i), 'Tfz'+str(i)]
+            headers += ['Tb0', 'Tb1', 'Tb2', 'Tf0', 'Tf1', 'Tf2']
             with open(self.record_file, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
-        row = []
+        row = [t, t_prot]
         Tb = self.getTensionBack()
         Tf = self.getTensionFront()
-        row = [Tb[0], Tb[1], Tb[2], Tf[0], Tf[1], Tf[2]]
+        row += [Tb[0], Tb[1], Tb[2], Tf[0], Tf[1], Tf[2]]
         with open(self.record_file, 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(row)
@@ -1034,7 +1029,8 @@ cdef class Moorings:
 
 
     def prestep(self):
-        if self.System.model is not None:
+        if self.System.model is not None and self.external_forces_from_ns is True:
+            Profiling.logEvent('moorings extern forces')
             self.setExternalForces()
 
     def poststep(self):
@@ -1118,6 +1114,20 @@ cdef class Moorings:
             pos[i] = [vec.x(), vec.y(), vec.z()]
         return pos
 
+    def getNodesD(self):
+        pos = np.zeros(( self.thisptr.nodes.size(),3 ))
+        for i in range(self.thisptr.nodes.size()):
+            vec = deref(self.thisptr.nodes[i]).GetD()
+            pos[i] = [vec.x(), vec.y(), vec.z()]
+        return pos
+
+    def getNodesDD(self):
+        pos = np.zeros(( self.thisptr.nodes.size(),3 ))
+        for i in range(self.thisptr.nodes.size()):
+            vec = deref(self.thisptr.nodes[i]).GetDD()
+            pos[i] = [vec.x(), vec.y(), vec.z()]
+        return pos
+
     def setContactMaterial(self, ChMaterialSurfaceDEM mat):
         self.thisptr.setContactMaterial(mat.sharedptr)
 
@@ -1143,7 +1153,7 @@ cdef class Moorings:
         cdef vector[double] fluid_density
         cdef double dens
         for i in range(self.thisptr.nodes.size()):
-            if self.System.model is not None:
+            if self.System.model is not None and self.external_forces_from_ns is True:
                 vec = deref(self.thisptr.nodes[i]).GetPos()
                 x = vec.x()
                 y = vec.y()
