@@ -47,7 +47,7 @@ define howto
 	@echo "${PROTEUS_PREFIX}/bin/python"
 	@echo ""
 	@echo "You should now verify that the install succeeded by running:"
-	@echo "make check"
+	@echo "make test"
 	@echo ""
 endef
 
@@ -302,7 +302,7 @@ doc:
 	@echo "**********************************"
 	-sensible-browser ../proteus-website/index.html &
 
-test:
+test: check
 	@echo "************************************"
 	@echo "Running test suite"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests --ignore proteus/tests/POD
@@ -321,8 +321,7 @@ jupyter:
 	jupyter nbextension enable --py --sys-prefix ipyleaflet
 	jupyter nbextension install --py --sys-prefix rise
 	jupyter nbextension enable --py --sys-prefix rise
-	jupyter nbextension install jupyter_dashboards --py --sys-prefix
-	jupyter nbextension enable jupyter_dashboards --py --sys-prefix
+	jupyter nbextension enable --py --sys-prefix jupyter_dashboards
 	jupyter nbextension install --sys-prefix --py ipyparallel
 	jupyter nbextension enable --sys-prefix --py ipyparallel
 	jupyter serverextension enable --sys-prefix --py ipyparallel
