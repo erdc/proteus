@@ -124,6 +124,11 @@ class RKEV(proteus.TimeIntegration.SSP33):
         self.lstage += 1
         assert self.timeOrder in [1,3]
         assert self.lstage > 0 and self.lstage <= self.timeOrder
+        assert 'FCTStep' in dir(self.transport)
+        assert 'FCT' in dir(self.transport.coefficients) #mwf put FCT switch inside FCTStep method?
+        for ci in range(self.nc):
+            if self.transport.coefficients.FCT == 1:
+                self.transport.FCTStep()
         if self.timeOrder == 3:
             if self.lstage == 1:
                 for ci in range(self.nc):
@@ -479,7 +484,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-        if (self.FCT==1):
+        if (self.FCT==1 and False):
             self.model.FCTStep()
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.checkMass:

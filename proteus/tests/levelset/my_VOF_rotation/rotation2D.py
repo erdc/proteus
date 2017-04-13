@@ -183,7 +183,7 @@ class MyCoefficients(VOF.Coefficients):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-        if(self.FCT==1):
+        if(self.FCT==1 and False):
             self.model.FCTStep()
         if self.checkMass:
             self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],

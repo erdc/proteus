@@ -135,7 +135,7 @@ class MyCoefficients(NCLS.Coefficients):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-        if (self.FCT==1):
+        if (self.FCT==1 and False): #no need now
             self.model.FCTStep()
         copyInstructions = {}
         return copyInstructions
