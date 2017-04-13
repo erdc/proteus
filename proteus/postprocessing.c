@@ -2884,12 +2884,12 @@ void buildLocalBDM2projectionMatrices(int degree,
 	       for (i=0 ; i < nSpace; i++){
 		 BDMprojectionMat_element[eN*dof*dof + (irow + s) + j*nVDOFs_element] +=
 
-		   w_int_div_free[eN * nSpace * nQuadraturePoints_elementInterior +
-				  nSpace * ibq  +
-				  i*num_div_free +
+		   w_int_div_free[eN * nQuadraturePoints_elementInterior * nSpace * num_div_free  +
+				  ibq * nSpace * num_div_free  +
+				  i * num_div_free +
 				  s]
 		   
-		   * piola_trial_fun[eN * dof * nSpace * nQuadraturePoints_elementInterior +
+		   * piola_trial_fun[eN * nQuadraturePoints_elementInterior * dof * nSpace  +
 				     ibq * dof * nSpace +
 				     j * nSpace +
 				     i] ;
@@ -3199,8 +3199,8 @@ void buildBDM2rhs(int nElements_global,
 			 ibq * nSpace + 
 			 j ] *
 	      
-	      w_interior_divfree[eN * nQuadraturePoints_elementInterior * nSpace+
-				 ibq*nSpace +
+	      w_interior_divfree[eN * nQuadraturePoints_elementInterior * num_div_free * nSpace+
+				 ibq * num_div_free * nSpace +
 				 j * num_div_free +
 				 s ];
 	 }

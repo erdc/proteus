@@ -469,9 +469,9 @@ def unitSimplex(nd=2):
     if nd==3:
        boundaryTags = {'bottom':1,'front':2,'side':3,'back':4}
        return PiecewiseLinearComplexDomain(vertices=[[0.0 , 0.0 , 0.0], 
-                                                     [0.0 , 0.0 , 1.0], 
+                                                     [1.0 , 0.0 , 0.0],
                                                      [0.0 , 1.0 , 0.0], 
-                                                     [1.0 , 0.0 , 0.0]],
+                                                     [0.0 , 0.0 , 1.0] ],
                                            facets = [[[0, 2, 3]],
                                                      [[0, 1, 2]],
                                                      [[0, 1, 3]],

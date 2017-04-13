@@ -60,7 +60,6 @@ class TestBDM2Reference1():
         Test the construction of a BDM2 projection matrix and rhs
         on the reference triangle
         '''
-
         # ******************* TEST PROJECTION MATRIX CONSTRUCTION ************
 
 
@@ -68,7 +67,6 @@ class TestBDM2Reference1():
         self.bdm2_obj.BDMprojectionMat_element \
                          = np.zeros_like(self.bdm2_obj.BDMprojectionMat_element)
 
-        # import pdb ; pdb.set_trace()
         self.bdm2_obj.buildLocalBDM2projectionMatrices \
                                    (self.bdm2_obj.degree,
                                     self.bdm2_obj.vt.ebq[('w*dS_u',0)],
@@ -81,40 +79,32 @@ class TestBDM2Reference1():
                                     self.bdm2_obj.edgeFlags,
                                     self.bdm2_obj.BDMprojectionMat_element)        
 
-        #    The following .savetxt command  generates the comparison output.  Be sure
-        #    this is actually generating what you want before you uncomment!  The 
-        #    currently stored file should be correct.
+        rel_path = "comparison_files/bdm2_reference_simplex_mat.data"
+        comparison_matrix = np.load(os.path.join(self.scriptdir,rel_path))
+        assert np.allclose(comparison_matrix,self.bdm2_obj.BDMprojectionMat_element)
 
-        #    np.savetxt('bdm2_ref_proj_mat.txt', bdm2_obj.BDMprojectionMat_element[0])
-        # rel_path = "comparison_files/bdm2_ref_proj_mat.txt"
-        # comparison_matrix = np.loadtxt(os.path.join(self.scriptdir,rel_path), dtype = float)
-        # assert np.allclose(comparison_matrix,self.bdm2_obj.BDMprojectionMat_element)
+        # # # ******************** TEST RHS CONSTRUCTION *************************
 
-        # # ******************** TEST RHS CONSTRUCTION *************************
-
-        # # construct a RHS vector from a velocity field of all 1's
+        # # # construct a RHS vector from a velocity field of all 1's
         self.bdm2_obj.ebq[('velocity',0)] = np.ones_like(self.bdm2_obj.ebq[('velocity',0)])
         self.bdm2_obj.q[('velocity',0)] = np.ones_like(self.bdm2_obj.q[('velocity',0)])
 
         self.bdm2_obj.buildBDM2rhs(self.bdm2_obj.BDMprojectionMat_element,
-                              self.bdm2_obj.BDMprojectionMatPivots_element,
-                              self.bdm2_obj.vt.ebq[('w*dS_u',0)],
-                              self.bdm2_obj.vt.ebq['n'],
-                              self.bdm2_obj.weightedInteriorTestGradients,
-                              self.bdm2_obj.weightedInteriorDivFreeElement,
-                              self.bdm2_obj.ebq[('velocity',0)],
-                              self.bdm2_obj.q[('velocity',0)],
-                              self.bdm2_obj.q[('velocity_dofs',0)],
-                              self.bdm2_obj.edgeFlags)
+                                  self.bdm2_obj.BDMprojectionMatPivots_element,
+                                  self.bdm2_obj.vt.ebq[('w*dS_u',0)],
+                                  self.bdm2_obj.vt.ebq['n'],
+                                  self.bdm2_obj.weightedInteriorTestGradients,
+                                  self.bdm2_obj.weightedInteriorDivFreeElement,
+                                  self.bdm2_obj.ebq[('velocity',0)],
+                                  self.bdm2_obj.q[('velocity',0)],
+                                  self.bdm2_obj.q[('velocity_dofs',0)],
+                                  self.bdm2_obj.edgeFlags)
 
-        # test_rhs = self.bdm2_obj.q[('velocity_dofs',0)]
+        test_rhs = self.bdm2_obj.q[('velocity_dofs',0)]
 
-        # comparison_rhs = np.array([ 3.33333333e-01,  3.33333333e-01,  1.33333333e+00,
-        #                            -1.66666667e-01, -1.66666667e-01, -6.66666667e-01,
-        #                            -1.66666667e-01, -1.66666667e-01, -6.66666667e-01,
-        #                            -1.00000000e+00,  5.00000000e-01,  4.33680869e-19])
-        
-        # assert np.allclose(comparison_rhs,test_rhs)
+        rel_path = "comparison_files/bdm2_reference_simplex_rhs.data"
+        comparison_rhs = np.load(os.path.join(self.scriptdir,rel_path))
+        assert np.allclose(comparison_rhs,test_rhs)
 
     # def test_BDM2_reference_triangle_full_in_space(self):
     #     rel_path_1 = "comparison_files/bdm_bdy_func_values.npy"

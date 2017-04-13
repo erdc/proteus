@@ -2,7 +2,8 @@ from proteus import iproteus as ip
 from proteus import default_p as p
 from proteus import default_n as n
 from proteus import default_s,default_so
-import numpy
+from proteus import Context
+import numpy, os
 import proteus as pr
 reload(p)
 reload(n)
@@ -10,11 +11,13 @@ reload(n)
 p.nd = 3
 p.name = "BDM2_Test_File_projection"
 
-p.rdomain = pr.Domain.unitSimplex(3)
-p.polyfile = "reference_triangle"
-p.rdomain.writePoly(p.polyfile)
-n.triangleOptions = "Yp"
+#p.rdomain = pr.Domain.unitSimplex(3)
+current_dir = os.path.dirname(__file__)
+p.polyfile = os.path.join(current_dir,"reference_simplex_keep")
+#p.rdomain.writePoly(p.polyfile)
+#n.triangleOptions = "Yp"
 
+p.genMesh = False
 p.nc = 1
 
 class velEx:
@@ -79,6 +82,7 @@ n.elementQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd,4)
 n.elementBoundaryQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd-1,4)
 n.nn = 3
 n.nLevels = 1
+n.genMesh = False
 
 n.subgridError = None
 n.shockCapturing = None
@@ -129,7 +133,8 @@ so.sList=[default_s]
 
 ########################################################################
 from proteus import *
-opts = None
+
+opts = Context.Options([("hotStart", True, "Use prescriped reference simplex file.")])
 ns = NumericalSolution.NS_base(so,[p],[n],so.sList,ip.opts)
 #from nose.tools import set_trace
 #set_trace()

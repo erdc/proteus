@@ -1596,8 +1596,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
             for k in range(n_xi):
                 for j in range(self.vt.nSpace_global):
                     # Apply Jacobian matrix
-                    for h in range(self.vt.nSpace_global):
-                        for i in range(self.get_num_sigmaBasisElements()):
+                    for i in range(self.get_num_sigmaBasisElements()):
+                        for h in range(self.vt.nSpace_global):
                             self.weightedInteriorDivFreeElement[eN,k,j,i] += self.interiorDivFreeElement[eN,k,h,i]*self.q['J'][eN][k][j][h]
                     for i in range(self.get_num_sigmaBasisElements()):
                         # scale by Jacobian
@@ -1630,7 +1630,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                          self.piola_trial_function,                # interior integrals - divFree part
                                                          self.edgeFlags,
                                                          self.BDMprojectionMat_element)            # projection matrix
-
 
         cpostprocessing.factorLocalBDM2projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
