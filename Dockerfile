@@ -166,13 +166,11 @@ RUN cd ~/.jupyter && \
           >> /home/$NB_USER/.ipython/profile_mpi/ipcluster_config.py \
     && jupyter serverextension enable --py jupyterlab --user \
     && jupyter nbextension enable --py --user widgetsnbextension\
-    && jupyter nbextension install --py --user mayavi \
     && jupyter nbextension enable --py --user bqplot \
     && jupyter nbextension enable --py --user pythreejs \
     && jupyter nbextension enable --py --user ipyleaflet \
     && jupyter nbextension install --py --user rise \
-    && jupyter nbextension enable --py --user rise \
-    && jupyter nbextension enable --py --user dashboards
+    && jupyter nbextension enable --py --user rise
 
 # Import matplotlib the first time to build the font cache.
 ENV XDG_CACHE_HOME /home/$NB_USER/.cache/
