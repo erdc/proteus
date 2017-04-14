@@ -127,9 +127,15 @@ RUN pip3 install pyzmq=16.0.2 --install-option="--zmq=/home/$NB_USER/proteus/lin
 RUN pip3 ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.6.1 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0
 RUN /usr/local/bin/jupyter serverextension enable --py jupyterlab --sys-prefix \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix widgetsnbextension \
+    && /usr/local/bin/jupyter nbextension enable --py --sys-prefix bqplot \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix pythreejs \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix ipyleaflet \
-    && /usr/local/bin/jupyter nbextension enable --py --sys-prefix dashboards
+    && /usr/local/bin/jupyter nbextension install --py --sys-prefix rise \
+    && /usr/local/bin/jupyter nbextension enable --py --sys-prefix rise \
+    && /usr/local/bin/jupyter dashboards quick-setup --sys-prefix \
+    && /usr/local/bin/jupyter nbextension install --sys-prefix --py ipyparallel \
+    && /usr/local/bin/jupyter nbextension enable --sys-prefix --py ipyparallel \
+    && /usr/local/bin/jupyter serverextension enable --sys-prefix --py ipyparallel
 
 EXPOSE 8888
 WORKDIR /home/$NB_USER
