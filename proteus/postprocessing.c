@@ -3451,7 +3451,7 @@ void getElementBDM2velocityValuesLagrangeRep(int nElements_global,
 	  for (id = 0; id < nSpace; id++)
 	    {
 	      q_velocity[eN*nQuadraturePoints_element*nSpace + iq*nSpace + id] = 0.0;
-	      for (k = 0; k < 6; k++)
+	      for (k = 0; k < nDOF_trial_element; k++)
 		{
 		  j = k*nSpace+ id; /*id*(nSpace+1) + k;*/		  
 		  q_velocity[eN*nQuadraturePoints_element*nSpace + iq*nSpace + id] +=

@@ -1528,13 +1528,13 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
             if i == 0:
                 if component == 0:
                     # -xy + xz
-                    return point[0]*(point[2] - point[1])
+                    return point[0]*(1. - point[0] - 2.*point[1] - point[2])
                 if component == 1:
                     # xy - yz
-                    return point[1]*(point[0] - point[2])
+                    return point[1]*(-1. + 2.*point[0] + point[1] + point[2])
                 if component == 2:
                     # -xz + yz
-                    return point[2]*(point[1] - point[0])
+                    return 0.
             if i == 1:
                 if component == 0:
                     # 2xy - 2xz
@@ -1544,16 +1544,16 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                     return point[1]*(1 - 3*point[0] - point[1])
                 if component == 2:
                     # -z + 3xz + z*z
-                    return point[2]*(point[2] + 3*point[0] - 1)
+                    return point[2]*(3*point[0] - 1)
             if i == 2:
                 if component == 0:
                     # x - x*x - 2xy - xz
-                    return point[0]*(1 - point[0] - 2*point[1] - point[2])
+                    return point[0]*(1 - point[0] - point[1] )
                 if component == 1:
                     # -y + 2xy + y*y + y*z
-                    return point[1]*(point[1] - 1 + 2*point[0] + point[2])
+                    return point[1]*(-1. + 3*point[0] + point[1])
                 if component == 2:
-                    return 0
+                    return -point[0]*point[2]
 
     def getInteriorDivFreeElement(self):
         '''
@@ -1781,7 +1781,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                       self.ebq[('velocity',ci)],
                                       self.q[('velocity',ci)],
                                       self.q[('velocity_dofs',ci)])
-        
+
         cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.vt.q[('w',ci)],
                                                                 self.q[('velocity_dofs',ci)],
                                                                 self.vt.q[('velocity',ci)])

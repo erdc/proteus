@@ -740,9 +740,15 @@ cpostprocessingGetElementBDM2velocityValuesLagrangeRep(PyObject* self,
 		       &p1_vdofs,
 		       &q_velocity))
     return NULL;
-  // this is really the dimension ... there should be a better way
-  // to handle this ...
-  nVDOFs_element = (SHAPE(q_velocity)[2]+1)*(SHAPE(q_velocity)[2]+2);
+
+  if (SHAPE(q_velocity)[2] == 2){
+    // dimension of bdm2 in 2d
+    nVDOFs_element = 12;
+  }
+  else if (SHAPE(q_velocity)[2] == 3){
+    // dimension of bdm2 in 3d
+    nVDOFs_element = 30;
+  }
   
   if (ND(p1_vdofs) > 1)
     assert(nVDOFs_element == SHAPE(p1_vdofs)[1]);

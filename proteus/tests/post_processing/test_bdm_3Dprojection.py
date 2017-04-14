@@ -55,7 +55,7 @@ class TestBDM2Reference1():
     def _setRelativePath(self):
         self.scriptdir = os.path.dirname(__file__)
     
-    def test_BDM2_reference_triangle(self):
+    def test_BDM2_reference_simplex(self):
         '''
         Test the construction of a BDM2 projection matrix and rhs
         on the reference triangle
@@ -106,17 +106,17 @@ class TestBDM2Reference1():
         comparison_rhs = np.load(os.path.join(self.scriptdir,rel_path))
         assert np.allclose(comparison_rhs,test_rhs)
 
-    # def test_BDM2_reference_triangle_full_in_space(self):
-    #     rel_path_1 = "comparison_files/bdm_bdy_func_values.npy"
-    #     rel_path_2 = "comparison_files/bdm_func_values.npy"
-    #     bdm_bdy_values = np.load(os.path.join(self.scriptdir,rel_path_1))
-    #     bdm_values = np.load(os.path.join(self.scriptdir,rel_path_2))
+    def test_BDM2_reference_triangle_full_in_space(self):
+        rel_path_1 = "import_modules/bdm2_3d_face_func_vals.data"
+        rel_path_2 = "import_modules/bdm2_3d_interior_func_vals.data"
+        bdm_bdy_values = np.load(os.path.join(self.scriptdir,rel_path_1))
+        bdm_values = np.load(os.path.join(self.scriptdir,rel_path_2))
         
-    #     self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values.copy()
-    #     self.bdm2_obj.q[('velocity',0)] = bdm_values.copy()
-    #     self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
-        
-    #     assert np.allclose(self.bdm2_obj.q[('velocity',0)],bdm_values)
+        self.bdm2_obj.ebq[('velocity',0)] = bdm_bdy_values.copy()
+        self.bdm2_obj.q[('velocity',0)] = bdm_values.copy()
+        self.bdm2_obj.evaluateLocalVelocityRepresentation(0,True)
+
+        assert np.allclose(self.bdm2_obj.q[('velocity',0)],bdm_values)
 
     # def test_BDM2_reference_triangle_full_not_in_space(self):
     #     rel_path_1 = "comparison_files/bdm_bdy_func_values_trig.npy"
