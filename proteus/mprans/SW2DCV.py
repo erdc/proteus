@@ -81,6 +81,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     def __init__(self,
                  bathymetry,
+                 cE=1.0,
                  nu=1.004e-6,
                  g=9.8,
                  nd=2,
@@ -96,6 +97,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nu = nu
         self.g = g
         self.nd=nd
+        self.cE=cE
         self.modelIndex=modelIndex
         mass={}
         advection={}
@@ -168,6 +170,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.h_dof_old = numpy.copy(self.model.u[0].dof)
         self.model.hu_dof_old = numpy.copy(self.model.u[1].dof)
         self.model.hv_dof_old = numpy.copy(self.model.u[2].dof)
+    def postStep(self,t,firstStep=False):
+        pass
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls=0
@@ -405,7 +409,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.h_dof_old = self.u[0].dof
         self.hu_dof_old = self.u[1].dof
         self.hv_dof_old = self.u[2].dof
+        # Galerkin step
+        #self.is_galerkin_step = False
+        self.h_dof_galerkin = numpy.copy(self.u[0].dof)
+        self.hu_dof_galerkin = numpy.copy(self.u[1].dof)
+        self.hv_dof_galerkin = numpy.copy(self.u[2].dof)
+
         #Vector for mass matrix
+        self.check_positivity_water_height=True
         self.recompute_lumped_mass_matrix=1
         self.lumped_mass_matrix = numpy.zeros(self.u[0].dof.shape,'d') #NOTE: important to init with zeros
         #mesh
@@ -526,9 +537,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         #hEps: this is use to regularize the flux and re-define the dry states
         self.hEps=None
+        self.ML=None #lumped mass matrix
+        self.MC_global=None #consistent mass matrix
         #Global C Matrices (mql)
         self.cterm_global=None
         self.cterm_transpose_global=None
+        # For FCT
+        self.low_order_hnp1=None
+        self.dEV_minus_dL_times_hStarji_minus_hStarij=None
 
         comm = Comm.get()
         self.comm=comm
@@ -630,24 +646,53 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         if 'use_first_order_flatB_GP_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_first_order_flatB_GP
-            self.calculateJacobian = self.sw2d.calculateJacobian_GP
+            self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
         elif 'use_second_order_flatB_GP_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_second_order_flatB_GP
-            self.calculateJacobian = self.sw2d.calculateJacobian_GP
+            self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
         elif 'use_second_order_NonFlatB_GP_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_second_order_NonFlatB_GP
-            self.calculateJacobian = self.sw2d.calculateJacobian_GP
+            self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
         elif 'use_EV_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_cell_based_entropy_viscosity
             self.calculateJacobian = self.sw2d.calculateJacobian_cell_based_entropy_viscosity
         elif 'use_second_order_NonFlatB_with_EV_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_second_order_NonFlatB_with_EV
-            self.calculateJacobian = self.sw2d.calculateJacobian_second_order_NonFlatB_with_EV
-
+            #self.calculateResidual = self.sw2d.calculateResidual_galerkin
+            self.calculateJacobian = self.sw2d.calculateMassMatrix
+            #self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
         else:
             self.calculateResidual = self.sw2d.calculateResidual
             self.calculateJacobian = self.sw2d.calculateJacobian
 
+    def FCTStep(self):
+        #NOTE: this function is meant to be called within the solver
+
+        rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+        # Extract hnp1 from global solution u
+        index = range(0,len(self.timeIntegration.u))
+        hIndex = index[0::3]
+        hnp1 = numpy.copy(self.timeIntegration.u[hIndex])
+
+        # Do some changes on hnp1 #
+        #hnp1[:] = 0
+
+        #if self.low_order TMP
+        #print self.low_order_hnp1.min() 
+        self.sw2d.FCTStep(self.timeIntegration.dt, 
+                          self.nnz, #number of non zero entries 
+                          len(rowptr)-1, #number of DOFs
+                          self.ML, #Lumped mass matrix
+                          self.h_dof_old, #soln
+                          hnp1, #solH
+                          self.low_order_hnp1, 
+                          rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
+                          colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
+                          MassMatrix, 
+                          self.dEV_minus_dL_times_hStarji_minus_hStarij)
+        
+        # Pass the post processed hnp1 solution to global solution u
+        self.timeIntegration.u[hIndex] = hnp1 
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -745,6 +790,38 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                           self.q['abs(det(J))'],
                                                           self.q[('grad(w)',0)],
                                                           self.q[('grad(w)*dV_f',0)])
+            #
+            #lumped mass matrix
+            #
+            #assume a linear mass term
+            dm = np.ones(self.q[('u',0)].shape,'d')
+            elementMassMatrix = np.zeros((self.mesh.nElements_global,
+                                          self.nDOF_test_element[0],
+                                          self.nDOF_trial_element[0]),'d')
+            cfemIntegrals.updateMassJacobian_weak_lowmem(dm,
+                                                         self.q[('w',0)],
+                                                         self.q[('w*dV_m',0)],
+                                                         elementMassMatrix)
+            self.MC_a = nzval_cMatrix.copy()
+            self.MC_global = SparseMat(self.nFreeDOF_global[0],
+                                       self.nFreeDOF_global[0],
+                                       nnz_cMatrix,
+                                       self.MC_a,
+                                       colind_cMatrix,
+                                       rowptr_cMatrix)
+            cfemIntegrals.zeroJacobian_CSR(nnz_cMatrix, self.MC_global)
+            cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.l2g[0]['nFreeDOF'],
+                                                                      self.l2g[0]['freeLocal'],
+                                                                      self.csrRowIndeces[(0,0)]/3/3,
+                                                                      self.csrColumnOffsets[(0,0)]/3,
+                                                                      elementMassMatrix,
+                                                                      self.MC_global)
+            self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
+            for i in range(self.nFreeDOF_global[0]):
+                self.ML[i] = self.MC_a[rowptr_cMatrix[i]:rowptr_cMatrix[i+1]].sum()
+            np.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
 
             for d in range(self.nSpace_global): #spatial dimensions
                 #C matrices
@@ -803,6 +880,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr_cMatrix, colind_cMatrix, Cy = self.cterm_global[1].getCSRrepresentation()        
         rowptr_cMatrix, colind_cMatrix, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
+        # This is dummy. I just care about the csr structure of the sparse matrix
+        self.dEV_minus_dL_times_hStarji_minus_hStarij = np.zeros(Cx.shape,'d')
+        self.low_order_hnp1 = numpy.zeros(self.u[0].dof.shape,'d')
+
         numDOFsPerEqn = self.u[0].dof.size #(mql): I am assuming all variables live on the same FE space
         numNonZeroEntries = len(Cx)
         #Load the unknowns into the finite element dof
@@ -836,7 +917,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #pdb.set_trace()
 
         #Make sure that the water height is positive (before computing the residual)
-        assert self.u[0].dof.min() >= 0, ("Negative water height: ", self.u[0].dof.min())
+        if (self.check_positivity_water_height==True):
+            assert self.u[0].dof.min() >= 0, ("Negative water height: ", self.u[0].dof.min())
         self.calculateResidual(
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -960,7 +1042,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.recompute_lumped_mass_matrix, 
             self.q[('u',0)], 
             self.q[('u',1)], 
-            self.q[('u',2)])
+            self.q[('u',2)],
+            self.h_dof_galerkin,
+            self.hu_dof_galerkin,
+            self.hv_dof_galerkin,
+            self.low_order_hnp1,
+            self.dEV_minus_dL_times_hStarji_minus_hStarij, 
+            self.coefficients.cE)
 
         self.recompute_lumped_mass_matrix=1
         if (self.recompute_lumped_mass_matrix==1):
@@ -974,8 +1062,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                      r[self.offset[cj]+self.stride[cj]*dofN] = 0
 
-        self.timeIntegration.dt=self.timeIntegration.runCFL/globalMax(self.edge_based_cfl.max())
-        logEvent("...   Time step = " + str(self.timeIntegration.dt),level=2)
+        #self.timeIntegration.dt=self.timeIntegration.runCFL/globalMax(self.edge_based_cfl.max())
+        #logEvent("...   Time step = " + str(self.timeIntegration.dt),level=2)
 
         cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
         logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax),level=2)

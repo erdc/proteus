@@ -4,6 +4,7 @@
 #include <iostream>
 #include "CompKernel.h"
 #include "ModelFactory.h"
+#include <assert.h>
 
 //cek todo
 //2. Get stabilization right
@@ -12,15 +13,17 @@
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define cMax 0.25
-#define cE 4.0
 #define IMPLICIT 0
 #define POWER_SMOOTHNESS_INDICATOR 2
 
 // FOR CELL BASED ENTROPY VISCOSITY 
-#define ENTROPY(g,h,hu,hv) 0.5*(g*h*h+hu*hu/h+hv*hv/h)
-#define D_ENTROPY(g,h,hu,hv,hx,hux,hvx) g*h*hx + hu/h*(hux-0.5*hx*(hu/h)) + hv/h*(hvx-0.5*hx*(hv/h))
+#define ENTROPY(g,h,hu,hv,one_over_hReg) 0.5*(g*h*h+hu*hu*one_over_hReg+hv*hv*one_over_hReg)
+#define DENTROPY_DH(g,h,hu,hv,one_over_hReg) g*h - 0.5*hu*hu*std::pow(one_over_hReg,2) - 0.5*hv*hv*std::pow(one_over_hReg,2)
+#define DENTROPY_DHU(g,h,hu,hv,hEps) 2*h/(h*h+std::pow(fmax(h,hEps),2))*hu
+#define DENTROPY_DHV(g,h,hu,hv,hEps) 2*h/(h*h+std::pow(fmax(h,hEps),2))*hv
+#define D_ENTROPY(g,h,hu,hv,hx,hux,hvx) g*h*hx + hu/h*(hux-0.5*hx*(hu/h)) + hv/h*(hvx-0.5*hx*(hv/h)) // This is used just for cell based EV
 
-// FOR INVARIANT DOMAIN PRESERVING 
+  // FOR INVARIANT DOMAIN PRESERVING 
 #define f(g,h,hZ) ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) )
 #define phi(g,h,hL,hR,uL,uR) ( f(g,h,hL) + f(g,h,hR) + uR - uL )
 
@@ -43,6 +46,18 @@ namespace proteus
   {
   public:
     virtual ~SW2DCV_base(){}
+    virtual void FCTStep(double dt, 
+			 int NNZ, //number on non-zero entries on sparsity pattern
+			 int numDOFs, //number of DOFs
+			 double* lumped_mass_matrix, //lumped mass matrix (as vector)
+			 double* soln, //DOFs of solution at time tn
+			 double* solH, //DOFs of high order solution at tnp1
+			 double* low_order_hnp1, //operators to construct low order solution
+			 int* csrRowIndeces_DofLoops, //csr row indeces 
+			 int* csrColumnOffsets_DofLoops, //csr column offsets 
+			 double* MassMatrix, //mass matrix
+			 double* dEV_minus_dL_times_hStarji_minus_hStarij //Note that this is an anti symmetric matrix
+			 )=0;
     virtual void calculateResidual(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -170,7 +185,15 @@ namespace proteus
 				   // SAVE SOLUTION (mql)
 				   double* hnp1_at_quad_point,
 				   double* hunp1_at_quad_point,
-				   double* hvnp1_at_quad_point
+				   double* hvnp1_at_quad_point,
+				   // GALERKIN SOLUTION 
+				   double* h_dof_galerkin,
+				   double* hu_dof_galerkin, 
+				   double* hv_dof_galerkin,
+				   // TO COMPUTE LOW ORDER 
+				   double* low_order_hnp1,
+				   double* dEV_minus_dL_times_hStarji_minus_hStarij,
+				   double cE				   
 				   )=0;
     virtual void calculateResidual_cell_based_entropy_viscosity(//element
 								double* mesh_trial_ref,
@@ -299,7 +322,15 @@ namespace proteus
 								// SAVE SOLUTION (mql)
 								double* hnp1_at_quad_point,
 								double* hunp1_at_quad_point,
-								double* hvnp1_at_quad_point
+								double* hvnp1_at_quad_point,
+								// GALERKIN SOLUTION 
+								double* h_dof_galerkin,
+								double* hu_dof_galerkin, 
+								double* hv_dof_galerkin,
+								// TO COMPUTE LOW ORDER 
+								double* low_order_hnp1,
+								double* dEV_minus_dL_times_hStarji_minus_hStarij,
+								double cE
 								)=0;
     virtual void calculateResidual_first_order_flatB_GP(//element
 					    double* mesh_trial_ref,
@@ -428,8 +459,16 @@ namespace proteus
 					    // SAVE SOLUTION (mql)
 					    double* hnp1_at_quad_point,
 					    double* hunp1_at_quad_point,
-					    double* hvnp1_at_quad_point
-					    )=0;
+					    double* hvnp1_at_quad_point,
+					    // GALERKIN SOLUTION 
+					    double* h_dof_galerkin,
+					    double* hu_dof_galerkin, 
+					    double* hv_dof_galerkin,
+					    // TO COMPUTE LOW ORDER 
+					    double* low_order_hnp1,
+					    double* dEV_minus_dL_times_hStarji_minus_hStarij,
+					    double cE
+							)=0;
     virtual void calculateResidual_second_order_flatB_GP(//element
 					       double* mesh_trial_ref,
 					       double* mesh_grad_trial_ref,
@@ -557,8 +596,16 @@ namespace proteus
 					       // SAVE SOLUTION (mql)
 					       double* hnp1_at_quad_point,
 					       double* hunp1_at_quad_point,
-					       double* hvnp1_at_quad_point
-					       )=0;
+					       double* hvnp1_at_quad_point,
+					       // GALERKIN SOLUTION 
+					       double* h_dof_galerkin,
+					       double* hu_dof_galerkin, 
+					       double* hv_dof_galerkin,
+					       // TO COMPUTE LOW ORDER 
+					       double* low_order_hnp1,
+					       double* dEV_minus_dL_times_hStarji_minus_hStarij,
+					       double cE
+							 )=0;
     virtual void calculateResidual_second_order_NonFlatB_GP(//element
 					       double* mesh_trial_ref,
 					       double* mesh_grad_trial_ref,
@@ -686,8 +733,16 @@ namespace proteus
 					       // SAVE SOLUTION (mql)
 					       double* hnp1_at_quad_point,
 					       double* hunp1_at_quad_point,
-					       double* hvnp1_at_quad_point
-					       )=0;
+					       double* hvnp1_at_quad_point,
+					       // GALERKIN SOLUTION 
+					       double* h_dof_galerkin,
+					       double* hu_dof_galerkin, 
+					       double* hv_dof_galerkin,
+					       // TO COMPUTE LOW ORDER 
+					       double* low_order_hnp1,
+					       double* dEV_minus_dL_times_hStarji_minus_hStarij,
+					       double cE
+							    )=0;
     virtual void calculateResidual_second_order_NonFlatB_with_EV(//element
 					       double* mesh_trial_ref,
 					       double* mesh_grad_trial_ref,
@@ -815,8 +870,153 @@ namespace proteus
 					       // SAVE SOLUTION (mql)
 					       double* hnp1_at_quad_point,
 					       double* hunp1_at_quad_point,
-					       double* hvnp1_at_quad_point
-					       )=0;
+					       double* hvnp1_at_quad_point,
+					       // GALERKIN SOLUTION 
+					       double* h_dof_galerkin,
+					       double* hu_dof_galerkin, 
+					       double* hv_dof_galerkin,
+					       // TO COMPUTE LOW ORDER 
+					       double* low_order_hnp1,
+					       double* dEV_minus_dL_times_hStarji_minus_hStarij,
+					       double cE
+								 )=0;
+    virtual void calculateResidual_galerkin(//element
+					    double* mesh_trial_ref,
+					    double* mesh_grad_trial_ref,
+					    double* mesh_dof,
+					    double* mesh_velocity_dof,
+					    double MOVING_DOMAIN,//0 or 1
+					    int* mesh_l2g,
+					    double* dV_ref,
+					    double* h_trial_ref,
+					    double* h_grad_trial_ref,
+					    double* h_test_ref,
+					    double* h_grad_test_ref,
+					    double* vel_trial_ref,
+					    double* vel_grad_trial_ref,
+					    double* vel_test_ref,
+					    double* vel_grad_test_ref,
+					    //element boundary
+					    double* mesh_trial_trace_ref,
+					    double* mesh_grad_trial_trace_ref,
+					    double* dS_ref,
+					    double* h_trial_trace_ref,
+					    double* h_grad_trial_trace_ref,
+					    double* h_test_trace_ref,
+					    double* h_grad_test_trace_ref,
+					    double* vel_trial_trace_ref,
+					    double* vel_grad_trial_trace_ref,
+					    double* vel_test_trace_ref,
+					    double* vel_grad_test_trace_ref,					 
+					    double* normal_ref,
+					    double* boundaryJac_ref,
+					    //physics
+					    double* elementDiameter,
+					    int nElements_global,
+					    double useRBLES,
+					    double useMetrics, 
+					    double alphaBDF,
+					    double nu,
+					    double g,
+					    int* h_l2g, 
+					    int* vel_l2g, 
+					    double* h_dof_old_old, 
+					    double* hu_dof_old_old, 
+					    double* hv_dof_old_old,
+					    double* h_dof_old, 
+					    double* hu_dof_old, 
+					    double* hv_dof_old,
+					    double* b_dof,
+					    double* h_dof, 
+					    double* hu_dof, 
+					    double* hv_dof,
+					    double* h_dof_sge, 
+					    double* hu_dof_sge, 
+					    double* hv_dof_sge,
+					    double* q_mass_acc,
+					    double* q_mom_hu_acc,
+					    double* q_mom_hv_acc,
+					    double* q_mass_adv,
+					    double* q_mass_acc_beta_bdf,
+					    double* q_mom_hu_acc_beta_bdf, 
+					    double* q_mom_hv_acc_beta_bdf,
+					    double* q_velocity_sge,
+					    double* q_cfl,
+					    double* q_numDiff_h,
+					    double* q_numDiff_hu, 
+					    double* q_numDiff_hv,
+					    double* q_numDiff_h_last, 
+					    double* q_numDiff_hu_last, 
+					    double* q_numDiff_hv_last,
+					    int* sdInfo_hu_hu_rowptr,
+					    int* sdInfo_hu_hu_colind,			      
+					    int* sdInfo_hu_hv_rowptr,
+					    int* sdInfo_hu_hv_colind,
+					    int* sdInfo_hv_hv_rowptr,
+					    int* sdInfo_hv_hv_colind,
+					    int* sdInfo_hv_hu_rowptr,
+					    int* sdInfo_hv_hu_colind,
+					    int offset_h, 
+					    int offset_hu, 
+					    int offset_hv,
+					    int stride_h, 
+					    int stride_hu, 
+					    int stride_hv,
+					    double* globalResidual,
+					    int nExteriorElementBoundaries_global,
+					    int* exteriorElementBoundariesArray,
+					    int* elementBoundaryElementsArray,
+					    int* elementBoundaryLocalElementBoundariesArray,
+					    int* isDOFBoundary_h,
+					    int* isDOFBoundary_hu,
+					    int* isDOFBoundary_hv,
+					    int* isAdvectiveFluxBoundary_h,
+					    int* isAdvectiveFluxBoundary_hu,
+					    int* isAdvectiveFluxBoundary_hv,
+					    int* isDiffusiveFluxBoundary_hu,
+					    int* isDiffusiveFluxBoundary_hv,
+					    double* ebqe_bc_h_ext,
+					    double* ebqe_bc_flux_mass_ext,
+					    double* ebqe_bc_flux_mom_hu_adv_ext,
+					    double* ebqe_bc_flux_mom_hv_adv_ext,
+					    double* ebqe_bc_hu_ext,
+					    double* ebqe_bc_flux_hu_diff_ext,
+					    double* ebqe_penalty_ext,
+					    double* ebqe_bc_hv_ext,
+					    double* ebqe_bc_flux_hv_diff_ext,
+					    double* q_velocity,
+					    double* ebqe_velocity,
+					    double* flux,
+					    double* elementResidual_h,
+					    // C matrices
+					    double* Cx, 
+					    double* Cy,
+					    double* CTx,
+					    double* CTy,
+					    // PARAMETERS FOR EDGE BASED STABILIZATION
+					    int numDOFsPerEqn,
+					    int NNZ,
+					    int* csrRowIndeces_DofLoops,
+					    int* csrColumnOffsets_DofLoops,
+					    // LUMPED MASS MATRIX
+					    double* lumped_mass_matrix,
+					    double* edge_based_cfl, 
+					    double cfl_run,
+					    double hEps,
+					    int recompute_lumped_mass_matrix,
+					    // SAVE SOLUTION (mql)
+					    double* hnp1_at_quad_point,
+					    double* hunp1_at_quad_point,
+					    double* hvnp1_at_quad_point,
+					    // GALERKIN SOLUTION 
+					    double* h_dof_galerkin,
+					    double* hu_dof_galerkin, 
+					    double* hv_dof_galerkin,
+					    // TO COMPUTE LOW ORDER 
+					    double* low_order_hnp1,
+					    double* dEV_minus_dL_times_hStarji_minus_hStarij,
+					    double cE
+					    )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -1041,232 +1241,232 @@ namespace proteus
 								int* csrColumnOffsets_eb_hv_h,
 								int* csrColumnOffsets_eb_hv_hu,
 								int* csrColumnOffsets_eb_hv_hv)=0;
-    virtual void calculateJacobian_second_order_NonFlatB_with_EV(//element
-								 double* mesh_trial_ref,
-								 double* mesh_grad_trial_ref,
-								 double* mesh_dof,
-								 double* mesh_velocity_dof,
-								 double MOVING_DOMAIN,
-								 int* mesh_l2g,
-								 double* dV_ref,
-								 double* h_trial_ref,
-								 double* h_grad_trial_ref,
-								 double* h_test_ref,
-								 double* h_grad_test_ref,
-								 double* vel_trial_ref,
-								 double* vel_grad_trial_ref,
-								 double* vel_test_ref,
-								 double* vel_grad_test_ref,
-								 //element boundary
-								 double* mesh_trial_trace_ref,
-								 double* mesh_grad_trial_trace_ref,
-								 double* dS_ref,
-								 double* h_trial_trace_ref,
-								 double* h_grad_trial_trace_ref,
-								 double* h_test_trace_ref,
-								 double* h_grad_test_trace_ref,
-								 double* vel_trial_trace_ref,
-								double* vel_grad_trial_trace_ref,
-								double* vel_test_trace_ref,
-								double* vel_grad_test_trace_ref,					 
-								double* normal_ref,
-								double* boundaryJac_ref,
-								//physics
-								double* elementDiameter,
-								int nElements_global,
-								double useRBLES,
-								double useMetrics, 
-								double alphaBDF,
-								double nu,
-								double g,
-								int* h_l2g, 
-								int* vel_l2g,
-								double* b_dof,
-								double* h_dof, 
-								double* hu_dof, 
-								double* hv_dof,
-								double* h_dof_sge, 
-								double* hu_dof_sge, 
-								double* hv_dof_sge,
-								double* q_mass_acc_beta_bdf,
-								double* q_mom_hu_acc_beta_bdf, 
-								double* q_mom_hv_acc_beta_bdf,
-								double* q_velocity_sge,
-								double* q_cfl,
-								double* q_numDiff_h_last,
-								double* q_numDiff_hu_last, 
-								double* q_numDiff_hv_last,
-								int* sdInfo_hu_hu_rowptr,
-								int* sdInfo_hu_hu_colind,			      
-								int* sdInfo_hu_hv_rowptr,
-								int* sdInfo_hu_hv_colind,
-								int* sdInfo_hv_hv_rowptr,
-								int* sdInfo_hv_hv_colind,
-								int* sdInfo_hv_hu_rowptr,
-								int* sdInfo_hv_hu_colind,
-								int* csrRowIndeces_h_h,
-								int* csrColumnOffsets_h_h,
-								int* csrRowIndeces_h_hu,
-								int* csrColumnOffsets_h_hu,
-								int* csrRowIndeces_h_hv,
-								int* csrColumnOffsets_h_hv,
-								int* csrRowIndeces_hu_h,
-								int* csrColumnOffsets_hu_h,
-								int* csrRowIndeces_hu_hu,
-								int* csrColumnOffsets_hu_hu,
-								int* csrRowIndeces_hu_hv,
-								int* csrColumnOffsets_hu_hv,
-								int* csrRowIndeces_hv_h,
-								int* csrColumnOffsets_hv_h,
-								int* csrRowIndeces_hv_hu,
-								int* csrColumnOffsets_hv_hu,
-								int* csrRowIndeces_hv_hv,
-								int* csrColumnOffsets_hv_hv,
-								double* globalJacobian,
-								int nExteriorElementBoundaries_global,
-								int* exteriorElementBoundariesArray,
-								int* elementBoundaryElementsArray,
-								int* elementBoundaryLocalElementBoundariesArray,
-								int* isDOFBoundary_h,
-								int* isDOFBoundary_hu,
-								int* isDOFBoundary_hv,
-								int* isAdvectiveFluxBoundary_h,
-								int* isAdvectiveFluxBoundary_hu,
-								int* isAdvectiveFluxBoundary_hv,
-								int* isDiffusiveFluxBoundary_hu,
-								int* isDiffusiveFluxBoundary_hv,
-								double* ebqe_bc_h_ext,
-								double* ebqe_bc_flux_mass_ext,
-								double* ebqe_bc_flux_mom_hu_adv_ext,
-								double* ebqe_bc_flux_mom_hv_adv_ext,
-								double* ebqe_bc_hu_ext,
-								double* ebqe_bc_flux_hu_diff_ext,
-								double* ebqe_penalty_ext,
-								double* ebqe_bc_hv_ext,
-								double* ebqe_bc_flux_hv_diff_ext,
-								int* csrColumnOffsets_eb_h_h,
-								int* csrColumnOffsets_eb_h_hu,
-								int* csrColumnOffsets_eb_h_hv,
-								int* csrColumnOffsets_eb_hu_h,
-								int* csrColumnOffsets_eb_hu_hu,
-								int* csrColumnOffsets_eb_hu_hv,
-								int* csrColumnOffsets_eb_hv_h,
-								int* csrColumnOffsets_eb_hv_hu,
-								int* csrColumnOffsets_eb_hv_hv)=0;
-    virtual void calculateJacobian_GP(//element
-				      double* mesh_trial_ref,
-				      double* mesh_grad_trial_ref,
-				      double* mesh_dof,
-				      double* mesh_velocity_dof,
-				      double MOVING_DOMAIN,
-				      int* mesh_l2g,
-				      double* dV_ref,
-				      double* h_trial_ref,
-				      double* h_grad_trial_ref,
-				      double* h_test_ref,
-				      double* h_grad_test_ref,
-				      double* vel_trial_ref,
-				      double* vel_grad_trial_ref,
-				      double* vel_test_ref,
-				      double* vel_grad_test_ref,
-				      //element boundary
-				      double* mesh_trial_trace_ref,
-				      double* mesh_grad_trial_trace_ref,
-				      double* dS_ref,
-				      double* h_trial_trace_ref,
-				      double* h_grad_trial_trace_ref,
-				      double* h_test_trace_ref,
-				      double* h_grad_test_trace_ref,
-				      double* vel_trial_trace_ref,
-				      double* vel_grad_trial_trace_ref,
-				      double* vel_test_trace_ref,
-				      double* vel_grad_test_trace_ref,					 
-				      double* normal_ref,
-				      double* boundaryJac_ref,
-				      //physics
-				      double* elementDiameter,
-				      int nElements_global,
-				      double useRBLES,
-				      double useMetrics, 
-				      double alphaBDF,
-				      double nu,
-				      double g,
-				      int* h_l2g, 
-				      int* vel_l2g,
-				      double* b_dof,
-				      double* h_dof, 
-				      double* hu_dof, 
-				      double* hv_dof,
-				      double* h_dof_sge, 
-				      double* hu_dof_sge, 
-				      double* hv_dof_sge,
-				      double* q_mass_acc_beta_bdf,
-				      double* q_mom_hu_acc_beta_bdf, 
-				      double* q_mom_hv_acc_beta_bdf,
-				      double* q_velocity_sge,
-				      double* q_cfl,
-				      double* q_numDiff_h_last,
-				      double* q_numDiff_hu_last, 
-				      double* q_numDiff_hv_last,
-				      int* sdInfo_hu_hu_rowptr,
-				      int* sdInfo_hu_hu_colind,			      
-				      int* sdInfo_hu_hv_rowptr,
-				      int* sdInfo_hu_hv_colind,
-				      int* sdInfo_hv_hv_rowptr,
-				      int* sdInfo_hv_hv_colind,
-				      int* sdInfo_hv_hu_rowptr,
-				      int* sdInfo_hv_hu_colind,
-				      int* csrRowIndeces_h_h,
-				      int* csrColumnOffsets_h_h,
-				      int* csrRowIndeces_h_hu,
-				      int* csrColumnOffsets_h_hu,
-				      int* csrRowIndeces_h_hv,
-				      int* csrColumnOffsets_h_hv,
-				      int* csrRowIndeces_hu_h,
-				      int* csrColumnOffsets_hu_h,
-				      int* csrRowIndeces_hu_hu,
-				      int* csrColumnOffsets_hu_hu,
-				      int* csrRowIndeces_hu_hv,
-				      int* csrColumnOffsets_hu_hv,
-				      int* csrRowIndeces_hv_h,
-				      int* csrColumnOffsets_hv_h,
-				      int* csrRowIndeces_hv_hu,
-				      int* csrColumnOffsets_hv_hu,
-				      int* csrRowIndeces_hv_hv,
-				      int* csrColumnOffsets_hv_hv,
-				      double* globalJacobian,
-				      int nExteriorElementBoundaries_global,
-				      int* exteriorElementBoundariesArray,
-				      int* elementBoundaryElementsArray,
-				      int* elementBoundaryLocalElementBoundariesArray,
-				      int* isDOFBoundary_h,
-				      int* isDOFBoundary_hu,
-				      int* isDOFBoundary_hv,
-				      int* isAdvectiveFluxBoundary_h,
-				      int* isAdvectiveFluxBoundary_hu,
-				      int* isAdvectiveFluxBoundary_hv,
-				      int* isDiffusiveFluxBoundary_hu,
-				      int* isDiffusiveFluxBoundary_hv,
-				      double* ebqe_bc_h_ext,
-				      double* ebqe_bc_flux_mass_ext,
-				      double* ebqe_bc_flux_mom_hu_adv_ext,
-				      double* ebqe_bc_flux_mom_hv_adv_ext,
-				      double* ebqe_bc_hu_ext,
-				      double* ebqe_bc_flux_hu_diff_ext,
-				      double* ebqe_penalty_ext,
-				      double* ebqe_bc_hv_ext,
-				      double* ebqe_bc_flux_hv_diff_ext,
-				      int* csrColumnOffsets_eb_h_h,
-				      int* csrColumnOffsets_eb_h_hu,
-				      int* csrColumnOffsets_eb_h_hv,
-				      int* csrColumnOffsets_eb_hu_h,
-				      int* csrColumnOffsets_eb_hu_hu,
-				      int* csrColumnOffsets_eb_hu_hv,
-				      int* csrColumnOffsets_eb_hv_h,
-				      int* csrColumnOffsets_eb_hv_hu,
-				      int* csrColumnOffsets_eb_hv_hv)=0;
+    virtual void calculateMassMatrix(//element
+				     double* mesh_trial_ref,
+				     double* mesh_grad_trial_ref,
+				     double* mesh_dof,
+				     double* mesh_velocity_dof,
+				     double MOVING_DOMAIN,
+				     int* mesh_l2g,
+				     double* dV_ref,
+				     double* h_trial_ref,
+				     double* h_grad_trial_ref,
+				     double* h_test_ref,
+				     double* h_grad_test_ref,
+				     double* vel_trial_ref,
+				     double* vel_grad_trial_ref,
+				     double* vel_test_ref,
+				     double* vel_grad_test_ref,
+				     //element boundary
+				     double* mesh_trial_trace_ref,
+				     double* mesh_grad_trial_trace_ref,
+				     double* dS_ref,
+				     double* h_trial_trace_ref,
+				     double* h_grad_trial_trace_ref,
+				     double* h_test_trace_ref,
+				     double* h_grad_test_trace_ref,
+				     double* vel_trial_trace_ref,
+				     double* vel_grad_trial_trace_ref,
+				     double* vel_test_trace_ref,
+				     double* vel_grad_test_trace_ref,					 
+				     double* normal_ref,
+				     double* boundaryJac_ref,
+				     //physics
+				     double* elementDiameter,
+				     int nElements_global,
+				     double useRBLES,
+				     double useMetrics, 
+				     double alphaBDF,
+				     double nu,
+				     double g,
+				     int* h_l2g, 
+				     int* vel_l2g,
+				     double* b_dof,
+				     double* h_dof, 
+				     double* hu_dof, 
+				     double* hv_dof,
+				     double* h_dof_sge, 
+				     double* hu_dof_sge, 
+				     double* hv_dof_sge,
+				     double* q_mass_acc_beta_bdf,
+				     double* q_mom_hu_acc_beta_bdf, 
+				     double* q_mom_hv_acc_beta_bdf,
+				     double* q_velocity_sge,
+				     double* q_cfl,
+				     double* q_numDiff_h_last,
+				     double* q_numDiff_hu_last, 
+				     double* q_numDiff_hv_last,
+				     int* sdInfo_hu_hu_rowptr,
+				     int* sdInfo_hu_hu_colind,			      
+				     int* sdInfo_hu_hv_rowptr,
+				     int* sdInfo_hu_hv_colind,
+				     int* sdInfo_hv_hv_rowptr,
+				     int* sdInfo_hv_hv_colind,
+				     int* sdInfo_hv_hu_rowptr,
+				     int* sdInfo_hv_hu_colind,
+				     int* csrRowIndeces_h_h,
+				     int* csrColumnOffsets_h_h,
+				     int* csrRowIndeces_h_hu,
+				     int* csrColumnOffsets_h_hu,
+				     int* csrRowIndeces_h_hv,
+				     int* csrColumnOffsets_h_hv,
+				     int* csrRowIndeces_hu_h,
+				     int* csrColumnOffsets_hu_h,
+				     int* csrRowIndeces_hu_hu,
+				     int* csrColumnOffsets_hu_hu,
+				     int* csrRowIndeces_hu_hv,
+				     int* csrColumnOffsets_hu_hv,
+				     int* csrRowIndeces_hv_h,
+				     int* csrColumnOffsets_hv_h,
+				     int* csrRowIndeces_hv_hu,
+				     int* csrColumnOffsets_hv_hu,
+				     int* csrRowIndeces_hv_hv,
+				     int* csrColumnOffsets_hv_hv,
+				     double* globalJacobian,
+				     int nExteriorElementBoundaries_global,
+				     int* exteriorElementBoundariesArray,
+				     int* elementBoundaryElementsArray,
+				     int* elementBoundaryLocalElementBoundariesArray,
+				     int* isDOFBoundary_h,
+				     int* isDOFBoundary_hu,
+				     int* isDOFBoundary_hv,
+				     int* isAdvectiveFluxBoundary_h,
+				     int* isAdvectiveFluxBoundary_hu,
+				     int* isAdvectiveFluxBoundary_hv,
+				     int* isDiffusiveFluxBoundary_hu,
+				     int* isDiffusiveFluxBoundary_hv,
+				     double* ebqe_bc_h_ext,
+				     double* ebqe_bc_flux_mass_ext,
+				     double* ebqe_bc_flux_mom_hu_adv_ext,
+				     double* ebqe_bc_flux_mom_hv_adv_ext,
+				     double* ebqe_bc_hu_ext,
+				     double* ebqe_bc_flux_hu_diff_ext,
+				     double* ebqe_penalty_ext,
+				     double* ebqe_bc_hv_ext,
+				     double* ebqe_bc_flux_hv_diff_ext,
+				     int* csrColumnOffsets_eb_h_h,
+				     int* csrColumnOffsets_eb_h_hu,
+				     int* csrColumnOffsets_eb_h_hv,
+				     int* csrColumnOffsets_eb_hu_h,
+				     int* csrColumnOffsets_eb_hu_hu,
+				     int* csrColumnOffsets_eb_hu_hv,
+				     int* csrColumnOffsets_eb_hv_h,
+				     int* csrColumnOffsets_eb_hv_hu,
+				     int* csrColumnOffsets_eb_hv_hv)=0;
+  virtual void calculateLumpedMassMatrix(//element
+					 double* mesh_trial_ref,
+					 double* mesh_grad_trial_ref,
+					 double* mesh_dof,
+					 double* mesh_velocity_dof,
+					 double MOVING_DOMAIN,
+					 int* mesh_l2g,
+					 double* dV_ref,
+					 double* h_trial_ref,
+					 double* h_grad_trial_ref,
+					 double* h_test_ref,
+					 double* h_grad_test_ref,
+					 double* vel_trial_ref,
+					 double* vel_grad_trial_ref,
+					 double* vel_test_ref,
+					 double* vel_grad_test_ref,
+					 //element boundary
+					 double* mesh_trial_trace_ref,
+					 double* mesh_grad_trial_trace_ref,
+					 double* dS_ref,
+					 double* h_trial_trace_ref,
+					 double* h_grad_trial_trace_ref,
+					 double* h_test_trace_ref,
+					 double* h_grad_test_trace_ref,
+					 double* vel_trial_trace_ref,
+					 double* vel_grad_trial_trace_ref,
+					 double* vel_test_trace_ref,
+					 double* vel_grad_test_trace_ref,					 
+					 double* normal_ref,
+					 double* boundaryJac_ref,
+					 //physics
+					 double* elementDiameter,
+					 int nElements_global,
+					 double useRBLES,
+					 double useMetrics, 
+					 double alphaBDF,
+					 double nu,
+					 double g,
+					 int* h_l2g, 
+					 int* vel_l2g,
+					 double* b_dof,
+					 double* h_dof, 
+					 double* hu_dof, 
+					 double* hv_dof,
+					 double* h_dof_sge, 
+					 double* hu_dof_sge, 
+					 double* hv_dof_sge,
+					 double* q_mass_acc_beta_bdf,
+					 double* q_mom_hu_acc_beta_bdf, 
+					 double* q_mom_hv_acc_beta_bdf,
+					 double* q_velocity_sge,
+					 double* q_cfl,
+					 double* q_numDiff_h_last,
+					 double* q_numDiff_hu_last, 
+					 double* q_numDiff_hv_last,
+					 int* sdInfo_hu_hu_rowptr,
+					 int* sdInfo_hu_hu_colind,			      
+					 int* sdInfo_hu_hv_rowptr,
+					 int* sdInfo_hu_hv_colind,
+					 int* sdInfo_hv_hv_rowptr,
+					 int* sdInfo_hv_hv_colind,
+					 int* sdInfo_hv_hu_rowptr,
+					 int* sdInfo_hv_hu_colind,
+					 int* csrRowIndeces_h_h,
+					 int* csrColumnOffsets_h_h,
+					 int* csrRowIndeces_h_hu,
+					 int* csrColumnOffsets_h_hu,
+					 int* csrRowIndeces_h_hv,
+					 int* csrColumnOffsets_h_hv,
+					 int* csrRowIndeces_hu_h,
+					 int* csrColumnOffsets_hu_h,
+					 int* csrRowIndeces_hu_hu,
+					 int* csrColumnOffsets_hu_hu,
+					 int* csrRowIndeces_hu_hv,
+					 int* csrColumnOffsets_hu_hv,
+					 int* csrRowIndeces_hv_h,
+					 int* csrColumnOffsets_hv_h,
+					 int* csrRowIndeces_hv_hu,
+					 int* csrColumnOffsets_hv_hu,
+					 int* csrRowIndeces_hv_hv,
+					 int* csrColumnOffsets_hv_hv,
+					 double* globalJacobian,
+					 int nExteriorElementBoundaries_global,
+					 int* exteriorElementBoundariesArray,
+					 int* elementBoundaryElementsArray,
+					 int* elementBoundaryLocalElementBoundariesArray,
+					 int* isDOFBoundary_h,
+					 int* isDOFBoundary_hu,
+					 int* isDOFBoundary_hv,
+					 int* isAdvectiveFluxBoundary_h,
+					 int* isAdvectiveFluxBoundary_hu,
+					 int* isAdvectiveFluxBoundary_hv,
+					 int* isDiffusiveFluxBoundary_hu,
+					 int* isDiffusiveFluxBoundary_hv,
+					 double* ebqe_bc_h_ext,
+					 double* ebqe_bc_flux_mass_ext,
+					 double* ebqe_bc_flux_mom_hu_adv_ext,
+					 double* ebqe_bc_flux_mom_hv_adv_ext,
+					 double* ebqe_bc_hu_ext,
+					 double* ebqe_bc_flux_hu_diff_ext,
+					 double* ebqe_penalty_ext,
+					 double* ebqe_bc_hv_ext,
+					 double* ebqe_bc_flux_hv_diff_ext,
+					 int* csrColumnOffsets_eb_h_h,
+					 int* csrColumnOffsets_eb_h_hu,
+					 int* csrColumnOffsets_eb_h_hv,
+					 int* csrColumnOffsets_eb_hu_h,
+					 int* csrColumnOffsets_eb_hu_hu,
+					 int* csrColumnOffsets_eb_hu_hv,
+					 int* csrColumnOffsets_eb_hv_h,
+					 int* csrColumnOffsets_eb_hv_hu,
+					 int* csrColumnOffsets_eb_hv_hv)=0;
   };
-  
+
   template<class CompKernelType,
 	   int nSpace,
 	   int nQuadraturePoints_element,
@@ -2338,6 +2538,93 @@ namespace proteus
     /*   return tmp; */
     /* } */
 
+    void FCTStep(double dt, 
+		 int NNZ, //number on non-zero entries on sparsity pattern
+		 int numDOFs, //number of DOFs
+		 double* lumped_mass_matrix, //lumped mass matrix (as vector)
+		 double* soln, //DOFs of solution at time tn
+		 double* solH, //DOFs of high order solution at tnp1
+		 double* low_order_hnp1, //operators to construct low order solution
+		 int* csrRowIndeces_DofLoops, //csr row indeces 
+		 int* csrColumnOffsets_DofLoops, //csr column offsets 
+		 double* MassMatrix, //mass matrix
+		 double* dEV_minus_dL_times_hStarji_minus_hStarij //low minus high order dissipative matrices
+		 )
+    {
+      register double Rneg[numDOFs];
+      register double FluxCorrectionMatrix[NNZ];
+      register double solL[numDOFs];
+      //////////////////
+      // LOOP in DOFs //
+      //////////////////
+      int ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  //read some vectors 
+	  double solHi = solH[i];
+	  double solni = soln[i];
+	  double mi = lumped_mass_matrix[i];
+	  // compute low order solution
+	  // mi*(uLi-uni) + dt*sum_j[(Tij+dLij)*unj] = 0
+	  solL[i] = solni - dt/mi*low_order_hnp1[i];
+
+	  double minH=0.;
+	  double Pnegi=0.;
+	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+
+	      // i-th row of flux correction matrix 
+	      FluxCorrectionMatrix[ij] = 
+		(((i==j) ? 1 : 0)*mi - MassMatrix[ij])*(solH[j]-soln[j] - (solHi-solni)) 
+		+ dt*dEV_minus_dL_times_hStarji_minus_hStarij[ij];
+
+	      ///////////////////////
+	      // COMPUTE P VECTORS //
+	      ///////////////////////
+	      Pnegi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] < 0) ? 1. : 0.);
+	      
+	      //update ij 
+	      ij+=1;
+	    }
+	  ///////////////////////
+	  // COMPUTE Q VECTORS //
+	  ///////////////////////
+	  double Qnegi = mi*(minH-solL[i]);
+
+	  ///////////////////////
+	  // COMPUTE R VECTORS //
+	  ///////////////////////
+	  Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
+	} // i DOFs
+      
+      //////////////////////
+      // COMPUTE LIMITERS // 
+      //////////////////////
+      ij=0;
+      for (int i=0; i<numDOFs; i++)
+	{
+	  double ith_Limiter_times_FluxCorrectionMatrix = 0.;
+	  double Rposi = 1., Rnegi = Rneg[i];
+	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      double Rposj = 1.;
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      //ith_Limiter_times_FluxCorrectionMatrix += 
+	      //((FluxCorrectionMatrix[ij]>0) ? std::min(Rposi,Rneg[j]) : std::min(Rnegi,Rposj)) * FluxCorrectionMatrix[ij];
+	      ith_Limiter_times_FluxCorrectionMatrix += 
+		FluxCorrectionMatrix[ij];
+	      //update ij
+	      ij+=1;
+	    }
+	  solH[i] = low_order_hnp1[i];
+	  //solH[i] = solL[i]; // + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
+	  //std::cout << lumped_mass_matrix[i] << std::endl;
+	}
+    }
+
     void calculateResidual(//element
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
@@ -2465,7 +2752,16 @@ namespace proteus
 			   // SAVE SOLUTION (mql)
 			   double* hnp1_at_quad_point,
 			   double* hunp1_at_quad_point,
-			   double* hvnp1_at_quad_point)
+			   double* hvnp1_at_quad_point,
+			   // GALERKIN SOLUTION 
+			   double* h_dof_galerkin,
+			   double* hu_dof_galerkin,
+			   double* hv_dof_galerkin,
+			   // TO COMPUTE LOW ORDER 
+			   double* low_order_hnp1,
+			   double* dEV_minus_dL_times_hStarji_minus_hStarij, 
+			   double cE)
+			   
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -3427,7 +3723,15 @@ namespace proteus
 							// SAVE SOLUTION (mql)
 							double* hnp1_at_quad_point,
 							double* hunp1_at_quad_point,
-							double* hvnp1_at_quad_point)
+							double* hvnp1_at_quad_point,
+							// GALERKIN SOLUTION 
+							double* h_dof_galerkin,
+							double* hu_dof_galerkin,
+							double* hv_dof_galerkin,
+							// TO COMPUTE LOW ORDER 
+							double* low_order_hnp1,
+							double* dEV_minus_dL_times_hStarji_minus_hStarij, 
+							double cE)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
       // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
@@ -3492,17 +3796,17 @@ namespace proteus
 	      cell_max_speed = std::max(cell_max_speed,
 					std::max(std::abs(un)+std::sqrt(g*hn),std::abs(vn)+std::sqrt(g*hn)));
 	      // entropy residual and entropy min and max
-	      entropy_max = std::max(entropy_max,ENTROPY(g,hn,un,vn));
-	      entropy_min = std::min(entropy_min,ENTROPY(g,hn,un,vn));
-	      cell_entropy_mean += ENTROPY(g,hn,un,vn)*dV;
+	      entropy_max = std::max(entropy_max,ENTROPY(g,hn,un,vn,1./hn));
+	      entropy_min = std::min(entropy_min,ENTROPY(g,hn,un,vn,1./hn));
+	      cell_entropy_mean += ENTROPY(g,hn,un,vn,1./hn)*dV;
 	      cell_volume += dV;
 	      double gradX_Entropy = D_ENTROPY(g,hn,hun,hvn,grad_hn[0],grad_hun[0],grad_hvn[0]);
 	      double gradY_Entropy = D_ENTROPY(g,hn,hun,hvn,grad_hn[1],grad_hun[1],grad_hvn[1]);
 	      cell_entropy_residual 
 		= std::max(cell_entropy_residual,
 			   std::abs(
-				    (ENTROPY(g,hn,hun,hvn) - ENTROPY(g,hnm1,hunm1,hvnm1))/dt
-				    +ENTROPY(g,hn,hun,hvn)/hn/hn*(hn*(grad_hun[0]+grad_hvn[1])-(hun*grad_hn[0]+hvn*grad_hn[1]))
+				    (ENTROPY(g,hn,hun,hvn,1./hn) - ENTROPY(g,hnm1,hunm1,hvnm1,1./hnm1))/dt
+				    +ENTROPY(g,hn,hun,hvn,1./hn)/hn/hn*(hn*(grad_hun[0]+grad_hvn[1])-(hun*grad_hn[0]+hvn*grad_hn[1]))
 				    +1./hn*(gradX_Entropy*hun+gradY_Entropy*hvn)
 				    +0.5*g*hn*(grad_hun[0]+grad_hvn[1])
 				    +0.5*g*(hun*grad_hn[0]+hvn*grad_hn[1])));
@@ -3893,7 +4197,15 @@ namespace proteus
 				    // SAVE SOLUTION (mql)
 				    double* hnp1_at_quad_point,
 				    double* hunp1_at_quad_point,
-				    double* hvnp1_at_quad_point)
+				    double* hvnp1_at_quad_point,
+				    // GALERKIN SOLUTION 
+				    double* h_dof_galerkin,
+				    double* hu_dof_galerkin,
+				    double* hv_dof_galerkin,
+				    // TO COMPUTE LOW ORDER 
+				    double* low_order_hnp1,
+				    double* dEV_minus_dL_times_hStarji_minus_hStarij,
+				    double cE)
     {
       double dt = 1./alphaBDF; 
       ////////////////
@@ -4182,7 +4494,15 @@ namespace proteus
 				       // SAVE SOLUTION (mql)
 				       double* hnp1_at_quad_point,
 				       double* hunp1_at_quad_point,
-				       double* hvnp1_at_quad_point)
+				       double* hvnp1_at_quad_point,
+				       // GALERKIN SOLUTION 
+				       double* h_dof_galerkin,
+				       double* hu_dof_galerkin,
+				       double* hv_dof_galerkin,
+				       // TO COMPUTE LOW ORDER 
+				       double* low_order_hnp1,
+				       double* dEV_minus_dL_times_hStarji_minus_hStarij,
+				       double cE)
     {
       double dt = 1./alphaBDF; 
       ////////////////
@@ -4506,7 +4826,15 @@ namespace proteus
 				       // SAVE SOLUTION (mql)
 				       double* hnp1_at_quad_point,
 				       double* hunp1_at_quad_point,
-				       double* hvnp1_at_quad_point)
+				       double* hvnp1_at_quad_point,
+				       // GALERKIN SOLUTION 
+				       double* h_dof_galerkin,
+				       double* hu_dof_galerkin,
+				       double* hv_dof_galerkin,
+				       // TO COMPUTE LOW ORDER 
+				       double* low_order_hnp1,
+				       double* dEV_minus_dL_times_hStarji_minus_hStarij,
+				       double cE)
     {
       //TMP FOR FRICTION//
       double mannings=0.00;
@@ -4979,141 +5307,200 @@ namespace proteus
 							 // SAVE SOLUTION (mql)
 							 double* hnp1_at_quad_point,
 							 double* hunp1_at_quad_point,
-							 double* hvnp1_at_quad_point)
+							 double* hvnp1_at_quad_point,
+							 // GALERKIN SOLUTION 
+							 double* h_dof_galerkin,
+							 double* hu_dof_galerkin,
+							 double* hv_dof_galerkin, 
+							 // TO COMPUTE LOW ORDER 
+							 double* low_order_hnp1,
+							 double* dEV_minus_dL_times_hStarji_minus_hStarij, 
+							 double cE)
     {
       double dt = 1./alphaBDF; 
-      double min_h = 1E10;
       ////////////////
       // CELL LOOPS //
       ////////////////
       // To compute: 
+      //      * Entropy residual
       //      * lumped_mass_matrix
       //      * Cell based CFL
       //      * velocity at quad points for other models 
-      // init lumped mass matrix to zero
-      if (recompute_lumped_mass_matrix==1)
+      // create global entropy residual vectors for each equation
+      register double entRes1[numDOFsPerEqn], entRes2[numDOFsPerEqn], entRes3[numDOFsPerEqn];
+      // init lumped mass matrix and ent residual vectors to zero
+      for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  for (int i=0; i<numDOFsPerEqn; i++)
-	    lumped_mass_matrix[i] = 0;
-	  for(int eN=0;eN<nElements_global;eN++)
+	  lumped_mass_matrix[i] = 0;
+	  entRes1[i] = 0;
+	  entRes2[i] = 0;
+	  entRes3[i] = 0;
+	}
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  //declare local storage for element residual and initialize
+	  register double 
+	    element_lumped_mass_matrix[nDOF_test_element],
+	    elEntRes1[nDOF_test_element],
+	    elEntRes2[nDOF_test_element],
+	    elEntRes3[nDOF_test_element], 
+	    elementResidual_h[nDOF_test_element],
+	    elementResidual_hu[nDOF_test_element],
+	    elementResidual_hv[nDOF_test_element];
+	  for (int i=0;i<nDOF_test_element;i++)
 	    {
-	      //declare local storage for element residual and initialize
-	      register double element_lumped_mass_matrix[nDOF_test_element],
-		elementResidual_h[nDOF_test_element],
-		elementResidual_hu[nDOF_test_element],
-		elementResidual_hv[nDOF_test_element];
-	      for (int i=0;i<nDOF_test_element;i++)
-		{
-		  element_lumped_mass_matrix[i]=0.0;
-		  elementResidual_h[i]=0.0;
-		  elementResidual_hu[i]=0.0;
-		  elementResidual_hv[i]=0.0;
-		}
-	      //
-	      //loop over quadrature points and compute integrands
-	      //
-	      for(int k=0;k<nQuadraturePoints_element;k++)
-		{
-		  //compute indices and declare local storage
-		  register int eN_k = eN*nQuadraturePoints_element+k,
-		    eN_k_nSpace = eN_k*nSpace,
-		    eN_nDOF_trial_element = eN*nDOF_trial_element;
-		  register double 
-		    h=0.0,hu=0.0,hv=0.0, // solution at current time
-		    hn=0.0,hun=0.0,hvn=0.0, // solution at current time
-		    grad_hn[nSpace],grad_hun[nSpace],grad_hvn[nSpace],		    
-		    jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
-		    h_test_dV[nDOF_trial_element],
-		    h_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],
-		    dV,x,y,xt,yt;
-		  //get jacobian, etc for mapping reference element
-		  ck.calculateMapping_element(eN,
-					      k,
-					      mesh_dof,
-					      mesh_l2g,
-					      mesh_trial_ref,
-					      mesh_grad_trial_ref,
-					      jac,
-					      jacDet,
-					      jacInv,
-					      x,y);
-		  //get the physical integration weight
-		  dV = fabs(jacDet)*dV_ref[k];
-		  //get the trial function gradients
-		  ck.gradTrialFromRef(&h_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,h_grad_trial);
-		  ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
-		  //get the solution at current time. This is to compute velocity for other models
-		  ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
-		  ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
-		  ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
-		  // get the solution at time tn
-		  ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
-		  ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
-		  ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
-		  // calculate grad of solution at tn at quadrature points
-		  ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
-		  ck.gradFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
-		  ck.gradFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hvn);
-		  // calculate cell based CFL
-		  calculateCFL(elementDiameter[eN],
-			       g,
-			       hn,
-			       hun,
-			       hvn,
-			       hEps,
-			       q_cfl[eN_k]);
-		  //precalculate test function products with integration weights
-		  for (int j=0;j<nDOF_trial_element;j++)
-		      h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
-		  //save velocity at quadrature points for other models to use
-		  q_velocity[eN_k_nSpace+0] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hu;
-		  q_velocity[eN_k_nSpace+1] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hv;
-		  hnp1_at_quad_point[eN_k] = h;
-		  hunp1_at_quad_point[eN_k] = hu;
-		  hvnp1_at_quad_point[eN_k] = hv;
-		  //update element residual. Part about the lumped mass matrix 
-		  double dxf1 = grad_hun[0];
-		  double dyf1 = grad_hvn[1];
-		  double dxf2 = (2*hn*hun*grad_hun[0] - hun*hun*grad_hn[0])/hn/hn + g*hn*grad_hn[0];
-		  double dyf2 = (hn*(hun*grad_hvn[1]+hvn*grad_hun[1])-hun*hvn*grad_hn[1])/hn/hn;
-		  double dxf3 = (hn*(hun*grad_hvn[0]+hvn*grad_hun[0])-hun*hvn*grad_hn[0])/hn/hn;
-		  double dyf3 = (2*hn*hvn*grad_hvn[1] - hvn*hvn*grad_hn[1])/hn/hn + g*hn*grad_hn[1];  
+	      element_lumped_mass_matrix[i]=0.0;
+	      elEntRes1[i]=0.0;
+	      elEntRes2[i]=0.0;
+	      elEntRes3[i]=0.0;
+	      elementResidual_h[i]=0.0;
+	      elementResidual_hu[i]=0.0;
+	      elementResidual_hv[i]=0.0;
+	    }
+	  //
+	  //loop over quadrature points and compute integrands
+	  //
+	  for(int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      //compute indices and declare local storage
+	      register int eN_k = eN*nQuadraturePoints_element+k,
+		eN_k_nSpace = eN_k*nSpace,
+		eN_nDOF_trial_element = eN*nDOF_trial_element;
+	      register double 
+		h=0.0,hu=0.0,hv=0.0, // solution at current time
+		hn=0.0,hun=0.0,hvn=0.0, // solution at current time
+		hG=0.0,huG=0.0,hvG=0.0, // galerkin solution
+		grad_hn[nSpace],grad_hun[nSpace],grad_hvn[nSpace],grad_z[nSpace],		
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		h_test_dV[nDOF_trial_element],
+		h_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],
+		dV,x,y,xt,yt;
+	      //get jacobian, etc for mapping reference element
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,
+					  x,y);
+	      //get the physical integration weight
+	      dV = fabs(jacDet)*dV_ref[k];
+	      //get the trial function gradients
+	      ck.gradTrialFromRef(&h_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,h_grad_trial);
+	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
+	      //get the solution at current time. This is to compute velocity for other models
+	      ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
+	      ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
+	      ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
+	      // get the solution at time tn
+	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
+	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
+	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
+	      // get the galerkin solution
+	      ck.valFromDOF(h_dof_galerkin,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hG);
+	      ck.valFromDOF(hu_dof_galerkin,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],huG);
+	      ck.valFromDOF(hv_dof_galerkin,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvG);
+	      // calculate grad of solution at tn at quadrature points
+	      ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
+	      ck.gradFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
+	      ck.gradFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hvn);
+	      ck.gradFromDOF(b_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_z);
+	      // calculate cell based CFL
+	      calculateCFL(elementDiameter[eN],
+			   g,
+			   hn,
+			   hun,
+			   hvn,
+			   hEps,
+			   q_cfl[eN_k]);
+	      //precalculate test function products with integration weights
+	      for (int j=0;j<nDOF_trial_element;j++)
+		h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
+	      //save velocity at quadrature points for other models to use
+	      q_velocity[eN_k_nSpace+0] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hu;
+	      q_velocity[eN_k_nSpace+1] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hv;
+	      hnp1_at_quad_point[eN_k] = h;
+	      hunp1_at_quad_point[eN_k] = hu;
+	      hvnp1_at_quad_point[eN_k] = hv;
+	      //update element residual. Part about the lumped mass matrix 
+	      double one_over_hnReg = 2*hn/(hn*hn+std::pow(fmax(hn,hEps),2));
+	      double dxf1 = grad_hun[0];
+	      double dyf1 = grad_hvn[1];
+	      double dxf2 = (2*hn*hun*grad_hun[0] - hun*hun*grad_hn[0])*std::pow(one_over_hnReg,2)+g*hn*grad_hn[0];
+	      double dyf2 = (hn*(hun*grad_hvn[1]+hvn*grad_hun[1])-hun*hvn*grad_hn[1])*std::pow(one_over_hnReg,2);
+	      double dxf3 = (hn*(hun*grad_hvn[0]+hvn*grad_hun[0])-hun*hvn*grad_hn[0])*std::pow(one_over_hnReg,2);
+	      double dyf3 = (2*hn*hvn*grad_hvn[1] - hvn*hvn*grad_hn[1])*std::pow(one_over_hnReg,2)+g*hn*grad_hn[1];
+	      // bathymetry source terms
+	      double b_dot_gradx_z = g*hn*grad_z[0];
+	      double b_dot_grady_z = g*hn*grad_z[1];
 
-		  for(int i=0;i<nDOF_test_element;i++)
-		    {
-		      // lumped mass matrix
-		      element_lumped_mass_matrix[i] += h_test_dV[i];
-		      elementResidual_h[i]  += (h-hn   + dt*(dxf1 + dyf1))*h_test_dV[i];
-		      elementResidual_hu[i] += (hu-hun + dt*(dxf2 + dyf2))*h_test_dV[i];
-		      elementResidual_hv[i] += (hv-hvn + dt*(dxf3 + dyf3))*h_test_dV[i];
-		    }
-		}
-	      // distribute
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
-		  register int eN_i=eN*nDOF_test_element+i;
-		  int h_gi = h_l2g[eN_i]; //global i-th index for h
-		  int vel_gi = vel_l2g[eN_i]; //global i-th index for velocities 
+		  // lumped mass matrix
+		  element_lumped_mass_matrix[i] += h_test_dV[i];
+		  elEntRes1[i] += ((hG-hn)/dt   + (dxf1 + dyf1))*DENTROPY_DH(g,hn,hun,hvn,one_over_hnReg)*h_test_dV[i];
+		  elEntRes2[i] += ((huG-hun)/dt + (dxf2 + dyf2) + b_dot_gradx_z)*DENTROPY_DHU(g,hn,hun,hvn,hEps)*h_test_dV[i];
+		  elEntRes3[i] += ((hvG-hvn)/dt + (dxf3 + dyf3) + b_dot_grady_z)*DENTROPY_DHV(g,hn,hun,hvn,hEps)*h_test_dV[i];
 
-		  lumped_mass_matrix[h_gi]  += element_lumped_mass_matrix[i];
-		  // distribute time derivative to global residual 
-		  globalResidual[offset_h+stride_h*h_gi]  += elementResidual_h[i];
-		  globalResidual[offset_hu+stride_hu*vel_gi] += elementResidual_hu[i];
-		  globalResidual[offset_hv+stride_hv*vel_gi] += elementResidual_hv[i];
+		  // HERE //
+		  /*
+		  if(std::isnan(elEntRes1[i]) || std::isnan(elEntRes2[i]) || std::isnan(elEntRes3[i]))
+		    {
+		      std::cout << "NaN in entropy residual: " << "\t"
+				<< elEntRes1[i] << "\t"
+				<< elEntRes2[i] << "\t"
+				<< elEntRes3[i] 
+				<< std::endl;		      
+		    }
+		  */
+		  // compute time derivative part of global residual. NOTE: no lumping
+		  elementResidual_h[i]  += (h-hn)*h_test_dV[i];
+		  elementResidual_hu[i] += (hu-hun)*h_test_dV[i];
+		  elementResidual_hv[i] += (hv-hvn)*h_test_dV[i];
 		}
-	      // COMPUTE MIN h //
-	      min_h = fmin(min_h,elementDiameter[eN]);
 	    }
-	} // end of computing lumped mass matrix
-      
-      ///////////////////////////////////////////
-      // COMPUTE SMOOTHNESS INDICATOR and dLij //
-      ///////////////////////////////////////////
+	  // distribute
+	  for(int i=0;i<nDOF_test_element;i++)
+	    {
+	      register int eN_i=eN*nDOF_test_element+i;
+	      int h_gi = h_l2g[eN_i]; //global i-th index for h
+	      int vel_gi = vel_l2g[eN_i]; //global i-th index for velocities 
+	      
+	      lumped_mass_matrix[h_gi]  += element_lumped_mass_matrix[i];
+	      // distribute element entropy residual to global vectors
+	      entRes1[h_gi] += elEntRes1[i];
+	      entRes2[h_gi] += elEntRes2[i];
+	      entRes3[h_gi] += elEntRes3[i];
+	      
+	      // distribute time derivative to global residual
+	      globalResidual[offset_h+stride_h*h_gi]  += elementResidual_h[i];
+	      globalResidual[offset_hu+stride_hu*vel_gi] += elementResidual_hu[i];
+	      globalResidual[offset_hv+stride_hv*vel_gi] += elementResidual_hv[i];
+	    }
+	}
+
+      ////////////////////////////////
+      // COMPUTE ENTROPY AT ith DOF //
+      ////////////////////////////////
+      // compute entropy (defined as eta) corresponding to ith node
+      register double eta[numDOFsPerEqn];
+      for (int i=0; i<numDOFsPerEqn; i++)
+	{
+	  double hin = h_dof_old[i];
+	  double one_over_hinReg = 2*hin/(hin*hin+std::pow(fmax(hin,hEps),2));
+	  eta[i] = ENTROPY(g,hin,hu_dof_old[i],hv_dof_old[i],one_over_hinReg);
+	}
+      //////////////////////////////////////////////////////////////
+      // COMPUTE SMOOTHNESS INDICATOR, dLij and etaMin and etaMax //
+      //////////////////////////////////////////////////////////////
       // Smoothness indicator is based on the solution. psi_i = psi_i(alpha_i); 
       // alpha_i = |sum(uj-ui)|/sum|uj-ui|
       int ij = 0;
       double max_cfl = 0.;
-      register double psi[numDOFsPerEqn], dL[NNZ];
+      register double psi[numDOFsPerEqn], dL[NNZ], etaMax[numDOFsPerEqn], etaMin[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
 	  double alphai, alphai_numerator=0, alphai_denominator=0; // smoothness indicator of solution
@@ -5123,6 +5510,8 @@ namespace proteus
 	  double Zi = b_dof[i];
 	  double dLii = 0.;
 
+	  etaMax[i] = std::abs(eta[i]);
+	  etaMin[i] = std::abs(eta[i]);
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    { //loop in j (sparsity pattern)
 	      int j = csrColumnOffsets_DofLoops[offset];
@@ -5178,8 +5567,16 @@ namespace proteus
 								   hj,huj,hvj, 
 								   hStarji,huStarji,hvStarji,
 								   hEps,false))*cji_norm);  
-	
+		  if (dL[ij] < 0.)
+		    {
+		      std::cout << "ERROR: Negative diagonal entry in dissipation matrix" << std::endl;
+		      abort();
+		    }
 		  dLii -= dL[ij];
+
+		  // compute entropy max and min
+		  etaMax[i] = fmax(etaMax[i],std::abs(eta[j]));
+    		  etaMin[i] = fmin(etaMin[i],std::abs(eta[j]));
 		}
 	      //update ij
 	      ij+=1;
@@ -5253,6 +5650,11 @@ namespace proteus
 
 	      // Dissipative term
 	      double muij = 0.;
+
+	      double entRes1i = std::abs( etaMax[i] == etaMin[i] ? 0. : entRes1[i]/(etaMax[i]-etaMin[i]) );
+	      double entRes2i = std::abs( etaMax[i] == etaMin[i] ? 0. : entRes2[i]/(etaMax[i]-etaMin[i]) );
+	      double entRes3i = std::abs( etaMax[i] == etaMin[i] ? 0. : entRes3[i]/(etaMax[i]-etaMin[i]) );
+
 	      if (i != j) // This is not necessary. See formula for ith_dissipative_terms
 		{
 		  ///////////////////////////
@@ -5276,9 +5678,22 @@ namespace proteus
 
 		  // compute dissipative terms for second and third equations
 		  dL[ij] *= std::max(psi[i],psi[j]);
-		  ith_dissipative_term1 += dL[ij]*(hStarji-hStarij);
-		  ith_dissipative_term2 += dL[ij]*(huStarji-huStarij);
-		  ith_dissipative_term3 += dL[ij]*(hvStarji-hvStarij);
+		  //ith_dissipative_term1 += dL[ij]*(hStarji-hStarij);
+		  //ith_dissipative_term2 += dL[ij]*(huStarji-huStarij);
+		  //ith_dissipative_term3 += dL[ij]*(hvStarji-hvStarij);
+
+		  double entRes1j = std::abs( etaMax[j] == etaMin[j] ? 0. : entRes1[j]/(etaMax[j]-etaMin[j]) );
+		  double entRes2j = std::abs( etaMax[j] == etaMin[j] ? 0. : entRes2[j]/(etaMax[j]-etaMin[j]) );
+		  double entRes3j = std::abs( etaMax[j] == etaMin[j] ? 0. : entRes3[j]/(etaMax[j]-etaMin[j]) );
+
+		  // compute dEV_minus_dL_times_hStarji_minus_hStarij for FCT
+		  //dEV_minus_dL_times_hStarji_minus_hStarij[ij] 
+		  //= (fmin(dL[ij],cE*fmax(entRes1i,entRes1j)) - dL[ij])*(hStarji-hStarij);
+
+		  // compute high order dissiptive term for all equations
+		  ith_dissipative_term1 += fmin(std::abs(dL[ij]),cE*fmax(entRes1i,entRes1j))*(hStarji-hStarij);
+		  ith_dissipative_term2 += fmin(std::abs(dL[ij]),cE*fmax(entRes2i,entRes2j))*(huStarji-huStarij);
+		  ith_dissipative_term3 += fmin(std::abs(dL[ij]),cE*fmax(entRes3i,entRes3j))*(hvStarji-hvStarij);
 
 		  // compute aux quantities for first equation 
 		  // aux1 = Veli*Cii + sum_j[ muij + (dLij-muij)*hStarij/hi ]
@@ -5289,31 +5704,289 @@ namespace proteus
 	      else // i==j
 		{
 		  aux1_to_compute_hnp1 += (ui*Cx[ij] + vi*Cy[ij])*hi;
+		  dEV_minus_dL_times_hStarji_minus_hStarij[ij] = 0.;
 		}
 	      // update ij
 	      ij+=1;
 	    }
 	  double mi = lumped_mass_matrix[i];
 
-	  //if (1 - dt/mi*aux1_to_compute_hnp1 < 0)
-	  //{
-	  //  std::cout << "aux1 < 0: " << 1-dt/mi*aux1_to_compute_hnp1 << std::endl;
-	  //  std::cout << "dt, cfl: " << dt << "\t" << edge_based_cfl[i] << std::endl;
-	  //  abort();
-	  //}
+	  //edge_based_cfl[i] = 2*aux1_to_compute_hnp1/mi;
+	  // Compute low order solution: lumped mass matrix and low order dissipative matrix
+	  low_order_hnp1[i] = hi*(1-dt/mi*aux1_to_compute_hnp1) + dt/mi*aux2_to_compute_hnp1;
 
-	  // compute residual
-	  double hinp1 = hi*(1 - dt/mi*aux1_to_compute_hnp1) + dt/mi*aux2_to_compute_hnp1;
-	  //globalResidual[offset_h+stride_h*i] = fmax(0.,hinp1);	 
-	  //globalResidual[offset_h+stride_h*i] = hi - dt/mi*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
-	  //globalResidual[offset_hu+stride_hu*i] = hui - dt/mi*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2);
-	  //globalResidual[offset_hv+stride_hv*i] = hvi - dt/mi*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3);
+	  if (low_order_hnp1[i] < 0.)
+	    {
+	      std::cout << "low order hnp1: " << low_order_hnp1[i] << std::endl;
+	      std::cout << hi << "\t"
+			<< 1-dt/mi*aux1_to_compute_hnp1 << "\t" 
+			<< dt/mi*aux2_to_compute_hnp1 
+			<< std::endl;
+	    }
+	  // distribute local to global flux and dissipative contributions
+	  //globalResidual[offset_h+stride_h*i]   += dt*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
+	  //globalResidual[offset_hu+stride_hu*i] += dt*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2);
+	  //globalResidual[offset_hv+stride_hv*i] += dt*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3);
 
-	  //globalResidual[offset_h+stride_h*i]   +=  dt*(ith_flux_term1 - ith_dissipative_term1);
-	  //globalResidual[offset_hu+stride_hu*i] += dt*(ith_flux_term2 - ith_dissipative_term2);
-	  //globalResidual[offset_hv+stride_hv*i] += dt*(ith_flux_term3 - ith_dissipative_term3);
+	  //globalResidual[offset_h+stride_h*i] = low_order_hnp1[i];
+	  globalResidual[offset_h+stride_h*i] = hi - dt/mi*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
+	  globalResidual[offset_hu+stride_hu*i] = hui - dt/mi*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2);
+	  globalResidual[offset_hv+stride_hv*i] = hvi - dt/mi*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3);
+
 	}
 
+    }
+
+    void calculateResidual_galerkin(//element
+				    double* mesh_trial_ref,
+				    double* mesh_grad_trial_ref,
+				    double* mesh_dof,
+				    double* mesh_velocity_dof,
+				    double MOVING_DOMAIN,
+				    int* mesh_l2g,
+				    double* dV_ref,
+				    double* h_trial_ref,
+				    double* h_grad_trial_ref,
+				    double* h_test_ref,
+				    double* h_grad_test_ref,
+				    double* vel_trial_ref,
+				    double* vel_grad_trial_ref,
+				    double* vel_test_ref,
+				    double* vel_grad_test_ref,
+				    //element boundary
+				    double* mesh_trial_trace_ref,
+				    double* mesh_grad_trial_trace_ref,
+				    double* dS_ref,
+				    double* h_trial_trace_ref,
+				    double* h_grad_trial_trace_ref,
+				    double* h_test_trace_ref,
+				    double* h_grad_test_trace_ref,
+				    double* vel_trial_trace_ref,
+				    double* vel_grad_trial_trace_ref,
+				    double* vel_test_trace_ref,
+				    double* vel_grad_test_trace_ref,
+				    double* normal_ref,
+				    double* boundaryJac_ref,
+				    //physics
+				    double* elementDiameter,
+				    int nElements_global,
+				    double useRBLES,
+				    double useMetrics, 
+				    double alphaBDF,
+				    double nu,
+				    double g,
+				    int* h_l2g, 
+				    int* vel_l2g, 
+				    double* h_dof_old_old, 
+				    double* hu_dof_old_old, 
+				    double* hv_dof_old_old, 
+				    double* h_dof_old, 
+				    double* hu_dof_old, 
+				    double* hv_dof_old, 
+				    double* b_dof, 
+				    double* h_dof, 
+				    double* hu_dof, 
+				    double* hv_dof, 
+				    double* h_dof_sge, 
+				    double* hu_dof_sge, 
+				    double* hv_dof_sge, 
+				    double* q_mass_acc,
+				    double* q_mom_hu_acc,
+				    double* q_mom_hv_acc,
+				    double* q_mass_adv,
+				    double* q_mass_acc_beta_bdf,
+				    double* q_mom_hu_acc_beta_bdf, 
+				    double* q_mom_hv_acc_beta_bdf,
+				    double* q_velocity_sge,
+				    double* q_cfl,
+				    double* q_numDiff_h, 
+				    double* q_numDiff_hu, 
+				    double* q_numDiff_hv, 
+				    double* q_numDiff_h_last,
+				    double* q_numDiff_hu_last, 
+				    double* q_numDiff_hv_last,
+				    int* sdInfo_hu_hu_rowptr,
+				    int* sdInfo_hu_hu_colind,			      
+				    int* sdInfo_hu_hv_rowptr,
+				    int* sdInfo_hu_hv_colind,
+				    int* sdInfo_hv_hv_rowptr,
+				    int* sdInfo_hv_hv_colind,
+				    int* sdInfo_hv_hu_rowptr,
+				    int* sdInfo_hv_hu_colind,
+				    int offset_h, 
+				    int offset_hu, 
+				    int offset_hv, 
+				    int stride_h, 
+				    int stride_hu, 
+				    int stride_hv,
+				    double* globalResidual,
+				    int nExteriorElementBoundaries_global,
+				    int* exteriorElementBoundariesArray,
+				    int* elementBoundaryElementsArray,
+				    int* elementBoundaryLocalElementBoundariesArray,
+				    int* isDOFBoundary_h,
+				    int* isDOFBoundary_hu,
+				    int* isDOFBoundary_hv,
+				    int* isAdvectiveFluxBoundary_h,
+				    int* isAdvectiveFluxBoundary_hu,
+				    int* isAdvectiveFluxBoundary_hv,
+				    int* isDiffusiveFluxBoundary_hu,
+				    int* isDiffusiveFluxBoundary_hv,
+				    double* ebqe_bc_h_ext,
+				    double* ebqe_bc_flux_mass_ext,
+				    double* ebqe_bc_flux_mom_hu_adv_ext,
+				    double* ebqe_bc_flux_mom_hv_adv_ext,
+				    double* ebqe_bc_hu_ext,
+				    double* ebqe_bc_flux_hu_diff_ext,
+				    double* ebqe_penalty_ext,
+				    double* ebqe_bc_hv_ext,
+				    double* ebqe_bc_flux_hv_diff_ext,
+				    double* q_velocity,
+				    double* ebqe_velocity,
+				    double* flux,
+				    double* elementResidual_h_save,
+				    // C matrices
+				    double* Cx, 
+				    double* Cy,
+				    double* CTx,
+				    double* CTy,
+				    // PARAMETERS FOR EDGE BASED STABILIZATION 
+				    int numDOFsPerEqn,
+				    int NNZ,
+				    int* csrRowIndeces_DofLoops,
+				    int* csrColumnOffsets_DofLoops,
+				    // LUMPED MASS MATRIX
+				    double* lumped_mass_matrix,
+				    double* edge_based_cfl,
+				    double cfl_run,
+				    double hEps,
+				    int recompute_lumped_mass_matrix, 
+				    // SAVE SOLUTION (mql)
+				    double* hnp1_at_quad_point,
+				    double* hunp1_at_quad_point,
+				    double* hvnp1_at_quad_point,
+				    // GALERKIN SOLUTION 
+				    double* h_dof_galerkin,
+				    double* hu_dof_galerkin,
+				    double* hv_dof_galerkin,
+				    // TO COMPUTE LOW ORDER 
+				    double* low_order_hnp1,
+				    double* dEV_minus_dL_times_hStarji_minus_hStarij, 
+				    double cE)
+    {
+      double dt = 1./alphaBDF; 
+      ////////////////
+      // CELL LOOPS //
+      ////////////////
+      // To compute residual of galerkin solution
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  //declare local storage for element residual and initialize
+	  register double elementResidual_h[nDOF_test_element], 
+	    elementResidual_hu[nDOF_test_element],
+	    elementResidual_hv[nDOF_test_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      elementResidual_h[i]=0.0;
+	      elementResidual_hu[i]=0.0;
+	      elementResidual_hv[i]=0.0;
+	    }
+	  //
+	  //loop over quadrature points and compute integrands
+	  //
+	  for(int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      //compute indices and declare local storage
+	      register int eN_k = eN*nQuadraturePoints_element+k,
+		eN_k_nSpace = eN_k*nSpace,
+		eN_nDOF_trial_element = eN*nDOF_trial_element;
+	      register double 
+		h=0.0,hu=0.0,hv=0.0, // solution at current time
+		hn=0.0,hun=0.0,hvn=0.0, // solution at current time
+		grad_hn[nSpace],grad_hun[nSpace],grad_hvn[nSpace],grad_z[nSpace],    
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		h_test_dV[nDOF_trial_element],
+		h_grad_trial[nDOF_trial_element*nSpace],vel_grad_trial[nDOF_trial_element*nSpace],
+		dV,x,y,xt,yt;
+	      //get jacobian, etc for mapping reference element
+	      ck.calculateMapping_element(eN,
+					  k,
+					  mesh_dof,
+					  mesh_l2g,
+					  mesh_trial_ref,
+					  mesh_grad_trial_ref,
+					  jac,
+					  jacDet,
+					  jacInv,
+					  x,y);
+	      //get the physical integration weight
+	      dV = fabs(jacDet)*dV_ref[k];
+	      //get the trial function gradients
+	      ck.gradTrialFromRef(&h_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,h_grad_trial);
+	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
+	      //get the solution at current time. This is to compute velocity for other models
+	      ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
+	      ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
+	      ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
+	      // get the solution at time tn
+	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
+	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
+	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
+	      // calculate grad of solution at tn at quadrature points
+	      ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
+	      ck.gradFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
+	      ck.gradFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hvn);
+	      ck.gradFromDOF(b_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_z);
+	      // calculate cell based CFL
+	      calculateCFL(elementDiameter[eN],
+			   g,
+			   hn,
+			   hun,
+			   hvn,
+			   hEps,
+			   q_cfl[eN_k]);
+	      //precalculate test function products with integration weights
+	      for (int j=0;j<nDOF_trial_element;j++)
+		h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
+	      //save velocity at quadrature points for other models to use
+	      q_velocity[eN_k_nSpace+0] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hu;
+	      q_velocity[eN_k_nSpace+1] = 2*h/(h*h+std::pow(fmax(h,hEps),2))*hv;
+	      hnp1_at_quad_point[eN_k] = h;
+	      hunp1_at_quad_point[eN_k] = hu;
+	      hvnp1_at_quad_point[eN_k] = hv;
+	      //update element residual. Part about the lumped mass matrix 
+	      double one_over_hnReg = 2*hn/(hn*hn+std::pow(fmax(hn,hEps),2));
+	      double dxf1 = grad_hun[0];
+	      double dyf1 = grad_hvn[1];
+	      double dxf2 = (2*hn*hun*grad_hun[0] - hun*hun*grad_hn[0])*std::pow(one_over_hnReg,2)+g*hn*grad_hn[0];
+	      double dyf2 = (hn*(hun*grad_hvn[1]+hvn*grad_hun[1])-hun*hvn*grad_hn[1])*std::pow(one_over_hnReg,2);
+	      double dxf3 = (hn*(hun*grad_hvn[0]+hvn*grad_hun[0])-hun*hvn*grad_hn[0])*std::pow(one_over_hnReg,2);
+	      double dyf3 = (2*hn*hvn*grad_hvn[1] - hvn*hvn*grad_hn[1])*std::pow(one_over_hnReg,2)+g*hn*grad_hn[1];
+	      // bathymetry source terms
+	      double b_dot_gradx_z = g*hn*grad_z[0];
+	      double b_dot_grady_z = g*hn*grad_z[1];
+		
+	      for(int i=0;i<nDOF_test_element;i++)
+		{
+		  elementResidual_h[i]  += (h -hn   + dt*(dxf1 + dyf1))*h_test_dV[i];
+		  elementResidual_hu[i] += (hu-hun + dt*(dxf2 + dyf2) + dt*b_dot_gradx_z)*h_test_dV[i];
+		  elementResidual_hv[i] += (hv-hvn + dt*(dxf3 + dyf3) + dt*b_dot_grady_z)*h_test_dV[i];
+		}
+	    }
+	  // distribute
+	  for(int i=0;i<nDOF_test_element;i++)
+	    {
+	      register int eN_i=eN*nDOF_test_element+i;
+	      int h_gi = h_l2g[eN_i]; //global i-th index for h
+	      int vel_gi = vel_l2g[eN_i]; //global i-th index for velocities 
+
+	      // distribute element residual to global residual
+	      globalResidual[offset_h+stride_h*h_gi]  += elementResidual_h[i];
+	      globalResidual[offset_hu+stride_hu*vel_gi] += elementResidual_hu[i];
+	      globalResidual[offset_hv+stride_hv*vel_gi] += elementResidual_hv[i];
+	    }
+	}
+      
     }
     
     void calculateJacobian(//element
@@ -6962,126 +7635,126 @@ namespace proteus
 	}//elements
     }
 
-    void calculateJacobian_second_order_NonFlatB_with_EV(//element
-							 double* mesh_trial_ref,
-							 double* mesh_grad_trial_ref,
-							 double* mesh_dof,
-							 double* mesh_velocity_dof,
-							 double MOVING_DOMAIN,
-							int* mesh_l2g,
-							double* dV_ref,
-							double* h_trial_ref,
-							double* h_grad_trial_ref,
-							double* h_test_ref,
-							double* h_grad_test_ref,
-							double* vel_trial_ref,
-							double* vel_grad_trial_ref,
-							double* vel_test_ref,
-							double* vel_grad_test_ref,
-							//element boundary
-							double* mesh_trial_trace_ref,
-							double* mesh_grad_trial_trace_ref,
-							double* dS_ref,
-							double* h_trial_trace_ref,
-							double* h_grad_trial_trace_ref,
-							double* h_test_trace_ref,
-							double* h_grad_test_trace_ref,
-							double* vel_trial_trace_ref,
-							double* vel_grad_trial_trace_ref,
-							double* vel_test_trace_ref,
-							double* vel_grad_test_trace_ref,
-							double* normal_ref,
-							double* boundaryJac_ref,
-							//physics
-							double* elementDiameter,
-							int nElements_global,
-							double useRBLES,
-							double useMetrics, 
-							double alphaBDF,
-							double nu,
-							double g,
-							int* h_l2g, 
-							int* vel_l2g,
-							double* b_dof,
-							double* h_dof, 
-							double* hu_dof, 
-							double* hv_dof, 
-							double* h_dof_sge, 
-							double* hu_dof_sge, 
-							double* hv_dof_sge, 
-							double* q_mass_acc_beta_bdf,
-							double* q_mom_hu_acc_beta_bdf, 
-							double* q_mom_hv_acc_beta_bdf,
-							double* q_velocity_sge,
-							double* q_cfl,
-							double* q_numDiff_h_last,
-							double* q_numDiff_hu_last, 
-							double* q_numDiff_hv_last, 
-							int* sdInfo_hu_hu_rowptr,
-							int* sdInfo_hu_hu_colind,			      
-							int* sdInfo_hu_hv_rowptr,
-							int* sdInfo_hu_hv_colind,
-							int* sdInfo_hv_hv_rowptr,
-							int* sdInfo_hv_hv_colind,
-							int* sdInfo_hv_hu_rowptr,
-							int* sdInfo_hv_hu_colind,
-							int* csrRowIndeces_h_h,
-							int* csrColumnOffsets_h_h,
-							int* csrRowIndeces_h_hu,
-							int* csrColumnOffsets_h_hu,
-							int* csrRowIndeces_h_hv,
-							int* csrColumnOffsets_h_hv,
-							int* csrRowIndeces_hu_h,
-							int* csrColumnOffsets_hu_h,
-							int* csrRowIndeces_hu_hu,
-							int* csrColumnOffsets_hu_hu,
-							int* csrRowIndeces_hu_hv,
-							int* csrColumnOffsets_hu_hv,
-							int* csrRowIndeces_hv_h,
-							int* csrColumnOffsets_hv_h,
-							int* csrRowIndeces_hv_hu,
-							int* csrColumnOffsets_hv_hu,
-							int* csrRowIndeces_hv_hv,
-							int* csrColumnOffsets_hv_hv,
-							double* globalJacobian,
-							int nExteriorElementBoundaries_global,
-							int* exteriorElementBoundariesArray,
-							int* elementBoundaryElementsArray,
-							int* elementBoundaryLocalElementBoundariesArray,
-							int* isDOFBoundary_h,
-							int* isDOFBoundary_hu,
-							int* isDOFBoundary_hv,
-							int* isAdvectiveFluxBoundary_h,
-							int* isAdvectiveFluxBoundary_hu,
-							int* isAdvectiveFluxBoundary_hv,
-							int* isDiffusiveFluxBoundary_hu,
-							int* isDiffusiveFluxBoundary_hv,
-							double* ebqe_bc_h_ext,
-							double* ebqe_bc_flux_mass_ext,
-							double* ebqe_bc_flux_mom_hu_adv_ext,
-							double* ebqe_bc_flux_mom_hv_adv_ext,
-							double* ebqe_bc_hu_ext,
-							double* ebqe_bc_flux_hu_diff_ext,
-							double* ebqe_penalty_ext,
-							double* ebqe_bc_hv_ext,
-							double* ebqe_bc_flux_hv_diff_ext,
-							int* csrColumnOffsets_eb_h_h,
-							int* csrColumnOffsets_eb_h_hu,
-							int* csrColumnOffsets_eb_h_hv,
-							int* csrColumnOffsets_eb_hu_h,
-							int* csrColumnOffsets_eb_hu_hu,
-							int* csrColumnOffsets_eb_hu_hv,
-							int* csrColumnOffsets_eb_hv_h,
-							int* csrColumnOffsets_eb_hv_hu,
-							int* csrColumnOffsets_eb_hv_hv)
+    void calculateMassMatrix(//element
+			     double* mesh_trial_ref,
+			     double* mesh_grad_trial_ref,
+			     double* mesh_dof,
+			     double* mesh_velocity_dof,
+			     double MOVING_DOMAIN,
+			     int* mesh_l2g,
+			     double* dV_ref,
+			     double* h_trial_ref,
+			     double* h_grad_trial_ref,
+			     double* h_test_ref,
+			     double* h_grad_test_ref,
+			     double* vel_trial_ref,
+			     double* vel_grad_trial_ref,
+			     double* vel_test_ref,
+			     double* vel_grad_test_ref,
+			     //element boundary
+			     double* mesh_trial_trace_ref,
+			     double* mesh_grad_trial_trace_ref,
+			     double* dS_ref,
+			     double* h_trial_trace_ref,
+			     double* h_grad_trial_trace_ref,
+			     double* h_test_trace_ref,
+			     double* h_grad_test_trace_ref,
+			     double* vel_trial_trace_ref,
+			     double* vel_grad_trial_trace_ref,
+			     double* vel_test_trace_ref,
+			     double* vel_grad_test_trace_ref,
+			     double* normal_ref,
+			     double* boundaryJac_ref,
+			     //physics
+			     double* elementDiameter,
+			     int nElements_global,
+			     double useRBLES,
+			     double useMetrics, 
+			     double alphaBDF,
+			     double nu,
+			     double g,
+			     int* h_l2g, 
+			     int* vel_l2g,
+			     double* b_dof,
+			     double* h_dof, 
+			     double* hu_dof, 
+			     double* hv_dof, 
+			     double* h_dof_sge, 
+			     double* hu_dof_sge, 
+			     double* hv_dof_sge, 
+			     double* q_mass_acc_beta_bdf,
+			     double* q_mom_hu_acc_beta_bdf, 
+			     double* q_mom_hv_acc_beta_bdf,
+			     double* q_velocity_sge,
+			     double* q_cfl,
+			     double* q_numDiff_h_last,
+			     double* q_numDiff_hu_last, 
+			     double* q_numDiff_hv_last, 
+			     int* sdInfo_hu_hu_rowptr,
+			     int* sdInfo_hu_hu_colind,			      
+			     int* sdInfo_hu_hv_rowptr,
+			     int* sdInfo_hu_hv_colind,
+			     int* sdInfo_hv_hv_rowptr,
+			     int* sdInfo_hv_hv_colind,
+			     int* sdInfo_hv_hu_rowptr,
+			     int* sdInfo_hv_hu_colind,
+			     int* csrRowIndeces_h_h,
+			     int* csrColumnOffsets_h_h,
+			     int* csrRowIndeces_h_hu,
+			     int* csrColumnOffsets_h_hu,
+			     int* csrRowIndeces_h_hv,
+			     int* csrColumnOffsets_h_hv,
+			     int* csrRowIndeces_hu_h,
+			     int* csrColumnOffsets_hu_h,
+			     int* csrRowIndeces_hu_hu,
+			     int* csrColumnOffsets_hu_hu,
+			     int* csrRowIndeces_hu_hv,
+			     int* csrColumnOffsets_hu_hv,
+			     int* csrRowIndeces_hv_h,
+			     int* csrColumnOffsets_hv_h,
+			     int* csrRowIndeces_hv_hu,
+			     int* csrColumnOffsets_hv_hu,
+			     int* csrRowIndeces_hv_hv,
+			     int* csrColumnOffsets_hv_hv,
+			     double* globalJacobian,
+			     int nExteriorElementBoundaries_global,
+			     int* exteriorElementBoundariesArray,
+			     int* elementBoundaryElementsArray,
+			     int* elementBoundaryLocalElementBoundariesArray,
+			     int* isDOFBoundary_h,
+			     int* isDOFBoundary_hu,
+			     int* isDOFBoundary_hv,
+			     int* isAdvectiveFluxBoundary_h,
+			     int* isAdvectiveFluxBoundary_hu,
+			     int* isAdvectiveFluxBoundary_hv,
+			     int* isDiffusiveFluxBoundary_hu,
+			     int* isDiffusiveFluxBoundary_hv,
+			     double* ebqe_bc_h_ext,
+			     double* ebqe_bc_flux_mass_ext,
+			     double* ebqe_bc_flux_mom_hu_adv_ext,
+			     double* ebqe_bc_flux_mom_hv_adv_ext,
+			     double* ebqe_bc_hu_ext,
+			     double* ebqe_bc_flux_hu_diff_ext,
+			     double* ebqe_penalty_ext,
+			     double* ebqe_bc_hv_ext,
+			     double* ebqe_bc_flux_hv_diff_ext,
+			     int* csrColumnOffsets_eb_h_h,
+			     int* csrColumnOffsets_eb_h_hu,
+			     int* csrColumnOffsets_eb_h_hv,
+			     int* csrColumnOffsets_eb_hu_h,
+			     int* csrColumnOffsets_eb_hu_hu,
+			     int* csrColumnOffsets_eb_hu_hv,
+			     int* csrColumnOffsets_eb_hv_h,
+			     int* csrColumnOffsets_eb_hv_hu,
+			     int* csrColumnOffsets_eb_hv_hv)
     {
-      double dt = 1./alphaBDF; // HACKED to work just for BDF1
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
       for(int eN=0;eN<nElements_global;eN++)
 	{
-	  register double  elementJacobian_h_h[nDOF_test_element][nDOF_trial_element],
+	  register double  
+	    elementJacobian_h_h[nDOF_test_element][nDOF_trial_element],
 	    elementJacobian_h_hu[nDOF_test_element][nDOF_trial_element],
 	    elementJacobian_h_hv[nDOF_test_element][nDOF_trial_element],
 	    elementJacobian_hu_h[nDOF_test_element][nDOF_trial_element],
@@ -7110,56 +7783,13 @@ namespace proteus
 		eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
 	      //declare local storage
-	      register double b=0.0,
-		h=0.0,
-		hu=0.0,
-		hv=0.0,
-		grad_b[nSpace],
-		grad_h[nSpace],
-		grad_hu[nSpace],
-		grad_hv[nSpace],
-		mass_acc=0.0,
-		dmass_acc_h=0.0,
-		mom_hu_acc=0.0,
-		dmom_hu_acc_h=0.0,
-		dmom_hu_acc_hu=0.0,
-		mom_hv_acc=0.0,
-		dmom_hv_acc_h=0.0,
-		dmom_hv_acc_hv=0.0,
-		mass_adv[nSpace],
-		dmass_adv_h[nSpace],
-		dmass_adv_hu[nSpace],
-		dmass_adv_hv[nSpace],
-		mom_hu_adv[nSpace],
-		dmom_hu_adv_h[nSpace],
-		dmom_hu_adv_hu[nSpace],
-		dmom_hu_adv_hv[nSpace],
-		mom_hv_adv[nSpace],
-		dmom_hv_adv_h[nSpace],
-		dmom_hv_adv_hu[nSpace],
-		dmom_hv_adv_hv[nSpace],
-		mom_hu_source=0.0,
-		dmom_hu_source_h=0.0,
-		mom_hv_source=0.0,
-		dmom_hv_source_h=0.0,
-		mass_acc_t=0.0,
-		dmass_acc_h_t=0.0,
-		mom_hu_acc_t=0.0,
-		dmom_hu_acc_h_t=0.0,
-		dmom_hu_acc_hu_t=0.0,
-		mom_hv_acc_t=0.0,
-		dmom_hv_acc_h_t=0.0,
-		dmom_hv_acc_hv_t=0.0,
+	      register double 
 		jac[nSpace*nSpace],
 		jacDet,
 		jacInv[nSpace*nSpace],
-		h_grad_trial[nDOF_trial_element*nSpace],
-		vel_grad_trial[nDOF_trial_element*nSpace],
 		dV,
 		h_test_dV[nDOF_test_element],
 		vel_test_dV[nDOF_test_element],
-		h_grad_test_dV[nDOF_test_element*nSpace],
-		vel_grad_test_dV[nDOF_test_element*nSpace],
 		x,y,xt,yt;
 	      //get jacobian, etc for mapping reference element
 	      ck.calculateMapping_element(eN,
@@ -7172,92 +7802,14 @@ namespace proteus
 					  jacDet,
 					  jacInv,
 					  x,y);
-	      //ck.calculateMappingVelocity_element(eN,
-	      //				  k,
-	      //				  mesh_velocity_dof,
-	      //				  mesh_l2g,
-	      //				  mesh_trial_ref,
-	      //				  xt,yt);
 	      //get the physical integration weight
 	      dV = fabs(jacDet)*dV_ref[k];
-	      //get the trial function gradients
-	      ck.gradTrialFromRef(&h_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,h_grad_trial);
-	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
-	      //get the solution 	
-	      ck.valFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],b);
-	      ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
-	      ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
-	      ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
-	      //get the solution gradients
-	      ck.gradFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_b);
-	      ck.gradFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h);
-	      ck.gradFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hu);
-	      ck.gradFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hv);
 	      //precalculate test function products with integration weights
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
 		  h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
 		  vel_test_dV[j] = vel_test_ref[k*nDOF_trial_element+j]*dV;
-		  for (int I=0;I<nSpace;I++)
-		    {
-		      h_grad_test_dV[j*nSpace+I]   = h_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
-		      vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin}
-		    }
 		}
-	      evaluateCoefficientsForJacobian(g,
-					      grad_b,
-					      h,
-					      hu,
-					      hv,
-					      mass_acc,
-					      dmass_acc_h,
-					      mom_hu_acc,
-					      dmom_hu_acc_h,
-					      dmom_hu_acc_hu,
-					      mom_hv_acc,
-					      dmom_hv_acc_h,
-					      dmom_hv_acc_hv,
-					      mass_adv,
-					      dmass_adv_h,
-					      dmass_adv_hu,
-					      dmass_adv_hv,
-					      mom_hu_adv,
-					      dmom_hu_adv_h,
-					      dmom_hu_adv_hu,
-					      dmom_hu_adv_hv,
-					      mom_hv_adv,
-					      dmom_hv_adv_h,
-					      dmom_hv_adv_hu,
-					      dmom_hv_adv_hv,
-					      mom_hu_source,
-					      dmom_hu_source_h,
-					      mom_hv_source,
-					      dmom_hv_source_h);
-	      //
-	      //moving mesh (TODO)
-	      //
-	      //
-	      //calculate time derivatives
-	      //
-	      ck.bdf(alphaBDF,
-		     q_mass_acc_beta_bdf[eN_k],
-		     mass_acc,
-		     dmass_acc_h,
-		     mass_acc_t,
-		     dmass_acc_h_t);
-	      ck.bdf(alphaBDF,
-		     q_mom_hu_acc_beta_bdf[eN_k],
-		     mom_hu_acc,
-		     dmom_hu_acc_hu,
-		     mom_hu_acc_t,
-		     dmom_hu_acc_hu_t);
-	      ck.bdf(alphaBDF,
-		     q_mom_hv_acc_beta_bdf[eN_k],
-		     mom_hv_acc,
-		     dmom_hv_acc_hv,
-		     mom_hv_acc_t,
-		     dmom_hv_acc_hv_t);
-
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
 		  register int i_nSpace = i*nSpace;
@@ -7267,16 +7819,16 @@ namespace proteus
 		      //////////////////////
 		      // h: h_h, h_u, h_v //
 		      //////////////////////
-		       // Mass matrix is NOT lumped
-		      elementJacobian_h_h[i][j] += dt*ck.MassJacobian_weak(dmass_acc_h_t,h_trial_ref[k*nDOF_trial_element+j],h_test_dV[i]);
+		      // EXPLICIT AND LUMPED 
+		      elementJacobian_h_h[i][j] += h_trial_ref[k*nDOF_trial_element+j]*h_test_dV[i];
 		      elementJacobian_h_hu[i][j] += 0;
 		      elementJacobian_h_hv[i][j] += 0;
-			
+		      
 		      //////////////////////
 		      // u: u_h, u_u, u_v //
 		      //////////////////////
 		      elementJacobian_hu_h[i][j] += 0;			  
-		      elementJacobian_hu_hu[i][j] += dt*ck.MassJacobian_weak(dmom_hu_acc_hu_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+		      elementJacobian_hu_hu[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
 		      elementJacobian_hu_hv[i][j] += 0;
 			
 		      //////////////////////
@@ -7284,7 +7836,7 @@ namespace proteus
 		      //////////////////////
 		      elementJacobian_hv_h[i][j] += 0;
 		      elementJacobian_hv_hu[i][j] += 0;
-		      elementJacobian_hv_hv[i][j] += dt*ck.MassJacobian_weak(dmom_hv_acc_hv_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+		      elementJacobian_hv_hv[i][j] += vel_trial_ref[k*nDOF_trial_element+j]*vel_test_dV[i];
 		    }//j
 		}//i
 	    }//k
@@ -7300,7 +7852,7 @@ namespace proteus
 		  globalJacobian[csrRowIndeces_h_h[eN_i] + csrColumnOffsets_h_h[eN_i_j]] += elementJacobian_h_h[i][j];
 		  globalJacobian[csrRowIndeces_h_hu[eN_i] + csrColumnOffsets_h_hu[eN_i_j]] += elementJacobian_h_hu[i][j];
 		  globalJacobian[csrRowIndeces_h_hv[eN_i] + csrColumnOffsets_h_hv[eN_i_j]] += elementJacobian_h_hv[i][j];
-		  
+
 		  globalJacobian[csrRowIndeces_hu_h[eN_i] + csrColumnOffsets_hu_h[eN_i_j]] += elementJacobian_hu_h[i][j];
 		  globalJacobian[csrRowIndeces_hu_hu[eN_i] + csrColumnOffsets_hu_hu[eN_i_j]] += elementJacobian_hu_hu[i][j];
 		  globalJacobian[csrRowIndeces_hu_hv[eN_i] + csrColumnOffsets_hu_hv[eN_i_j]] += elementJacobian_hu_hv[i][j];
@@ -7311,122 +7863,123 @@ namespace proteus
 		}//j
 	    }//i
 	}//elements
+      
     }
 
-    void calculateJacobian_GP(//element
-			      double* mesh_trial_ref,
-			      double* mesh_grad_trial_ref,
-			      double* mesh_dof,
-			      double* mesh_velocity_dof,
-			      double MOVING_DOMAIN,
-			      int* mesh_l2g,
-			      double* dV_ref,
-			      double* h_trial_ref,
-			      double* h_grad_trial_ref,
-			      double* h_test_ref,
-			      double* h_grad_test_ref,
-			      double* vel_trial_ref,
-			      double* vel_grad_trial_ref,
-			      double* vel_test_ref,
-			      double* vel_grad_test_ref,
-			      //element boundary
-			      double* mesh_trial_trace_ref,
-			      double* mesh_grad_trial_trace_ref,
-			      double* dS_ref,
-			      double* h_trial_trace_ref,
-			      double* h_grad_trial_trace_ref,
-			      double* h_test_trace_ref,
-			      double* h_grad_test_trace_ref,
-			      double* vel_trial_trace_ref,
-			      double* vel_grad_trial_trace_ref,
-			      double* vel_test_trace_ref,
-			      double* vel_grad_test_trace_ref,
-			      double* normal_ref,
-			      double* boundaryJac_ref,
-			      //physics
-			      double* elementDiameter,
-			      int nElements_global,
-			      double useRBLES,
-			      double useMetrics, 
-			      double alphaBDF,
-			      double nu,
-			      double g,
-			      int* h_l2g, 
-			      int* vel_l2g,
-			      double* b_dof,
-			      double* h_dof, 
-			      double* hu_dof, 
-			      double* hv_dof, 
-			      double* h_dof_sge, 
-			      double* hu_dof_sge, 
-			      double* hv_dof_sge, 
-			      double* q_mass_acc_beta_bdf,
-			      double* q_mom_hu_acc_beta_bdf, 
-			      double* q_mom_hv_acc_beta_bdf,
-			      double* q_velocity_sge,
-			      double* q_cfl,
-			      double* q_numDiff_h_last,
-			      double* q_numDiff_hu_last, 
-			      double* q_numDiff_hv_last, 
-			      int* sdInfo_hu_hu_rowptr,
-			      int* sdInfo_hu_hu_colind,			      
-			      int* sdInfo_hu_hv_rowptr,
-			      int* sdInfo_hu_hv_colind,
-			      int* sdInfo_hv_hv_rowptr,
-			      int* sdInfo_hv_hv_colind,
-			      int* sdInfo_hv_hu_rowptr,
-			      int* sdInfo_hv_hu_colind,
-			      int* csrRowIndeces_h_h,
-			      int* csrColumnOffsets_h_h,
-			      int* csrRowIndeces_h_hu,
-			      int* csrColumnOffsets_h_hu,
-			      int* csrRowIndeces_h_hv,
-			      int* csrColumnOffsets_h_hv,
-			      int* csrRowIndeces_hu_h,
-			      int* csrColumnOffsets_hu_h,
-			      int* csrRowIndeces_hu_hu,
-			      int* csrColumnOffsets_hu_hu,
-			      int* csrRowIndeces_hu_hv,
-			      int* csrColumnOffsets_hu_hv,
-			      int* csrRowIndeces_hv_h,
-			      int* csrColumnOffsets_hv_h,
-			      int* csrRowIndeces_hv_hu,
-			      int* csrColumnOffsets_hv_hu,
-			      int* csrRowIndeces_hv_hv,
-			      int* csrColumnOffsets_hv_hv,
-			      double* globalJacobian,
-			      int nExteriorElementBoundaries_global,
-			      int* exteriorElementBoundariesArray,
-			      int* elementBoundaryElementsArray,
-			      int* elementBoundaryLocalElementBoundariesArray,
-			      int* isDOFBoundary_h,
-			      int* isDOFBoundary_hu,
-			      int* isDOFBoundary_hv,
-			      int* isAdvectiveFluxBoundary_h,
-			      int* isAdvectiveFluxBoundary_hu,
-			      int* isAdvectiveFluxBoundary_hv,
-			      int* isDiffusiveFluxBoundary_hu,
-			      int* isDiffusiveFluxBoundary_hv,
-			      double* ebqe_bc_h_ext,
-			      double* ebqe_bc_flux_mass_ext,
-			      double* ebqe_bc_flux_mom_hu_adv_ext,
-			      double* ebqe_bc_flux_mom_hv_adv_ext,
-			      double* ebqe_bc_hu_ext,
-			      double* ebqe_bc_flux_hu_diff_ext,
-			      double* ebqe_penalty_ext,
-			      double* ebqe_bc_hv_ext,
-			      double* ebqe_bc_flux_hv_diff_ext,
-			      int* csrColumnOffsets_eb_h_h,
-			      int* csrColumnOffsets_eb_h_hu,
-			      int* csrColumnOffsets_eb_h_hv,
-			      int* csrColumnOffsets_eb_hu_h,
-			      int* csrColumnOffsets_eb_hu_hu,
-			      int* csrColumnOffsets_eb_hu_hv,
-			      int* csrColumnOffsets_eb_hv_h,
-			      int* csrColumnOffsets_eb_hv_hu,
-			      int* csrColumnOffsets_eb_hv_hv)
+    ////
+    void calculateLumpedMassMatrix(//element
+				   double* mesh_trial_ref,
+				   double* mesh_grad_trial_ref,
+				   double* mesh_dof,
+				   double* mesh_velocity_dof,
+				   double MOVING_DOMAIN,
+				   int* mesh_l2g,
+				   double* dV_ref,
+				   double* h_trial_ref,
+				   double* h_grad_trial_ref,
+				   double* h_test_ref,
+				   double* h_grad_test_ref,
+				   double* vel_trial_ref,
+				   double* vel_grad_trial_ref,
+				   double* vel_test_ref,
+				   double* vel_grad_test_ref,
+				   //element boundary
+				   double* mesh_trial_trace_ref,
+				   double* mesh_grad_trial_trace_ref,
+				   double* dS_ref,
+				   double* h_trial_trace_ref,
+				   double* h_grad_trial_trace_ref,
+				   double* h_test_trace_ref,
+				   double* h_grad_test_trace_ref,
+				   double* vel_trial_trace_ref,
+				   double* vel_grad_trial_trace_ref,
+				   double* vel_test_trace_ref,
+				   double* vel_grad_test_trace_ref,
+				   double* normal_ref,
+				   double* boundaryJac_ref,
+				   //physics
+				   double* elementDiameter,
+				   int nElements_global,
+				   double useRBLES,
+				   double useMetrics, 
+				   double alphaBDF,
+				   double nu,
+				   double g,
+				   int* h_l2g, 
+				   int* vel_l2g,
+				   double* b_dof,
+				   double* h_dof, 
+				   double* hu_dof, 
+				   double* hv_dof, 
+				   double* h_dof_sge, 
+				   double* hu_dof_sge, 
+				   double* hv_dof_sge, 
+				   double* q_mass_acc_beta_bdf,
+				   double* q_mom_hu_acc_beta_bdf, 
+				   double* q_mom_hv_acc_beta_bdf,
+				   double* q_velocity_sge,
+				   double* q_cfl,
+				   double* q_numDiff_h_last,
+				   double* q_numDiff_hu_last, 
+				   double* q_numDiff_hv_last, 
+				   int* sdInfo_hu_hu_rowptr,
+				   int* sdInfo_hu_hu_colind,			      
+				   int* sdInfo_hu_hv_rowptr,
+				   int* sdInfo_hu_hv_colind,
+				   int* sdInfo_hv_hv_rowptr,
+				   int* sdInfo_hv_hv_colind,
+				   int* sdInfo_hv_hu_rowptr,
+				   int* sdInfo_hv_hu_colind,
+				   int* csrRowIndeces_h_h,
+				   int* csrColumnOffsets_h_h,
+				   int* csrRowIndeces_h_hu,
+				   int* csrColumnOffsets_h_hu,
+				   int* csrRowIndeces_h_hv,
+				   int* csrColumnOffsets_h_hv,
+				   int* csrRowIndeces_hu_h,
+				   int* csrColumnOffsets_hu_h,
+				   int* csrRowIndeces_hu_hu,
+				   int* csrColumnOffsets_hu_hu,
+				   int* csrRowIndeces_hu_hv,
+				   int* csrColumnOffsets_hu_hv,
+				   int* csrRowIndeces_hv_h,
+				   int* csrColumnOffsets_hv_h,
+				   int* csrRowIndeces_hv_hu,
+				   int* csrColumnOffsets_hv_hu,
+				   int* csrRowIndeces_hv_hv,
+				   int* csrColumnOffsets_hv_hv,
+				   double* globalJacobian,
+				   int nExteriorElementBoundaries_global,
+				   int* exteriorElementBoundariesArray,
+				   int* elementBoundaryElementsArray,
+				   int* elementBoundaryLocalElementBoundariesArray,
+				   int* isDOFBoundary_h,
+				   int* isDOFBoundary_hu,
+				   int* isDOFBoundary_hv,
+				   int* isAdvectiveFluxBoundary_h,
+				   int* isAdvectiveFluxBoundary_hu,
+				   int* isAdvectiveFluxBoundary_hv,
+				   int* isDiffusiveFluxBoundary_hu,
+				   int* isDiffusiveFluxBoundary_hv,
+				   double* ebqe_bc_h_ext,
+				   double* ebqe_bc_flux_mass_ext,
+				   double* ebqe_bc_flux_mom_hu_adv_ext,
+				   double* ebqe_bc_flux_mom_hv_adv_ext,
+				   double* ebqe_bc_hu_ext,
+				   double* ebqe_bc_flux_hu_diff_ext,
+				   double* ebqe_penalty_ext,
+				   double* ebqe_bc_hv_ext,
+				   double* ebqe_bc_flux_hv_diff_ext,
+				   int* csrColumnOffsets_eb_h_h,
+				   int* csrColumnOffsets_eb_h_hu,
+				   int* csrColumnOffsets_eb_h_hv,
+				   int* csrColumnOffsets_eb_hu_h,
+				   int* csrColumnOffsets_eb_hu_hu,
+				   int* csrColumnOffsets_eb_hu_hv,
+				   int* csrColumnOffsets_eb_hv_h,
+				   int* csrColumnOffsets_eb_hv_hu,
+				   int* csrColumnOffsets_eb_hv_hv)
     {
-      double dt = 1./alphaBDF; // HACKED to work just for BDF1
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
@@ -7461,56 +8014,13 @@ namespace proteus
 		eN_nDOF_trial_element = eN*nDOF_trial_element; //index to a vector at a quadrature point
 
 	      //declare local storage
-	      register double b=0.0,
-		h=0.0,
-		hu=0.0,
-		hv=0.0,
-		grad_b[nSpace],
-		grad_h[nSpace],
-		grad_hu[nSpace],
-		grad_hv[nSpace],
-		mass_acc=0.0,
-		dmass_acc_h=0.0,
-		mom_hu_acc=0.0,
-		dmom_hu_acc_h=0.0,
-		dmom_hu_acc_hu=0.0,
-		mom_hv_acc=0.0,
-		dmom_hv_acc_h=0.0,
-		dmom_hv_acc_hv=0.0,
-		mass_adv[nSpace],
-		dmass_adv_h[nSpace],
-		dmass_adv_hu[nSpace],
-		dmass_adv_hv[nSpace],
-		mom_hu_adv[nSpace],
-		dmom_hu_adv_h[nSpace],
-		dmom_hu_adv_hu[nSpace],
-		dmom_hu_adv_hv[nSpace],
-		mom_hv_adv[nSpace],
-		dmom_hv_adv_h[nSpace],
-		dmom_hv_adv_hu[nSpace],
-		dmom_hv_adv_hv[nSpace],
-		mom_hu_source=0.0,
-		dmom_hu_source_h=0.0,
-		mom_hv_source=0.0,
-		dmom_hv_source_h=0.0,
-		mass_acc_t=0.0,
-		dmass_acc_h_t=0.0,
-		mom_hu_acc_t=0.0,
-		dmom_hu_acc_h_t=0.0,
-		dmom_hu_acc_hu_t=0.0,
-		mom_hv_acc_t=0.0,
-		dmom_hv_acc_h_t=0.0,
-		dmom_hv_acc_hv_t=0.0,
+	      register double 
 		jac[nSpace*nSpace],
 		jacDet,
 		jacInv[nSpace*nSpace],
-		h_grad_trial[nDOF_trial_element*nSpace],
-		vel_grad_trial[nDOF_trial_element*nSpace],
 		dV,
 		h_test_dV[nDOF_test_element],
 		vel_test_dV[nDOF_test_element],
-		h_grad_test_dV[nDOF_test_element*nSpace],
-		vel_grad_test_dV[nDOF_test_element*nSpace],
 		x,y,xt,yt;
 	      //get jacobian, etc for mapping reference element
 	      ck.calculateMapping_element(eN,
@@ -7523,92 +8033,15 @@ namespace proteus
 					  jacDet,
 					  jacInv,
 					  x,y);
-	      //ck.calculateMappingVelocity_element(eN,
-	      //				  k,
-	      //				  mesh_velocity_dof,
-	      //				  mesh_l2g,
-	      //				  mesh_trial_ref,
-	      //				  xt,yt);
 	      //get the physical integration weight
 	      dV = fabs(jacDet)*dV_ref[k];
-	      //get the trial function gradients
-	      ck.gradTrialFromRef(&h_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,h_grad_trial);
-	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
-	      //get the solution 	
-	      ck.valFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],b);
-	      ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
-	      ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
-	      ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
-	      //get the solution gradients
-	      ck.gradFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_b);
-	      ck.gradFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h);
-	      ck.gradFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hu);
-	      ck.gradFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hv);
 	      //precalculate test function products with integration weights
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
 		  h_test_dV[j] = h_test_ref[k*nDOF_trial_element+j]*dV;
 		  vel_test_dV[j] = vel_test_ref[k*nDOF_trial_element+j]*dV;
-		  for (int I=0;I<nSpace;I++)
-		    {
-		      h_grad_test_dV[j*nSpace+I]   = h_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
-		      vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin}
-		    }
 		}
-	      evaluateCoefficientsForJacobian(g,
-					      grad_b,
-					      h,
-					      hu,
-					      hv,
-					      mass_acc,
-					      dmass_acc_h,
-					      mom_hu_acc,
-					      dmom_hu_acc_h,
-					      dmom_hu_acc_hu,
-					      mom_hv_acc,
-					      dmom_hv_acc_h,
-					      dmom_hv_acc_hv,
-					      mass_adv,
-					      dmass_adv_h,
-					      dmass_adv_hu,
-					      dmass_adv_hv,
-					      mom_hu_adv,
-					      dmom_hu_adv_h,
-					      dmom_hu_adv_hu,
-					      dmom_hu_adv_hv,
-					      mom_hv_adv,
-					      dmom_hv_adv_h,
-					      dmom_hv_adv_hu,
-					      dmom_hv_adv_hv,
-					      mom_hu_source,
-					      dmom_hu_source_h,
-					      mom_hv_source,
-					      dmom_hv_source_h);
-	      //
-	      //moving mesh (TODO)
-	      //
-	      //
-	      //calculate time derivatives
-	      //
-	      ck.bdf(alphaBDF,
-		     q_mass_acc_beta_bdf[eN_k],
-		     mass_acc,
-		     dmass_acc_h,
-		     mass_acc_t,
-		     dmass_acc_h_t);
-	      ck.bdf(alphaBDF,
-		     q_mom_hu_acc_beta_bdf[eN_k],
-		     mom_hu_acc,
-		     dmom_hu_acc_hu,
-		     mom_hu_acc_t,
-		     dmom_hu_acc_hu_t);
-	      ck.bdf(alphaBDF,
-		     q_mom_hv_acc_beta_bdf[eN_k],
-		     mom_hv_acc,
-		     dmom_hv_acc_hv,
-		     mom_hv_acc_t,
-		     dmom_hv_acc_hv_t);
-
+		
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
 		  register int i_nSpace = i*nSpace;

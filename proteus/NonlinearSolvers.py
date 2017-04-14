@@ -637,11 +637,113 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
  
         FIX_ROUNDOFF_ERROR = False
+
+        COMPUTE_GALERKIN = True
         
+        #####################
+        # GALERKIN SOLUTION #
+        #####################
+        if (COMPUTE_GALERKIN):
+            #backup_calculateResidual = self.F.calculateResidual
+            logEvent("   Galerkin solution", level=1)
+            self.F.calculateResidual = self.F.sw2d.calculateResidual_galerkin
+            self.computeResidual(u,r,b)                            
+            if self.updateJacobian or self.fullNewton:
+                self.updateJacobian = False
+                self.F.getJacobian(self.J)
+                self.linearSolver.prepare(b=r)
+            self.du[:]=0.0
+            if not self.directSolver:
+                if self.EWtol:
+                    self.setLinearSolverTolerance(r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed()
+            u-=self.du
+            # DISTRIBUTE SOLUTION FROM u to u[ci].dof
+            #self.F.setUnknowns(u)
+            logEvent("   End of Galerkin solution", level=1)        
+            # Get index for different variables
+            index = range(0,len(u))
+            hIndex = index[0::3]
+            huIndex = index[1::3]
+            hvIndex = index[2::3]
+            # Copy galerkin solution to corresponding vector
+            self.F.h_dof_galerkin[:] = u[hIndex] 
+            self.F.hu_dof_galerkin[:] = u[huIndex] 
+            self.F.hv_dof_galerkin[:] = u[hvIndex]
+            # Copy back old solution to current solution (for next time we call calculateResidual)
+            u[hIndex]=self.F.h_dof_old
+            u[huIndex]=self.F.hu_dof_old
+            u[hvIndex]=self.F.hv_dof_old
+            # Change back the function to calculateResidual
+            self.F.calculateResidual = self.F.sw2d.calculateResidual_second_order_NonFlatB_with_EV
+            # Make sure no NaNs
+            hG_NaNs  = np.sum(1.0*np.isnan(self.F.h_dof_galerkin))
+            huG_NaNs = np.sum(1.0*np.isnan(self.F.hu_dof_galerkin))
+            hvG_NaNs = np.sum(1.0*np.isnan(self.F.hv_dof_galerkin))
+            assert hG_NaNs==0 and huG_NaNs==0 and hvG_NaNs==0, ("NaNs on Galerkin solution")
+            ############################
+            # END OF GALERKIN SOLUTION #
+            ############################
+
         self.computeResidual(u,r,b)
         u[:] = r
-        self.computeResidual(u,r,b)
+        self.F.FCTStep()
+        self.F.setUnknowns(u)
+
+        ##############################
+        # ENTROPY VISCOSITY SOLUTION #
+        ##############################
+        #self.F.calculateResidual = self.F.sw2d.calculateResidual_second_order_NonFlatB_with_EV
+        """
+        r=self.solveInitialize(u,r,b)
+        self.F.check_positivity_water_height=False
+        self.norm_r0 = self.norm(r)
+        self.norm_r_hist = []
+        self.norm_du_hist = []
+        self.gammaK_max=0.0
+        self.linearSolverFailed = False
+        while (not self.converged(r) and
+               not self.failed()):
+            logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+                     % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+            if self.updateJacobian or self.fullNewton:
+                self.updateJacobian = False
+                self.F.getJacobian(self.J)
+                self.linearSolver.prepare(b=r)
+            self.du[:]=0.0
+            if not self.directSolver:
+                if self.EWtol:
+                    self.setLinearSolverTolerance(r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed()
+            u-=self.du
+            self.computeResidual(u,r,b)                            
+        # If solution has converged
+        logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+        logEvent(memory("Newton","Newton"),level=4)
+
+        ############################
+        # FCT STEP ON WATER HEIGHT #
+        ############################
+        self.F.FCTStep()
         
+        # DISTRIBUTE SOLUTION FROM u to u[ci].dof
+        self.F.setUnknowns(u)
+        
+        # Get values at quad points (in case there is a need to do convergence tests)
+        for ci in range(self.F.nc):
+            self.F.u[ci].getValues(self.F.q[('w',0)],self.F.q[('u',ci)])
+
+        self.F.check_positivity_water_height=True
+        """
+
+
+        
+
         # To Fix round off error
         #if (FIX_ROUNDOFF_ERROR):
         #    index = range(0,len(u))
