@@ -107,6 +107,7 @@ RUN git clone https://github.com/erdc-cm/proteus && \
     ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source" && \
     ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_jessie --objects="build" && \
     cd stack && \
+    git checkout stable/proteus && \
     ../hashdist/bin/hit build default.yaml -v
 
 ENV CC mpicc
