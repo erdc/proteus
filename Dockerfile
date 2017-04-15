@@ -124,14 +124,17 @@ RUN cd proteus && make jupyter
 USER root
 
 RUN pip3 install pyzmq==16.0.2 --install-option="--zmq=/home/$NB_USER/proteus/linux2"
-RUN pip3 install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0
+RUN pip3 install widgetsnbextension==2.0.0
+RUN pip3 install six==1.9.0
+RUN pip3 install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  notebook==4.4.0 widgetsnbextension==2.0.0 ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 hide_code==0.4.0
 RUN /usr/local/bin/jupyter serverextension enable --py jupyterlab --sys-prefix \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix widgetsnbextension \
-    && /usr/local/bin/jupyter nbextension enable --py --sys-prefix bqplot \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix pythreejs \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix ipyleaflet \
     && /usr/local/bin/jupyter nbextension install --py --sys-prefix rise \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix rise \
+    && /usr/local/bin/jupyter nbextension install --py --sys-prefix hide_code \
+    && /usr/local/bin/jupyter nbextension enable --py --sys-prefix hide_code \
     && /usr/local/bin/jupyter dashboards quick-setup --sys-prefix \
     && /usr/local/bin/jupyter nbextension install --sys-prefix --py ipyparallel \
     && /usr/local/bin/jupyter nbextension enable --sys-prefix --py ipyparallel \
@@ -160,17 +163,9 @@ USER $NB_USER
 
 RUN cd ~/.jupyter && \
     ipython profile create mpi --parallel && \
-    ipcluster nbextension enable --user && \
     echo '\nc.NotebookApp.server_extensions.append("ipyparallel.nbextension")' >> /home/$NB_USER/.jupyter/jupyter_notebook_config.py && \
     echo "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\nc.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" \
-          >> /home/$NB_USER/.ipython/profile_mpi/ipcluster_config.py \
-    && jupyter serverextension enable --py jupyterlab --user \
-    && jupyter nbextension enable --py --user widgetsnbextension\
-    && jupyter nbextension enable --py --user bqplot \
-    && jupyter nbextension enable --py --user pythreejs \
-    && jupyter nbextension enable --py --user ipyleaflet \
-    && jupyter nbextension install --py --user rise \
-    && jupyter nbextension enable --py --user rise
+          >> /home/$NB_USER/.ipython/profile_mpi/ipcluster_config.py
 
 # Import matplotlib the first time to build the font cache.
 ENV XDG_CACHE_HOME /home/$NB_USER/.cache/
