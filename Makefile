@@ -230,6 +230,7 @@ install: profile $(shell find proteus -type f) $(wildcard *.py) proteus
 	$(call howto)
 
 develop: proteus profile 
+	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/* ${PROTEUS}/${PROTEUS_ARCH}/lib
 	@echo "************************"
 	@echo "Installing development version"
 	@echo "************************"

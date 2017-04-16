@@ -34,25 +34,30 @@ public:
 	int nb_elems;   // number of nodes along cable
   double Cd_axial;  // drag coeff in axial direction
   double Cd_normal;  // drag coeff in normal direction
+  double Cm_axial;  // added mass coeff in axial direction
+  double Cm_normal;  // added mass coeff in normal direction
 	std::vector<ChVector<>> mvecs;  // vectors (nodes coordinates)
 	std::vector<ChVector<>> mvecs_middle;
 	std::vector<ChVector<>> mdirs;  // vectors (nodes coordinates)
 	std::shared_ptr<ChMaterialBeamANCF> mmaterial_cable;  // cable material
 	double d, rho, E, length;  // diameter, density, Young's modulus, length of cable
-    double A0; // unstretched diameter
+  double A0; // unstretched diameter
 	double L0 = 0;  // initial length along cable
 	std::vector<std::shared_ptr<ChNodeFEAxyzDD>> nodes;  // array nodes coordinates and direction
 	std::vector<std::shared_ptr<ChElementBeamANCF>> elems;  // array of elements */
 	std::vector<double> elems_length;  // array of elements
 	std::vector<ChVector<>> fluid_velocity;
+	std::vector<ChVector<>> fluid_acceleration;
 	std::vector<double> fluid_density;
-    std::vector<double> nodes_density; // density of (cable-fluid) at nodes
+  std::vector<double> nodes_density; // density of (cable-fluid) at nodes
 	cppCable(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, double length,
-		int nb_elems, double d, double rho, double E, double L0);  // constructor
+           int nb_elems, double d, double rho, double E, double L0);  // constructor
 	void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
-    void setFluidDensityAtNodes(std::vector<double> vof);
+	void setFluidAccelerationAtNodes(std::vector<ChVector<>> acc);
+  void setFluidDensityAtNodes(std::vector<double> vof);
 	std::vector<std::shared_ptr<ChVector<double>>> getNodalPositions();
 	std::vector<ChVector<>> forces_drag;
+	std::vector<ChVector<>> forces_addedmass;
   std::vector<std::shared_ptr<ChLoadBeamWrenchDistributed>> elems_loads_distributed;
   std::vector<std::shared_ptr<ChLoadBeamWrench>> elems_loads;
 	void buildVectors();  // builds location vectors for the nodes
@@ -61,9 +66,11 @@ public:
 	void buildElements();  // builds the elements for the mesh
 	void buildMesh();  // builds the mesh
 	void setDragForce();  // calculates the drag force per nodes
+	void setAddedMassForce();  // calculates the added mass force per nodes
   void applyForces();
   void addNodestoContactCloud(std::shared_ptr<ChContactSurfaceNodeCloud> cloud);
   void setDragCoefficients(double axial, double normal);
+  void setAddedMassCoefficients(double axial, double normal);
 };
 
 class cppMultiSegmentedCable {
@@ -84,6 +91,7 @@ public:
 	std::vector<double> length;  // diameter, density, Young's modulus, length of cable
 	std::vector<std::shared_ptr<ChNodeFEAxyzDD>> nodes;  // array nodes coordinates and direction
 	std::vector<ChVector<>> fluid_velocity;
+	std::vector<ChVector<>> fluid_acceleration;
 	std::vector<double> fluid_density;
 	std::vector<std::shared_ptr<ChElementBeamANCF>> elems;  // array of elements */
   std::shared_ptr<ChLinkPointFrame> constraint_front;
@@ -94,8 +102,10 @@ public:
 	cppMultiSegmentedCable(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, std::vector<double> length,
 		std::vector<int> nb_nodes, std::vector<double> d, std::vector<double> rho, std::vector<double> E);
 	void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
+	void setFluidAccelerationAtNodes(std::vector<ChVector<>> vel);
     void setFluidDensityAtNodes(std::vector<double> vof);
 	void updateDragForces();
+	void updateAddedMassForces();
   void applyForces();
 	std::vector<std::shared_ptr<ChVector<double>>> getNodalPositions();
   void buildNodes();
@@ -187,8 +197,28 @@ void cppMultiSegmentedCable::buildCable() {
 		}
 	}
   buildNodesCloud();
+  fluid_velocity.clear();
+  fluid_acceleration.clear();
+  fluid_density.clear();
+  for (int i = 0; i < nodes.size(); ++i) {
+    fluid_velocity.push_back(ChVector<>(0.,0.,0.));
+    fluid_acceleration.push_back(ChVector<>(0.,0.,0.));
+    fluid_density.push_back(0.);
+  }
+  setFluidVelocityAtNodes(fluid_velocity);
+  setFluidAccelerationAtNodes(fluid_acceleration);
+  setFluidDensityAtNodes(fluid_density);
 }
 
+void cppMultiSegmentedCable::setFluidAccelerationAtNodes(std::vector<ChVector<>> acc) {
+	fluid_acceleration = acc;
+	int node_nb = 0;
+	for (int i = 0; i < cables.size(); ++i) {
+		std::vector<ChVector<>> fluid_acc(fluid_acceleration.begin() + node_nb, fluid_acceleration.begin() + node_nb + cables[i]->nodes.size());
+		cables[i]->setFluidAccelerationAtNodes(fluid_acc);
+		node_nb += cables[i]->nodes.size();
+	}
+}
 
 void cppMultiSegmentedCable::setFluidVelocityAtNodes(std::vector<ChVector<>> vel) {
 	fluid_velocity = vel;
@@ -217,6 +247,11 @@ void cppMultiSegmentedCable::updateDragForces() {
 	};
 }
 
+void cppMultiSegmentedCable::updateAddedMassForces() {
+	for (int i = 0; i < cables.size(); ++i) {
+		cables[i]->setAddedMassForce();
+	};
+}
 
 void cppMultiSegmentedCable::applyForces() {
 	for (int i = 0; i < cables.size(); ++i) {
@@ -292,6 +327,8 @@ cppCable::cppCable(
 {
   Cd_axial = 1.15;  // studless chain
   Cd_normal = 1.4;  // studless chain
+  Cm_axial = 0.5;  //studless chain
+  Cm_normal = 1.;  // studless chain
   A0 = d*d/4*M_PI;
 	// TO CHANGE !!!
 	//buildMaterials();
@@ -348,13 +385,17 @@ void cppCable::buildNodes() {
 	ChVector<> ref = ChVector<>(1., 0., 0.);
 	std::shared_ptr<ChNodeFEAxyzDD> node;
 	// first node
-	dir = mvecs[1] - mvecs[0];
+	dir = (mvecs[1] - mvecs[0]);
 	dir.Normalize();
 	//plane = dir.x()*(x - mvecs[0].x()) + dir.y()*(y - mvecs[0].y()) + dir.z()*(z - mvecs[0].z());
-	if (dir.x() == 1 && dir.y() == 0 && dir.z() == 0) {
-		ref = ChVector<>(0., 0., -1.);
+	if (dir.x() == 1) {
+    ref = ChVector<>(0., 0., -1.);
 		ref.Normalize();
 	}
+  else if (dir.x() == -1) {
+    ref = ChVector<>(0., 0., 1.);
+		ref.Normalize();
+  }
 	else {
 		ref = ChVector<>(1., 0., 0.);
 	}
@@ -369,10 +410,14 @@ void cppCable::buildNodes() {
 	for (int i = 1; i < nb_nodes - 1; ++i) {
 		dir = mvecs[i + 1] - mvecs[i - 1];
 		dir.Normalize();
-		if (dir.x() == 1 && dir.y() == 0 && dir.z() == 0) {
-			ref = ChVector<>(0., 0., -1.);
-			ref.Normalize();
-		}
+    if (dir.x() == 1) {
+      ref = ChVector<>(0., 0., -1.);
+      ref.Normalize();
+    }
+    else if (dir.x() == -1) {
+      ref = ChVector<>(0., 0., 1.);
+      ref.Normalize();
+    }
 		else {
 			ref = ChVector<>(1., 0., 0.);
 		}
@@ -385,10 +430,14 @@ void cppCable::buildNodes() {
 	}  // last node
 	dir = mvecs[nb_nodes - 1] - mvecs[nb_nodes - 2];
 	dir.Normalize();
-	if (dir.x() == 1 && dir.y() == 0 && dir.z() == 0) {
-		ref = ChVector<>(0., 0., -1.);
-		ref.Normalize();
-	}
+  if (dir.x() == 1) {
+    ref = ChVector<>(0., 0., -1.);
+    ref.Normalize();
+  }
+  else if (dir.x() == -1) {
+    ref = ChVector<>(0., 0., 1.);
+    ref.Normalize();
+  }
 	else {
 		ref = ChVector<>(1., 0., 0.);
 	}
@@ -420,7 +469,8 @@ void cppCable::buildElements() {
           elems_loads.push_back(load);
 			element->SetNodes(nodes[i - 1], nodes[i + 1], nodes[i]);
       double elem_length = (nodes[i]->GetPos()-nodes[i-1]->GetPos()).Length()+(nodes[i+1]->GetPos()-nodes[i]->GetPos()).Length();
-			element->SetDimensions(elem_length, d, d);
+      double d2 = sqrt(d*d-(d*d-CH_C_PI*d*d/4.));
+			element->SetDimensions(elem_length, d2, d2);
 			element->SetMaterial(mmaterial_cable);
 			element->SetAlphaDamp(0.0004);
 			element->SetGravityOn(true);
@@ -442,10 +492,13 @@ void cppCable::buildMesh() {
 	}
 }
 
+void cppCable::setFluidAccelerationAtNodes(std::vector<ChVector<>> acc) {
+	fluid_acceleration = acc;
+}
+
 void cppCable::setFluidVelocityAtNodes(std::vector<ChVector<>> vel) {
 	fluid_velocity = vel;
 }
-
 
 void cppCable::setFluidDensityAtNodes(std::vector<double> dens) {
 	fluid_density = dens;
@@ -454,6 +507,12 @@ void cppCable::setFluidDensityAtNodes(std::vector<double> dens) {
 void cppCable::setDragCoefficients(double axial, double normal) {
   Cd_axial = axial;
 	Cd_normal = normal;
+}
+
+
+void cppCable::setAddedMassCoefficients(double axial, double normal) {
+  Cm_axial = axial;
+	Cm_normal = normal;
 }
 
 void cppCable::setDragForce() {
@@ -468,10 +527,9 @@ void cppCable::setDragForce() {
 	ChVector<> Fd_a;  // axial (tangential) drag force
 	ChVector<> Fd_n;  // normal(transversal) drag force
 	ChVector<> Fd;  // total drag force
-    ChVector<> Va;
-    ChVector<> Vn;
-	std::shared_ptr<ChVector<>> force_drag;
-    double rho_f;
+  ChVector<> Va;
+  ChVector<> Vn;
+  double rho_f;
 	// clear current drag forces
 	forces_drag.clear();
 	double length_elem = length / (nb_nodes - 1);
@@ -488,13 +546,55 @@ void cppCable::setDragForce() {
 		// transverse drag coefficient
 		/* double C_dn = 0.;  // transversal drag coeff */
 		/* double C_dt = 0.;  // tangential drag coeff */
-        rho_f = fluid_density[i];
-        Va = u_rel^t_dir*t_dir;
-        Vn = u_rel-Va;
-		Fd_a = 0.5*rho_f*Cd_axial*d*Va.Length()*Va;//(force per unit length)
-        Fd_n = 0.5*rho_f*Cd_normal*M_PI*d*Vn.Length()*Vn;//(force per unit length)
+    rho_f = fluid_density[i];
+    Va = u_rel^t_dir*t_dir;
+    Vn = u_rel-Va;
+    Fd_a = 0.5*rho_f*Cd_axial*d*Va.Length()*Va;//(force per unit length)
+    Fd_n = 0.5*rho_f*Cd_normal*M_PI*d*Vn.Length()*Vn;//(force per unit length)
 		Fd = Fd_a + Fd_n;
 		forces_drag.push_back(Fd);
+	}
+}
+
+
+void cppCable::setAddedMassForce() {
+    /*
+     * setFluidVelocityAtNodes and setFluidDensityAtNodes
+     * must be called before this function
+     */
+	ChVector<> a_ch;  // acceleration from chrono
+	ChVector<> a_prot;  // acceleration from proteus
+	ChVector<> a_rel;  // relative acceleration of node with surrounding fluid
+	ChVector<> t_dir;  // tangent at node
+	ChVector<> Fm_a;  // axial (tangential) added mass force
+	ChVector<> Fm_n;  // normal(transversal) added mass force
+	ChVector<> Fm;  // total added mass force
+    ChVector<> Va;
+    ChVector<> Vn;
+    double rho_f;
+	// clear current drag forces
+	forces_drag.clear();
+	double length_elem = length / (nb_nodes - 1);
+	for (int i = 0; i < nodes.size(); ++i) {
+		a_ch = nodes[i]->GetPos_dtdt();
+		// get velocity u_prot from proteus // TO CHANGE !!
+		double ax_prot = fluid_acceleration[i][0];
+		double ay_prot = fluid_acceleration[i][1];
+		double az_prot = fluid_acceleration[i][2];
+		a_prot = ChVector<>(ax_prot, ay_prot, az_prot);
+		a_rel = a_prot - a_ch;
+		// CAREFUL HERE: ChBeamElementANCF, GetD() does not give direction but normal
+		t_dir = nodes[i]->GetD() % nodes[i]->GetDD();
+		// transverse drag coefficient
+		/* double C_dn = 0.;  // transversal drag coeff */
+		/* double C_dt = 0.;  // tangential drag coeff */
+    rho_f = fluid_density[i];
+    Va = a_rel^t_dir*t_dir;
+    Vn = a_rel-Va;
+    Fm_a = rho_f*Cm_axial*M_PI*d*d/4.*Va;//(force per unit length)
+    Fm_n = rho_f*Cm_normal*M_PI*d*d/4.*Vn;//(force per unit length)
+		Fm = Fm_a + Fm_n;
+		forces_addedmass.push_back(Fm);
 	}
 }
 
@@ -508,13 +608,13 @@ void cppCable::applyForces() {
   double mass_f;  // mass of fluid displaced by cable element
   for (int i = 1; i < nodes.size()-1; ++i) {
       if (i % 2 != 0) {
+      F_drag = (forces_drag[i-1]+forces_drag[i]+forces_drag[i+1])/3;
+      F_addedmass = (forces_addedmass[i-1]+forces_addedmass[i]+forces_addedmass[i+1])/3;
+      F_total = F_drag+F_addedmass;//+F_buoyancy;//+F_fluid
+      elems_loads_distributed[i/2]->loader.SetForcePerUnit(F_total);
+      // buoyancy
       rho_f = -(fluid_density[i-1]+fluid_density[i]+fluid_density[i+1])/3.;
       mass_f = rho_f*A0*elems[i/2]->GetRestLength();
-      F_drag = (forces_drag[i-1]+forces_drag[i]+forces_drag[i+1])/3;
-      F_buoyancy = -(fluid_density[i-1]+fluid_density[i]+fluid_density[i+1])/3*A0*system.Get_G_acc();
-      //F_addedmass = Cm*mass_f*fluid_acceleration[i]-Ca*mass*(elems[i/2]->GetNodeA()->GetPos_dtdt()+elems[i/2]->GetNodeB()->GetPos_dtdt()+elems[i/2]->GetNodeC()->GetPos_dtdt())/3.;
-      F_total = F_drag;//+F_addedmass;//+F_buoyancy;//+F_fluid
-      elems_loads_distributed[i/2]->loader.SetForcePerUnit(F_total);
       F_buoyancy = -mass_f*system.Get_G_acc();
       elems_loads[i/2]->loader.SetForce(F_buoyancy);
         }
