@@ -32,6 +32,7 @@ Example::
 from math import cos, sin, sqrt
 import math
 import sys
+import copy
 import numpy as np
 from proteus import BoundaryConditions as bc
 from .Profiling import logEvent
@@ -389,7 +390,7 @@ class Cuboid(Shape):
                               [-1., 0.,  0.],
                               [0.,  0.,  1.]])
         self.regions = np.array([[x, y, z]])
-        self.volumes = np.array([[[0, 1, 2, 3, 4, 5]]])
+        self.volumes = [[[0, 1, 2, 3, 4, 5]]]
         # defining flags for boundary conditions
         self.boundaryTags = bt = {'z-': 1,
                                   'y+': 2,
@@ -481,7 +482,7 @@ class Sphere(Shape):
         self.coords = np.array(coords)
         self.nSectors = nSectors
         self.constructShape()
-        self.volumes = np.array([[[i for i in range(len(self.facets))]]])
+        self.volumes = [[[i for i in range(len(self.facets))]]]
         # defining flags for boundary conditions
         self.boundaryTags = bt = {'sphere': 1}
         self.BC = {'sphere': self.BC_class(shape=self, name='sphere')}
@@ -784,6 +785,77 @@ class Rectangle(Shape):
                             [x-0.5*L, y+0.5*H]]
         self.volume = L*H
 
+class Cylinder(Shape):
+    """
+    Class to create a cylinder.
+
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    radius: float
+        radius of cylinder.
+    height: float
+        height of cylinder.
+    nPoints: int
+        number of points to discretize circles of cylinder.
+    coords: Optional[array_like]
+        Coordinates of the centroid of the shape.
+    barycenter: Optional[array_like]
+        Coordinates of the barycenter.
+    """
+    count = 0
+    def __init__(self, domain, radius, height, nPoints, coords=(0.,0.,0.), barycenter=None):
+        super(Cylinder, self).__init__(domain, nd=3)
+        self.__class__.count += 1
+        self.name = "Cylinder" + str(self.__class__.count)
+        self.radius = radius
+        self.height = height
+        self.coords = np.array(coords)
+        self.barycenter = np.array(barycenter)
+        self.nPoints = nPoints
+        self.constructShape()
+
+    def constructShape(self):
+        h_offset = np.array([0., 0., self.height])
+        arc = 2.*np.pi*self.radius/self.nPoints
+        ang = arc/self.radius
+        vert = []
+        facets = []
+        segs = []
+        for i in range(0, self.nPoints):
+            vert += [[self.radius*cos(ang*i),
+                      self.radius*sin(ang*i),
+                      0]]
+            if i > 0:
+                segs += [[i-1, i]]
+        segs += [[i, 0]]
+        segs_bottom = np.array(segs)
+        vert_bottom = np.array(vert)
+        facets += [[[i for i in range(0, len(vert_bottom))]]]
+        vert_top = np.array(vert)+h_offset
+        segs_top = np.array(segs)+len(vert) 
+        nvb = len(vert_bottom)
+        facets += [[[i+nvb for i in range(0, len(vert_top))]]]
+        for i in range(len(vert_bottom)-1):
+            facets += [[[i, i+1, i+nvb+1, i+nvb]]]
+        facets += [[[i+1, 0, nvb, i+1+nvb]]]  # last facet
+        self.vertices = np.vstack((vert_bottom, vert_top))-h_offset/2.+np.array(self.coords)
+        self.segments = np.vstack((segs_bottom, segs_top))
+        self.segmentFlags = np.array([1 for i in range(len(segs_bottom))]+[2 for i in range(len(segs_top))])
+        self.facets = facets
+        self.vertexFlags = np.array([1 for i in range(len(vert_bottom))]+[2 for i in range(len(vert_top))])
+        self.facetFlags = np.array([1, 2]+[3 for i in range(len(self.facets)-2)])
+        self.boundaryTags = {'z-': 1, 'z+': 2, 'cylinder': 3}
+        self.regions = np.array([self.coords])
+        self.regionFlags = np.array([1])
+        self.volumes = [[[i for i in range(len(self.facets))]]]
+        self.BC = {'z-': self.BC_class(shape=self, name='z-'),
+                   'z+': self.BC_class(shape=self, name='z+'),
+                   'cylinder': self.BC_class(shape=self, name='cylinder')}
+        self.BC_list = [self.BC['z-'], self.BC['z+'], self.BC['cylinder']]
+
 
 class CustomShape(Shape):
     """
@@ -836,10 +908,10 @@ class CustomShape(Shape):
         self.boundaryTags = boundaryTags
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)
-        if segments:
+        if segments is not None:
             self.segments = np.array(segments)
             self.segmentFlags = np.array(segmentFlags)
-        if facets:
+        if facets is not None:
             self.facets = np.array(facets)
             self.facetFlags = np.array(facetFlags)
         if holes is not None:
@@ -884,7 +956,7 @@ class ShapeSTL(Shape):
         self.vertices, self.facets, self.facetnormals = getInfoFromSTL(self.filename)
         self.facetFlags = np.ones(len(self.facets))
         self.vertexFlags = np.ones(len(self.vertices))
-        self.volumes = np.array([[[i for i in range(len(self.facets))]]])
+        self.volumes = [[[i for i in range(len(self.facets))]]]
         self.boundaryTags = {'stl': 1}
         self.BC = {'stl': self.BC_class(shape=self, name='stl')}
         self.BC_list = [self.BC['stl']]
@@ -1154,12 +1226,12 @@ def _assembleGeometry(domain, BC_class):
             start_rflag = 0
         domain.bc += shape.BC_list
         # making copies of shape properties before operations/modifications
-        vertices = shape.vertices.copy()
-        vertexFlags = shape.vertexFlags.copy()
+        vertices = copy.deepcopy(shape.vertices)
+        vertexFlags = copy.deepcopy(shape.vertexFlags)
         if shape.segments is not None:
-            segments = shape.segments.copy()
+            segments = copy.deepcopy(shape.segments)
         if shape.facets is not None:
-            facets = shape.facets.copy()
+            facets = copy.deepcopy(shape.facets)
         # deleting duplicate vertices and updating segment/facets accordingly
         del_v = 0
         for i_s, vertex in enumerate(shape.vertices):
@@ -1193,7 +1265,10 @@ def _assembleGeometry(domain, BC_class):
             domain.regions += (shape.regions).tolist()
             domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
         if shape.facets is not None:
-            facets = deepcopy(shape.facets.tolist())
+            if type(facets) is np.ndarray:
+                facets = facets.tolist()
+            else:
+                facets = copy.deepcopy(shape.facets)
             for i, facet in enumerate(facets):
                 for j, subf in enumerate(facet):
                     for k, v_nb in enumerate(subf):
@@ -1267,7 +1342,11 @@ def _assembleGeometry(domain, BC_class):
             if shape.holes_ind is not None:
                 domain.holes_ind += (np.array(shape.holes_ind)+shape.start_volume).tolist()
             if shape.volumes is not None:
-                volumes = (shape.volumes+shape.start_facet).tolist()
+                volumes = copy.deepcopy(shape.volumes)
+                for volume in volumes:
+                    for subvolume in volume:
+                        for i in range(len(subvolume)):
+                            subvolume[i] += shape.start_facet
                 volumes_to_remove = []
                 for i, volume in enumerate(volumes):
                     # add holes to volumes
@@ -1277,7 +1356,10 @@ def _assembleGeometry(domain, BC_class):
                             child_facets = []  # facets in volumes
                             for child_vol in child.volumes:
                                 # don't need holes of child volumes, only outer shells:
-                                child_vols += [(child_vol[0]+child.start_facet).tolist()]
+                                child_vol_copy = copy.deepcopy(child_vol[0])
+                                for i in range(len(child_vol_copy)):
+                                    child_vol_copy[i] += child.start_facet
+                                child_vols += [child_vol_copy]
                             if len(child_vols) > 1:
                                 # merge volumes that share a facet
                                 inter = np.intersect1d(*child_vols)

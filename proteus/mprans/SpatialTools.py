@@ -33,6 +33,7 @@ from proteus.mprans import BoundaryConditions as bc
 from proteus.SpatialTools import (Shape,
                                   Cuboid,
                                   Sphere,
+                                  Cylinder,
                                   Rectangle,
                                   CustomShape,
                                   ShapeSTL,
@@ -495,6 +496,7 @@ class ShapeRANS(Shape):
 Rectangle.__bases__ = (ShapeRANS,)
 Cuboid.__bases__ = (ShapeRANS,)
 Sphere.__bases__ = (ShapeRANS,)
+Cylinder.__bases__ = (ShapeRANS,)
 CustomShape.__bases__ = (ShapeRANS,)
 ShapeSTL.__bases__ = (ShapeRANS,)
 
@@ -810,7 +812,7 @@ class Tank3D(ShapeRANS):
         self.facetFlags = np.array(facetFlags)
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
-        self.volumes = np.array(volumes)
+        self.volumes = volumes
 
 
     def setAbsorptionZones(self, allSponge=False, y_n=False, y_p=False,
