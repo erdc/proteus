@@ -3446,7 +3446,15 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG(NF_base):
                        #                                                                     self.scale_penalty,
                         #                                                                    self.penalty_floor)
 
+
+# If using this flux, it adds the term  + p*\n to the existing HamiltonJacobiFlux.  Because this is
+# in a sense treating pressure (or pI) as a conservative advection velocity, but pressure is
+# not really being advected, it is important not to use this flux in combination with
+# an upwinding numericalFlux for the pressure variable.  Recommended ones are
+# ConstantAdvection_exterior or others of that type for pressure.
+#
 class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Diffusion_SIPG_exterior):
+    useStrongDirichletConstraints=False
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions,
@@ -3489,6 +3497,11 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Diffusion_SI
             for bci in self.periodicBoundaryConditionsDictList[ci].values():
                 self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
                 self.ebqe[('u',ci)][bci[1]]=ebqe[('u',ci)][bci[0]]
+        # check if flux is even defined, to add term ('f' dot 'n' = pN)
+        if (ebqe.has_key(('f',0)) and ebqe[('f',0)][...,0].shape == ebqe[('u',0)].shape):
+            includeAdvectiveFluxpNTerm = True
+        else:
+            includeAdvectiveFluxpNTerm = False
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         if self.vt.movingDomain:
             self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
@@ -3508,6 +3521,17 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Diffusion_SI
                                                                         ebqe[('dH',ci,ci)],
                                                                         ebqe[('HamiltonJacobiFlux',ci)],
                                                                         ebqe[('dHamiltonJacobiFlux_left',ci,ci)])
+
+            # we add the term that technically should be an advective flux but since
+            # it is constant wrt variables here, we just add it to the HamiltonJacobiFlux
+            #  < div(p I), w> = < -p I, grad w > + <pI n, grad w>_{\partial\Lambda}
+            #
+            # so our term is  pIn = p \n  and since 'f' = pI, we just innerproduct
+            # with 'n' to get our term.
+            if includeAdvectiveFluxpNTerm:
+                ebqe[('HamiltonJacobiFlux',ci)][:] += (ebqe[('f',ci)]*ebqe['n']).sum(-1)   #  + p N from advection terms
+                ebqe[('dHamiltonJacobiFlux_left',ci,ci)][:] += 0.0
+
             for ck in range(self.nc):
                 if ebqe.has_key(('a',ci,ck)):
                     if self.vt.sd:
