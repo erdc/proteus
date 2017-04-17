@@ -3235,7 +3235,7 @@ void solveLocalBDM2projection(int nElements_global,
   char TRANS='N';
   int eN,ebN,s,irow,kp,ibq,J,nSimplex,nVDOFs_element2;
   double btmp;
-  PROTEUS_LAPACK_INTEGER pivots_element[30]; /*maximum size for local space is ???*/
+  PROTEUS_LAPACK_INTEGER pivots_element[30];
   PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER) nVDOFs_element);
 
   for (eN = 0; eN < nElements_global; eN++)

@@ -1448,7 +1448,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                              self.vt.q[('f',ci)],
                                                              self.q[('velocity',ci)])
 
-
     def set_BDM_dimensions(self,degree):
         ''' Calculate and set the BDM polynomial dimension
             input - degree
@@ -1759,6 +1758,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         if self.degree >= 2 and velocity_field_set==False:
             for ci in self.vtComponents:
                 self.setInteriorVelocityValues(ci)
+
+        self.q[('velocity_dofs',ci)].fill(0.)
         
         self.buildBDM2rhs(self.BDMprojectionMat_element,
                           self.BDMprojectionMatPivots_element,
@@ -1785,6 +1786,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.vt.q[('w',ci)],
                                                                 self.q[('velocity_dofs',ci)],
                                                                 self.vt.q[('velocity',ci)])
+
 
     def evaluateElementVelocityField(self,x,ci):
         """
