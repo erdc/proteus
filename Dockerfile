@@ -120,15 +120,14 @@ RUN cd proteus && make develop
 ENV PATH /home/$NB_USER/proteus/linux2/bin:$PATH
 ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux2/lib:$LD_LIBRARY_PATH
 
-RUN pip -v install scandir==1.4
-RUN cd proteus && CC=gcc CXX=g++ make jupyter
+RUN cd proteus && make jupyter
 
 USER root
 
-RUN CC=gcc CXX=g++ pip3 install pyzmq==16.0.2 --install-option="--zmq=/home/$NB_USER/proteus/linux2"
-RUN CC=gcc CXX=g++ pip3 install widgetsnbextension==2.0.0
-RUN CC=gcc CXX=g++ pip3 install six==1.9.0
-RUN CC=gcc CXX=g++ pip3 install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  notebook==4.4.0 widgetsnbextension==2.0.0 ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 hide_code==0.4.0
+RUN pip3 install pyzmq==16.0.2 --install-option="--zmq=/home/$NB_USER/proteus/linux2"
+RUN pip3 install widgetsnbextension==2.0.0
+RUN pip3 install six==1.9.0
+RUN pip3 install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  notebook==4.4.0 widgetsnbextension==2.0.0 ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 hide_code==0.4.0
 RUN /usr/local/bin/jupyter serverextension enable --py jupyterlab --sys-prefix \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix widgetsnbextension \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix pythreejs \
