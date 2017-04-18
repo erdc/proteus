@@ -638,7 +638,7 @@ cdef class System:
         self.thisptr = newSystem(<double*> gravity.data)
         self.subcomponents = []
         self.dt_init = 0.001
-        self.model = model
+        self.model = None
         self.nd = nd
         self.build_kdtree = False
 
@@ -665,14 +665,14 @@ cdef class System:
         for s in self.subcomponents:
             s.prestep()
         comm = Comm.get()
-        print('before chrono timestep', comm.rank(), self.subcomponents[1].getTensionBack())
+        #print('before chrono timestep', comm.rank(), self.subcomponents[1].getTensionBack())
         self.step(self.proteus_dt)
-        print('after chrono timestep', comm.rank(), self.subcomponents[1].getTensionBack())
+        #print('after chrono timestep', comm.rank(), self.subcomponents[1].getTensionBack())
         for s in self.subcomponents:
             s.poststep()
         Profiling.logEvent('Solved Chrono system to t='+str(self.thisptr.system.GetChTime()))
         #self.recordBodyList()
-u
+
     def calculate_init(self):
         self.directory = str(Profiling.logDir)+'/'
         self.thisptr.setDirectory(self.directory)
