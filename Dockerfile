@@ -107,6 +107,7 @@ RUN git clone https://github.com/erdc-cm/proteus && \
     ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source" && \
     ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_jessie --objects="build" && \
     cd stack && \
+    git checkout stable/proteus && \
     ../hashdist/bin/hit build default.yaml -v
 
 ENV CC mpicc
@@ -124,8 +125,10 @@ RUN cd proteus && make jupyter
 USER root
 
 RUN pip3 install pyzmq==16.0.2 --install-option="--zmq=/home/$NB_USER/proteus/linux2"
-RUN pip3 install widgetsnbextension==2.0.0
 RUN pip3 install six==1.9.0
+RUN pip3 install packaging==16.8
+RUN pip3 install appdirs
+RUN pip3 install widgetsnbextension==2.0.0
 RUN pip3 install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  notebook==4.4.0 widgetsnbextension==2.0.0 ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 hide_code==0.4.0
 RUN /usr/local/bin/jupyter serverextension enable --py jupyterlab --sys-prefix \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix widgetsnbextension \
