@@ -638,10 +638,23 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
  
         FIX_ROUNDOFF_ERROR = False
-        
+        assert r is not None
+            
         self.computeResidual(u,r,b)
         u[:] = r
-        self.computeResidual(u,r,b)
+        self.F.setUnknowns(u)
+        for ci in range(self.F.nc):
+            self.F.u[ci].getValues(self.F.q[('w',0)],self.F.q[('u',ci)])
+            self.F.u[ci].getValuesGlobalExteriorTrace(self.F.ebqe[('w',0)],self.F.ebqe[('u',ci)])
+        #index = range(0,len(u))
+        #hIndex = index[0::3]
+        #huIndex = index[1::3]
+        #hvIndex = index[2::3]
+
+        #self.F.u[0].dof[:] = u[hIndex]
+        #self.F.u[1].dof[:] = u[huIndex]
+        #self.F.u[2].dof[:] = u[hvIndex]
+        #self.computeResidual(u,r,b)
         
         # To Fix round off error
         #if (FIX_ROUNDOFF_ERROR):
