@@ -14,7 +14,7 @@ from Profiling import logEvent
 import time as tt
 import sys as sys
 
-__all__ = ['Solirarywave',
+__all__ = ['Solitarywave',
 	    'MonochromaticWaves',
            'RandomWaves',
            'MultiSpectraRandomWaves',
@@ -499,6 +499,8 @@ def PM_mod(f,f0,Hs):
     http://www.orcina.com/SoftwareProducts/OrcaFlex/Documentation/Help/Content/html/Waves,WaveSpectra.htm
     And then to Tucker M J, 1991. Waves in Ocean Engineering. Ellis Horwood Ltd. (Chichester).
 
+    Parameters
+    --------
     f : numpy.ndarray
         Frequency array
     f0 : float
@@ -817,6 +819,8 @@ class  MonochromaticWaves:
              Fenton Fourier coefficients for free-surface elevation             
     Bcoeff : numpy.ndarray
              Fenton Fourier coefficients for velocity (set to None for linear wave theory)  
+    Bcoeff : integer
+             Fenton Fourier components for reconstruction (set to 1000, needs to be equal to the size of Bcoeff and Ycoeff)  
     meanVelocity : numpy.ndarray
              Mean velocity for Fenton Fourier approximation            
     phi0 : float
