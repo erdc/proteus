@@ -2739,7 +2739,6 @@ void buildLocalBDM2projectionMatrices(int degree,
   double pval, pvalx, pvaly;
   nSimplex = nSpace+1;
   assert(degree == 2);
-  assert(nVDOFs_element == nSpace*(nSpace*3));
 
   int interiorPspace = nDOFs_trial_interior_element;
   
@@ -3161,7 +3160,7 @@ void buildBDM2rhs(int nElements_global,
       for (s = 0; s < interiorPspace-1; s++){
 	// Iterate over interior polynomial test space      
 	  irow = boundary_dof + s;
-	  btmp = 0.0;
+	  p1_velocity_dofs[eN*nVDOFs_element+irow] = 0. ;
 	
 	  for (ibq=0; ibq < nQuadraturePoints_elementInterior; ibq++){
 	  // Iterate over quadrature points

@@ -1759,8 +1759,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
             for ci in self.vtComponents:
                 self.setInteriorVelocityValues(ci)
 
-        self.q[('velocity_dofs',ci)].fill(0.)
-        
         self.buildBDM2rhs(self.BDMprojectionMat_element,
                           self.BDMprojectionMatPivots_element,
                           self.ebq[('w*dS_u',self.BDMcomponent)],
