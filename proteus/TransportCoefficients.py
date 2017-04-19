@@ -936,19 +936,18 @@ class UnitCubeRotation(TC_base):
                                       c[('m',0)],c[('dm',0,0)],
                                       c[('f',0)],c[('df',0,0)])
 
-##\brief Incompressible Navier-Stokes equations
-#
-#The equations are formulated as
-#
-#\f{eqnarray*}
-#\nabla \cdot \mathbf{v} &=& 0 \\
-#\frac{\partial \left \mathbf{v}\right }{\partial t} + \nabla \cdot \left(\mathbf{v} \otimes \mathbf{v} - \nu \Delta \mathbf{f} \right) + \frac{\nabla p}{\rho}- \mathbf{g} &=& 0
-#\f}
-#
-#where \f$\mathbf{v}\f$ is the velocity, \f$p\f$ is the pressure, \f$\nu\f$ is the kinematic viscosity, \f$\rho\f$ is the density, and \f$\mathbf{g}\f$ is the gravitational acceleration.
 class NavierStokes(TC_base):
-    """
-    The coefficients for the incompressible Navier-Stokes equations.
+    r""" The coefficients for the incompressible Navier-Stokes equations.
+
+    .. math::
+
+       \nabla \cdot \mathbf{v} = 0
+   
+    .. math::
+
+       \dfrac{\partial \mathbf{v} }{\partial t} + \nabla \cdot (\mathbf{v} \otimes \mathbf{v} - \nu \Delta \mathbf{f}) + \frac{\nabla p}{\rho}- \mathbf{g} = 0
+
+    where :math:`\mathbf{v}` is the velocity, :math:`p` is the pressure, :math:`\nu` is the kinematic viscosity, :math:`\rho` is the density, and :math:`g` is the gravitational acceleration.
     """
     from ctransportCoefficients import NavierStokes_2D_Evaluate
     from ctransportCoefficients import NavierStokes_3D_Evaluate
