@@ -819,7 +819,7 @@ class  MonochromaticWaves:
              Fenton Fourier coefficients for free-surface elevation             
     Bcoeff : numpy.ndarray
              Fenton Fourier coefficients for velocity (set to None for linear wave theory)  
-    Bcoeff : integer
+    Nf : integer
              Fenton Fourier components for reconstruction (set to 1000, needs to be equal to the size of Bcoeff and Ycoeff)  
     meanVelocity : numpy.ndarray
              Mean velocity for Fenton Fourier approximation            
