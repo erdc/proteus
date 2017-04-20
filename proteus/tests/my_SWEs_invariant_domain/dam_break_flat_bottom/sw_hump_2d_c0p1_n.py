@@ -2,12 +2,15 @@ from proteus import *
 from proteus.default_n import *
 from sw_hump_2d_p import *
 
-refinement=3
-runCFL=0.75
+refinement=6
+runCFL=0.1
 #use_EV_stabilization=True
 #use_first_order_flatB_GP_stabilization=True
 #use_second_order_flatB_GP_stabilization=True
-use_second_order_NonFlatB_GP_stabilization=True
+#use_second_order_NonFlatB_GP_stabilization=True
+#use_EV_stabilization = True
+use_second_order_NonFlatB_with_EV_stabilization=True
+
 #timeIntegration = SSP33
 #timeIntegration = BackwardEuler_cfl
 timeIntegration = EdgeBased_ForwardEuler
@@ -26,7 +29,8 @@ elementQuadrature = SimplexGaussQuadrature(nd,3)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
 multilevelNonlinearSolver  = Newton
-levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
+#levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
+levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
 #levelNonlinearSolver = Newton
 
 fullNewtonFlag = False #NOTE: False just if the method is explicit

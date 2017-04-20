@@ -10,6 +10,8 @@ L=(2.0,2.0)
 g = 1.0
 
 cE=2
+LUMPED_MASS_MATRIX=0
+
 #Parameters for init condition
 wl=0.5
 island=1.25
@@ -31,8 +33,8 @@ domain.writePoly("tank2d")
 def bathymetry_function(X):
     x = X[0]
     y = X[1]
-    return island*(xl <= x)*(x <= xr)*(yl <= y)*(y <= yr)
-    #return 0.*X[0]
+    #return island*(xl <= x)*(x <= xr)*(yl <= y)*(y <= yr)
+    return 0.*X[0]
 
 ##############################
 ##### INITIAL CONDITIONS #####
@@ -53,7 +55,7 @@ class water_height:
                 h=wl-island
             else:
                 h=wl
-        elif(True):
+        elif(False):
             if (x < xl/2.):
                 h = 2*wl
             elif (xl <= x and x <= xr and yl <= y and y <= yr):
@@ -144,4 +146,4 @@ diffusiveFluxBoundaryConditions = {0:{},
 #########################################
 bathymetry={0:bathymetry_function}
 LevelModelType = SW2DCV.LevelModel
-coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE)
+coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE,LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX)

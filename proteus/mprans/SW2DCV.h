@@ -18,10 +18,10 @@
 
 // FOR CELL BASED ENTROPY VISCOSITY 
 #define ENTROPY(g,h,hu,hv,one_over_hReg) 0.5*(g*h*h+hu*hu*one_over_hReg+hv*hv*one_over_hReg)
-#define DENTROPY_DH(g,h,hu,hv,one_over_hReg) g*h - 0.5*hu*hu*std::pow(one_over_hReg,2) - 0.5*hv*hv*std::pow(one_over_hReg,2)
-#define DENTROPY_DHU(g,h,hu,hv,hEps) 2*h/(h*h+std::pow(fmax(h,hEps),2))*hu
-#define DENTROPY_DHV(g,h,hu,hv,hEps) 2*h/(h*h+std::pow(fmax(h,hEps),2))*hv
-#define D_ENTROPY(g,h,hu,hv,hx,hux,hvx) g*h*hx + hu/h*(hux-0.5*hx*(hu/h)) + hv/h*(hvx-0.5*hx*(hv/h)) // This is used just for cell based EV
+#define DENTROPY_DH(g,h,hu,hv,one_over_hReg) g*h - 0.5*(hu*hu+hv*hv)*std::pow(one_over_hReg,2) 
+#define DENTROPY_DHU(g,h,hu,hv,one_over_hReg) hu*one_over_hReg
+#define DENTROPY_DHV(g,h,hu,hv,one_over_hReg) hv*one_over_hReg
+#define D_ENTROPY(g,h,hu,hv,hx,hux,hvx,one_over_hnReg) g*h*hx + hu*one_over_hnReg*(hux-0.5*hx*(hu*one_over_hnReg)) + hv*one_over_hnReg*(hvx-0.5*hx*(hv*one_over_hnReg))
 
   // FOR INVARIANT DOMAIN PRESERVING 
 #define f(g,h,hZ) ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) )
@@ -50,13 +50,21 @@ namespace proteus
 			 int NNZ, //number on non-zero entries on sparsity pattern
 			 int numDOFs, //number of DOFs
 			 double* lumped_mass_matrix, //lumped mass matrix (as vector)
-			 double* soln, //DOFs of solution at time tn
-			 double* solH, //DOFs of high order solution at tnp1
+			 double* hn, //DOFs of solution at time tn
+			 double* hun, 
+			 double* hvn, 
+			 double* high_order_hnp1, //DOFs of high order solution at tnp1
+			 double* high_order_hunp1, 
+			 double* high_order_hvnp1, 
 			 double* low_order_hnp1, //operators to construct low order solution
+			 double* low_order_hunp1,
+			 double* low_order_hvnp1,
 			 int* csrRowIndeces_DofLoops, //csr row indeces 
 			 int* csrColumnOffsets_DofLoops, //csr column offsets 
 			 double* MassMatrix, //mass matrix
-			 double* dEV_minus_dL_times_hStarji_minus_hStarij //Note that this is an anti symmetric matrix
+			 double* dEV_minus_dL_times_hStarji_minus_hStarij, //Note that this is an anti symmetric matrix
+			 double* dEV_minus_dL_times_huStarji_minus_huStarij,
+			 double* dEV_minus_dL_times_hvStarji_minus_hvStarij
 			 )=0;
     virtual void calculateResidual(//element
 				   double* mesh_trial_ref,
@@ -192,8 +200,13 @@ namespace proteus
 				   double* hv_dof_galerkin,
 				   // TO COMPUTE LOW ORDER 
 				   double* low_order_hnp1,
+				   double* low_order_hunp1,
+				   double* low_order_hvnp1,
 				   double* dEV_minus_dL_times_hStarji_minus_hStarij,
-				   double cE				   
+				   double* dEV_minus_dL_times_huStarji_minus_huStarij,
+				   double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+				   double cE, 
+				   int LUMPED_MASS_MATRIX
 				   )=0;
     virtual void calculateResidual_cell_based_entropy_viscosity(//element
 								double* mesh_trial_ref,
@@ -329,8 +342,13 @@ namespace proteus
 								double* hv_dof_galerkin,
 								// TO COMPUTE LOW ORDER 
 								double* low_order_hnp1,
+								double* low_order_hunp1,
+								double* low_order_hvnp1,
 								double* dEV_minus_dL_times_hStarji_minus_hStarij,
-								double cE
+								double* dEV_minus_dL_times_huStarji_minus_huStarij,
+								double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+								double cE,
+								int LUMPED_MASS_MATRIX
 								)=0;
     virtual void calculateResidual_first_order_flatB_GP(//element
 					    double* mesh_trial_ref,
@@ -466,8 +484,13 @@ namespace proteus
 					    double* hv_dof_galerkin,
 					    // TO COMPUTE LOW ORDER 
 					    double* low_order_hnp1,
+					    double* low_order_hunp1,
+					    double* low_order_hvnp1,
 					    double* dEV_minus_dL_times_hStarji_minus_hStarij,
-					    double cE
+					    double* dEV_minus_dL_times_huStarji_minus_huStarij,
+					    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+					    double cE,
+					    int LUMPED_MASS_MATRIX
 							)=0;
     virtual void calculateResidual_second_order_flatB_GP(//element
 					       double* mesh_trial_ref,
@@ -603,8 +626,13 @@ namespace proteus
 					       double* hv_dof_galerkin,
 					       // TO COMPUTE LOW ORDER 
 					       double* low_order_hnp1,
+					       double* low_order_hunp1,
+					       double* low_order_hvnp1,
 					       double* dEV_minus_dL_times_hStarji_minus_hStarij,
-					       double cE
+					       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+					       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+					       double cE,
+					       int LUMPED_MASS_MATRIX
 							 )=0;
     virtual void calculateResidual_second_order_NonFlatB_GP(//element
 					       double* mesh_trial_ref,
@@ -740,8 +768,13 @@ namespace proteus
 					       double* hv_dof_galerkin,
 					       // TO COMPUTE LOW ORDER 
 					       double* low_order_hnp1,
+					       double* low_order_hunp1,
+					       double* low_order_hvnp1,
 					       double* dEV_minus_dL_times_hStarji_minus_hStarij,
-					       double cE
+					       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+					       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+					       double cE,
+					       int LUMPED_MASS_MATRIX
 							    )=0;
     virtual void calculateResidual_second_order_NonFlatB_with_EV(//element
 					       double* mesh_trial_ref,
@@ -877,8 +910,13 @@ namespace proteus
 					       double* hv_dof_galerkin,
 					       // TO COMPUTE LOW ORDER 
 					       double* low_order_hnp1,
+					       double* low_order_hunp1,
+					       double* low_order_hvnp1,
 					       double* dEV_minus_dL_times_hStarji_minus_hStarij,
-					       double cE
+					       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+					       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+					       double cE,
+					       int LUMPED_MASS_MATRIX
 								 )=0;
     virtual void calculateResidual_galerkin(//element
 					    double* mesh_trial_ref,
@@ -1014,8 +1052,13 @@ namespace proteus
 					    double* hv_dof_galerkin,
 					    // TO COMPUTE LOW ORDER 
 					    double* low_order_hnp1,
+					    double* low_order_hunp1,
+					    double* low_order_hvnp1,
 					    double* dEV_minus_dL_times_hStarji_minus_hStarij,
-					    double cE
+					    double* dEV_minus_dL_times_huStarji_minus_huStarij,
+					    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+					    double cE,
+					    int LUMPED_MASS_MATRIX
 					    )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
@@ -2542,18 +2585,27 @@ namespace proteus
 		 int NNZ, //number on non-zero entries on sparsity pattern
 		 int numDOFs, //number of DOFs
 		 double* lumped_mass_matrix, //lumped mass matrix (as vector)
-		 double* soln, //DOFs of solution at time tn
-		 double* solH, //DOFs of high order solution at tnp1
+		 double* hn, //DOFs of solution at time tn
+		 double* hun, 
+		 double* hvn,
+		 double* high_order_hnp1, //DOFs of high order solution at tnp1
+		 double* high_order_hunp1, 
+		 double* high_order_hvnp1, 
 		 double* low_order_hnp1, //operators to construct low order solution
+		 double* low_order_hunp1,
+		 double* low_order_hvnp1,
 		 int* csrRowIndeces_DofLoops, //csr row indeces 
 		 int* csrColumnOffsets_DofLoops, //csr column offsets 
 		 double* MassMatrix, //mass matrix
-		 double* dEV_minus_dL_times_hStarji_minus_hStarij //low minus high order dissipative matrices
+		 double* dEV_minus_dL_times_hStarji_minus_hStarij, //low minus high order dissipative matrices
+		 double* dEV_minus_dL_times_huStarji_minus_huStarij,
+		 double* dEV_minus_dL_times_hvStarji_minus_hvStarij
 		 )
     {
-      register double Rneg[numDOFs];
-      register double FluxCorrectionMatrix[NNZ];
-      register double solL[numDOFs];
+      double h_threshold = 1.0E-3;
+      //double h_threshold = 0.15;
+      register double Rneg[numDOFs], Rpos[numDOFs];
+      register double FluxCorrectionMatrix1[NNZ], FluxCorrectionMatrix2[NNZ], FluxCorrectionMatrix3[NNZ];
       //////////////////
       // LOOP in DOFs //
       //////////////////
@@ -2561,12 +2613,13 @@ namespace proteus
       for (int i=0; i<numDOFs; i++)
 	{
 	  //read some vectors 
-	  double solHi = solH[i];
-	  double solni = soln[i];
+	  double high_order_hnp1i  = high_order_hnp1[i];
+	  double high_order_hunp1i = high_order_hunp1[i];
+	  double high_order_hvnp1i = high_order_hvnp1[i];
+	  double hni = hn[i];
+	  double huni = hun[i];
+	  double hvni = hvn[i];
 	  double mi = lumped_mass_matrix[i];
-	  // compute low order solution
-	  // mi*(uLi-uni) + dt*sum_j[(Tij+dLij)*unj] = 0
-	  solL[i] = solni - dt/mi*low_order_hnp1[i];
 
 	  double minH=0.;
 	  double Pnegi=0.;
@@ -2574,16 +2627,21 @@ namespace proteus
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
-
+	      double ML_minus_MC = (i==j ? 1. : 0.)*mi - MassMatrix[ij];
 	      // i-th row of flux correction matrix 
-	      FluxCorrectionMatrix[ij] = 
-		(((i==j) ? 1 : 0)*mi - MassMatrix[ij])*(solH[j]-soln[j] - (solHi-solni)) 
+	      FluxCorrectionMatrix1[ij] = ML_minus_MC*(high_order_hnp1[j]-hn[j] - (high_order_hnp1i-hni)) 
 		+ dt*dEV_minus_dL_times_hStarji_minus_hStarij[ij];
+
+	      FluxCorrectionMatrix2[ij] = ML_minus_MC*(high_order_hunp1[j]-hun[j] - (high_order_hunp1i-huni)) 
+		+ dt*dEV_minus_dL_times_huStarji_minus_huStarij[ij];
+
+	      FluxCorrectionMatrix3[ij] = ML_minus_MC*(high_order_hvnp1[j]-hvn[j] - (high_order_hvnp1i-hvni)) 
+		+ dt*dEV_minus_dL_times_hvStarji_minus_hvStarij[ij];
 
 	      ///////////////////////
 	      // COMPUTE P VECTORS //
 	      ///////////////////////
-	      Pnegi += FluxCorrectionMatrix[ij]*((FluxCorrectionMatrix[ij] < 0) ? 1. : 0.);
+	      Pnegi += FluxCorrectionMatrix1[ij]*((FluxCorrectionMatrix1[ij] < 0) ? 1. : 0.);
 	      
 	      //update ij 
 	      ij+=1;
@@ -2591,12 +2649,21 @@ namespace proteus
 	  ///////////////////////
 	  // COMPUTE Q VECTORS //
 	  ///////////////////////
-	  double Qnegi = mi*(minH-solL[i]);
+	  double Qnegi = mi*(minH-low_order_hnp1[i]);
 
 	  ///////////////////////
 	  // COMPUTE R VECTORS //
 	  ///////////////////////
-	  Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
+	  if (high_order_hnp1[i] < h_threshold)
+	    {
+	      Rneg[i] = 0.;
+	      Rpos[i] = 0.;
+	    }
+	  else
+	    {	     
+	      Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
+	      Rpos[i] = 1.;
+	    }
 	} // i DOFs
       
       //////////////////////
@@ -2605,23 +2672,40 @@ namespace proteus
       ij=0;
       for (int i=0; i<numDOFs; i++)
 	{
-	  double ith_Limiter_times_FluxCorrectionMatrix = 0.;
-	  double Rposi = 1., Rnegi = Rneg[i];
+	  double ith_Limiter_times_FluxCorrectionMatrix1 = 0.;
+	  double ith_Limiter_times_FluxCorrectionMatrix2 = 0.;
+	  double ith_Limiter_times_FluxCorrectionMatrix3 = 0.;
+	  double Rposi = Rpos[i], Rnegi = Rneg[i];
 	  // LOOP OVER THE SPARSITY PATTERN (j-LOOP)//
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
-	      double Rposj = 1.;
 	      int j = csrColumnOffsets_DofLoops[offset];
-	      //ith_Limiter_times_FluxCorrectionMatrix += 
-	      //((FluxCorrectionMatrix[ij]>0) ? std::min(Rposi,Rneg[j]) : std::min(Rnegi,Rposj)) * FluxCorrectionMatrix[ij];
-	      ith_Limiter_times_FluxCorrectionMatrix += 
-		FluxCorrectionMatrix[ij];
+	      // compute limiter based on water height
+	      double Lij = (FluxCorrectionMatrix1[ij] > 0. ? std::min(Rposi,Rneg[j]) : std::min(Rnegi,Rpos[j]));
+	      //double Lij = 1.;
+
+	      ith_Limiter_times_FluxCorrectionMatrix1 += Lij*FluxCorrectionMatrix1[ij];
+	      ith_Limiter_times_FluxCorrectionMatrix2 += Lij*FluxCorrectionMatrix2[ij];
+	      ith_Limiter_times_FluxCorrectionMatrix3 += Lij*FluxCorrectionMatrix3[ij];
+
 	      //update ij
 	      ij+=1;
 	    }
-	  solH[i] = low_order_hnp1[i];
-	  //solH[i] = solL[i]; // + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
-	  //std::cout << lumped_mass_matrix[i] << std::endl;
+	  double one_over_mi = 1.0/lumped_mass_matrix[i];	  
+	  high_order_hnp1[i]  = low_order_hnp1[i]  + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
+	  high_order_hunp1[i] = low_order_hunp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
+	  high_order_hvnp1[i] = low_order_hvnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
+
+	  if (high_order_hnp1[i] < -1E-16)
+	    {
+	      std::cout << "Water height: "
+			<<  high_order_hnp1[i] 
+			<< " ... aborting!" << std::endl;
+	      abort();
+	    }
+	  else 
+	    high_order_hnp1[i] = fmax(0.,high_order_hnp1[i]);
+
 	}
     }
 
@@ -2759,8 +2843,13 @@ namespace proteus
 			   double* hv_dof_galerkin,
 			   // TO COMPUTE LOW ORDER 
 			   double* low_order_hnp1,
+			   double* low_order_hunp1,
+			   double* low_order_hvnp1,
 			   double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-			   double cE)
+			   double* dEV_minus_dL_times_huStarji_minus_huStarij,
+			   double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+			   double cE,
+			   int LUMPED_MASS_MATRIX)
 			   
     {
       //
@@ -3730,8 +3819,13 @@ namespace proteus
 							double* hv_dof_galerkin,
 							// TO COMPUTE LOW ORDER 
 							double* low_order_hnp1,
+							double* low_order_hunp1,
+							double* low_order_hvnp1,
 							double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-							double cE)
+							double* dEV_minus_dL_times_huStarji_minus_huStarij,
+							double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+							double cE,
+							int LUMPED_MASS_MATRIX)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
       // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
@@ -3800,8 +3894,8 @@ namespace proteus
 	      entropy_min = std::min(entropy_min,ENTROPY(g,hn,un,vn,1./hn));
 	      cell_entropy_mean += ENTROPY(g,hn,un,vn,1./hn)*dV;
 	      cell_volume += dV;
-	      double gradX_Entropy = D_ENTROPY(g,hn,hun,hvn,grad_hn[0],grad_hun[0],grad_hvn[0]);
-	      double gradY_Entropy = D_ENTROPY(g,hn,hun,hvn,grad_hn[1],grad_hun[1],grad_hvn[1]);
+	      double gradX_Entropy = D_ENTROPY(g,hn,hun,hvn,grad_hn[0],grad_hun[0],grad_hvn[0],1./hn);
+	      double gradY_Entropy = D_ENTROPY(g,hn,hun,hvn,grad_hn[1],grad_hun[1],grad_hvn[1],1./hn);
 	      cell_entropy_residual 
 		= std::max(cell_entropy_residual,
 			   std::abs(
@@ -4204,8 +4298,13 @@ namespace proteus
 				    double* hv_dof_galerkin,
 				    // TO COMPUTE LOW ORDER 
 				    double* low_order_hnp1,
+				    double* low_order_hunp1,
+				    double* low_order_hvnp1,
 				    double* dEV_minus_dL_times_hStarji_minus_hStarij,
-				    double cE)
+				    double* dEV_minus_dL_times_huStarji_minus_huStarij,
+				    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+				    double cE,
+				    int LUMPED_MASS_MATRIX)
     {
       double dt = 1./alphaBDF; 
       ////////////////
@@ -4501,8 +4600,13 @@ namespace proteus
 				       double* hv_dof_galerkin,
 				       // TO COMPUTE LOW ORDER 
 				       double* low_order_hnp1,
+				       double* low_order_hunp1,
+				       double* low_order_hvnp1,
 				       double* dEV_minus_dL_times_hStarji_minus_hStarij,
-				       double cE)
+				       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+				       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+				       double cE, 
+				       int LUMPED_MASS_MATRIX)
     {
       double dt = 1./alphaBDF; 
       ////////////////
@@ -4833,14 +4937,19 @@ namespace proteus
 				       double* hv_dof_galerkin,
 				       // TO COMPUTE LOW ORDER 
 				       double* low_order_hnp1,
+				       double* low_order_hunp1,
+				       double* low_order_hvnp1,
 				       double* dEV_minus_dL_times_hStarji_minus_hStarij,
-				       double cE)
+				       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+				       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+				       double cE,
+				       int LUMPED_MASS_MATRIX)
     {
       //TMP FOR FRICTION//
-      double mannings=0.00;
-      double eta=1./3;
-      double a=2.;
-      double k = g*mannings*mannings;
+      double mannings=0.02;
+      double n2 = std::pow(mannings,2);
+      double gamma=4./3;
+      double xi=2.;
 
       double min_h = 1E10;
       ////////////////
@@ -5093,11 +5202,12 @@ namespace proteus
 	  // friction term lumped
 	  double veli_norm = std::sqrt(ui*ui+vi*vi);
 	  double mi = lumped_mass_matrix[i];
-	  double dx = std::sqrt(mi);
-	  //double ith_friction_term2 = mi*(k*veli_norm*ui/(std::pow(hi,eta) + std::pow(dx,a*eta)/std::pow(k,a-1.)));
-	  //double ith_friction_term3 = mi*(k*veli_norm*vi/(std::pow(hi,eta) + std::pow(dx,a*eta)/std::pow(k,a-1.)));	    
-	  double ith_friction_term2 = mi*k*veli_norm*ui*std::pow(one_over_hiReg,1./3);
-	  double ith_friction_term3 = mi*k*veli_norm*vi*std::pow(one_over_hiReg,1./3);
+	  
+	  double hi_to_the_gamma = std::pow(hi,gamma);
+	  double ith_friction_term2 =  
+	    veli_norm==0 ? 0. : 2*g*n2*hui*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
+	  double ith_friction_term3 =  
+	    veli_norm==0 ? 0. : 2*g*n2*hvi*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
 
 	  // loop over the sparsity pattern of the i-th DOF
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
@@ -5314,9 +5424,20 @@ namespace proteus
 							 double* hv_dof_galerkin, 
 							 // TO COMPUTE LOW ORDER 
 							 double* low_order_hnp1,
+							 double* low_order_hunp1,
+							 double* low_order_hvnp1,
 							 double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-							 double cE)
+							 double* dEV_minus_dL_times_huStarji_minus_huStarij,
+							 double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+							 double cE,
+							 int LUMPED_MASS_MATRIX)
     {
+      // FOR FRICTION TERMS //
+      //double mannings=0.0;
+      //double n2 = std::pow(mannings,2);
+      //double gamma=4./3;
+      //double xi=2.;
+
       double dt = 1./alphaBDF; 
       ////////////////
       // CELL LOOPS //
@@ -5327,36 +5448,43 @@ namespace proteus
       //      * Cell based CFL
       //      * velocity at quad points for other models 
       // create global entropy residual vectors for each equation
-      register double entRes1[numDOFsPerEqn], entRes2[numDOFsPerEqn], entRes3[numDOFsPerEqn];
+      // TMP global entropy 
+      double entropy_max=-1.E10, entropy_min=1.E10, cell_entropy_mean, entropy_mean=0;
+      double cell_volume, volume=0;
+      double pointwise_entropy_residual, entropy_normalization_factor=1.0;
+      register double global_entropy_residual[numDOFsPerEqn]; 
+      
       // init lumped mass matrix and ent residual vectors to zero
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
 	  lumped_mass_matrix[i] = 0;
-	  entRes1[i] = 0;
-	  entRes2[i] = 0;
-	  entRes3[i] = 0;
+	  // TMP global entropy
+	  global_entropy_residual[i]=0;
 	}
       for(int eN=0;eN<nElements_global;eN++)
 	{
 	  //declare local storage for element residual and initialize
 	  register double 
 	    element_lumped_mass_matrix[nDOF_test_element],
-	    elEntRes1[nDOF_test_element],
-	    elEntRes2[nDOF_test_element],
-	    elEntRes3[nDOF_test_element], 
 	    elementResidual_h[nDOF_test_element],
 	    elementResidual_hu[nDOF_test_element],
 	    elementResidual_hv[nDOF_test_element];
+	  // TMP global entropy
+	  register double element_entropy_residual[nDOF_test_element]; 
+	    
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
 	      element_lumped_mass_matrix[i]=0.0;
-	      elEntRes1[i]=0.0;
-	      elEntRes2[i]=0.0;
-	      elEntRes3[i]=0.0;
 	      elementResidual_h[i]=0.0;
 	      elementResidual_hu[i]=0.0;
 	      elementResidual_hv[i]=0.0;
+
+	      // TMP global entropy
+	      element_entropy_residual[i] =0;
 	    }
+	  // TMP global entropy 
+	  cell_volume = 0; 
+	  cell_entropy_mean = 0;
 	  //
 	  //loop over quadrature points and compute integrands
 	  //
@@ -5368,7 +5496,8 @@ namespace proteus
 		eN_nDOF_trial_element = eN*nDOF_trial_element;
 	      register double 
 		h=0.0,hu=0.0,hv=0.0, // solution at current time
-		hn=0.0,hun=0.0,hvn=0.0, // solution at current time
+		hnm1=0.0,hunm1=0.0,hvnm1=0.0, // solution at tnm1
+		hn=0.0,hun=0.0,hvn=0.0, // solution at tn
 		hG=0.0,huG=0.0,hvG=0.0, // galerkin solution
 		grad_hn[nSpace],grad_hun[nSpace],grad_hvn[nSpace],grad_z[nSpace],		
 		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
@@ -5395,6 +5524,10 @@ namespace proteus
 	      ck.valFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h);
 	      ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
 	      ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
+	      // calculate the solution at time tnm1
+	      ck.valFromDOF(h_dof_old_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hnm1);
+	      ck.valFromDOF(hu_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hunm1);
+	      ck.valFromDOF(hv_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvnm1);
 	      // get the solution at time tn
 	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
 	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
@@ -5426,7 +5559,9 @@ namespace proteus
 	      hunp1_at_quad_point[eN_k] = hu;
 	      hvnp1_at_quad_point[eN_k] = hv;
 	      //update element residual. Part about the lumped mass matrix 
+	      double one_over_hnm1Reg = 2*hnm1/(hnm1*hnm1+std::pow(fmax(hnm1,hEps),2));
 	      double one_over_hnReg = 2*hn/(hn*hn+std::pow(fmax(hn,hEps),2));
+	      double one_over_hGReg = 2*hG/(hG*hG+std::pow(fmax(hG,hEps),2));
 	      double dxf1 = grad_hun[0];
 	      double dyf1 = grad_hvn[1];
 	      double dxf2 = (2*hn*hun*grad_hun[0] - hun*hun*grad_hn[0])*std::pow(one_over_hnReg,2)+g*hn*grad_hn[0];
@@ -5436,32 +5571,53 @@ namespace proteus
 	      // bathymetry source terms
 	      double b_dot_gradx_z = g*hn*grad_z[0];
 	      double b_dot_grady_z = g*hn*grad_z[1];
+	      // fprime_dot_grad(u)
+	      double un = 2*hn/(hn*hn+std::pow(fmax(hn,hEps),2))*hun;
+	      double vn = 2*hn/(hn*hn+std::pow(fmax(hn,hEps),2))*hvn;
 
+	      double fp_dot_grad_u1 = grad_hun[0] + grad_hvn[1];
+	      double fp_dot_grad_u2 = grad_hn[0]*(-un*un+g*hn)+2*un*grad_hun[0]-un*vn*grad_hn[1]+vn*grad_hun[1]+un*grad_hvn[1];
+	      double fp_dot_grad_u3 = -un*vn*grad_hn[0]+vn*grad_hun[0]+un*grad_hvn[0]+grad_hn[1]*(-vn*vn+g*hn)+2*vn*grad_hvn[1];
+	      
+	      //double entropy_residual1 = ((hG-hn)/dt   + (dxf1 + dyf1))*DENTROPY_DH(g,hn,hun,hvn,one_over_hnReg);
+	      //double entropy_residual2 = ((huG-hun)/dt + (dxf2 + dyf2) + b_dot_gradx_z)*DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
+	      //double entropy_residual3 = ((hvG-hvn)/dt + (dxf3 + dyf3) + b_dot_grady_z)*DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
+
+	      double entropy_residual1 = ((hG-hn)/dt   + (fp_dot_grad_u1))                 * DENTROPY_DH (g,hn,hun,hvn,one_over_hnReg);
+	      double entropy_residual2 = ((huG-hun)/dt + (fp_dot_grad_u2 + b_dot_gradx_z)) * DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
+	      double entropy_residual3 = ((hvG-hvn)/dt + (fp_dot_grad_u3 + b_dot_grady_z)) * DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
+
+	      // TMP global entropy
+	      entropy_max = fmax(entropy_max,ENTROPY(g,hn,hun,hvn,one_over_hnReg));
+	      entropy_min = fmin(entropy_min,ENTROPY(g,hn,hun,hvn,one_over_hnReg));
+	      cell_entropy_mean += ENTROPY(g,hn,hun,hvn,one_over_hnReg)*dV;
+	      cell_volume += dV;
+	      double gradX_Entropy = D_ENTROPY(g,hn,hun,hvn,grad_hn[0],grad_hun[0],grad_hvn[0],one_over_hnReg);
+	      double gradY_Entropy = D_ENTROPY(g,hn,hun,hvn,grad_hn[1],grad_hun[1],grad_hvn[1],one_over_hnReg);
+	      pointwise_entropy_residual 
+		= (ENTROPY(g,hn,hun,hvn,one_over_hnReg) - ENTROPY(g,hnm1,hunm1,hvnm1,one_over_hnm1Reg))/dt
+		+ENTROPY(g,hn,hun,hvn,one_over_hnReg)*std::pow(one_over_hnReg,2)*(hn*(grad_hun[0]+grad_hvn[1])-(hun*grad_hn[0]+hvn*grad_hn[1]))
+		+one_over_hnReg*(gradX_Entropy*hun+gradY_Entropy*hvn)
+		+0.5*g*hn*(grad_hun[0]+grad_hvn[1])
+		+0.5*g*(hun*grad_hn[0]+hvn*grad_hn[1]);
+	      
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
 		  // lumped mass matrix
 		  element_lumped_mass_matrix[i] += h_test_dV[i];
-		  elEntRes1[i] += ((hG-hn)/dt   + (dxf1 + dyf1))*DENTROPY_DH(g,hn,hun,hvn,one_over_hnReg)*h_test_dV[i];
-		  elEntRes2[i] += ((huG-hun)/dt + (dxf2 + dyf2) + b_dot_gradx_z)*DENTROPY_DHU(g,hn,hun,hvn,hEps)*h_test_dV[i];
-		  elEntRes3[i] += ((hvG-hvn)/dt + (dxf3 + dyf3) + b_dot_grady_z)*DENTROPY_DHV(g,hn,hun,hvn,hEps)*h_test_dV[i];
-
-		  // HERE //
-		  /*
-		  if(std::isnan(elEntRes1[i]) || std::isnan(elEntRes2[i]) || std::isnan(elEntRes3[i]))
-		    {
-		      std::cout << "NaN in entropy residual: " << "\t"
-				<< elEntRes1[i] << "\t"
-				<< elEntRes2[i] << "\t"
-				<< elEntRes3[i] 
-				<< std::endl;		      
-		    }
-		  */
+		  element_entropy_residual[i] += 
+		    (entropy_residual1+entropy_residual2+entropy_residual3)*h_test_dV[i];
+		  //TMP global entropy
+		  //element_entropy_residual[i] += pointwise_entropy_residual*h_test_dV[i];
 		  // compute time derivative part of global residual. NOTE: no lumping
 		  elementResidual_h[i]  += (h-hn)*h_test_dV[i];
 		  elementResidual_hu[i] += (hu-hun)*h_test_dV[i];
 		  elementResidual_hv[i] += (hv-hvn)*h_test_dV[i];
 		}
 	    }
+	  // TMP global entropy
+	  volume += cell_volume;
+	  entropy_mean += cell_entropy_mean;
 	  // distribute
 	  for(int i=0;i<nDOF_test_element;i++)
 	    {
@@ -5471,9 +5627,7 @@ namespace proteus
 	      
 	      lumped_mass_matrix[h_gi]  += element_lumped_mass_matrix[i];
 	      // distribute element entropy residual to global vectors
-	      entRes1[h_gi] += elEntRes1[i];
-	      entRes2[h_gi] += elEntRes2[i];
-	      entRes3[h_gi] += elEntRes3[i];
+	      global_entropy_residual[h_gi] += element_entropy_residual[i];
 	      
 	      // distribute time derivative to global residual
 	      globalResidual[offset_h+stride_h*h_gi]  += elementResidual_h[i];
@@ -5481,7 +5635,11 @@ namespace proteus
 	      globalResidual[offset_hv+stride_hv*vel_gi] += elementResidual_hv[i];
 	    }
 	}
-
+      // TMP global entropy 
+      entropy_mean /= volume;
+      entropy_normalization_factor = std::max(std::abs(entropy_max-entropy_mean),
+      				      std::abs(entropy_min-entropy_mean));
+      
       ////////////////////////////////
       // COMPUTE ENTROPY AT ith DOF //
       ////////////////////////////////
@@ -5567,11 +5725,46 @@ namespace proteus
 								   hj,huj,hvj, 
 								   hStarji,huStarji,hvStarji,
 								   hEps,false))*cji_norm);  
-		  if (dL[ij] < 0.)
+		  /*
+		  if (dL[ij] > 100) //TMP
 		    {
-		      std::cout << "ERROR: Negative diagonal entry in dissipation matrix" << std::endl;
+		      std::cout << dL[ij] << std::endl;
+
+		      std::cout << maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+								 hi,hui,hvi,
+								 hStarji,huStarji,hvStarji,
+								 hEps,false)
+				<< std::endl;
+		      std::cout << maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+								 hi,hui,hvi, 
+								 hStarij,huStarij,hvStarij,
+								 hEps,false)
+				<< std::endl;
+		      std::cout << maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+								 hj,huj,hvj, 
+								 hStarij,huStarij,hvStarij,
+								 hEps,false)
+				<< std::endl;
+		      
+		      std::cout << hj << "\t"
+				<< huj << "\t" 
+				<< hvj
+				<< std::endl;
+		      std::cout << hStarji << "\t"
+				<< huStarji << "\t" 
+				<< hvStarji
+				<< std::endl;
+		      std::cout << maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+								 hj,huj,hvj, 
+								 hStarji,huStarji,hvStarji,
+								 hEps,true)
+				<< std::endl;
+
+	      
+
 		      abort();
 		    }
+		  */
 		  dLii -= dL[ij];
 
 		  // compute entropy max and min
@@ -5619,14 +5812,28 @@ namespace proteus
 	  double ui = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hui;
 	  double vi = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hvi;
 
+	  // entropy normalization factor 
+	  double one_over_entNormFactori = etaMax[i] == etaMin[i] ? 0. : 1./(etaMax[i]-etaMin[i]);
+
 	  // regularization of 1/hi 
 	  double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2));
 
 	  double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
-	  double ith_dissipative_term1=0., ith_dissipative_term2=0., ith_dissipative_term3=0.;
+	  double ith_dissipative_low_order_term1=0., ith_dissipative_low_order_term2=0., ith_dissipative_low_order_term3=0.,
+	    ith_dissipative_term1=0., ith_dissipative_term2=0., ith_dissipative_term3=0.;
 	  double ith_well_balancing_term1=0., ith_well_balancing_term2=0., ith_well_balancing_term3=0.;
 	  double aux1_to_compute_hnp1=0., aux2_to_compute_hnp1=0.;
 
+	  // friction term lumped
+	  //double veli_norm = std::sqrt(ui*ui+vi*vi);
+	  //double mi = lumped_mass_matrix[i];
+	  
+	  //double hi_to_the_gamma = std::pow(hi,gamma);
+	  //double ith_friction_term2 =  
+	  //veli_norm==0 ? 0. : 2*g*n2*hui*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
+	  //double ith_friction_term3 =  
+	  //veli_norm==0 ? 0. : 2*g*n2*hvi*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
+	  
 	  // loop over the sparsity pattern of the i-th DOF
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
@@ -5651,10 +5858,6 @@ namespace proteus
 	      // Dissipative term
 	      double muij = 0.;
 
-	      double entRes1i = std::abs( etaMax[i] == etaMin[i] ? 0. : entRes1[i]/(etaMax[i]-etaMin[i]) );
-	      double entRes2i = std::abs( etaMax[i] == etaMin[i] ? 0. : entRes2[i]/(etaMax[i]-etaMin[i]) );
-	      double entRes3i = std::abs( etaMax[i] == etaMin[i] ? 0. : entRes3[i]/(etaMax[i]-etaMin[i]) );
-
 	      if (i != j) // This is not necessary. See formula for ith_dissipative_terms
 		{
 		  ///////////////////////////
@@ -5678,22 +5881,41 @@ namespace proteus
 
 		  // compute dissipative terms for second and third equations
 		  dL[ij] *= std::max(psi[i],psi[j]);
-		  //ith_dissipative_term1 += dL[ij]*(hStarji-hStarij);
-		  //ith_dissipative_term2 += dL[ij]*(huStarji-huStarij);
-		  //ith_dissipative_term3 += dL[ij]*(hvStarji-hvStarij);
+		  // compute dLij*(uStarji-uStarij)
+		  double ith_dissipative_low_order_term1_ij = dL[ij]*(hStarji-hStarij);
+		  double ith_dissipative_low_order_term2_ij = dL[ij]*(huStarji-huStarij);
+		  double ith_dissipative_low_order_term3_ij = dL[ij]*(hvStarji-hvStarij);
+		  // sum dissipative matrix contribution to global vectors
+		  ith_dissipative_low_order_term1 += ith_dissipative_low_order_term1_ij;
+		  ith_dissipative_low_order_term2 += ith_dissipative_low_order_term2_ij;
+		  ith_dissipative_low_order_term3 += ith_dissipative_low_order_term3_ij;
 
-		  double entRes1j = std::abs( etaMax[j] == etaMin[j] ? 0. : entRes1[j]/(etaMax[j]-etaMin[j]) );
-		  double entRes2j = std::abs( etaMax[j] == etaMin[j] ? 0. : entRes2[j]/(etaMax[j]-etaMin[j]) );
-		  double entRes3j = std::abs( etaMax[j] == etaMin[j] ? 0. : entRes3[j]/(etaMax[j]-etaMin[j]) );
+		  // compute entropy residual for each component 
+		  double one_over_entNormFactorj = etaMax[j] == etaMin[j] ? 0. : 1./(etaMax[j]-etaMin[j]);
+		  double dEVij = cE*fmax(std::abs(global_entropy_residual[i])*one_over_entNormFactori,
+					 std::abs(global_entropy_residual[j])*one_over_entNormFactorj);
+		  double ith_dissipative_term1_ij = fmin(dL[ij],dEVij)*(hStarji-hStarij);
+		  double ith_dissipative_term2_ij = fmin(dL[ij],dEVij)*(huStarji-huStarij);
+		  double ith_dissipative_term3_ij = fmin(dL[ij],dEVij)*(hvStarji-hvStarij);
 
-		  // compute dEV_minus_dL_times_hStarji_minus_hStarij for FCT
-		  //dEV_minus_dL_times_hStarji_minus_hStarij[ij] 
-		  //= (fmin(dL[ij],cE*fmax(entRes1i,entRes1j)) - dL[ij])*(hStarji-hStarij);
+		  if (cE >= 1000) //HACK to switch between EV or not
+		    {
+		      ith_dissipative_term1_ij = dL[ij]*(hStarji-hStarij);
+		      ith_dissipative_term2_ij = dL[ij]*(huStarji-huStarij);
+		      ith_dissipative_term3_ij = dL[ij]*(hvStarji-hvStarij);
+		    }
+		  // sum high order dissipative matrix contribution to global vectors
+		  ith_dissipative_term1 += ith_dissipative_term1_ij;
+		  ith_dissipative_term2 += ith_dissipative_term2_ij;
+		  ith_dissipative_term3 += ith_dissipative_term3_ij;
 
-		  // compute high order dissiptive term for all equations
-		  ith_dissipative_term1 += fmin(std::abs(dL[ij]),cE*fmax(entRes1i,entRes1j))*(hStarji-hStarij);
-		  ith_dissipative_term2 += fmin(std::abs(dL[ij]),cE*fmax(entRes2i,entRes2j))*(huStarji-huStarij);
-		  ith_dissipative_term3 += fmin(std::abs(dL[ij]),cE*fmax(entRes3i,entRes3j))*(hvStarji-hvStarij);
+		  // compute dEV_minus_dL_times_hStarji_minus_hStarij, ... for FCT		  
+		  dEV_minus_dL_times_hStarji_minus_hStarij[ij] 
+		    = ith_dissipative_term1_ij - ith_dissipative_low_order_term1_ij;
+		  dEV_minus_dL_times_huStarji_minus_huStarij[ij] 
+		    = ith_dissipative_term2_ij - ith_dissipative_low_order_term2_ij;
+		  dEV_minus_dL_times_hvStarji_minus_hvStarij[ij] 
+		    = ith_dissipative_term3_ij - ith_dissipative_low_order_term3_ij;
 
 		  // compute aux quantities for first equation 
 		  // aux1 = Veli*Cii + sum_j[ muij + (dLij-muij)*hStarij/hi ]
@@ -5705,15 +5927,19 @@ namespace proteus
 		{
 		  aux1_to_compute_hnp1 += (ui*Cx[ij] + vi*Cy[ij])*hi;
 		  dEV_minus_dL_times_hStarji_minus_hStarij[ij] = 0.;
+		  dEV_minus_dL_times_huStarji_minus_huStarij[ij] = 0.;
+		  dEV_minus_dL_times_hvStarji_minus_hvStarij[ij] = 0.;	  
 		}
 	      // update ij
 	      ij+=1;
 	    }
 	  double mi = lumped_mass_matrix[i];
 
-	  //edge_based_cfl[i] = 2*aux1_to_compute_hnp1/mi;
 	  // Compute low order solution: lumped mass matrix and low order dissipative matrix
-	  low_order_hnp1[i] = hi*(1-dt/mi*aux1_to_compute_hnp1) + dt/mi*aux2_to_compute_hnp1;
+	  low_order_hnp1[i]  = hi*(1-dt/mi*aux1_to_compute_hnp1) + dt/mi*aux2_to_compute_hnp1;
+	  //low_order_hnp1[i]  = hi  - dt/mi*(ith_flux_term1 - ith_dissipative_low_order_term1);
+	  low_order_hunp1[i] = hui - dt/mi*(ith_flux_term2 - ith_dissipative_low_order_term2 - ith_well_balancing_term2);
+	  low_order_hvnp1[i] = hvi - dt/mi*(ith_flux_term3 - ith_dissipative_low_order_term3 - ith_well_balancing_term3); 
 
 	  if (low_order_hnp1[i] < 0.)
 	    {
@@ -5723,18 +5949,22 @@ namespace proteus
 			<< dt/mi*aux2_to_compute_hnp1 
 			<< std::endl;
 	    }
-	  // distribute local to global flux and dissipative contributions
-	  //globalResidual[offset_h+stride_h*i]   += dt*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
-	  //globalResidual[offset_hu+stride_hu*i] += dt*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2);
-	  //globalResidual[offset_hv+stride_hv*i] += dt*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3);
 
-	  //globalResidual[offset_h+stride_h*i] = low_order_hnp1[i];
-	  globalResidual[offset_h+stride_h*i] = hi - dt/mi*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
-	  globalResidual[offset_hu+stride_hu*i] = hui - dt/mi*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2);
-	  globalResidual[offset_hv+stride_hv*i] = hvi - dt/mi*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3);
+	  // distribute local to global flux and dissipative contributions
+	  if (LUMPED_MASS_MATRIX==1)
+	    {
+	      globalResidual[offset_h+stride_h*i]   = hi  - dt/mi*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
+	      globalResidual[offset_hu+stride_hu*i] = hui - dt/mi*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2); // + ith_friction_term2);
+	      globalResidual[offset_hv+stride_hv*i] = hvi - dt/mi*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3); // + ith_friction_term3);
+	    }
+	  else
+	    {
+	      globalResidual[offset_h+stride_h*i]   += dt*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
+	      globalResidual[offset_hu+stride_hu*i] += dt*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2); // + ith_friction_term2);
+	      globalResidual[offset_hv+stride_hv*i] += dt*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3); // + ith_friction_term3);
+	    }
 
 	}
-
     }
 
     void calculateResidual_galerkin(//element
@@ -5871,8 +6101,13 @@ namespace proteus
 				    double* hv_dof_galerkin,
 				    // TO COMPUTE LOW ORDER 
 				    double* low_order_hnp1,
+				    double* low_order_hunp1,
+				    double* low_order_hvnp1,
 				    double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-				    double cE)
+				    double* dEV_minus_dL_times_huStarji_minus_huStarij,
+				    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+				    double cE,
+				    int LUMPED_MASS_MATRIX)
     {
       double dt = 1./alphaBDF; 
       ////////////////
@@ -5968,9 +6203,9 @@ namespace proteus
 		
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
-		  elementResidual_h[i]  += (h -hn   + dt*(dxf1 + dyf1))*h_test_dV[i];
-		  elementResidual_hu[i] += (hu-hun + dt*(dxf2 + dyf2) + dt*b_dot_gradx_z)*h_test_dV[i];
-		  elementResidual_hv[i] += (hv-hvn + dt*(dxf3 + dyf3) + dt*b_dot_grady_z)*h_test_dV[i];
+		  elementResidual_h[i]  += ((h-hn)  + dt*(dxf1 + dyf1))*h_test_dV[i];
+		  elementResidual_hu[i] += ((hu-hun) + dt*(dxf2 + dyf2) + dt*b_dot_gradx_z)*h_test_dV[i];
+		  elementResidual_hv[i] += ((hv-hvn) + dt*(dxf3 + dyf3) + dt*b_dot_grady_z)*h_test_dV[i];
 		}
 	    }
 	  // distribute

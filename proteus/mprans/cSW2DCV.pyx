@@ -10,13 +10,21 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 	             int NNZ,
 		     int numDOFs,
 		     double* lumped_mass_matrix, 
-		     double* soln, 
-		     double* solH, 
+		     double* hn,
+		     double* hun,
+		     double* hvn, 
+		     double* high_order_hnp1, 
+		     double* high_order_hunp1, 
+		     double* high_order_hvnp1, 
 		     double* low_order_hnp1, 
+		     double* low_order_hunp1,
+		     double* low_order_hvnp1,
 		     int* csrRowIndeces_DofLoops, 
 		     int* csrColumnOffsets_DofLoops, 
 		     double* MassMatrix, 
-		     double* dL_minus_dC) 
+		     double* dEV_minus_dL_times_hStarji_minus_hStarij,
+		     double* dEV_minus_dL_times_huStarji_minus_huStarij,
+		     double* dEV_minus_dL_times_hvStarji_minus_hvStarij)
         void calculateResidual(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -142,8 +150,13 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* hu_dof_galerkin, 
 			       double* hv_dof_galerkin,
 			       double* low_order_hnp1,
+			       double* low_order_hunp1,
+			       double* low_order_hvnp1,
 			       double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-			       double cE)
+			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+			       double cE, 
+			       int LUMPED_MASS_MATRIX)
         void calculateResidual_cell_based_entropy_viscosity(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -269,8 +282,13 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* hu_dof_galerkin, 
 			       double* hv_dof_galerkin,
 			       double* low_order_hnp1,
+			       double* low_order_hunp1,
+			       double* low_order_hvnp1,
 			       double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-			       double cE)
+			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+			       double cE,
+			       int LUMPED_MASS_MATRIX)
         void calculateResidual_first_order_flatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -396,8 +414,13 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* hu_dof_galerkin, 
 			       double* hv_dof_galerkin,
 			       double* low_order_hnp1,
+			       double* low_order_hunp1,
+			       double* low_order_hvnp1,
 			       double* dEV_minus_dL_times_hStarji_minus_hStarij,
-			       double cE)	
+			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+			       double cE,
+			       int LUMPED_MASS_MATRIX)	
         void calculateResidual_second_order_flatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -523,8 +546,13 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* hu_dof_galerkin, 
 			       double* hv_dof_galerkin,
 			       double* low_order_hnp1,
+			       double* low_order_hunp1,
+			       double* low_order_hvnp1,
 			       double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-			       double cE)
+			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+			       double cE,
+			       int LUMPED_MASS_MATRIX)
         void calculateResidual_second_order_NonFlatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -650,8 +678,13 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* hu_dof_galerkin, 
 			       double* hv_dof_galerkin,
 			       double* low_order_hnp1,
+			       double* low_order_hunp1,
+			       double* low_order_hvnp1,
 			       double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-			       double cE)
+			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+			       double cE,
+			       int LUMPED_MASS_MATRIX)
         void calculateResidual_second_order_NonFlatB_with_EV(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -777,8 +810,13 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* hu_dof_galerkin, 
 			       double* hv_dof_galerkin,
 			       double* low_order_hnp1,
+			       double* low_order_hunp1,
+			       double* low_order_hvnp1,
 			       double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-			       double cE)
+			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+			       double cE,
+			       int LUMPED_MASS_MATRIX)
         void calculateResidual_galerkin(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -904,8 +942,13 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* hu_dof_galerkin, 
 			       double* hv_dof_galerkin,
 			       double* low_order_hnp1,
+			       double* low_order_hunp1,
+			       double* low_order_hvnp1,
 			       double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-			       double cE)
+			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
+			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+			       double cE,
+			       int LUMPED_MASS_MATRIX)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -1374,24 +1417,40 @@ cdef class cSW2DCV_base:
 	       int NNZ,
 	       int numDOFs,
 	       numpy.ndarray lumped_mass_matrix, 
-	       numpy.ndarray soln, 
-	       numpy.ndarray solH, 
+	       numpy.ndarray hn, 
+	       numpy.ndarray hun, 
+	       numpy.ndarray hvn, 
+	       numpy.ndarray high_order_hnp1,
+	       numpy.ndarray high_order_hunp1,
+	       numpy.ndarray high_order_hvnp1,
 	       numpy.ndarray low_order_hnp1, 
+	       numpy.ndarray low_order_hunp1, 
+	       numpy.ndarray low_order_hvnp1, 
 	       numpy.ndarray csrRowIndeces_DofLoops, 
 	       numpy.ndarray csrColumnOffsets_DofLoops, 
 	       numpy.ndarray MassMatrix, 
-	       numpy.ndarray dL_minus_dC):
+	       numpy.ndarray dEV_minus_dL_times_hStarji_minus_hStarij,
+	       numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij,
+	       numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij):
        self.thisptr.FCTStep(dt, 
        			    NNZ,
 	                    numDOFs,
 			    <double*> lumped_mass_matrix.data, 
-			    <double*> soln.data, 
-			    <double*> solH.data,
+			    <double*> hn.data, 
+			    <double*> hun.data, 
+			    <double*> hvn.data, 
+			    <double*> high_order_hnp1.data,
+			    <double*> high_order_hunp1.data,
+			    <double*> high_order_hvnp1.data,
 			    <double*> low_order_hnp1.data,
+			    <double*> low_order_hunp1.data,
+			    <double*> low_order_hvnp1.data,
 			    <int*> csrRowIndeces_DofLoops.data,
 			    <int*> csrColumnOffsets_DofLoops.data,
 			    <double*> MassMatrix.data,
-			    <double*> dL_minus_dC.data)
+			    <double*> dEV_minus_dL_times_hStarji_minus_hStarij.data,
+			    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data,
+			    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data)
    def calculateResidual(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -1518,8 +1577,13 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray hu_dof_galerkin,
 			 numpy.ndarray hv_dof_galerkin,
 			 numpy.ndarray low_order_hnp1,
+			 numpy.ndarray low_order_hunp1,
+			 numpy.ndarray low_order_hvnp1,
 			 numpy.ndarray dEV_minus_dL_times_hStarji_minus_hStarij, 
-			 double cE):
+			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij,
+			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij,  
+			 double cE, 
+			 int LUMPED_MASS_MATRIX):
        self.thisptr.calculateResidual(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1648,8 +1712,13 @@ cdef class cSW2DCV_base:
 	    <double*> hu_dof_galerkin.data,
 	    <double*> hv_dof_galerkin.data,
 	    <double*> low_order_hnp1.data,
+	    <double*> low_order_hunp1.data,
+	    <double*> low_order_hvnp1.data,
 	    <double*> dEV_minus_dL_times_hStarji_minus_hStarij.data, 
-	    cE)
+	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data, 
+	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data, 
+	    cE, 
+	    LUMPED_MASS_MATRIX)
    def calculateResidual_cell_based_entropy_viscosity(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -1776,8 +1845,13 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray hu_dof_galerkin,
 			 numpy.ndarray hv_dof_galerkin,
 			 numpy.ndarray low_order_hnp1,
+			 numpy.ndarray low_order_hunp1,
+			 numpy.ndarray low_order_hvnp1,
 			 numpy.ndarray dEV_minus_dL_times_hStarji_minus_hStarij, 
-			 double cE):
+			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
+			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
+			 double cE,
+			 int LUMPED_MASS_MATRIX):
        self.thisptr.calculateResidual_cell_based_entropy_viscosity(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1906,8 +1980,13 @@ cdef class cSW2DCV_base:
 	    <double*> hu_dof_galerkin.data,
 	    <double*> hv_dof_galerkin.data,
 	    <double*> low_order_hnp1.data,
+	    <double*> low_order_hunp1.data,
+	    <double*> low_order_hvnp1.data,
 	    <double*> dEV_minus_dL_times_hStarji_minus_hStarij.data, 
-	    cE)
+	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data, 
+	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data, 
+	    cE,
+	    LUMPED_MASS_MATRIX)
    def calculateResidual_first_order_flatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2034,8 +2113,13 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray hu_dof_galerkin,
 			 numpy.ndarray hv_dof_galerkin,
 			 numpy.ndarray low_order_hnp1,
+			 numpy.ndarray low_order_hunp1,
+			 numpy.ndarray low_order_hvnp1,
 			 numpy.ndarray dEV_minus_dL_times_hStarji_minus_hStarij, 
-			 double cE):
+			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
+			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
+			 double cE,
+			 int LUMPED_MASS_MATRIX):
        self.thisptr.calculateResidual_first_order_flatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -2164,8 +2248,13 @@ cdef class cSW2DCV_base:
 	    <double*> hu_dof_galerkin.data,
 	    <double*> hv_dof_galerkin.data,
 	    <double*> low_order_hnp1.data,
+	    <double*> low_order_hunp1.data,
+	    <double*> low_order_hvnp1.data,
 	    <double*> dEV_minus_dL_times_hStarji_minus_hStarij.data,
-	    cE)
+	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data,
+	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data,
+	    cE,
+	    LUMPED_MASS_MATRIX)
    def calculateResidual_second_order_flatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2292,8 +2381,13 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray hu_dof_galerkin,
 			 numpy.ndarray hv_dof_galerkin,
 			 numpy.ndarray low_order_hnp1,
+			 numpy.ndarray low_order_hunp1,
+			 numpy.ndarray low_order_hvnp1,
 			 numpy.ndarray dEV_minus_dL_times_hStarji_minus_hStarij, 
-			 double cE):
+			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
+			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
+			 double cE,
+			 int LUMPED_MASS_MATRIX):
        self.thisptr.calculateResidual_second_order_flatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -2422,8 +2516,13 @@ cdef class cSW2DCV_base:
 	    <double*> hu_dof_galerkin.data,
 	    <double*> hv_dof_galerkin.data,
 	    <double*> low_order_hnp1.data,
+	    <double*> low_order_hunp1.data,
+	    <double*> low_order_hvnp1.data,
 	    <double*> dEV_minus_dL_times_hStarji_minus_hStarij.data, 
-	    cE)
+	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data, 
+	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data, 
+	    cE,
+	    LUMPED_MASS_MATRIX)
    def calculateResidual_second_order_NonFlatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2550,8 +2649,13 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray hu_dof_galerkin,
 			 numpy.ndarray hv_dof_galerkin,
 			 numpy.ndarray low_order_hnp1,
+			 numpy.ndarray low_order_hunp1,
+			 numpy.ndarray low_order_hvnp1,
 			 numpy.ndarray dEV_minus_dL_times_hStarji_minus_hStarij, 
-			 double cE):
+			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
+			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
+			 double cE,
+			 int LUMPED_MASS_MATRIX):
        self.thisptr.calculateResidual_second_order_NonFlatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -2680,8 +2784,13 @@ cdef class cSW2DCV_base:
 	    <double*> hu_dof_galerkin.data,
 	    <double*> hv_dof_galerkin.data,
 	    <double*> low_order_hnp1.data,
+	    <double*> low_order_hunp1.data,
+	    <double*> low_order_hvnp1.data,
 	    <double*> dEV_minus_dL_times_hStarji_minus_hStarij.data, 
-	    cE)
+	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data, 
+	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data, 
+	    cE,
+	    LUMPED_MASS_MATRIX)
    def calculateResidual_second_order_NonFlatB_with_EV(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2808,8 +2917,13 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray hu_dof_galerkin,
 			 numpy.ndarray hv_dof_galerkin,
 			 numpy.ndarray low_order_hnp1,
+			 numpy.ndarray low_order_hunp1,
+			 numpy.ndarray low_order_hvnp1,
 			 numpy.ndarray dEV_minus_dL_times_hStarji_minus_hStarij, 
-			 double cE):
+			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
+			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
+			 double cE,
+			 int LUMPED_MASS_MATRIX):
        self.thisptr.calculateResidual_second_order_NonFlatB_with_EV(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -2938,8 +3052,13 @@ cdef class cSW2DCV_base:
 	    <double*> hu_dof_galerkin.data,
 	    <double*> hv_dof_galerkin.data,
 	    <double*> low_order_hnp1.data,
+	    <double*> low_order_hunp1.data,
+	    <double*> low_order_hvnp1.data,
 	    <double*> dEV_minus_dL_times_hStarji_minus_hStarij.data,
-	    cE)
+	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data,
+	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data,
+	    cE,
+	    LUMPED_MASS_MATRIX)
    def calculateResidual_galerkin(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -3066,8 +3185,13 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray hu_dof_galerkin,
 			 numpy.ndarray hv_dof_galerkin,
 			 numpy.ndarray low_order_hnp1,
+			 numpy.ndarray low_order_hunp1,
+			 numpy.ndarray low_order_hvnp1,
 			 numpy.ndarray dEV_minus_dL_times_hStarji_minus_hStarij, 
-			 double cE):
+			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
+			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
+			 double cE,
+			 int LUMPED_MASS_MATRIX):
        self.thisptr.calculateResidual_galerkin(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -3196,8 +3320,13 @@ cdef class cSW2DCV_base:
 	    <double*> hu_dof_galerkin.data,
 	    <double*> hv_dof_galerkin.data,
 	    <double*> low_order_hnp1.data,
+	    <double*> low_order_hunp1.data,
+	    <double*> low_order_hvnp1.data,
 	    <double*> dEV_minus_dL_times_hStarji_minus_hStarij.data, 
-	    cE)
+	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data, 
+	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data, 
+	    cE,
+	    LUMPED_MASS_MATRIX)
 
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
