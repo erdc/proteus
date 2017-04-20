@@ -81,7 +81,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     """
     def __init__(self,
                  bathymetry,
-                 cE=1.0,
                  nu=1.004e-6,
                  g=9.8,
                  nd=2,
@@ -89,7 +88,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  movingDomain=False,
                  useRBLES=0.0,
 		 useMetrics=0.0,
-                 modelIndex=0):
+                 modelIndex=0, 
+                 cE=1.0,
+                 LUMPED_MASS_MATRIX=1):
         self.bathymetry = bathymetry 
         self.useRBLES=useRBLES
         self.useMetrics=useMetrics
@@ -98,6 +99,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.g = g
         self.nd=nd
         self.cE=cE
+        self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
         self.modelIndex=modelIndex
         mass={}
         advection={}
@@ -544,7 +546,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.cterm_transpose_global=None
         # For FCT
         self.low_order_hnp1=None
+        self.low_order_hunp1=None
+        self.low_order_hvnp1=None
         self.dEV_minus_dL_times_hStarji_minus_hStarij=None
+        self.dEV_minus_dL_times_huStarji_minus_huStarij=None
+        self.dEV_minus_dL_times_hvStarji_minus_hvStarij=None
 
         comm = Comm.get()
         self.comm=comm
@@ -623,7 +629,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.mesh.nodeVelocityArray==None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
         #cek/ido todo replace python loops in modules with optimized code if possible/necessary
-        self.forceStrongConditions=True#False
+        self.forceStrongConditions=True
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
@@ -672,27 +678,39 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # Extract hnp1 from global solution u
         index = range(0,len(self.timeIntegration.u))
         hIndex = index[0::3]
-        hnp1 = numpy.copy(self.timeIntegration.u[hIndex])
+        huIndex = index[1::3]
+        hvIndex = index[2::3]
+        high_order_hnp1 = numpy.copy(self.timeIntegration.u[hIndex])
+        high_order_hunp1 = numpy.copy(self.timeIntegration.u[huIndex])
+        high_order_hvnp1 = numpy.copy(self.timeIntegration.u[hvIndex])
 
-        # Do some changes on hnp1 #
-        #hnp1[:] = 0
-
-        #if self.low_order TMP
-        #print self.low_order_hnp1.min() 
+        # Do some type of limitation 
+        
         self.sw2d.FCTStep(self.timeIntegration.dt, 
                           self.nnz, #number of non zero entries 
                           len(rowptr)-1, #number of DOFs
                           self.ML, #Lumped mass matrix
                           self.h_dof_old, #soln
-                          hnp1, #solH
+                          self.hu_dof_old,
+                          self.hv_dof_old,
+                          high_order_hnp1, #solH
+                          high_order_hunp1,
+                          high_order_hvnp1,
                           self.low_order_hnp1, 
+                          self.low_order_hunp1, 
+                          self.low_order_hvnp1, 
                           rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
                           colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
                           MassMatrix, 
-                          self.dEV_minus_dL_times_hStarji_minus_hStarij)
-        
+                          self.dEV_minus_dL_times_hStarji_minus_hStarij,
+                          self.dEV_minus_dL_times_huStarji_minus_huStarij,
+                          self.dEV_minus_dL_times_hvStarji_minus_hvStarij)
+                
         # Pass the post processed hnp1 solution to global solution u
-        self.timeIntegration.u[hIndex] = hnp1 
+        self.timeIntegration.u[hIndex] = high_order_hnp1 
+        self.timeIntegration.u[huIndex] = high_order_hunp1 
+        self.timeIntegration.u[hvIndex] = high_order_hvnp1 
+
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -882,7 +900,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr_cMatrix, colind_cMatrix, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         # This is dummy. I just care about the csr structure of the sparse matrix
         self.dEV_minus_dL_times_hStarji_minus_hStarij = np.zeros(Cx.shape,'d')
+        self.dEV_minus_dL_times_huStarji_minus_huStarij = np.zeros(Cx.shape,'d')
+        self.dEV_minus_dL_times_hvStarji_minus_hvStarij = np.zeros(Cx.shape,'d')
         self.low_order_hnp1 = numpy.zeros(self.u[0].dof.shape,'d')
+        self.low_order_hunp1 = numpy.zeros(self.u[1].dof.shape,'d')
+        self.low_order_hvnp1 = numpy.zeros(self.u[2].dof.shape,'d')
 
         numDOFsPerEqn = self.u[0].dof.size #(mql): I am assuming all variables live on the same FE space
         numNonZeroEntries = len(Cx)
@@ -1047,8 +1069,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.hu_dof_galerkin,
             self.hv_dof_galerkin,
             self.low_order_hnp1,
+            self.low_order_hunp1,
+            self.low_order_hvnp1,
             self.dEV_minus_dL_times_hStarji_minus_hStarij, 
-            self.coefficients.cE)
+            self.dEV_minus_dL_times_huStarji_minus_huStarij, 
+            self.dEV_minus_dL_times_hvStarji_minus_hvStarij, 
+            self.coefficients.cE, 
+            self.coefficients.LUMPED_MASS_MATRIX)
 
         self.recompute_lumped_mass_matrix=1
         if (self.recompute_lumped_mass_matrix==1):
@@ -1057,6 +1084,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             logEvent("Not recomputing the lumped mass matrix",level=1)
         #import pdb
         #pdb.set_trace()
+
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1076,6 +1104,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Global residual",level=9,data=r)
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
+
     def getJacobian(self,jacobian):
 	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
 				       jacobian)
