@@ -850,7 +850,7 @@ namespace proteus
      
       //H_s =  (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
       H_s1 = 0.5*(1. - cos(M_PI*x));
-      H_s3 = exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
+      H_s3 = (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
       
       x = 1. - x;
       H_s2 = 1.- (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
