@@ -548,9 +548,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.low_order_hnp1=None
         self.low_order_hunp1=None
         self.low_order_hvnp1=None
-        self.dEV_minus_dL_times_hStarji_minus_hStarij=None
-        self.dEV_minus_dL_times_huStarji_minus_huStarij=None
-        self.dEV_minus_dL_times_hvStarji_minus_hvStarij=None
+        self.dEV_minus_dL=None
 
         comm = Comm.get()
         self.comm=comm
@@ -693,6 +691,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           self.h_dof_old, #soln
                           self.hu_dof_old,
                           self.hv_dof_old,
+                          self.coefficients.b.dof,
                           high_order_hnp1, #solH
                           high_order_hunp1,
                           high_order_hvnp1,
@@ -701,10 +700,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           self.low_order_hvnp1, 
                           rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
                           colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
-                          MassMatrix, 
-                          self.dEV_minus_dL_times_hStarji_minus_hStarij,
-                          self.dEV_minus_dL_times_huStarji_minus_huStarij,
-                          self.dEV_minus_dL_times_hvStarji_minus_hvStarij)
+                          MassMatrix,
+                          self.dEV_minus_dL,
+                          self.hEps)
                 
         # Pass the post processed hnp1 solution to global solution u
         self.timeIntegration.u[hIndex] = high_order_hnp1 
@@ -899,9 +897,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr_cMatrix, colind_cMatrix, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         # This is dummy. I just care about the csr structure of the sparse matrix
-        self.dEV_minus_dL_times_hStarji_minus_hStarij = np.zeros(Cx.shape,'d')
-        self.dEV_minus_dL_times_huStarji_minus_huStarij = np.zeros(Cx.shape,'d')
-        self.dEV_minus_dL_times_hvStarji_minus_hvStarij = np.zeros(Cx.shape,'d')
+        self.dEV_minus_dL = np.zeros(Cx.shape,'d')
         self.low_order_hnp1 = numpy.zeros(self.u[0].dof.shape,'d')
         self.low_order_hunp1 = numpy.zeros(self.u[1].dof.shape,'d')
         self.low_order_hvnp1 = numpy.zeros(self.u[2].dof.shape,'d')
@@ -1071,9 +1067,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.low_order_hnp1,
             self.low_order_hunp1,
             self.low_order_hvnp1,
-            self.dEV_minus_dL_times_hStarji_minus_hStarij, 
-            self.dEV_minus_dL_times_huStarji_minus_huStarij, 
-            self.dEV_minus_dL_times_hvStarji_minus_hvStarij, 
+            self.dEV_minus_dL,
             self.coefficients.cE, 
             self.coefficients.LUMPED_MASS_MATRIX, 
             self.timeIntegration.dt)

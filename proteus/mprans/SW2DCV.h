@@ -53,6 +53,7 @@ namespace proteus
 			 double* hn, //DOFs of solution at time tn
 			 double* hun, 
 			 double* hvn, 
+			 double* b_dof,
 			 double* high_order_hnp1, //DOFs of high order solution at tnp1
 			 double* high_order_hunp1, 
 			 double* high_order_hvnp1, 
@@ -62,9 +63,8 @@ namespace proteus
 			 int* csrRowIndeces_DofLoops, //csr row indeces 
 			 int* csrColumnOffsets_DofLoops, //csr column offsets 
 			 double* MassMatrix, //mass matrix
-			 double* dEV_minus_dL_times_hStarji_minus_hStarij, //Note that this is an anti symmetric matrix
-			 double* dEV_minus_dL_times_huStarji_minus_huStarij,
-			 double* dEV_minus_dL_times_hvStarji_minus_hvStarij
+			 double* dEV_minus_dL,
+			 double hEps
 			 )=0;
     virtual void calculateResidual(//element
 				   double* mesh_trial_ref,
@@ -202,9 +202,7 @@ namespace proteus
 				   double* low_order_hnp1,
 				   double* low_order_hunp1,
 				   double* low_order_hvnp1,
-				   double* dEV_minus_dL_times_hStarji_minus_hStarij,
-				   double* dEV_minus_dL_times_huStarji_minus_huStarij,
-				   double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+				   double* dEV_minus_dL,
 				   double cE, 
 				   int LUMPED_MASS_MATRIX, 
 				   double dt
@@ -345,9 +343,7 @@ namespace proteus
 								double* low_order_hnp1,
 								double* low_order_hunp1,
 								double* low_order_hvnp1,
-								double* dEV_minus_dL_times_hStarji_minus_hStarij,
-								double* dEV_minus_dL_times_huStarji_minus_huStarij,
-								double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+								double* dEV_minus_dL,
 								double cE,
 								int LUMPED_MASS_MATRIX,
 								double dt
@@ -488,9 +484,7 @@ namespace proteus
 					    double* low_order_hnp1,
 					    double* low_order_hunp1,
 					    double* low_order_hvnp1,
-					    double* dEV_minus_dL_times_hStarji_minus_hStarij,
-					    double* dEV_minus_dL_times_huStarji_minus_huStarij,
-					    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+					    double* dEV_minus_dL,
 					    double cE,
 					    int LUMPED_MASS_MATRIX,
 					    double dt
@@ -631,9 +625,7 @@ namespace proteus
 					       double* low_order_hnp1,
 					       double* low_order_hunp1,
 					       double* low_order_hvnp1,
-					       double* dEV_minus_dL_times_hStarji_minus_hStarij,
-					       double* dEV_minus_dL_times_huStarji_minus_huStarij,
-					       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+					       double* dEV_minus_dL,
 					       double cE,
 					       int LUMPED_MASS_MATRIX,
 					       double dt
@@ -774,9 +766,7 @@ namespace proteus
 					       double* low_order_hnp1,
 					       double* low_order_hunp1,
 					       double* low_order_hvnp1,
-					       double* dEV_minus_dL_times_hStarji_minus_hStarij,
-					       double* dEV_minus_dL_times_huStarji_minus_huStarij,
-					       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+					       double* dEV_minus_dL,
 					       double cE,
 					       int LUMPED_MASS_MATRIX,
 					       double dt
@@ -917,9 +907,7 @@ namespace proteus
 					       double* low_order_hnp1,
 					       double* low_order_hunp1,
 					       double* low_order_hvnp1,
-					       double* dEV_minus_dL_times_hStarji_minus_hStarij,
-					       double* dEV_minus_dL_times_huStarji_minus_huStarij,
-					       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+					       double* dEV_minus_dL,
 					       double cE,
 					       int LUMPED_MASS_MATRIX,
 					       double dt
@@ -1060,9 +1048,7 @@ namespace proteus
 					    double* low_order_hnp1,
 					    double* low_order_hunp1,
 					    double* low_order_hvnp1,
-					    double* dEV_minus_dL_times_hStarji_minus_hStarij,
-					    double* dEV_minus_dL_times_huStarji_minus_huStarij,
-					    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+					    double* dEV_minus_dL,
 					    double cE,
 					    int LUMPED_MASS_MATRIX,
 					    double dt
@@ -2595,10 +2581,11 @@ namespace proteus
     void FCTStep(double dt, 
 		 int NNZ, //number on non-zero entries on sparsity pattern
 		 int numDOFs, //number of DOFs
-		 double* lumped_mass_matrix, //lumped mass matrix (as vector)
+		 double* lumped_mass_matrix, //lumped mass matrix (as vector))
 		 double* hn, //DOFs of solution at time tn
 		 double* hun, 
 		 double* hvn,
+		 double* b_dof,
 		 double* high_order_hnp1, //DOFs of high order solution at tnp1
 		 double* high_order_hunp1, 
 		 double* high_order_hvnp1, 
@@ -2608,9 +2595,8 @@ namespace proteus
 		 int* csrRowIndeces_DofLoops, //csr row indeces 
 		 int* csrColumnOffsets_DofLoops, //csr column offsets 
 		 double* MassMatrix, //mass matrix
-		 double* dEV_minus_dL_times_hStarji_minus_hStarij, //low minus high order dissipative matrices
-		 double* dEV_minus_dL_times_huStarji_minus_huStarij,
-		 double* dEV_minus_dL_times_hvStarji_minus_hvStarij
+		 double* dEV_minus_dL,
+		 double hEps
 		 )
     {
       double h_threshold = 1.0E-3;
@@ -2630,6 +2616,7 @@ namespace proteus
 	  double hni = hn[i];
 	  double huni = hun[i];
 	  double hvni = hvn[i];
+	  double Zi = b_dof[i];
 	  double mi = lumped_mass_matrix[i];
 
 	  double minH=0.;
@@ -2639,15 +2626,30 @@ namespace proteus
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
 	      double ML_minus_MC = (i==j ? 1. : 0.)*mi - MassMatrix[ij];
+
+	      double hnj = hn[j];
+	      double hunj = hun[j];
+	      double hvnj = hvn[j];
+	      double Zj = b_dof[j];
+
+	      // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
+	      double hStarij  = fmax(0., hni + Zi - fmax(Zi,Zj));
+	      double huStarij = (hni <= hEps ? 0. : huni*hStarij/hni);
+	      double hvStarij = (hni <= hEps ? 0. : hvni*hStarij/hni);
+	      
+	      double hStarji  = fmax(0., hnj + Zj - fmax(Zi,Zj));
+	      double huStarji = (hnj <= hEps ? 0. : hunj*hStarji/hnj);
+	      double hvStarji = (hnj <= hEps ? 0. : hvnj*hStarji/hnj);
+	      
 	      // i-th row of flux correction matrix 
 	      FluxCorrectionMatrix1[ij] = ML_minus_MC*(high_order_hnp1[j]-hn[j] - (high_order_hnp1i-hni)) 
-		+ dt*dEV_minus_dL_times_hStarji_minus_hStarij[ij];
+		+ dt*dEV_minus_dL[ij]*(hStarji-hStarij);
 
 	      FluxCorrectionMatrix2[ij] = ML_minus_MC*(high_order_hunp1[j]-hun[j] - (high_order_hunp1i-huni)) 
-		+ dt*dEV_minus_dL_times_huStarji_minus_huStarij[ij];
+		+ dt*dEV_minus_dL[ij]*(huStarji-huStarij);
 
 	      FluxCorrectionMatrix3[ij] = ML_minus_MC*(high_order_hvnp1[j]-hvn[j] - (high_order_hvnp1i-hvni)) 
-		+ dt*dEV_minus_dL_times_hvStarji_minus_hvStarij[ij];
+		+ dt*dEV_minus_dL[ij]*(hvStarji-hvStarij);
 
 	      ///////////////////////
 	      // COMPUTE P VECTORS //
@@ -2856,9 +2858,7 @@ namespace proteus
 			   double* low_order_hnp1,
 			   double* low_order_hunp1,
 			   double* low_order_hvnp1,
-			   double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-			   double* dEV_minus_dL_times_huStarji_minus_huStarij,
-			   double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+			   double* dEV_minus_dL,
 			   double cE,
 			   int LUMPED_MASS_MATRIX,
 			   double dt)
@@ -3833,9 +3833,7 @@ namespace proteus
 							double* low_order_hnp1,
 							double* low_order_hunp1,
 							double* low_order_hvnp1,
-							double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-							double* dEV_minus_dL_times_huStarji_minus_huStarij,
-							double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+							double* dEV_minus_dL,
 							double cE,
 							int LUMPED_MASS_MATRIX,
 							double dt)
@@ -4312,9 +4310,7 @@ namespace proteus
 				    double* low_order_hnp1,
 				    double* low_order_hunp1,
 				    double* low_order_hvnp1,
-				    double* dEV_minus_dL_times_hStarji_minus_hStarij,
-				    double* dEV_minus_dL_times_huStarji_minus_huStarij,
-				    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+				    double* dEV_minus_dL,
 				    double cE,
 				    int LUMPED_MASS_MATRIX,
 				    double dt)
@@ -4614,9 +4610,7 @@ namespace proteus
 				       double* low_order_hnp1,
 				       double* low_order_hunp1,
 				       double* low_order_hvnp1,
-				       double* dEV_minus_dL_times_hStarji_minus_hStarij,
-				       double* dEV_minus_dL_times_huStarji_minus_huStarij,
-				       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+				       double* dEV_minus_dL,
 				       double cE, 
 				       int LUMPED_MASS_MATRIX,
 				       double dt)
@@ -4951,9 +4945,7 @@ namespace proteus
 				       double* low_order_hnp1,
 				       double* low_order_hunp1,
 				       double* low_order_hvnp1,
-				       double* dEV_minus_dL_times_hStarji_minus_hStarij,
-				       double* dEV_minus_dL_times_huStarji_minus_huStarij,
-				       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+				       double* dEV_minus_dL,
 				       double cE,
 				       int LUMPED_MASS_MATRIX,
 				       double dt)
@@ -5438,9 +5430,7 @@ namespace proteus
 							 double* low_order_hnp1,
 							 double* low_order_hunp1,
 							 double* low_order_hvnp1,
-							 double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-							 double* dEV_minus_dL_times_huStarji_minus_huStarij,
-							 double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+							 double* dEV_minus_dL,
 							 double cE,
 							 int LUMPED_MASS_MATRIX,
 							 double dt)
@@ -5460,17 +5450,12 @@ namespace proteus
       //      * Cell based CFL
       //      * velocity at quad points for other models 
       // create global entropy residual vectors for each equation
-      // TMP global entropy 
-      double entropy_max=-1.E10, entropy_min=1.E10, cell_entropy_mean, entropy_mean=0;
-      double cell_volume, volume=0;
-      double pointwise_entropy_residual, entropy_normalization_factor=1.0;
       register double global_entropy_residual[numDOFsPerEqn]; 
       
       // init lumped mass matrix and ent residual vectors to zero
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
 	  lumped_mass_matrix[i] = 0;
-	  // TMP global entropy
 	  global_entropy_residual[i]=0;
 	}
       for(int eN=0;eN<nElements_global;eN++)
@@ -5480,9 +5465,8 @@ namespace proteus
 	    element_lumped_mass_matrix[nDOF_test_element],
 	    elementResidual_h[nDOF_test_element],
 	    elementResidual_hu[nDOF_test_element],
-	    elementResidual_hv[nDOF_test_element];
-	  // TMP global entropy
-	  register double element_entropy_residual[nDOF_test_element]; 
+	    elementResidual_hv[nDOF_test_element],
+	    element_entropy_residual[nDOF_test_element]; 
 	    
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
@@ -5490,13 +5474,8 @@ namespace proteus
 	      elementResidual_h[i]=0.0;
 	      elementResidual_hu[i]=0.0;
 	      elementResidual_hv[i]=0.0;
-
-	      // TMP global entropy
 	      element_entropy_residual[i] =0;
 	    }
-	  // TMP global entropy 
-	  cell_volume = 0; 
-	  cell_entropy_mean = 0;
 	  //
 	  //loop over quadrature points and compute integrands
 	  //
@@ -5591,10 +5570,6 @@ namespace proteus
 	      double fp_dot_grad_u2 = grad_hn[0]*(-un*un+g*hn)+2*un*grad_hun[0]-un*vn*grad_hn[1]+vn*grad_hun[1]+un*grad_hvn[1];
 	      double fp_dot_grad_u3 = -un*vn*grad_hn[0]+vn*grad_hun[0]+un*grad_hvn[0]+grad_hn[1]*(-vn*vn+g*hn)+2*vn*grad_hvn[1];
 	      
-	      //double entropy_residual1 = ((hG-hn)/dt   + (dxf1 + dyf1))*DENTROPY_DH(g,hn,hun,hvn,one_over_hnReg);
-	      //double entropy_residual2 = ((huG-hun)/dt + (dxf2 + dyf2) + b_dot_gradx_z)*DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
-	      //double entropy_residual3 = ((hvG-hvn)/dt + (dxf3 + dyf3) + b_dot_grady_z)*DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
-
 	      //double entropy_residual1 = ((hG-hn)/dt   + (fp_dot_grad_u1))                 * DENTROPY_DH (g,hn,hun,hvn,one_over_hnReg);
 	      //double entropy_residual2 = ((huG-hun)/dt + (fp_dot_grad_u2 + b_dot_gradx_z)) * DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
 	      //double entropy_residual3 = ((hvG-hvn)/dt + (fp_dot_grad_u3 + b_dot_grady_z)) * DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
@@ -5603,37 +5578,19 @@ namespace proteus
 	      double entropy_residual2 = ((hun-hunm1)/dt + (fp_dot_grad_u2 + b_dot_gradx_z)) * DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
 	      double entropy_residual3 = ((hvn-hvnm1)/dt + (fp_dot_grad_u3 + b_dot_grady_z)) * DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
 
-	      // TMP global entropy
-	      entropy_max = fmax(entropy_max,ENTROPY(g,hn,hun,hvn,one_over_hnReg));
-	      entropy_min = fmin(entropy_min,ENTROPY(g,hn,hun,hvn,one_over_hnReg));
-	      cell_entropy_mean += ENTROPY(g,hn,hun,hvn,one_over_hnReg)*dV;
-	      cell_volume += dV;
-	      double gradX_Entropy = D_ENTROPY(g,hn,hun,hvn,grad_hn[0],grad_hun[0],grad_hvn[0],one_over_hnReg);
-	      double gradY_Entropy = D_ENTROPY(g,hn,hun,hvn,grad_hn[1],grad_hun[1],grad_hvn[1],one_over_hnReg);
-	      pointwise_entropy_residual 
-		= (ENTROPY(g,hn,hun,hvn,one_over_hnReg) - ENTROPY(g,hnm1,hunm1,hvnm1,one_over_hnm1Reg))/dt
-		+ENTROPY(g,hn,hun,hvn,one_over_hnReg)*std::pow(one_over_hnReg,2)*(hn*(grad_hun[0]+grad_hvn[1])-(hun*grad_hn[0]+hvn*grad_hn[1]))
-		+one_over_hnReg*(gradX_Entropy*hun+gradY_Entropy*hvn)
-		+0.5*g*hn*(grad_hun[0]+grad_hvn[1])
-		+0.5*g*(hun*grad_hn[0]+hvn*grad_hn[1]);
-	      
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
 		  // lumped mass matrix
 		  element_lumped_mass_matrix[i] += h_test_dV[i];
 		  element_entropy_residual[i] += 
 		    (entropy_residual1+entropy_residual2+entropy_residual3)*h_test_dV[i];
-		  //TMP global entropy
-		  //element_entropy_residual[i] += pointwise_entropy_residual*h_test_dV[i];
+
 		  // compute time derivative part of global residual. NOTE: no lumping
 		  elementResidual_h[i]  += (h-hn)*h_test_dV[i];
 		  elementResidual_hu[i] += (hu-hun)*h_test_dV[i];
 		  elementResidual_hv[i] += (hv-hvn)*h_test_dV[i];
 		}
 	    }
-	  // TMP global entropy
-	  volume += cell_volume;
-	  entropy_mean += cell_entropy_mean;
 	  // distribute
 	  for(int i=0;i<nDOF_test_element;i++)
 	    {
@@ -5651,10 +5608,6 @@ namespace proteus
 	      globalResidual[offset_hv+stride_hv*vel_gi] += elementResidual_hv[i];
 	    }
 	}
-      // TMP global entropy 
-      entropy_mean /= volume;
-      entropy_normalization_factor = std::max(std::abs(entropy_max-entropy_mean),
-      				      std::abs(entropy_min-entropy_mean));
       
       ////////////////////////////////
       // COMPUTE ENTROPY AT ith DOF //
@@ -5925,13 +5878,8 @@ namespace proteus
 		  ith_dissipative_term2 += ith_dissipative_term2_ij;
 		  ith_dissipative_term3 += ith_dissipative_term3_ij;
 
-		  // compute dEV_minus_dL_times_hStarji_minus_hStarij, ... for FCT		  
-		  dEV_minus_dL_times_hStarji_minus_hStarij[ij] 
-		    = ith_dissipative_term1_ij - ith_dissipative_low_order_term1_ij;
-		  dEV_minus_dL_times_huStarji_minus_huStarij[ij] 
-		    = ith_dissipative_term2_ij - ith_dissipative_low_order_term2_ij;
-		  dEV_minus_dL_times_hvStarji_minus_hvStarij[ij] 
-		    = ith_dissipative_term3_ij - ith_dissipative_low_order_term3_ij;
+		  // compute dEV_minus_dL
+		  dEV_minus_dL[ij] = fmin(dL[ij],dEVij) - dL[ij];
 
 		  // compute aux quantities for first equation 
 		  // aux1 = Veli*Cii + sum_j[ muij + (dLij-muij)*hStarij/hi ]
@@ -5942,9 +5890,7 @@ namespace proteus
 	      else // i==j
 		{
 		  aux1_to_compute_hnp1 += (ui*Cx[ij] + vi*Cy[ij])*hi;
-		  dEV_minus_dL_times_hStarji_minus_hStarij[ij] = 0.;
-		  dEV_minus_dL_times_huStarji_minus_huStarij[ij] = 0.;
-		  dEV_minus_dL_times_hvStarji_minus_hvStarij[ij] = 0.;	  
+		  dEV_minus_dL[ij]=0.; //Not true but the prod of this times Uj-Ui will be zero
 		}
 	      // update ij
 	      ij+=1;
@@ -6119,9 +6065,7 @@ namespace proteus
 				    double* low_order_hnp1,
 				    double* low_order_hunp1,
 				    double* low_order_hvnp1,
-				    double* dEV_minus_dL_times_hStarji_minus_hStarij, 
-				    double* dEV_minus_dL_times_huStarji_minus_huStarij,
-				    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
+				    double* dEV_minus_dL,
 				    double cE,
 				    int LUMPED_MASS_MATRIX,
 				    double dt)
