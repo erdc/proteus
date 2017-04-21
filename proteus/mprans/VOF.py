@@ -135,11 +135,8 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) #no need for .copy?
                     self.m_stage[ci][self.lstage][:] = numpy.copy(self.transport.q[('m',ci)])
                     #needs to be updated for non-scalar equations
-                    #these match what is in the hand-coded NumericalSolution
-                    #mwf was
-                    #self.transport.coefficients.u_dof_old = numpy.copy(self.transport.u[ci].dof)
-                    self.transport.coefficients.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
                     #this as used as last stage value in EV Transport model
+                    #mwf TODO, get rid of m_last here
                     self.m_last[ci] = numpy.copy(self.transport.q[('m',ci)])
 
             elif self.lstage == 2:
@@ -154,12 +151,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     #either have another temporary here or have the VOF code use m_stage
                     #instead of m_last
                     self.m_stage[ci][self.lstage] += 3./4.*self.m_last_save[ci] 
-                   
-                    #needs to be updated for non-scalar equations
-                    #these match what is in the hand-coded NumericalSolution
-                    #mwf was
-                    #self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_stage[ci][self.lstage])
-                    self.transport.coefficients.u_dof_old[:] = self.u_dof_stage[ci][self.lstage]
+                    #mwf TODO get rid of this
                     self.m_last[ci] = numpy.copy(self.m_stage[ci][self.lstage])
             elif self.lstage == 3:
                 for ci in range(self.nc):
@@ -167,15 +159,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.u_dof_stage[ci][self.lstage][:] *= 2.0/3.0
                     self.u_dof_stage[ci][self.lstage][:] += 1.0/3.0*self.u_dof_last[ci]
                     #switch  time history back
-                    ##mwf orig
-                    #this needs to be updated for multiple components
-                    #self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_last[ci])
-                    #self.transport.u[ci].dof = numpy.copy(self.u_dof_stage[ci][self.lstage])
-                    #self.m_last[ci] = numpy.copy(self.m_last_save[ci])
-                    #self.transport.getResidual(self.u_dof_stage[ci][self.lstage],
-                    #                           self.transport.globalResidualDummy)
-                    ##move away from using u_dof_old
-                    self.transport.coefficients.u_dof_old = numpy.copy(self.u_dof_last[ci])
+                    #mwf TODO this needs to be fixed for multipcomponent
                     self.transport.u[ci].dof = numpy.copy(self.u_dof_stage[ci][self.lstage])
                     self.m_last[ci] = numpy.copy(self.m_last_save[ci])
                     tmp_dof_stage = self.u_dof_stage[ci][self.lstage].copy()
@@ -207,9 +191,6 @@ class RKEV(proteus.TimeIntegration.SSP33):
         """
         assumes successful step has been taken
         """
-        #mwf
-        #import pdb;
-        #pdb.set_trace()
         
         self.t = self.tLast + self.dt
         for ci in range(self.nc):
@@ -942,21 +923,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.mesh.nodeVelocityArray==None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
     def FCTStep(self):
-        diff = self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage] - self.coefficients.u_dof_old
-        if np.max(np.absolute(diff)) > 1.0e-10:
-            #mwf debug
-            import pdb
-            pdb.set_trace()
-        #assert np.max(np.absolute(diff)) < 1.0e-10
 
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         self.vof.FCTStep(self.timeIntegration.dt, 
                          self.nnz, #number of non zero entries 
                          len(rowptr)-1, #number of DOFs
                          self.ML, #Lumped mass matrix
-                         #mwf orig
-                         #self.coefficients.u_dof_old, #soln
-                         self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],
+                         self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],#soln
                          self.u[0].dof, #solH
                          self.flux_plus_dLij_times_soln, 
                          rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
@@ -1182,8 +1155,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        diff = self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage] - self.coefficients.u_dof_old
-        assert np.max(np.absolute(diff)) < 1.0e-10
         self.vof.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1221,9 +1192,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementDiametersArray,
             degree_polynomial,
             self.u[0].dof,
-            #mwf orig
-            #self.coefficients.u_dof_old,
-            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],
+            #mwf need another argument for u_dof_old to represent u^n
+            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage], #u last stage and u^n right now
             self.coefficients.u_dof_old_old,
             self.coefficients.velx_tn_dof, 
             self.coefficients.vely_tn_dof, # HACKED TO 2D FOR NOW (MQL)
