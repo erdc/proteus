@@ -954,7 +954,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                          self.nnz, #number of non zero entries 
                          len(rowptr)-1, #number of DOFs
                          self.ML, #Lumped mass matrix
-                         #mwf orig self.coefficients.u_dof_old, #soln
+                         #mwf orig
+                         #self.coefficients.u_dof_old, #soln
                          self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],
                          self.u[0].dof, #solH
                          self.flux_plus_dLij_times_soln, 
