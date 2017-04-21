@@ -105,7 +105,7 @@ RUN git clone https://github.com/erdc-cm/proteus && \
     make hashdist stack stack/default.yaml && \
     ./hashdist/bin/hit init-home && \
     ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source" && \
-    ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_jessie --objects="build" && \
+    ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_jovyan --objects="build" && \
     cd stack && \
     git checkout stable/proteus && \
     ../hashdist/bin/hit build default.yaml -v
@@ -129,7 +129,16 @@ RUN pip3 install six==1.9.0
 RUN pip3 install packaging==16.8
 RUN pip3 install appdirs
 RUN pip3 install widgetsnbextension==2.0.0
-RUN pip3 install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  notebook==4.4.0 widgetsnbextension==2.0.0 ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 hide_code==0.4.0 jupyterhub==0.7.2
+RUN pip3 install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  notebook==4.4.0 widgetsnbextension==2.0.0 ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 hide_code==0.4.0
+RUN REPO=http://cdn-fastly.deb.debian.org \
+    && echo "deb $REPO/debian jessie main\ndeb $REPO/debian-security jessie/updates main" > /etc/apt/sources.list \
+    && apt-get update && apt-get -yq dist-upgrade \
+    && apt-get install -yq --fix-missing \
+    nodejs.legacy \
+    npm \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+RUN pip3 install git+https://github.com/jupyter/jupyterhub#egg=jupytherhub
 RUN /usr/local/bin/jupyter serverextension enable --py jupyterlab --sys-prefix \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix widgetsnbextension \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix pythreejs \
