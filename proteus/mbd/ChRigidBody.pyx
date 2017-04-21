@@ -154,6 +154,8 @@ cdef extern from "ChRigidBody.h":
 
 cdef class RigidBody:
     cdef cppRigidBody * thisptr
+    cdef ch.ChQuaternion rotation
+    cdef ch.ChQuaternion rotation_last
     cdef public:
       str record_file
       object model
@@ -408,9 +410,40 @@ cdef class RigidBody:
             self.thisptr.setPosition(<double*> new_x.data)
         self.thisptr.poststep()
         self.getValues()
-        comm = Comm.get()
-        if comm.isMaster():
-            self._recordValues()
+        comm = Comm.get().comm.tompi4py()
+        comm = Comm.get().comm.tompi4py()
+        cdef ch.ChQuaternion rotq
+        cdef ch.ChQuaternion rotq_last
+        cdef ch.ChVector pos
+        cdef ch.ChVector pos_last
+        cdef double e0, e1, e2, e3, e0_last, e1_last, e2_last, e3_last
+        cdef double posx, posy, posz, posx_last, posy_last, posz_last
+        if self.system.parallel_mode is True:
+            # need to broadcast values to all processors
+            # comm.Barrier()
+            rotation = comm.bcast(self.rotq, self.system.chrono_processor)
+            rotation_last = comm.bcast(self.rotq_last, self.system.chrono_processor)
+            position = comm.bcast(self.position, self.system.chrono_processor)
+            position_last = comm.bcast(self.position_last, self.system.chrono_processor)
+            e0, e1, e2, e3 = rotation
+            e0_last, e1_last, e2_last, e3_last = rotation_last
+            posx, posy, posz = position
+            posx_last, posy_last, posz_last = position_last
+            pos = ch.ChVector[double](posx, posy, posz)
+            pos_last = ch.ChVector[double](posx_last, posy_last, posz_last)
+            rotq = ch.ChQuaternion[double](e0, e1, e2, e3)
+            rotq_last = ch.ChQuaternion[double](e0_last, e1_last, e2_last, e3_last)
+            self.thisptr.rotq = rotq
+            self.thisptr.rotq_last = rotq_last
+            self.thisptr.pos = pos
+            self.thisptr.pos_last = pos_last
+            print('ROT: ', rotation, rotation_last)
+            print('POS: ', position, position_last)
+            if comm.rank == 1:
+                self._recordValues()
+        else:
+            if comm.rank == 0:
+                self._recordValues()
 
     def calculate_init(self):
         # barycenter0 used for moment calculations
@@ -643,6 +676,8 @@ cdef class System:
     cdef object nodes_kdtree
     cdef public:
         bool build_kdtree
+        bool parallel_mode
+        int chrono_processor
     def __cinit__(self, np.ndarray gravity, int nd=3):
         self.thisptr = newSystem(<double*> gravity.data)
         self.subcomponents = []
@@ -650,6 +685,16 @@ cdef class System:
         self.model = None
         self.nd = nd
         self.build_kdtree = False
+        comm = Comm.get().comm.tompi4py()
+        if comm.Get_size() > 1:
+            parallel_mode = True
+            chrono_processor = 1
+        else:
+            parallel_mode = False
+            chrono_processor = 0
+        self.parallel_mode = parallel_mode
+        self.chrono_processor = chrono_processor
+
 
     def attachModel(self, model, ar):
         self.model = model
@@ -659,6 +704,7 @@ cdef class System:
         pass
 
     def calculate(self, proteus_dt=None):
+        comm = Comm.get().comm.tompi4py()
         if self.model is not None:
             try:
                 self.proteus_dt = self.model.levelModelList[-1].dt_last
@@ -673,9 +719,9 @@ cdef class System:
             self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         for s in self.subcomponents:
             s.prestep()
-        comm = Comm.get()
         #print('before chrono timestep', comm.rank(), self.subcomponents[1].getTensionBack())
-        self.step(self.proteus_dt)
+        if comm.rank == self.chrono_processor:
+            self.step(self.proteus_dt)
         #print('after chrono timestep', comm.rank(), self.subcomponents[1].getTensionBack())
         for s in self.subcomponents:
             s.poststep()
@@ -725,9 +771,13 @@ cdef class System:
         self.subcomponents += [subcomponent]
 
     def recordBodyList(self):
-        comm = Comm.get()
-        if comm.isMaster():
-            self.thisptr.recordBodyList()
+        comm = Comm.get().comm.tompi4py()
+        if self.System.parallel_mode is True:
+            if comm.rank == 1:
+                self.thisptr.recordBodyList()
+        else:
+            if comm.rank == 0:
+                self.thisptr.recordBodyList()
 
     def findELementContainingCoords(self, coords):
         """
@@ -1056,8 +1106,8 @@ cdef class Moorings:
             self.setExternalForces()
 
     def poststep(self):
-        comm = Comm.get()
-        if comm.isMaster():
+        comm = Comm.get().comm.tompi4py()
+        if comm.rank == self.System.chrono_processor:
             self._recordValues()
 
     def setNodesPositionFunction(self, function):
@@ -1137,7 +1187,6 @@ cdef class Moorings:
             ds = L/(nb_nodes-1)
             for j in range(nb_nodes):
                 x, y, z = self.nodes_function(L0+ds*j)
-                print("node", j, x, y, z)
                 vec = ch.ChVector[double](x, y, z)
                 deref(self.thisptr.cables[i]).mvecs.push_back(vec)
                 print(x, y, z)

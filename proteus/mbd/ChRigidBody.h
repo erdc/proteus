@@ -1,6 +1,7 @@
 #include "chrono/physics/ChSystemDEM.h"
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/core/ChTransform.h"
 #include <iostream>
 #include <fstream>
 using namespace chrono;
@@ -225,25 +226,25 @@ void cppSystem::setDirectory(std::string dir) {
 
 double cppRigidBody::hx(double* x, double t)
 {
-  rotm = body->GetA();
-  ChVector<double> local = ChTransform<double>::TransformParentToLocal(ChVector<double>(x[0],x[1],x[2]), pos_last, rotm_last);
-  ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local, pos, rotm);
+  /* rotm = body->GetA(); */
+  ChVector<double> local = ChTransform<double>::TransformParentToLocal(ChVector<double>(x[0],x[1],x[2]), pos_last, rotq_last);
+  ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local, pos, rotq);
   return xNew.x() - x[0];
 }
 
 double cppRigidBody::hy(double* x, double t)
 {
-  rotm = body->GetA();
-  ChVector<double> local = ChTransform<double>::TransformParentToLocal(ChVector<double>(x[0],x[1],x[2]), pos_last, rotm_last);
-  ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local, pos, rotm);
+  /* rotm = body->GetA(); */
+  ChVector<double> local = ChTransform<double>::TransformParentToLocal(ChVector<double>(x[0],x[1],x[2]), pos_last, rotq_last);
+  ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local, pos, rotq);
   return xNew.y() - x[1];
 }
 
 double cppRigidBody::hz(double* x, double t)
 {
-  rotm = body->GetA();
-  ChVector<double> local = ChTransform<double>::TransformParentToLocal(ChVector<double>(x[0],x[1],x[2]), pos_last, rotm_last);
-  ChVector<double> xNew = ChTransform<double>::TransformLocalToParent(local, pos, rotm);
+  /* rotm = body->GetA(); */
+  ChVector<double> local = ChTransform<double>::TransformParentToLocal(ChVector<double>(x[0],x[1],x[2]), pos_last, rotq_last);
+  ChVector<double> xNew = ChTransform<double>::TransformLocalToParent(local, pos, rotq);
   return xNew.z() - x[2];
 }
 
