@@ -678,7 +678,9 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         if (COMPUTE_GALERKIN):
             #backup_calculateResidual = self.F.calculateResidual
             logEvent("   Galerkin solution", level=1)
-            self.F.calculateResidual = self.F.sw2d.calculateResidual_galerkin
+
+            self.F.calculateResidual = self.F.sw2d.calculateResidual_galerkin            
+            time_before_galerkin = self.F.timeIntegration.dt #TMP
             self.computeResidual(u,r,b)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
@@ -728,6 +730,11 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
             u[:] = r
         else:
             logEvent("   Entropy viscosity solution with consistent mass matrix", level=1)
+            time_before_edge_based = self.F.timeIntegration.dt #TMP
+            if (np.abs(time_before_galerkin - time_before_edge_based) > 0):
+                print time_before_galerkin, time_before_edge_based
+                print np.abs(time_before_galerkin - time_before_edge_based)
+                input("STOOOOP!!!!")
             self.computeResidual(u,r,b)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False

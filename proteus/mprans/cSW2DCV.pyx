@@ -156,7 +156,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 			       double cE, 
-			       int LUMPED_MASS_MATRIX)
+			       int LUMPED_MASS_MATRIX, 
+			       double dt)
         void calculateResidual_cell_based_entropy_viscosity(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -288,7 +289,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 			       double cE,
-			       int LUMPED_MASS_MATRIX)
+			       int LUMPED_MASS_MATRIX, 
+			       double dt)
         void calculateResidual_first_order_flatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -420,7 +422,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 			       double cE,
-			       int LUMPED_MASS_MATRIX)	
+			       int LUMPED_MASS_MATRIX, 
+			       double dt)	
         void calculateResidual_second_order_flatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -552,7 +555,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 			       double cE,
-			       int LUMPED_MASS_MATRIX)
+			       int LUMPED_MASS_MATRIX, 
+			       double dt)
         void calculateResidual_second_order_NonFlatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -684,7 +688,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 			       double cE,
-			       int LUMPED_MASS_MATRIX)
+			       int LUMPED_MASS_MATRIX, 
+			       double dt)
         void calculateResidual_second_order_NonFlatB_with_EV(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -816,7 +821,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 			       double cE,
-			       int LUMPED_MASS_MATRIX)
+			       int LUMPED_MASS_MATRIX, 
+			       double dt)
         void calculateResidual_galerkin(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -948,7 +954,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 			       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 			       double cE,
-			       int LUMPED_MASS_MATRIX)
+			       int LUMPED_MASS_MATRIX, 
+			       double dt)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -1057,7 +1064,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                                int* csrColumnOffsets_eb_u_v,
                                int* csrColumnOffsets_eb_v_h,
                                int* csrColumnOffsets_eb_v_u,
-                               int* csrColumnOffsets_eb_v_v)                               
+                               int* csrColumnOffsets_eb_v_v,
+			       double dt) 
         void calculateJacobian_cell_based_entropy_viscosity(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -1166,7 +1174,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                                int* csrColumnOffsets_eb_u_v,
                                int* csrColumnOffsets_eb_v_h,
                                int* csrColumnOffsets_eb_v_u,
-                               int* csrColumnOffsets_eb_v_v)                               
+                               int* csrColumnOffsets_eb_v_v, 
+			       double dt)
         void calculateMassMatrix(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -1275,7 +1284,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                                int* csrColumnOffsets_eb_u_v,
                                int* csrColumnOffsets_eb_v_h,
                                int* csrColumnOffsets_eb_v_u,
-                               int* csrColumnOffsets_eb_v_v)                               
+                               int* csrColumnOffsets_eb_v_v, 
+			       double dt)                               
         void calculateLumpedMassMatrix(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -1384,7 +1394,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
                                int* csrColumnOffsets_eb_u_v,
                                int* csrColumnOffsets_eb_v_h,
                                int* csrColumnOffsets_eb_v_u,
-                               int* csrColumnOffsets_eb_v_v)                               
+                               int* csrColumnOffsets_eb_v_v, 
+			       double dt)                               
     SW2DCV_base* newSW2DCV(int nSpaceIn,
                        int nQuadraturePoints_elementIn,
                        int nDOF_mesh_trial_elementIn,
@@ -1583,7 +1594,8 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij,
 			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij,  
 			 double cE, 
-			 int LUMPED_MASS_MATRIX):
+			 int LUMPED_MASS_MATRIX,	
+			 double dt):
        self.thisptr.calculateResidual(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1718,7 +1730,8 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data, 
 	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data, 
 	    cE, 
-	    LUMPED_MASS_MATRIX)
+	    LUMPED_MASS_MATRIX, 
+	    dt)
    def calculateResidual_cell_based_entropy_viscosity(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -1851,7 +1864,8 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
 			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
 			 double cE,
-			 int LUMPED_MASS_MATRIX):
+			 int LUMPED_MASS_MATRIX, 
+			 double dt):
        self.thisptr.calculateResidual_cell_based_entropy_viscosity(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1986,7 +2000,8 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data, 
 	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data, 
 	    cE,
-	    LUMPED_MASS_MATRIX)
+	    LUMPED_MASS_MATRIX, 
+	    dt)
    def calculateResidual_first_order_flatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2119,7 +2134,8 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
 			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
 			 double cE,
-			 int LUMPED_MASS_MATRIX):
+			 int LUMPED_MASS_MATRIX, 
+			 double dt):
        self.thisptr.calculateResidual_first_order_flatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -2254,7 +2270,8 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data,
 	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data,
 	    cE,
-	    LUMPED_MASS_MATRIX)
+	    LUMPED_MASS_MATRIX, 
+	    dt)
    def calculateResidual_second_order_flatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2387,7 +2404,8 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
 			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
 			 double cE,
-			 int LUMPED_MASS_MATRIX):
+			 int LUMPED_MASS_MATRIX, 
+			 double dt):
        self.thisptr.calculateResidual_second_order_flatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -2522,7 +2540,8 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data, 
 	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data, 
 	    cE,
-	    LUMPED_MASS_MATRIX)
+	    LUMPED_MASS_MATRIX, 
+	    dt)
    def calculateResidual_second_order_NonFlatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2655,7 +2674,8 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
 			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
 			 double cE,
-			 int LUMPED_MASS_MATRIX):
+			 int LUMPED_MASS_MATRIX, 
+			 double dt):
        self.thisptr.calculateResidual_second_order_NonFlatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -2790,7 +2810,8 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data, 
 	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data, 
 	    cE,
-	    LUMPED_MASS_MATRIX)
+	    LUMPED_MASS_MATRIX, 
+	    dt)
    def calculateResidual_second_order_NonFlatB_with_EV(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2923,7 +2944,8 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
 			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
 			 double cE,
-			 int LUMPED_MASS_MATRIX):
+			 int LUMPED_MASS_MATRIX, 
+			 double dt):
        self.thisptr.calculateResidual_second_order_NonFlatB_with_EV(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -3058,7 +3080,8 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data,
 	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data,
 	    cE,
-	    LUMPED_MASS_MATRIX)
+	    LUMPED_MASS_MATRIX, 
+	    dt)
    def calculateResidual_galerkin(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -3191,7 +3214,8 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL_times_huStarji_minus_huStarij, 
 			 numpy.ndarray dEV_minus_dL_times_hvStarji_minus_hvStarij, 
 			 double cE,
-			 int LUMPED_MASS_MATRIX):
+			 int LUMPED_MASS_MATRIX, 
+			 double dt):
        self.thisptr.calculateResidual_galerkin(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -3326,7 +3350,8 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL_times_huStarji_minus_huStarij.data, 
 	    <double*> dEV_minus_dL_times_hvStarji_minus_hvStarij.data, 
 	    cE,
-	    LUMPED_MASS_MATRIX)
+	    LUMPED_MASS_MATRIX, 
+	    dt)
 
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
@@ -3437,7 +3462,8 @@ cdef class cSW2DCV_base:
                          numpy.ndarray csrColumnOffsets_eb_u_v,
                          numpy.ndarray csrColumnOffsets_eb_v_h,
                          numpy.ndarray csrColumnOffsets_eb_v_u,
-                         numpy.ndarray csrColumnOffsets_eb_v_v):
+                         numpy.ndarray csrColumnOffsets_eb_v_v, 
+			 double dt):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
@@ -3548,7 +3574,8 @@ cdef class cSW2DCV_base:
                                       <int*> csrColumnOffsets_eb_u_v.data,
                                       <int*> csrColumnOffsets_eb_v_h.data,
                                       <int*> csrColumnOffsets_eb_v_u.data,
-                                      <int*> csrColumnOffsets_eb_v_v.data)
+                                      <int*> csrColumnOffsets_eb_v_v.data, 
+				      dt)
    def calculateJacobian_cell_based_entropy_viscosity(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -3658,7 +3685,8 @@ cdef class cSW2DCV_base:
                          numpy.ndarray csrColumnOffsets_eb_u_v,
                          numpy.ndarray csrColumnOffsets_eb_v_h,
                          numpy.ndarray csrColumnOffsets_eb_v_u,
-                         numpy.ndarray csrColumnOffsets_eb_v_v):
+                         numpy.ndarray csrColumnOffsets_eb_v_v, 
+			 double dt):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian_cell_based_entropy_viscosity(<double*> mesh_trial_ref.data,
@@ -3769,7 +3797,8 @@ cdef class cSW2DCV_base:
                                       <int*> csrColumnOffsets_eb_u_v.data,
                                       <int*> csrColumnOffsets_eb_v_h.data,
                                       <int*> csrColumnOffsets_eb_v_u.data,
-                                      <int*> csrColumnOffsets_eb_v_v.data)
+                                      <int*> csrColumnOffsets_eb_v_v.data, 
+				      dt)
    def calculateMassMatrix(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -3879,7 +3908,8 @@ cdef class cSW2DCV_base:
                          numpy.ndarray csrColumnOffsets_eb_u_v,
                          numpy.ndarray csrColumnOffsets_eb_v_h,
                          numpy.ndarray csrColumnOffsets_eb_v_u,
-                         numpy.ndarray csrColumnOffsets_eb_v_v):
+                         numpy.ndarray csrColumnOffsets_eb_v_v, 
+			 double dt):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateMassMatrix(<double*> mesh_trial_ref.data,
@@ -3990,7 +4020,8 @@ cdef class cSW2DCV_base:
                                       <int*> csrColumnOffsets_eb_u_v.data,
                                       <int*> csrColumnOffsets_eb_v_h.data,
                                       <int*> csrColumnOffsets_eb_v_u.data,
-                                      <int*> csrColumnOffsets_eb_v_v.data)
+                                      <int*> csrColumnOffsets_eb_v_v.data, 
+				      dt)
    def calculateLumpedMassMatrix(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -4100,7 +4131,8 @@ cdef class cSW2DCV_base:
                          numpy.ndarray csrColumnOffsets_eb_u_v,
                          numpy.ndarray csrColumnOffsets_eb_v_h,
                          numpy.ndarray csrColumnOffsets_eb_v_u,
-                         numpy.ndarray csrColumnOffsets_eb_v_v):
+                         numpy.ndarray csrColumnOffsets_eb_v_v, 
+			 double dt):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateLumpedMassMatrix(<double*> mesh_trial_ref.data,
@@ -4211,4 +4243,5 @@ cdef class cSW2DCV_base:
                                       <int*> csrColumnOffsets_eb_u_v.data,
                                       <int*> csrColumnOffsets_eb_v_h.data,
                                       <int*> csrColumnOffsets_eb_v_u.data,
-                                      <int*> csrColumnOffsets_eb_v_v.data)
+                                      <int*> csrColumnOffsets_eb_v_v.data, 
+				      dt)
