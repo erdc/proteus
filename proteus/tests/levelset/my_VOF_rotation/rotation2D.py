@@ -107,6 +107,8 @@ class MyCoefficients(VOF.Coefficients):
         self.model = modelList[self.modelIndex]
         self.u_dof_old = np.copy(self.model.u[0].dof)
         self.u_dof_old_old = np.copy(self.model.u[0].dof)
+        #mwf debug initialize time history too just to confirm no differences
+        self.model.timeIntegration.initializeTimeHistory()
         self.velx_tn_dof = np.zeros(self.model.u[0].dof.shape,'d')+1E10
         self.vely_tn_dof = np.zeros(self.model.u[0].dof.shape,'d')+1E10
         self.flux_plus_dLij_times_soln = np.zeros(self.model.u[0].dof.shape,'d')
