@@ -10,6 +10,8 @@
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono_fea/ChElementBeamANCF.h"
+#include "chrono_fea/ChElementCableANCF.h"
+#include "chrono_fea/ChBeamSection.h"
 #include "chrono_fea/ChMesh.h"
 #include "chrono_fea/ChLinkPointPoint.h"
 #include "chrono_fea/ChLinkPointFrame.h"
@@ -39,19 +41,23 @@ public:
 	std::vector<ChVector<>> mvecs;  // vectors (nodes coordinates)
 	std::vector<ChVector<>> mvecs_middle;
 	std::vector<ChVector<>> mdirs;  // vectors (nodes coordinates)
-	std::shared_ptr<ChMaterialBeamANCF> mmaterial_cable;  // cable material
 	double d, rho, E, length;  // diameter, density, Young's modulus, length of cable
   double A0; // unstretched diameter
 	double L0 = 0;  // initial length along cable
+  std::string beam_type;
 	std::vector<std::shared_ptr<ChNodeFEAxyzDD>> nodes;  // array nodes coordinates and direction
 	std::vector<std::shared_ptr<ChElementBeamANCF>> elems;  // array of elements */
+	std::vector<std::shared_ptr<ChElementCableANCF>> elemsCableANCF;  // array of elements */
+	std::shared_ptr<ChMaterialBeamANCF> mmaterial_cable;  // cable material
+	std::vector<std::shared_ptr<ChElementCableANCF>> elems_cable;  // array of elements */
+	std::shared_ptr<ChBeamSectionCable> msection_cable;  // cable material
 	std::vector<double> elems_length;  // array of elements
 	std::vector<ChVector<>> fluid_velocity;
 	std::vector<ChVector<>> fluid_acceleration;
 	std::vector<double> fluid_density;
   std::vector<double> nodes_density; // density of (cable-fluid) at nodes
 	cppCable(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, double length,
-           int nb_elems, double d, double rho, double E, double L0);  // constructor
+           int nb_elems, double d, double rho, double E, double L0, std::string beam_type);  // constructor
 	void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
 	void setFluidAccelerationAtNodes(std::vector<ChVector<>> acc);
   void setFluidDensityAtNodes(std::vector<double> vof);
@@ -62,9 +68,17 @@ public:
   std::vector<std::shared_ptr<ChLoadBeamWrench>> elems_loads;
 	void buildVectors();  // builds location vectors for the nodes
 	void buildNodes();  // builds the nodes for the mesh
+	void buildNodesBeamANCF();  // builds the nodes for the mesh
+	void buildNodesCableANCF();  // builds the nodes for the mesh
 	void buildMaterials();  // builds the material to use for elements
+	void buildMaterialsBeamANCF();  // builds the material to use for elements
+	void buildMaterialsCableANCF();  // builds the material to use for elements
 	void buildElements();  // builds the elements for the mesh
+	void buildElementsBeamANCF();  // builds the elements for the mesh
+	void buildElementsCableANCF();  // builds the elements for the mesh
 	void buildMesh();  // builds the mesh
+	void buildMeshBeamANCF();  // builds the mesh
+	void buildMeshCableANCF();  // builds the mesh
 	void setDragForce();  // calculates the drag force per nodes
 	void setAddedMassForce();  // calculates the added mass force per nodes
   void applyForces();
@@ -76,6 +90,7 @@ public:
 class cppMultiSegmentedCable {
 public:
 	ChSystemDEM& system;  // global system
+  std::string beam_type;
 	std::shared_ptr<ChMaterialSurfaceDEM> mysurfmaterial;
 	std::shared_ptr<ChMesh> mesh;  // mesh
 	std::shared_ptr<ChBody> fairleadd;
@@ -94,13 +109,14 @@ public:
 	std::vector<ChVector<>> fluid_acceleration;
 	std::vector<double> fluid_density;
 	std::vector<std::shared_ptr<ChElementBeamANCF>> elems;  // array of elements */
+	std::vector<std::shared_ptr<ChElementCableANCF>> elemsCableANCF;  // array of elements */
   std::shared_ptr<ChLinkPointFrame> constraint_front;
   std::shared_ptr<ChLinkPointFrame> constraint_back;
   std::shared_ptr<ChBody> body_back;
   std::shared_ptr<ChBody> body_front;
   bool nodes_built;
 	cppMultiSegmentedCable(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, std::vector<double> length,
-		std::vector<int> nb_nodes, std::vector<double> d, std::vector<double> rho, std::vector<double> E);
+                         std::vector<int> nb_nodes, std::vector<double> d, std::vector<double> rho, std::vector<double> E, std::string beam_type);
 	void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
 	void setFluidAccelerationAtNodes(std::vector<ChVector<>> vel);
     void setFluidDensityAtNodes(std::vector<double> vof);
@@ -116,6 +132,7 @@ public:
 	void attachFrontNodeToBody(std::shared_ptr<ChBody> body);
   void setContactMaterial(std::shared_ptr<ChMaterialSurfaceDEM> material);
   void buildNodesCloud();
+  ChVector<> getTensionElement(int i);
 };
 
 class cppMesh {
@@ -146,23 +163,28 @@ cppMultiSegmentedCable::cppMultiSegmentedCable(
 	std::vector<int> nb_elems,
 	std::vector<double> d,
 	std::vector<double> rho,
-	std::vector<double> E) :
+	std::vector<double> E,
+  std::string beam_type = "BeamANCF") :
 	system(system),
 	mesh(mesh),
 	length(length),
 	nb_elems(nb_elems),
 	d(d),
 	rho(rho),
-	E(E)
+  E(E),
+  beam_type(beam_type)
 {
+  GetLog() << "Initialize cable\n";
   nodes_built = false;
 	std::shared_ptr<cppCable> segment;
 	double L0 = 0;
 	for (int i = 0; i < length.size(); ++i) {
-		segment = std::make_shared<cppCable>(system, mesh, length[i], nb_elems[i], d[i], rho[i], E[i], L0);
+    GetLog() << "Building cable " << i << "\n" ;
+		segment = std::make_shared<cppCable>(system, mesh, length[i], nb_elems[i], d[i], rho[i], E[i], L0, beam_type);
 		cables.push_back(segment);
 		L0 = L0 + length[i];
 	}
+  GetLog() << "Finished Initializing\n" ;
 }
 
 void cppMultiSegmentedCable::buildNodes() {
@@ -188,7 +210,12 @@ void cppMultiSegmentedCable::buildCable() {
       nodes.insert(nodes.end(), cables[i]->nodes.begin(), cables[i]->nodes.end());
     }
 		cables[i]->buildElements();
+    if (beam_type == "BeamANCF") {
       elems.insert(elems.end(), cables[i]->elems.begin(), cables[i]->elems.end());
+    }
+    else if (beam_type == "CableANCF") {
+      elemsCableANCF.insert(elemsCableANCF.end(), cables[i]->elemsCableANCF.begin(), cables[i]->elemsCableANCF.end());
+    }
 		cables[i]->buildMesh();
 		if (i>0) {
 			auto con1 = std::make_shared<ChLinkPointPoint>();
@@ -259,6 +286,31 @@ void cppMultiSegmentedCable::applyForces() {
 	};
 }
 
+ChVector<> cppMultiSegmentedCable::getTensionElement(int i) {
+
+  auto mat = ChMatrix<>();
+  auto force = ChVector<>();
+  auto torque = ChVector<>();
+  double eta = 0.6;
+  if (beam_type == "BeamANCF") {
+    elems[i]->EvaluateSectionForceTorque(eta,
+                                         mat,
+                                         force,
+                                         torque);
+
+  }
+  else if (beam_type == "CableANCF") {
+    elemsCableANCF[i]->EvaluateSectionForceTorque(eta,
+                                         mat,
+                                         force,
+                                         torque);
+  }
+  GetLog() << force;
+  GetLog() << torque;
+  GetLog() << mat;
+  return force;
+}
+
 std::vector<std::shared_ptr<ChVector<double>>> cppMultiSegmentedCable::getNodalPositions() {
 	std::vector<std::shared_ptr<ChVector<double>>> nodal_positions;
 	for (int i = 0; i < nodes.size(); ++i) {
@@ -314,7 +366,8 @@ cppCable::cppCable(
 	double d,  // diameter of cable
 	double rho,   // density of cable (kg/m3)
 	double E, // Young's modulus
-	double L0 = 0
+	double L0 = 0,
+  std::string beam_type = "BeamANCF"
 ) :
 	system(system),
 	mesh(mesh),
@@ -323,7 +376,8 @@ cppCable::cppCable(
 	d(d),
 	rho(rho),
 	E(E),
-	L0(L0)
+    L0(L0),
+    beam_type(beam_type)
 {
   Cd_axial = 1.15;  // studless chain
   Cd_normal = 1.4;  // studless chain
@@ -339,43 +393,79 @@ cppCable::cppCable(
 }
 
 void cppCable::buildMaterials() {
+  if (beam_type == "BeamANCF") {
+    buildMaterialsBeamANCF();
+      }
+  else if (beam_type == "CableANCF") {
+    buildMaterialsCableANCF();
+      }
+}
+void cppCable::buildMaterialsBeamANCF() {
 	// make material characteristics of cable
-	auto nu = ChVector<>(0.3, 0.3, 0.3);
-	double E2 = E / nu.y()*nu.x();
-	auto EE = ChVector<>(E, E2, E2);
-	double G2 = 1e-6;
-	auto GG = ChVector<>(EE.z() / (2 * (1 + nu.z())), G2, G2);
-	double k_rect = 10 * (1 + nu.x()) / (12 + 11 * nu.x()); // rectangular cross-section
-	double k_circ = 6 * (1 + nu.x()) / (7 + 6 * nu.x());
-	//mmaterial_cable = std::make_shared<ChMaterialBeamANCF>(rho, EE, nu, GG, 0.84, 0.84);
-	mmaterial_cable = std::make_shared<ChMaterialBeamANCF>(rho, EE, nu, GG, k_circ, k_circ);
+    auto nu = ChVector<>(0.3, 0.3, 0.3);
+    double E2 = E / nu.y()*nu.x();
+    auto EE = ChVector<>(E, E2, E2);
+    double G = EE.z() / (2 * (1 + nu.z()));
+    /* double G2 = G; */
+    double G2 = 1e-6;
+    auto GG = ChVector<>(G, G2, G2);
+    double k_rect = 10 * (1 + nu.x()) / (12 + 11 * nu.x()); // rectangular cross-section
+    double k_circ = 6 * (1 + nu.x()) / (7 + 6 * nu.x());
+    //mmaterial_cable = std::make_shared<ChMaterialBeamANCF>(rho, EE, nu, GG, 0.84, 0.84);
+    mmaterial_cable = std::make_shared<ChMaterialBeamANCF>(rho, EE, nu, GG, k_circ, k_circ);
 }
 
-void cppCable::buildVectors() {
-	// find coordinates of nodes
-	// s = a.sinh(x/a); x = a.arcsinh(s/a); y = a.cosh(x/a)
-	double s = 26;
-	double a = 6.5256159;
-	double x0 = 0;
-	// fraction of length along cable
-	mvecs.clear();
-	double y;
-	double x;
-	double z;
-	nb_nodes = nb_elems * 2 + 1;
-	double ds = length / ((double)nb_nodes - 1);
-	for (int i = 0; i < nb_nodes; ++i) {
-		x = x0 + a*asinh((L0 + ds*i) / a);
-		y = 0.001 + a*(cosh(x / a) - 1);
-		z = 0;
-		//x = L0 + ds*i;
-		//y = 1.5+0.00001*x;
-		mvecs.push_back(ChVector<>(x, y, z));
-		elems_length.push_back(ds * 2);
-	}
+void cppCable::buildMaterialsCableANCF() {
+    msection_cable = std::make_shared<ChBeamSectionCable>();
+    msection_cable->SetDiameter(d);
+    msection_cable->SetYoungModulus(E);
+    msection_cable->SetDensity(rho);
+    msection_cable->SetI(1e-6);
 }
 
 void cppCable::buildNodes() {
+  GetLog() << "Building nodes\n";
+  GetLog() << beam_type << "\n";
+  if (beam_type == "BeamANCF") {
+    GetLog() << "Building nodes beam\n";
+    buildNodesBeamANCF();
+  }
+  else if (beam_type == "CableANCF") {
+    GetLog() << "Building nodes cable\n";
+    buildNodesCableANCF();
+  }
+  GetLog() << "Building nodes finished\n";
+}
+
+void cppCable::buildNodesCableANCF() {
+	nodes.clear();
+  nb_nodes = nb_elems+1;
+	ChVector<> dir;  // direction of node
+	ChVector<> norm1; // normal of node direction
+	ChVector<> norm2; // normal of node direction and norm1
+	ChCoordsys<> coordsys;  // coordinate system
+	ChVector<> ref = ChVector<>(1., 0., 0.);
+	std::shared_ptr<ChNodeFEAxyzDD> node;
+	// first node
+	dir = (mvecs[1] - mvecs[0]);
+	dir.Normalize();
+	node = std::make_shared<ChNodeFEAxyzDD>(mvecs[0], dir, ref);
+	nodes.push_back(node);
+	// other nodes
+	for (int i = 1; i < mvecs.size() - 1; ++i) {
+		dir = mvecs[i + 1] - mvecs[i - 1];
+		dir.Normalize();
+		node = std::make_shared<ChNodeFEAxyzDD>(mvecs[i], dir, ref);
+		nodes.push_back(node);
+	}  // last node
+	dir = mvecs[nb_nodes - 1] - mvecs[nb_nodes - 2];
+	dir.Normalize();
+	node = std::make_shared<ChNodeFEAxyzDD>(mvecs[mvecs.size() - 1], dir, ref);
+	nodes.push_back(node);
+  GetLog() << "NODES BUILT: " << nodes.size() << "\n";
+}
+
+void cppCable::buildNodesBeamANCF() {
 	nodes.clear();
   nb_nodes = 2*nb_elems+1;
 	ChVector<> dir;  // direction of node
@@ -407,7 +497,7 @@ void cppCable::buildNodes() {
 	node = std::make_shared<ChNodeFEAxyzDD>(mvecs[0], norm1, norm2);
 	nodes.push_back(node);
 	// other nodes
-	for (int i = 1; i < nb_nodes - 1; ++i) {
+	for (int i = 1; i < mvecs.size() - 1; ++i) {
 		dir = mvecs[i + 1] - mvecs[i - 1];
 		dir.Normalize();
     if (dir.x() == 1) {
@@ -445,11 +535,46 @@ void cppCable::buildNodes() {
 	norm1.Normalize();
 	norm2 = dir % norm1;
 	norm2.Normalize();
-	node = std::make_shared<ChNodeFEAxyzDD>(mvecs[nb_nodes - 1], norm1, norm2);
+	node = std::make_shared<ChNodeFEAxyzDD>(mvecs[mvecs.size() - 1], norm1, norm2);
 	nodes.push_back(node);
 }
 
 void cppCable::buildElements() {
+  GetLog() << "Building elements";
+  if (beam_type == "BeamANCF") {
+    GetLog() << "Building Beam elements";
+    buildElementsBeamANCF();
+      }
+  else if (beam_type == "CableANCF") {
+    GetLog() << "Building Cable elements";
+    buildElementsCableANCF();
+      }
+  GetLog() << "Finished building elements\n";
+}
+
+void cppCable::buildElementsCableANCF() {
+	auto loadcontainer = std::make_shared<ChLoadContainer>();
+	system.Add(loadcontainer);
+	// build elements
+	elemsCableANCF.clear();
+  elems_loads_distributed.clear();
+  elems_loads.clear();
+  nb_nodes = nb_elems*2+1;
+	for (int i = 0; i < nodes.size() - 1; ++i) {
+			auto element = std::make_shared<ChElementCableANCF>();
+      auto load_distributed = std::make_shared<ChLoadBeamWrenchDistributed>(element);
+      auto load = std::make_shared<ChLoadBeamWrench>(element);
+      loadcontainer->Add(load_distributed);
+      loadcontainer->Add(load);
+			elemsCableANCF.push_back(element);
+      elems_loads_distributed.push_back(load_distributed);
+      elems_loads.push_back(load);
+			element->SetNodes(nodes[i], nodes[i + 1]);
+      element->SetSection(msection_cable);
+		}
+	}
+
+void cppCable::buildElementsBeamANCF() {
 	auto loadcontainer = std::make_shared<ChLoadContainer>();
 	system.Add(loadcontainer);
 	// build elements
@@ -457,7 +582,7 @@ void cppCable::buildElements() {
   elems_loads_distributed.clear();
   elems_loads.clear();
   nb_nodes = nb_elems*2+1;
-	for (int i = 1; i < nb_nodes - 1; ++i) {
+	for (int i = 1; i < nodes.size() - 1; ++i) {
 		if (i % 2 != 0) {
 			auto element = std::make_shared<ChElementBeamANCF>();
       auto load_distributed = std::make_shared<ChLoadBeamWrenchDistributed>(element);
@@ -470,16 +595,38 @@ void cppCable::buildElements() {
 			element->SetNodes(nodes[i - 1], nodes[i + 1], nodes[i]);
       double elem_length = (nodes[i]->GetPos()-nodes[i-1]->GetPos()).Length()+(nodes[i+1]->GetPos()-nodes[i]->GetPos()).Length();
       double d2 = sqrt(d*d-(d*d-CH_C_PI*d*d/4.));
+      d2 = sqrt(d2*d2/2.);  //dividing by 2 because cable thickness seems to be only half of the total thickness in chrono
 			element->SetDimensions(elem_length, d2, d2);
 			element->SetMaterial(mmaterial_cable);
 			element->SetAlphaDamp(0.0004);
 			element->SetGravityOn(true);
 			element->SetStrainFormulation(ChElementBeamANCF::StrainFormulation::CMNoPoisson);
+      element->SetupInitial(&system);
 		}
 	}
+  GetLog() << elems.size() << " Elements built\n";
 }
 
 void cppCable::buildMesh() {
+  if (beam_type == "BeamANCF") {
+    buildMeshBeamANCF();
+  }
+  else if (beam_type == "CableANCF") {
+    buildMeshCableANCF();
+  }
+}
+
+void cppCable::buildMeshCableANCF() {
+	// build the mesh (nodes and elements)
+	auto node = elemsCableANCF[0]->GetNodeA();
+	mesh->AddNode(node);
+	for (int i = 0; i < elemsCableANCF.size(); ++i) {
+		auto node = elemsCableANCF[i]->GetNodeB();
+		mesh->AddNode(node);
+		mesh->AddElement(elemsCableANCF[i]);
+	}
+}
+void cppCable::buildMeshBeamANCF() {
 	// build the mesh (nodes and elements)
 	auto node = elems[0]->GetNodeA();
 	mesh->AddNode(node);
@@ -634,9 +781,10 @@ cppMultiSegmentedCable * newMoorings(
 	std::vector<int> nb_elems,
 	std::vector<double> d,
 	std::vector<double> rho,
-	std::vector<double> E)
+	std::vector<double> E,
+  std::string beam_type)
 {
-	return new cppMultiSegmentedCable(system, mesh, length, nb_elems, d, rho, E);
+	return new cppMultiSegmentedCable(system, mesh, length, nb_elems, d, rho, E, beam_type);
 }
 
 cppMesh * newMesh(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh) {
