@@ -60,6 +60,9 @@ namespace proteus
 			 double* low_order_hnp1, //operators to construct low order solution
 			 double* low_order_hunp1,
 			 double* low_order_hvnp1,
+			 double* limited_hnp1,
+			 double* limited_hunp1,
+			 double* limited_hvnp1,
 			 int* csrRowIndeces_DofLoops, //csr row indeces 
 			 int* csrColumnOffsets_DofLoops, //csr column offsets 
 			 double* MassMatrix, //mass matrix
@@ -2592,6 +2595,9 @@ namespace proteus
 		 double* low_order_hnp1, //operators to construct low order solution
 		 double* low_order_hunp1,
 		 double* low_order_hvnp1,
+		 double* limited_hnp1,
+		 double* limited_hunp1,
+		 double* limited_hvnp1,
 		 int* csrRowIndeces_DofLoops, //csr row indeces 
 		 int* csrColumnOffsets_DofLoops, //csr column offsets 
 		 double* MassMatrix, //mass matrix
@@ -2600,9 +2606,7 @@ namespace proteus
 		 )
     {
       double h_threshold = 1.0E-3;
-      //double h_threshold = 0.15;
       register double Rneg[numDOFs], Rpos[numDOFs];
-      register double FluxCorrectionMatrix1[NNZ], FluxCorrectionMatrix2[NNZ], FluxCorrectionMatrix3[NNZ];
       //////////////////
       // LOOP in DOFs //
       //////////////////
@@ -2611,11 +2615,7 @@ namespace proteus
 	{
 	  //read some vectors 
 	  double high_order_hnp1i  = high_order_hnp1[i];
-	  double high_order_hunp1i = high_order_hunp1[i];
-	  double high_order_hvnp1i = high_order_hvnp1[i];
 	  double hni = hn[i];
-	  double huni = hun[i];
-	  double hvni = hvn[i];
 	  double Zi = b_dof[i];
 	  double mi = lumped_mass_matrix[i];
 
@@ -2625,37 +2625,22 @@ namespace proteus
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
-	      double ML_minus_MC = (i==j ? 1. : 0.)*mi - MassMatrix[ij];
-
+	      // read some vectors
 	      double hnj = hn[j];
-	      double hunj = hun[j];
-	      double hvnj = hvn[j];
 	      double Zj = b_dof[j];
 
 	      // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
 	      double hStarij  = fmax(0., hni + Zi - fmax(Zi,Zj));
-	      double huStarij = (hni <= hEps ? 0. : huni*hStarij/hni);
-	      double hvStarij = (hni <= hEps ? 0. : hvni*hStarij/hni);
-	      
 	      double hStarji  = fmax(0., hnj + Zj - fmax(Zi,Zj));
-	      double huStarji = (hnj <= hEps ? 0. : hunj*hStarji/hnj);
-	      double hvStarji = (hnj <= hEps ? 0. : hvnj*hStarji/hnj);
 	      
 	      // i-th row of flux correction matrix 
-	      FluxCorrectionMatrix1[ij] = ML_minus_MC*(high_order_hnp1[j]-hn[j] - (high_order_hnp1i-hni)) 
+	      double ML_minus_MC = (i==j ? 1. : 0.)*mi - MassMatrix[ij];
+	      double FluxCorrectionMatrix1 = ML_minus_MC*(high_order_hnp1[j]-hn[j] - (high_order_hnp1i-hni)) 
 		+ dt*dEV_minus_dL[ij]*(hStarji-hStarij);
 
-	      FluxCorrectionMatrix2[ij] = ML_minus_MC*(high_order_hunp1[j]-hun[j] - (high_order_hunp1i-huni)) 
-		+ dt*dEV_minus_dL[ij]*(huStarji-huStarij);
-
-	      FluxCorrectionMatrix3[ij] = ML_minus_MC*(high_order_hvnp1[j]-hvn[j] - (high_order_hvnp1i-hvni)) 
-		+ dt*dEV_minus_dL[ij]*(hvStarji-hvStarij);
-
-	      ///////////////////////
 	      // COMPUTE P VECTORS //
-	      ///////////////////////
-	      Pnegi += FluxCorrectionMatrix1[ij]*((FluxCorrectionMatrix1[ij] < 0) ? 1. : 0.);
-	      
+	      Pnegi += FluxCorrectionMatrix1*((FluxCorrectionMatrix1 < 0) ? 1. : 0.);	      
+
 	      //update ij 
 	      ij+=1;
 	    }
@@ -2685,6 +2670,16 @@ namespace proteus
       ij=0;
       for (int i=0; i<numDOFs; i++)
 	{
+	  //read some vectors 
+	  double high_order_hnp1i  = high_order_hnp1[i];
+	  double high_order_hunp1i = high_order_hunp1[i];
+	  double high_order_hvnp1i = high_order_hvnp1[i];
+	  double hni = hn[i];
+	  double huni = hun[i];
+	  double hvni = hvn[i];
+	  double Zi = b_dof[i];
+	  double mi = lumped_mass_matrix[i];
+
 	  double ith_Limiter_times_FluxCorrectionMatrix1 = 0.;
 	  double ith_Limiter_times_FluxCorrectionMatrix2 = 0.;
 	  double ith_Limiter_times_FluxCorrectionMatrix3 = 0.;
@@ -2693,31 +2688,57 @@ namespace proteus
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
+	      // read some vectors
+	      double hnj = hn[j];
+	      double hunj = hun[j];
+	      double hvnj = hvn[j];
+	      double Zj = b_dof[j];
+
+	      // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
+	      double hStarij  = fmax(0., hni + Zi - fmax(Zi,Zj));
+	      double huStarij = (hni <= hEps ? 0. : huni*hStarij/hni);
+	      double hvStarij = (hni <= hEps ? 0. : hvni*hStarij/hni);
+	      
+	      double hStarji  = fmax(0., hnj + Zj - fmax(Zi,Zj));
+	      double huStarji = (hnj <= hEps ? 0. : hunj*hStarji/hnj);
+	      double hvStarji = (hnj <= hEps ? 0. : hvnj*hStarji/hnj);
+
+	      // COMPUTE FLUX CORRECTION MATRICES
+	      double ML_minus_MC = (i==j ? 1. : 0.)*mi - MassMatrix[ij];
+	      double FluxCorrectionMatrix1 = ML_minus_MC*(high_order_hnp1[j]-hn[j] - (high_order_hnp1i-hni)) 
+		+ dt*dEV_minus_dL[ij]*(hStarji-hStarij);
+
+	      double FluxCorrectionMatrix2 = ML_minus_MC*(high_order_hunp1[j]-hun[j] - (high_order_hunp1i-huni)) 
+		+ dt*dEV_minus_dL[ij]*(huStarji-huStarij);
+
+	      double FluxCorrectionMatrix3 = ML_minus_MC*(high_order_hvnp1[j]-hvn[j] - (high_order_hvnp1i-hvni)) 
+		+ dt*dEV_minus_dL[ij]*(hvStarji-hvStarij);
+
 	      // compute limiter based on water height
-	      double Lij = (FluxCorrectionMatrix1[ij] > 0. ? std::min(Rposi,Rneg[j]) : std::min(Rnegi,Rpos[j]));
+	      double Lij = (FluxCorrectionMatrix1 > 0. ? std::min(Rposi,Rneg[j]) : std::min(Rnegi,Rpos[j]));
 	      //double Lij = 1.;
 
-	      ith_Limiter_times_FluxCorrectionMatrix1 += Lij*FluxCorrectionMatrix1[ij];
-	      ith_Limiter_times_FluxCorrectionMatrix2 += Lij*FluxCorrectionMatrix2[ij];
-	      ith_Limiter_times_FluxCorrectionMatrix3 += Lij*FluxCorrectionMatrix3[ij];
+	      ith_Limiter_times_FluxCorrectionMatrix1 += Lij*FluxCorrectionMatrix1;
+	      ith_Limiter_times_FluxCorrectionMatrix2 += Lij*FluxCorrectionMatrix2;
+	      ith_Limiter_times_FluxCorrectionMatrix3 += Lij*FluxCorrectionMatrix3;
 
 	      //update ij
 	      ij+=1;
 	    }
 	  double one_over_mi = 1.0/lumped_mass_matrix[i];	  
-	  high_order_hnp1[i]  = low_order_hnp1[i]  + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
-	  high_order_hunp1[i] = low_order_hunp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
-	  high_order_hvnp1[i] = low_order_hvnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
+	  limited_hnp1[i]  = low_order_hnp1[i]  + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
+	  limited_hunp1[i] = low_order_hunp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
+	  limited_hvnp1[i] = low_order_hvnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
 
-	  if (high_order_hnp1[i] < -1E-16)
+	  if (limited_hnp1[i] < -1E-16)
 	    {
 	      std::cout << "Water height: "
-			<<  high_order_hnp1[i] 
+			<<  limited_hnp1[i] 
 			<< " ... aborting!" << std::endl;
 	      abort();
 	    }
 	  else 
-	    high_order_hnp1[i] = fmax(0.,high_order_hnp1[i]);
+	    limited_hnp1[i] = fmax(0.,limited_hnp1[i]);
 
 	}
     }

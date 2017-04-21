@@ -678,10 +678,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         hIndex = index[0::3]
         huIndex = index[1::3]
         hvIndex = index[2::3]
-        high_order_hnp1 = numpy.copy(self.timeIntegration.u[hIndex])
-        high_order_hunp1 = numpy.copy(self.timeIntegration.u[huIndex])
-        high_order_hvnp1 = numpy.copy(self.timeIntegration.u[hvIndex])
-
+        # extract high order solution
+        #high_order_hnp1 = numpy.copy(self.timeIntegration.u[hIndex])
+        #high_order_hunp1 = numpy.copy(self.timeIntegration.u[huIndex])
+        #high_order_hvnp1 = numpy.copy(self.timeIntegration.u[hvIndex])
+        # create limited solution 
+        limited_hnp1 = numpy.zeros(self.h_dof_old.shape)
+        limited_hunp1 = numpy.zeros(self.h_dof_old.shape)
+        limited_hvnp1 = numpy.zeros(self.h_dof_old.shape)
         # Do some type of limitation 
         
         self.sw2d.FCTStep(self.timeIntegration.dt, 
@@ -692,12 +696,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           self.hu_dof_old,
                           self.hv_dof_old,
                           self.coefficients.b.dof,
-                          high_order_hnp1, #solH
-                          high_order_hunp1,
-                          high_order_hvnp1,
+                          self.timeIntegration.u[hIndex],
+                          self.timeIntegration.u[huIndex],
+                          self.timeIntegration.u[hvIndex],
+                          #high_order_hnp1, #solH
+                          #high_order_hunp1,
+                          #high_order_hvnp1,
                           self.low_order_hnp1, 
                           self.low_order_hunp1, 
                           self.low_order_hvnp1, 
+                          limited_hnp1, 
+                          limited_hunp1,
+                          limited_hvnp1,
                           rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
                           colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
                           MassMatrix,
@@ -705,9 +715,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           self.hEps)
                 
         # Pass the post processed hnp1 solution to global solution u
-        self.timeIntegration.u[hIndex] = high_order_hnp1 
-        self.timeIntegration.u[huIndex] = high_order_hunp1 
-        self.timeIntegration.u[hvIndex] = high_order_hvnp1 
+        self.timeIntegration.u[hIndex]  = limited_hnp1
+        self.timeIntegration.u[huIndex] = limited_hunp1
+        self.timeIntegration.u[hvIndex] = limited_hvnp1
 
     def getResidual(self,u,r):
         """
