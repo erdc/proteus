@@ -20,6 +20,7 @@
 #include "chrono_fea/ChContactSurfaceNodeCloud.h"
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/solver/ChSolverMINRES.h"
+#include "chrono/core/ChTransform.h"
 
 
 //using namespace std;

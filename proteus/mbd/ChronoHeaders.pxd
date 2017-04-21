@@ -68,6 +68,8 @@ cdef extern from "ChMoorings.h":
         double e1()
         double e2()
         double e3()
+        ChQuaternion(double e0, double e1, double e2, double e3)
+        ChQuaternion()
     cdef cppclass ChMatrix33[double]:
         ChVector Get_A_Xaxis()
         ChVector Get_A_Yaxis()
