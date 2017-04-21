@@ -80,6 +80,7 @@ class cppRigidBody {
                                    double damping,
                                    double rest_length);
   void setName(std::string name);
+  void setPrescribedMotionPoly(double coeff1);
 };
 
 cppSystem::cppSystem(double* gravity):
@@ -93,12 +94,14 @@ gravity(gravity)
   auto msolver = std::static_pointer_cast<ChSolverMINRES>(system.GetSolver());
   msolver->SetDiagonalPreconditioning(true);
   system.SetSolverWarmStarting(true);  // this helps a lot to speedup convergence in this class of problems
-  //system.SetMaxItersSolverSpeed(100);  // max iteration for iterative solvers
-  //system.SetMaxItersSolverStab(100);  // max iteration for stabilization (iterative solvers)
+  system.SetMaxItersSolverSpeed(100); // max iteration for iterative solvers
+  system.SetMaxItersSolverStab(100); // max iteration for stabilization (iterative solvers)
+  system.SetTolForce(1e-13);
+  //system.SetMaxItersSolverSpeed(100);  
+  //system.SetMaxItersSolverStab(100);  
   //system.SetTolForce(1e-14); // default: 0.001
   //system.SetMaxiter(200); // default: 6. Max constraints to reach tolerance on constraints.
   //system.SetTol(1e-10); // default: 0.0002. Tolerance for keeping constraints together.
-  //system.SetIntegrationType(ChSystemDEM::INT_HHT); // used before: ChSystemDEM::INT_EULER_IMPLICIT_LINEARIZED
   system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED); // used before: ChSystemDEM::INT_EULER_IMPLICIT_LINEARIZED
   if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system.GetTimestepper())) {
     mystepper->SetAlpha(-0.2);
@@ -109,15 +112,19 @@ gravity(gravity)
 void cppSystem::setTimestepperType(std::string tstype) {
   if (tstype == "HHT") {
     system.SetTimestepperType(ChTimestepper::Type::HHT);
-    if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system.GetTimestepper())) {
+      auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system.GetTimestepper());
       mystepper->SetAlpha(-0.2);
+      mystepper->SetMaxiters(10);
+      mystepper->SetAbsTolerances(1e-6);
+      mystepper->SetMode(ChTimestepperHHT::POSITION);
+      mystepper->SetScaling(false);
+      mystepper->SetVerbose(true);
+      mystepper->SetModifiedNewton(false);
     }
     else if (tstype == "Euler") {
       system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
     }
-    
   }
-}
 
 void cppSystem::setGravity(double* gravity)
 {
@@ -292,6 +299,21 @@ void cppRigidBody::poststep()
   angvel = body->GetWvel_loc();
   F = body->Get_Xforce();
   M = body->Get_Xtorque();
+}
+
+void cppRigidBody::setPrescribedMotionPoly(double coeff1) {
+  auto fixed_body = std::make_shared<ChBody>();
+  fixed_body->SetPos(body->GetPos());
+  fixed_body->SetBodyFixed(true);
+  system->system.Add(fixed_body);
+  auto lock = std::make_shared<ChLinkLockLock>();
+  lock->Initialize(body, fixed_body, fixed_body->GetCoord());
+  system->system.Add(lock);
+  auto forced_motion = std::make_shared<ChFunction_Poly>();
+  forced_motion->Set_order(1);
+  forced_motion->Set_coeff(coeff1, 1);
+  std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+  lock->SetMotion_X(forced_ptr);
 }
 
 void cppRigidBody::setPosition(double* position){

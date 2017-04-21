@@ -27,6 +27,8 @@ cdef extern from "ChMoorings.h":
     cdef cppclass cppCable:
         ch.ChSystemDEM& system
         ch.ChMesh& mesh
+        vector[shared_ptr[ch.ChNodeFEAxyzDD]] nodes
+        vector[shared_ptr[ch.ChElementBeamANCF]] elems
         double L0
         double length
         int nb_elems
@@ -60,13 +62,15 @@ cdef extern from "ChMoorings.h":
         void setFluidAccelerationAtNodes(vector[ch.ChVector] fluid_acceleration)
         void setFluidDensityAtNodes(vector[double] fluid_density)
         void setContactMaterial(shared_ptr[ch.ChMaterialSurfaceDEM] material)
+        ch.ChVector getTensionElement(int i)
     cppMultiSegmentedCable * newMoorings(ch.ChSystemDEM& system,
                                          shared_ptr[ch.ChMesh] mesh,
                                          vector[double] length,
                                          vector[int] nb_elems,
                                          vector[double] d,
                                          vector[double] rho,
-                                         vector[double] E
+                                         vector[double] E,
+                                         string beam_type
         )
     cdef cppclass cppSurfaceBoxNodesCloud:
         ch.ChSystemDEM& system
@@ -137,6 +141,8 @@ cdef extern from "ChRigidBody.h":
         void setConstraints(double* free_x, double* free_r)
         void setInertiaXX(double* inertia)
         void setName(string name)
+        void setPrescribedMotionPoly(double coeff1)
+
 
     cppRigidBody * newRigidBody(cppSystem* system,
                                 double* center,
@@ -420,6 +426,9 @@ cdef class RigidBody:
 
     def calculate(self):
         pass
+
+    def setPrescribedMotionPoly(self, double coeff1):
+        self.thisptr.setPrescribedMotionPoly(coeff1)
 
     def setPrescribedMotion(self, function):
         self.prescribed_motion_function = function
@@ -924,6 +933,7 @@ cdef class Moorings:
       np.ndarray fluid_velocity_array_previous
       np.ndarray fluid_acceleration_array
       string name
+      string beam_type
     def __cinit__(self,
                   System system,
                   Mesh mesh,
@@ -931,11 +941,13 @@ cdef class Moorings:
                   np.ndarray nb_elems,
                   np.ndarray d,
                   np.ndarray rho,
-                  np.ndarray E):
+                  np.ndarray E,
+                  string beam_type="BeamANCF"):
         self.System = system
         self.System.addSubcomponent(self)
         self.nd = self.System.nd
         self.Mesh = mesh
+        self.beam_type = beam_type
         cdef vector[double] vec_length
         cdef vector[int] vec_nb_elems
         cdef vector[double] vec_d
@@ -953,7 +965,8 @@ cdef class Moorings:
                                    vec_nb_elems,
                                    vec_d,
                                    vec_rho,
-                                   vec_E
+                                   vec_E,
+                                   beam_type
                                    )
         self.nodes_function = lambda s: (s, s, s)
         self.nodes_built = False
@@ -1081,6 +1094,16 @@ cdef class Moorings:
         assert self.nodes_built is True, 'call buildNodes() before calling this function'
         self.thisptr.attachBackNodeToBody(body.thisptr.body)
 
+    def getElementMass(self, int i=0):
+        mass = deref(self.thisptr.elems[i]).GetMass()
+        return mass
+
+    def getTensionElement(self, int i=0):
+        cdef ch.ChVector[double] F
+        F = self.thisptr.getTensionElement(i)
+        return np.array([F.x(), F.y(), F.z()])
+
+
     def attachFrontNodeToBody(self, RigidBody body):
         assert self.nodes_built is True, 'call buildNodes() before calling this function'
         self.thisptr.attachFrontNodeToBody(body.thisptr.body)
@@ -1104,12 +1127,20 @@ cdef class Moorings:
             L0 = deref(self.thisptr.cables[i]).L0
             L = deref(self.thisptr.cables[i]).length
             nb_elems = deref(self.thisptr.cables[i]).nb_elems
-            nb_nodes = nb_elems*2+1
+            if self.beam_type == "BeamANCF":
+                nb_nodes = nb_elems*2+1
+            elif self.beam_type == "CableANCF":
+                nb_nodes = nb_elems+1
+            else:
+                print("set element type")
+                sys.exit()
             ds = L/(nb_nodes-1)
             for j in range(nb_nodes):
                 x, y, z = self.nodes_function(L0+ds*j)
+                print("node", j, x, y, z)
                 vec = ch.ChVector[double](x, y, z)
                 deref(self.thisptr.cables[i]).mvecs.push_back(vec)
+                print(x, y, z)
         self.buildNodes()
 
     def buildNodes(self):

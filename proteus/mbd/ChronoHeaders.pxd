@@ -47,6 +47,7 @@ cdef extern from "ChMoorings.h":
         shared_ptr[ChNodeFEAxyzDD] GetNodeC()
         void setAlphaDamp(double a)
         double GetLengthX() const
+        double GetMass()
     cdef cppclass ChBodyFrame
     cdef cppclass ChLinkPointFrame:
         ChVector GetReactionOnNode()
