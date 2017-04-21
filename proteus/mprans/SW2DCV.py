@@ -1075,7 +1075,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dEV_minus_dL_times_huStarji_minus_huStarij, 
             self.dEV_minus_dL_times_hvStarji_minus_hvStarij, 
             self.coefficients.cE, 
-            self.coefficients.LUMPED_MASS_MATRIX)
+            self.coefficients.LUMPED_MASS_MATRIX, 
+            self.timeIntegration.dt)
 
         self.recompute_lumped_mass_matrix=1
         if (self.recompute_lumped_mass_matrix==1):
@@ -1215,7 +1216,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(1,2)],
             self.csrColumnOffsets_eb[(2,0)],
             self.csrColumnOffsets_eb[(2,1)],
-            self.csrColumnOffsets_eb[(2,2)])
+            self.csrColumnOffsets_eb[(2,2)], 
+            self.timeIntegration.dt)
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:

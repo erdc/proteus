@@ -206,7 +206,8 @@ namespace proteus
 				   double* dEV_minus_dL_times_huStarji_minus_huStarij,
 				   double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 				   double cE, 
-				   int LUMPED_MASS_MATRIX
+				   int LUMPED_MASS_MATRIX, 
+				   double dt
 				   )=0;
     virtual void calculateResidual_cell_based_entropy_viscosity(//element
 								double* mesh_trial_ref,
@@ -235,7 +236,7 @@ namespace proteus
 								double* vel_trial_trace_ref,
 								double* vel_grad_trial_trace_ref,
 								double* vel_test_trace_ref,
-								double* vel_grad_test_trace_ref,					 
+								double* vel_grad_test_trace_ref,
 								double* normal_ref,
 								double* boundaryJac_ref,
 								//physics
@@ -348,7 +349,8 @@ namespace proteus
 								double* dEV_minus_dL_times_huStarji_minus_huStarij,
 								double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 								double cE,
-								int LUMPED_MASS_MATRIX
+								int LUMPED_MASS_MATRIX,
+								double dt
 								)=0;
     virtual void calculateResidual_first_order_flatB_GP(//element
 					    double* mesh_trial_ref,
@@ -490,7 +492,8 @@ namespace proteus
 					    double* dEV_minus_dL_times_huStarji_minus_huStarij,
 					    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 					    double cE,
-					    int LUMPED_MASS_MATRIX
+					    int LUMPED_MASS_MATRIX,
+					    double dt
 							)=0;
     virtual void calculateResidual_second_order_flatB_GP(//element
 					       double* mesh_trial_ref,
@@ -632,7 +635,8 @@ namespace proteus
 					       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 					       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 					       double cE,
-					       int LUMPED_MASS_MATRIX
+					       int LUMPED_MASS_MATRIX,
+					       double dt
 							 )=0;
     virtual void calculateResidual_second_order_NonFlatB_GP(//element
 					       double* mesh_trial_ref,
@@ -774,7 +778,8 @@ namespace proteus
 					       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 					       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 					       double cE,
-					       int LUMPED_MASS_MATRIX
+					       int LUMPED_MASS_MATRIX,
+					       double dt
 							    )=0;
     virtual void calculateResidual_second_order_NonFlatB_with_EV(//element
 					       double* mesh_trial_ref,
@@ -916,7 +921,8 @@ namespace proteus
 					       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 					       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 					       double cE,
-					       int LUMPED_MASS_MATRIX
+					       int LUMPED_MASS_MATRIX,
+					       double dt
 								 )=0;
     virtual void calculateResidual_galerkin(//element
 					    double* mesh_trial_ref,
@@ -1058,7 +1064,8 @@ namespace proteus
 					    double* dEV_minus_dL_times_huStarji_minus_huStarij,
 					    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 					    double cE,
-					    int LUMPED_MASS_MATRIX
+					    int LUMPED_MASS_MATRIX,
+					    double dt
 					    )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
@@ -1171,7 +1178,8 @@ namespace proteus
 				   int* csrColumnOffsets_eb_hu_hv,
 				   int* csrColumnOffsets_eb_hv_h,
 				   int* csrColumnOffsets_eb_hv_hu,
-				   int* csrColumnOffsets_eb_hv_hv)=0;
+				   int* csrColumnOffsets_eb_hv_hv, 
+				   double dt)=0;
     virtual void calculateJacobian_cell_based_entropy_viscosity(//element
 								double* mesh_trial_ref,
 								double* mesh_grad_trial_ref,
@@ -1283,7 +1291,8 @@ namespace proteus
 								int* csrColumnOffsets_eb_hu_hv,
 								int* csrColumnOffsets_eb_hv_h,
 								int* csrColumnOffsets_eb_hv_hu,
-								int* csrColumnOffsets_eb_hv_hv)=0;
+								int* csrColumnOffsets_eb_hv_hv, 
+								double dt)=0;
     virtual void calculateMassMatrix(//element
 				     double* mesh_trial_ref,
 				     double* mesh_grad_trial_ref,
@@ -1395,7 +1404,8 @@ namespace proteus
 				     int* csrColumnOffsets_eb_hu_hv,
 				     int* csrColumnOffsets_eb_hv_h,
 				     int* csrColumnOffsets_eb_hv_hu,
-				     int* csrColumnOffsets_eb_hv_hv)=0;
+				     int* csrColumnOffsets_eb_hv_hv, 
+				     double dt)=0;
   virtual void calculateLumpedMassMatrix(//element
 					 double* mesh_trial_ref,
 					 double* mesh_grad_trial_ref,
@@ -1507,7 +1517,8 @@ namespace proteus
 					 int* csrColumnOffsets_eb_hu_hv,
 					 int* csrColumnOffsets_eb_hv_h,
 					 int* csrColumnOffsets_eb_hv_hu,
-					 int* csrColumnOffsets_eb_hv_hv)=0;
+					 int* csrColumnOffsets_eb_hv_hv, 
+					 double dt)=0;
   };
 
   template<class CompKernelType,
@@ -2849,7 +2860,8 @@ namespace proteus
 			   double* dEV_minus_dL_times_huStarji_minus_huStarij,
 			   double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 			   double cE,
-			   int LUMPED_MASS_MATRIX)
+			   int LUMPED_MASS_MATRIX,
+			   double dt)
 			   
     {
       //
@@ -3825,9 +3837,9 @@ namespace proteus
 							double* dEV_minus_dL_times_huStarji_minus_huStarij,
 							double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 							double cE,
-							int LUMPED_MASS_MATRIX)
+							int LUMPED_MASS_MATRIX,
+							double dt)
     {
-      double dt = 1./alphaBDF; // HACKED to work just for BDF1
       // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
       // for linear viscosity //
       double max_speed_per_cell[nElements_global];
@@ -4304,9 +4316,9 @@ namespace proteus
 				    double* dEV_minus_dL_times_huStarji_minus_huStarij,
 				    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 				    double cE,
-				    int LUMPED_MASS_MATRIX)
+				    int LUMPED_MASS_MATRIX,
+				    double dt)
     {
-      double dt = 1./alphaBDF; 
       ////////////////
       // CELL LOOPS //
       ////////////////
@@ -4606,9 +4618,9 @@ namespace proteus
 				       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 				       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 				       double cE, 
-				       int LUMPED_MASS_MATRIX)
+				       int LUMPED_MASS_MATRIX,
+				       double dt)
     {
-      double dt = 1./alphaBDF; 
       ////////////////
       // CELL LOOPS //
       ////////////////
@@ -4943,7 +4955,8 @@ namespace proteus
 				       double* dEV_minus_dL_times_huStarji_minus_huStarij,
 				       double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 				       double cE,
-				       int LUMPED_MASS_MATRIX)
+				       int LUMPED_MASS_MATRIX,
+				       double dt)
     {
       //TMP FOR FRICTION//
       double mannings=0.02;
@@ -5175,7 +5188,6 @@ namespace proteus
       //////////////////////
       //double dt = cfl_run/max_cfl;
       //double dt = 0.1*min_h;
-      double dt = 1./alphaBDF; 
 
       //////////////////
       // Loop on DOFs // to compute flux and dissipative terms
@@ -5430,7 +5442,8 @@ namespace proteus
 							 double* dEV_minus_dL_times_huStarji_minus_huStarij,
 							 double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 							 double cE,
-							 int LUMPED_MASS_MATRIX)
+							 int LUMPED_MASS_MATRIX,
+							 double dt)
     {
       // FOR FRICTION TERMS //
       //double mannings=0.0;
@@ -5438,7 +5451,6 @@ namespace proteus
       //double gamma=4./3;
       //double xi=2.;
 
-      double dt = 1./alphaBDF; 
       ////////////////
       // CELL LOOPS //
       ////////////////
@@ -5583,9 +5595,13 @@ namespace proteus
 	      //double entropy_residual2 = ((huG-hun)/dt + (dxf2 + dyf2) + b_dot_gradx_z)*DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
 	      //double entropy_residual3 = ((hvG-hvn)/dt + (dxf3 + dyf3) + b_dot_grady_z)*DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
 
-	      double entropy_residual1 = ((hG-hn)/dt   + (fp_dot_grad_u1))                 * DENTROPY_DH (g,hn,hun,hvn,one_over_hnReg);
-	      double entropy_residual2 = ((huG-hun)/dt + (fp_dot_grad_u2 + b_dot_gradx_z)) * DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
-	      double entropy_residual3 = ((hvG-hvn)/dt + (fp_dot_grad_u3 + b_dot_grady_z)) * DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
+	      //double entropy_residual1 = ((hG-hn)/dt   + (fp_dot_grad_u1))                 * DENTROPY_DH (g,hn,hun,hvn,one_over_hnReg);
+	      //double entropy_residual2 = ((huG-hun)/dt + (fp_dot_grad_u2 + b_dot_gradx_z)) * DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
+	      //double entropy_residual3 = ((hvG-hvn)/dt + (fp_dot_grad_u3 + b_dot_grady_z)) * DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
+
+	      double entropy_residual1 = ((hn-hnm1)/dt   + (fp_dot_grad_u1))                 * DENTROPY_DH (g,hn,hun,hvn,one_over_hnReg);
+	      double entropy_residual2 = ((hun-hunm1)/dt + (fp_dot_grad_u2 + b_dot_gradx_z)) * DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
+	      double entropy_residual3 = ((hvn-hvnm1)/dt + (fp_dot_grad_u3 + b_dot_grady_z)) * DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
 
 	      // TMP global entropy
 	      entropy_max = fmax(entropy_max,ENTROPY(g,hn,hun,hvn,one_over_hnReg));
@@ -6107,9 +6123,9 @@ namespace proteus
 				    double* dEV_minus_dL_times_huStarji_minus_huStarij,
 				    double* dEV_minus_dL_times_hvStarji_minus_hvStarij,
 				    double cE,
-				    int LUMPED_MASS_MATRIX)
+				    int LUMPED_MASS_MATRIX,
+				    double dt)
     {
-      double dt = 1./alphaBDF; 
       ////////////////
       // CELL LOOPS //
       ////////////////
@@ -6335,7 +6351,8 @@ namespace proteus
 			   int* csrColumnOffsets_eb_hu_hv,
 			   int* csrColumnOffsets_eb_hv_h,
 			   int* csrColumnOffsets_eb_hv_hu,
-			   int* csrColumnOffsets_eb_hv_hv)
+			   int* csrColumnOffsets_eb_hv_hv, 
+			   double dt)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -7581,9 +7598,9 @@ namespace proteus
 							int* csrColumnOffsets_eb_hu_hv,
 							int* csrColumnOffsets_eb_hv_h,
 							int* csrColumnOffsets_eb_hv_hu,
-							int* csrColumnOffsets_eb_hv_hv)
+							int* csrColumnOffsets_eb_hv_hv, 
+							double dt)
     {
-      double dt = 1./alphaBDF; // HACKED to work just for BDF1
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
@@ -7981,7 +7998,8 @@ namespace proteus
 			     int* csrColumnOffsets_eb_hu_hv,
 			     int* csrColumnOffsets_eb_hv_h,
 			     int* csrColumnOffsets_eb_hv_hu,
-			     int* csrColumnOffsets_eb_hv_hv)
+			     int* csrColumnOffsets_eb_hv_hv, 
+			     double dt)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -8213,7 +8231,8 @@ namespace proteus
 				   int* csrColumnOffsets_eb_hu_hv,
 				   int* csrColumnOffsets_eb_hv_h,
 				   int* csrColumnOffsets_eb_hv_hu,
-				   int* csrColumnOffsets_eb_hv_hv)
+				   int* csrColumnOffsets_eb_hv_hv, 
+				   double dt)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
