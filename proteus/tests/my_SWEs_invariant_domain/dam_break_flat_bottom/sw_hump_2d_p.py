@@ -8,12 +8,13 @@ nd=2
 T=1.0
 L=(10.0,1.0)
 g = 9.81
-hl=2.005 #0.005
+hl=1.00
 xc=5
 domain = RectangularDomain(L=L)
 
-cE=10
+cE=1
 LUMPED_MASS_MATRIX=0
+USE_EV_BASED_ON_GALERKIN=0
 
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
@@ -39,7 +40,7 @@ class dam_break_problem_starting_at_t0:
         if (x <= self.xc):
             h = self.hl
         else:
-            h = 1
+            h = 0.1
         return h
 
 class dam_break_problem_starting_at_t1:
@@ -212,5 +213,5 @@ diffusiveFluxBoundaryConditions = {0:{},
 #########################################
 bathymetry={0:bathymetry_function}
 LevelModelType = SW2DCV.LevelModel
-coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE,LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX)
+coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE,LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,USE_EV_BASED_ON_GALERKIN=USE_EV_BASED_ON_GALERKIN)
 
