@@ -90,7 +90,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 		 useMetrics=0.0,
                  modelIndex=0, 
                  cE=1.0,
-                 LUMPED_MASS_MATRIX=1):
+                 LUMPED_MASS_MATRIX=1, 
+                 USE_EV_BASED_ON_GALERKIN=0,
+                 mannings=0.):
         self.bathymetry = bathymetry 
         self.useRBLES=useRBLES
         self.useMetrics=useMetrics
@@ -100,6 +102,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nd=nd
         self.cE=cE
         self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
+        self.USE_EV_BASED_ON_GALERKIN=USE_EV_BASED_ON_GALERKIN
+        self.mannings=mannings
         self.modelIndex=modelIndex
         mass={}
         advection={}
@@ -1080,7 +1084,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.dEV_minus_dL,
             self.coefficients.cE, 
             self.coefficients.LUMPED_MASS_MATRIX, 
-            self.timeIntegration.dt)
+            self.coefficients.USE_EV_BASED_ON_GALERKIN,
+            self.timeIntegration.dt, 
+            self.coefficients.mannings)
 
         self.recompute_lumped_mass_matrix=1
         if (self.recompute_lumped_mass_matrix==1):

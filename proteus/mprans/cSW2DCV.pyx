@@ -158,7 +158,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL,	
 			       double cE, 
 			       int LUMPED_MASS_MATRIX, 
-			       double dt)
+			       int USE_EV_BASED_ON_GALERKIN,
+			       double dt, 
+			       double mannings)
         void calculateResidual_cell_based_entropy_viscosity(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -289,7 +291,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL,	
 			       double cE,
 			       int LUMPED_MASS_MATRIX, 
-			       double dt)
+			       int USE_EV_BASED_ON_GALERKIN,
+			       double dt, 
+			       double mannings)
         void calculateResidual_first_order_flatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -420,7 +424,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL,	
 			       double cE,
 			       int LUMPED_MASS_MATRIX, 
-			       double dt)	
+			       int USE_EV_BASED_ON_GALERKIN,
+			       double dt, 
+			       double mannings)	
         void calculateResidual_second_order_flatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -551,7 +557,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL,	
 			       double cE,
 			       int LUMPED_MASS_MATRIX, 
-			       double dt)
+			       int USE_EV_BASED_ON_GALERKIN,
+			       double dt, 
+			       double mannings)
         void calculateResidual_second_order_NonFlatB_GP(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -682,7 +690,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL,	
 			       double cE,
 			       int LUMPED_MASS_MATRIX, 
-			       double dt)
+			       int USE_EV_BASED_ON_GALERKIN,
+			       double dt, 
+			       double mannings)
         void calculateResidual_second_order_NonFlatB_with_EV(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -813,7 +823,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL,	
 			       double cE,
 			       int LUMPED_MASS_MATRIX, 
-			       double dt)
+			       int USE_EV_BASED_ON_GALERKIN,
+			       double dt, 
+			       double mannings)
         void calculateResidual_galerkin(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -944,7 +956,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* dEV_minus_dL,	
 			       double cE,
 			       int LUMPED_MASS_MATRIX, 
-			       double dt)
+			       int USE_EV_BASED_ON_GALERKIN,
+			       double dt, 
+			       double mannings)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -1588,7 +1602,9 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL,
 			 double cE, 
 			 int LUMPED_MASS_MATRIX,	
-			 double dt):
+			 int USE_EV_BASED_ON_GALERKIN,
+			 double dt, 
+			 double mannings):
        self.thisptr.calculateResidual(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1722,7 +1738,9 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL.data,
 	    cE, 
 	    LUMPED_MASS_MATRIX, 
-	    dt)
+	    USE_EV_BASED_ON_GALERKIN,
+	    dt, 
+	    mannings)
    def calculateResidual_cell_based_entropy_viscosity(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -1854,7 +1872,9 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL,
 			 double cE,
 			 int LUMPED_MASS_MATRIX, 
-			 double dt):
+			 int USE_EV_BASED_ON_GALERKIN,
+			 double dt, 
+			 double mannings):
        self.thisptr.calculateResidual_cell_based_entropy_viscosity(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1988,7 +2008,9 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL.data,
 	    cE,
 	    LUMPED_MASS_MATRIX, 
-	    dt)
+	    USE_EV_BASED_ON_GALERKIN,
+	    dt, 		
+	    mannings)
    def calculateResidual_first_order_flatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2120,7 +2142,9 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL,
 			 double cE,
 			 int LUMPED_MASS_MATRIX, 
-			 double dt):
+			 int USE_EV_BASED_ON_GALERKIN,
+			 double dt, 
+			 double mannings):
        self.thisptr.calculateResidual_first_order_flatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -2254,7 +2278,9 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL.data,
 	    cE,
 	    LUMPED_MASS_MATRIX, 
-	    dt)
+	    USE_EV_BASED_ON_GALERKIN,
+	    dt, 
+	    mannings)
    def calculateResidual_second_order_flatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2386,7 +2412,9 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL,
 			 double cE,
 			 int LUMPED_MASS_MATRIX, 
-			 double dt):
+			 int USE_EV_BASED_ON_GALERKIN,
+			 double dt, 
+			 double mannings):
        self.thisptr.calculateResidual_second_order_flatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -2520,7 +2548,9 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL.data,
 	    cE,
 	    LUMPED_MASS_MATRIX, 
-	    dt)
+	    USE_EV_BASED_ON_GALERKIN,
+	    dt, 
+	    mannings)
    def calculateResidual_second_order_NonFlatB_GP(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2652,7 +2682,9 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL,
 			 double cE,
 			 int LUMPED_MASS_MATRIX, 
-			 double dt):
+			 int USE_EV_BASED_ON_GALERKIN,
+			 double dt, 
+			 double mannings):
        self.thisptr.calculateResidual_second_order_NonFlatB_GP(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -2786,7 +2818,9 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL.data,
 	    cE,
 	    LUMPED_MASS_MATRIX, 
-	    dt)
+	    USE_EV_BASED_ON_GALERKIN,
+	    dt, 
+	    mannings)
    def calculateResidual_second_order_NonFlatB_with_EV(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -2918,7 +2952,9 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL,
 			 double cE,
 			 int LUMPED_MASS_MATRIX, 
-			 double dt):
+			 int USE_EV_BASED_ON_GALERKIN,
+			 double dt, 
+			 double mannings):
        self.thisptr.calculateResidual_second_order_NonFlatB_with_EV(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -3051,8 +3087,10 @@ cdef class cSW2DCV_base:
 	    <double*> low_order_hvnp1.data,
 	    <double*> dEV_minus_dL.data,
 	    cE,
-	    LUMPED_MASS_MATRIX, 
-	    dt)
+	    LUMPED_MASS_MATRIX,		
+	    USE_EV_BASED_ON_GALERKIN,
+	    dt, 
+	    mannings)
    def calculateResidual_galerkin(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -3184,7 +3222,9 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray dEV_minus_dL,
 			 double cE,
 			 int LUMPED_MASS_MATRIX, 
-			 double dt):
+			 int USE_EV_BASED_ON_GALERKIN,
+			 double dt, 
+			 double mannings):
        self.thisptr.calculateResidual_galerkin(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -3318,7 +3358,9 @@ cdef class cSW2DCV_base:
 	    <double*> dEV_minus_dL.data,
 	    cE,
 	    LUMPED_MASS_MATRIX, 
-	    dt)
+	    USE_EV_BASED_ON_GALERKIN,
+	    dt, 
+	    mannings)
 
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,

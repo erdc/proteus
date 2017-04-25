@@ -2,8 +2,8 @@ from proteus import *
 from proteus.default_n import *
 from sw_hump_2d_p import *
 
-refinement=6
-runCFL=0.1
+refinement=5
+runCFL=0.75
 #use_EV_stabilization=True
 #use_first_order_flatB_GP_stabilization=True
 #use_second_order_flatB_GP_stabilization=True

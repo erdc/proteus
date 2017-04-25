@@ -208,7 +208,9 @@ namespace proteus
 				   double* dEV_minus_dL,
 				   double cE, 
 				   int LUMPED_MASS_MATRIX, 
-				   double dt
+				   int USE_EV_BASED_ON_GALERKIN,
+				   double dt,
+				   double mannings
 				   )=0;
     virtual void calculateResidual_cell_based_entropy_viscosity(//element
 								double* mesh_trial_ref,
@@ -349,7 +351,9 @@ namespace proteus
 								double* dEV_minus_dL,
 								double cE,
 								int LUMPED_MASS_MATRIX,
-								double dt
+								int USE_EV_BASED_ON_GALERKIN,
+								double dt,
+								double mannings
 								)=0;
     virtual void calculateResidual_first_order_flatB_GP(//element
 					    double* mesh_trial_ref,
@@ -490,7 +494,9 @@ namespace proteus
 					    double* dEV_minus_dL,
 					    double cE,
 					    int LUMPED_MASS_MATRIX,
-					    double dt
+					    int USE_EV_BASED_ON_GALERKIN,
+					    double dt,
+					    double mannings
 							)=0;
     virtual void calculateResidual_second_order_flatB_GP(//element
 					       double* mesh_trial_ref,
@@ -631,7 +637,9 @@ namespace proteus
 					       double* dEV_minus_dL,
 					       double cE,
 					       int LUMPED_MASS_MATRIX,
-					       double dt
+					       int USE_EV_BASED_ON_GALERKIN,
+					       double dt,
+					       double mannings
 							 )=0;
     virtual void calculateResidual_second_order_NonFlatB_GP(//element
 					       double* mesh_trial_ref,
@@ -772,7 +780,9 @@ namespace proteus
 					       double* dEV_minus_dL,
 					       double cE,
 					       int LUMPED_MASS_MATRIX,
-					       double dt
+					       int USE_EV_BASED_ON_GALERKIN,
+					       double dt,
+					       double mannings
 							    )=0;
     virtual void calculateResidual_second_order_NonFlatB_with_EV(//element
 					       double* mesh_trial_ref,
@@ -913,7 +923,9 @@ namespace proteus
 					       double* dEV_minus_dL,
 					       double cE,
 					       int LUMPED_MASS_MATRIX,
-					       double dt
+					       int USE_EV_BASED_ON_GALERKIN,
+					       double dt,
+					       double mannings
 								 )=0;
     virtual void calculateResidual_galerkin(//element
 					    double* mesh_trial_ref,
@@ -1054,7 +1066,9 @@ namespace proteus
 					    double* dEV_minus_dL,
 					    double cE,
 					    int LUMPED_MASS_MATRIX,
-					    double dt
+					    int USE_EV_BASED_ON_GALERKIN,
+					    double dt,
+					    double mannings
 					    )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
@@ -2882,7 +2896,9 @@ namespace proteus
 			   double* dEV_minus_dL,
 			   double cE,
 			   int LUMPED_MASS_MATRIX,
-			   double dt)
+			   int USE_EV_BASED_ON_GALERKIN,
+			   double dt, 
+			   double mannings)
 			   
     {
       //
@@ -3857,7 +3873,9 @@ namespace proteus
 							double* dEV_minus_dL,
 							double cE,
 							int LUMPED_MASS_MATRIX,
-							double dt)
+							int USE_EV_BASED_ON_GALERKIN,
+							double dt,
+							double mannings)
     {
       // ** COMPUTE QUANTITIES PER CELL (MQL) ** //
       // for linear viscosity //
@@ -4334,7 +4352,9 @@ namespace proteus
 				    double* dEV_minus_dL,
 				    double cE,
 				    int LUMPED_MASS_MATRIX,
-				    double dt)
+				    int USE_EV_BASED_ON_GALERKIN,
+				    double dt, 
+				    double mannings)
     {
       ////////////////
       // CELL LOOPS //
@@ -4634,7 +4654,9 @@ namespace proteus
 				       double* dEV_minus_dL,
 				       double cE, 
 				       int LUMPED_MASS_MATRIX,
-				       double dt)
+				       int USE_EV_BASED_ON_GALERKIN,
+				       double dt,
+				       double mannings)
     {
       ////////////////
       // CELL LOOPS //
@@ -4969,10 +4991,11 @@ namespace proteus
 				       double* dEV_minus_dL,
 				       double cE,
 				       int LUMPED_MASS_MATRIX,
-				       double dt)
+				       int USE_EV_BASED_ON_GALERKIN,
+				       double dt,
+				       double mannings)
     {
       //TMP FOR FRICTION//
-      double mannings=0.02;
       double n2 = std::pow(mannings,2);
       double gamma=4./3;
       double xi=2.;
@@ -5454,10 +5477,11 @@ namespace proteus
 							 double* dEV_minus_dL,
 							 double cE,
 							 int LUMPED_MASS_MATRIX,
-							 double dt)
+							 int USE_EV_BASED_ON_GALERKIN,
+							 double dt,
+							 double mannings)
     {
       // FOR FRICTION TERMS //
-      //double mannings=0.0;
       //double n2 = std::pow(mannings,2);
       //double gamma=4./3;
       //double xi=2.;
@@ -5545,9 +5569,12 @@ namespace proteus
 	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
 	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
 	      // get the galerkin solution
-	      ck.valFromDOF(h_dof_galerkin,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hG);
-	      ck.valFromDOF(hu_dof_galerkin,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],huG);
-	      ck.valFromDOF(hv_dof_galerkin,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvG);
+	      if (USE_EV_BASED_ON_GALERKIN==1)
+		{
+		  ck.valFromDOF(h_dof_galerkin,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hG);
+		  ck.valFromDOF(hu_dof_galerkin,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],huG);
+		  ck.valFromDOF(hv_dof_galerkin,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvG);
+		}
 	      // calculate grad of solution at tn at quadrature points
 	      ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
 	      ck.gradFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
@@ -5590,14 +5617,16 @@ namespace proteus
 	      double fp_dot_grad_u1 = grad_hun[0] + grad_hvn[1];
 	      double fp_dot_grad_u2 = grad_hn[0]*(-un*un+g*hn)+2*un*grad_hun[0]-un*vn*grad_hn[1]+vn*grad_hun[1]+un*grad_hvn[1];
 	      double fp_dot_grad_u3 = -un*vn*grad_hn[0]+vn*grad_hun[0]+un*grad_hvn[0]+grad_hn[1]*(-vn*vn+g*hn)+2*vn*grad_hvn[1];
-	      
-	      //double entropy_residual1 = ((hG-hn)/dt   + (fp_dot_grad_u1))                 * DENTROPY_DH (g,hn,hun,hvn,one_over_hnReg);
-	      //double entropy_residual2 = ((huG-hun)/dt + (fp_dot_grad_u2 + b_dot_gradx_z)) * DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
-	      //double entropy_residual3 = ((hvG-hvn)/dt + (fp_dot_grad_u3 + b_dot_grady_z)) * DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
 
 	      double entropy_residual1 = ((hn-hnm1)/dt   + (fp_dot_grad_u1))                 * DENTROPY_DH (g,hn,hun,hvn,one_over_hnReg);
 	      double entropy_residual2 = ((hun-hunm1)/dt + (fp_dot_grad_u2 + b_dot_gradx_z)) * DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
 	      double entropy_residual3 = ((hvn-hvnm1)/dt + (fp_dot_grad_u3 + b_dot_grady_z)) * DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
+	      if (USE_EV_BASED_ON_GALERKIN==1)
+		{
+		  entropy_residual1 = ((hG-hn)/dt   + (fp_dot_grad_u1))                 * DENTROPY_DH (g,hn,hun,hvn,one_over_hnReg);
+		  entropy_residual2 = ((huG-hun)/dt + (fp_dot_grad_u2 + b_dot_gradx_z)) * DENTROPY_DHU(g,hn,hun,hvn,one_over_hnReg);
+		  entropy_residual3 = ((hvG-hvn)/dt + (fp_dot_grad_u3 + b_dot_grady_z)) * DENTROPY_DHV(g,hn,hun,hvn,one_over_hnReg);
+		}
 
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
@@ -6089,7 +6118,9 @@ namespace proteus
 				    double* dEV_minus_dL,
 				    double cE,
 				    int LUMPED_MASS_MATRIX,
-				    double dt)
+				    int USE_EV_BASED_ON_GALERKIN,
+				    double dt,
+				    double mannings)
     {
       ////////////////
       // CELL LOOPS //

@@ -670,17 +670,15 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
  
         FIX_ROUNDOFF_ERROR = False
 
-        COMPUTE_GALERKIN = True
- 
         #####################
         # GALERKIN SOLUTION #
         #####################
-        if (COMPUTE_GALERKIN):
+        if (self.F.coefficients.USE_EV_BASED_ON_GALERKIN==1):
             #backup_calculateResidual = self.F.calculateResidual
             logEvent("   Galerkin solution", level=1)
 
             self.F.calculateResidual = self.F.sw2d.calculateResidual_galerkin            
-            time_before_galerkin = self.F.timeIntegration.dt #TMP
+            #time_before_galerkin = self.F.timeIntegration.dt #TMP
             self.computeResidual(u,r,b)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
@@ -730,11 +728,11 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
             u[:] = r
         else:
             logEvent("   Entropy viscosity solution with consistent mass matrix", level=1)
-            time_before_edge_based = self.F.timeIntegration.dt #TMP
-            if (np.abs(time_before_galerkin - time_before_edge_based) > 0):
-                print time_before_galerkin, time_before_edge_based
-                print np.abs(time_before_galerkin - time_before_edge_based)
-                input("STOOOOP!!!!")
+            #time_before_edge_based = self.F.timeIntegration.dt #TMP
+            #if (np.abs(time_before_galerkin - time_before_edge_based) > 0):
+            #    print time_before_galerkin, time_before_edge_based
+            #    print np.abs(time_before_galerkin - time_before_edge_based)
+            #    input("STOOOOP!!!!")
             self.computeResidual(u,r,b)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
@@ -761,9 +759,9 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         self.F.setUnknowns(u)
         
         # Get values at quad points (in case there is a need to do convergence tests)
-        for ci in range(self.F.nc):
-            self.F.u[ci].getValues(self.F.q[('w',0)],self.F.q[('u',ci)])
-
+        #for ci in range(self.F.nc):
+        #    self.F.u[ci].getValues(self.F.q[('w',0)],self.F.q[('u',ci)])
+        self.computeResidual(u,r,b)
         self.F.check_positivity_water_height=True
 
         # To Fix round off error
