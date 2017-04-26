@@ -112,9 +112,9 @@ namespace proteus
 				   double* h_dof_old_old,
  				   double* hu_dof_old_old, 
 				   double* hv_dof_old_old,
-				   double* h_dof_old,
- 				   double* hu_dof_old, 
-				   double* hv_dof_old,
+				   double* h_dof_lstage,
+ 				   double* hu_dof_lstage, 
+				   double* hv_dof_lstage,
 				   double* b_dof,
 				   double* h_dof, 
 				   double* hu_dof, 
@@ -255,9 +255,9 @@ namespace proteus
 								double* h_dof_old_old, 
 								double* hu_dof_old_old, 
 								double* hv_dof_old_old,
-								double* h_dof_old, 
-								double* hu_dof_old, 
-								double* hv_dof_old,
+								double* h_dof_lstage, 
+								double* hu_dof_lstage, 
+								double* hv_dof_lstage,
 								double* b_dof,
 								double* h_dof, 
 								double* hu_dof, 
@@ -398,9 +398,9 @@ namespace proteus
 					    double* h_dof_old_old, 
 					    double* hu_dof_old_old, 
 					    double* hv_dof_old_old,
-					    double* h_dof_old, 
-					    double* hu_dof_old, 
-					    double* hv_dof_old,
+					    double* h_dof_lstage, 
+					    double* hu_dof_lstage, 
+					    double* hv_dof_lstage,
 					    double* b_dof,
 					    double* h_dof, 
 					    double* hu_dof, 
@@ -541,9 +541,9 @@ namespace proteus
 					       double* h_dof_old_old, 
 					       double* hu_dof_old_old, 
 					       double* hv_dof_old_old,
-					       double* h_dof_old, 
-					       double* hu_dof_old, 
-					       double* hv_dof_old,
+					       double* h_dof_lstage, 
+					       double* hu_dof_lstage, 
+					       double* hv_dof_lstage,
 					       double* b_dof,
 					       double* h_dof, 
 					       double* hu_dof, 
@@ -684,9 +684,9 @@ namespace proteus
 					       double* h_dof_old_old, 
 					       double* hu_dof_old_old, 
 					       double* hv_dof_old_old,
-					       double* h_dof_old, 
-					       double* hu_dof_old, 
-					       double* hv_dof_old,
+					       double* h_dof_lstage, 
+					       double* hu_dof_lstage, 
+					       double* hv_dof_lstage,
 					       double* b_dof,
 					       double* h_dof, 
 					       double* hu_dof, 
@@ -827,9 +827,9 @@ namespace proteus
 					       double* h_dof_old_old, 
 					       double* hu_dof_old_old, 
 					       double* hv_dof_old_old,
-					       double* h_dof_old, 
-					       double* hu_dof_old, 
-					       double* hv_dof_old,
+					       double* h_dof_lstage, 
+					       double* hu_dof_lstage, 
+					       double* hv_dof_lstage,
 					       double* b_dof,
 					       double* h_dof, 
 					       double* hu_dof, 
@@ -970,9 +970,9 @@ namespace proteus
 					    double* h_dof_old_old, 
 					    double* hu_dof_old_old, 
 					    double* hv_dof_old_old,
-					    double* h_dof_old, 
-					    double* hu_dof_old, 
-					    double* hv_dof_old,
+					    double* h_dof_lstage, 
+					    double* hu_dof_lstage, 
+					    double* hv_dof_lstage,
 					    double* b_dof,
 					    double* h_dof, 
 					    double* hu_dof, 
@@ -2800,9 +2800,9 @@ namespace proteus
 			   double* h_dof_old_old, 
 			   double* hu_dof_old_old, 
 			   double* hv_dof_old_old, 
-			   double* h_dof_old, 
-			   double* hu_dof_old, 
-			   double* hv_dof_old, 
+			   double* h_dof_lstage, 
+			   double* hu_dof_lstage, 
+			   double* hv_dof_lstage, 
 			   double* b_dof, 
 			   double* h_dof, 
 			   double* hu_dof, 
@@ -3777,9 +3777,9 @@ namespace proteus
 							double* h_dof_old_old, 
 							double* hu_dof_old_old, 
 							double* hv_dof_old_old, 
-							double* h_dof_old, 
-							double* hu_dof_old, 
-							double* hv_dof_old, 
+							double* h_dof_lstage, 
+							double* hu_dof_lstage, 
+							double* hv_dof_lstage, 
 							double* b_dof, 
 							double* h_dof, 
 							double* hu_dof, 
@@ -3920,17 +3920,17 @@ namespace proteus
 		grad_hn[nSpace],grad_hun[nSpace],grad_hvn[nSpace];
 	      register int eN_nDOF_trial_element = eN*nDOF_trial_element;
 	      // calculate solution at tn at quadrature points
-	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
-	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
-	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
+	      ck.valFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
+	      ck.valFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
+	      ck.valFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
 	      // calculate solution at tnm1 at quadrature points
       	      ck.valFromDOF(h_dof_old_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hnm1);
       	      ck.valFromDOF(hu_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hunm1);
       	      ck.valFromDOF(hv_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvnm1);
 	      // calculate grad of solution at tn at quadrature points
-      	      ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
-      	      ck.gradFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
-      	      ck.gradFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hvn);
+      	      ck.gradFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
+      	      ck.gradFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
+      	      ck.gradFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hvn);
 	      ///////////////
 	      // MAX SPEED //
 	      ///////////////
@@ -4039,18 +4039,18 @@ namespace proteus
       	      ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
       	      ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
 	      //get the solution at time tn (old time)
-	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_tn);
-      	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_tn);
-      	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_tn);
+	      ck.valFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_tn);
+      	      ck.valFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_tn);
+      	      ck.valFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_tn);
 	      //get the solution gradients at current time
       	      ck.gradFromDOF(b_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_b);
       	      ck.gradFromDOF(h_dof,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h);
       	      ck.gradFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hu);
       	      ck.gradFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hv);
 	      //get the solution gradients at tn (old time)
-      	      ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h_tn);
-      	      ck.gradFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hu_tn);
-      	      ck.gradFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hv_tn);
+      	      ck.gradFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_h_tn);
+      	      ck.gradFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hu_tn);
+      	      ck.gradFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hv_tn);
       	      //precalculate test function products with integration weights
       	      for (int j=0;j<nDOF_trial_element;j++)
       		{
@@ -4204,7 +4204,7 @@ namespace proteus
 	      int h_gi = h_l2g[eN_i]; //global i-th index for h
 	      int vel_gi = vel_l2g[eN_i]; //global i-th index for velocities 
 		
-	      elementResidual_h_save[eN_i] +=  elementResidual_h[i];//* (h_dof[h_gi] - h_dof_old[h_gi]);
+	      elementResidual_h_save[eN_i] +=  elementResidual_h[i];//* (h_dof[h_gi] - h_dof_lstage[h_gi]);
 	        	      
       	      globalResidual[offset_h+stride_h*h_gi]  += elementResidual_h[i];
       	      globalResidual[offset_hu+stride_hu*vel_gi] += elementResidual_hu[i];
@@ -4256,9 +4256,9 @@ namespace proteus
 				    double* h_dof_old_old, 
 				    double* hu_dof_old_old, 
 				    double* hv_dof_old_old, 
-				    double* h_dof_old, 
-				    double* hu_dof_old, 
-				    double* hv_dof_old, 
+				    double* h_dof_lstage, 
+				    double* hu_dof_lstage, 
+				    double* hv_dof_lstage, 
 				    double* b_dof, 
 				    double* h_dof, 
 				    double* hu_dof, 
@@ -4408,9 +4408,9 @@ namespace proteus
 		  ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
 		  ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
 		  //get the solution at time tn (old time). This is needed to compute the CFL
-		  ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_tn);
-		  ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_tn);
-		  ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_tn);
+		  ck.valFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_tn);
+		  ck.valFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_tn);
+		  ck.valFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_tn);
 		  //precalculate test function products with integration weights
 		  for (int j=0;j<nDOF_trial_element;j++)
 		    {
@@ -4449,9 +4449,9 @@ namespace proteus
       int ij = 0;
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  double hi = h_dof_old[i];
-	  double hui = hu_dof_old[i];
-	  double hvi = hv_dof_old[i];
+	  double hi = h_dof_lstage[i];
+	  double hui = hu_dof_lstage[i];
+	  double hvi = hv_dof_lstage[i];
 	  // regularization of 1/hi 
 	  double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2));
 
@@ -4463,9 +4463,9 @@ namespace proteus
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
-	      double hj = h_dof_old[j];
-	      double huj = hu_dof_old[j];
-	      double hvj = hv_dof_old[j];
+	      double hj = h_dof_lstage[j];
+	      double huj = hu_dof_lstage[j];
+	      double hvj = hv_dof_lstage[j];
 
 	      // regularization of 1/hj
 	      double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2));
@@ -4558,9 +4558,9 @@ namespace proteus
 				       double* h_dof_old_old, 
 				       double* hu_dof_old_old, 
 				       double* hv_dof_old_old, 
-				       double* h_dof_old, 
-				       double* hu_dof_old, 
-				       double* hv_dof_old, 
+				       double* h_dof_lstage, 
+				       double* hu_dof_lstage, 
+				       double* hv_dof_lstage, 
 				       double* b_dof, 
 				       double* h_dof, 
 				       double* hu_dof, 
@@ -4710,9 +4710,9 @@ namespace proteus
 		  ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
 		  ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
 		  //get the solution at time tn (old time). This is needed to compute the CFL
-		  ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_tn);
-		  ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_tn);
-		  ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_tn);
+		  ck.valFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_tn);
+		  ck.valFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_tn);
+		  ck.valFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_tn);
 		  //precalculate test function products with integration weights
 		  for (int j=0;j<nDOF_trial_element;j++)
 		    {
@@ -4756,11 +4756,11 @@ namespace proteus
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
 	  double alphai, alphai_numerator=0, alphai_denominator=0; // smoothness indicator of solution
-	  double hi = h_dof_old[i]; // solution at time tn for the ith DOF
+	  double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    { //loop in j (sparsity pattern)
 	      int j = csrColumnOffsets_DofLoops[offset];
-	      double hj = h_dof_old[j]; // solution at time tn for the jth DOF
+	      double hj = h_dof_lstage[j]; // solution at time tn for the jth DOF
 	      alphai_numerator += (hj-hi);
 	      alphai_denominator += std::abs(hj-hi);
 	    }
@@ -4785,9 +4785,9 @@ namespace proteus
       int ij = 0;
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  double hi = h_dof_old[i];
-	  double hui = hu_dof_old[i];
-	  double hvi = hv_dof_old[i];
+	  double hi = h_dof_lstage[i];
+	  double hui = hu_dof_lstage[i];
+	  double hvi = hv_dof_lstage[i];
 	  // regularization of 1/hi 
 	  double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2));
 
@@ -4799,9 +4799,9 @@ namespace proteus
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
-	      double hj = h_dof_old[j];
-	      double huj = hu_dof_old[j];
-	      double hvj = hv_dof_old[j];
+	      double hj = h_dof_lstage[j];
+	      double huj = hu_dof_lstage[j];
+	      double hvj = hv_dof_lstage[j];
 
 	      // regularization of 1/hj
 	      double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2));
@@ -4895,9 +4895,9 @@ namespace proteus
 				       double* h_dof_old_old, 
 				       double* hu_dof_old_old, 
 				       double* hv_dof_old_old, 
-				       double* h_dof_old, 
-				       double* hu_dof_old, 
-				       double* hv_dof_old, 
+				       double* h_dof_lstage, 
+				       double* hu_dof_lstage, 
+				       double* hv_dof_lstage, 
 				       double* b_dof, 
 				       double* h_dof, 
 				       double* hu_dof, 
@@ -5086,18 +5086,18 @@ namespace proteus
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
 	  double alphai, alphai_numerator=0, alphai_denominator=0; // smoothness indicator of solution
-	  double hi = h_dof_old[i]; // solution at time tn for the ith DOF
-	  double hui = hu_dof_old[i]; 
-	  double hvi = hv_dof_old[i]; 
+	  double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
+	  double hui = hu_dof_lstage[i]; 
+	  double hvi = hv_dof_lstage[i]; 
 	  double Zi = b_dof[i];
 	  double dLii = 0.;
 
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    { //loop in j (sparsity pattern)
 	      int j = csrColumnOffsets_DofLoops[offset];
-	      double hj = h_dof_old[j]; // solution at time tn for the jth DOF
-	      double huj = hu_dof_old[j];
-	      double hvj = hv_dof_old[j];
+	      double hj = h_dof_lstage[j]; // solution at time tn for the jth DOF
+	      double huj = hu_dof_lstage[j];
+	      double hvj = hv_dof_lstage[j];
 	      double Zj = b_dof[j];
 
 	      //////////////////////////////////
@@ -5231,9 +5231,9 @@ namespace proteus
       ij = 0;
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  double hi = h_dof_old[i];
-	  double hui = hu_dof_old[i];
-	  double hvi = hv_dof_old[i];	  
+	  double hi = h_dof_lstage[i];
+	  double hui = hu_dof_lstage[i];
+	  double hvi = hv_dof_lstage[i];	  
 	  double Zi = b_dof[i];
 	  
 	  double ui = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hui;
@@ -5261,9 +5261,9 @@ namespace proteus
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
-	      double hj = h_dof_old[j];
-	      double huj = hu_dof_old[j];
-	      double hvj = hv_dof_old[j];
+	      double hj = h_dof_lstage[j];
+	      double huj = hu_dof_lstage[j];
+	      double hvj = hv_dof_lstage[j];
 	      double Zj = b_dof[j];
 	      double uj = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2))*huj;
 	      double vj = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2))*hvj;
@@ -5381,9 +5381,9 @@ namespace proteus
 							 double* h_dof_old_old, 
 							 double* hu_dof_old_old, 
 							 double* hv_dof_old_old, 
-							 double* h_dof_old, 
-							 double* hu_dof_old, 
-							 double* hv_dof_old, 
+							 double* h_dof_lstage, 
+							 double* hu_dof_lstage, 
+							 double* hv_dof_lstage, 
 							 double* b_dof, 
 							 double* h_dof, 
 							 double* hu_dof, 
@@ -5565,9 +5565,9 @@ namespace proteus
 	      ck.valFromDOF(hu_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hunm1);
 	      ck.valFromDOF(hv_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvnm1);
 	      // get the solution at time tn
-	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
-	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
-	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
+	      ck.valFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
+	      ck.valFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
+	      ck.valFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
 	      // get the galerkin solution
 	      if (USE_EV_BASED_ON_GALERKIN==1)
 		{
@@ -5576,9 +5576,9 @@ namespace proteus
 		  ck.valFromDOF(hv_dof_galerkin,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvG);
 		}
 	      // calculate grad of solution at tn at quadrature points
-	      ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
-	      ck.gradFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
-	      ck.gradFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hvn);
+	      ck.gradFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
+	      ck.gradFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
+	      ck.gradFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hvn);
 	      ck.gradFromDOF(b_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_z);
 	      // calculate cell based CFL
 	      calculateCFL(elementDiameter[eN],
@@ -5666,9 +5666,9 @@ namespace proteus
       register double eta[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  double hin = h_dof_old[i];
+	  double hin = h_dof_lstage[i];
 	  double one_over_hinReg = 2*hin/(hin*hin+std::pow(fmax(hin,hEps),2));
-	  eta[i] = ENTROPY(g,hin,hu_dof_old[i],hv_dof_old[i],one_over_hinReg);
+	  eta[i] = ENTROPY(g,hin,hu_dof_lstage[i],hv_dof_lstage[i],one_over_hinReg);
 	}
       //////////////////////////////////////////////////////////////
       // COMPUTE SMOOTHNESS INDICATOR, dLij and etaMin and etaMax //
@@ -5681,9 +5681,9 @@ namespace proteus
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
 	  double alphai, alphai_numerator=0, alphai_denominator=0; // smoothness indicator of solution
-	  double hi = h_dof_old[i]; // solution at time tn for the ith DOF
-	  double hui = hu_dof_old[i]; 
-	  double hvi = hv_dof_old[i]; 
+	  double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
+	  double hui = hu_dof_lstage[i]; 
+	  double hvi = hv_dof_lstage[i]; 
 	  double Zi = b_dof[i];
 	  double dLii = 0.;
 
@@ -5692,9 +5692,9 @@ namespace proteus
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    { //loop in j (sparsity pattern)
 	      int j = csrColumnOffsets_DofLoops[offset];
-	      double hj = h_dof_old[j]; // solution at time tn for the jth DOF
-	      double huj = hu_dof_old[j];
-	      double hvj = hv_dof_old[j];
+	      double hj = h_dof_lstage[j]; // solution at time tn for the jth DOF
+	      double huj = hu_dof_lstage[j];
+	      double hvj = hv_dof_lstage[j];
 	      double Zj = b_dof[j];
 
 	      //////////////////////////////////
@@ -5823,9 +5823,9 @@ namespace proteus
       ij = 0;
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  double hi = h_dof_old[i];
-	  double hui = hu_dof_old[i];
-	  double hvi = hv_dof_old[i];	  
+	  double hi = h_dof_lstage[i];
+	  double hui = hu_dof_lstage[i];
+	  double hvi = hv_dof_lstage[i];	  
 	  double Zi = b_dof[i];
 	  
 	  double ui = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hui;
@@ -5857,9 +5857,9 @@ namespace proteus
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
-	      double hj = h_dof_old[j];
-	      double huj = hu_dof_old[j];
-	      double hvj = hv_dof_old[j];
+	      double hj = h_dof_lstage[j];
+	      double huj = hu_dof_lstage[j];
+	      double hvj = hv_dof_lstage[j];
 	      double Zj = b_dof[j];
 	      double uj = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2))*huj;
 	      double vj = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2))*hvj;
@@ -6022,9 +6022,9 @@ namespace proteus
 				    double* h_dof_old_old, 
 				    double* hu_dof_old_old, 
 				    double* hv_dof_old_old, 
-				    double* h_dof_old, 
-				    double* hu_dof_old, 
-				    double* hv_dof_old, 
+				    double* h_dof_lstage, 
+				    double* hu_dof_lstage, 
+				    double* hv_dof_lstage, 
 				    double* b_dof, 
 				    double* h_dof, 
 				    double* hu_dof, 
@@ -6176,13 +6176,13 @@ namespace proteus
 	      ck.valFromDOF(hu_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu);
 	      ck.valFromDOF(hv_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv);
 	      // get the solution at time tn
-	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
-	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
-	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
+	      ck.valFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
+	      ck.valFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
+	      ck.valFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
 	      // calculate grad of solution at tn at quadrature points
-	      ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
-	      ck.gradFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
-	      ck.gradFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hvn);
+	      ck.gradFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
+	      ck.gradFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
+	      ck.gradFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hvn);
 	      ck.gradFromDOF(b_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_z);
 	      // calculate cell based CFL
 	      calculateCFL(elementDiameter[eN],
