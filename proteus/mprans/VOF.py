@@ -237,6 +237,8 @@ class RKEV(proteus.TimeIntegration.SSP33):
         """
         allow classes to set various numerical parameters
         """
+        if 'runCFL' in dir(nOptions):
+            self.runCFL = nOptions.runCFL
         flags = ['timeOrder']
         for flag in flags:
             if flag in dir(nOptions):
