@@ -79,6 +79,7 @@ namespace proteus
 				   double* elementDiameter,
 				   int degree_polynomial,
 				   double* u_dof,
+				   double* u_dof_lstage,
 				   double* u_dof_old,
 				   double* u_dof_old_old,
 				   double* velx_tn_dof, 
@@ -527,6 +528,7 @@ namespace proteus
 			   double* elementDiameter,
 			   int degree_polynomial,
 			   double* u_dof,
+			   double* u_dof_lstage,
 			   double* u_dof_old,
 			   double* u_dof_old_old,
 			   double* velx_tn_dof, 
@@ -772,7 +774,7 @@ namespace proteus
 		  // distribute global residual for (lumped) mass matrix 
 
 		  if (LUMPED_MASS_MATRIX==1)
-		    globalResidual[gi] += elementResidual_u[i]*(u_dof[gi]-u_dof_old[gi]); //LUMPING
+		    globalResidual[gi] += elementResidual_u[i]*(u_dof[gi]-u_dof_lstage[gi]); //LUMPING
 		  else
 		    globalResidual[gi] += elementResidual_u[i];
 		  // distribute EntResVector 
@@ -957,7 +959,7 @@ namespace proteus
 		  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 		    {
 		      int j = csrColumnOffsets_DofLoops[offset];
-		      ith_TransportMatrix_times_solution += TransportMatrix[ij]*u_dof_old[j];
+		      ith_TransportMatrix_times_solution += TransportMatrix[ij]*u_dof_lstage[j];
 		      //update ij
 		      ij+=1;
 		    }
@@ -1248,13 +1250,13 @@ namespace proteus
 	      double alphai, alphai_numerator=0, alphai_denominator=0; // smoothness indicator of solution
 	      int num_columns = csrRowIndeces_DofLoops[i+1]-csrRowIndeces_DofLoops[i];
 	      double betaij = 1./(num_columns-1); // weight within smoothness indicator
-	      double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+	      double solni = u_dof_lstage[i]; // solution at time tn for the ith DOF
 	      for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 		{ //loop in j (sparsity pattern)
 		  int j = csrColumnOffsets_DofLoops[offset];
 		  if (ENTROPY_VISCOSITY==1)
 		    MaxEntResi = std::max(MaxEntResi,std::abs(EntResVector[j]));
-		  double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+		  double solnj = u_dof_lstage[j]; // solution at time tn for the jth DOF
 		  alphai_numerator += betaij*(solnj-solni);
 		  alphai_denominator += betaij*std::abs(solnj-solni);
 		}
@@ -1275,7 +1277,7 @@ namespace proteus
 	    {
 	      for (int i=0; i<numDOFs; i++)
 		{
-		  double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+		  double solni = u_dof_lstage[i]; // solution at time tn for the ith DOF
 		  double ith_dissipative_term = 0;
 		  double ith_low_order_dissipative_term = 0;
 		  
@@ -1283,7 +1285,7 @@ namespace proteus
 		  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 		    {
 		      int j = csrColumnOffsets_DofLoops[offset];
-		      double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+		      double solnj = u_dof_lstage[j]; // solution at time tn for the jth DOF
 		      double dLij=0., dCij=0.;
 		      
 		      if (i != j) //NOTE: there is really no need to check for i!=j (see formula for ith_dissipative_term)
@@ -1333,7 +1335,7 @@ namespace proteus
 		{
 		  double vxi = velx_tn_dof[i];
 		  double vyi = vely_tn_dof[i]; // velocity at time tn for the ith DOF
-		  double solni = u_dof_old[i]; // solution at time tn for the ith DOF
+		  double solni = u_dof_lstage[i]; // solution at time tn for the ith DOF
 		  
 		  double ith_flux_term = 0;
 		  double ith_dissipative_term = 0;
@@ -1345,7 +1347,7 @@ namespace proteus
 		      int j = csrColumnOffsets_DofLoops[offset];
 		      double vxj = velx_tn_dof[j];
 		      double vyj = vely_tn_dof[j]; // velocity at time tn for the jth DOF
-		      double solnj = u_dof_old[j]; // solution at time tn for the jth DOF
+		      double solnj = u_dof_lstage[j]; // solution at time tn for the jth DOF
 
 		      double dLij=0., dCij=0.;
 		      ith_flux_term += solnj*(vxj*Cx[ij] + vyj*Cy[ij]);
@@ -1523,10 +1525,10 @@ namespace proteus
 		  ck.gradTrialFromRef(&u_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,u_grad_trial);
 		  //get the solution
 		  ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u);
-		  ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u_old);
+		  ck.valFromDOF(u_dof_lstage,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],u_old);
 		  //get the solution gradients
 		  ck.gradFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u);
-		  ck.gradFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u_old);
+		  ck.gradFromDOF(u_dof_lstage,&u_l2g[eN_nDOF_trial_element],u_grad_trial,grad_u_old);
 		  //precalculate test function products with integration weights
 		  for (int j=0;j<nDOF_trial_element;j++)
 		    {

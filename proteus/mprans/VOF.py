@@ -925,7 +925,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.mesh.nodeVelocityArray==None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
     def FCTStep(self):
-
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         self.vof.FCTStep(self.timeIntegration.dt, 
                          self.nnz, #number of non zero entries 
@@ -1156,7 +1155,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             pass
         #mwf debug
         #import pdb
-        #pdb.set_trace()
+        #pdb.set_trace()        
         self.vof.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1196,6 +1195,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].dof,
             #mwf need another argument for u_dof_old to represent u^n
             self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage], #u last stage and u^n right now
+            self.coefficients.u_dof_old,
             self.coefficients.u_dof_old_old,
             self.coefficients.velx_tn_dof, 
             self.coefficients.vely_tn_dof, # HACKED TO 2D FOR NOW (MQL)
