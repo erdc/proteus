@@ -898,9 +898,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           self.nnz, #number of non zero entries 
                           len(rowptr)-1, #number of DOFs
                           self.ML, #Lumped mass matrix
-                          self.h_dof_old, #soln
-                          self.hu_dof_old,
-                          self.hv_dof_old,
+                          self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage], #hn
+                          self.timeIntegration.u_dof_stage[1][self.timeIntegration.lstage], #hun
+                          self.timeIntegration.u_dof_stage[2][self.timeIntegration.lstage], #hvn
                           self.coefficients.b.dof,
                           self.timeIntegration.u[hIndex],
                           self.timeIntegration.u[huIndex],
