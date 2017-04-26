@@ -69,7 +69,8 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         self.pivot = np.zeros(3)
         self.last_pivot = np.zeros(3)
         self.init_barycenter = self.Shape.barycenter.copy()
-        
+        self.InputMotion = False
+
         # variables for checking numerical method
         self.ux = 0.0
         self.uy = 0.0
@@ -284,18 +285,15 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             ay0 = (Fy - Cy*vy0 - Ky*uy0) / mass                        # y-axis acceleration
             az0 = (Fz - Cz*vz0 - Kz*uz0) / mass                        # z-axis acceleration
             # solving numerical scheme
-            for ii in range(self.substeps):
-                ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0, dt=dt_sub, substeps=self.substeps, F=Fx, K=Kx, C=Cx, m=mass, velCheck=False)
-                uy, vy, ay = runge_kutta(u0=uy0, v0=vy0, a0=ay0, dt=dt_sub, substeps=self.substeps, F=Fy, K=Ky, C=Cy, m=mass, velCheck=False)
-                uz, vz, az = runge_kutta(u0=uz0, v0=vz0, a0=az0, dt=dt_sub, substeps=self.substeps, F=Fz, K=Kz, C=Cz, m=mass, velCheck=False)
+            ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0, dt=dt_sub, substeps=self.substeps, F=Fx, K=Kx, C=Cx, m=mass, velCheck=False)
+            uy, vy, ay = runge_kutta(u0=uy0, v0=vy0, a0=ay0, dt=dt_sub, substeps=self.substeps, F=Fy, K=Ky, C=Cy, m=mass, velCheck=False)
+            uz, vz, az = runge_kutta(u0=uz0, v0=vz0, a0=az0, dt=dt_sub, substeps=self.substeps, F=Fz, K=Kz, C=Cz, m=mass, velCheck=False)
             # used for storing values of displacements through timesteps
             self.ux = ux
             self.uy = uy
             self.uz = uz
             # final values
-            self.h[:] = np.array([self.ux - (self.last_position[0] - self.init_barycenter[0]),
-                                  self.uy - (self.last_position[1] - self.init_barycenter[1]),
-                                  self.uz - (self.last_position[2] - self.init_barycenter[2])])
+            self.h[:] = np.array([self.ux - ux0, self.uy - uy0, self.uz - uz0])
             self.velocity = np.array([vx, vy, vz])
             self.acceleration = np.array([ax, ay, az])       
                         
@@ -344,23 +342,36 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             
         return self.ang_disp
 
-
-    def setSprings(self, springs, K=[0.0, 0.0, 0.0, 0.0], C=[0.0, 0.0, 0.0, 0.0]):
+    def setSprings(self, springs, Kx, Ky, Krot, Cx, Cy, Crot, Kz=0.0, Cz=0.0 ):
         """
         Sets a system of uniform springs to model soil's reactions (for moving bodies)
-
         Parameters
         ----------
         spring: string
             If True, spring module is switched on.
-        K: list
-            1st, 2nd, 3rd, 4th are rispectively the x, y, z and rotational stiffness
-        C: float
-            1st, 2nd, 3rd, 4th are rispectively the x, y, z and rotational damping parameter
+        Kx: float
+            horizontal stiffness
+        Ky: float
+            vertical stiffness
+        Krot: float
+            rotational stiffness
+        Cx: float
+            horizontal damping parameter
+        Cy: float
+            vertical damping parameter
+        Crot: float
+            rotational damping parameter
         """
         self.springs = springs
-        self.Kx, self.Ky, self.Kz, self.Krot = K
-        self.Cx, self.Cy, self.Cz, self.Crot = C
+        self.Kx = Kx
+        self.Ky = Ky
+        self.Kz = Kz
+        self.Krot = Krot
+        self.Cx = Cx
+        self.Cy = Cy
+        self.Cz = Cz
+        self.Crot = Crot
+
 
 
     def setPivot(self, pivot=None):
@@ -742,6 +753,8 @@ class CaissonBody(RigidBody):
         # friciton module parameter used for switching to dynamic motion cases
         self.sliding = False
         self.sliding_last = False
+        self.friction = False
+        self.overturning = False
         # friction and overturning parameters to be initialised
         self.pivot_friction = np.zeros(3)
         self.last_pivot_friction = np.zeros(3)
@@ -1055,10 +1068,9 @@ class CaissonBody(RigidBody):
             # solving numerical scheme
             ay0 = (Fv - Cy*vy0 - Ky*uy0) / mass
             if self.scheme == 'Runge_Kutta':
-                for ii in range(substeps):
-                    uy, vy, ay = runge_kutta(u0=uy0, v0=vy0, a0=ay0,
-                                             dt=dt_sub, substeps=substeps,
-                                             F=Fv, K=Ky, C=Cy, m=mass, velCheck=False)
+                uy, vy, ay = runge_kutta(u0=uy0, v0=vy0, a0=ay0,
+                                         dt=dt_sub, substeps=substeps,
+                                         F=Fv, K=Ky, C=Cy, m=mass, velCheck=False)
             
             # Frictional force            
             PL=0.0
@@ -1093,14 +1105,13 @@ class CaissonBody(RigidBody):
                 Fh=Fx
                 self.sliding=False
 
-            # initial condition acceleration 
-	    # solving numerical scheme
-	    ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass 
+            # initial condition acceleration
+            # solving numerical scheme
+            ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass 
             if self.scheme == 'Runge_Kutta':
-                for ii in range(substeps):
-                    ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0,
-                                             dt=dt_sub, substeps=substeps,
-                                             F=Fh, K=Kx, C=Cx, m=mass, velCheck=True)
+                ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0,
+                                         dt=dt_sub, substeps=substeps,
+                                         F=Fh, K=Kx, C=Cx, m=mass, velCheck=True)
                     
 	        
             # When horizontal velocity changes sign, 0-condition is passed
@@ -1351,19 +1362,16 @@ class CaissonBody(RigidBody):
         
 
 
-class paddleBody(RigidBody):
+class PaddleBody(RigidBody):
     """
     Sub-class to create a PADDLE rigid body.
     """
 
     def __init__(self, shape, substeps):
-        super(paddleBody, self).__init__(shape, substeps)
+        super(PaddleBody, self).__init__(shape, substeps)
         self.pivot = np.zeros(3)
         self.last_pivot = np.zeros(3)
-        self.Shape.barycenter = np.array([(self.Shape.vertices[0][0]+self.Shape.vertices[1][0])*0.5,
-                                           0.0,
-                                           0.0],
-                                        )
+        self.barycenter = self.Shape.barycenter #= np.array([(self.Shape.vertices[0][0]+self.Shape.vertices[1][0])*0.5, 0.0,0.0] )
         self.init_barycenter = self.Shape.barycenter.copy()
         # variables for checking numerical method
         self.ux = 0.0
@@ -1400,7 +1408,6 @@ class paddleBody(RigidBody):
                                  (self.Shape.vertices[3][0], self.Shape.vertices[3][1])])
 
 
-
     def _store_last_values(self):
         # store previous values
         self.last_position[:] = self.position
@@ -1420,10 +1427,68 @@ class paddleBody(RigidBody):
         self.last_uy = self.uy
 
 
+    def inputMotion(self, At, Tt, Ar, Tr,
+                          InputMotion=False, pivot=None ):
+        """
+        Sets motion as an input. It's imposed rather than calculated.
+
+        Parameters
+        ----------
+        At: list, like [0.,0.,0.]
+            Amplitude of translational motion
+        Tt: list
+            Period of translational motion
+        Ar: list
+            Amplitude of rotational motion
+        Tr: list
+            Period of rotational motion
+        InputMotion: bool
+            If True, motion as input is applied.
+        pivot: list
+            Centre of rotation. If only translation, write barycenter's coordinates
+	    """     
+        self.InputMotion = InputMotion
+        if pivot == None:
+            self.pivot = self.Shape.barycenter
+        else:
+            self.pivot = np.array(pivot)
+        self.At = np.array(At)
+        self.Tt = np.array(Tt)
+        self.Ar = np.array(Ar)
+        self.Tr = np.array(Tr)
+        
+
+    def imposeSinusoidalMotion(self):
+        """
+        Motion is imposed rather than calculated.
+	    """   
+        
+        t = self.model.stepController.t_model_last
+        Tra = np.array([0.,0.,0.])
+        Rot = np.array([0.,0.,0.])
+        for ii in [0,1,2]:
+            At, Tt = self.At[ii], self.Tt[ii]
+            Ar, Tr = self.Ar[ii], self.Tr[ii]
+            if Tt == 0.0:
+                Wt = 0.0
+            else:
+                Wt = 2.*3.14/Tt
+
+            if Tr == 0.0:
+                Wr = 0.0
+            else:
+                Wr = 2.*3.14/Tr
+            Dt = At*sin(Wt*t)
+            Dr = Ar*sin(Wr*t)            
+        # motion update
+            Tra[ii] = Dt - (self.last_position[ii] - self.init_barycenter[ii])
+            Rot[ii] = Dr - (self.last_rotation_euler[ii])
+        return Tra, Rot
+
+
     def step(self, dt, substeps=20):
         """
         Step for rigid body calculations in Python
-
         Parameters
         ----------
         dt: float
@@ -1433,8 +1498,17 @@ class paddleBody(RigidBody):
         # reinitialise displacement values
         self.ang_disp[:] = np.zeros(3)
         self.h[:] = np.zeros(3)
-        # check if motion is imposed or calculated
-        self.imposeMotion(dt)
+
+        # Calculate or impose motion of the rigid body
+        if self.InputMotion == True:
+            # sinusoidal motion imposed
+            self.h[:], self.ang_disp[:] = self.imposeSinusoidalMotion()
+        else:
+            # Translational motion calculation
+            h = self.getDisplacement(dt)
+            # Rotational motion calculation
+            ang_disp = self.getAngularDisplacement(dt)
+
         # translate
         self.Shape.translate(self.h[:nd])
         # rotate
@@ -1454,41 +1528,12 @@ class paddleBody(RigidBody):
         self.position[:] = self.Shape.barycenter
 
         # update vertices for friction and overturning modules
-        self.cV[0] = self.cV_init[0]
-        self.cV[1] = self.cV_init[1]
+        self.cV[0] = self.Shape.vertices[0]
+        self.cV[1] = self.Shape.vertices[1]
         self.cV[2] = self.Shape.vertices[2]
         self.cV[3] = self.Shape.vertices[3]
 
 
-    def inputMotion(self, InputMotion, pivot):
-        """
-        Sets motion as an input. It's imposed rather than calculated.
-
-        Parameters
-        ----------
-        InputMotion: bool
-            If True motion as input is applied.
-        pivot: arrat.
-            Centre of rotation.
-	"""     
-        self.InputMotion = InputMotion
-        self.pivot = pivot
-
-
-    def imposeMotion(self,dt):
-        """
-        Motion is imposed rather than calculated.
-
-	"""   
-        a=0.35     # rad
-        T=2.0        # sec
-        w=6.28/T     # Hz
-        t = self.model.stepController.t_model_last
-        phiz=a*sin(w*t)  
-        drot=phiz-self.last_rotation_euler[2]
-        # motion update
-        self.h[:]=np.array([0.,0.,0.])
-        self.ang_disp[:]=np.array([0.,0.,drot])
 
 
 def forward_euler(p0, v0, a, dt):
