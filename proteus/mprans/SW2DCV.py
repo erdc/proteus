@@ -82,8 +82,17 @@ class RKEV(proteus.TimeIntegration.SSP33):
 
     ... more to come ...
     """
-    def __init__(self, transport, timeOrder=1, runCFL=0.1):
-        TimeIntegration.SSP33.__init__(self, transport,runCFL=runCFL)
+    def __init__(self, transport, timeOrder=1, runCFL=0.1, integrateInterpolationPoints=False):
+        BackwardEuler.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
+        self.runCFL=runCFL
+        self.dtLast=None
+        self.dtRatioMax = 2.0
+        self.isAdaptive=True
+        # About the cfl 
+        assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
+        self.edge_based_cfl = transport.edge_based_cfl
+        self.cell_based_cfl = transport.q[('cfl',0)]
+        # Stuff particular for SSP33
         self.timeOrder = timeOrder  #order of approximation
         self.nStages = timeOrder  #number of stages total
         self.lstage = 0  #last stage completed
@@ -113,17 +122,16 @@ class RKEV(proteus.TimeIntegration.SSP33):
     #    self.dt = DTSET #  don't update t
     def choose_dt(self):
         maxCFL = 1.0e-6
-        for ci in range(self.nc):
-            if self.cfl.has_key(ci):
-                maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
+        maxCFL = max(maxCFL,globalMax(self.edge_based_cfl.max()))
+        #maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max()))
         self.dt = self.runCFL/maxCFL
         if self.dtLast == None:
             self.dtLast = self.dt
-        # mwf debug
-        print "RKEv max cfl component ci dt dtLast {0} {1} {2} {3}".format(maxCFL,ci,self.dt,self.dtLast)
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
+        # mwf debug
+        #print "RKEv max cfl component ci dt dtLast {0} {1} {2} {3}".format(maxCFL,ci,self.dt,self.dtLast)
         self.substeps = [self.t for i in range(self.nStages)] #Manuel is ignoring different time step levels for now
     def initialize_dt(self,t0,tOut,q):
         """
@@ -148,11 +156,6 @@ class RKEV(proteus.TimeIntegration.SSP33):
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        assert 'FCTStep' in dir(self.transport)
-        assert 'FCT' in dir(self.transport.coefficients) #mwf put FCT switch inside FCTStep method?
-        for ci in range(self.nc):
-            if self.transport.coefficients.FCT == 1:
-                self.transport.FCTStep()
         self.lstage += 1
         assert self.timeOrder in [1,3]
         assert self.lstage > 0 and self.lstage <= self.timeOrder
@@ -167,7 +170,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.m_last[ci] = numpy.copy(self.transport.q[('m',ci)])
 
             elif self.lstage == 2:
-                 for ci in range(self.nc):
+                for ci in range(self.nc):
                     self.u_dof_stage[ci][self.lstage][:] = numpy.copy(self.transport.u[ci].dof) 
                     self.u_dof_stage[ci][self.lstage] *= 1./4.
                     self.u_dof_stage[ci][self.lstage] += 3./4.*self.u_dof_last[ci]
@@ -200,9 +203,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
             for ci in range(self.nc):
                 self.m_stage[ci][self.lstage][:]=self.transport.q[('m',ci)][:]
                 self.u_dof_stage[ci][self.lstage][:] = self.transport.u[ci].dof[:]
-                
-            
-
+                            
     def initializeTimeHistory(self,resetFromDOF=True):
         """
         Push necessary information into time history arrays
