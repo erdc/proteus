@@ -994,6 +994,7 @@ namespace proteus
 			ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
 			ebN_local_kb_nSpace = ebN_local_kb*nSpace;		      
 		      register double
+			u_ext=0.0,
 			flux_ext=0.0,
 			bc_u_ext=0.0,
 			jac_ext[nSpace*nSpace],
@@ -1044,8 +1045,17 @@ namespace proteus
 			flux_ext = bc_u_ext*flow;
 		      else 
 			flux_ext = 0;
+		      
+		      ck.valFromDOF(u_dof,&u_l2g[eN_nDOF_trial_element],&u_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+		      ebqe_flux[ebNE_kb] = flux_ext;
+		      //save for other models? cek need to be consistent with numerical flux
+		      if(flux_ext >=0.0)
+			ebqe_u[ebNE_kb] = u_ext;
+		      else
+			ebqe_u[ebNE_kb] = bc_u_ext;
+
 		      for (int i=0;i<nDOF_test_element;i++)
-			elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]); 
+			elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_ext,u_test_dS[i]); 		    
 		    }//kb
 		  // Distribute
 		  for (int i=0;i<nDOF_test_element;i++)
@@ -1658,8 +1668,8 @@ namespace proteus
 		      elementResidual_u[i] += 
 			dt*ck.Mass_weak(m_t,u_test_dV[i]) + 
 			dt*ck.Advection_weak(f_star,&u_grad_test_dV[i_nSpace]) + 
-			dt*(ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridError(subgridError_u,Lstar_u[i]) + 		   
-			dt*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u_star,&u_grad_test_dV[i_nSpace]);
+			dt*(ENTROPY_VISCOSITY==1 ? 0. : 1.)*ck.SubgridError(subgridError_u,Lstar_u[i]) + 
+			dt*ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u_star,&u_grad_test_dV[i_nSpace]); 
 		    }//i
 		  //
 		  //cek/ido todo, get rid of m, since u=m
