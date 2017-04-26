@@ -194,10 +194,12 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.m_last[ci] = numpy.copy(self.m_last_save[ci])
                     tmp_dof_stage = self.u_dof_stage[ci][self.lstage].copy()
                     self.u_dof_stage[ci][self.lstage][:] = self.u_dof_last[ci]
-                    self.transport.getResidual(tmp_dof_stage,
-                                               self.transport.globalResidualDummy)
+                    #globalResidualDummy = numpy.zeros(self.u.shape,'d')
+                    #self.transport.getResidual(tmp_dof_stage,
+                    #                           globalResidualDummy)
                     self.u_dof_stage[ci][self.lstage][:] = tmp_dof_stage
-                    
+                    #self.setUnkowns(self.u)
+
         else:
             assert self.timeOrder == 1
             for ci in range(self.nc):
@@ -1194,9 +1196,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.h_dof_old_old,
             self.hu_dof_old_old,
             self.hv_dof_old_old,
-            self.h_dof_old,
-            self.hu_dof_old,
-            self.hv_dof_old,
+            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage],
+            self.timeIntegration.u_dof_stage[1][self.timeIntegration.lstage],
+            self.timeIntegration.u_dof_stage[2][self.timeIntegration.lstage],
+            #self.h_dof_old,
+            #self.hu_dof_old,
+            #self.hv_dof_old,
             self.coefficients.b.dof,
             self.u[0].dof,
             self.u[1].dof,
