@@ -767,7 +767,7 @@ class Rectangle(Shape):
                         self.BC['y+'],
                         self.BC['x-']]
         # self.BC = BCContainer(self.BC_dict)
-        self.It = L**2+H**2/12
+        self.It = (L**2+H**2)/12
 
     def setDimensions(self, dim):
         """
@@ -832,6 +832,12 @@ class Circle(Shape):
         seg_last=[nVertices-1,0]
         segm.append(seg_last,)
         self.segments=np.array(segm)
+        
+        # facets
+        facets=[]
+        for kkk in range(nVertices):
+            facets.append(kkk)
+        self.facets=np.array([[facets]])
 
         # barycenter, orientations, region
         if barycenter is not None:
@@ -852,6 +858,7 @@ class Circle(Shape):
                 segmFlag.append(bt['circle'],)
         self.vertexFlags = np.array(vertFlag)
         self.segmentFlags = np.array(segmFlag)
+        self.facetFlags=np.array([1])
         self.regionFlags = np.array([1])
 
         # boundary list
