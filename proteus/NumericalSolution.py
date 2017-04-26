@@ -839,118 +839,11 @@ class NS_base:  # (HasTraits):
                                 #TODO: model.stepController.substeps doesn't seem to be updated after a solver failure unless model.stepController.stepExact is true
                                 logEvent("Model substep t=%12.5e for model %s model.timeIntegration.t= %12.5e" % (self.tSubstep,model.name,model.levelModelList[-1].timeIntegration.t),level=3)
 
-                                #HACKED SSP IMPLEMENTATION (MQL)#
-                                # SOME THINGS USEFUL TO KNOW:
-                                # model.uList[0] DOFs for Newton's method
-                                # model.levelModelList[0] is the OneLevelModel based on VOF.py
-                                # model.levelModelList[0].q[('u',0)] is the solution at quad points (or 'm')
-                                # model.levelModelList[0].u[0].dof are the DOFs of the solution at new time
-                                # model.levelModelList[0].coefficients.u_dof_old are the old DOFs
-                                # model.levelModelList[0].timeIntegration.alpha_bdf = 1/dt
-                                # model.levelModelList[0].timeIntegration.beta_bdf[0] = -1/dt*unm1 (at quad points)
-                                # model.levelModelList[0].timeIntegration.m_last[0] = unm1 (used to update beta within getResidual in VOF.py)
-                                ###################
-                                ### FIRST STAGE ###
-                                ###################
-                                logEvent("FIRST hacked STAGE of SSP33",level=3)
-                                #save DOFs from previous time step
-                                
-                                #if (model.levelModelList[0].timeIntegration is not None and  
-                                 #   model.levelModelList[0].timeIntegration.use_SSP33): 
-                                if (False):
-                                    #unm1 = numpy.copy(model.levelModelList[0].coefficients.u_dof_old)
-                                    #unm1 = numpy.copy(model.uList[0]) 
-                                    hnm1 = numpy.copy(model.levelModelList[0].h_dof_old)
-                                    hunm1 = numpy.copy(model.levelModelList[0].hu_dof_old)
-                                    hvnm1 = numpy.copy(model.levelModelList[0].hv_dof_old)
-                                    #unm1_quad = numpy.copy(model.levelModelList[0].timeIntegration.m_last[0]) #assuming porosity=1
-                                #update BETA. timeIntegration.m_last[0] = unm1 at quad points. 
-                                #solve forward euler for current stage
-                                #model.stepController.setInitialGuess(model.uList,model.rList) #TMP: uncomment
+                                model.stepController.setInitialGuess(model.uList,model.rList) 
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
-                                #if (model.levelModelList[0].timeIntegration is not None and  
-                                 #   model.levelModelList[0].timeIntegration.use_SSP33):
-                                if (False): #NOTE: I USE FORWARD EULER WHILE DEVELOPING SPATIAL DISCRETIZATIONS
-                                    #get stage 1 solution
-                                    hStage1 = numpy.copy(model.levelModelList[0].h_dof)
-                                    huStage1 = numpy.copy(model.levelModelList[0].hu_dof)
-                                    hvStage1 = numpy.copy(model.levelModelList[0].hv_dof)
-                                    ####################
-                                    ### SECOND STAGE ###
-                                    ####################
-                                    logEvent("SECOND hacked STAGE of SSP33",level=3)
-                                    #overwrite initial guess for Newtons Method
-                                    #model.uList[0] = numpy.copy(uStage1) #not necessary
-                                    #set input for second stage. INPUT: solution from first stage
-                                    model.levelModelList[0].h_dof_old = numpy.copy(hStage1)
-                                    model.levelModelList[0].hu_dof_old = numpy.copy(huStage1)
-                                    model.levelModelList[0].hv_dof_old = numpy.copy(hvStage1)
-                                    # to update BETA. timeIntegration.m_last[0] = uStage1 at quad points
-                                    #model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[0].q[('m',0)])
-                                    #solve forward euler for current stage
-                                    #model.stepController.setInitialGuess(model.uList,model.rList)
-                                    solverFailed = model.solver.solveMultilevel(uList=model.uList,
-                                                                                rList=model.rList,
-                                                                                par_uList=model.par_uList,
-                                                                                par_rList=model.par_rList)
-                                    #get stage 2 solution
-                                    hStage2 = numpy.copy(model.levelModelList[0].h_dof)
-                                    hStage2 *= 1./4
-                                    hStage2 += 3./4*hnm1
-                                    huStage2 = numpy.copy(model.levelModelList[0].hu_dof)
-                                    huStage2 *= 1./4
-                                    huStage2 += 3./4*hunm1
-                                    hvStage2 = numpy.copy(model.levelModelList[0].hv_dof)
-                                    hvStage2 *= 1./4
-                                    hvStage2 += 3./4*hvnm1
-                                    ###################
-                                    ### THIRD STAGE ###
-                                    ###################
-                                    logEvent("THIRD hacked STAGE of SSP33",level=3)
-                                    #overwrite initial guess for Newtons Method
-                                    #model.uList[0] = numpy.copy(uStage2) #not necessary
-                                    #set input for third stage. INPUT: solution from second stage
-                                    model.levelModelList[0].h_dof_old = numpy.copy(hStage2)
-                                    model.levelModelList[0].hu_dof_old = numpy.copy(huStage2)
-                                    model.levelModelList[0].hv_dof_old = numpy.copy(hvStage2)
-                                    # to update BETA. timeIntegration.m_last[0] = uStage 2 at quad points
-                                    #model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(model.levelModelList[0].q[('m',0)])
-                                    #model.levelModelList[0].timeIntegration.m_last[0] *= 1./4
-                                    #model.levelModelList[0].timeIntegration.m_last[0] += 3./4*unm1_quad
-                                    #solve forward euler for current stage
-                                    #model.stepController.setInitialGuess(model.uList,model.rList)
-                                    solverFailed = model.solver.solveMultilevel(uList=model.uList,
-                                                                                rList=model.rList,
-                                                                                par_uList=model.par_uList,
-                                                                                par_rList=model.par_rList)
-                                    #get stage 3 solution
-                                    hStage3 = numpy.copy(model.levelModelList[0].h_dof)
-                                    hStage3 *= 2./3
-                                    hStage3 += 1./3*hnm1
-                                    huStage3 = numpy.copy(model.levelModelList[0].hu_dof)
-                                    huStage3 *= 2./3
-                                    huStage3 += 1./3*hunm1
-                                    hvStage3 = numpy.copy(model.levelModelList[0].hv_dof)
-                                    hvStage3 *= 2./3
-                                    hvStage3 += 1./3*hvnm1
-                                    # restore solution at previous time step
-                                    model.levelModelList[0].h_dof_old = numpy.copy(hnm1)
-                                    model.levelModelList[0].hu_dof_old = numpy.copy(hunm1)
-                                    model.levelModelList[0].hv_dof_old = numpy.copy(hvnm1)
-                                    # get solution at next time step 
-                                    model.levelModelList[0].u[0].dof = numpy.copy(hStage3)
-                                    model.levelModelList[0].u[1].dof = numpy.copy(huStage3)
-                                    model.levelModelList[0].u[2].dof = numpy.copy(hvStage3)
-
-                                    # to update BETA. timeIntegration.m_last[0] = unm1 at quad points
-                                    #model.levelModelList[0].timeIntegration.m_last[0] = numpy.copy(unm1_quad)
-                                    # update residual and q_u, q_m 
-                                    #model.levelModelList[0].getResidual(numpy.copy(uStage3),
-                                    #                                   model.levelModelList[0].globalResidualDummy)
-                                # FINISHED hacked SSP33 implementation (MQL)
                                 Profiling.memory("solver.solveMultilevel")
                                 if self.opts.wait:
                                     raw_input("Hit any key to continue")
