@@ -50,9 +50,9 @@ namespace proteus
 			 int NNZ, //number on non-zero entries on sparsity pattern
 			 int numDOFs, //number of DOFs
 			 double* lumped_mass_matrix, //lumped mass matrix (as vector)
-			 double* hn, //DOFs of solution at time tn
-			 double* hun, 
-			 double* hvn, 
+			 double* h_lstage, //DOFs of solution at last stage
+			 double* hu_lstage, 
+			 double* hv_lstage, 
 			 double* b_dof,
 			 double* high_order_hnp1, //DOFs of high order solution at tnp1
 			 double* high_order_hunp1, 
@@ -2620,9 +2620,9 @@ namespace proteus
 		 int NNZ, //number on non-zero entries on sparsity pattern
 		 int numDOFs, //number of DOFs
 		 double* lumped_mass_matrix, //lumped mass matrix (as vector))
-		 double* hn, //DOFs of solution at time tn
-		 double* hun, 
-		 double* hvn,
+		 double* h_lstage, //DOFs of solution at last stage
+		 double* hu_lstage, 
+		 double* hv_lstage,
 		 double* b_dof,
 		 double* high_order_hnp1, //DOFs of high order solution at tnp1
 		 double* high_order_hunp1, 
@@ -2650,7 +2650,7 @@ namespace proteus
 	{
 	  //read some vectors 
 	  double high_order_hnp1i  = high_order_hnp1[i];
-	  double hni = hn[i];
+	  double hni = h_lstage[i];
 	  double Zi = b_dof[i];
 	  double mi = lumped_mass_matrix[i];
 
@@ -2661,7 +2661,7 @@ namespace proteus
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
 	      // read some vectors
-	      double hnj = hn[j];
+	      double hnj = h_lstage[j];
 	      double Zj = b_dof[j];
 
 	      // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
@@ -2670,7 +2670,7 @@ namespace proteus
 	      
 	      // i-th row of flux correction matrix 
 	      double ML_minus_MC = (i==j ? 1. : 0.)*mi - MassMatrix[ij];
-	      double FluxCorrectionMatrix1 = ML_minus_MC*(high_order_hnp1[j]-hn[j] - (high_order_hnp1i-hni)) 
+	      double FluxCorrectionMatrix1 = ML_minus_MC*(high_order_hnp1[j]-hnj - (high_order_hnp1i-hni)) 
 		+ dt*dEV_minus_dL[ij]*(hStarji-hStarij);
 
 	      // COMPUTE P VECTORS //
@@ -2709,9 +2709,9 @@ namespace proteus
 	  double high_order_hnp1i  = high_order_hnp1[i];
 	  double high_order_hunp1i = high_order_hunp1[i];
 	  double high_order_hvnp1i = high_order_hvnp1[i];
-	  double hni = hn[i];
-	  double huni = hun[i];
-	  double hvni = hvn[i];
+	  double hni = h_lstage[i];
+	  double huni = hu_lstage[i];
+	  double hvni = hv_lstage[i];
 	  double Zi = b_dof[i];
 	  double mi = lumped_mass_matrix[i];
 
@@ -2724,9 +2724,9 @@ namespace proteus
 	    {
 	      int j = csrColumnOffsets_DofLoops[offset];
 	      // read some vectors
-	      double hnj = hn[j];
-	      double hunj = hun[j];
-	      double hvnj = hvn[j];
+	      double hnj = h_lstage[j];
+	      double hunj = hu_lstage[j];
+	      double hvnj = hv_lstage[j];
 	      double Zj = b_dof[j];
 
 	      // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
@@ -2740,13 +2740,13 @@ namespace proteus
 
 	      // COMPUTE FLUX CORRECTION MATRICES
 	      double ML_minus_MC = (i==j ? 1. : 0.)*mi - MassMatrix[ij];
-	      double FluxCorrectionMatrix1 = ML_minus_MC*(high_order_hnp1[j]-hn[j] - (high_order_hnp1i-hni)) 
+	      double FluxCorrectionMatrix1 = ML_minus_MC*(high_order_hnp1[j]-hnj - (high_order_hnp1i-hni)) 
 		+ dt*dEV_minus_dL[ij]*(hStarji-hStarij);
 
-	      double FluxCorrectionMatrix2 = ML_minus_MC*(high_order_hunp1[j]-hun[j] - (high_order_hunp1i-huni)) 
+	      double FluxCorrectionMatrix2 = ML_minus_MC*(high_order_hunp1[j]-hunj - (high_order_hunp1i-huni)) 
 		+ dt*dEV_minus_dL[ij]*(huStarji-huStarij);
 
-	      double FluxCorrectionMatrix3 = ML_minus_MC*(high_order_hvnp1[j]-hvn[j] - (high_order_hvnp1i-hvni)) 
+	      double FluxCorrectionMatrix3 = ML_minus_MC*(high_order_hvnp1[j]-hvnj - (high_order_hvnp1i-hvni)) 
 		+ dt*dEV_minus_dL[ij]*(hvStarji-hvStarij);
 
 	      // compute limiter based on water height
