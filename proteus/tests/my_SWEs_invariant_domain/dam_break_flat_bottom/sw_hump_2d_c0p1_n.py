@@ -10,11 +10,21 @@ runCFL=0.75
 #use_second_order_NonFlatB_GP_stabilization=True
 #use_EV_stabilization = True
 use_second_order_NonFlatB_with_EV_stabilization=True
+#timeIntegration_sw2d = "SSP33"
+timeIntegration_sw2d = "FE"
 
 #timeIntegration = SSP33
 #timeIntegration = BackwardEuler_cfl
-timeIntegration = EdgeBased_ForwardEuler
+#timeIntegration = EdgeBased_ForwardEuler
+timeIntegration = SW2DCV.RKEV 
 stepController = Min_dt_controller
+if timeIntegration_sw2d == "SSP33": #mwf hack
+    timeOrder = 3
+    nStagesTime = 3
+else:
+    timeOrder = 1
+    nStagesTime = 1
+
 rtol_u[0] = 1.0e-4
 rtol_u[1] = 1.0e-4
 rtol_u[2] = 1.0e-4
