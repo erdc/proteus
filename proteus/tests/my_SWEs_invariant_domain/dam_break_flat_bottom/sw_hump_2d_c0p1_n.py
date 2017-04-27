@@ -2,7 +2,7 @@ from proteus import *
 from proteus.default_n import *
 from sw_hump_2d_p import *
 
-refinement=4
+refinement=3
 runCFL=0.75
 #use_EV_stabilization=True
 #use_first_order_flatB_GP_stabilization=True
@@ -10,8 +10,8 @@ runCFL=0.75
 #use_second_order_NonFlatB_GP_stabilization=True
 #use_EV_stabilization = True
 use_second_order_NonFlatB_with_EV_stabilization=True
-#timeIntegration_sw2d = "SSP33"
-timeIntegration_sw2d = "FE"
+timeIntegration_sw2d = "SSP33"
+#timeIntegration_sw2d = "FE"
 
 #timeIntegration = SSP33
 #timeIntegration = BackwardEuler_cfl

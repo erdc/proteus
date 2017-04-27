@@ -640,11 +640,14 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
 
         self.computeResidual(u,r,b)
         u[:] = r
-        self.F.setUnknowns(u)
-        
+        self.computeResidual(u,r,b)
+
+        #self.F.setUnknowns(u)        
         # Get values at quad points (in case there is a need to do convergence tests)
-        for ci in range(self.F.nc):
-            self.F.u[ci].getValues(self.F.q[('w',0)],self.F.q[('u',ci)])
+        #for ci in range(self.F.nc):
+        #    self.F.u[ci].getValues(self.F.q[('w',0)],self.F.q[('u',ci)])
+
+        self.F.check_positivity_water_height=True
 
         # To Fix round off error
         #if (FIX_ROUNDOFF_ERROR):
@@ -756,64 +759,15 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         self.F.FCTStep()
         
         # DISTRIBUTE SOLUTION FROM u to u[ci].dof
-        self.F.setUnknowns(u)
-        
+        self.computeResidual(u,r,b)
+
+        #self.F.setUnknowns(u)        
         # Get values at quad points (in case there is a need to do convergence tests)
         #for ci in range(self.F.nc):
         #    self.F.u[ci].getValues(self.F.q[('w',0)],self.F.q[('u',ci)])
-        self.computeResidual(u,r,b)
+
         self.F.check_positivity_water_height=True
 
-        # To Fix round off error
-        #if (FIX_ROUNDOFF_ERROR):
-        #    index = range(0,len(u))
-        #    hIndex = index[0::3]
-        #    huIndex = index[1::3]
-        #    hvIndex = index[2::3]
-            # Fix the water height 
-        #    u[hIndex] = np.maximum(u[hIndex], 0.)
-        # Fix the momentum
-        #    aux = np.maximum(u[hIndex],self.F.hEps)
-        #    u[huIndex] = u[huIndex]*(2.*u[hIndex]**2./(u[hIndex]**2+aux**2.))
-        #    u[hvIndex] = u[hvIndex]*(2.*u[hIndex]**2./(u[hIndex]**2+aux**2.))
-
-        # SOLVER WITH WHILE LOOP
-        #####****************
-        #import Viewers
-        #memory()
-        #r=self.solveInitialize(u,r,b)
-        #self.norm_r0 = self.norm(r)
-        #self.norm_r_hist = []
-        #self.norm_du_hist = []
-        #self.gammaK_max=0.0
-        #self.linearSolverFailed = False
-        #while (not self.converged(r) and
-        #       not self.failed()):
-        #    logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-        #        % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
-        #    if self.updateJacobian or self.fullNewton:
-        #        self.updateJacobian = False
-        #        self.F.getJacobian(self.J)
-        #        self.linearSolver.prepare(b=r)
-        #    self.du[:]=0.0
-        #    if not self.directSolver:
-        #        if self.EWtol:
-        #            self.setLinearSolverTolerance(r)
-        #    if not self.linearSolverFailed:
-        #        self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-        #        self.linearSolverFailed = self.linearSolver.failed()
-        #    u-=self.du
-        #    self.F.check_positivity_water_height=False
-        #    self.computeResidual(u,r,b)                            
-        #else:
-        #    logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-        #        % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-        #    logEvent(memory("Newton","Newton"),level=4)
-        #    return self.failedFlag
-        #logEvent("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-        #    % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-        #logEvent(memory("Newton","Newton"),level=4)
-        
 import deim_utils
 class POD_Newton(Newton):
     """Newton's method on the reduced order system based on POD"""

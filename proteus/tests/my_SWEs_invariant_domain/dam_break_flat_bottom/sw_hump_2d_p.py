@@ -5,13 +5,14 @@ from proteus.mprans import SW2DCV
 from proteus.Domain import RectangularDomain
 nd=2
 
-T=6.0
+T=5.0
 L=(10.0,1.0)
 g = 9.81
 hl=0.005
 xc=5
 domain = RectangularDomain(L=L)
 
+#This is relevant just when use_second_order_NonFlatB_with_EV_stabilization=True
 cE=1
 LUMPED_MASS_MATRIX=0
 USE_EV_BASED_ON_GALERKIN=0
@@ -40,7 +41,7 @@ class dam_break_problem_starting_at_t0:
         if (x <= self.xc):
             h = self.hl
         else:
-            h = 0.0
+            h = 0.
         return h
 
 class dam_break_problem_starting_at_t1:
@@ -91,12 +92,12 @@ class Zero:
     def uOfXT(self,x,t):
         return 0.0
 
-initialConditions = {0:dam_break_problem_starting_at_t0(hl=hl,xc=xc),
-                     1:Zero(),
-                     2:Zero()}
-#initialConditions = {0:dam_break_problem_starting_at_t1(hl=hl,xc=xc,g=g),
-#                     1:momX_starting_at_t1(hl=hl,xc=xc,g=g),
+#initialConditions = {0:dam_break_problem_starting_at_t0(hl=hl,xc=xc),
+#                     1:Zero(),
 #                     2:Zero()}
+initialConditions = {0:dam_break_problem_starting_at_t1(hl=hl,xc=xc,g=g),
+                     1:momX_starting_at_t1(hl=hl,xc=xc,g=g),
+                     2:Zero()}
 
 ##########################
 ##### EXACT SOLUTION #####
@@ -142,8 +143,8 @@ class exact_velx:
     def uOfXT(self,X,t):
         return 0.0
 
-analyticalSolution = {0:exact_h_starting_at_t0(hl=hl,xc=xc,g=g), 
-#analyticalSolution = {0:exact_h_starting_at_t1(hl=hl,xc=xc,g=g), 
+#analyticalSolution = {0:exact_h_starting_at_t0(hl=hl,xc=xc,g=g), 
+analyticalSolution = {0:exact_h_starting_at_t1(hl=hl,xc=xc,g=g), 
                       1:Zero(),
                       2:Zero()}
 
