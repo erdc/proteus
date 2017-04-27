@@ -5573,6 +5573,7 @@ namespace proteus
 		h=0.0,hu=0.0,hv=0.0, // solution at current time
 		hnm1=0.0,hunm1=0.0,hvnm1=0.0, // solution at tnm1
 		hn=0.0,hun=0.0,hvn=0.0, // solution at tn
+		h_lstage=0.0,hu_lstage=0.0,hv_lstage=0.0, // solution at lstage
 		hG=0.0,huG=0.0,hvG=0.0, // galerkin solution
 		grad_hn[nSpace],grad_hun[nSpace],grad_hvn[nSpace],grad_z[nSpace],		
 		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
@@ -5603,10 +5604,14 @@ namespace proteus
 	      ck.valFromDOF(h_dof_old_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hnm1);
 	      ck.valFromDOF(hu_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hunm1);
 	      ck.valFromDOF(hv_dof_old_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvnm1);
-	      // get the solution at time tn
-	      ck.valFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
-	      ck.valFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
-	      ck.valFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
+	      // get the solution at time tn for ENTROPY VISCOSITY
+	      ck.valFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],hn);
+	      ck.valFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hun);
+	      ck.valFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvn);
+	      // get the solution at the lstage
+	      ck.valFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],&h_trial_ref[k*nDOF_trial_element],h_lstage);
+	      ck.valFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hu_lstage);
+	      ck.valFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hv_lstage);
 	      // get the galerkin solution
 	      if (USE_EV_BASED_ON_GALERKIN==1)
 		{
@@ -5614,10 +5619,10 @@ namespace proteus
 		  ck.valFromDOF(hu_dof_galerkin,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],huG);
 		  ck.valFromDOF(hv_dof_galerkin,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],hvG);
 		}
-	      // calculate grad of solution at tn at quadrature points
-	      ck.gradFromDOF(h_dof_lstage,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
-	      ck.gradFromDOF(hu_dof_lstage,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
-	      ck.gradFromDOF(hv_dof_lstage,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hvn);
+	      // calculate grad of solution at tn for ENTROPY VISCOSITY
+	      ck.gradFromDOF(h_dof_old,&h_l2g[eN_nDOF_trial_element],h_grad_trial,grad_hn);
+	      ck.gradFromDOF(hu_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hun);
+	      ck.gradFromDOF(hv_dof_old,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_hvn);
 	      ck.gradFromDOF(b_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_z);
 	      // calculate cell based CFL
 	      calculateCFL(elementDiameter[eN],
@@ -5637,15 +5642,16 @@ namespace proteus
 	      hunp1_at_quad_point[eN_k] = hu;
 	      hvnp1_at_quad_point[eN_k] = hv;
 	      //update element residual. Part about the lumped mass matrix 
-	      double one_over_hnm1Reg = 2*hnm1/(hnm1*hnm1+std::pow(fmax(hnm1,hEps),2));
+	      //double one_over_hnm1Reg = 2*hnm1/(hnm1*hnm1+std::pow(fmax(hnm1,hEps),2));
 	      double one_over_hnReg = 2*hn/(hn*hn+std::pow(fmax(hn,hEps),2));
-	      double one_over_hGReg = 2*hG/(hG*hG+std::pow(fmax(hG,hEps),2));
-	      double dxf1 = grad_hun[0];
-	      double dyf1 = grad_hvn[1];
-	      double dxf2 = (2*hn*hun*grad_hun[0] - hun*hun*grad_hn[0])*std::pow(one_over_hnReg,2)+g*hn*grad_hn[0];
-	      double dyf2 = (hn*(hun*grad_hvn[1]+hvn*grad_hun[1])-hun*hvn*grad_hn[1])*std::pow(one_over_hnReg,2);
-	      double dxf3 = (hn*(hun*grad_hvn[0]+hvn*grad_hun[0])-hun*hvn*grad_hn[0])*std::pow(one_over_hnReg,2);
-	      double dyf3 = (2*hn*hvn*grad_hvn[1] - hvn*hvn*grad_hn[1])*std::pow(one_over_hnReg,2)+g*hn*grad_hn[1];
+	      //double one_over_hGReg = 2*hG/(hG*hG+std::pow(fmax(hG,hEps),2));
+	      //double dxf1 = grad_hun[0];
+	      //double dyf1 = grad_hvn[1];
+	      //double dxf2 = (2*hn*hun*grad_hun[0] - hun*hun*grad_hn[0])*std::pow(one_over_hnReg,2)+g*hn*grad_hn[0];
+	      //double dyf2 = (hn*(hun*grad_hvn[1]+hvn*grad_hun[1])-hun*hvn*grad_hn[1])*std::pow(one_over_hnReg,2);
+	      //double dxf3 = (hn*(hun*grad_hvn[0]+hvn*grad_hun[0])-hun*hvn*grad_hn[0])*std::pow(one_over_hnReg,2);
+	      //double dyf3 = (2*hn*hvn*grad_hvn[1] - hvn*hvn*grad_hn[1])*std::pow(one_over_hnReg,2)+g*hn*grad_hn[1];
+
 	      // bathymetry source terms
 	      double b_dot_gradx_z = g*hn*grad_z[0];
 	      double b_dot_grady_z = g*hn*grad_z[1];
@@ -5675,9 +5681,9 @@ namespace proteus
 		    (entropy_residual1+entropy_residual2+entropy_residual3)*h_test_dV[i];
 
 		  // compute time derivative part of global residual. NOTE: no lumping
-		  elementResidual_h[i]  += (h-hn)*h_test_dV[i];
-		  elementResidual_hu[i] += (hu-hun)*h_test_dV[i];
-		  elementResidual_hv[i] += (hv-hvn)*h_test_dV[i];
+		  elementResidual_h[i]  += (h-h_lstage)*h_test_dV[i];
+		  elementResidual_hu[i] += (hu-hu_lstage)*h_test_dV[i];
+		  elementResidual_hv[i] += (hv-hv_lstage)*h_test_dV[i];
 		}
 	    }
 	  // distribute
@@ -5705,9 +5711,15 @@ namespace proteus
       register double eta[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  double hin = h_dof_lstage[i];
+	  // COMPUTE ENTROPY BASED ON OLD STAGE
+	  //double hin = h_dof_lstage[i];
+	  //double one_over_hinReg = 2*hin/(hin*hin+std::pow(fmax(hin,hEps),2));
+	  //eta[i] = ENTROPY(g,hin,hu_dof_lstage[i],hv_dof_lstage[i],one_over_hinReg);
+
+	  // COMPUTE ENTROPY BASED ON OLD SOLUTION 
+	  double hin = h_dof_old[i]; 
 	  double one_over_hinReg = 2*hin/(hin*hin+std::pow(fmax(hin,hEps),2));
-	  eta[i] = ENTROPY(g,hin,hu_dof_lstage[i],hv_dof_lstage[i],one_over_hinReg);
+	  eta[i] = ENTROPY(g,hin,hu_dof_old[i],hv_dof_old[i],one_over_hinReg);
 	}
       //////////////////////////////////////////////////////////////
       // COMPUTE SMOOTHNESS INDICATOR, dLij and etaMin and etaMax //
