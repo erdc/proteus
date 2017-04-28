@@ -92,7 +92,7 @@ cdef extern from "ChRigidBody.h":
         void setChTimeStep(double dt)
         void setGravity(double* gravity)
         void setDirectory(string directory)
-        void setTimestepperType(string tstype)
+        void setTimestepperType(string tstype, bool verbose)
     cppSystem * newSystem(double* gravity)
     cdef cppclass cppRigidBody:
         shared_ptr[ch.ChBody] body
@@ -142,6 +142,7 @@ cdef extern from "ChRigidBody.h":
         void setInertiaXX(double* inertia)
         void setName(string name)
         void setPrescribedMotionPoly(double coeff1)
+        void setPrescribedMotionSine(double a, double f)
 
 
     cppRigidBody * newRigidBody(cppSystem* system,
@@ -232,6 +233,9 @@ cdef class RigidBody:
         self.Shape = shape
         if 'ChRigidBody' not in shape.auxiliaryVariables:
             shape.auxiliaryVariables['ChRigidBody'] = self
+
+    def SetBodyFixed(self, bool state):
+        deref(self.thisptr.body).SetBodyFixed(state)
 
     def setWidth2D(self, width):
         self.width_2D = width
@@ -437,8 +441,6 @@ cdef class RigidBody:
             self.thisptr.rotq_last = rotq_last
             self.thisptr.pos = pos
             self.thisptr.pos_last = pos_last
-            print('ROT: ', rotation, rotation_last)
-            print('POS: ', position, position_last)
             if comm.rank == 1:
                 self._recordValues()
         else:
@@ -462,6 +464,9 @@ cdef class RigidBody:
 
     def setPrescribedMotionPoly(self, double coeff1):
         self.thisptr.setPrescribedMotionPoly(coeff1)
+
+    def setPrescribedMotionSine(self, double a, double f):
+        self.thisptr.setPrescribedMotionSine(a, f)
 
     def setPrescribedMotion(self, function):
         self.prescribed_motion_function = function
@@ -695,6 +700,8 @@ cdef class System:
         self.parallel_mode = parallel_mode
         self.chrono_processor = chrono_processor
 
+    def GetChTime(self):
+        return self.thisptr.system.GetChTime()
 
     def attachModel(self, model, ar):
         self.model = model
@@ -743,8 +750,8 @@ cdef class System:
         for s in self.subcomponents:
             s.poststep()
 
-    def setTimestepperType(self, string tstype):
-        self.thisptr.setTimestepperType(tstype)
+    def setTimestepperType(self, string tstype, bool verbose):
+        self.thisptr.setTimestepperType(tstype, verbose)
 
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
@@ -764,7 +771,7 @@ cdef class System:
     def step(self, double dt):
         steps = max(int(dt/self.chrono_dt), 1)
         comm = Comm.get()
-        print('hi3', comm.rank(), dt, steps)
+        # print('hi3', comm.rank(), dt, steps)
         self.thisptr.step(<double> dt, n_substeps=steps)
 
     def addSubcomponent(self, subcomponent):
@@ -978,6 +985,7 @@ cdef class Moorings:
       bool back_body
       bool nodes_built
       bool external_forces_from_ns
+      bool external_forces_manual
       np.ndarray fluid_density_array
       np.ndarray fluid_velocity_array
       np.ndarray fluid_velocity_array_previous
@@ -1022,6 +1030,7 @@ cdef class Moorings:
         self.nodes_built = False
         self.name = 'record_moorings'
         self.external_forces_from_ns = False
+        self.external_forces_manual = False
 
     def setName(self, string name):
         self.name = name
@@ -1104,6 +1113,8 @@ cdef class Moorings:
         if self.System.model is not None and self.external_forces_from_ns is True:
             Profiling.logEvent('moorings extern forces')
             self.setExternalForces()
+        elif self.external_forces_manual is not None:
+            self.setExternalForces()
 
     def poststep(self):
         comm = Comm.get().comm.tompi4py()
@@ -1164,11 +1175,11 @@ cdef class Moorings:
             lengths[i] = deref(self.thisptr.elems[i]).GetLengthX()
         return lengths
 
-    def setDragCoefficients(self, double Cd_axial, double Cd_normal, int cable_nb):
-        deref(self.thisptr.cables[cable_nb]).setDragCoefficients(Cd_axial, Cd_normal)
+    def setDragCoefficients(self, double axial, double normal, int cable_nb):
+        deref(self.thisptr.cables[cable_nb]).setDragCoefficients(axial, normal)
 
-    def setAddedMassCoefficients(self, double Cd_axial, double Cd_normal, int cable_nb):
-        deref(self.thisptr.cables[cable_nb]).setAddedMassCoefficients(Cd_axial, Cd_normal)
+    def setAddedMassCoefficients(self, double axial, double normal, int cable_nb):
+        deref(self.thisptr.cables[cable_nb]).setAddedMassCoefficients(axial, normal)
 
     def setNodesPosition(self):
         cdef ch.ChVector[double] vec
@@ -1189,7 +1200,6 @@ cdef class Moorings:
                 x, y, z = self.nodes_function(L0+ds*j)
                 vec = ch.ChVector[double](x, y, z)
                 deref(self.thisptr.cables[i]).mvecs.push_back(vec)
-                print(x, y, z)
         self.buildNodes()
 
     def buildNodes(self):
@@ -1278,28 +1288,27 @@ cdef class Moorings:
         # update added mass forces
         # self.thisptr.updateAddedMassForces()
 
-    def setFluidDensityAtNodes(self, density_array):
-        cdef vector[ch.ChVector[double]] fluid_velocity
-        cdef vector[ch.ChVector[double]] fluid_acceleration
-        cdef ch.ChVector[double] vel
-        cdef ch.ChVector[double] acc
+    def setFluidDensityAtNodes(self, np.ndarray density_array):
         cdef vector[double] fluid_density
+        self.fluid_density_array = density_array
         cdef double dens
         for d in density_array:
-            fluid_density.push_pback(d)
+            fluid_density.push_back(d)
         self.thisptr.setFluidDensityAtNodes(fluid_density)
 
-    def setFluidVelocityAtNodes(self, velocity_array):
+    def setFluidVelocityAtNodes(self, np.ndarray velocity_array):
         cdef vector[ch.ChVector[double]] fluid_velocity
         cdef ch.ChVector[double] vel
+        self.fluid_velocity_array = velocity_array
         for v in velocity_array:
             vel = ch.ChVector[double](v[0], v[1], v[2])
             fluid_velocity.push_back(vel)
         self.thisptr.setFluidVelocityAtNodes(fluid_velocity)
 
-    def setFluidAccelerationAtNodes(self, acceleration_array):
+    def setFluidAccelerationAtNodes(self, np.ndarray acceleration_array):
         cdef vector[ch.ChVector[double]] fluid_acceleration
         cdef ch.ChVector[double] acc
+        self.fluid_acceleration_array = acceleration_array
         for a in acceleration_array:
             acc = ch.ChVector[double](a[0], a[1], a[2])
             fluid_acceleration.push_back(acc)
