@@ -421,7 +421,7 @@ void cppCable::buildMaterialsCableANCF() {
     msection_cable->SetDiameter(d);
     msection_cable->SetYoungModulus(E);
     msection_cable->SetDensity(rho);
-    msection_cable->SetI(1e-6);
+    msection_cable->SetI(1e-12);
 }
 
 void cppCable::buildNodes() {
@@ -689,6 +689,10 @@ void cppCable::setDragForce() {
 		double uz_prot = fluid_velocity[i][2];
 		u_prot = ChVector<>(ux_prot, uy_prot, uz_prot);
 		u_rel = u_prot - u_ch;
+    if (i == 50) {
+      GetLog() << "VELOCITY NODE " << i << "\n";
+      GetLog() << u_ch;
+    }
 		// CAREFUL HERE: ChBeamElementANCF, GetD() does not give direction but normal
 		t_dir = nodes[i]->GetD() % nodes[i]->GetDD();
 		// transverse drag coefficient
@@ -754,19 +758,39 @@ void cppCable::applyForces() {
   ChVector<> F_addedmass; // buoyancy force per unit length
   double rho_f;  // density of fluid around cable element
   double mass_f;  // mass of fluid displaced by cable element
+  /* for (int i = 1; i < nodes.size()-1; ++i) { */
+  /*     if (i % 2 != 0) { */
+  /*     F_drag = (forces_drag[i-1]+forces_drag[i]+forces_drag[i+1])/3; */
+  /*     F_addedmass = (forces_addedmass[i-1]+forces_addedmass[i]+forces_addedmass[i+1])/3; */
+  /*     F_total = F_drag+F_addedmass;//+F_buoyancy;//+F_fluid */
+  /*     elems_loads_distributed[i/2]->loader.SetForcePerUnit(F_total); */
+  /*     // buoyancy */
+  /*     rho_f = -(fluid_density[i-1]+fluid_density[i]+fluid_density[i+1])/3.; */
+  /*     mass_f = rho_f*A0*elems[i/2]->GetRestLength(); */
+  /*     F_buoyancy = -mass_f*system.Get_G_acc(); */
+  /*     elems_loads[i/2]->loader.SetForce(F_buoyancy); */
+  /*       } */
+  /*   } */
+  double lengths = 0;
   for (int i = 1; i < nodes.size()-1; ++i) {
-      if (i % 2 != 0) {
-      F_drag = (forces_drag[i-1]+forces_drag[i]+forces_drag[i+1])/3;
-      F_addedmass = (forces_addedmass[i-1]+forces_addedmass[i]+forces_addedmass[i+1])/3;
+      F_drag = (forces_drag[i]+forces_drag[i+1])/2;
+      if (i == 50) {
+        GetLog() << "DRAG FORCE " << i << "\n";
+        GetLog() << F_drag;
+      }
+      F_addedmass = (forces_addedmass[i]+forces_addedmass[i+1])/2;
       F_total = F_drag+F_addedmass;//+F_buoyancy;//+F_fluid
-      elems_loads_distributed[i/2]->loader.SetForcePerUnit(F_total);
+      elems_loads_distributed[i]->loader.SetForcePerUnit(F_total);
+      lengths = lengths + elemsCableANCF[i]->GetRestLength();
       // buoyancy
-      rho_f = -(fluid_density[i-1]+fluid_density[i]+fluid_density[i+1])/3.;
-      mass_f = rho_f*A0*elems[i/2]->GetRestLength();
-      F_buoyancy = -mass_f*system.Get_G_acc();
-      elems_loads[i/2]->loader.SetForce(F_buoyancy);
-        }
+      /* GetLog() << "buoyancy\n"; */
+      /* rho_f = -(fluid_density[i]+fluid_density[i+1])/2.; */
+      /* mass_f = rho_f*A0*elems[i]->GetRestLength(); */
+      /* F_buoyancy = -mass_f*system.Get_G_acc(); */
+      /* GetLog() << F_buoyancy; */
+      /* elems_loads[i]->loader.SetForce(F_buoyancy); */
     }
+  GetLog() << "Total length: " << lengths << "\n";
   };
 
 void cppCable::addNodestoContactCloud(std::shared_ptr<ChContactSurfaceNodeCloud> cloud) {
