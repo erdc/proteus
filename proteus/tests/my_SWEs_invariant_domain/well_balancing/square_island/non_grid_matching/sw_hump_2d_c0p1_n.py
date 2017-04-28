@@ -8,10 +8,10 @@ runCFL=0.75
 #use_EV_stabilization=True
 #use_first_order_flatB_GP_stabilization=True
 #use_second_order_flatB_GP_stabilization=True
-use_second_order_NonFlatB_GP_stabilization=True
-#use_second_order_NonFlatB_with_EV_stabilization=True
-#timeIntegration_sw2d = "SSP33"
-timeIntegration_sw2d = "FE"
+#use_second_order_NonFlatB_GP_stabilization=True
+use_second_order_NonFlatB_with_EV_stabilization=True
+timeIntegration_sw2d = "SSP33"
+#timeIntegration_sw2d = "FE"
 
 #timeIntegration = SSP33
 #timeIntegration = BackwardEuler_cfl
@@ -39,8 +39,8 @@ elementQuadrature = SimplexGaussQuadrature(nd,3)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
 multilevelNonlinearSolver  = Newton
-levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
-#levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
+#levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
+levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
 #levelNonlinearSolver = Newton
 
 fullNewtonFlag = False #NOTE: False just if the method is explicit
