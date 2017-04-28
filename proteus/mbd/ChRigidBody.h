@@ -21,7 +21,7 @@ class cppSystem {
   void recordBodyList();
   void setGravity(double* gravity);
   void setDirectory(std::string dir);
-  void setTimestepperType(std::string tstype);
+  void setTimestepperType(std::string tstype, bool verbose);
 };
 
 
@@ -82,6 +82,7 @@ class cppRigidBody {
                                    double rest_length);
   void setName(std::string name);
   void setPrescribedMotionPoly(double coeff1);
+  void setPrescribedMotionSine(double a, double f);
 };
 
 cppSystem::cppSystem(double* gravity):
@@ -110,7 +111,7 @@ gravity(gravity)
   //system.SetTimestepper(std::make_shared<ChTimestepperEulerImplicitLinearized>());  // default: fast, 1st order
 }
 
-void cppSystem::setTimestepperType(std::string tstype) {
+void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
   if (tstype == "HHT") {
     system.SetTimestepperType(ChTimestepper::Type::HHT);
       auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system.GetTimestepper());
@@ -119,7 +120,7 @@ void cppSystem::setTimestepperType(std::string tstype) {
       mystepper->SetAbsTolerances(1e-6);
       mystepper->SetMode(ChTimestepperHHT::POSITION);
       mystepper->SetScaling(false);
-      mystepper->SetVerbose(true);
+      mystepper->SetVerbose(verbose);
       mystepper->SetModifiedNewton(false);
     }
     else if (tstype == "Euler") {
@@ -317,6 +318,22 @@ void cppRigidBody::setPrescribedMotionPoly(double coeff1) {
   lock->SetMotion_X(forced_ptr);
 }
 
+
+void cppRigidBody::setPrescribedMotionSine(double a, double f) {
+  auto fixed_body = std::make_shared<ChBody>();
+  fixed_body->SetPos(body->GetPos());
+  fixed_body->SetBodyFixed(true);
+  system->system.Add(fixed_body);
+  auto lock = std::make_shared<ChLinkLockLock>();
+  lock->Initialize(body, fixed_body, fixed_body->GetCoord());
+  system->system.Add(lock);
+  auto forced_motion = std::make_shared<ChFunction_Sine>();
+  forced_motion->Set_amp(a);
+  forced_motion->Set_freq(f);
+  std::shared_ptr<ChFunction> forced_ptr = forced_motion;
+  lock->SetMotion_X(forced_ptr);
+}
+
 void cppRigidBody::setPosition(double* position){
   body->SetPos(ChVector<>(position[0], position[1], position[2]));
 }
@@ -446,3 +463,5 @@ cppRigidBody * newRigidBody(cppSystem* system,
                           free_x,
                           free_r);
 }
+
+
