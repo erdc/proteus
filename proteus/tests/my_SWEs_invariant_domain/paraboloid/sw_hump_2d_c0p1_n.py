@@ -2,17 +2,29 @@ from proteus import *
 from proteus.default_n import *
 from sw_hump_2d_p import *
 
-refinement=4
-runCFL=0.75
+refinement=3
+runCFL=0.5
 
 #use_EV_stabilization=True
 #use_first_order_flatB_GP_stabilization=True
 #use_second_order_flatB_GP_stabilization=True
-use_second_order_NonFlatB_GP_stabilization=True
+#use_second_order_NonFlatB_GP_stabilization=True
+use_second_order_NonFlatB_with_EV_stabilization=True
+timeIntegration_sw2d = "SSP33"
+#timeIntegration_sw2d = "FE"
+
 #timeIntegration = SSP33
 #timeIntegration = BackwardEuler_cfl
-timeIntegration = EdgeBased_ForwardEuler
+#timeIntegration = EdgeBased_ForwardEuler
+timeIntegration = SW2DCV.RKEV 
 stepController = Min_dt_controller
+if timeIntegration_sw2d == "SSP33": #mwf hack
+    timeOrder = 3
+    nStagesTime = 3
+else:
+    timeOrder = 1
+    nStagesTime = 1
+
 rtol_u[0] = 1.0e-4
 rtol_u[1] = 1.0e-4
 rtol_u[2] = 1.0e-4
@@ -27,13 +39,14 @@ elementQuadrature = SimplexGaussQuadrature(nd,3)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
 multilevelNonlinearSolver  = Newton
-levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
+#levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
+levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
 #levelNonlinearSolver = Newton
 
 fullNewtonFlag = False #NOTE: False just if the method is explicit
-nDTout=100
+nDTout=10
 
-nnx0=9
+nnx0=6
 nnz=1
 
 nnx = (nnx0-1)*(2**refinement)+1
@@ -69,3 +82,5 @@ multilevelLinearSolver = LU
 levelLinearSolver = LU
 
 #conservativeFlux = {0:'pwl'}
+tnList=[0.,1E-6]+[float(n)*T/float(nDTout) for n in range(1,nDTout+1)]
+

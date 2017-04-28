@@ -15,8 +15,13 @@ a=1.0
 domain = RectangularDomain(L=L)
 eta = 0.5
 
+#This is relevant just when use_second_order_NonFlatB_with_EV_stabilization=True
+cE=1
+LUMPED_MASS_MATRIX=0
+USE_EV_BASED_ON_GALERKIN=0
+
 omega = math.sqrt(2*g*h0)/a
-T=3*2*math.pi/omega
+T=1#2*math.pi/omega
 
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
@@ -208,6 +213,6 @@ diffusiveFluxBoundaryConditions = {0:{},
 #########################################
 bathymetry={0:bathymetry_function}
 LevelModelType = SW2DCV.LevelModel
-coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry)
+coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE,LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,USE_EV_BASED_ON_GALERKIN=USE_EV_BASED_ON_GALERKIN) 
 
 

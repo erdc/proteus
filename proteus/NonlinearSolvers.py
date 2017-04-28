@@ -640,7 +640,9 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
 
         self.computeResidual(u,r,b)
         u[:] = r
+        self.F.auxiliaryCallCalculateResidual = True
         self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
 
         #self.F.setUnknowns(u)        
         # Get values at quad points (in case there is a need to do convergence tests)
@@ -670,9 +672,7 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
     """
 
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
- 
         FIX_ROUNDOFF_ERROR = False
-
         #####################
         # GALERKIN SOLUTION #
         #####################
@@ -725,41 +725,37 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         ##############################
         # ENTROPY VISCOSITY SOLUTION #
         ##############################
-        if (self.F.coefficients.LUMPED_MASS_MATRIX):
-            logEvent("   Entropy viscosity solution with lumped mass matrix", level=1)
-            self.computeResidual(u,r,b)
-            u[:] = r
-        else:
-            logEvent("   Entropy viscosity solution with consistent mass matrix", level=1)
-            #time_before_edge_based = self.F.timeIntegration.dt #TMP
-            #if (np.abs(time_before_galerkin - time_before_edge_based) > 0):
-            #    print time_before_galerkin, time_before_edge_based
-            #    print np.abs(time_before_galerkin - time_before_edge_based)
-            #    input("STOOOOP!!!!")
-            self.computeResidual(u,r,b)
-            if self.updateJacobian or self.fullNewton:
-                self.updateJacobian = False
-                self.F.getJacobian(self.J)
-                self.linearSolver.prepare(b=r)
-            self.du[:]=0.0
-            if not self.directSolver:
-                if self.EWtol:
-                    self.setLinearSolverTolerance(r)
-            if not self.linearSolverFailed:
-                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                self.linearSolverFailed = self.linearSolver.failed()
-            u-=self.du
+        logEvent("   Entropy viscosity solution with consistent mass matrix", level=1)
+        #time_before_edge_based = self.F.timeIntegration.dt #TMP
+        #if (np.abs(time_before_galerkin - time_before_edge_based) > 0):
+        #    print time_before_galerkin, time_before_edge_based
+        #    print np.abs(time_before_galerkin - time_before_edge_based)
+        #    input("STOOOOP!!!!")
+        self.computeResidual(u,r,b)
+        if self.updateJacobian or self.fullNewton:
+            self.updateJacobian = False
+            self.F.getJacobian(self.J)
+            self.linearSolver.prepare(b=r)
+        self.du[:]=0.0
+        if not self.directSolver:
+            if self.EWtol:
+                self.setLinearSolverTolerance(r)
+        if not self.linearSolverFailed:
+            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+            self.linearSolverFailed = self.linearSolver.failed()
+        u-=self.du
         logEvent("   End of entropy viscosity solution", level=4)
 
         ############################
         # FCT STEP ON WATER HEIGHT #
         ############################
-
         logEvent("   FCT Step", level=1)
         self.F.FCTStep()
         
         # DISTRIBUTE SOLUTION FROM u to u[ci].dof
+        self.F.auxiliaryCallCalculateResidual = True
         self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
 
         #self.F.setUnknowns(u)        
         # Get values at quad points (in case there is a need to do convergence tests)

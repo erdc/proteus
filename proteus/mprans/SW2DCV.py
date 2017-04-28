@@ -86,7 +86,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
         BackwardEuler.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
         self.runCFL=runCFL
         self.dtLast=None
-        self.dtRatioMax = 2.0
+        self.dtRatioMax = 2.
         self.isAdaptive=True
         # About the cfl 
         assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
@@ -122,9 +122,13 @@ class RKEV(proteus.TimeIntegration.SSP33):
     #    self.dt = DTSET #  don't update t
     def choose_dt(self):
         maxCFL = 1.0e-6
+        #if (globalMax(self.edge_based_cfl.max()==0)):
+        #    self.dt = 1E-6
+        #else:
         maxCFL = max(maxCFL,globalMax(self.edge_based_cfl.max()))
-        #maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max()))
-        self.dt = self.runCFL/maxCFL
+        # maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max()))
+        self.dt = self.runCFL/maxCFL            
+
         if self.dtLast == None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
@@ -409,6 +413,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
                  movingDomain=False):
+
+        self.auxiliaryCallCalculateResidual=False
         self.postProcessing = False#this is a hack to test the effect of post-processing
         #
         #set the objects describing the method and boundary conditions
@@ -1293,14 +1299,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.dt, 
             self.coefficients.mannings)
 
-        self.recompute_lumped_mass_matrix=1
-        if (self.recompute_lumped_mass_matrix==1):
-            logEvent("Recomputing the lumped mass matrix",level=1)
-        else:
-            logEvent("Not recomputing the lumped mass matrix",level=1)
-        #import pdb
-        #pdb.set_trace()
-
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1309,11 +1307,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.timeIntegration.dt=self.timeIntegration.runCFL/globalMax(self.edge_based_cfl.max())
         #logEvent("...   Time step = " + str(self.timeIntegration.dt),level=2)
 
-        cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
-        logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax),level=2)
-
-        edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
-        logEvent("...   Maximum Edge Based CFL = " + str(edge_based_cflMax),level=2)
+        if (self.auxiliaryCallCalculateResidual==False):
+            edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
+            cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
+            logEvent("...   Current dt = " + str(self.timeIntegration.dt),level=4)
+            logEvent("...   Maximum Cell Based CFL = " + str(cell_based_cflMax),level=2)
+            logEvent("...   Maximum Edge Based CFL = " + str(edge_based_cflMax),level=2)
 
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
