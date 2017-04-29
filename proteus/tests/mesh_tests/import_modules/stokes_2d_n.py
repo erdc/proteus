@@ -121,3 +121,5 @@ linTolFac = 0.0
 l_atol_res = 1.0e-10
 
 #conservativeFlux =  {0:'pwl'}
+conservativeFlux =  None
+cfluxtag = None
