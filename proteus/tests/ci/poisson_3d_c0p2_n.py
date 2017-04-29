@@ -83,4 +83,6 @@ linTolFac = 0.0
 #linear solver absolute convergence test
 l_atol_res = 1.0e-10
 
-#conservativeFlux =  {0:'pwl'}
+conservativeFlux =  None
+cfluxtag = None
+conservativeFlux =  {0:'pwl-bdm2'}
