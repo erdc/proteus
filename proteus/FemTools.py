@@ -3187,6 +3187,13 @@ class ParametricFiniteElementSpace:
                                xiArray,
                                inverseJacobianArray,
                                grad_vArray):
+        ''' This function calculates the BasisGradientValues for calculations on the reference element
+            xiArray (input)               - a list of quadrature points (x,y,z) in 2D case, z = 0
+            inverseJacobianArray (input)  - values of the inverseJacobian matrix used in the affine transformation from 
+                                            the physical domain to the reference element
+            grad_vArray (output)          - gradient values of basis functions on reference triangle, adjusted for transformation
+                                            from physical domain
+        '''
         grad_vArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
         range_n_xi = range(n_xi)
@@ -3258,6 +3265,12 @@ class ParametricFiniteElementSpace:
                             permutations,
                             xiArray,
                             vArray):
+        '''
+        This function calculates the basis function values on the trace of the element boundaries.
+        permutations (input)    - 
+        xiArray (input)         - a list of the element boundary quarature points mapped from the physical domain to the reference triangle.
+        vArray (output)         - the vector to store the basis function trace values on the reference triangle
+        '''
         n_xi = xiArray.shape[2]
         range_n_xi = range(n_xi)
         psi = numpy.zeros((self.referenceFiniteElement.referenceElement.nElementBoundaries*n_xi,

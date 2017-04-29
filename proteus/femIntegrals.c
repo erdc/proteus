@@ -6468,6 +6468,36 @@ void calculateWeightedShapeGradients(int nElements_global,
             abs_det_jac[eN*nQuadraturePoints_element+
                         k];
 }
+
+/// THIS SHOULD BE REMOVED BEFORE MERGE
+void calculateWeightedPiolaShapeGradients(int nElements_global,
+					  int nQuadraturePoints_element,
+					  int nDOF_test_element,
+					  int nSpace,
+					  double* dVR,
+					  double* abs_det_jac,
+					  double* grad_w,
+					  double* grad_w_dV)
+{
+  int eN,i,k,I;
+  for (eN=0;eN<nElements_global;eN++)
+    for (k=0;k<nQuadraturePoints_element;k++)
+      for (i=0;i<nDOF_test_element;i++)
+        for (I=0;I<nSpace;I++)
+          grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace+
+                    k*nDOF_test_element*nSpace+
+                    i*nSpace+
+                    I] 
+            =
+            grad_w[eN*nQuadraturePoints_element*nDOF_test_element*nSpace+
+                   k*nDOF_test_element*nSpace+
+                   i*nSpace+
+                   I]
+            *
+            dVR[k]
+	    ;
+}
+
 void calculateWeightedShapeHessians(int nElements_global,
                                      int nQuadraturePoints_element,
                                      int nDOF_test_element,
@@ -6647,6 +6677,38 @@ void calculateWeightedShapeTrace(int nElements_global,
                                  double* sqrt_det_g,
                                  double* w,
                                  double* w_dS)
+{
+  int eN,ebN,i,k;
+  for (eN=0;eN<nElements_global;eN++)
+    for (ebN=0;ebN<nElementBoundaries_element;ebN++)
+      for (k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
+        for (i=0;i<nDOF_test_element;i++)
+          {
+            w_dS[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element+
+                 ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
+                 k*nDOF_test_element+
+                 i] 
+              =
+              w[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element+
+                ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_test_element +
+                k*nDOF_test_element+
+                i]
+              *
+              dSR[k]
+              *
+              sqrt_det_g[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary+
+                         ebN*nElementBoundaryQuadraturePoints_elementBoundary+
+                         k];
+          }
+}
+void calculateWeightedPiolaShapeTrace(int nElements_global,
+				      int nElementBoundaries_element,
+				      int nElementBoundaryQuadraturePoints_elementBoundary,
+				      int nDOF_test_element,
+				      double* dSR,
+				      double* sqrt_det_g,
+				      double* w,
+				      double* w_dS)
 {
   int eN,ebN,i,k;
   for (eN=0;eN<nElements_global;eN++)
