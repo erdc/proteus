@@ -14,6 +14,8 @@ from proteus import (Comm,
                      NumericalFlux)
 from proteus import default_p as p
 from proteus import default_n as n
+reload(p)
+reload(n)
 
 from proteus.Gauges import PointGauges, LineGauges, LineIntegralGauges
 
@@ -65,6 +67,8 @@ def gauge_setup(nd, total_nodes=None):
     n.elementQuadrature = Quadrature.SimplexGaussQuadrature(p.nd,3)
     n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,3)
     n.numericalFluxType = NumericalFlux.NoFlux
+    n.cfluxtag = None
+    n.conservativeFlux = None
 
     if total_nodes is None:
         total_nodes = 2*comm.size()
