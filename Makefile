@@ -328,3 +328,12 @@ jupyter:
 	jupyter nbextension install --sys-prefix --py ipyparallel
 	jupyter nbextension enable --sys-prefix --py ipyparallel
 	jupyter serverextension enable --sys-prefix --py ipyparallel
+	ipython profile create mpi --parallel
+	echo "c.IPClusterEngines.engine_launcher_class = 'MPI'" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+
+lfs:
+	pip install pyliblzma
+	wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
+	tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
+	cd git-lfs-1.5.5 && PREFIX=${HOME} ./install.sh
+	export PATH=${HOME}/bin:${PATH}
