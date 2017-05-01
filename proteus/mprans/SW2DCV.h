@@ -23,6 +23,9 @@
 #define DENTROPY_DHV(g,h,hu,hv,one_over_hReg) hv*one_over_hReg
 #define D_ENTROPY(g,h,hu,hv,hx,hux,hvx,one_over_hnReg) g*h*hx + hu*one_over_hnReg*(hux-0.5*hx*(hu*one_over_hnReg)) + hv*one_over_hnReg*(hvx-0.5*hx*(hv*one_over_hnReg))
 
+#define ENTROPY_FLUX1(g,h,hu,hv,one_over_hReg) (ENTROPY(g,h,hu,hv,one_over_hReg)+0.5*g*h*h)*hu*one_over_hReg
+#define ENTROPY_FLUX2(g,h,hu,hv,one_over_hReg) (ENTROPY(g,h,hu,hv,one_over_hReg)+0.5*g*h*h)*hv*one_over_hReg
+
   // FOR INVARIANT DOMAIN PRESERVING 
 #define f(g,h,hZ) ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) )
 #define phi(g,h,hL,hR,uL,uR) ( f(g,h,hL) + f(g,h,hR) + uR - uL )
@@ -5520,10 +5523,10 @@ namespace proteus
 							 double dt,
 							 double mannings)
     {
-      // FOR FRICTION TERMS //
-      //double n2 = std::pow(mannings,2);
-      //double gamma=4./3;
-      //double xi=2.;
+      //FOR FRICTION//
+      double n2 = std::pow(mannings,2);
+      double gamma=4./3;
+      double xi=2.;
 
       ////////////////
       // CELL LOOPS //
@@ -5703,12 +5706,49 @@ namespace proteus
 	      globalResidual[offset_hv+stride_hv*vel_gi] += elementResidual_hv[i];
 	    }
 	}
-      
+     
+
+      ////////////////////////////////////
+      // COMPUTE FAKE GALERKIN SOLUTION //
+      ////////////////////////////////////
+      int ij = 0;
+      for (int i=0; i<numDOFsPerEqn; i++)
+	{
+	  double hni = h_dof_lstage[i];
+	  double huni = hu_dof_lstage[i];
+	  double hvni = hv_dof_lstage[i];
+	  double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
+	  
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double hnj = h_dof_lstage[j];
+	      double hunj = hu_dof_lstage[j];
+	      double hvnj = hv_dof_lstage[j];
+	      double Zj = b_dof[j];
+	      
+	      // regularization of 1/hj
+	      double one_over_hnjReg = 2*hnj/(hnj*hnj+std::pow(fmax(hnj,hEps),2));
+
+	      // Nodal projection of fluxes
+	      ith_flux_term1 += hunj*Cx[ij] + hvnj*Cy[ij]; // f1*C
+	      ith_flux_term2 += ( hunj*hunj*one_over_hnjReg*Cx[ij] + hunj*hvnj*one_over_hnjReg*Cy[ij] 
+				  + g*hni*(hnj+Zj)*Cx[ij] );
+	      ith_flux_term3 += ( hunj*hvnj*one_over_hnjReg*Cx[ij] + hvnj*hvnj*one_over_hnjReg*Cy[ij] 
+				  + g*hni*(hnj+Zj)*Cy[ij] );
+	    }
+	  double mi = lumped_mass_matrix[i];
+	  h_dof_galerkin[i] = hni - dt/mi*ith_flux_term1;
+	  hu_dof_galerkin[i] = huni - dt/mi*ith_flux_term2;
+	  hv_dof_galerkin[i] = hvni - dt/mi*ith_flux_term3;
+	}
+ 
       ////////////////////////////////
       // COMPUTE ENTROPY AT ith DOF //
       ////////////////////////////////
       // compute entropy (defined as eta) corresponding to ith node
       register double eta[numDOFsPerEqn];
+      register double etaG[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
 	  // COMPUTE ENTROPY BASED ON OLD STAGE
@@ -5717,16 +5757,69 @@ namespace proteus
 	  //eta[i] = ENTROPY(g,hin,hu_dof_lstage[i],hv_dof_lstage[i],one_over_hinReg);
 
 	  // COMPUTE ENTROPY BASED ON OLD SOLUTION 
-	  double hin = h_dof_old[i]; 
-	  double one_over_hinReg = 2*hin/(hin*hin+std::pow(fmax(hin,hEps),2));
-	  eta[i] = ENTROPY(g,hin,hu_dof_old[i],hv_dof_old[i],one_over_hinReg);
+	  double hni = h_dof_lstage[i]; 
+	  double huni = h_dof_lstage[i]; 
+	  double hvni = h_dof_lstage[i]; 
+	  double one_over_hniReg = 2*hni/(hni*hni+std::pow(fmax(hni,hEps),2));
+	  eta[i] = ENTROPY(g,hni,huni,hvni,one_over_hniReg);
+
+	  // COMPUTE ENTROPY BASED ON FAKE GALERKIN
+	  double hGi = h_dof_galerkin[i]; 
+	  double huGi = hu_dof_galerkin[i]; 
+	  double hvGi = hv_dof_galerkin[i]; 
+	  double one_over_hGiReg = 2*hGi/(hGi*hGi+std::pow(fmax(hGi,hEps),2));
+	  etaG[i] = ENTROPY(g,hGi,huGi,hvGi,one_over_hGiReg);
+
+	  //////////////////////////
+	  // NEW ENTROPY RESIDUAL //
+	  //////////////////////////
+	  double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
+	  double eta_prime1 = DENTROPY_DH  (g,hni,huni,hvni,one_over_hniReg); 
+	  double eta_prime2 = DENTROPY_DHU (g,hni,huni,hvni,one_over_hniReg); 
+	  double eta_prime3 = DENTROPY_DHV (g,hni,huni,hvni,one_over_hniReg); 
+
+	  // loop over the sparsity pattern of the i-th DOF
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double hnj = h_dof_lstage[j];
+	      double hunj = hu_dof_lstage[j];
+	      double hvnj = hv_dof_lstage[j];
+	      double Zj = b_dof[j];
+
+	      // regularization of 1/hj
+	      double one_over_hnjReg = 2*hnj/(hnj*hnj+std::pow(fmax(hnj,hEps),2));
+
+	      // Nodal projection of fluxes
+	      ith_flux_term1 += hunj*Cx[ij] + hvnj*Cy[ij]; // f1*C
+	      ith_flux_term2 += ( hunj*hunj*one_over_hnjReg*Cx[ij] + hunj*hvnj*one_over_hnjReg*Cy[ij] 
+				  + g*hni*(hnj+Zj)*Cx[ij] );
+	      ith_flux_term3 += ( hunj*hvnj*one_over_hnjReg*Cx[ij] + hvnj*hvnj*one_over_hnjReg*Cy[ij] 
+				  + g*hni*(hnj+Zj)*Cy[ij] );	      
+	    }
+	  double mi = lumped_mass_matrix[i];
+	  // option 1
+	  //global_entropy_residual[i] = 
+	  //(etaG[i] - eta[i])*mi/dt 
+	  //+ ith_flux_term1*eta_prime1 + ith_flux_term2*eta_prime2 + ith_flux_term3*eta_prime3;
+	  // option 2
+	  global_entropy_residual[i] = ( Cx[ij]*ENTROPY_FLUX1(g,hni,huni,hvni,one_over_hniReg) + 
+					 Cy[ij]*ENTROPY_FLUX2(g,hni,huni,hvni,one_over_hniReg) )
+	    -(ith_flux_term1*eta_prime1 + ith_flux_term2*eta_prime2 + ith_flux_term3*eta_prime3);
+
+	  //double aux = ( Cx[ij]*ENTROPY_FLUX1(g,hni,huni,hvni,one_over_hniReg) + 
+	  //	 Cy[ij]*ENTROPY_FLUX2(g,hni,huni,hvni,one_over_hniReg) )
+	  //-(ith_flux_term1*eta_prime1 + ith_flux_term2*eta_prime2 + ith_flux_term3*eta_prime3);
+
+	  //std::cout << global_entropy_residual[i] - aux << std::endl;
 	}
+
       //////////////////////////////////////////////////////////////
       // COMPUTE SMOOTHNESS INDICATOR, dLij and etaMin and etaMax //
       //////////////////////////////////////////////////////////////
       // Smoothness indicator is based on the solution. psi_i = psi_i(alpha_i); 
       // alpha_i = |sum(uj-ui)|/sum|uj-ui|
-      int ij = 0;
+      ij = 0;
       double max_cfl = 0.;
       register double psi[numDOFsPerEqn], dL[NNZ], etaMax[numDOFsPerEqn], etaMin[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
@@ -5882,6 +5975,7 @@ namespace proteus
 	  double ui = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hui;
 	  double vi = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hvi;
 
+
 	  // entropy normalization factor 
 	  double one_over_entNormFactori = etaMax[i] == etaMin[i] ? 0. : 1./(etaMax[i]-etaMin[i]);
 
@@ -5894,15 +5988,16 @@ namespace proteus
 	  double ith_well_balancing_term1=0., ith_well_balancing_term2=0., ith_well_balancing_term3=0.;
 	  double aux1_to_compute_hnp1=0., aux2_to_compute_hnp1=0.;
 
+
 	  // friction term lumped
-	  //double veli_norm = std::sqrt(ui*ui+vi*vi);
-	  //double mi = lumped_mass_matrix[i];
+	  double veli_norm = std::sqrt(ui*ui+vi*vi);
+	  double mi = lumped_mass_matrix[i];
 	  
-	  //double hi_to_the_gamma = std::pow(hi,gamma);
-	  //double ith_friction_term2 =  
-	  //veli_norm==0 ? 0. : 2*g*n2*hui*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
-	  //double ith_friction_term3 =  
-	  //veli_norm==0 ? 0. : 2*g*n2*hvi*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
+	  double hi_to_the_gamma = std::pow(hi,gamma);
+	  double ith_friction_term2 =  
+	    veli_norm==0 ? 0. : 2*g*n2*hui*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
+	  double ith_friction_term3 =  
+	    veli_norm==0 ? 0. : 2*g*n2*hvi*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
 	  
 	  // loop over the sparsity pattern of the i-th DOF
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
@@ -5996,13 +6091,13 @@ namespace proteus
 	      // update ij
 	      ij+=1;
 	    }
-	  double mi = lumped_mass_matrix[i];
+	  //double mi = lumped_mass_matrix[i];
 
 	  // Compute low order solution: lumped mass matrix and low order dissipative matrix
 	  low_order_hnp1[i]  = hi*(1-dt/mi*aux1_to_compute_hnp1) + dt/mi*aux2_to_compute_hnp1;
 	  //low_order_hnp1[i]  = hi  - dt/mi*(ith_flux_term1 - ith_dissipative_low_order_term1);
-	  low_order_hunp1[i] = hui - dt/mi*(ith_flux_term2 - ith_dissipative_low_order_term2 - ith_well_balancing_term2);
-	  low_order_hvnp1[i] = hvi - dt/mi*(ith_flux_term3 - ith_dissipative_low_order_term3 - ith_well_balancing_term3); 
+	  low_order_hunp1[i] = hui - dt/mi*(ith_flux_term2 - ith_dissipative_low_order_term2 - ith_well_balancing_term2 + ith_friction_term2);
+	  low_order_hvnp1[i] = hvi - dt/mi*(ith_flux_term3 - ith_dissipative_low_order_term3 - ith_well_balancing_term3 + ith_friction_term3); 
 
 	  if (low_order_hnp1[i] < 0.)
 	    {
@@ -6017,14 +6112,14 @@ namespace proteus
 	  if (LUMPED_MASS_MATRIX==1)
 	    {
 	      globalResidual[offset_h+stride_h*i]   = hi  - dt/mi*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
-	      globalResidual[offset_hu+stride_hu*i] = hui - dt/mi*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2); // + ith_friction_term2);
-	      globalResidual[offset_hv+stride_hv*i] = hvi - dt/mi*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3); // + ith_friction_term3);
+	      globalResidual[offset_hu+stride_hu*i] = hui - dt/mi*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2 + ith_friction_term2);
+	      globalResidual[offset_hv+stride_hv*i] = hvi - dt/mi*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3 + ith_friction_term3);
 	    }
 	  else
 	    {
 	      globalResidual[offset_h+stride_h*i]   += dt*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
-	      globalResidual[offset_hu+stride_hu*i] += dt*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2); // + ith_friction_term2);
-	      globalResidual[offset_hv+stride_hv*i] += dt*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3); // + ith_friction_term3);
+	      globalResidual[offset_hu+stride_hu*i] += dt*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2 + ith_friction_term2);
+	      globalResidual[offset_hv+stride_hv*i] += dt*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3 + ith_friction_term3);
 	    }
 
 	}
