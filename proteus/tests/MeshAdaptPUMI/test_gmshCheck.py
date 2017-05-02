@@ -26,7 +26,7 @@ def test_gmshLoadAndAdapt(verbose=0):
     comm = Comm.init()
 
     nElements_initial = mesh.nElements_global
-    mesh.convertFromPUMI(domain.PUMIMesh, domain.faceList, parallel = comm.size() > 1, dim = domain.nd)
+    mesh.convertFromPUMI(domain.PUMIMesh, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
 
     domain.PUMIMesh.transferFieldToPUMI("coordinates",mesh.nodeArray)
 
@@ -68,6 +68,7 @@ def test_gmshLoadAndAdapt(verbose=0):
     mesh = MeshTools.TetrahedralMesh()
     mesh.convertFromPUMI(domain.PUMIMesh,
                      domain.faceList,
+                     domain.regList,
                      parallel = comm.size() > 1,
                      dim = domain.nd)
     nElements_final = mesh.nElements_global
@@ -89,7 +90,7 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     comm = Comm.init()
 
     nElements_initial = mesh.nElements_global
-    mesh.convertFromPUMI(domain.PUMIMesh, domain.faceList, parallel = comm.size() > 1, dim = domain.nd)
+    mesh.convertFromPUMI(domain.PUMIMesh, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
 
     domain.PUMIMesh.transferFieldToPUMI("coordinates",mesh.nodeArray)
 
@@ -131,6 +132,7 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     mesh = MeshTools.TriangularMesh()
     mesh.convertFromPUMI(domain.PUMIMesh,
                      domain.faceList,
+                     domain.regList,
                      parallel = comm.size() > 1,
                      dim = domain.nd)
     nElements_final = mesh.nElements_global

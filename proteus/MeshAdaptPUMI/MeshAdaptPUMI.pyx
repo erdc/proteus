@@ -25,7 +25,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int reconstructFromProteus(Mesh&)
         int constructFromSerialPUMIMesh(Mesh&)
         int constructFromParallelPUMIMesh(Mesh&, Mesh&)
-        int updateMaterialArrays(Mesh&, int, int)
+        int updateMaterialArrays(Mesh&,int, int, int)
         int transferFieldToPUMI(char*, double*, int, int)
         int transferFieldToProteus(char*, double*, int, int)
         int transferPropertiesToPUMI(double*, double*,double*)
@@ -67,9 +67,9 @@ cdef class MeshAdaptPUMI:
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         cdef CMesh* subdomain_cmesh_ptr = <CMesh*>subdomain_cmesh
         return self.thisptr.constructFromParallelPUMIMesh(cmesh_ptr.mesh, subdomain_cmesh_ptr.mesh)
-    def updateMaterialArrays(self, cmesh, bdryId, geomTag):
+    def updateMaterialArrays(self, cmesh, dim,bdryId, geomTag):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh, bdryId, geomTag)
+        return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh,dim, bdryId, geomTag)
     def transferFieldToPUMI(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] inArray):
         inArray = np.ascontiguousarray(inArray)
         return self.thisptr.transferFieldToPUMI(name, &inArray[0,0], inArray.shape[1], inArray.shape[0])
