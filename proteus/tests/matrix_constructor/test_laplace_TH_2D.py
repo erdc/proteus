@@ -32,7 +32,7 @@ class TestLaplaceConstruction2D(proteus.test_utils.TestTools.SimulationTest):
         op_constructor = LinearSolvers.OperatorConstructor(mm)
         op_constructor.attachLaplaceOperator()
         laplace = LinearAlgebraTools.superlu_sparse_2_dense(op_constructor.LaplaceOperator)
-        rel_path = "comparison_files/laplace_TH_mesh.npy"
+        rel_path = "comparison_files/laplace_TH_mesh.data"
         comparison_mat_p = numpy.load(os.path.join(self.scriptdir,rel_path))
         assert numpy.allclose(laplace,comparison_mat_p,rtol=1e-04,atol=1e-04)
 

@@ -6532,12 +6532,6 @@ class MultilevelTransport:
                                                  petsc_subdomain2global_petsc, ghosts=petsc_ghosts,
                                                  proteus2petsc_subdomain=proteus2petsc_subdomain,
                                                  petsc2proteus_subdomain=petsc2proteus_subdomain)
-                        # if comm.rank()==0:
-                        #     print 'par_n_list = ' + `par_n_list`
-                        #     print 'par_N_list = ' + `par_N_list`
-                        #     print 'par_nghosts_list = ' + `par_nghost_list`
-                        #     print 'subdomain2global = ' + `subdomain2global`
-#                            import pdb ; pdb.set_trace()
                         rowptr, colind, nzval = jacobian.getCSRrepresentation()
                         rowptr_petsc = rowptr.copy()
                         colind_petsc = colind.copy()
@@ -6588,8 +6582,6 @@ class MultilevelTransport:
                         transport.nzval_petsc = nzval_petsc
                         transport.colind_petsc = colind_petsc
                         transport.rowptr_petsc = rowptr_petsc
-#                        if comm.rank() == 0 :
-#                            import pdb ; pdb.set_trace()
                         petsc_jacobian = SparseMat(transport.dim,transport.dim,nzval_petsc.shape[0], nzval_petsc, colind_petsc, rowptr_petsc)
                         transport.petsc_jacobian = petsc_jacobian#petsc_jacobian = jacobian
                         if  comm.size() == 1:
@@ -6598,6 +6590,17 @@ class MultilevelTransport:
                             assert (rowptr_petsc == rowptr).all()
                         assert(colind.max() <= par_n+par_nghost)
                         assert(colind_petsc.max() <= par_n + par_nghost)
+                        ParInfo_petsc4py.par_bs = 1
+                        ParInfo_petsc4py.par_n = par_n
+                        ParInfo_petsc4py.par_n_lst = par_n_list
+                        ParInfo_petsc4py.par_N = par_N
+                        ParInfo_petsc4py.par_nghost = par_nghost
+                        ParInfo_petsc4py.par_nghost_lst = par_nghost_list
+                        ParInfo_petsc4py.petsc_subdomain2global_petsc = petsc_subdomain2global_petsc
+                        ParInfo_petsc4py.proteus2petsc_subdomain = proteus2petsc_subdomain
+                        ParInfo_petsc4py.petsc2proteus_subdomain = petsc2proteus_subdomain
+                        ParInfo_petsc4py.subdomain2global = subdomain2global
+                        ParInfo_petsc4py.dim = transport.dim
                         par_jacobian = ParMat_petsc4py(petsc_jacobian,1,par_n,par_N,par_nghost,
                                                        petsc_subdomain2global_petsc,pde=transport,
                                                        proteus_jacobian=jacobian, nzval_proteus2petsc=nzval_proteus2petsc)

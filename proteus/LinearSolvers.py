@@ -836,6 +836,8 @@ class SchurOperatorConstructor:
         self.L = linear_smoother.L
         self.pde_type = pde_type
         self.opBuilder = OperatorConstructor(self.L.pde)
+        self.Qp_built = False
+        self.Ap_built = False
 
     def getQp(self, output_matrix=False):
         """ Return the pressure mass matrix Qp.
@@ -850,11 +852,13 @@ class SchurOperatorConstructor:
         Qp : matrix
             The pressure mass matrix.
         """
-        Qsys_petsc4py = self._massMatrix()
-        self.Qp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
-                                             self.linear_smoother.isp)
-        if output_matrix==True:
-            self._exportMatrix(self.Qp,"Qp")
+        if self.Qp_built == False:
+            Qsys_petsc4py = self._massMatrix()
+            self.Qp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                                 self.linear_smoother.isp)
+            if output_matrix==True:
+                self._exportMatrix(self.Qp,"Qp")
+            self.Qp_built = True
         return self.Qp
 
     def getTwoPhaseQp_rho(self,
@@ -1007,11 +1011,13 @@ class SchurOperatorConstructor:
         Ap : matrix
             The Laplacian pressure matrix.
         """
-        Ap_sys_petsc4py = self._getLaplace()
-        self.Ap = Ap_sys_petsc4py.getSubMatrix(self.linear_smoother.isp,
-                                               self.linear_smoother.isp)
-        if output_matrix==True:
-            self._exportmatrix(self.Ap,'Ap')
+        if self.Ap_built == False:
+            Ap_sys_petsc4py = self._getLaplace()
+            self.Ap = Ap_sys_petsc4py.getSubMatrix(self.linear_smoother.isp,
+                                                   self.linear_smoother.isp)
+            if output_matrix==True:
+                self._exportmatrix(self.Ap,'Ap')
+            self.Ap_built = True
         return self.Ap
 
     def getTwoPhaseInvScaledAp(self,
@@ -1706,7 +1712,7 @@ class NavierStokes_TwoPhaseQp(NavierStokesSchur):
             self._setConstantPressureNullSpace(global_ksp)
         
 class NavierStokes3D_PCD(NavierStokesSchur) :
-    def __init__(self,L,prefix=None,bdyNullSpace=False):
+    def __init__(self,L,prefix=None,bdyNullSpace=False,bdyAdjust=True):
         """
         Initialize the pressure convection diffusion preconditioning class.
 
@@ -1714,6 +1720,7 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         ----------
         L :  
         prefix : 
+        bdyAdjust :
 
         Notes
         -----
@@ -1722,6 +1729,7 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         be tested and taylored to problem specific boundary conditions.
         """
         NavierStokes3D.__init__(self,L,prefix,bdyNullSpace)
+        self.bdyAdjust = bdyAdjust
 
     def setUp(self,global_ksp):
         # Step-1: build the necessary operators
@@ -1729,12 +1737,26 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         self.Fp = self.operator_constructor.getFp()
         self.Ap = self.operator_constructor.getAp()
 
-        # The lines below can be uncommented to output the petsc matrices
-        # This can be helpful for debuggin.
-#        petsc_view(self.Qp,'Qp')
-#        petsc_view(self.Fp,'Fp')
-#        petsc_view(self.Ap,'Ap')
-        
+        comm = Comm.get()
+        if self.L.pde.forceStrongConditions == True:
+            dirichlet_dof_lst = self.L.pde.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.keys()
+            if comm.size() > 1:
+                self.Ap.zeroRowsColumns(ParInfo_petsc4py.subdomain2global[dirichlet_dof_lst])
+                self.Fp.zeroRowsColumns(ParInfo_petsc4py.subdomain2global[dirichlet_dof_lst])
+            else:
+                self.Ap.zeroRowsColumns(dirichlet_dof_lst)
+                self.Fp.zeroRowsColumns(dirichlet_dof_lst)
+        else:
+            self.Ap.zeroRowsColumns(0)
+            self.Fp.zeroRowsColumns(0)
+
+        # This can be helpful for debugging.
+#        ParInfo_petsc4py.print_info()
+#        petsc_view(self.tmp1,'tmp1_2')
+#        petsc_view(self.Qp,'Qp_2')
+#        petsc_view(self.Fp,'Fp_2')
+#        petsc_view(self.Ap,'Ap_2')
+
         # Step-2: Set up the Shell for the  PETSc operator
         # Qp
         L_sizes = self.Qp.size
@@ -1743,7 +1765,12 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
         self.PCDInv_shell = p4pyPETSc.Mat().create()
         self.PCDInv_shell.setSizes(L_sizes)
         self.PCDInv_shell.setType('python')
-        self.matcontext_inv = PCDInv_shell(self.Qp,self.Fp,self.Ap)
+        
+        self.matcontext_inv = PCDInv_shell(self.Qp,
+                                           self.Fp,
+                                           self.Ap,
+                                           self.bdyAdjust)
+        
         self.PCDInv_shell.setPythonContext(self.matcontext_inv)
         self.PCDInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
@@ -1754,7 +1781,6 @@ class NavierStokes3D_PCD(NavierStokesSchur) :
             nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
                                                vectors = (),
                                                constant = True)
-#            import pdb ; pdb.set_trace()
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
 #            self._setConstantPressureNullSpace(global_ksp)
@@ -3126,6 +3152,7 @@ class OperatorConstructor:
     def attachLaplaceOperator(self,nu=1.0):
         """ Create a Discrete Laplace Operator matrix."""
         self._laplace_val = self.OLT.nzval.copy()
+        self._laplace_val.fill(0.)
         self.LaplaceOperator = SparseMat(self.OLT.nFreeVDOF_global,
                                          self.OLT.nFreeVDOF_global,
                                          self.OLT.nnz,
@@ -3175,7 +3202,8 @@ class OperatorConstructor:
     def attachTPInvScaledLaplaceOperator(self, phase_function = None):
         """ Create a Discrete Laplace Operator matrix."""
         self._laplace_val = self.OLT.nzval.copy()
-
+        #self._laplace_val.fill(0.)
+        
         _rho_0 = self.OLT.coefficients.rho_0
         _rho_1 = self.OLT.coefficients.rho_1
         _nu_0 = self.OLT.coefficients.nu_0
