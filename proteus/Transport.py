@@ -6389,7 +6389,7 @@ class MultilevelTransport:
             self.comm=comm
             # before merging this stuff, the following line should be changed to
             # if (comm.size() > 1): 
-            if (comm.size() >= 1):
+            if (comm.size() > 1):
                 for ci in range(transport.nc):
                     assert trialSpaceDict[ci].dofMap.dof_offsets_subdomain_owned is not None, "trial space %s needs subdomain -> global mappings " % trialSpaceDict
                 #initially assume all the spaces can share the same l2g information ...
