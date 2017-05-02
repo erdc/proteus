@@ -3360,6 +3360,7 @@ class OperatorConstructor:
     def attachBOperator(self):
         """Attach a discrete B operator to the Operator Constructor """
         self._B_val = self.OLT.nzval.copy()
+        self._B_val.fill(0.)
         self.BOperator = SparseMat(self.OLT.nFreeVDOF_global,
                                    self.OLT.nFreeVDOF_global,
                                    self.OLT.nnz,
