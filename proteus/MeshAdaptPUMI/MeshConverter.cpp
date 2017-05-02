@@ -411,3 +411,54 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh,
   }
   return 0;
 }
+//Attempt to reconstruct a PUMI mesh based on Proteus mesh data
+////structures.
+#include <apf.h>
+#include <gmi_null.h>
+#include <gmi_mesh.h>
+#include <apfMDS.h>
+#include <apfMesh2.h>
+int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh)
+{
+  gmi_model* g;
+  gmi_register_null();
+  g = gmi_load(".null");
+  apf::Mesh2* m2 = apf::makeEmptyMdsMesh(g,2,false);
+  m2 = apf::makeEmptyMdsMesh(g,2,false);
+  apf::Vector3 pt;
+  apf::MeshEntity* vertices[mesh.nNodes_global];
+  apf::MeshEntity* elemverts[mesh.nNodes_element];
+  apf::MeshEntity* elements[mesh.nElements_global];
+  for(int vID=0; vID<mesh.nNodes_global;vID++){
+    pt[0]=mesh.nodeArray[vID*3+0];
+    pt[1]=mesh.nodeArray[vID*3+1];
+    pt[2]=mesh.nodeArray[vID*3+2];
+    vertices[vID] = m2->createVert(0);
+    m2->setPoint(vertices[vID],0,pt);
+    apf::Vector3 check;
+    m2->getPoint(vertices[vID],0,check);
+    std::cout<<"Was the point set? "<<check<<std::endl;
+  }
+  for(int fID=0; fID<mesh.nElements_global;fID++){
+      for(int i=0; i<mesh.nNodes_element;i++){
+        std::cout<<"FID "<<fID<<" i "<< mesh.elementNodesArray[fID * mesh.nNodes_element + i]<<std::endl;
+        elemverts[i] = vertices[mesh.elementNodesArray[fID * mesh.nNodes_element + i]]; 
+        apf::Vector3 check;
+        m2->getPoint(elemverts[i],0,check);
+        std::cout<<"Was the point set? "<<check<<std::endl;
+      }
+      apf::buildElement(m2,0,apf::Mesh::TRIANGLE,elemverts);
+  }
+  apf::deriveMdsModel(m2);
+  m2->acceptChanges();
+  m2->verify();
+  apf::writeVtkFiles("reconstructedMesh", m2);
+  m2->destroyNative();
+  apf::destroyMesh(m2);
+  m->destroyNative();
+  apf::destroyMesh(m);
+  m = m2;
+  std::cout<<"COMPLETED RECONSTRUCTION!\n";
+  abort();
+}
+
