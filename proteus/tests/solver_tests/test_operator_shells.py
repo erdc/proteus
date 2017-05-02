@@ -60,7 +60,10 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         self.petsc_options.setValue('innerPCDsolver_Qp_ksp_type','preonly')
         self.petsc_options.setValue('innerPCDsolver_Ap_pc_type','lu')
         self.petsc_options.setValue('innerPCDsolver_Qp_pc_type','lu')
-        PCD_shell = LinearAlgebraTools.PCDInv_shell(petsc_matQp , petsc_matFp , petsc_matAp)
+        PCD_shell = LinearAlgebraTools.PCDInv_shell(petsc_matQp ,
+                                                    petsc_matFp ,
+                                                    petsc_matAp ,
+                                                    False)
         x_vec = np.ones(size_n)
         y_vec = np.zeros(size_n)
         x_PETSc_vec = p4pyPETSc.Vec().createWithArray(x_vec)

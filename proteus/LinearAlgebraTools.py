@@ -12,6 +12,7 @@ import numpy
 import math
 import sys
 import superluWrappers
+import Comm
 from .superluWrappers import *
 from .Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
@@ -45,7 +46,7 @@ def petsc_load_matrix(filename):
         viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
         output = p4pyPETSc.Mat().load(viewer)
     except:
-        print('invalid file name')
+        print("Either you've entered an invalid file name or your object is a vector.")
     return output
 
 def petsc_load_vector(filename):
@@ -136,22 +137,30 @@ def superlu_2_petsc4py(sparse_superlu):
 
     Parameters
     ----------
-    sparse_matrix : :class:`proteus.superluWrappers.SparseMatrix`
+    sparse_superlu : :class:`proteus.superluWrappers.SparseMatrix`
 
     Returns
     -------
     sparse_matrix : PETSc4py matrix
     """
-    rowptr, colind, nzval = sparse_superlu.getCSRrepresentation()
-    A_rowptr = rowptr.copy()
-    A_colind = colind.copy()
-    A_nzval  = nzval.copy()
-    nr       = sparse_superlu.shape[0]
-    nc       = sparse_superlu.shape[1]
-    A_petsc4py = p4pyPETSc.Mat().createAIJWithArrays((nr,nc),
-                                                     (A_rowptr,
-                                                      A_colind,
-                                                      A_nzval))
+    comm = Comm.get()
+
+    if comm.size() > 1:
+        rowptr,colind,nzval = sparse_superlu.getCSRrepresentation()
+        A_petsc4py = ParMat_petsc4py.create_ParMat_from_OperatorConstructor(sparse_superlu)
+        
+    else:    
+        rowptr, colind, nzval = sparse_superlu.getCSRrepresentation()
+        A_rowptr = rowptr.copy()
+        A_colind = colind.copy()
+        A_nzval  = nzval.copy()
+        nr       = sparse_superlu.shape[0]
+        nc       = sparse_superlu.shape[1]
+        A_petsc4py = p4pyPETSc.Mat().createAIJWithArrays((nr,nc),
+                                                         (A_rowptr,
+                                                          A_colind,
+                                                          A_nzval))
+
     return A_petsc4py
 
 class ParVec:
@@ -186,7 +195,6 @@ class ParVec:
        self.cparVec.scatter_forward_insert()
     def scatter_reverse_add(self):
        self.cparVec.scatter_reverse_add()
-
 
 class ParVec_petsc4py(p4pyPETSc.Vec):
     """
@@ -293,8 +301,65 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
         """Saves to disk using a PETSc binary viewer. """
         petsc_view(self, filename)
 
+class ParInfo_petsc4py:
+    """
+    ARB - this class is experimental.  My idea is to store the
+    information need to constructor parallel vectors and matrices
+    here as static class values.  Then ParVec and ParMat can
+    use these values to create parallel objects later.
+    """
+    par_bs = None
+    par_n = None
+    par_n_lst = None
+    par_N = None
+    par_nghost = None
+    par_nghost_lst = None
+    petsc_subdomain2global_petsc = None
+    subdomain2global = None
+    proteus2petsc_subdomain = None
+    petsc2proteus_subdomain = None
+    dim = None
+
+    @classmethod
+    def print_info(cls):
+        import Comm
+        comm = Comm.get()
+        print 'comm.rank() = ' + `comm.rank()` + ' par_bs = ' + `cls.par_bs`
+        print 'comm.rank() = ' + `comm.rank()` + ' par_n = ' + `cls.par_n`
+        print 'comm.rank() = ' + `comm.rank()` + ' par_n_lst = ' + `cls.par_n_lst`
+        print 'comm.rank() = ' + `comm.rank()` + ' par_N = ' + `cls.par_N`
+        print 'comm.rank() = ' + `comm.rank()` + ' par_nghost = ' + `cls.par_nghost`
+        print 'comm.rank() = ' + `comm.rank()` + ' par_nghost_lst = ' + `cls.par_nghost_lst`
+        print 'comm.rank() = ' + `comm.rank()` + ' petsc_subdomain2global_petsc = ' + `cls.petsc_subdomain2global_petsc`
+        print 'comm.rank() = ' + `comm.rank()` + ' subdomain2global = ' + `cls.subdomain2global`
+        print 'comm.rank() = ' + `comm.rank()` + ' proteus2petsc_subdomain = ' + `cls.proteus2petsc_subdomain`
+        print 'comm.rank() = ' + `comm.rank()` + ' petsc2proteus_subomdain = ' + `cls.petsc2proteus_subdomain`
+        print 'comm.rank() = ' + `comm.rank()` + ' dim = ' + `cls.dim`
+
 class ParMat_petsc4py(p4pyPETSc.Mat):
-    """Parallel matrix based on petsc4py's wrappers for PETSc. """
+    """Parallel matrix based on petsc4py's wrappers for PETSc. 
+    ghosted_csr_mat : :class:`proteus.superluWrappers.SparseMatrix`
+        Primary CSR information for the ParMat.
+    par_bs : int
+        The block size.
+    par_n : int
+        The number of locally owned unknowns.
+    par_N : int
+        The number of global unknowns.
+    par_nghost : int
+        The number of locally owned ghost unknowns.
+    subdomain2global : :class:`numpy.ndarray`
+        A map from the local unknown to the global unknown.
+    blockVecType : str
+    pde : :class:`proteus.Transport.OneLevelTransport`
+        The Transport class defining the problem.
+    par_nc : int
+    par_Nc : int
+    proteus_jacobian : :class:`proteus.superluWrappers.SparseMatrix`
+        Jacobian generated by Transport class's initializeJacobian.
+    nzval_proteus2petsc : :class:`numpy.ndarray`
+        ?
+    """
     def __init__(self,
                  ghosted_csr_mat=None,
                  par_bs=None,
@@ -325,12 +390,12 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         self.blockSize = max(1,par_bs)
         if self.blockSize > 1 and blockVecType != "simple":
             ## \todo fix block aij in ParMat_petsc4py
-            self.setType('baij')
+            self.setType('mpibaij')
             self.setSizes([[self.blockSize*par_n,self.blockSize*par_N],[self.blockSize*par_nc,self.blockSize*par_Nc]],bsize=self.blockSize)
             self.setBlockSize(self.blockSize)
             self.subdomain2global = subdomain2global #no need to include extra block dofs?
         else:
-            self.setType('aij')
+            self.setType('mpiaij')
             self.setSizes([[par_n*self.blockSize,par_N*self.blockSize],[par_nc*self.blockSize,par_Nc*self.blockSize]],bsize=1)
             if self.blockSize > 1: #have to build in block dofs
                 subdomain2globalTotal = numpy.zeros((self.blockSize*subdomain2global.shape[0],),'i')
@@ -365,6 +430,84 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         """
         petsc_view(self, filename)
 
+    @classmethod
+    def create_ParMat_from_OperatorConstructor(cls,
+                                               operator):
+        """ Build a ParMat consistent with the problem from an Operator 
+        constructor matrix.
+
+        Arguments
+        ---------
+        operator : :class:`proteus.superluWrappers.SparseMatrix`
+            Matrix to be turned into a parallel petsc matrix.
+        """
+        comm = Comm.get()
+        
+        par_bs = ParInfo_petsc4py.par_bs
+        par_n = ParInfo_petsc4py.par_n
+        par_N = ParInfo_petsc4py.par_N
+        par_nghost = ParInfo_petsc4py.par_nghost
+        petsc_subdomain2global_petsc = ParInfo_petsc4py.petsc_subdomain2global_petsc
+        subdomain2global = ParInfo_petsc4py.subdomain2global
+        petsc2proteus_subdomain = ParInfo_petsc4py.petsc2proteus_subdomain
+        proteus2petsc_subdomain = ParInfo_petsc4py.proteus2petsc_subdomain
+        dim = ParInfo_petsc4py.dim
+        # ARB - this is largely copied from Transport.py,
+        # a refactor should be done to elimate this duplication
+        rowptr, colind, nzval = operator.getCSRrepresentation()
+        # if comm.rank()==1:
+        #     print 'subdomain2global = ' + `subdomain2global`
+        #     print 'rowptr = ' + `rowptr`
+        #     print 'comm.rank() = ' + `nzval[95:131]`
+        rowptr_petsc = rowptr.copy()
+        colind_petsc = colind.copy()
+        nzval_petsc = nzval.copy()
+        nzval_proteus2petsc = colind.copy()
+        nzval_petsc2proteus = colind.copy()
+        rowptr_petsc[0] = 0
+
+        comm.beginSequential()
+        for i in range(par_n+par_nghost):
+            start_proteus = rowptr[petsc2proteus_subdomain[i]]
+            end_proteus = rowptr[petsc2proteus_subdomain[i]+1]
+            nzrow = end_proteus - start_proteus
+            rowptr_petsc[i+1] = rowptr_petsc[i] + nzrow
+            start_petsc = rowptr_petsc[i]
+            end_petsc = rowptr_petsc[i+1]
+            petsc_cols_i = proteus2petsc_subdomain[colind[start_proteus:end_proteus]]
+            j_sorted = petsc_cols_i.argsort()
+            colind_petsc[start_petsc:end_petsc] = petsc_cols_i[j_sorted]
+            nzval_petsc[start_petsc:end_petsc] = nzval[start_proteus:end_proteus][j_sorted]
+            for j_petsc, j_proteus in zip(numpy.arange(start_petsc,end_petsc),
+                                          numpy.arange(start_proteus,end_proteus)[j_sorted]):
+                nzval_petsc2proteus[j_petsc] = j_proteus
+                nzval_proteus2petsc[j_proteus] = j_petsc
+        comm.endSequential()
+
+        proteus_a = {}
+        petsc_a = {}
+
+        for i in range(dim):
+            for j,k in zip(colind[rowptr[i]:rowptr[i+1]],range(rowptr[i],rowptr[i+1])):
+                proteus_a[i,j] = nzval[k]
+                petsc_a[proteus2petsc_subdomain[i],proteus2petsc_subdomain[j]] = nzval[k]
+        for i in range(dim):
+            for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],range(rowptr_petsc[i],rowptr_petsc[i+1])):
+                nzval_petsc[k] = petsc_a[i,j]
+
+        #additional stuff needed for petsc par mat
+
+        petsc_jacobian = SparseMat(dim,dim,nzval_petsc.shape[0], nzval_petsc, colind_petsc, rowptr_petsc)
+        return cls(petsc_jacobian,
+                   par_bs,
+                   par_n,
+                   par_N,
+                   par_nghost,
+                   petsc_subdomain2global_petsc,
+                   proteus_jacobian = operator,
+                   nzval_proteus2petsc=nzval_proteus2petsc)
+
+        
 def Vec(n):
     """
     Build a vector of length n (using numpy)
@@ -495,7 +638,7 @@ class InvOperatorShell(OperatorShell):
         vec : PETSc vector
         """
         tmp = p4pyPETSc.Vec().create()
-        tmp.setType('seq')
+        tmp.setType('mpi')
         tmp.setSizes(size)
         return tmp
 
@@ -789,9 +932,9 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         tmp1 = p4pyPETSc.Vec().create()
         tmp2 = p4pyPETSc.Vec().create()
         tmp3 = p4pyPETSc.Vec().create()
-        tmp1.setType('seq')
-        tmp2.setType('seq')
-        tmp3.setType('seq')
+        tmp1.setType('mpi')
+        tmp2.setType('mpi')
+        tmp3.setType('mpi')
         tmp1 = y.copy()
         tmp2 = y.copy()
         tmp3 = y.copy()
@@ -812,7 +955,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
  
 class PCDInv_shell(InvOperatorShell):
     """ Shell class for the PCD Inverse preconditioner """
-    def __init__(self,Qp_matrix,Fp_matrix,Ap_matrix):
+    def __init__(self,Qp_matrix,Fp_matrix,Ap_matrix,bdyAdjust):
         """ Initializes the pressure-convection-diffusion inverse operator.
 
         Parameters
@@ -823,11 +966,14 @@ class PCDInv_shell(InvOperatorShell):
                     Convection-diffusion operator.
         Ap_matrix : petsc4py matrix object
                     The pressure Laplacian operator.
+        bdyAdjust : bool
+            True if improved boundary adjustment should be used.
         """
         # ARB - Chebyshev semi-iteration...
         self.Qp = Qp_matrix
         self.Fp = Fp_matrix
         self.Ap = Ap_matrix
+        self.bdyAdjust = bdyAdjust
         # initialize kspAp
         self._options = p4pyPETSc.Options()
 
@@ -866,7 +1012,6 @@ class PCDInv_shell(InvOperatorShell):
             self.r_work = None        
         self.kspAp.setUp()
 
-        
     def apply(self,A,x,y):
         """  
         Apply the inverse pressure-convection-diffusion operator.
@@ -883,22 +1028,26 @@ class PCDInv_shell(InvOperatorShell):
         y : petsc4py vector
             Result of operator acting on x.
         """
-        # TODO ARB - 02/10/17 Should we apply the operator
-        # in the reserve order?
-        x_tmp = p4pyPETSc.Vec().create()
+        x_tmp = p4pyPETSc.Vec().create(comm=p4pyPETSc.COMM_WORLD)
+        temp1 = p4pyPETSc.Vec().create(comm=p4pyPETSc.COMM_WORLD)
+        temp2 = p4pyPETSc.Vec().create(comm=p4pyPETSc.COMM_WORLD)
+        
         x_tmp = x.copy()
-        if self._options.hasName('innerPCDsolver_Ap_ksp_constant_null_space'):
-            self.const_null_space.remove(x_tmp)
-        temp1 = p4pyPETSc.Vec().create()
-        # create a copy / duplicate of the vector x ...
-        temp1.setType('seq')
-        temp2 = p4pyPETSc.Vec().create()
-        temp2.setType('seq')
-        temp1 = y.copy()
-        temp2 = y.copy()
-        self.kspAp.solve(x_tmp,temp1)
-        self.Fp.mult(temp1,temp2)
-        self.kspQp.solve(temp2,y)
+        temp1 = x.copy()
+        temp2 = x.copy()
+
+        if self.bdyAdjust==True:
+            self.kspQp.solve(x_tmp,temp1)
+            self.Fp.mult(temp1,temp2)
+            if self._options.hasName('innerPCDsolver_Ap_ksp_constant_null_space'):
+                self.const_null_space.remove(temp2)
+            self.kspAp.solve(temp2,y)
+        else:
+            if self._options.hasName('innerPCDsolver_Ap_ksp_constant_null_space'):
+                self.const_null_space.remove(temp2)
+            self.kspAp.solve(x_tmp,temp1)
+            self.Fp.mult(temp1,temp2)
+            self.kspQp.solve(temp2,y)
 
 
 class LSCInv_shell(InvOperatorShell):
@@ -930,7 +1079,6 @@ class LSCInv_shell(InvOperatorShell):
 
         # TODO - Add an assert testing that Qv is diagonal.
         # *** - I can't find a PETSc function that does this :-(
-        
         self.Qv = Qv
         self.B = B
         self.F = F

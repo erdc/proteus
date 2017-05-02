@@ -5,7 +5,6 @@
 -ksp_gmres_restart 500
 -ksp_atol 1e-20
 -ksp_rtol 1e-6
--ksp_knoll
 -ksp_gmres_modifiedgramschmidt
 
 # pc options
