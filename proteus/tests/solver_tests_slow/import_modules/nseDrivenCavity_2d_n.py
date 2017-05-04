@@ -20,17 +20,8 @@ stepController = FixedStep
 timeIntegration = NoIntegration
 #number of output timesteps
 
-#T = 10.0
-#dt_fixed = 1.0
-#dt_init = 1.0
-#runCFL = 0.9
-#nDTout = int(round(T/dt_fixed))
-#tnList = [0.0,1.0,2.0,3.0,4.0]
 import numpy as  np
-#tnList = np.linspace(0.0,3.7,8).tolist()
 tnList =  [0.0,1.0,1.7,2.2,2.7,3.2,3.5,3.7]#,1.5,2.0,2.5,3.0]
-#tnList = [0.0,1.0,2.0,3.0,4.0]
-#tnList = [0.0,dt_init]+[i*dt_fixed for i in range(1,nDTout+1)]
 
 shockCapturing = None
 
@@ -47,8 +38,6 @@ elif numeric_scheme=="C0P1C0P1":
                  1:C0_AffineLinearOnSimplexWithNodalBasis,
                  2:C0_AffineLinearOnSimplexWithNodalBasis}
     subgridError = NavierStokesASGS_velocity_pressure(coefficients,nd,lag=False)
-    #subgridError = RANS2P.SubgridError(coefficients,nd,lag=False)
-    #shockCapturing = RANS2P.ShockCapturing(coefficients,nd,shockCapturingFactor=0.0, lag=False)
 elif numeric_scheme=="C0Q1C0Q1":
     femSpaces = {0:C0_AffineLinearOnCubeWithNodalBasis,
                 1:C0_AffineLinearOnCubeWithNodalBasis,
@@ -142,6 +131,12 @@ l_atol_res = 1.0e-8
 
 if schur_solver == 'Qp':
     linearSmoother=NavierStokes3D_Qp
+elif schur_solver == 'two_phase_Qp':
+    linearSmoother=NavierStokes_TwoPhaseQp
+elif schur_solver == 'two_phase_LSC':
+    linearSmoother=NavierStokes_TwoPhaseLSC
+elif schur_solver == 'two_phase_PCD':
+    linearSmoother=NavierStokes_TwoPhasePCD
 elif schur_solver == 'LSC':
     linearSmoother=NavierStokes3D_LSC
 elif schur_solver == 'pcd':

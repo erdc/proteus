@@ -163,6 +163,29 @@ def superlu_2_petsc4py(sparse_superlu):
 
     return A_petsc4py
 
+def csr_2_petsc_mpiaij(size,csr):
+    """ Create an MPIaij petsc4py matrix from size and CSR information.
+
+    Parameters:
+    ----------
+    size : tuple
+        Two entires: (num_rows, num_cols)
+    csr : tuple
+        (row_idx, col_idx, vals)
+
+    Returns:
+    --------
+    matrix : PETSc4py MPIaij matrix
+    """
+    mat = p4pyPETSc.Mat().create()
+    mat.setSizes(size = size)
+    mat.setType('mpiaij')
+    mat.setUp()
+    mat.assemblyBegin()
+    mat.setValuesCSR(csr[0],csr[1],csr[2])
+    mat.assemblyEnd()
+    return mat
+
 class ParVec:
     """
     A parallel vector built on top of daetk's wrappers for petsc
@@ -1059,7 +1082,7 @@ class LSCInv_shell(InvOperatorShell):
     \hat{Q^{-1}_{v}} B^{'})^{-1} (B \hat{Q^{-1}_{v}} B^{'})` 
     is used to approximate the Schur complement.
     """
-    def __init__(self, Qv, B, F):
+    def __init__(self, Qv, B, Bt, F):
         """Initializes the LSC inverse operator.
         
         Parameters
@@ -1067,7 +1090,9 @@ class LSCInv_shell(InvOperatorShell):
         Qv : petsc4py matrix object
             The diagonal elements of the velocity mass matrix.
         B : petsc4py matrix object
-            The velocity-pressure operator.
+            The discrete divergence operator.
+        Bt : petsc4py matrix object
+            The discrete gradient operator.
         F : petsc4py matrix object
             The A-block of the linear system.
         """
@@ -1081,6 +1106,7 @@ class LSCInv_shell(InvOperatorShell):
         # *** - I can't find a PETSc function that does this :-(
         self.Qv = Qv
         self.B = B
+        self.Bt = Bt
         self.F = F
     
         # The commented code below creates a shell for the BQvBt
@@ -1156,10 +1182,10 @@ class LSCInv_shell(InvOperatorShell):
         self.Qv_inv = p4pyPETSc.Mat().create()
         self.Qv_inv.setSizes(self.Qv.getSizes())
         # ARB - think about correct way to initialize the matrix. (matduplicate)
-        self.Qv_inv.setType('aij')
+        self.Qv_inv.setType('mpiaij')
         self.Qv_inv.setUp()
         self.Qv_inv.setDiagonal(1./self.Qv.getDiagonal())
-        QinvBt = self.Qv_inv.matTransposeMult(self.B)
+        QinvBt = self.Qv_inv.matMult(self.Bt)
         self.BQinvBt = self.B.matMult(QinvBt)
 
     def __diagonalInverse(self, A):

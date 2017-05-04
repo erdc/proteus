@@ -2,7 +2,7 @@ from proteus import *
 from proteus.default_p import *
 from proteus import Domain
 import nseBackwardsFacingStep_2d
-from TwophaseNavierStokes_ST_LS_SO_VV import TwophaseNavierStokes_ST_LS_SO_VV
+from NavierStokes_ST_LS_SO_VV import NavierStokes_ST_LS_SO_VV
 from proteus import Context
 Context.setFromModule(nseBackwardsFacingStep_2d)
 ct=Context.get()
@@ -162,17 +162,17 @@ Diffusivefluxboundaryconditions = {0:getDiffFluxBCp,
                                    1:getDiffFluxBCu,
                                    2:getDiffFluxBCv}
 
-coefficients = TwophaseNavierStokes_ST_LS_SO_VV(epsFact=0.0,
-                                                sigma=0.0,
-                                                rho_0=1.0,
-                                                nu_0=1.0,
-                                                rho_1=1.0,
-                                                nu_1=1.0,
-                                                g=[0.0,0.0],
-                                                nd=2,
-                                                LS_model=None,
-                                                KN_model=None,
-                                                epsFact_density=None,
-                                                stokes=False);    
+coefficients = NavierStokes_ST_LS_SO_VV(epsFact=0.0,
+                                        sigma=0.0,
+                                        rho_0=1.0,
+                                        nu_0=1.0,
+                                        rho_1=1.0,
+                                        nu_1=1.0,
+                                        g=[0.0,0.0],
+                                        nd=2,
+                                        LS_model=None,
+                                        KN_model=None,
+                                        epsFact_density=None,
+                                        stokes=False);    
 
 coefficients.variableNames=['p','u','v']

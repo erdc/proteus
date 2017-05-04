@@ -1,4 +1,4 @@
-"""
+r"""
 A hierarchy of classes for linear algebraic system solvers.
 
 .. inheritance-diagram:: proteus.LinearSolvers
@@ -1858,9 +1858,10 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
         # direct and cleanest, but one could also call the operator constructors.
         self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
         self.F = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
+        self.Bt = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isp)
 #        self.B = self.operator_constructor.getB()
 #        self.F = self.operator_constructor.getF()
-        self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.F)
+        self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.Bt,self.F)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
@@ -1888,14 +1889,18 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
         self.two_phase_Qv = self.operator_constructor.getTPQv_mu()
         self.Qv_hat = p4pyPETSc.Mat().create()
         self.Qv_hat.setSizes(self.two_phase_Qv.getSizes())
-        self.Qv_hat.setType('aij')
+        self.Qv_hat.setType('mpiaij')
         self.Qv_hat.setUp()
         self.Qv_hat.setDiagonal(self.two_phase_Qv.getDiagonal())
         
         self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
+        self.Bt = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isp)
         self.F = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
 
-        self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.F)
+        self.matcontext_inv = LSCInv_shell(self.Qv_hat,
+                                           self.B,
+                                           self.Bt,
+                                           self.F)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
@@ -3202,14 +3207,13 @@ class OperatorConstructor:
     def attachTPInvScaledLaplaceOperator(self, phase_function = None):
         """ Create a Discrete Laplace Operator matrix."""
         self._laplace_val = self.OLT.nzval.copy()
-        #self._laplace_val.fill(0.)
-        
+        self._laplace_val.fill(0.)
+
         _rho_0 = self.OLT.coefficients.rho_0
         _rho_1 = self.OLT.coefficients.rho_1
         _nu_0 = self.OLT.coefficients.nu_0
         _nu_1 = self.OLT.coefficients.nu_1
 
-        
         self.TPInvScaledLaplaceOperator = SparseMat(self.OLT.nFreeVDOF_global,
                                                     self.OLT.nFreeVDOF_global,
                                                     self.OLT.nnz,
