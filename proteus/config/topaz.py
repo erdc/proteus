@@ -3,9 +3,9 @@ from default import *
 platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C']
     
 PROTEUS_PRELOAD_LIBS=['/p/home/apps/sgi/mpt-2.12-sgi712r26/lib/libmpi.so',
-'/p/home/apps/sgi/mpt-2.12-sgi712r26/lib/libmpi_lustre.so']
+'/p/home/apps/sgi/mpt-2.12-sgi712r26/lib/libmpi_lustre.so',
+'/p/home/apps/intel/parallel_studio_2016/compilers_and_libraries_2016.0.109/linux/mkl/lib/intel64/libmkl_rt.so']
 #,
-#'/p/home/apps/intel/parallel_studio_2016/compilers_and_libraries_2016.0.109/linux/mkl/lib/intel64/libmkl_rt.so',
 #'/p/home/apps/intel/parallel_studio_2016/compilers_and_libraries_2016.0.109/linux/mkl/lib/intel64/libmkl_sequential.so',
 #'/p/home/apps/intel/parallel_studio_2016/compilers_and_libraries_2016.0.109/linux/mkl/lib/intel64/libmkl_core.so',
 #'/p/home/apps/intel/parallel_studio_2016/compilers_and_libraries_2016.0.109/linux/mkl/lib/intel64/libmkl_sequential.so',
