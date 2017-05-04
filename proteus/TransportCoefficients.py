@@ -1918,6 +1918,8 @@ class DiscreteTwoPhaseScaledLaplaceOperatorBase(TC_base):
 
 class DiscreteTwoPhaseInvScaledLaplaceOperator(DiscreteTwoPhaseScaledLaplaceOperatorBase):
     r""" This class creates an inverse scaled two-phase operator for the Laplace Operator.
+    TODO (ARB) - This function is only scaling based on the density.  This needs a better
+    name to communicate this.
     """
     from ctransportCoefficients import TwoPhaseInvScaledLaplace_2D_Evaluate
     from ctransportCoefficients import TwoPhaseInvScaledLaplace_3D_Evaluate

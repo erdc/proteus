@@ -19,7 +19,7 @@ import pytest
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 import nseDrivenCavity_2d_n
 import nseDrivenCavity_2d_p
-from NavierStokes_ST_LS_SO_VV import NavierStokes_ST_LS_SO_VV
+from TwophaseNavierStokes_ST_LS_SO_VV import TwophaseNavierStokes_ST_LS_SO_VV
 
 class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
 
@@ -44,20 +44,20 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
                                             opts)
         self.ns.calculateSolution('stokes')
         
-        relpath = 'comparison_files/drivenCavityNSE_LSC_expected.h5'
+        relpath = 'comparison_files/drivenCavityTPNSE_PCD_expected.h5'
         expected = tables.openFile(os.path.join(self._scriptdir,relpath))
         actual = tables.openFile('drivenCavityNSETrial.h5','r')
-        assert numpy.allclose(expected.root.velocity_t7,
-                              actual.root.velocity_t7,
+        assert numpy.allclose(expected.root.velocity_t4,
+                              actual.root.velocity_t4,
                               atol=1e-2)
         expected.close()
         actual.close()
 
-        relpath = 'comparison_files/drivenCavityNSE_LSC_expected.log'
+        relpath = 'comparison_files/drivenCavityTPNSE_PCD_expected.log'
         actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
         expected_log = TestTools.NumericResults.build_from_proteus_log(os.path.join(self._scriptdir,
                                                                                     relpath))
-        plot_lst = [(3.7,0,3),(3.2,0,2),(2.7,0,2),(2.2,0,1),(1.7,0,1)]
+        plot_lst = [(4.0,0,1),(3.0,0,1),(2.0,0,1),(1.0,0,3)]
         L1 = expected_log.get_ksp_resid_it_info(plot_lst)
         L2 = actual_log.get_ksp_resid_it_info(plot_lst)
         assert L1 == L2        
@@ -68,18 +68,30 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
         - THQuads
         - LSC
         """
-        nseDrivenCavity_2d_p.coefficients = NavierStokes_ST_LS_SO_VV(epsFact=0.0,
-                                                                     sigma=0.0,
-                                                                     rho_0=1.0,
-                                                                     nu_0=1.0,
-                                                                     rho_1=1.0,
-                                                                     nu_1=1.0,
-                                                                     g=[0.0,0.0],
-                                                                     nd=2,
-                                                                     LS_model=None,
-                                                                     KN_model=None,
-                                                                     epsFact_density=None,
-                                                                     stokes=False);
+        def which_region(x):
+            x1 = abs(x[0] - 0.5) ; x2 = abs(x[0] + 0.5)
+            y1 = abs(x[1] - 0.5) ; y2 = abs(x[1] + 0.5)
+            if (x1+x2 == 1) and (y1 + y2 == 1):
+                return 100
+            else:
+                return -100
+
+        phase_func = lambda x : which_region(x) 
+
+        
+        nseDrivenCavity_2d_p.coefficients = TwophaseNavierStokes_ST_LS_SO_VV(epsFact=0.0,
+                                                                             sigma=0.0,
+                                                                             rho_0=1.0,
+                                                                             nu_0=1.0,
+                                                                             rho_1=1.0,
+                                                                             nu_1=1.0,
+                                                                             g=[0.0,0.0],
+                                                                             nd=2,
+                                                                             LS_model=None,
+                                                                             KN_model=None,
+                                                                             epsFact_density=None,
+                                                                             stokes=False,
+                                                                             phase_func=phase_func);
 
         nseDrivenCavity_2d_p.coefficients.variableNames = ['p','u','v']
 
@@ -87,7 +99,8 @@ class Test_NSE_Driven_Cavity(proteus.test_utils.TestTools.SimulationTest):
                                                     1:nseDrivenCavity_2d_p.getDBCu,
                                                     2:nseDrivenCavity_2d_p.getDBCv}
         nseDrivenCavity_2d_n.nLevels = 1
-        nseDrivenCavity_2d_n.linearSmoother = nseDrivenCavity_2d_n.NavierStokes3D_LSC
+        nseDrivenCavity_2d_n.tnList = [0.0,1.0,2.0,3.0,4.0]
+        nseDrivenCavity_2d_n.linearSmoother = nseDrivenCavity_2d_n.NavierStokes_TwoPhasePCD
         self.so.tnList = self.nList[0].tnList
         self._setPETSc(petsc_file = os.path.join(self._scriptdir,'import_modules/petsc.options.schur_lsc'))
         self._runTest()

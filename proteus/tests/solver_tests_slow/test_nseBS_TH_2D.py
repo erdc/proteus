@@ -19,7 +19,7 @@ import pytest
 proteus.test_utils.TestTools.addSubFolders( inspect.currentframe() )
 import nseBackwardsFacingStep_2d_n
 import nseBackwardsFacingStep_2d_p
-from TwophaseNavierStokes_ST_LS_SO_VV import TwophaseNavierStokes_ST_LS_SO_VV
+from NavierStokes_ST_LS_SO_VV import NavierStokes_ST_LS_SO_VV
 
 class Test_NSE_BackwardsFacingStep(proteus.test_utils.TestTools.SimulationTest):
 

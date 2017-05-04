@@ -7,7 +7,7 @@ Test module for solver shell operator.
 import proteus.test_utils.TestTools
 from proteus.iproteus import *
 from proteus import Comm
-from proteus import LinearAlgebraTools
+from proteus import LinearAlgebraTools as LAT
 
 import os
 import sys
@@ -60,10 +60,10 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         self.petsc_options.setValue('innerPCDsolver_Qp_ksp_type','preonly')
         self.petsc_options.setValue('innerPCDsolver_Ap_pc_type','lu')
         self.petsc_options.setValue('innerPCDsolver_Qp_pc_type','lu')
-        PCD_shell = LinearAlgebraTools.PCDInv_shell(petsc_matQp ,
-                                                    petsc_matFp ,
-                                                    petsc_matAp ,
-                                                    False)
+        PCD_shell = LAT.PCDInv_shell(petsc_matQp ,
+                                     petsc_matFp ,
+                                     petsc_matAp ,
+                                     False)
         x_vec = np.ones(size_n)
         y_vec = np.zeros(size_n)
         x_PETSc_vec = p4pyPETSc.Vec().createWithArray(x_vec)
@@ -87,7 +87,7 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
                                                csr = (row_idx_A, col_idx_A, vals_A))
         petsc_matB = p4pyPETSc.Mat().createAIJ(size = (num_B_rows,num_B_cols) ,
                                                csr = (row_idx_B, col_idx_B, vals_B))
-        BinvABt_shell = LinearAlgebraTools.B_Ainv_Bt_shell(petsc_matA,petsc_matB)
+        BinvABt_shell = LAT.B_Ainv_Bt_shell(petsc_matA,petsc_matB)
         x_vec = np.ones(num_B_rows)
         y_vec = np.zeros(num_B_rows)
         x_PETSc_vec = p4pyPETSc.Vec().createWithArray(x_vec)
@@ -105,22 +105,32 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         vals_B    =  [1.1, 6.3, 7.3, 3.6, 6.3]
         col_idx_B =  [0  , 2  , 0  , 1  , 2  ]
         row_idx_B =  [0, 2, 5]
+        vals_Bt   =  [1.1, 7.3, 3.6, 6.3, 6.3]
+        col_idx_Bt = [0, 1, 1, 0, 1]
+        row_idx_Bt = [0, 2, 3, 5]
         vals_F  =    [3.2, 1.1, 6.3, 1., -5.1]
         col_idx_F  = [0, 1, 0, 2, 0]
         row_idx_F  = [0, 2, 4, 5]
         num_B_rows = len(row_idx_B) - 1
         num_B_cols = len(row_idx_A) - 1
-        petsc_matA = p4pyPETSc.Mat().createAIJ(size = (num_B_cols,num_B_cols), 
-                                                csr = (row_idx_A,col_idx_A,vals_A))
-        petsc_matB = p4pyPETSc.Mat().createAIJ(size = (num_B_rows,num_B_cols), 
-                                                csr = (row_idx_B,col_idx_B,vals_B))
-        petsc_matF = p4pyPETSc.Mat().createAIJ(size = (num_B_cols,num_B_cols), 
-                                                csr = (row_idx_F,col_idx_F,vals_F))
+
+        petsc_matA = LAT.csr_2_petsc_mpiaij((num_B_cols,num_B_cols),
+                                            (row_idx_A,col_idx_A,vals_A))
+        petsc_matB = LAT.csr_2_petsc_mpiaij(size = (num_B_rows,num_B_cols), 
+                                            csr = (row_idx_B,col_idx_B,vals_B))
+        petsc_matBt = LAT.csr_2_petsc_mpiaij(size = (num_B_cols,num_B_rows), 
+                                             csr = (row_idx_Bt,col_idx_Bt,vals_Bt))
+        petsc_matF = LAT.csr_2_petsc_mpiaij(size = (num_B_cols,num_B_cols), 
+                                            csr = (row_idx_F,col_idx_F,vals_F))
+
         self.petsc_options.setValue('innerLSCsolver_BTinvBt_ksp_type','preonly')
         self.petsc_options.setValue('innerLSCsolver_T_ksp_type','preonly')
         self.petsc_options.setValue('innerLSCsolver_BTinvBt_pc_type','lu')
         self.petsc_options.setValue('innerLSCsolver_T_pc_type','lu')
-        LSC_shell = LinearAlgebraTools.LSCInv_shell(petsc_matA,petsc_matB,petsc_matF)
+        LSC_shell = LAT.LSCInv_shell(petsc_matA,
+                                     petsc_matB,
+                                     petsc_matBt,
+                                     petsc_matF)
         x_vec = np.ones(num_B_rows)
         y_vec = np.zeros(num_B_rows)
         x_PETSc_vec = p4pyPETSc.Vec().createWithArray(x_vec)
@@ -144,21 +154,21 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         Qp_visc_row_idx = [0, 3, 6, 8]
         Qp_visc_num_rows = len(Qp_visc_row_idx) - 1
         Qp_visc_petsc = p4pyPETSc.Mat().createAIJ(size = (Qp_visc_num_rows,Qp_visc_num_rows),
-                                                 csr = (Qp_visc_row_idx,Qp_visc_col_idx,Qp_visc_vals))
+                                                  csr = (Qp_visc_row_idx,Qp_visc_col_idx,Qp_visc_vals))
 
         Np_vals = [3.2, 1.1, 6.3, 1.0, -5.1]
         Np_col_idx = [0, 1, 1, 2, 2]
         Np_row_idx = [0, 2, 4, 5]
         Np_num_rows = len(Np_row_idx) - 1
         Np_petsc = p4pyPETSc.Mat().createAIJ(size = (Np_num_rows,Np_num_rows),
-                                                 csr = (Np_row_idx,Np_col_idx,Np_vals))
+                                             csr = (Np_row_idx,Np_col_idx,Np_vals))
 
         Ap_vals = [0.6, 8.2, 1.0, 0.2, 1.2, 2.5]
         Ap_col_idx = [0, 1, 2, 1, 0, 2]
         Ap_row_idx = [0, 3, 4, 6]
         Ap_num_rows = len(Ap_row_idx) - 1
         Ap_petsc = p4pyPETSc.Mat().createAIJ(size = (Ap_num_rows,Ap_num_rows),
-                                                 csr = (Ap_row_idx,Ap_col_idx,Ap_vals))
+                                             csr = (Ap_row_idx,Ap_col_idx,Ap_vals))
 
         self.petsc_options.setValue('innerTPPCDsolver_Qp_visc_ksp_type','preonly')
         self.petsc_options.setValue('innerTPPCDsolver_Qp_dens_ksp_type','preonly')
@@ -167,17 +177,17 @@ class TestOperatorShells(proteus.test_utils.TestTools.BasicTest):
         self.petsc_options.setValue('innerTPPCDsolver_Qp_dens_pc_type','lu')
         self.petsc_options.setValue('innerTPPCDsolver_Ap_rho_pc_type','lu')
 
-        TPPCD_shell_1 = LinearAlgebraTools.TwoPhase_PCDInv_shell(Qp_visc_petsc,
-                                                                 Qp_rho_petsc,
-                                                                 Ap_petsc,
-                                                                 Np_petsc)
+        TPPCD_shell_1 = LAT.TwoPhase_PCDInv_shell(Qp_visc_petsc,
+                                                  Qp_rho_petsc,
+                                                  Ap_petsc,
+                                                  Np_petsc)
 
-        TPPCD_shell_2 = LinearAlgebraTools.TwoPhase_PCDInv_shell(Qp_visc_petsc,
-                                                                 Qp_rho_petsc,
-                                                                 Ap_petsc,
-                                                                 Np_petsc,
-                                                                 True,
-                                                                 4)        
+        TPPCD_shell_2 = LAT.TwoPhase_PCDInv_shell(Qp_visc_petsc,
+                                                  Qp_rho_petsc,
+                                                  Ap_petsc,
+                                                  Np_petsc,
+                                                  True,
+                                                  4)
 
         x_vec = np.ones(Ap_num_rows)
         y_vec = np.zeros(Ap_num_rows)
