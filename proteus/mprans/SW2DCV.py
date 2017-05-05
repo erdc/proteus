@@ -122,9 +122,6 @@ class RKEV(proteus.TimeIntegration.SSP33):
     #    self.dt = DTSET #  don't update t
     def choose_dt(self):
         maxCFL = 1.0e-6
-        #if (globalMax(self.edge_based_cfl.max()==0)):
-        #    self.dt = 1E-6
-        #else:
         maxCFL = max(maxCFL,globalMax(self.edge_based_cfl.max()))
         # maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max()))
         self.dt = self.runCFL/maxCFL            
@@ -142,7 +139,8 @@ class RKEV(proteus.TimeIntegration.SSP33):
         Modify self.dt
         """
         self.tLast=t0
-        self.choose_dt()
+        self.dt = 1E-6
+        #self.choose_dt()
         self.t = t0+self.dt
  
     def setCoefficients(self):
@@ -860,40 +858,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
                                    compKernelFlag)
 
-        if 'use_first_order_flatB_GP_stabilization' in dir(options):
-            self.calculateResidual = self.sw2d.calculateResidual_first_order_flatB_GP
-            self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
-        elif 'use_second_order_flatB_GP_stabilization' in dir(options):
-            self.calculateResidual = self.sw2d.calculateResidual_second_order_flatB_GP
-            self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
-        elif 'use_second_order_NonFlatB_GP_stabilization' in dir(options):
+        if 'use_second_order_NonFlatB_GP_stabilization' in dir(options):
             self.calculateResidual = self.sw2d.calculateResidual_second_order_NonFlatB_GP
             self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
-        elif 'use_EV_stabilization' in dir(options):
-            self.calculateResidual = self.sw2d.calculateResidual_cell_based_entropy_viscosity
-            self.calculateJacobian = self.sw2d.calculateJacobian_cell_based_entropy_viscosity
-        elif 'use_second_order_NonFlatB_with_EV_stabilization' in dir(options):
-            self.calculateResidual = self.sw2d.calculateResidual_second_order_NonFlatB_with_EV
-            #self.calculateResidual = self.sw2d.calculateResidual_galerkin
-            self.calculateJacobian = self.sw2d.calculateMassMatrix
-            #self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
         else:
             self.calculateResidual = self.sw2d.calculateResidual
-            self.calculateJacobian = self.sw2d.calculateJacobian
-
+            if (self.coefficients.LUMPED_MASS_MATRIX):
+                self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
+            else:
+                self.calculateJacobian = self.sw2d.calculateMassMatrix
     def FCTStep(self):
         #NOTE: this function is meant to be called within the solver
-
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
         # Extract hnp1 from global solution u
         index = range(0,len(self.timeIntegration.u))
         hIndex = index[0::3]
         huIndex = index[1::3]
         hvIndex = index[2::3]
-        # extract high order solution
-        #high_order_hnp1 = numpy.copy(self.timeIntegration.u[hIndex])
-        #high_order_hunp1 = numpy.copy(self.timeIntegration.u[huIndex])
-        #high_order_hvnp1 = numpy.copy(self.timeIntegration.u[hvIndex])
         # create limited solution 
         limited_hnp1 = numpy.zeros(self.h_dof_old.shape)
         limited_hunp1 = numpy.zeros(self.h_dof_old.shape)
@@ -911,9 +892,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           self.timeIntegration.u[hIndex],
                           self.timeIntegration.u[huIndex],
                           self.timeIntegration.u[hvIndex],
-                          #high_order_hnp1, #solH
-                          #high_order_hunp1,
-                          #high_order_hvnp1,
                           self.low_order_hnp1, 
                           self.low_order_hunp1, 
                           self.low_order_hvnp1, 
@@ -1302,7 +1280,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
+                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
 
         #self.timeIntegration.dt=self.timeIntegration.runCFL/globalMax(self.edge_based_cfl.max())
         #logEvent("...   Time step = " + str(self.timeIntegration.dt),level=2)
