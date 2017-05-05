@@ -5,7 +5,7 @@ from proteus.mprans import SW2DCV
 from proteus.Domain import RectangularDomain
 nd=2
 
-T=5.0
+T=5.
 L=(10.0,1.0)
 g = 9.81
 hl=0.005
@@ -14,8 +14,8 @@ domain = RectangularDomain(L=L)
 
 #This is relevant just when use_second_order_NonFlatB_with_EV_stabilization=True
 cE=1
-LUMPED_MASS_MATRIX=0
-USE_EV_BASED_ON_GALERKIN=0
+LUMPED_MASS_MATRIX=1
+mannings=0.0
 
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
@@ -214,5 +214,5 @@ diffusiveFluxBoundaryConditions = {0:{},
 #########################################
 bathymetry={0:bathymetry_function}
 LevelModelType = SW2DCV.LevelModel
-coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE,LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,USE_EV_BASED_ON_GALERKIN=USE_EV_BASED_ON_GALERKIN)
+coefficients = SW2DCV.Coefficients(g=g,bathymetry=bathymetry,cE=cE,LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,mannings=mannings)
 
