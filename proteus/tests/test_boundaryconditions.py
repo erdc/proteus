@@ -172,7 +172,7 @@ class TestBC(unittest.TestCase):
             u_diff += [BC.u_diffusive.uOfXT(x, t)]
             v_diff += [BC.v_diffusive.uOfXT(x, t)]
             w_diff += [BC.w_diffusive.uOfXT(x, t)]
-            k_dir += [BC.k_dirichlet.uOfXT(x, t)]
+            k_diff += [BC.k_diffusive.uOfXT(x, t)]
             d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
             vof_adv += [BC.vof_advective.uOfXT(x, t)]
         zeros = np.zeros(len(t_list))
@@ -181,7 +181,7 @@ class TestBC(unittest.TestCase):
         npt.assert_equal(BC.v_dirichlet.uOfXT, None)
         npt.assert_equal(BC.w_dirichlet.uOfXT, None)
         npt.assert_equal(BC.vof_dirichlet.uOfXT, None)
-        npt.assert_equal(k_dir, zeros)
+        npt.assert_equal(k_diff, zeros)
         npt.assert_equal(BC.dissipation_dirichlet.uOfXT, None)
         npt.assert_equal(p_adv, zeros)
         npt.assert_equal(u_adv, zeros)
