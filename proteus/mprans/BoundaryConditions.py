@@ -134,11 +134,7 @@ class BC_RANS(BC_Base):
 
         # turbulent boundary conditions
         self.k_dirichlet.setConstantBC(0.0)  
-        self.k_advective.resetBC()
-        self.k_diffusive.resetBC()
-        self.dissipation_dirichlet.setConstantBC(0.0)  
-        self.dissipation_advective.resetBC()
-        self.dissipation_diffusive.resetBC()
+        self.dissipation_diffusive.setConstantBC(0.0)  
 
     def setFreeSlip(self):
         """
@@ -156,12 +152,8 @@ class BC_RANS(BC_Base):
         self.w_diffusive.setConstantBC(0.)
 
         # turbulent boundary conditions
-        self.k_dirichlet.resetBC() 
-        self.k_advective.setConstantBC(0.) 
-        self.k_diffusive.setConstantBC(0.) 
-        self.dissipation_dirichlet.resetBC() 
-        self.dissipation_advective.setConstantBC(0.) 
-        self.dissipation_diffusive.setConstantBC(0.) 
+        self.k_dirichlet.setConstantBC(0.0)  
+        self.dissipation_diffusive.setConstantBC(0.0)  
 
     def setAtmosphere(self, orientation=None, vof_air=1.):
         """
