@@ -271,34 +271,6 @@ class TestShapeRANS(unittest.TestCase):
         self.assertRaises(ValueError,assembleDomainRANS,domain)
 
 
-    def test_rigid_body(self):
-        domain = create_domain2D()
-        rectangle = create_rectangle(domain, dim=[2., 2.], coords=[1., 1.],
-                                     folder='mprans')
-        rectangle.setRigidBody()
-        npt.assert_equal(rectangle.holes.tolist(), [[1., 1.]])
-        assembleDomainRANS(domain)
-        isRigidBody = isinstance(domain.auxiliaryVariables['twp'][0], RigidBody)
-        npt.assert_equal(isRigidBody, True)
-
-    # def test_set_constraints(self):
-    #     domain = create_domain2D()
-    #     rectangle = create_rectangle(domain, dim=[2., 2.], coords=[1., 1.],
-    #                                  folder='mprans')
-    #     free_x = [1., 1.]
-    #     free_r = [0., 1.]
-    #     rectangle.setConstraints(free_x, free_r)
-    #     npt.assert_equal(rectangle.free_x.tolist(), free_x)
-    #     npt.assert_equal(rectangle.free_r.tolist(), free_r)
-
-    # def test_set_mass(self):
-    #     domain = create_domain2D()
-    #     rectangle = create_rectangle(domain, dim=[2., 2.], coords=[1., 1.],
-    #                                  folder='mprans')
-    #     mass = 50.
-    #     rectangle.setMass(mass)
-    #     npt.assert_equal(rectangle.mass, mass)
-
     def test_absorption_zones(self):
         flag = 1
         epsFact_solid = 0.5

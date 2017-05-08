@@ -130,8 +130,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
         if self.record_dict:
             self._recordValues()
         # print in proteus log file
-        print self.h, self.ang_disp, self.Shape.barycenter, self.pivot
-        print self.F, self.M
+
         self._logTrace()
 
     def _store_last_values(self):
@@ -478,14 +477,14 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             self.h[:], self.ang_disp[:] = self.imposeSinusoidalMotion()
         else:
             # Translational motion calculation
-            h = self.getDisplacement(dt)
+            self.h[:] = self.getDisplacement(dt)
             # Rotational motion calculation
-            ang_disp = self.getAngularDisplacement(dt)
+            self.ang_disp[:] = self.getAngularDisplacement(dt)
             
         # translate
         self.Shape.translate(self.h[:nd])
         # rotate
-        self.ang = np.linalg.norm(self.ang_disp)
+        self.ang = np.linalg.norm(self.ang_disp[:])
         if nd == 2 and self.ang_vel[2] < 0:
             self.ang = -self.ang
         if self.ang != 0.:
@@ -773,7 +772,8 @@ class CaissonBody(RigidBody):
         self.uxEl = 0.0
         self.last_uxEl = 0.0
         self.uxPl = 0.0
-        self.last_uxPl = 0.0        
+        self.last_uxPl = 0.0 
+        self.EL, self.last_EL, self.PL, self.last_PL= 0.0, 0.0, 0.0, 0.0
 
 
     def calculate_init(self):
@@ -826,6 +826,8 @@ class CaissonBody(RigidBody):
         self.last_uy = self.uy
         self.last_uxEl = self.uxEl
         self.last_uxPl = self.uxPl
+        self.last_EL = self.EL
+        self.last_PL = self.PL
                 
 
     def step(self, dt, substeps=20):
@@ -970,7 +972,7 @@ class CaissonBody(RigidBody):
         self.overturning = overturning
 
 
-    def setSprings(self, springs, Kx, Ky, Krot, Cx, Cy, Crot):
+    def setSprings(self, springs, Kx, Ky, Krot, Cx, Cy, Crot, Kz=0.0, Cz=0.0 ):
         """
         Sets a system of uniform springs to model soil's reactions (for moving bodies)
         Parameters
@@ -993,9 +995,11 @@ class CaissonBody(RigidBody):
         self.springs = springs
         self.Kx = Kx
         self.Ky = Ky
+        self.Kz = Kz
         self.Krot = Krot
         self.Cx = Cx
         self.Cy = Cy
+        self.Cz = Cz
         self.Crot = Crot
 
 
@@ -1073,8 +1077,8 @@ class CaissonBody(RigidBody):
                                          F=Fv, K=Ky, C=Cy, m=mass, velCheck=False)
             
             # Frictional force            
-            PL=0.0
-            EL=0.0
+            #self.PL=0.0
+            #self.EL=0.0
             reactionx = -(Kx*ux0)
             reactiony = -(Ky*uy)
             Ftan = -sign*m*abs(reactiony)
@@ -1083,31 +1087,31 @@ class CaissonBody(RigidBody):
 
             # check on the status of the body
             if self.sliding == True:
-                # plastic displacement
+                # caisson already experiences sliding and plastic displacements
                 Kx=0.0
                 Cx=0.0
-                EL=0.0
-                PL=1.0
+                self.EL=0.0
+                self.PL=1.0
                 Fh=Fx+Ftan
                 self.sliding=True
             elif abs(reactionx)>abs(Ftan) and (reactionx)*vx0 < 0.:
-                # plastic displacement
+                # caisson starts to experience sliding and plastic displacements
                 Kx=0.0
                 Cx=0.0
-                EL=0.0
-                PL=1.0
+                self.EL=0.0
+                self.PL=1.0
                 Fh=Fx+Ftan
-                self.sliding=True
+                self.sliding=True                
             else:
-                # elastic displacement
-                EL=1.0
-                PL=0.0
+                # caisson experiences vibration motion and elastic displacements
+                self.EL=1.0
+                self.PL=0.0
                 Fh=Fx
                 self.sliding=False
 
             # initial condition acceleration
             # solving numerical scheme
-            ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass 
+            ax0 = (Fh - Cx*vx0 - Kx*ux0) / mass
             if self.scheme == 'Runge_Kutta':
                 ux, vx, ax = runge_kutta(u0=ux0, v0=vx0, a0=ax0,
                                          dt=dt_sub, substeps=substeps,
@@ -1116,7 +1120,7 @@ class CaissonBody(RigidBody):
 	        
             # When horizontal velocity changes sign, 0-condition is passed
             # Loop must start from static case again
-            #self.sliding = False
+            
             if (vx0*vx) < 0.0 and self.sliding == True:
                 self.sliding = False
 
@@ -1125,8 +1129,8 @@ class CaissonBody(RigidBody):
             self.uy = uy
             dx = self.ux - ux0
             dy = self.uy - uy0
-            self.uxEl = dx*EL + self.last_uxEl   # updating elastic displacement
-            self.uxPl = dx*PL + self.last_uxPl   # updating plastic displacement
+            self.uxEl = dx*self.EL + self.last_uxEl   # updating elastic displacement
+            self.uxPl = dx*self.PL + self.last_uxPl   # updating plastic displacement
 
             # final values
             self.h[0] = dx 
@@ -1148,7 +1152,7 @@ class CaissonBody(RigidBody):
             else :
                 sign=sign_dynamic
                 m=self.m_dynamic
-            dynamic_case(self, sign, Fx, Fv, mass, m)
+            dynamic_case(self, sign=sign, Fx=Fx, Fv=Fv, mass=mass, m=m)
 
         if (Fv*gv)<0:
         #--- Floating module, static case
@@ -1427,14 +1431,19 @@ class PaddleBody(RigidBody):
         self.last_uy = self.uy
 
 
-    def inputMotion(self, At, Tt, Ar, Tr,
-                          InputMotion=False, pivot=None ):
+    def inputMotion(self, InputMotion=False, pivot=None, 
+                          At=[0., 0., 0], Tt=[0., 0., 0],
+                          Ar=[0., 0., 0], Tr=[0., 0., 0]):
         """
         Sets motion as an input. It's imposed rather than calculated.
 
         Parameters
         ----------
-        At: list, like [0.,0.,0.]
+        InputMotion: bool
+            If True, motion as input is applied.
+        pivot: list
+            Centre of rotation. If only translation, write barycenter's coordinates
+        At: list
             Amplitude of translational motion
         Tt: list
             Period of translational motion
@@ -1442,10 +1451,6 @@ class PaddleBody(RigidBody):
             Amplitude of rotational motion
         Tr: list
             Period of rotational motion
-        InputMotion: bool
-            If True, motion as input is applied.
-        pivot: list
-            Centre of rotation. If only translation, write barycenter's coordinates
 	    """     
         self.InputMotion = InputMotion
         if pivot == None:
@@ -1456,7 +1461,7 @@ class PaddleBody(RigidBody):
         self.Tt = np.array(Tt)
         self.Ar = np.array(Ar)
         self.Tr = np.array(Tr)
-        
+
 
     def imposeSinusoidalMotion(self):
         """
@@ -1483,7 +1488,8 @@ class PaddleBody(RigidBody):
         # motion update
             Tra[ii] = Dt - (self.last_position[ii] - self.init_barycenter[ii])
             Rot[ii] = Dr - (self.last_rotation_euler[ii])
-        return Tra, Rot
+
+        return Tra, Rot       
 
 
     def step(self, dt, substeps=20):
@@ -1505,10 +1511,10 @@ class PaddleBody(RigidBody):
             self.h[:], self.ang_disp[:] = self.imposeSinusoidalMotion()
         else:
             # Translational motion calculation
-            h = self.getDisplacement(dt)
+            self.h[:] = self.getDisplacement(dt)
             # Rotational motion calculation
-            ang_disp = self.getAngularDisplacement(dt)
-
+            ang_disp[:] = self.getAngularDisplacement(dt)
+        
         # translate
         self.Shape.translate(self.h[:nd])
         # rotate
@@ -1526,7 +1532,7 @@ class PaddleBody(RigidBody):
             self.rotation_matrix[:] = np.eye(3)
         self.barycenter[:] = self.Shape.barycenter
         self.position[:] = self.Shape.barycenter
-
+        
         # update vertices for friction and overturning modules
         self.cV[0] = self.Shape.vertices[0]
         self.cV[1] = self.Shape.vertices[1]
