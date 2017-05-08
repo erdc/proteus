@@ -422,8 +422,8 @@ class TestRigidBody(unittest.TestCase):
         caisson.translate(-h[:nd]), caisson.rotate(-rot[2])
         c2d.step(dt)
         posTra2, rot2 = c2d.position, c2d.rotation[:nd,:nd]
-        npt.assert_allclose(posTra1, posTra2, rtol=1e-10, atol=0)
-        npt.assert_allclose(rot1, rot2, rtol=1e-10, atol=0)
+        npt.assert_allclose(posTra1, posTra2, rtol=1e-5, atol=0)
+        npt.assert_allclose(rot1, rot2, rtol=1e-5, atol=0)
 
 #    def testSetRecordValues(self):
 #        from proteus import Domain  
