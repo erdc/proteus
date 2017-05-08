@@ -161,7 +161,7 @@ class TestBC(unittest.TestCase):
     def test_open_air(self):
         BC = create_BC(folder='mprans')
         BC.setFreeSlip()
-        u_adv, v_adv, w_adv,p_adv, u_diff, v_diff, w_diff, k_dir, d_diff, vof_adv = [], [], [], [], [], [], [], [], [], []
+        u_adv, v_adv, w_adv,p_adv, u_diff, v_diff, w_diff, k_diff, d_diff, vof_adv = [], [], [], [], [], [], [], [], [], []
         t_list = get_time_array()
         for t in t_list:
             x = get_random_x()
