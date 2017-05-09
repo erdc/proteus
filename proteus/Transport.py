@@ -41,8 +41,7 @@ class StorageSet(set):
             storageDict[k] = numpy.zeros(self.shape,self.storageType)
 
 class OneLevelTransport(NonlinearEquation):
-    r"""
-    A class for finite element discretizations of multicomponent
+    r""" A class for finite element discretizations of multicomponent
     advective-diffusive-reactive transport on a single spatial mesh.
 
     Objects of this type take the initial-boundary value
@@ -71,6 +70,13 @@ class OneLevelTransport(NonlinearEquation):
 
     The rest of the functions in this class are either private functions
     or return various other pieces of information.
+
+    Attributes
+    ----------
+    ebq_global[('velocityAverage',0)] : array
+        This attribute stores the average velocity along an edge given 
+        a discontinous velocity field.
+
     """
     def __init__(self,
                  uDict,
@@ -1576,6 +1582,7 @@ class OneLevelTransport(NonlinearEquation):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         import PostProcessingTools
+#        import pdb ; pdb.set_trace()
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
@@ -1648,13 +1655,11 @@ class OneLevelTransport(NonlinearEquation):
                 for eN in range(self.mesh.nElements_global):
                     materialFlag = self.mesh.elementMaterialTypes[eN]
                     for k in range(self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
-#                        pdb.set_trace()
                         interpolationValues[eN,k] = sol.uOfXT(self.u[cj].femSpace.interpolationPoints[eN,k],T,materialFlag)
             except TypeError:
                 for eN in range(self.mesh.nElements_global):
                     for k in range(self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
                         interpolationValues[eN,k] = sol.uOfXT(self.u[cj].femSpace.interpolationPoints[eN,k],T)
-#            pdb.set_trace()
             self.ua[cj].projectFromInterpolationConditions(interpolationValues)
             self.u[cj].femSpace.writeFunctionXdmf(archive,self.ua[cj],tCount)
     #what about setting initial conditions directly from dofs calculated elsewhere?
@@ -4215,8 +4220,6 @@ class OneLevelTransport(NonlinearEquation):
         list of local dof because of the exclusion of Dirichlet nodes
         (otherwise we could just loop over range(self.nDOF_element).
         """
-        import pdb
-#        pdb.set_trace()
         self.l2g=[{'nFreeDOF':numpy.zeros((self.mesh.nElements_global,),'i'),
                    'freeLocal':numpy.zeros((self.mesh.nElements_global,self.nDOF_trial_element[cj]),'i'),
                    'freeGlobal':numpy.zeros((self.mesh.nElements_global,self.nDOF_trial_element[cj]),'i')} for cj in range(self.nc)]
@@ -6638,6 +6641,8 @@ class MultilevelTransport:
                     if ts.dofMap.nDOF_all_processes != par_N:
                         mixed=True
                 par_nghost = 0
+                subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
+                max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
                 logEvent("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 if mixed:
                     par_N = par_n = sum([ts.dofMap.nDOF_all_processes for ts in trialSpaceDict.values()])

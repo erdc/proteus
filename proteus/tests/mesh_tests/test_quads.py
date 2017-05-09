@@ -75,7 +75,7 @@ class Test2DStokesOnQuads():
                     "poiseulleFlow.xmf",
                     "poiseulleFlow.h5",
                     "poiseulleFlow0.h5"]
-        TestTools.closeFiles(Filelist)
+        TestTools.removeFiles(Filelist)
        
     def test_01_FullRun(self):
         import filecmp

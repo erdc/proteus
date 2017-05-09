@@ -47,7 +47,7 @@ class TestHsu(unittest.TestCase):
         if(drag2 != 0):
             drag /=drag2
             drag2/=drag2
-        self.assertTrue(drag == drag2)
+        npt.assert_almost_equal(drag,drag2)
     @pytest.mark.skip(reason="in development")
     def testGranularDrag2(self):
         gl=GlobalVariables()
