@@ -32,7 +32,7 @@ def writeOutTriangulation(tri,filebase="mesh",nbase=0,verbose=0):
 
     """
     failed = False
-    if tri == None:
+    if tri is None:
         failed = True
         return failed
     if not nbase in [0,1]:
@@ -89,7 +89,7 @@ def printNodeFile(nodes,filebase='mesh',attrib=None,markers=None,nbase=0):
     Remaining lines: <vertex #> <x> <y>  [attributes] [boundary marker]
     """
     failed = False
-    if nodes == None: #ok to do nothing of nodes is empy
+    if nodes is None: #ok to do nothing of nodes is empy
         return failed
     #end empty areas check
     if not nbase in [0,1]:
@@ -109,11 +109,11 @@ def printNodeFile(nodes,filebase='mesh',attrib=None,markers=None,nbase=0):
     nvert   = nodes.shape[0]
     sdim    = 2
     nattrib = 0
-    if attrib != None:
+    if attrib is not None:
         nattrib = attrib.shape[1]
     #end if
     nmarkers= 0
-    if markers != None:
+    if markers is not None:
         nmarkers = 1
     #end if
     line = """%d %d %d %d \n""" % (nvert,sdim,nattrib,nmarkers)
@@ -143,7 +143,7 @@ def printElemFile(elems,filebase='mesh',attrib=None,nbase=0):
     Remaining lines: <triangle #> <node> <node>  <node> ... [attributes]
     """
     failed = False
-    if elems == None: #ok to do nothing of nodes is empy
+    if elems is None: #ok to do nothing of nodes is empy
         return failed
     #end empty areas check
     if not nbase in [0,1]:
@@ -164,7 +164,7 @@ def printElemFile(elems,filebase='mesh',attrib=None,nbase=0):
     nelem   = elems.shape[0]
     nodesPerTri = elems.shape[1] #should be 3 or 6
     nattrib = 0
-    if attrib != None:
+    if attrib is not None:
         nattrib = attrib.shape[1]
     #end if
     line = """%d %d %d \n""" % (nelem,nodesPerTri,nattrib)
@@ -203,10 +203,10 @@ def printPolyFile(nodes,segments,filebase='mesh',
 
     """
     failed = False
-    if nodes == None: #ok to do nothing of nodes is empy
+    if nodes is None: #ok to do nothing of nodes is empy
         return failed
-    if segments == None:
-        if nodes == None:
+    if segments is None:
+        if nodes is None:
             return failed
         else:
             failed = True
@@ -237,11 +237,11 @@ def printPolyFile(nodes,segments,filebase='mesh',
     nvert   = nodes.shape[0]
     sdim    = 2
     npattrib= 0
-    if pattrib != None:
+    if pattrib is not None:
         npattrib = pattrib.shape[1]
     #end if
     npmarkers= 0
-    if pmarkers != None:
+    if pmarkers is not None:
         npmarkers = 1
     #end if
     #write points out
@@ -261,7 +261,7 @@ def printPolyFile(nodes,segments,filebase='mesh',
     #write segments out
     nsegments = segments.shape[0]
     nsmarkers = 0
-    if smarkers != None:
+    if smarkers is not None:
         nsmarkers = 1
     line = """%d %d \n""" % (nsegments,nsmarkers)
     fout.write(line)
@@ -275,7 +275,7 @@ def printPolyFile(nodes,segments,filebase='mesh',
     #end i segment loop
 
     nholes = 0
-    if holes != None:
+    if holes is not None:
         nholes = holes.shape[0]
     #end if
     line ="""%d\n""" % nholes
@@ -286,7 +286,7 @@ def printPolyFile(nodes,segments,filebase='mesh',
         fout.write(line)
     #end i for holes
     nregions = 0
-    if regions != None:
+    if regions is not None:
         nregions = regions.shape[0]
     #end if
     line = "#no regions specified"
@@ -317,7 +317,7 @@ def printAreaFile(elemAreas,filebase='mesh',nbase=0):
     note, negative area means that the area is unconstrained
     """
     failed = False
-    if elemAreas == None: #ok to do nothing if elemAreas is empty
+    if elemAreas is None: #ok to do nothing if elemAreas is empty
         return failed
     #end elemAreas empty
     if not nbase in [0,1]:
@@ -357,7 +357,7 @@ def printEdgeFile(edges,filebase='mesh',markers=None,nbase=0):
     Following lines: <edge #> <endpoint> <endpoint> [boundary marker]
     """
     failed = False
-    if edges == None: #ok to do nothing if elemAreas is empty
+    if edges is None: #ok to do nothing if elemAreas is empty
         return failed
     #end empty arrays check
 
@@ -377,7 +377,7 @@ def printEdgeFile(edges,filebase='mesh',markers=None,nbase=0):
     fout.write(format)
     nedges   = edges.shape[0]
     nmarkers = 0
-    if markers != None:
+    if markers is not None:
         nmarkers = 1
     #end if
     line = """%d %d \n""" % (nedges,nmarkers)
@@ -404,7 +404,7 @@ def printNeighborFile(neigs,filebase='mesh',nbase=0):
     Following lines: <triangle #> <neighbor> <neighbor> <neighbor>
     """
     failed = False
-    if neigs == None: #ok to do nothing if elemAreas is empty
+    if neigs is None: #ok to do nothing if elemAreas is empty
         return failed
     #end
     if not nbase in [0,1]:
@@ -791,12 +791,12 @@ class TriangleInputFileReader:
         #end
         outputData['hole']   = {}
         outputData['hole']['holes'] = None
-        if not holeData == None:
+        if not holeData is None:
             outputData['hole']['holes']  = holeData[0]
 
         outputData['region'] = {}
         outputData['region']['regions'] = None
-        if not regionData == None:
+        if not regionData is None:
             outputData['region']['regions'] = regionData[0]
 
         return outputInfo,outputData
