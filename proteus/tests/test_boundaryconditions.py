@@ -160,42 +160,42 @@ class TestBC(unittest.TestCase):
 
     def test_open_air(self):
         BC = create_BC(folder='mprans')
-        b_or = np.array([[+1., 0., 0.]])
-        b_i = 0
-        BC = create_BC(folder='mprans', b_or=b_or, b_i=b_i)
+        BC = create_BC(folder='mprans', b_or=np.array([[1., 1., 1.]]), b_i=0)
         BC.setAtmosphere()
-        u_adv, v_adv, w_adv, p_adv, u_diff, v_diff, w_diff, k_diff, d_diff, vof_adv = [], [], [], [], [], [], [], [], [], []
+        p_dir, u_dir, v_dir, w_dir, vof_dir, u_diff, v_diff, w_diff, k_diff, d_diff = [], [], [], [], [], [], [], [], [], []
         t_list = get_time_array()
         for t in t_list:
             x = get_random_x()
-            u_adv += [BC.u_advective.uOfXT(x, t)]
-            v_adv += [BC.v_advective.uOfXT(x, t)]
-            w_adv += [BC.w_advective.uOfXT(x, t)]
-            p_adv += [BC.p_advective.uOfXT(x, t)]
+            p_dir += [BC.p_dirichlet.uOfXT(x, t)]
+            u_dir += [BC.u_dirichlet.uOfXT(x, t)]
+            v_dir += [BC.v_dirichlet.uOfXT(x, t)]
+            w_dir += [BC.w_dirichlet.uOfXT(x, t)]
+            vof_dir += [BC.vof_dirichlet.uOfXT(x, t)]
             u_diff += [BC.u_diffusive.uOfXT(x, t)]
             v_diff += [BC.v_diffusive.uOfXT(x, t)]
             w_diff += [BC.w_diffusive.uOfXT(x, t)]
             k_diff += [BC.k_diffusive.uOfXT(x, t)]
             d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
-            vof_adv += [BC.vof_advective.uOfXT(x, t)]
         zeros = np.zeros(len(t_list))
-        npt.assert_equal(BC.p_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.u_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.v_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.w_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.vof_dirichlet.uOfXT, None)
-        npt.assert_equal(k_diff, zeros)
+        vofAir = zeros + 1.
+        npt.assert_equal(p_dir, zeros)
+        npt.assert_equal(u_dir, zeros)
+        npt.assert_equal(v_dir, zeros)
+        npt.assert_equal(w_dir, zeros)
+        npt.assert_equal(vof_dir, vofAir)
+        npt.assert_equal(BC.k_dirichlet.uOfXT, None)
         npt.assert_equal(BC.dissipation_dirichlet.uOfXT, None)
-        npt.assert_equal(p_adv, zeros)
-        npt.assert_equal(u_adv, zeros)
-        npt.assert_equal(v_adv, zeros)
-        npt.assert_equal(w_adv, zeros)
-        npt.assert_equal(vof_adv, zeros)
+        npt.assert_equal(BC.p_advective.uOfXT, None)
+        npt.assert_equal(BC.u_advective.uOfXT, None)
+        npt.assert_equal(BC.v_advective.uOfXT, None)
+        npt.assert_equal(BC.w_advective.uOfXT, None)
+        npt.assert_equal(BC.vof_advective.uOfXT, None)
         npt.assert_equal(BC.k_advective.uOfXT, None)
         npt.assert_equal(BC.dissipation_advective.uOfXT, None)
         npt.assert_equal(u_diff, zeros)
         npt.assert_equal(v_diff, zeros)
         npt.assert_equal(w_diff, zeros)
+        npt.assert_equal(k_diff, zeros)
         npt.assert_equal(d_diff, zeros)
         # check if other BC are None
     # def test_unsteady_two_phase_velocity_inlet(self):
