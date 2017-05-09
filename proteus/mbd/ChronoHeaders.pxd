@@ -83,10 +83,27 @@ cdef extern from "ChMoorings.h":
         void SetupInitial()
     cdef cppclass ChPhysicsItem:
         ChPhysicsItem()
-    cdef cppclass ChBody(ChPhysicsItem):
-        ChBody() except +
+    cdef cppclass ChFrame[double]:
         void SetPos(const ChVector[double]& mpos) except +
+        ChVector& GetPos()
+        ChQuaternion& GetRot()
         void SetRot(ChQuaternion &rot) except +
+        void SetPos(ChVector &pos) except +
+        ChMatrix33& GetA()
+        ChVector GetRotAxis()
+        double GetRotAngle()
+    cdef cppclass ChFrameMoving[double](ChFrame):
+        ChVector& GetPos_dt()
+        ChQuaternion& GetRot_dt()
+        ChVector& GetPos_dtdt()
+        ChQuaternion& GetRot_dtdt()
+        ChMatrix33 GetA_dt()
+        ChMatrix33 GetA_dtdt()
+    cdef cppclass ChBodyFrame(ChFrameMoving):
+        ChBodyFrame()
+    cdef cppclass ChBody(ChPhysicsItem, ChBodyFrame):
+        ChBody() except +
+        # void SetRot(ChQuaternion &rot) except +
         void SetBodyFixed(bool state) except +
         void SetMaterialSurface(const shared_ptr[ChMaterialSurfaceBase] &mnewsurf) except +
         void SetMass(double newmass)
