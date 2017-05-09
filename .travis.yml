@@ -1,5 +1,5 @@
 dist: trusty
-sudo: required
+sudo: true
 
 language: python
 
@@ -14,15 +14,20 @@ addons:
     packages:
     - gfortran
     - libffi-dev
-    - python-lzma
     - libssl-dev
+    - python-lzma
 
 before_install:
 - pip install pyliblzma
+- wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
+- tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
+- cd git-lfs-1.5.5
+- PREFIX=${HOME} ./install.sh
+- export PATH=${HOME}/bin:${PATH}
+- cd ..
 
 install:
-- curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
-- sudo apt-get install git-lfs
+- git lfs fetch
 - git lfs checkout
 - make hashdist
 - make stack
@@ -30,9 +35,13 @@ install:
 - ./hashdist/bin/hit init-home
 - ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source"
 - ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_ubuntu_14_04 --objects="build"
-- rm -rf ${HOME}/.hashdist/bld/chrono/*
-- FC=gfortran make install
+- cd stack
+- ../hashdist/bin/hit build -v default.yaml
+- cd ..
+- make profile
+- FC=gfortran CC=mpicc CXX=mpicxx make install
 - export PATH=$PWD/linux2/bin:$PATH
+- export LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 - export SSL_CERT_DIR=/etc/ssl/certs
 - ls $SSL_CERT_DIR
 

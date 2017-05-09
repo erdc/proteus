@@ -51,7 +51,14 @@ class TestPoisson():
                     'poisson_3d_tetgen_c0p1pe1.xmf',
                     'poisson_3d_tetgen_c0p1pe1.h5',
                     'poisson_3d_c0q2pe1.xmf',
-                    'poisson_3d_c0q2pe1.h5']
+                    'poisson_3d_c0q2pe1.h5',
+                    'reference_triangle_2d.node',
+                    'reference_triangle_2d.ele',
+                    'reference_triangle_2d.poly',
+                    'reference_triangle_3d.ele',
+                    'reference_triangle_3d.node',
+                    'reference_triangle_3d.poly',
+                    'reference_triangle_3d.face']
         for file in FileList:
             if os.path.isfile(file):
                 os.remove(file)

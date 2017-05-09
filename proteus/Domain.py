@@ -457,6 +457,7 @@ def unitSimplex(nd=2):
     if nd!=2 and nd!=3:
         logEvent("ERROR - Reference element must have dimension 2 or 3")
         sys.exit(1)
+
     if nd==2:
         return PlanarStraightLineGraphDomain(vertices=[[0. , 0.], 
                                                        [0. , 1.], 
@@ -468,9 +469,9 @@ def unitSimplex(nd=2):
     if nd==3:
        boundaryTags = {'bottom':1,'front':2,'side':3,'back':4}
        return PiecewiseLinearComplexDomain(vertices=[[0.0 , 0.0 , 0.0], 
-                                                     [0.0 , 0.0 , 1.0], 
+                                                     [1.0 , 0.0 , 0.0],
                                                      [0.0 , 1.0 , 0.0], 
-                                                     [1.0 , 0.0 , 0.0]],
+                                                     [0.0 , 0.0 , 1.0] ],
                                            facets = [[[0, 2, 3]],
                                                      [[0, 1, 2]],
                                                      [[0, 1, 3]],
@@ -864,6 +865,20 @@ class MeshTetgenDomain(D_base):
         D_base.__init__(self,3,name=fileprefix)
         self.meshfile=fileprefix
 
+class PUMIDomain(D_base):
+  """
+  3d domains from PUMI mesh files
+
+  faceList -- defines face classification in simmetrix  mesh
+  PUMIMesh -- the MeshAdapt object
+  """
+  def __init__(self, name="PUMIDomain", dim=3):
+      D_base.__init__(self,dim,name)
+      self.faceList=[]
+      self.PUMIMesh=None
+      #
+      #it would be useful to define a dictionary mapping strings to faces
+      #boundariesTags={'bottom':3,'top':5,'front':1,'back':6,'left':2,'right':4}
 
 class PiecewiseLinearComplexDomain(D_base):
     """
