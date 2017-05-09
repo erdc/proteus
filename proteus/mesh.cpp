@@ -2462,6 +2462,7 @@ extern "C"
           nodes[0] = mesh.elementNodesArray[eN*4+((ebN+1)%4)];
           nodes[1] = mesh.elementNodesArray[eN*4+((ebN+2)%4)];
           nodes[2] = mesh.elementNodesArray[eN*4+((ebN+3)%4)];
+
           NodeTuple<3> ebt(nodes);
           if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
             {
@@ -2890,11 +2891,12 @@ extern "C"
 	    mesh.elementBoundaryBarycentersArray[ebN*3 + 2] += 
 	      nNperElemBInv*mesh.nodeArray[mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN_L]*3 + 2];
 
-	    for (int nN_R=nN_L+1;nN_R<mesh.nNodes_elementBoundary;nN_R++)
+	    for (int nN_R=nN_L+1;nN_R<mesh.nNodes_elementBoundary;nN_R++) {
 	      mesh.elementBoundaryDiametersArray[ebN] = fmax(mesh.elementBoundaryDiametersArray[ebN],
 							     edgeLength(mesh.elementBoundaryNodesArray[ebN*3+nN_L],
 									mesh.elementBoundaryNodesArray[ebN*3+nN_R],
 									mesh.nodeArray));
+            }
 	  }
       } 
     for (int eN=0;eN<mesh.nElements_global;eN++)
@@ -2947,10 +2949,10 @@ extern "C"
       {
 	mesh.nodeDiametersArray[nN] /= mesh.nodeSupportArray[nN];
       }
-    //printf("volume = %12.5e \n",mesh.volume);
-    //printf("h = %12.5e \n",mesh.h);
-    //printf("hMin = %12.5e \n",mesh.hMin);
-    //printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
+//    printf("volume = %12.5e \n",mesh.volume);
+//    printf("h = %12.5e \n",mesh.h);
+//    printf("hMin = %12.5e \n",mesh.hMin);
+//    printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
     return 0;
   }
   inline double hexahedronVolume(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, const double* nodeArray)

@@ -6394,7 +6394,8 @@ class PoissonEquationCoefficients(TC_base):
                          diffusion,
                          potential,
                          reaction,
-                         hamiltonian)
+                         hamiltonian,
+                         sparseDiffusionTensors={})
     def initializeElementQuadrature(self,t,cq):
         nd = self.nd
         for ci in range(self.nc):
