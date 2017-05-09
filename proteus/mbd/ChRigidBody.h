@@ -54,13 +54,7 @@ class cppRigidBody {
   double* inertia;
   std::shared_ptr<ChBody> body;
   cppSystem* system;
-  cppRigidBody(cppSystem* system,
-               double* pos,
-               double* rotq,
-               double mass,
-               double* inertia,
-               double* free_x,
-               double* free_r);
+  cppRigidBody(cppSystem* system);
   double hx(double* x, double t);
   double hy(double* x, double t);
   double hz(double* x, double t);
@@ -184,34 +178,14 @@ void cppSystem::setChTimeStep(double dt) {
     chrono_dt = dt;
 };
 
-cppRigidBody::cppRigidBody(cppSystem* system,
-                           double* posin,
-                           double* rotin,
-                           double mass,
-                           double* inertia,
-                           double* free_xin,
-                           double* free_rin):
-  system(system),
-  mass(mass),
-  inertia(inertia),
-  free_x(free_xin[0], free_xin[1], free_xin[2]),
-  free_r(free_rin[0], free_rin[1], free_rin[2])
+cppRigidBody::cppRigidBody(cppSystem* system):
+  system(system)
 {
 
   body = std::make_shared<ChBody>();
   // add body to system
   system->system.AddBody(body);
   // basic attributes of body
-  pos = ChVector<>(posin[0], posin[1], posin[2]);
-  rotq = ChQuaternion<>(rotin[0], rotin[1], rotin[2], rotin[3]);
-  body->SetPos(pos);
-  body->SetRot(rotq);
-  body->SetInertiaXX(ChVector<>(1.,
-                                1.,
-                                inertia[2]));  // careful division by zero!
-  if (free_x.x() == 0 && free_x.y() == 0 && free_x.z() ==0 && free_r.x() == 0 && free_r.y() ==0 && free_r.z() == 0) {
-  body->SetBodyFixed(true);
-  }
   rotm = body->GetA();
   rotm_last = body->GetA();
   pos = body->GetPos();
@@ -447,21 +421,9 @@ cppSystem * newSystem(double* gravity)
 
 
 
-cppRigidBody * newRigidBody(cppSystem* system,
-                            double* position,
-                            double* rotq,
-                            double mass,
-                            double* inertia,
-                            double* free_x,
-                            double* free_r)
+cppRigidBody * newRigidBody(cppSystem* system)
 {
-  return new cppRigidBody(system,
-                          position,
-                          rotq,
-                          mass,
-                          inertia,
-                          free_x,
-                          free_r);
+  return new cppRigidBody(system);
 }
 
 

@@ -83,6 +83,7 @@ cdef extern from "ChMoorings.h":
                                                 ch.ChVector position,
                                                 ch.ChVector dimensions)
 
+
 cdef extern from "ChRigidBody.h":
     cdef cppclass cppSystem:
         ch.ChSystemDEM system
@@ -118,9 +119,7 @@ cdef extern from "ChRigidBody.h":
         ch.ChVector F_last
         ch.ChVector M
         ch.ChVector M_last
-        cppRigidBody(cppSystem* system, double* position,
-                     double* rotq, double mass, double* inertia,
-                     double* free_x, double* free_r)
+        cppRigidBody(cppSystem* system)
         void prestep(double* force, double* torque)
         void poststep()
         double hx(double* x, double dt)
@@ -145,13 +144,7 @@ cdef extern from "ChRigidBody.h":
         void setPrescribedMotionSine(double a, double f)
 
 
-    cppRigidBody * newRigidBody(cppSystem* system,
-                                double* center,
-                                double* rot,
-                                double mass,
-                                double* inertia,
-                                double* free_x,
-                                double* free_r)
+    cppRigidBody * newRigidBody(cppSystem* system)
 
 cdef class RigidBody:
     cdef cppRigidBody * thisptr
@@ -191,56 +184,75 @@ cdef class RigidBody:
       np.ndarray M_prot
       np.ndarray F_prot_last
       np.ndarray M_prot_last
+      string name
       # np.ndarray free_r
       # np.ndarray free_x
     def __cinit__(self,
                   System system,
-                  shape=None,
-                  np.ndarray center=None,
-                  np.ndarray rot=np.array([1.,0.,0.,0.]),
-                  double mass=1.,
-                  np.ndarray inertia=np.array([1.,1.,1.]),
-                  np.ndarray free_x=np.array([1.,1.,1.]),
-                  np.ndarray free_r=np.array([1.,1.,1.])):
+                  shape=None):
         self.system = system
-        self.Shape = shape
-        if shape is not None:
-            self.nd = shape.nd
-        self.system.addSubcomponent(self)
+        self.thisptr = newRigidBody(system.thisptr)
+        self.Shape = None
+        self.attachShape(shape)  # attach shape (if any)
+        self.system.addSubcomponent(self)  # add body to system (for pre and post steps)
         self.record_dict = OrderedDict()
-        if center is None:
-            if shape is not None:
-                center = np.array(shape.barycenter)
-            else:
-                center = np.array([0., 0., 0.])
-        self.thisptr = newRigidBody(system.thisptr,
-                                    <double*> center.data,
-                                    <double*> rot.data,
-                                    <double> mass,
-                                    <double*> inertia.data,
-                                    <double*> free_x.data,
-                                    <double*> free_r.data)
-        if shape is not None:
-            if 'ChRigidBody' not in shape.auxiliaryVariables:
-                shape.auxiliaryVariables['ChRigidBody'] = self
-                self.setName(shape.name)
-        self.F_prot = np.zeros(3)
-        self.M_prot = np.zeros(3)
+        self.F_prot = np.zeros(3)  # initialise empty Proteus force
+        self.M_prot = np.zeros(3)  # initialise empty Proteus moment
         self.prescribed_motion_function = None
 
     def attachShape(self, shape):
-        assert self.Shape is None, 'Shape '+self.Shape.name+' was already attached'
-        self.Shape = shape
-        if 'ChRigidBody' not in shape.auxiliaryVariables:
-            shape.auxiliaryVariables['ChRigidBody'] = self
+        """Attach proteus.SpatialTools shape to body.
+        Used for automatic calculation of external forces from Proteus.
+        Called automatically when creating a body and passing a shape
+        instance.
+
+        Parameters
+        ----------
+        shape: SpatialTools.Shape
+            instance of shape from proteus.SpatialTools or
+            proteus.mprans.SpatialTools
+        """
+        if shape is not None:
+            assert self.Shape is None, 'Shape '+self.Shape.name+' was already attached'
+            self.Shape = shape
+            if 'ChRigidBody' not in shape.auxiliaryVariables:
+                shape.auxiliaryVariables['ChRigidBody'] = self
+                self.setName(shape.name)
+            self.nd = shape.Domain.nd
+            self.SetPosition(shape.barycenter)
 
     def SetBodyFixed(self, bool state):
+        """Fix body in space
+
+        Parameters
+        ----------
+        state: bool
+            body fixed if True, body free if False
+        """
         deref(self.thisptr.body).SetBodyFixed(state)
 
     def setWidth2D(self, width):
+        """Sets width of 2D body (for forces and moments calculation)
+
+        Parameters
+        ----------
+        width: float
+            width of the body
+        """
         self.width_2D = width
 
     def set_indices(self, i_start, i_end):
+        """Sets the flags of the boundaries of the body
+        numbers must be gloabal (from domain.segmentFlags or
+        domain.facetFlags) and a range from i_start to i_end.
+
+        Parameters
+        ----------
+        i_start: int
+            first global flag of body boundaries
+        i_end: int
+            last global flag (+1) of body boundaries
+        """
         self.i_start = i_start
         self.i_end = i_end
 
@@ -261,71 +273,93 @@ cdef class RigidBody:
         self.thisptr.poststep()
 
     def hx(self, np.ndarray x, double t):
+        """BC function for mesh nodes displacement (x component)
+
+        Parameters
+        ----------
+        x: array_like
+            coordinates of the node before displacement
+        t: double
+            simulation time
+        """
         return self.thisptr.hx(<double*> x.data, t)
 
     def hy(self, np.ndarray x, double t):
+        """BC function for mesh nodes displacement (y component)
+
+        Parameters
+        ----------
+        x: array_like
+            coordinates of the node before displacement
+        t: double
+            simulation time
+        """
         return self.thisptr.hy(<double*> x.data, t)
 
     def hz(self, np.ndarray x, double t):
+        """BC function for mesh nodes displacement (z component)
+
+        Parameters
+        ----------
+        x: array_like
+            coordinates of the node before displacement
+        t: double
+            simulation time
+        """
         return self.thisptr.hz(<double*> x.data, t)
 
-    # def setConstraintsDOF(self, np.ndarray free_x, np.ndarray free_r):
-    #     """
-    #     Sets constraints on the Shape (for moving bodies)
-
-    #     Parameters
-    #     ----------
-    #     free_x: array_like
-    #         Translational constraints.
-    #     free_r: array_like
-    #         Rotational constraints.
-    #     """
-    #     self.thisptr.free_x = <double*> free_x.data
-    #     self.thisptr.free_r = <double*> free_r.data
     def addSpring(self, double stiffness, double damping, np.ndarray fairlead,
                   np.ndarray anchor, double rest_length):
         self.thisptr.addSpring(stiffness, damping, <double*> fairlead.data,
                                <double*> anchor.data, rest_length)
 
-    def setPosition(self, np.ndarray position):
+    def SetPosition(self, np.ndarray position):
+        """Sets position of body manually
+
+        Parameters
+        ----------
+        position: array_like
+            new position of body (must be array of length 3)
+        """
         self.thisptr.setPosition(<double*> position.data)
 
     def setRotation(self, np.ndarray quaternion):
+        """Sets rotation of body manually
+
+        Parameters
+        ----------
+        rotation: array_like
+            new rotation of body (quaternion: must be array of length 4)
+        """
         self.thisptr.setRotation(<double*> quaternion.data)
 
     def setConstraints(self, np.ndarray free_x, np.ndarray free_r):
-        self.thisptr.setConstraints(<double*> free_x.data, <double*> free_r.data)
+        """Sets constraints on the body
+        (!) Only acts on Proteus and gravity forces
 
-    def setMass(self, double mass):
-        """
-        Set mass of the shape.
         Parameters
         ----------
-        mass: float
+        free_x: array_like
+            Translational constraints.
+        free_r: array_like
+            Rotational constraints.
+        """
+        self.thisptr.setConstraints(<double*> free_x.data, <double*> free_r.data)
+
+    def SetMass(self, double mass):
+        """Sets mass of body.
+
+        Parameters
+        ----------
+        mass: double
             mass of the body
         """
         deref(self.thisptr.body).SetMass(mass)
 
-    # def setInertiaTensor(self, It):
-    #     """
-    #     Set the inertia tensor of the shape
-
-    #     Parameters
-    #     ----------
-    #     It: array_like, float
-    #         Inertia tensor of the body (3x3 array in 3D, float in 2D)
-
-    #     Notes
-    #     -----
-    #     The inertia tensor should not be already scaled with the mass of the
-    #     shape.
-    #     """
-    #     self.thisptr.inertia = <double*> It
-
     def getPressureForces(self):
-        """
-        Gives the pressure forces applied on each segments/facets of the rigid
-        body
+        """Gives pressure forces from fluid (Proteus) acting on body.
+        (!) Only works during proteus simulation
+
         Returns
         -------
         F_p: array_like
@@ -337,9 +371,9 @@ cdef class RigidBody:
         return F_t
 
     def getShearForces(self):
-        """
-        Gives the shear forces applied on each segments/facets of the rigid
-        body
+        """Gives shear forces from fluid (Proteus) acting on body
+        (!) Only works during proteus simulation
+
         Returns
         -------
         F_v: array_like
@@ -351,8 +385,9 @@ cdef class RigidBody:
         return F_t
 
     def getMoments(self):
-        """
-        Gives the moments applied on each segments/facets of the rigid body
+        """Gives moments from fluid (Proteus) acting on body
+        (!) Only works during proteus simulation
+
         Returns
         -------
         M: array_like
@@ -363,25 +398,67 @@ cdef class RigidBody:
         M_t = np.sum(M, axis=0)
         # !!!!!!!!!!!! UPDATE BARYCENTER !!!!!!!!!!!!
         Fx, Fy, Fz = self.F_prot
-        rx, ry, rz = self.barycenter0-self.getPosition()
+        rx, ry, rz = self.barycenter0-self.GetPos()
         Mp = np.array([ry*Fz-rz*Fy, -(rx*Fz-rz*Fx), (rx*Fy-ry*Fx)])
         M_t += Mp
         return M_t
 
-    def getPosition(self):
-        x = self.thisptr.pos.x()
-        y = self.thisptr.pos.y()
-        z = self.thisptr.pos.z()
-        return np.array([x, y, z])
+    def SetPos(self, double[:] pos):
+        """Sets current position of body
 
-    def getRotationQuaternion(self):
-        e0 = self.thisptr.rotq.e0()
-        e1 = self.thisptr.rotq.e1()
-        e2 = self.thisptr.rotq.e2()
-        e3 = self.thisptr.rotq.e3()
-        return np.array([e0, e1, e2, e3])
+        Parameters
+        ----------
+        pos: array_like
+            position of body (array of length 3)
+        """
+        assert len(pos) == 3, 'Position aray must be of length 3'
+        cdef ch.ChVector pos_vec
+        pos_vec = ch.ChVector[double](pos[0], pos[1], pos[2])
+        deref(self.thisptr.body).SetPos(pos_vec)
+
+    def GetPos(self):
+        """Gives current position of body
+
+        Returns
+        -------
+        pos: array_like
+            current position of body
+        """
+        pos = ChVector_to_npArray(deref(self.thisptr.body).GetPos())
+        return pos
+
+    def SetRot(self, double[:] rot):
+        """Sets current rotation (quaternion) of body
+
+        Parameters
+        ----------
+        rot: array_like
+           rotation of body (array of length 4)
+        """
+        assert len(rot) == 4, 'Position aray must be of length 4'
+        cdef ch.ChQuaternion rot_vec
+        rot_vec = ch.ChQuaternion[double](rot[0], rot[1], rot[2], rot[3])
+        deref(self.thisptr.body).SetRot(rot_vec)
+
+    def GetRot(self):
+        """Gives current rotation (quaternion) of body
+
+        Returns
+        -------
+        rot: array_like
+            current rotation of body
+        """
+        rot = ChQuaternion_to_npArray(deref(self.thisptr.body).GetRot())
+        return rot
 
     def getRotationMatrix(self):
+        """Gives current rotation (matrix) of body
+
+        Returns
+        -------
+        rot: array_like
+            current rotation (matrix) of body
+        """
         x0 = self.thisptr.rotm.Get_A_Xaxis().x()
         x1 = self.thisptr.rotm.Get_A_Xaxis().y()
         x2 = self.thisptr.rotm.Get_A_Xaxis().z()
@@ -391,12 +468,15 @@ cdef class RigidBody:
         z0 = self.thisptr.rotm.Get_A_Zaxis().x()
         z1 = self.thisptr.rotm.Get_A_Zaxis().y()
         z2 = self.thisptr.rotm.Get_A_Zaxis().z()
-        matrix = np.array([x0, x1, x2],
-                          [y0, y1, y2],
-                          [z0, z1, z2])
-        return matrix
+        rot = np.array([x0, x1, x2],
+                       [y0, y1, y2],
+                       [z0, z1, z2])
+        return rot
 
     def prestep(self):
+        """Called before Chrono system step.
+        Sets external forces automatically from Proteus solution.
+        """
         if self.system.model is not None:
             self.F_prot_last = np.array(self.F_prot)
             self.M_prot_last = np.array(self.M_prot)
@@ -405,10 +485,25 @@ cdef class RigidBody:
             self.setExternalForces(self.F_prot, self.M_prot)
 
     def setExternalForces(self, np.ndarray forces, np.ndarray moments):
+        """Sets external forces to body.
+        Called during prestep or can be called manually. If called manually,
+        must be a Chrono only simulation.
+
+        Parameters
+        ----------
+        forces: array_like
+            forces array (length 3)
+        moments: array_like
+            moments array (length 3)
+        """
         self.thisptr.prestep(<double*> forces.data,
                              <double*> moments.data)
 
     def poststep(self):
+        """Called after Chrono system step.
+        Records values to csv, broadcast new position and rotation from
+        calculating processor to all processors for moving mesh BC.
+        """
         if self.prescribed_motion_function is not None:
             new_x = self.callPrescribedMotion(self.system.model.stepController.t_model_last)
             self.thisptr.setPosition(<double*> new_x.data)
@@ -448,6 +543,9 @@ cdef class RigidBody:
                 self._recordValues()
 
     def calculate_init(self):
+        """Called from self.System.calculate_init()
+        before simulation starts
+        """
         # barycenter0 used for moment calculations
         if self.Shape is not None:
             self.barycenter0 = self.Shape.barycenter.copy()
@@ -462,19 +560,53 @@ cdef class RigidBody:
     def calculate(self):
         pass
 
-    def setPrescribedMotionPoly(self, double coeff1):
-        self.thisptr.setPrescribedMotionPoly(coeff1)
-
     def setPrescribedMotionSine(self, double a, double f):
+        """Sets sinusoidal prescribed motion for body
+
+        Parameters
+        ----------
+        a: double
+            amplitude of sinusoid
+        f: double
+            frequency of sinusoid
+        """
         self.thisptr.setPrescribedMotionSine(a, f)
 
+    def setPrescribedMotionPoly(self, double coeff1):
+        """Sets polynomial prescribed motion for body
+
+        Parameters
+        ----------
+        coeff1: double
+            coeff1 of polynomial
+        """
+        self.thisptr.setPrescribedMotionPoly(coeff1)
+
     def setPrescribedMotion(self, function):
+        """Sets custom prescribed motion function
+        (!) should be preferably set only if body is free and not
+        linked to other bodies or other elements (such as moorings)
+        as this is used only for setting moving mesh BC by enforcing
+        position of the body at each time step.
+        Use setPrescribedMotionPoly or setPrescribedMotionSine for
+        functions that are safe to use with a body linked with other
+        elements.
+
+        Parameters
+        ----------
+        function:
+            must be a function of time returning an array of the
+            absolute position of the body (numpy array of length 3:
+            x, y, z)
+        """
         self.prescribed_motion_function = function
 
     cdef np.ndarray callPrescribedMotion(self, double t):
         return self.prescribed_motion_function(t)
 
     def getValues(self):
+        """Get values (pos, vel, acc, etc.) from C++ to python
+        """
         # position
         self.position = ChVector_to_npArray(self.thisptr.pos)
         self.position_last = ChVector_to_npArray(self.thisptr.pos_last)
@@ -510,8 +642,9 @@ cdef class RigidBody:
                         rot=False, ang_disp=False, F=False, M=False,
                         inertia=False, vel=False, acc=False, ang_vel=False, ang_acc=False):
         """
-        Sets the rigid body attributes that are to be recorded in a csv file
+        Sets the body attributes that are to be recorded in a csv file
         during the simulation.
+
         Parameters
         ----------
         filename: Optional[string]
@@ -556,24 +689,11 @@ cdef class RigidBody:
             self.record_dict['x'] = ['position_last', 0]
             self.record_dict['y'] = ['position_last', 1]
             self.record_dict['z'] = ['position_last', 2]
-        # if rot is True:
-        #     self.record_dict['rx'] = ['last_rotation_euler', 0]
-        #     self.record_dict['ry'] = ['last_rotation_euler', 1]
-        #     self.record_dict['rz'] = ['last_rotation_euler', 2]
         if rot is True:
             self.record_dict['rotq_e0'] = ['rotq_last', 0]
             self.record_dict['rotq_e1'] = ['rotq_last', 1]
             self.record_dict['rotq_e2'] = ['rotq_last', 2]
             self.record_dict['rotq_e3'] = ['rotq_last', 3]
-            # self.record_dict['rotm_a11'] = ['rotm_last', (0,0)]
-            # self.record_dict['rotm_a12'] = ['rotm_last', (0,1)]
-            # self.record_dict['rotm_a13'] = ['rotm_last', (0,2)]
-            # self.record_dict['rotm_a21'] = ['rotm_last', (1,0)]
-            # self.record_dict['rotm_a22'] = ['rotm_last', (1,1)]
-            # self.record_dict['rotm_a23'] = ['rotm_last', (1,2)]
-            # self.record_dict['rotm_a31'] = ['rotm_last', (2,0)]
-            # self.record_dict['rotm_a32'] = ['rotm_last', (2,1)]
-            # self.record_dict['rotm_a33'] = ['rotm_last', (2,2)]
         if F is True:
             self.record_dict['Fx'] = ['F', 0]
             self.record_dict['Fy'] = ['F', 1]
@@ -609,8 +729,7 @@ cdef class RigidBody:
             self.record_dict['intertia'] = ['inertia', None]
 
     def _recordValues(self):
-        """
-        Records values of rigid body attributes at each time step in a csv file.
+        """Records values of body attributes in a csv file.
         """
         if self.Shape is not None:
             self.record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name + '.csv')
@@ -663,6 +782,14 @@ cdef class RigidBody:
                                                  rest_length)
 
     def setName(self, string name):
+        """Sets name of body (used for csv file)
+
+        Parameters
+        ----------
+        name: str
+            name of the body
+        """
+        self.name = name
         self.thisptr.setName(name)
 
 
@@ -683,6 +810,7 @@ cdef class System:
         bool build_kdtree
         bool parallel_mode
         int chrono_processor
+
     def __cinit__(self, np.ndarray gravity, int nd=3):
         self.thisptr = newSystem(<double*> gravity.data)
         self.subcomponents = []
@@ -701,9 +829,19 @@ cdef class System:
         self.chrono_processor = chrono_processor
 
     def GetChTime(self):
-        return self.thisptr.system.GetChTime()
+        """Gives time of Chrono system simulation
+
+        Returns
+        -------
+        time: double
+            time of chrono system
+        """
+        time = self.thisptr.system.GetChTime()
+        return time
 
     def attachModel(self, model, ar):
+        """Attaches Proteus model to auxiliary variable
+        """
         self.model = model
         return self
 
@@ -711,6 +849,16 @@ cdef class System:
         pass
 
     def calculate(self, proteus_dt=None):
+        """Does chrono system calculation for a Proteus time step
+        Calls prestep and poststep on all subcomponents (bodies,
+        moorings, etc) attached to the system.
+
+        Parameters
+        ----------
+        proteus_dt: Optional[proteus_dt]
+            Manually sets a time step. The time step is set
+            automatically when coupled with a Proteus simulation
+        """
         comm = Comm.get().comm.tompi4py()
         if self.model is not None:
             try:
@@ -736,6 +884,11 @@ cdef class System:
         #self.recordBodyList()
 
     def calculate_init(self):
+        """Does chrono system initialisation
+        (!) Must be called before the first calculate() call.
+        Calls calculate_init and poststep on all subcomponents
+        (bodies, moorings, etc) attached to the system.
+        """
         self.directory = str(Profiling.logDir)+'/'
         self.thisptr.setDirectory(self.directory)
         if self.model is not None and self.build_kdtree is True:
@@ -750,22 +903,39 @@ cdef class System:
         for s in self.subcomponents:
             s.poststep()
 
-    def setTimestepperType(self, string tstype, bool verbose):
+    def setTimestepperType(self, string tstype, bool verbose=False):
+        """Change timestepper (default: Euler)
+
+        Parameters
+        ----------
+        tstype: str
+            type of timestepper ('Euler' or 'HHT')
+        """
+        tstypes = ["Euler", "HHT"]
+        assert str(tstype) in tstypes, str(tstype)+" not a valid choice."
         self.thisptr.setTimestepperType(tstype, verbose)
 
     def setTimeStep(self, double dt):
         """Sets time step for Chrono solver.
         Calculations in Chrono will use this time step within the
         Proteus time step (if bigger)
+
         Parameters
         ----------
         dt: float
-            time step
+            Chrono time step size
         """
         self.chrono_dt = dt
         self.thisptr.setChTimeStep(dt)
 
     def setGravity(self, np.ndarray gravity):
+        """Sets gravity acceleration of the Chrono system
+
+        Parameters
+        ----------
+        gravity: array_like
+            Gravity acceleration (array of length 3)
+        """
         self.thisptr.setGravity(<double*> gravity.data)
 
     def step(self, double dt):
@@ -775,6 +945,15 @@ cdef class System:
         self.thisptr.step(<double> dt, n_substeps=steps)
 
     def addSubcomponent(self, subcomponent):
+        """Adds subcomponent to system
+        calculate_init() of subcomponent called before initial timestep
+        prestep() and poststep of subcomponent() called at all timestep
+
+        Parameters
+        ----------
+        subcomponent: class instance
+            class instance of subcomponent
+        """
         self.subcomponents += [subcomponent]
 
     def recordBodyList(self):
@@ -920,6 +1099,16 @@ cdef np.ndarray ChMatrix33_to_npArray(ch.ChMatrix33 &mat):
                      [mat.Get_A_Yaxis().x(), mat.Get_A_Yaxis().y(), mat.Get_A_Yaxis().z()],
                      [mat.Get_A_Zaxis().x(), mat.Get_A_Zaxis().y(), mat.Get_A_Zaxis().z()]])
 
+cdef ch.ChVector npArray_to_ChVector(np.ndarray arr):
+    cdef ch.ChVector vec
+    vec = ch.ChVector[double](arr[0], arr[1], arr[2])
+    return vec
+
+cdef ch.ChQuaternion npArray_to_ChQuaternion(np.ndarray arr):
+    cdef ch.ChQuaternion quat
+    quat = ch.ChQuaternion[double](arr[0], arr[1], arr[2], arr[3])
+    return quat
+
 #def testx():
 #    cdef ChSystem system = ChSystem()
 #    cdef ChBody bod = ChBody()
@@ -971,6 +1160,29 @@ cdef class SurfaceBoxNodesCloud:
 
 
 cdef class Moorings:
+    """Class for building mooring cables
+
+    Parameters
+    ----------
+    system: System
+        Class instance of the system.
+    mesh: Mesh
+        Class instance of the mesh.
+    length: np.ndarray
+        Length of cable segments. Must be an array, if the cable only
+        has one type of segment (e.g. only one type of chain), an
+        array of length 1 can be passed.
+    nb_elems: np.ndarray
+        Number of elements per segments.
+    d: np.ndarray
+        Diameter of segments.
+    rho: np.ndarray
+        Density of segments.
+    E: np.ndarray
+        Young's modulus of segments.
+    beam_type: str
+        Type of elements (default: "CableANCF").
+    """
     cdef cppMultiSegmentedCable * thisptr
     cdef public:
       str record_file
@@ -995,12 +1207,14 @@ cdef class Moorings:
     def __cinit__(self,
                   System system,
                   Mesh mesh,
-                  np.ndarray length,
-                  np.ndarray nb_elems,
-                  np.ndarray d,
-                  np.ndarray rho,
-                  np.ndarray E,
-                  string beam_type="BeamANCF"):
+                  double[:] length,
+                  int[:] nb_elems,
+                  double[:] d,
+                  double[:] rho,
+                  double[:] E,
+                  string beam_type="CableANCF"):
+        check_arrays = [len(length), len(nb_elems), len(d), len(rho), len(E)]
+        assert all(v == len(length) for v in check_arrays), 'arrays are not of same length'
         self.System = system
         self.System.addSubcomponent(self)
         self.nd = self.System.nd
@@ -1033,9 +1247,18 @@ cdef class Moorings:
         self.external_forces_manual = False
 
     def setName(self, string name):
+        """Sets name of cable, used for csv file
+
+        Parameters
+        ----------
+        name: str
+            Name of cable.
+        """
         self.name = name
 
     def _recordValues(self):
+        """Records values in csv files
+        """
         if self.System.model is not None:
             t_last = self.System.model.stepController.t_model_last
             try:
@@ -1079,6 +1302,8 @@ cdef class Moorings:
             writer.writerow(row)
 
     def getTensionBack(self):
+        """
+        """
         cdef ch.ChVector T
         if self.thisptr.constraint_back:
             T = deref(self.thisptr.constraint_back).GetReactionOnNode()
@@ -1087,6 +1312,8 @@ cdef class Moorings:
             return np.zeros(3)
 
     def getTensionFront(self):
+        """
+        """
         cdef ch.ChVector T
         if self.thisptr.constraint_front:
             T = deref(self.thisptr.constraint_front).GetReactionOnNode()
@@ -1110,6 +1337,8 @@ cdef class Moorings:
 
 
     def prestep(self):
+        """Sets external forces on the cable (if any)
+        """
         if self.System.model is not None and self.external_forces_from_ns is True:
             Profiling.logEvent('moorings extern forces')
             self.setExternalForces()
@@ -1117,6 +1346,8 @@ cdef class Moorings:
             self.setExternalForces()
 
     def poststep(self):
+        """Records values
+        """
         comm = Comm.get().comm.tompi4py()
         if comm.rank == self.System.chrono_processor:
             self._recordValues()
@@ -1124,8 +1355,11 @@ cdef class Moorings:
     def setNodesPositionFunction(self, function):
         """Function to build nodes
 
-        Must be a function taking one argument (e.g. distance along cable) and
-        returning 3 arguments (x, y, z) coordinates
+        Parameters
+        ----------
+        function:
+            Must be a function taking one argument (e.g. distance
+            along cable) and returning 3 arguments (x, y, z) coords.
         """
         self.nodes_function = function
 
@@ -1152,8 +1386,26 @@ cdef class Moorings:
         deref(self.thisptr.nodes.back()).SetFixed(fixed)
 
     def attachBackNodeToBody(self, RigidBody body):
+        """Attaches back node to a body with ChLinkLockLock
+
+        Parameters
+        ----------
+        body: RigidBody
+            body to which the node will be attached
+        """
         assert self.nodes_built is True, 'call buildNodes() before calling this function'
         self.thisptr.attachBackNodeToBody(body.thisptr.body)
+
+    def attachFrontNodeToBody(self, RigidBody body):
+        """Attaches front node to a body with ChLinkLockLock
+
+        Parameters
+        ----------
+        body: RigidBody
+            body to which the node will be attached
+        """
+        assert self.nodes_built is True, 'call buildNodes() before calling this function'
+        self.thisptr.attachFrontNodeToBody(body.thisptr.body)
 
     def getElementMass(self, int i=0):
         mass = deref(self.thisptr.elems[i]).GetMass()
@@ -1164,24 +1416,45 @@ cdef class Moorings:
         F = self.thisptr.getTensionElement(i)
         return np.array([F.x(), F.y(), F.z()])
 
-
-    def attachFrontNodeToBody(self, RigidBody body):
-        assert self.nodes_built is True, 'call buildNodes() before calling this function'
-        self.thisptr.attachFrontNodeToBody(body.thisptr.body)
-
     def getLengthElems(self):
         lengths = np.zeros(self.thisptr.elems.size())
         for i in range(self.thisptr.elems.size()):
             lengths[i] = deref(self.thisptr.elems[i]).GetLengthX()
         return lengths
 
-    def setDragCoefficients(self, double axial, double normal, int cable_nb):
-        deref(self.thisptr.cables[cable_nb]).setDragCoefficients(axial, normal)
+    def setDragCoefficients(self, double tangential, double normal, int segment_nb):
+        """Sets drag coefficients of cable
 
-    def setAddedMassCoefficients(self, double axial, double normal, int cable_nb):
-        deref(self.thisptr.cables[cable_nb]).setAddedMassCoefficients(axial, normal)
+        Parameters
+        ----------
+        tangential: double
+            Tangential drag coefficient.
+        normal: double
+            Normal drag coefficient.
+        segment_nb: int
+            Segment number to which these coefficients apply.
+        """
+        deref(self.thisptr.cables[segment_nb]).setDragCoefficients(tangential, normal)
+
+    def setAddedMassCoefficients(self, double tangential, double normal, int segment_nb):
+        """Sets added mass coefficients of cable
+
+        Parameters
+        ----------
+        tangential: double
+            Tangential added mass coefficient.
+        normal: double
+            Normal added mass coefficient.
+        segment_nb: int
+            Segment number to which these coefficients apply.
+        """
+        deref(self.thisptr.cables[segment_nb]).setAddedMassCoefficients(tangential, normal)
 
     def setNodesPosition(self):
+        """Builds the nodes of the cable.
+
+        (!) Must be called after setNodesPositionFunction()
+        """
         cdef ch.ChVector[double] vec
         for i in range(self.thisptr.cables.size()):
             deref(self.thisptr.cables[i]).mvecs.clear()
@@ -1207,6 +1480,13 @@ cdef class Moorings:
         self.nodes_built = True
 
     def getNodesPosition(self):
+        """Gives array of nodes position
+
+        Returns
+        -------
+        pos: np.ndarray
+            Array of nodes position.
+        """
         pos = np.zeros(( self.thisptr.nodes.size(),3 ))
         for i in range(self.thisptr.nodes.size()):
             vec = deref(self.thisptr.nodes[i]).GetPos()
@@ -1214,13 +1494,22 @@ cdef class Moorings:
         return pos
 
     def getNodesD(self):
-        pos = np.zeros(( self.thisptr.nodes.size(),3 ))
+        """Gives direction of nodes
+
+        Returns
+        -------
+        dire: np.ndarray
+            Array of nodes direction.
+        """
+        dire = np.zeros(( self.thisptr.nodes.size(),3 ))
         for i in range(self.thisptr.nodes.size()):
             vec = deref(self.thisptr.nodes[i]).GetD()
-            pos[i] = [vec.x(), vec.y(), vec.z()]
-        return pos
+            dire[i] = [vec.x(), vec.y(), vec.z()]
+        return dire
 
     def getNodesDD(self):
+        """(!) Only for BeamANCF
+        """
         pos = np.zeros(( self.thisptr.nodes.size(),3 ))
         for i in range(self.thisptr.nodes.size()):
             vec = deref(self.thisptr.nodes[i]).GetDD()
@@ -1228,6 +1517,13 @@ cdef class Moorings:
         return pos
 
     def setContactMaterial(self, ChMaterialSurfaceDEM mat):
+        """Sets contact material of the cable
+
+        Parameters
+        ----------
+        mat: ChMaterialSurfaceDEM
+            Material of cable.
+        """
         self.thisptr.setContactMaterial(mat.sharedptr)
 
     def setExternalForces(self, fluid_velocity_array=None, fluid_density_array=None,
@@ -1441,19 +1737,66 @@ cdef class ChQuaternion:
     def e3(self):
         return deref(self.sharedptr).e3()
 
-cdef class ChBody:
-    cdef shared_ptr[ch.ChBody] sharedptr
+cdef class ChFrame:
+    cdef shared_ptr[ch.ChFrame] sharedptr_chframe
+    def __cinit(self):
+        if type(self) is ChFrame:
+            self.sharedptr_chframe = make_shared[ch.ChFrame]()
+    def GetPos(self):
+        return ChVector_to_npArray(deref(self.sharedptr_chframe).GetPos())
+    def GetRot(self):
+        return ChQuaternion_to_npArray(deref(self.sharedptr_chframe).GetRot())
+    def SetRot(self, ChQuaternion rot):
+        deref(self.sharedptr_chframe).SetRot(deref(rot.sharedptr))
+    def SetPos(self, ChVector mpos):
+        deref(self.sharedptr_chframe).SetPos(<ch.ChVector> deref(mpos.sharedptr))
+    def GetA(self):
+        return ChMatrix33_to_npArray(deref(self.sharedptr_chframe).GetA())
+    def GetRotAxis(self):
+        cdef ch.ChVector vec
+        vec = deref(self.sharedptr_chframe).GetRotAxis()
+        return ChVector_to_npArray(vec)
+    def GetRotAngle(self):
+        return deref(self.sharedptr_chframe).GetRotAngle()
+
+cdef class ChFrameMoving(ChFrame):
+    cdef shared_ptr[ch.ChFrameMoving] sharedptr_chframemoving
+    def __cinit(self):
+        if type(self) is ChFrameMoving:
+            self.sharedptr_chframemoving = make_shared[ch.ChFrameMoving]()
+            self.sharedptr_chframe = <shared_ptr[ch.ChFrame]> self.sharedptr_chframemoving
+    def GetPos_dt(self):
+        return ChVector_to_npArray(deref(self.sharedptr_chframemoving).GetPos_dt())
+    def GetPos_dtdt(self):
+        return ChVector_to_npArray(deref(self.sharedptr_chframemoving).GetPos_dtdt())
+    def GetRot_dt(self):
+        return ChQuaternion_to_npArray(deref(self.sharedptr_chframemoving).GetRot_dt())
+    def GetRot_dtdt(self):
+        return ChQuaternion_to_npArray(deref(self.sharedptr_chframemoving).GetRot_dtdt())
+
+cdef class ChBodyFrame(ChFrameMoving):
+    cdef shared_ptr[ch.ChBodyFrame] sharedptr_chbodyframe
+    def __cinit(self):
+        # following commented does not work because abstract class
+        pass
+        # if type(self) is ChBodyFrame:
+        #     self.sharedptr_chbodyframe = make_shared[ch.ChBodyFrame]()
+        #     self.sharedptr_chframemoving = <shared_ptr[ch.ChFrameMoving]> self.sharedptr_chbodyframe
+        #     self.sharedptr_chframe = <shared_ptr[ch.ChFrame]> self.sharedptr_chbodyframe
+
+cdef class ChBody(ChBodyFrame):
+    cdef shared_ptr[ch.ChBody] sharedptr_chbody
     def __cinit__(self):
         if type(self) is ChBody:
-            self.sharedptr = make_shared[ch.ChBody]()
+            self.sharedptr_chbody = make_shared[ch.ChBody]()
+            self.sharedptr_chbodyframe = <shared_ptr[ch.ChBodyFrame]> self.sharedptr_chbody
+            self.sharedptr_chframemoving = <shared_ptr[ch.ChFrameMoving]> self.sharedptr_chbody
+            self.sharedptr_chframe = <shared_ptr[ch.ChFrame]> self.sharedptr_chbody
     def SetBodyFixed(self, bool state):
-        deref(self.sharedptr).SetBodyFixed(state)
-    def SetRot(self, ChQuaternion rot):
-        deref(self.sharedptr).SetRot(deref(rot.sharedptr))
-    def SetPos(self, ChVector mpos):
-        deref(self.sharedptr).SetPos(<ch.ChVector> deref(mpos.sharedptr))
+        deref(self.sharedptr_chbody).SetBodyFixed(state)
+
     def SetMaterialSurface(self, ChMaterialSurfaceDEM mat):
-        deref(self.sharedptr).SetMaterialSurface(<shared_ptr[ch.ChMaterialSurfaceBase]> mat.sharedptr)
+        deref(self.sharedptr_chbody).SetMaterialSurface(<shared_ptr[ch.ChMaterialSurfaceBase]> mat.sharedptr)
 
 # cdef class ChLinkPointPoint:
 #     cdef shared_ptr[ch.ChLinkPointPoint] sharedptr
@@ -1463,8 +1806,13 @@ cdef class ChBody:
 #         deref(self.sharedptr).Initialize(<shared_ptr[ch.ChNodeFEAxyz]> anodeA, <shared_ptr[ch.ChNodeFEAxyz]> anodeB)
 
 cdef class ChBodyEasyBox(ChBody):
-    cdef shared_ptr[ch.ChBodyEasyBox] sharedptr2
+    cdef shared_ptr[ch.ChBodyEasyBox] sharedptr_chbodyeasybox
     def __cinit__(self, System system, double Xsize, double Ysize, double Zsize, double mdensity, bool collide=True, bool visual_asset=False):
-        self.sharedptr2 = make_shared[ch.ChBodyEasyBox](Xsize, Ysize, Zsize, mdensity, collide, visual_asset)
-        self.sharedptr = <shared_ptr[ch.ChBody]> self.sharedptr2
-        system.thisptr.system.Add(<shared_ptr[ch.ChPhysicsItem]> self.sharedptr2)
+        if type(self) is ChBodyEasyBox:
+            self.sharedptr_chbodyeasybox = make_shared[ch.ChBodyEasyBox](Xsize, Ysize, Zsize, mdensity, collide, visual_asset)
+            self.sharedptr_chbody = <shared_ptr[ch.ChBody]> self.sharedptr_chbodyeasybox
+            self.sharedptr_chbodyframe = <shared_ptr[ch.ChBodyFrame]> self.sharedptr_chbodyeasybox
+            self.sharedptr_chframemoving = <shared_ptr[ch.ChFrameMoving]> self.sharedptr_chbodyeasybox
+            self.sharedptr_chframe = <shared_ptr[ch.ChFrame]> self.sharedptr_chbodyeasybox
+            # to remove below
+            system.thisptr.system.Add(<shared_ptr[ch.ChPhysicsItem]> self.sharedptr_chbodyeasybox)
