@@ -160,6 +160,9 @@ class TestBC(unittest.TestCase):
 
     def test_open_air(self):
         BC = create_BC(folder='mprans')
+        b_or = np.array([[+1., 0., 0.]])
+        b_i = 0
+        BC = create_BC(folder='mprans', b_or=b_or, b_i=b_i)
         BC.setAtmosphere()
         u_adv, v_adv, w_adv, p_adv, u_diff, v_diff, w_diff, k_diff, d_diff, vof_adv = [], [], [], [], [], [], [], [], [], []
         t_list = get_time_array()
