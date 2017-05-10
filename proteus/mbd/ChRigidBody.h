@@ -184,7 +184,7 @@ cppRigidBody::cppRigidBody(cppSystem* system):
 
   body = std::make_shared<ChBody>();
   // add body to system
-  system->system.AddBody(body);
+  /* system->system.AddBody(body); */ // now added externally in cython
   // basic attributes of body
   rotm = body->GetA();
   rotm_last = body->GetA();
