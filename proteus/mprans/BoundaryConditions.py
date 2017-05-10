@@ -278,6 +278,7 @@ class BC_RANS(BC_Base):
         self.v_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_v_dirichlet(x, t)
         self.w_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_w_dirichlet(x, t)
         self.vof_dirichlet.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
+        self.vof_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_vof_dirichlet(x, t)
         self.p_advective.uOfXT = lambda x, t: self.__cpp_UnsteadyTwoPhaseVelocityInlet_p_advective(x, t)
 
     def __cpp_UnsteadyTwoPhaseVelocityInlet_u_dirichlet(self, x, t):
