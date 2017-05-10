@@ -29,6 +29,7 @@ cdef extern from "ChMoorings.h":
         void AddAllNodes(const double point_radius)
     cdef cppclass ChNodeFEAxyz
     cdef cppclass ChNodeFEAxyzrot
+    cdef cppclass ChNodeFEAxyzD
     cdef cppclass ChNodeFEAxyzDD:
         const ChVector& GetPos()
         const ChVector& GetD()
@@ -76,8 +77,10 @@ cdef extern from "ChMoorings.h":
         ChVector Get_A_Zaxis()
     cdef cppclass ChSystem:
         void Add(shared_ptr[ChPhysicsItem] newitem)
+        void AddBody(shared_ptr[ChBody] newbody)
     cdef cppclass ChSystemDEM:
         void Add(shared_ptr[ChPhysicsItem] newitem)
+        void AddBody(shared_ptr[ChBody] newbody)
         double GetStep()
         double GetChTime()
         void SetupInitial()
@@ -104,8 +107,11 @@ cdef extern from "ChMoorings.h":
     cdef cppclass ChBody(ChPhysicsItem, ChBodyFrame):
         ChBody() except +
         # void SetRot(ChQuaternion &rot) except +
+        void SetInertiaXX(ChVector &iner)
+        void SetInertiaXY(ChVector &iner)
         void SetBodyFixed(bool state) except +
         void SetMaterialSurface(const shared_ptr[ChMaterialSurfaceBase] &mnewsurf) except +
         void SetMass(double newmass)
+        double GetMass()
     cdef cppclass ChBodyEasyBox(ChBody):
         ChBodyEasyBox(double Xsize, double Ysize, double Zsize, double mdensity, bool collide=False, bool visual_asset=True)
