@@ -6137,6 +6137,7 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
             intersections.update(((tuple(elementIntersections[0]), tuple(elementIntersections[1])),),)
     return intersections
 
+
 def runTetgen(polyfile,
               baseFlags="Yp",
               name = ""):
@@ -6180,6 +6181,7 @@ def runTetgen(polyfile,
         os.rename(edgefile,tmp)
         assert os.path.exists(tmp), "no .edge"
 
+        
 def genMeshWithTetgen(polyfile,
                       nbase=1):
    """
