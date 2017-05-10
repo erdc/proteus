@@ -424,7 +424,7 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
           if(BCtype[1]+BCtype[2]+BCtype[3] == 3){
             for(int i=1;i<nsd+1;i++)
               m->getDoubleTag(bent,fluxtag[i],&(fluxdata[i][0]));
-            bflux = {fluxdata[1][l],fluxdata[2][l],fluxdata[3][l]};
+            bflux = apf::Vector3(fluxdata[1][l],fluxdata[2][l],fluxdata[3][l]);
             bflux = bflux-identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1)*normal;
           }
           else{
