@@ -11081,6 +11081,8 @@ class DiscreteTwoPhaseMassMatrix(TC_base):
 
     for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
     :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
+
+    TODO - ARB: this needs to be refactored to use virtual functions.
     """
     from ctransportCoefficients import TwoPhaseMass_2D_Evaluate
     from ctransportCoefficients import TwoPhaseMass_3D_Evaluate
@@ -11198,6 +11200,61 @@ class DiscreteTwoPhaseMassMatrix(TC_base):
                                           c[('dm',2,2)],
                                           c[('dm',3,3)])
 
+class DiscreteTwoPhaseMassMatrix_rho(DiscreteTwoPhaseMassMatrix):
+    r"""
+    ARB TODO - This along side the DiscreteTwoPhaseMassMatrix should
+    be refactored along with the single-phase mass matrix.
+    Currently the evaluate method is being overriden to define a 
+    different inner product calculation.
+    """
+    from ctransportCoefficients import TwoPhaseMass_rho_2D_Evaluate
+    from ctransportCoefficients import TwoPhaseMass_rho_3D_Evaluate
+    def evaluate(self,t,c):
+        if self.phase_function != None:
+            self.initializeQuadratureWithPhaseFunction(c)
+            
+        if c[('u',0)].shape == self.q_phi.shape:
+            phi = self.q_phi
+        else:
+            phi = self.ebq_phi
+
+        if self.nd==2:
+            self.TwoPhaseMass_rho_2D_Evaluate(self.eps,
+                                              self.rho_0,
+                                              self.nu_0,
+                                              self.rho_1,
+                                              self.nu_1,
+                                              phi,
+                                              c[('u',0)],
+                                              c[('u',1)],
+                                              c[('u',2)],
+                                              c[('m',0)],
+                                              c[('m',1)],
+                                              c[('m',2)],
+                                              c[('dm',0,0)],
+                                              c[('dm',1,1)],
+                                              c[('dm',2,2)])
+
+        elif self.nd==3:
+            self.TwoPhaseMass_rho_3D_Evaluate(self.eps,
+                                              self.rho_0,
+                                              self.nu_0,
+                                              self.rho_1,
+                                              self.nu_1,
+                                              phi,
+                                              c[('u',0)],
+                                              c[('u',1)],
+                                              c[('u',2)],
+                                              c[('u',3)],
+                                              c[('m',0)],
+                                              c[('m',1)],
+                                              c[('m',2)],
+                                              c[('m',3)],
+                                              c[('dm',0,0)],
+                                              c[('dm',1,1)],
+                                              c[('dm',2,2)],
+                                              c[('dm',3,3)])
+
 class DiscreteTwoPhaseMassMatrix_mu(DiscreteTwoPhaseMassMatrix):
     r"""
     ARB TODO - This along side the DiscreteTwoPhaseMassMatrix should
@@ -11252,7 +11309,7 @@ class DiscreteTwoPhaseMassMatrix_mu(DiscreteTwoPhaseMassMatrix):
                                              c[('dm',1,1)],
                                              c[('dm',2,2)],
                                              c[('dm',3,3)])
-
+ 
             
 class DiscreteTwoPhaseInvScaledMassMatrix(DiscreteTwoPhaseMassMatrix):
     r"""

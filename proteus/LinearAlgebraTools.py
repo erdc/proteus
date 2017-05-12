@@ -958,9 +958,9 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         tmp1.setType('mpi')
         tmp2.setType('mpi')
         tmp3.setType('mpi')
-        tmp1 = y.copy()
-        tmp2 = y.copy()
-        tmp3 = y.copy()
+        tmp1 = x.copy()
+        tmp2 = x.copy()
+        tmp3 = x.copy()
 
         self.kspQp_visc.solve(x,y)
         self.kspQp_dens.solve(x,tmp1)

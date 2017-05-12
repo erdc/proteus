@@ -475,6 +475,7 @@ class KSP_petsc4py(LinearSolver):
         if self.pc != None:
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
+            # TODO - ARB, there should be an assert here in case PCType is not set.
             if self.preconditioner.PCType=='schur':
                 # this should probably live somewhere else?!
                 self.preconditioner.setUp(self.ksp)
@@ -885,7 +886,7 @@ class SchurOperatorConstructor:
         if self.L.pde.coefficients.which_region != None:
             self._phase_function = self.L.pde.coefficients.which_region
 
-        Qsys_petsc4py = self._TPMassMatrix()
+        Qsys_petsc4py = self._TPMassMatrix_rho()
         self.TPQp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                self.linear_smoother.isp)
 
@@ -918,7 +919,13 @@ class SchurOperatorConstructor:
         """
         if self.L.pde.coefficients.which_region != None:
             self._phase_function = self.L.pde.coefficients.which_region
-
+        # ARB - This section was me experimenting with mprans.
+        # if hasattr(self.L.pde.coefficients,'which_region'):
+        #     if self.L.pde.coefficients.which_region != None:
+        #         self._phase_function = self.L.pde.coefficients.which_region
+        # elif hasattr(self.L.pde.coefficients,'q_vf'):
+        #     self._phase_function = self.L.pde.coefficients.q_vf
+        # import pdb ; pdb.set_trace()
         Qsys_petsc4py = self._TPInvScaledMassMatrix()
         self.TPInvScaledQp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                         self.linear_smoother.isp)
@@ -950,7 +957,7 @@ class SchurOperatorConstructor:
 
         return self.Qv
 
-    def getTPQv(self,output_matrix=False):
+    def getTwoPhaseQv_rho(self,output_matrix=False):
         """ Return the velocity mass matrix Qv.
 
         Parameters
@@ -966,7 +973,7 @@ class SchurOperatorConstructor:
         if self.L.pde.coefficients.which_region != None:
             self._phase_function = self.L.pde.coefficients.which_region
 
-        Qsys_petsc4py = self._TPMassMatrix()
+        Qsys_petsc4py = self._TPMassMatrix_rho()
         self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
                                              self.linear_smoother.isv)
         if output_matrix==True:
@@ -974,7 +981,7 @@ class SchurOperatorConstructor:
 
         return self.Qv
 
-    def getTPQv_mu(self,output_matrix=False):
+    def getTwoPhaseQv_mu(self,output_matrix=False):
         """ Return the velocity mass matrix Qv.
 
         Parameters
@@ -1251,7 +1258,7 @@ class SchurOperatorConstructor:
         self.opBuilder.attachMassOperator()
         return superlu_2_petsc4py(self.opBuilder.MassOperator)
 
-    def _TPMassMatrix(self):
+    def _TPMassMatrix_rho(self):
         """ Generates a two phase mass matrix.
 
         Returns
@@ -1260,7 +1267,7 @@ class SchurOperatorConstructor:
             The two-phase mass matrix.
 
         """
-        self.opBuilder.attachTwoPhaseMassOperator(phase_function = self._phase_function)
+        self.opBuilder.attachTwoPhaseMassOperator_rho(phase_function = self._phase_function)
         return superlu_2_petsc4py(self.opBuilder.TPMassOperator)
 
     def _TPMassMatrix_mu(self):
@@ -1804,7 +1811,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur) :
         self.Np_rho = self.operator_constructor.getTwoPhaseCp_rho()
         self.Ap_invScaledRho = self.operator_constructor.getTwoPhaseInvScaledAp()
         self.Qp_invScaledVis = self.operator_constructor.getTwoPhaseInvScaledQp()
-
+        import pdb ; pdb.set_trace()
         L_sizes = self.Qp_rho.size
         
         L_range = self.Qp_rho.owner_range
@@ -1825,7 +1832,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur) :
             nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
                                                vectors = (),
                                                constant = True)
-#            import pdb ; pdb.set_trace()
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
             global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[1].setNullSpace(nsp)
 #            self._setConstantPressureNullSpace(global_ksp)
@@ -1886,7 +1892,7 @@ class NavierStokes_TwoPhaseLSC(NavierStokesSchur):
         NavierStokesSchur.__init__(self,L,prefix,bdyNullSpace)
 
     def setUp(self,global_ksp):
-        self.two_phase_Qv = self.operator_constructor.getTPQv_mu()
+        self.two_phase_Qv = self.operator_constructor.getTwoPhaseQv_mu()
         self.Qv_hat = p4pyPETSc.Mat().create()
         self.Qv_hat.setSizes(self.two_phase_Qv.getSizes())
         self.Qv_hat.setType('mpiaij')
@@ -3041,7 +3047,7 @@ class OperatorConstructor:
         self.massOperatorAttached = True
 
 
-    def attachTwoPhaseMassOperator(self,recalculate=False, phase_function = None):
+    def attachTwoPhaseMassOperator_rho(self,recalculate=False, phase_function = None):
         """Create a discrete Mass Operator matrix. """
         self._mass_val = self.OLT.nzval.copy()
         
@@ -3101,12 +3107,11 @@ class OperatorConstructor:
     def attachTwoPhaseInvScaledMassOperator(self, recalculate=False, phase_function = None):
         """Create a discrete Mass Operator matrix. """
         self._mass_val = self.OLT.nzval.copy()
-        
         _rho_0 = self.OLT.coefficients.rho_0
         _rho_1 = self.OLT.coefficients.rho_1
         _nu_0 = self.OLT.coefficients.nu_0
         _nu_1 = self.OLT.coefficients.nu_1
-        
+
         self._mass_val.fill(0.)
         self.TPInvScaledMassOperator = SparseMat(self.OLT.nFreeVDOF_global,
                                                  self.OLT.nFreeVDOF_global,
@@ -3118,7 +3123,7 @@ class OperatorConstructor:
         if self.OLT.coefficients.rho != None:
             _rho = self.OLT.coefficients.rho
 
-        if phase_function == None:
+        if phase_function is None:
             self.MassOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseInvScaledMassMatrix(nd = _nd,
                                                                                                rho_0 = _rho_0,
                                                                                                nu_0 = _nu_0,
@@ -3854,6 +3859,7 @@ class OperatorConstructor:
 
         for ci in self.MassOperatorCoeff.mass.keys():
             elementQuadratureDict[('m',ci)] = self._elementQuadrature
+
         (elementQuadraturePoints,elementQuadratureWeights,
          elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
         for ci in range(self.OLT.nc):
