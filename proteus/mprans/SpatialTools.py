@@ -813,7 +813,7 @@ class Tank3D(ShapeRANS):
         self.volumes = np.array(volumes)
 
 
-    def setAbsorptionZones(self, dragAlpha=,allSponge=False,
+    def setAbsorptionZones(self, dragAlpha,allSponge=False,
                            y_n=False, y_p=False,
                            x_n=False, x_p=False, 
                            dragBeta=0., porosity=1.):
