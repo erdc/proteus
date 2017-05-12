@@ -1236,7 +1236,7 @@ class Tank2D(ShapeRANS):
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
 
-    def setGenerationZones(self, ,  dragAlpha,  smoothing
+    def setGenerationZones(self,  dragAlpha,  smoothing,
                            waves=None, wind_speed=(0., 0., 0.),
                            x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
