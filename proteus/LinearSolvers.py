@@ -1811,7 +1811,6 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur) :
         self.Np_rho = self.operator_constructor.getTwoPhaseCp_rho()
         self.Ap_invScaledRho = self.operator_constructor.getTwoPhaseInvScaledAp()
         self.Qp_invScaledVis = self.operator_constructor.getTwoPhaseInvScaledQp()
-        import pdb ; pdb.set_trace()
         L_sizes = self.Qp_rho.size
         
         L_range = self.Qp_rho.owner_range
@@ -3450,8 +3449,9 @@ class OperatorConstructor:
         """Define the quadrature type used to build operators.
         
         """
-        self._elementQuadrature = self.OLT._elementQuadrature
-        self._elementBoundaryQuadrature = self.OLT._elementBoundaryQuadrature
+        pass
+#        self._elementQuadrature = self.OLT._elementQuadrature
+#        self._elementBoundaryQuadrature = self.OLT._elementBoundaryQuadrature
 
     def _attachJacobianInfo(self,Q):
         """ This helper function attaches quadrature data related to 'J'
