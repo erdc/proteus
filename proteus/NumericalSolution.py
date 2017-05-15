@@ -680,6 +680,14 @@ class NS_base:  # (HasTraits):
         p0 = self.pList[0]
         n0 = self.nList[0]
         adaptMeshNow = False
+        #will need to move this to earlier when the mesh is created
+        from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+        #if not hasattr(p0.domain,'PUMIMesh'):
+        #    p0.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=0.00625, numIter=2,sfConfig="ERM",logType="off")
+        #    p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh)
+        #    #import pdb;pdb.set_trace()
+        #    p0.domain.PUMIMesh.convertFrom
+
         if (isinstance(p0.domain, Domain.PUMIDomain) and
             n0.adaptMesh and
             self.so.useOneMesh and 
@@ -733,59 +741,7 @@ class NS_base:  # (HasTraits):
               logEvent("Need to Adapt")
         return adaptMeshNow
 
-    def PUMI_adaptMesh(self):
-        """
-        Uses a computed error field to construct a size field and adapts
-        the mesh using SCOREC tools (a.k.a. MeshAdapt)
-        """
-        ##
-        ## zhang-alvin's BC communication for N-S error estimation
-        ##
-        #  #for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
-        #    #if idx>0:
-        #    #    diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
-        #    #else:
-        #    #    diff_flux = numpy.empty([2,2]) #dummy diff flux
-        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
-        #    #    idx,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-        #    #    diff_flux)
-        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
-        #    #    idx,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-        #    #    diff_flux)
-        p0 = self.pList[0]
-        n0 = self.nList[0]
-        sfConfig = p0.domain.PUMIMesh.size_field_config()
-        logEvent("h-adapt mesh by calling AdaptPUMIMesh")
-        p0.domain.PUMIMesh.adaptPUMIMesh()
-
-        #code to suggest adapting until error is reduced;
-        #not fully baked and can lead to infinite loops of adaptation
-        #if(sfConfig=="ERM"):
-        #  p0.domain.PUMIMesh.get_local_error() 
-        #  while(p0.domain.PUMIMesh.willAdapt()):
-        #    p0.domain.PUMIMesh.adaptPUMIMesh()
-        #    p0.domain.PUMIMesh.get_local_error()
-        
-        logEvent("Converting PUMI mesh to Proteus")
-        #ibaned: PUMI conversion #2
-        #TODO: this code is nearly identical to
-        #PUMI conversion #1, they should be merged
-        #into a function
-        if p0.domain.nd == 3:
-          mesh = MeshTools.TetrahedralMesh()
-        else:
-          mesh = MeshTools.TriangularMesh()
-        mesh.convertFromPUMI(p0.domain.PUMIMesh,
-                             p0.domain.faceList,
-                             p0.domain.regList,
-                             parallel = self.comm.size() > 1,
-                             dim = p0.domain.nd)
+    def PUMI2Proteus(self):
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
         if p0.domain.nd == 3:
           mlMesh = MeshTools.MultilevelTetrahedralMesh(
@@ -935,6 +891,62 @@ class NS_base:  # (HasTraits):
                     model,
                     index,
                     self.systemStepController.t_system_last+1.0e-6)
+
+
+    def PUMI_adaptMesh(self):
+        """
+        Uses a computed error field to construct a size field and adapts
+        the mesh using SCOREC tools (a.k.a. MeshAdapt)
+        """
+        ##
+        ## zhang-alvin's BC communication for N-S error estimation
+        ##
+        #  #for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
+        #    #if idx>0:
+        #    #    diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
+        #    #else:
+        #    #    diff_flux = numpy.empty([2,2]) #dummy diff flux
+        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
+        #    #    idx,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+        #    #    diff_flux)
+        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
+        #    #    idx,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+        #    #    diff_flux)
+        p0 = self.pList[0]
+        n0 = self.nList[0]
+        sfConfig = p0.domain.PUMIMesh.size_field_config()
+        logEvent("h-adapt mesh by calling AdaptPUMIMesh")
+        p0.domain.PUMIMesh.adaptPUMIMesh()
+
+        #code to suggest adapting until error is reduced;
+        #not fully baked and can lead to infinite loops of adaptation
+        #if(sfConfig=="ERM"):
+        #  p0.domain.PUMIMesh.get_local_error() 
+        #  while(p0.domain.PUMIMesh.willAdapt()):
+        #    p0.domain.PUMIMesh.adaptPUMIMesh()
+        #    p0.domain.PUMIMesh.get_local_error()
+        
+        logEvent("Converting PUMI mesh to Proteus")
+        #ibaned: PUMI conversion #2
+        #TODO: this code is nearly identical to
+        #PUMI conversion #1, they should be merged
+        #into a function
+        if p0.domain.nd == 3:
+          mesh = MeshTools.TetrahedralMesh()
+        else:
+          mesh = MeshTools.TriangularMesh()
+        mesh.convertFromPUMI(p0.domain.PUMIMesh,
+                             p0.domain.faceList,
+                             p0.domain.regList,
+                             parallel = self.comm.size() > 1,
+                             dim = p0.domain.nd)
+        PUMI2Proteus()
       ##chitak end Adapt
 
     ## compute the solution
