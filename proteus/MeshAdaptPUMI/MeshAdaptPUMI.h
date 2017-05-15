@@ -57,6 +57,7 @@ class MeshAdaptPUMIDrvr{
 
 
   //Public Variables
+  bool isReconstructed;
   double hmax, hmin; //bounds on mesh size
   int numIter; //number of iterations for MeshAdapt
   int nAdapt; //counter for number of adapt steps

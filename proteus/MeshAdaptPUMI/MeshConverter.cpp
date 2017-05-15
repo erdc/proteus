@@ -437,6 +437,7 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh,
 int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh)
 {
   std::cout<<"STARTING RECONSTRUCTION!\n";
+  isReconstructed = 1; //True
 
   //Preliminaries
   
@@ -574,8 +575,8 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh)
   gmi_write_dmg(gMod,"Reconstruct.dmg");
   apf::writeVtkFiles("reconstructedMesh", m);
 
-  m->destroyNative();
-  apf::destroyMesh(m);
+  //m->destroyNative();
+  //apf::destroyMesh(m);
   std::cout<<"COMPLETED RECONSTRUCTION!\n";
 }
 

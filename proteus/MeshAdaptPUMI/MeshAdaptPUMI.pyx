@@ -20,6 +20,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         MeshAdaptPUMIDrvr(double, double, int, char*, char*,char*,double,double)
         int numIter, numAdaptSteps
         string size_field_config, adapt_type_config
+        bint isReconstructed
         int loadModelAndMesh(char *, char*)
         int getSimmetrixBC()
         int reconstructFromProteus(Mesh&)
@@ -44,6 +45,7 @@ cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
     cdef double hmax, hmin
     cdef int numIter, numAdaptSteps
+    cdef bint isReconstructed
     def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="ERM",maType="isotropic",logType="off",targetError=0,targetElementCount=0):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
         self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType,logType,targetError,targetElementCount)
@@ -55,6 +57,8 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.adapt_type_config
     def numIter(self):
         return self.thisptr.numIter
+    def isReconstructed(self):
+        return self.thisptr.isReconstructed
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
     def reconstructFromProteus(self,cmesh):
