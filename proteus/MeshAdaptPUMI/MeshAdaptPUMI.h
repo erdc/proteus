@@ -94,7 +94,6 @@ class MeshAdaptPUMIDrvr{
 
   private: 
   apf::Mesh2* m;
-  apf::Mesh2* m2;
   int comm_size, comm_rank;
 
   double rho[2], nu[2];
