@@ -426,49 +426,156 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh,
 #include <apf.h>
 #include <gmi_null.h>
 #include <gmi_mesh.h>
+#include <gmi.h>
 #include <apfMDS.h>
 #include <apfMesh2.h>
+#include <ma.h>
+
+#include <cassert>
+#include <gmi_lookup.h>
+
 int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh)
 {
-  gmi_model* g;
-  gmi_register_null();
-  g = gmi_load(".null");
-  apf::Mesh2* m2 = apf::makeEmptyMdsMesh(g,2,false);
-  m2 = apf::makeEmptyMdsMesh(g,2,false);
+  std::cout<<"STARTING RECONSTRUCTION!\n";
+
+  //Preliminaries
+  
+  int nBoundaryNodes=0;
+  for(int i =0;i<mesh.nNodes_global;i++){
+    if(mesh.nodeMaterialTypes[i]>0){
+      nBoundaryNodes++;
+    }    
+  }
+    
+  //create Model
+  gmi_model* gMod;
+
+  struct gmi_base* gMod_base;
+  gMod_base = (gmi_base*)malloc(sizeof(*gMod_base));
+  gMod_base->model.ops = &gmi_base_ops;
+  gmi_base_init(gMod_base);
+
+  struct agm_ent e;
+  struct agm_bdry b;
+  struct agm_ent d;
+  
+  //gvertices
+  gmi_base_reserve(gMod_base,AGM_VERTEX,nBoundaryNodes);
+  for(int i=0;i<nBoundaryNodes;i++){
+    e = agm_add_ent(gMod_base->topo, AGM_VERTEX);
+    gmi_set_lookup(gMod_base->lookup, e, i);
+  }
+  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)0);
+
+  //gedges
+  gmi_base_reserve(gMod_base,AGM_EDGE,mesh.nExteriorElementBoundaries_global);
+  for(int i=0;i<mesh.nExteriorElementBoundaries_global;i++){
+    e = agm_add_ent(gMod_base->topo, AGM_EDGE);
+    gmi_set_lookup(gMod_base->lookup, e, i);
+  }
+  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)1);
+
+  //gfaces
+  gmi_base_reserve(gMod_base,AGM_FACE,1);
+
+  e = agm_add_ent(gMod_base->topo, AGM_FACE);
+  gmi_set_lookup(gMod_base->lookup, e, mesh.elementMaterialTypes[0]); //assumes material types are uniform
+
+  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)2);
+
+  gMod = &gMod_base->model;
+
+
+  //create Mesh
+  m = apf::makeEmptyMdsMesh(gMod,2,false);
   apf::Vector3 pt;
-  apf::MeshEntity* vertices[mesh.nNodes_global];
+  apf::MeshEntity* vertices[mesh.nNodes_global]; //possibly make this a growing list..
   apf::MeshEntity* elemverts[mesh.nNodes_element];
+  apf::MeshEntity* edges[mesh.nEdges_global];
   apf::MeshEntity* elements[mesh.nElements_global];
+
+  apf::ModelEntity* g_vertEnt;
+  apf::ModelEntity* g_edgeEnt;
+  apf::ModelEntity* g_faceEnt;
+  apf::MeshEntity* vertEnt;
+  
+  int matTag; //mesh.elementMaterialType[fID];
+  int vertCounter = 0; //-1 so that with the first gEnt that is on a boundary, we have a 0 index
+
   for(int vID=0; vID<mesh.nNodes_global;vID++){
+    matTag = mesh.nodeMaterialTypes[vID];
+    if(matTag!=0){
+      vertCounter++;
+    }
+  }
+  int modelVertexMaterial[vertCounter];
+  int modelEdgeMaterial[mesh.nExteriorElementBoundaries_global];
+    
+  vertCounter = 0; //reinitialize the vertCounter
+  apf::ModelEntity* gEnt; 
+  for(int vID=0; vID<mesh.nNodes_global;vID++){
+    matTag = mesh.nodeMaterialTypes[vID];
+    if(matTag==0){
+      matTag = mesh.elementMaterialTypes[0]; //also assumes that there is only a single material type
+      gEnt = m->findModelEntity(2,matTag);
+    }
+    else{
+      gEnt = m->findModelEntity(0,vertCounter);
+      modelVertexMaterial[vertCounter] = matTag;
+      vertCounter++;
+    }
     pt[0]=mesh.nodeArray[vID*3+0];
     pt[1]=mesh.nodeArray[vID*3+1];
     pt[2]=mesh.nodeArray[vID*3+2];
-    vertices[vID] = m2->createVert(0);
-    m2->setPoint(vertices[vID],0,pt);
-    apf::Vector3 check;
-    m2->getPoint(vertices[vID],0,check);
-    std::cout<<"Was the point set? "<<check<<std::endl;
+    vertices[vID] = m->createVert(gEnt);
+    m->setPoint(vertices[vID],0,pt);
   }
+
+  //Only construct the mesh entities on model edges
+  
+  apf::Downward down_edge;
+  int edgCounter = 0; //counter for global model edges
+  for(int edgID=0; edgID<mesh.nExteriorElementBoundaries_global;edgID++){
+    gEnt = m->findModelEntity(1,edgCounter);
+    edgCounter++;
+    //i need the edge adjacency array to tell me what the adjacent edges should be..
+    int actual_edgID = mesh.exteriorElementBoundariesArray[edgID];
+    down_edge[0] = vertices[mesh.edgeNodesArray[actual_edgID*2]];
+    down_edge[1] = vertices[mesh.edgeNodesArray[actual_edgID*2+1]];
+    //std::cout<<edgID<<" Adjacent vertices are "<< mesh.edgeNodesArray[actual_edgID*2]<<" "<<mesh.edgeNodesArray[actual_edgID*2+1]<<std::endl;
+    m->createEntity(apf::Mesh::EDGE,gEnt,down_edge);
+  }
+ 
+
+  std::cout<<"Initializing RECONSTRUCTION!\n";
   for(int fID=0; fID<mesh.nElements_global;fID++){
       for(int i=0; i<mesh.nNodes_element;i++){
-        std::cout<<"FID "<<fID<<" i "<< mesh.elementNodesArray[fID * mesh.nNodes_element + i]<<std::endl;
-        elemverts[i] = vertices[mesh.elementNodesArray[fID * mesh.nNodes_element + i]]; 
-        apf::Vector3 check;
-        m2->getPoint(elemverts[i],0,check);
-        std::cout<<"Was the point set? "<<check<<std::endl;
+        int vID = mesh.elementNodesArray[fID*mesh.nNodes_element+i];
+        elemverts[i]=vertices[vID];
       }
-      apf::buildElement(m2,0,apf::Mesh::TRIANGLE,elemverts);
+      gEnt = m->findModelEntity(2,mesh.elementMaterialTypes[fID]);
+      apf::buildElement(m,gEnt,apf::Mesh::TRIANGLE,elemverts);
   }
-  apf::deriveMdsModel(m2);
-  m2->acceptChanges();
-  m2->verify();
-  apf::writeVtkFiles("reconstructedMesh", m2);
-  m2->destroyNative();
-  apf::destroyMesh(m2);
+
+  std::cout<<"Looped RECONSTRUCTION!\n";
+  m->acceptChanges();
+  m->verify();
+
+  gmi_model* g2 = m->getModel();
+  gmi_iter* gIter = gmi_begin(g2,0);
+  gmi_ent* gmiEnt;
+  while(gmiEnt = gmi_next(g2,gIter)){
+    std::cout<<"What is the tag? "<<gmi_tag(g2,gmiEnt)<<" material? "<<modelVertexMaterial[gmi_tag(g2,gmiEnt)]<<std::endl;
+  }
+  gmi_end(g2,gIter);
+
+  
+  //write model and mesh
+  gmi_write_dmg(gMod,"Reconstruct.dmg");
+  apf::writeVtkFiles("reconstructedMesh", m);
+
   m->destroyNative();
   apf::destroyMesh(m);
-  m = m2;
   std::cout<<"COMPLETED RECONSTRUCTION!\n";
-  abort();
 }
 
