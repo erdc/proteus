@@ -421,6 +421,71 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh,
   m->end(it);
   return 0;
 }
+
+/* Overload updateMaterialArray for reconstructed SCOREC meshes.
+ * The material types are stored based on derived model entity.
+ * We can recover the material of a mesh entity by looking at its classified
+ * model entity
+ */
+int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
+{
+  int geomTag;
+  apf::ModelEntity* geomEnt;
+  apf::MeshIterator* it;
+  apf::MeshEntity* f;
+
+  int dim = 0;
+  it = m->begin(dim);
+  while(f = m->iterate(it)){
+    geomEnt = m->toModel(f);
+    int i = localNumber(f);
+    if(m->getModelType(geomEnt) == dim){
+      geomTag = m->getModelTag(m->toModel(f));
+      mesh.nodeMaterialTypes[i] =modelVertexMaterial[geomTag];
+    }
+    else{
+      mesh.nodeMaterialTypes[i] = 0; //This assumes that all vertices on the boundary are model vertices
+    }
+  }
+  m->end(it);
+
+  if(m->getDimension()==2)
+    dim = 1;
+  else
+    dim = 2;
+  it = m->begin(dim);
+  while(f = m->iterate(it)){
+    geomEnt = m->toModel(f);
+    int i = localNumber(f);
+    if(m->getModelType(geomEnt) == dim){
+      geomTag = m->getModelTag(m->toModel(f));
+      std::cout<<"Entity "<<i<<" geomTag "<<geomTag<<" geomType "<<m->getModelType(geomEnt)<<" initial material "<<mesh.elementBoundaryMaterialTypes[i]<<" after "<<modelBoundaryMaterial[geomTag]<<std::endl;
+      mesh.elementBoundaryMaterialTypes[i] =modelBoundaryMaterial[geomTag];
+    }
+    else{
+      geomTag = m->getModelTag(m->toModel(f));
+      std::cout<<"Entity "<<i<<" geomTag "<<geomTag<<" geomType "<<m->getModelType(geomEnt)<<" initial material "<<mesh.elementBoundaryMaterialTypes[i]<<" after "<<0<<std::endl;
+      mesh.elementBoundaryMaterialTypes[i] = 0; //This assumes that all vertices on the boundary are model vertices
+    }
+  }
+  m->end(it);
+
+  dim = dim+1; //the regions are necessary one dimension higher than previous dim
+  it = m->begin(dim);
+  while(f = m->iterate(it)){
+    geomEnt = m->toModel(f);
+    int i = localNumber(f);
+    assert(m->getModelType(geomEnt)==dim);
+    geomTag = m->getModelTag(m->toModel(f));
+    mesh.elementMaterialTypes[i] =modelRegionMaterial[0];
+  }
+  m->end(it);
+
+  return 0;
+}
+
+
+
 //Attempt to reconstruct a PUMI mesh based on Proteus mesh data
 ////structures.
 #include <apf.h>
@@ -500,19 +565,13 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh)
   apf::ModelEntity* g_faceEnt;
   apf::MeshEntity* vertEnt;
   
-  int matTag; //mesh.elementMaterialType[fID];
-  int vertCounter = 0; //-1 so that with the first gEnt that is on a boundary, we have a 0 index
-
-  for(int vID=0; vID<mesh.nNodes_global;vID++){
-    matTag = mesh.nodeMaterialTypes[vID];
-    if(matTag!=0){
-      vertCounter++;
-    }
-  }
-  int modelVertexMaterial[vertCounter];
-  int modelEdgeMaterial[mesh.nExteriorElementBoundaries_global];
+  //these data structures assume that every boundary entity is a model entity
+  modelVertexMaterial = (int*)malloc(nBoundaryNodes*sizeof(int));
+  modelBoundaryMaterial = (int*)malloc(mesh.nExteriorElementBoundaries_global*sizeof(int));
+  modelRegionMaterial = (int*)malloc(sizeof(int));
     
-  vertCounter = 0; //reinitialize the vertCounter
+  int matTag; //mesh.elementMaterialType[fID];
+  int vertCounter = 0;
   apf::ModelEntity* gEnt; 
   for(int vID=0; vID<mesh.nNodes_global;vID++){
     matTag = mesh.nodeMaterialTypes[vID];
@@ -532,13 +591,14 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh)
     m->setPoint(vertices[vID],0,pt);
   }
 
-  //Only construct the mesh entities on model edges
+  //Construct the mesh edge entities
   
   apf::Downward down_edge;
-  int edgCounter = 0; //counter for global model edges
+/*
   for(int edgID=0; edgID<mesh.nExteriorElementBoundaries_global;edgID++){
-    gEnt = m->findModelEntity(1,edgCounter);
-    edgCounter++;
+    gEnt = m->findModelEntity(1,edgID);
+    modelBoundaryMaterial[edgID] = mesh.elementBoundaryMaterialTypes[edgID]; 
+    std::cout<<edgID<<" What is the boundary material? "<<mesh.elementBoundaryMaterialTypes[edgID]<<std::endl;
     //i need the edge adjacency array to tell me what the adjacent edges should be..
     int actual_edgID = mesh.exteriorElementBoundariesArray[edgID];
     down_edge[0] = vertices[mesh.edgeNodesArray[actual_edgID*2]];
@@ -546,9 +606,28 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh)
     //std::cout<<edgID<<" Adjacent vertices are "<< mesh.edgeNodesArray[actual_edgID*2]<<" "<<mesh.edgeNodesArray[actual_edgID*2+1]<<std::endl;
     m->createEntity(apf::Mesh::EDGE,gEnt,down_edge);
   }
- 
+*/
+  int edgCounter = 0;
+  for(int edgID=0;edgID<mesh.nElementBoundaries_global;edgID++){
+    if(mesh.exteriorElementBoundariesArray[edgCounter]==edgID){
+      gEnt = m->findModelEntity(1,edgCounter);
+      modelBoundaryMaterial[edgCounter] = mesh.elementBoundaryMaterialTypes[edgID]; 
+      edgCounter++;
+    }
+    else {
+      assert(mesh.elementBoundaryMaterialTypes[edgID]==0);
+      gEnt = m->findModelEntity(2,mesh.elementMaterialTypes[0]);
+    }
+
+    //modelBoundaryMaterial[edgID] = mesh.elementBoundaryMaterialTypes[edgID]; 
+    //int actual_edgID = mesh.exteriorElementBoundariesArray[edgID];
+    down_edge[0] = vertices[mesh.edgeNodesArray[edgID*2]];
+    down_edge[1] = vertices[mesh.edgeNodesArray[edgID*2+1]];
+    m->createEntity(apf::Mesh::EDGE,gEnt,down_edge);
+  }
 
   std::cout<<"Initializing RECONSTRUCTION!\n";
+  modelRegionMaterial[0] = mesh.elementMaterialTypes[0]; //single material type at the moment
   for(int fID=0; fID<mesh.nElements_global;fID++){
       for(int i=0; i<mesh.nNodes_element;i++){
         int vID = mesh.elementNodesArray[fID*mesh.nNodes_element+i];
@@ -575,8 +654,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh)
   gmi_write_dmg(gMod,"Reconstruct.dmg");
   apf::writeVtkFiles("reconstructedMesh", m);
 
-  //m->destroyNative();
-  //apf::destroyMesh(m);
+  numberLocally();
   std::cout<<"COMPLETED RECONSTRUCTION!\n";
 }
 

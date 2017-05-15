@@ -28,6 +28,7 @@ class MeshAdaptPUMIDrvr{
   int constructFromSerialPUMIMesh(Mesh& mesh);
   int constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh);
   int updateMaterialArrays(Mesh& mesh,int dim, int bdryID, int GeomTag);
+  int updateMaterialArrays(Mesh& mesh);
   void numberLocally();
   int localNumber(apf::MeshEntity* e);
   int dumpMesh(Mesh& mesh);
@@ -57,7 +58,6 @@ class MeshAdaptPUMIDrvr{
 
 
   //Public Variables
-  bool isReconstructed;
   double hmax, hmin; //bounds on mesh size
   int numIter; //number of iterations for MeshAdapt
   int nAdapt; //counter for number of adapt steps
@@ -92,6 +92,13 @@ class MeshAdaptPUMIDrvr{
   double total_error;
   double errRho_max;
   double rel_err_total;
+
+  //Mesh Reconstruction
+  int isReconstructed;
+  int* modelVertexMaterial; 
+  int* modelBoundaryMaterial;
+  int* modelRegionMaterial;
+
 
   private: 
   apf::Mesh2* m;

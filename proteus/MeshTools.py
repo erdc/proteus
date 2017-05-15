@@ -1599,12 +1599,15 @@ class Mesh:
           comm.barrier()
         else:
           PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
-          for i in range(len(faceList)):
-            for j in range(len(faceList[i])):
-              PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), i+1, faceList[i][j])
-          for i in range(len(regList)):
-            for j in range(len(regList[i])):
-              PUMIMesh.updateMaterialArrays(self.cmesh,dim, i+1, regList[i][j])
+          if(PUMIMesh.isReconstructed):
+            PUMIMesh.updateMaterialArrays(self.cmesh);
+          else:
+              for i in range(len(faceList)):
+                for j in range(len(faceList[i])):
+                  PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), i+1, faceList[i][j])
+              for i in range(len(regList)):
+                for j in range(len(regList[i])):
+                  PUMIMesh.updateMaterialArrays(self.cmesh,dim, i+1, regList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
