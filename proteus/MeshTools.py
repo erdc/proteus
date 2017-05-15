@@ -1613,7 +1613,6 @@ class Mesh:
             cmeshTools.computeGeometricInfo_triangle(self.cmesh)
           self.buildFromC(self.cmesh)
         logEvent("meshInfo says : \n"+self.meshInfo())
-        PUMIMesh.reconstructFromProteus(self.cmesh)
 
 class MultilevelMesh(Mesh):
     """A hierchical multilevel mesh"""
