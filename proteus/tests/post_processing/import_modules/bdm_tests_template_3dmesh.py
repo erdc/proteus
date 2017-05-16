@@ -7,13 +7,12 @@ import proteus as pr
 reload(p)
 reload(n)
 
-p.nd = 2
-p.name = "BDM2_Test_File_projection"
+p.nd = 3
+p.name = "BDM2_Test_File"
 
-p.rdomain = pr.Domain.unitSimplex(2)
-p.polyfile = "reference_triangle"
-p.rdomain.writePoly(p.polyfile)
-n.triangleOptions = "Yp"
+p.x0 = (0.,0.,0.)
+p.L=(1.0,1.0,1.0);
+p.T=1.0
 
 p.nc = 1
 
@@ -23,13 +22,15 @@ class velEx:
         self.aex = aex
     def uOfX(self,X):
         du = self.duex.duOfX(X)
-        A = numpy.reshape(self.aex(X),(2,2))
+        A = numpy.reshape(self.aex(X),(3,3))
         return -numpy.dot(A,du)
     def uOfXT(self,X,T):
         return self.uOfX(X)
 
 def A(x):
-    return numpy.array([[1.0, 0.0],[0.0, 1.0]],'d')
+    return numpy.array([[1.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0],
+                        [0.0, 0.0, 1.0]],'d')
 def f(x):
     return 1.0
 
@@ -37,26 +38,40 @@ class uEx:
     def __init__(self):
         pass
     def uOfX(self,x):
-        return x[0]**2 + x[1]**2
+        return x[0]**2 + x[1]**2 + x[2]**2
     def uOfXT(self,x,T):
         return self.uOfX(x)
     def duOfX(self,X):
-        du = 2.0*numpy.reshape(X[0:2],(2,))
+        du = 2.0*numpy.reshape(X[0:3],(3,))
         return du
     def duOfXT(self,X,T):
         return self.duOfX(X)
 
+eps=1.0e-4
+    
+def onDirichletBoundary(x):
+    if (x[0] <= p.x0[0] + eps or
+        x[1] <= p.x0[1] + eps or
+        x[1] >= p.x0[1] + p.L[1] - eps or
+        x[2] <= p.x0[2] + eps or
+        x[2] >= p.x0[2] + p.L[2] - eps):
+        return True
+    else:
+        return False
+    
 def getDBC(x,flag):
-    if x[0] in [0.0] or x[1] in [0.0,1.0]:
+    if onDirichletBoundary(x):
         return lambda x,t: uEx().uOfXT(x,t)
 
 def getAdvFluxBC(x,flag):
     pass
 
 def getDiffFluxBC(x,flag):
-    if x[0]==1.0:
+    if x[0] >= p.x0[0] + p.L[0] - eps:
         n = numpy.zeros((p.nd,),'d'); n[0]=1.0
         return lambda x,t: numpy.dot(velEx(uEx(),A).uOfXT(x,t),n)
+    elif not onDirichletBoundary(x):
+        return lambda x,t: 0.0
 
 p.analyticalSolution = {0:uEx()}
 p.dirichletConditions = {0:getDBC}
@@ -77,7 +92,7 @@ n.parallel = False
 n.femSpaces = dict((i,pr.FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis) for i in range(p.nc))
 n.elementQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd,4)
 n.elementBoundaryQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd-1,4)
-n.nn = 3
+n.nn = 2
 n.nLevels = 1
 
 n.subgridError = None
