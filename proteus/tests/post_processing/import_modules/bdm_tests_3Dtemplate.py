@@ -3,19 +3,17 @@ from proteus import default_p as p
 from proteus import default_n as n
 from proteus import default_s,default_so
 from proteus import Context
-import numpy, os
+import numpy, os, inspect
 import proteus as pr
 reload(p)
 reload(n)
 
+
 p.nd = 3
 p.name = "BDM2_Test_File_projection"
 
-#p.rdomain = pr.Domain.unitSimplex(3)
-current_dir = os.path.dirname(__file__)
+current_dir = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() )) [0]))
 p.polyfile = os.path.join(current_dir,"reference_simplex_keep")
-#p.rdomain.writePoly(p.polyfile)
-#n.triangleOptions = "Yp"
 
 p.genMesh = False
 p.nc = 1
@@ -117,13 +115,6 @@ n.multigridCycles = 0
 
 n.cfluxtag = 'pwl-bdm2'
 n.conservativeFlux = {0:'pwl-bdm2'}
-#n.cfluxtag  = 'pwl-bdm2'#'pwl-bdm'#'sun-rt0','sun-gs-rt0','pwc','pwl','pwl-bdm','point-eval'
-#n.conservativeFlux =  {0:'pwl-bdm2'}#,1:'pwl-ib-fix-0'}#dict((i,cfluxtag) for i in range(nc))
-#need this for sun-wheeler-gs
-#if n.cfluxtag == 'sun-gs-rt0':
-#    n.numericalFluxType = pr.Advection_DiagonalUpwind_Diffusion_IIPG_exterior
-#n.preSmooths = 3
-#n.postSmooths = 3
 
 #########################################################################
 
@@ -136,8 +127,3 @@ from proteus import *
 
 opts = Context.Options([("hotStart", True, "Use prescriped reference simplex file.")])
 ns = NumericalSolution.NS_base(so,[p],[n],so.sList,ip.opts)
-#from nose.tools import set_trace
-#set_trace()
-
-#failed = ns.calculateSolution('ladr_run1')
-#assert(not failed)
