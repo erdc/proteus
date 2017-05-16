@@ -52,6 +52,9 @@ class D_base:
         # use_gmsh hack
         self.use_gmsh = False
         self.MeshOptions = MeshTools.MeshOptions(self)
+        # for PUMI compatibility
+        self.faceList=[] #list of the boundary IDs that have corresponding BCs, might be the same as self.facets[]
+        self.regList=[] # list of regions in the domain, this might be the same as self.regions[]
 
     def writeAsymptote(self, fileprefix):
         """
