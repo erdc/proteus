@@ -836,40 +836,11 @@ class NS_base:  # (HasTraits):
         #will need to move this to earlier when the mesh is created
         from proteus.MeshAdaptPUMI import MeshAdaptPUMI
         if not hasattr(p0.domain,'PUMIMesh'):
-            p0.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=0.00625, numIter=2,sfConfig="ERM",logType="off")
+            #p0.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=0.00625, numIter=2,sfConfig="ERM",logType="off")
+            p0.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=0.05, numIter=2,sfConfig="ERM",logType="on")
             p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh)
-            logEvent("Copying coordinates to PUMI")
-            p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
-                self.modelList[0].levelModelList[0].mesh.nodeArray)
-            logEvent("Copying DOF and parameters to PUMI")
-            for m in self.modelList:
-              for lm in m.levelModelList:
-                coef = lm.coefficients
-                if coef.vectorComponents != None:
-                  vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
-                  for vci in range(len(coef.vectorComponents)):
-                    vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
-                  p0.domain.PUMIMesh.transferFieldToPUMI(
-                         coef.vectorName, vector)
-                  del vector
-                for ci in range(coef.nc):
-                  if coef.vectorComponents == None or \
-                     ci not in coef.vectorComponents:
-                    scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-                    scalar[:,0] = lm.u[ci].dof[:]
-                    p0.domain.PUMIMesh.transferFieldToPUMI(
-                        coef.variableNames[ci], scalar)
-                    del scalar
 
-            mesh = MeshTools.TriangularMesh()
-            mesh.convertFromPUMI(p0.domain.PUMIMesh,
-                             faceList=[],
-                             regList=[],
-                             parallel = self.comm.size() > 1,
-                             dim = p0.domain.nd)
-            self.PUMI2Proteus(mesh)
-
-        if (isinstance(p0.domain, Domain.PUMIDomain) and
+        if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
             self.so.useOneMesh and 
             self.nSolveSteps%n0.adaptMesh_nSteps==0):
