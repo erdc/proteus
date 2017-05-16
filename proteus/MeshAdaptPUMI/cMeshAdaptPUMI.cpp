@@ -76,7 +76,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   target_element_count = targetElementCount;
   domainVolume = 0.0;
   THRESHOLD = 0.0;
-  isReconstructed=0.0;
+  isReconstructed=0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()

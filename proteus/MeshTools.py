@@ -1599,7 +1599,7 @@ class Mesh:
           comm.barrier()
         else:
           PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
-          if(PUMIMesh.isReconstructed):
+          if(PUMIMesh.isReconstructed()):
             PUMIMesh.updateMaterialArrays(self.cmesh);
           else:
               for i in range(len(faceList)):

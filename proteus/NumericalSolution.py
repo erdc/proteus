@@ -835,8 +835,7 @@ class NS_base:  # (HasTraits):
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
         from proteus.MeshAdaptPUMI import MeshAdaptPUMI
-        if not hasattr(p0.domain,'PUMIMesh'):
-            #p0.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=0.00625, numIter=2,sfConfig="ERM",logType="off")
+        if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
             p0.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=0.05, numIter=2,sfConfig="ERM",logType="on")
             p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh)
 
