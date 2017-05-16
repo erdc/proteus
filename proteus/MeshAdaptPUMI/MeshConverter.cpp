@@ -439,9 +439,12 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
   while(f = m->iterate(it)){
     geomEnt = m->toModel(f);
     int i = localNumber(f);
+    geomTag = m->getModelTag(m->toModel(f));
     if(m->getModelType(geomEnt) == dim){
-      geomTag = m->getModelTag(m->toModel(f));
       mesh.nodeMaterialTypes[i] =modelVertexMaterial[geomTag];
+    }
+    else if(m->getModelType(geomEnt)==(m->getDimension()-1)){ //on the boundary entity
+      mesh.nodeMaterialTypes[i] =modelBoundaryMaterial[geomTag];
     }
     else{
       mesh.nodeMaterialTypes[i] = 0; //This assumes that all vertices on the boundary are model vertices
@@ -457,14 +460,17 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
   while(f = m->iterate(it)){
     geomEnt = m->toModel(f);
     int i = localNumber(f);
+    if(m->countUpward(f)==1){//necessarily a boundary mesh edge
+      std::cout<<"Edge "<<i<<" geomType "<<m->getModelType(geomEnt)<<" geomTag "<<m->getModelTag(m->toModel(f))<<" material "<<modelBoundaryMaterial[m->getModelTag(m->toModel(f))]<<std::endl;
+    }
     if(m->getModelType(geomEnt) == dim){
       geomTag = m->getModelTag(m->toModel(f));
-      std::cout<<"Entity "<<i<<" geomTag "<<geomTag<<" geomType "<<m->getModelType(geomEnt)<<" initial material "<<mesh.elementBoundaryMaterialTypes[i]<<" after "<<modelBoundaryMaterial[geomTag]<<std::endl;
+      //std::cout<<"Entity "<<i<<" geomTag "<<geomTag<<" geomType "<<m->getModelType(geomEnt)<<" initial material "<<mesh.elementBoundaryMaterialTypes[i]<<" after "<<modelBoundaryMaterial[geomTag]<<std::endl;
       mesh.elementBoundaryMaterialTypes[i] =modelBoundaryMaterial[geomTag];
     }
     else{
       geomTag = m->getModelTag(m->toModel(f));
-      std::cout<<"Entity "<<i<<" geomTag "<<geomTag<<" geomType "<<m->getModelType(geomEnt)<<" initial material "<<mesh.elementBoundaryMaterialTypes[i]<<" after "<<0<<std::endl;
+      //std::cout<<"Entity "<<i<<" geomTag "<<geomTag<<" geomType "<<m->getModelType(geomEnt)<<" initial material "<<mesh.elementBoundaryMaterialTypes[i]<<" after "<<0<<std::endl;
       mesh.elementBoundaryMaterialTypes[i] = 0; //This assumes that all vertices on the boundary are model vertices
     }
   }
