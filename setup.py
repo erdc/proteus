@@ -349,6 +349,13 @@ setup(name='proteus',
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
                    Extension("mprans.cRANS2P",["proteus/mprans/cRANS2P.pyx"], depends=["proteus/mprans/RANS2P.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
                              language="c++", include_dirs=[numpy.get_include(), 'proteus']),
+                   
+                   Extension("mprans.cPreconditionerOperators",
+                             ['proteus/mprans/cPreconditionerOperators.pyx'],
+                             depends =['proteus/mprans/PreconditionerOperators.h'] + ["proteus/CompKernel.h"],
+                             language="c++",
+                             include_dirs=[numpy.get_include(), 'proteus']),
+                   
                    Extension("mprans.cRANS2P2D",["proteus/mprans/cRANS2P2D.pyx"],
                              depends=["proteus/mprans/RANS2P2D.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
                              language="c++",

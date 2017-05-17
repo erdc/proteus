@@ -4,6 +4,7 @@ A hierarchy of classes for linear algebraic system solvers.
 .. inheritance-diagram:: proteus.LinearSolvers
    :parts: 1
 """
+import proteus
 from LinearAlgebraTools import *
 import FemTools
 import lapackWrappers
@@ -836,7 +837,10 @@ class SchurOperatorConstructor:
         self.linear_smoother=linear_smoother
         self.L = linear_smoother.L
         self.pde_type = pde_type
-        self.opBuilder = OperatorConstructor(self.L.pde)
+        if isinstance(self.L.pde,proteus.mprans.RANS2P.LevelModel):
+            self.opBuilder = OperatorConstructor_rans2p(self.L.pde)
+        else:
+            self.opBuilder = OperatorConstructor_oneLevel(self.L.pde)
         self.Qp_built = False
         self.Ap_built = False
 
@@ -917,15 +921,11 @@ class SchurOperatorConstructor:
         Qp : matrix
            A two-phase pressure mass matrix.
         """
-        if self.L.pde.coefficients.which_region != None:
-            self._phase_function = self.L.pde.coefficients.which_region
-        # ARB - This section was me experimenting with mprans.
-        # if hasattr(self.L.pde.coefficients,'which_region'):
-        #     if self.L.pde.coefficients.which_region != None:
-        #         self._phase_function = self.L.pde.coefficients.which_region
-        # elif hasattr(self.L.pde.coefficients,'q_vf'):
-        #     self._phase_function = self.L.pde.coefficients.q_vf
-        # import pdb ; pdb.set_trace()
+        try:
+            if self.L.pde.coefficients.which_region != None:
+                self._phase_function = self.L.pde.coefficients.which_region
+        except AttributeError:
+            pass
         Qsys_petsc4py = self._TPInvScaledMassMatrix()
         self.TPInvScaledQp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                         self.linear_smoother.isp)
@@ -1292,7 +1292,10 @@ class SchurOperatorConstructor:
             The two-phase mass matrix.
 
         """
-        self.opBuilder.attachTwoPhaseInvScaledMassOperator(phase_function = self._phase_function)
+        try:
+            self.opBuilder.attachTwoPhaseInvScaledMassOperator(phase_function = self._phase_function)
+        except AttributeError:
+            self.opBuilder.attachTwoPhaseInvScaledMassOperator()
         return superlu_2_petsc4py(self.opBuilder.TPInvScaledMassOperator)
     
     def _getLaplace(self,output_matrix=False):
@@ -2936,6 +2939,29 @@ class StorageSet(set):
             storageDict[k] = numpy.zeros(self.shape,self.storageType)
 
 class OperatorConstructor:
+    """ Base class for operator constructors. """
+    def __init__(self,model):
+        self.OLT = model
+            
+class OperatorConstructor_rans2p(OperatorConstructor):
+    """ A class for building common discrete rans2p operators.
+
+    Arguments:
+    ----------
+    LevelModel : :class:`proteus.mprans.RANS2P.LevelModel`
+        Level transport model derived from the rans2p class.
+    """
+    def __init__(self,levelModel):
+        OperatorConstructor.__init__(self,levelModel)
+
+    def attachTwoPhaseInvScaledMassOperator(self):
+        """Create a discrete TwoPhase Mass operator matrix. """
+        from proteus.mprans.cPreconditionerOperators import *
+        self.opConstructor = cRANS2P_Op_Builder()
+        self.opConstructor.attachTwoPhaseInvScaledMassOperator()
+        import pdb ; pdb.set_trace()
+
+class OperatorConstructor_oneLevel(OperatorConstructor):
     """ A class for building common discrete operators. 
     
     Arguments
@@ -2943,9 +2969,11 @@ class OperatorConstructor:
     OLT : :class:`proteus.Transport.OneLevelTransport`
         One level transport class from which operator construction 
         will be based.
+
+    TODO - ARB: replace self.OLT with self.model.
     """
     def __init__(self,OLT):
-        self.OLT = OLT
+        OperatorConstructor.__init__(self,OLT)
         self._initializeOperatorConstruction()
         self.massOperatorAttached = False
         self.Qv_constructed = False
