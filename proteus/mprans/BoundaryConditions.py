@@ -169,18 +169,21 @@ class BC_RANS(BC_Base):
             orientation = self._b_or
         self.reset()
         self.p_dirichlet.setConstantBC(0.)
-        if self._b_or[0] == 1. or self._b_or[0] == -1.:
-            self.u_dirichlet.setConstantBC(0.)
-        else:
-            self.u_dirichlet.resetBC()
-        if self._b_or[1] == 1. or self._b_or[1] == -1.:
-            self.v_dirichlet.setConstantBC(0.)
-        else:
-            self.v_dirichlet.resetBC()
-        if self._b_or[2] == 1. or self._b_or[2] == -1.:
-            self.w_dirichlet.setConstantBC(0.)
-        else:
-            self.w_dirichlet.resetBC()
+        self.u_dirichlet.setConstantBC(0.)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
+        # if self._b_or[0] == 1. or self._b_or[0] == -1.:
+        #     self.u_dirichlet.setConstantBC(0.)
+        # else:
+        #     self.u_dirichlet.resetBC()
+        # if self._b_or[1] == 1. or self._b_or[1] == -1.:
+        #     self.v_dirichlet.setConstantBC(0.)
+        # else:
+        #     self.v_dirichlet.resetBC()
+        # if self._b_or[2] == 1. or self._b_or[2] == -1.:
+        #     self.w_dirichlet.setConstantBC(0.)
+        # else:
+        #     self.w_dirichlet.resetBC()
         self.vof_dirichlet.setConstantBC(vof_air)  # air
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
