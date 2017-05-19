@@ -4,7 +4,30 @@ import os
 import sys
 import inspect
 import pickle
+import petsc4py
 
+def get_include_dir():
+    return os.path.dirname(os.path.realpath(__file__))
+
+def setup_profiling():
+    comm = Comm.get()
+    Profiling.procID = comm.rank()
+    Profiling.logLevel = 10
+    Profiling.logFile = sys.stdout
+    Profiling.logAllProcesses = True
+
+def silent_rm(filename):
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
+
+def removeFiles(filelist):
+    """ Remove a list of files. """
+    for file in filelist:
+        if os.path.isfile(file):
+            os.remove(file)
+    
 def addSubFolders(currentframe):
     """Add import_modules and comparison_files to sys.path
 
@@ -22,12 +45,6 @@ def addSubFolders(currentframe):
 
     if cmd_subfolder not in sys.path:
         sys.path.insert(0,cmd_subfolder)
-
-def closeFiles(filelist):
-    """Close a set of files. """
-    for file in filelist:
-        if os.path.isfile(file):
-            os.remove(file)
 
 class NumericResults:
     """Parse and stores numerical data from a Proteus log file.
@@ -192,7 +209,12 @@ class NumericResults:
         pass
 
 
-    def _init_ipython_plot(self,plot_data,legend_lst=[],title_str=' ',axis=None):
+    def _init_ipython_plot(self,
+                           plot_data,
+                           legend_lst=[],
+                           title_str=' ',
+                           axis=None,
+                           plot_relative=False):
         """ Private member function that loads ipython plotting libraries 
 
         Parameters
@@ -201,11 +223,19 @@ class NumericResults:
             A list of lists that stores the data series to be plotted.
         legend : lst
             A list of strings for the legend.
+        axis : bool
+           Indicates whether there is a user specified axis.
+        plot_relative : bool
+           Indicates whether the relative residuals should be plotted.
         """
         import matplotlib
         import numpy as np
         import matplotlib.pyplot as plt       
         for data_set in plot_data:
+            if plot_relative == True:
+                max_term = max(data_set)
+                for i,term in enumerate(data_set):
+                    data_set[i] = data_set[i] / max_term
             plt.plot(data_set)
         plt.yscale("log")
         plt.legend(legend_lst)
@@ -214,7 +244,7 @@ class NumericResults:
             plt.xlim(axis[0],axis[1])
         plt.show() 
 
-    def ipython_plot_newton_it(self,time_level):
+    def ipython_plot_newton_it(self,time_level,axis=False):
         """ Plot the Newton iteration residual in a jupyter notebook.
 
         Parameters
@@ -225,7 +255,8 @@ class NumericResults:
         plot_data = []
         legend = []
         title = 'Residual From Newton Iterations'
-
+        axis_inline = axis
+        
         for data_set in time_level:
             if data_set[0] in self.data_dictionary.keys():
                 if data_set[1] in self.data_dictionary[data_set[0]].keys():
@@ -235,10 +266,45 @@ class NumericResults:
                     print 'The second key ' + `data_set[1]` + ' is not valid.'
             else:
                 print 'The first key ' + `data_set[1]` + ' is not valid.'
-    
-        self._init_ipython_plot(plot_data,legend,title)
 
-    def ipython_plot_ksp_residual(self,time_level_it):
+        if axis!=False:
+            self._init_ipython_plot(plot_data,legend,title,axis_inline)
+        else:
+            self._init_ipython_plot(plot_data,legend,title)
+
+    def get_newton_it_info(self,time_level):
+        """ Print the total number of iterations to converge for a given time-step
+            and mesh level.
+
+        Parameters
+        ----------
+        time_level : lst of tuples
+            A list of tuples with the data to be reported.
+
+        Returns
+        -------
+        return_data : lst of tuples
+        """
+        return_data = []
+        
+        for data_set in time_level:
+            if data_set[0] in self.data_dictionary.keys():
+                if data_set[1] in self.data_dictionary[data_set[0]].keys():
+                    result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][0]))
+                    return_data.append(result)
+                else:
+                    print 'The second key ' + `data_set[1]` + 'is not valid.'
+            else:
+                print 'The first key ' + `data_set[1]` + 'is not valid.'
+
+        return return_data
+            
+    def ipython_plot_ksp_residual(self,
+                                  time_level_it,
+                                  axis = False,
+                                  user_legend = False,
+                                  plot_relative = False,
+                                  title = False):
         """ Plot the outer KSP residual in a jupyter notebook.
         
         Parameters
@@ -247,8 +313,9 @@ class NumericResults:
         """
         plot_data = []
         legend = []
-        title = 'Residuals of Outer Most KSP Solve.'
-        axis = [0,8]
+        if title == False:
+            title = 'Residuals of Outer Most KSP Solve.'
+        axis_inline = axis
 
         for data_set in time_level_it:
             if data_set[0] in self.data_dictionary.keys():
@@ -262,8 +329,47 @@ class NumericResults:
                     print 'The second key ' + `data_set[1]` + ' is not valid.'
             else:
                 print 'The first key ' + `data_set[1]` + ' is not valid.'
-                
-        self._init_ipython_plot(plot_data,legend,title,axis)
+
+        if user_legend!=False:
+            legend = user_legend
+
+        if axis!=False:
+            self._init_ipython_plot(plot_data,legend,title,axis,plot_relative=plot_relative)
+        else:
+            self._init_ipython_plot(plot_data,legend,title,plot_relative=plot_relative)
+
+
+
+    def get_ksp_resid_it_info(self,time_level):
+        """ Collect the total number of iterations to converge for a given time-step
+            and mesh level.
+
+        Parameters
+        ----------
+        time_level : lst of tuples
+            A list of tuples with the data to be reported.
+
+        Returns
+        -------
+        return_data : lst of tuples
+        """
+        return_data = []
+        
+        for data_set in time_level:
+            if data_set[0] in self.data_dictionary.keys():
+                if data_set[1] in self.data_dictionary[data_set[0]].keys():
+                    if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
+                        result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0]))
+                        return_data.append(result)
+                    else:
+                        print 'The third key ' + `data_set[1]` + 'is not valid.'
+                else:
+                    print 'The second key ' + `data_set[1]` + 'is not valid.'
+            else:
+                print 'The first key ' + `data_set[1]` + 'is not valid.'
+
+        return return_data
+
 
     def ipython_plot_ksp_schur_residual(self,time_level_it,axis=False):
         """ Plot the inner KSP residual in a jupyter notebook.
@@ -295,3 +401,80 @@ class NumericResults:
             self._init_ipython_plot(plot_data,legend,title,axis_inline)
         else:
             self._init_ipython_plot(plot_data,legend,title)
+
+class BasicTest():
+    """ A base class for tests. """
+    @classmethod
+    def setup_class(cls):
+        pass
+
+    @classmethod
+    def teardown_class(cls):
+        pass
+
+    def setup_method(self,method):
+        pass
+
+    def teardown_method(self,method):
+        pass
+    
+class SimulationTest(BasicTest):
+    """ A base class for simulation based tests. """
+
+    @classmethod
+    def _setRelativePath(self,input_file):
+        self.scriptdir = os.path.dirname(input_file)
+
+    @staticmethod
+    def remove_files(filelist):
+        """Close a set of files. """
+        for file in filelist:
+            if os.path.isfile(file):
+                os.remove(file)
+
+    def teardown_method(self):
+#        extens = ('edge','ele','log','neig','node','poly','h5','xmf','prof0','info','m')
+        extens = ('m')
+        # TDB - this is probably too aggressive for an arbitrary test directory.
+        for currentFile in os.listdir('.'):
+            if any(currentFile.endswith(ext) for ext in extens):
+                if os.path.isfile(currentFile):
+                    os.remove(currentFile)
+
+    def _setPETSc(self,petsc_file):
+        """The function takes a file with petsc options and sets the options globally.
+
+        petsc_file : str
+            string with the location of the file
+        """
+        # First, clear any existing PETSc options settings
+        for key in petsc4py.PETSc.Options().getAll():
+            petsc4py.PETSc.Options().delValue(key)
+        # Second, collect and add new PETSc options
+        petsc_options = []
+        with open(petsc_file) as petsc_file:
+            data = petsc_file.readlines()
+        def strip_comments(line):
+            if '#' in line:
+                line = line[:line.index('#')]
+            return line
+        stripped_data = [strip_comments(line) for line in data]
+        petsc_options = ''.join(stripped_data).split('\n')
+        new_petsc = []
+        for item in petsc_options:
+            if item != '':
+                new = item.split()
+                new[0] = new[0][1:]
+                new_petsc.append((new))
+        for item in new_petsc:
+            if len(item)==2:
+                petsc4py.PETSc.Options().setValue(item[0],item[1])
+            if len(item)==1:
+                petsc4py.PETSc.Options().setValue(item[0],'')
+
+        
+class AirWaterVVTest(SimulationTest):
+    """A test class for the air-water-vv module. """
+
+    def getPETScDir(self):
+        self._petscdir = os.path.join(self._scriptdir,"../../../inputTemplates/") 
