@@ -23,6 +23,8 @@ initialConditions = None
 sd=True
 Ident = numpy.zeros((nd,nd),'d')
 Ident[0,0]=1.0; Ident[1,1] = 1.0
+domain = None
+polyfile = None
 
 class velEx:
     def __init__(self,duex,aex):
