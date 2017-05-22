@@ -111,13 +111,6 @@ n.multigridCycles = 0
 
 n.cfluxtag = 'pwl-bdm2'
 n.conservativeFlux = {0:'pwl-bdm2'}
-#n.cfluxtag  = 'pwl-bdm2'#'pwl-bdm'#'sun-rt0','sun-gs-rt0','pwc','pwl','pwl-bdm','point-eval'
-#n.conservativeFlux =  {0:'pwl-bdm2'}#,1:'pwl-ib-fix-0'}#dict((i,cfluxtag) for i in range(nc))
-#need this for sun-wheeler-gs
-#if n.cfluxtag == 'sun-gs-rt0':
-#    n.numericalFluxType = pr.Advection_DiagonalUpwind_Diffusion_IIPG_exterior
-#n.preSmooths = 3
-#n.postSmooths = 3
 
 #########################################################################
 
@@ -129,8 +122,3 @@ so.sList=[default_s]
 from proteus import *
 opts = None
 ns = NumericalSolution.NS_base(so,[p],[n],so.sList,ip.opts)
-#from nose.tools import set_trace
-#set_trace()
-
-#failed = ns.calculateSolution('ladr_run1')
-#assert(not failed)
