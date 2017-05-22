@@ -323,6 +323,38 @@ namespace proteus
 				   int* csrColumnOffsets_eb_w_v,
 				   int* csrColumnOffsets_eb_w_w,				   
 				   int* elementFlags)=0;
+    virtual void getTwoPhaseInvScaledMassOperator(double *mesh_trial_ref,
+						  double *mesh_grad_trial_ref,
+						  double *mesh_dof,
+						  int* mesh_l2g,
+						  double* dV_ref,
+						  double* p_trial_ref,
+						  double* p_test_ref,
+						  double* vel_trial_ref,
+						  double* vel_test_ref,
+						  double* elementDiameter,
+						  double* nodeDiametersArray,
+						  int nElements_global,
+						  double useMetrics,
+						  double epsFact_rho,
+						  double epsFact_mu,
+						  double rho_0,
+						  double nu_0,
+						  double rho_1,
+						  double nu_1,
+						  int* p_l2g,
+						  int* vel_l2g,
+						  double* p_dof, double* u_dof, double* v_dof,
+						  const double useVF,
+						  double* vf,
+						  double* phi,
+						  int* csrRowIndeces_p_p,
+						  int* csrColumnOffsets_p_p,
+						  int* csrRowIndeces_u_u,
+						  int* csrColumnOffsets_u_u,
+						  int* csrRowIndeces_v_v,
+						  int* csrColumnOffsets_v_v,
+						  double* mass_matrix)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
     					  int* exteriorElementBoundariesArray,
     					  int nInteriorElementBoundaries_global,
@@ -803,6 +835,47 @@ namespace proteus
 #endif
     }
     //VRANS specific
+    inline
+      void evaluateTPInvViscosityMassCoefficients(const double eps_rho,
+						  const double eps_mu,
+						  const double rho_0,
+						  double nu_0,
+						  const double rho_1,
+						  double nu_1,
+						  const double useVF,
+						  const double& vf,
+						  const double& phi,
+						  const double& p,
+						  const double& u,
+						  const double& v,
+						  double& mom_p_acc,
+						  double& dmom_p_acc_p,
+						  double& mom_u_acc,
+						  double& dmom_u_acc_u,
+						  double& mom_v_acc,
+						  double& dmom_v_acc_v)
+  {
+
+    // This should be split off into a seperate function
+    double H_rho, H_mu, rho, nu, mu;
+    H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+    H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+
+    rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
+    nu = nu_0*(1.0-H_mu) + nu_1*H_mu;
+    mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu;
+    // Up to here.
+
+    mom_p_acc = p / nu;
+    dmom_p_acc_p = 1. / nu;
+
+    mom_u_acc = u / nu;
+    dmom_u_acc_u = 1. / nu;
+
+    mom_v_acc = v / nu;
+    dmom_v_acc_v = 1. / nu;
+  }
+    
     inline
       void updateDarcyForchheimerTerms_Ergun(/* const double linearDragFactor, */
 					   /* const double nonlinearDragFactor, */
@@ -4765,6 +4838,163 @@ namespace proteus
 	    }//kb
 	}//ebNE
     }//computeJacobian
+
+    void getTwoPhaseInvScaledMassOperator(double *mesh_trial_ref,
+					  double *mesh_grad_trial_ref,
+					  double *mesh_dof,
+					  int* mesh_l2g,
+					  double* dV_ref,
+					  double* p_trial_ref,
+					  double* p_test_ref,
+					  double* vel_trial_ref,
+					  double* vel_test_ref,
+					  double* elementDiameter,
+					  double* nodeDiametersArray,
+					  int nElements_global,
+					  double useMetrics,
+					  double epsFact_rho,
+					  double epsFact_mu,
+					  double rho_0,
+					  double nu_0,
+					  double rho_1,
+					  double nu_1,
+					  int* p_l2g,
+					  int* vel_l2g,
+					  double* p_dof, double* u_dof, double* v_dof,
+			       		  const double useVF,
+					  double* vf,
+					  double* phi,
+					  int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
+					  int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
+					  int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
+					  double* mass_matrix)
+    {
+    // Step 1.1 - Initialize local matrix
+      
+    for (int eN=0 ; eN < nElements_global; ++eN){
+
+      double local_matrix_p_p[nDOF_test_element][nDOF_trial_element];
+      double local_matrix_u_u[nDOF_test_element][nDOF_trial_element];
+      double local_matrix_v_v[nDOF_test_element][nDOF_trial_element];
+      double eps_rho, eps_mu;
+      
+      // reset local matrix entries
+      for (int i=0; i<nDOF_test_element; ++i)
+	for (int j=0; j<nDOF_trial_element; ++j){
+	  local_matrix_p_p[i][j] = 0.0 ;
+	  local_matrix_u_u[i][j] = 0.0 ;
+	  local_matrix_v_v[i][j] = 0.0 ;
+	}
+      // Step 1.2 - Loop over quadrature points on element
+      for (int k=0 ; k < nQuadraturePoints_element; ++k){
+
+	int eN_k = eN*nQuadraturePoints_element+k;
+	int eN_nDOF_trial_element = eN*nDOF_trial_element;
+	// *** Local storage arrays ***
+	double p = 0.0, u = 0.0, v= 0.0 ;
+	double dV;
+	double mom_p_acc = 0.0, dmom_p_acc_p = 0.0;
+	double mom_u_acc = 0.0, dmom_u_acc_u = 0.0;
+	double mom_v_acc = 0.0, dmom_v_acc_v = 0.0;
+	double jac[nSpace*nSpace] ;
+	double jacInv[nSpace*nSpace] ;
+	double jacDet,x,y,z ;
+	double p_test_dV[nDOF_test_element], vel_test_dV[nDOF_test_element];
+	double h_phi;
+	
+	// Step 1.2.1 Calculate integration weights
+
+	ck.calculateMapping_element(eN,
+			    k,
+			    mesh_dof,
+			    mesh_l2g,
+			    mesh_trial_ref,
+			    mesh_grad_trial_ref,
+			    jac,
+			    jacDet,
+			    jacInv,
+			    x,y,z);
+
+	ck.calculateH_element(eN,
+			      k,
+			      nodeDiametersArray,
+			      mesh_l2g,
+			      mesh_trial_ref,
+			      h_phi);
+	
+	dV = fabs(jacDet)*dV_ref[k];
+
+	ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p);
+	ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
+	ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
+	  
+	eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	eps_mu = epsFact_mu * (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	// Step 1.2.2 Scale test functions with integration weights.
+	  for (int j=0 ; j<nDOF_trial_element ; ++j){
+	    p_test_dV[j] = p_test_ref[k*nDOF_trial_element + j]*dV;
+	    vel_test_dV[j] = vel_test_ref[k*nDOF_trial_element + j] * dV;
+	  }
+
+	// Step 1.2.2 Evaluate coefficients
+	evaluateTPInvViscosityMassCoefficients(eps_rho,
+					       eps_mu,
+					       rho_0,
+					       nu_0,
+					       rho_1,
+					       nu_1,
+					       useVF,
+					       vf[eN_k],
+					       phi[eN_k],
+					       p,
+					       u,
+					       v,
+					       mom_p_acc,
+					       dmom_p_acc_p,
+					       mom_u_acc,
+					       dmom_u_acc_u,
+					       mom_v_acc,
+					       dmom_v_acc_v) ;
+					       
+	// Step 1.2.3 Loop over test and weighted trial functions
+	// to evaluate local inner product contrubtions
+	for (int i=0 ; i < nDOF_test_element; ++i)
+	  {
+	    int i_nSpace = i*nSpace;
+	    for (int j=0 ; j < nDOF_trial_element; ++j)
+	      {
+		int j_nSpace = j*nSpace;
+		local_matrix_p_p[i][j] += ck.MassJacobian_weak(dmom_p_acc_p,
+							       p_trial_ref[k*nDOF_trial_element+j],
+							       p_test_dV[i]) ;
+		local_matrix_u_u[i][j] += ck.MassJacobian_weak(dmom_u_acc_u,
+							       vel_trial_ref[k*nDOF_trial_element+j],
+							       vel_test_dV[i]) ;
+		local_matrix_v_v[i][j] += ck.MassJacobian_weak(dmom_v_acc_v,
+							       vel_trial_ref[k*nDOF_trial_element+j],
+							       vel_test_dV[i]) ;
+	      }//j
+	  }//i
+
+	
+      } // k
+
+      // Step 1.3 - Write local matrix information into global system
+      for (int i=0 ; i<nDOF_test_element; ++i)
+	{
+	  int eN_i = eN*nDOF_test_element+i;
+	  for (int j=0 ; j < nDOF_trial_element; ++j)
+	    {
+	      int eN_i_j = eN_i*nDOF_trial_element + j;
+	      mass_matrix[csrRowIndeces_p_p[eN_i] + csrColumnOffsets_p_p[eN_i_j]] += local_matrix_p_p[i][j] ;
+	      mass_matrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += local_matrix_u_u[i][j] ;
+	      mass_matrix[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += local_matrix_v_v[i][j] ;
+	    }
+    	}
+      
+      } // eN
+
+    }
 
     void calculateVelocityAverage(int nExteriorElementBoundaries_global,
     				  int* exteriorElementBoundariesArray,

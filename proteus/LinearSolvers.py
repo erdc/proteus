@@ -1547,7 +1547,6 @@ class SchurPrecon(KSP_Preconditioner):
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         #Global null space constructor
         # if p4pyPETSc.COMM_WORLD.rank==0:
-        #     import pdb ; pdb.set_trace()
         # temp_array = numpy.zeros(shape=(neqns,1))
         # temp_array[0:n_DOF_pressure] = 1.0/(sqrt(N_DOF_pressure))
         # null_space_basis = p4pyPETSc.Vec().createWithArray(temp_array,
@@ -1575,7 +1574,6 @@ class NavierStokesSchur(SchurPrecon):
         Preconditioner arguments can be set with PETSc command line.
         """
         if self.bdyNullSpace == True:
-#            import pdb ; pdb.set_trace()
             self._setConstantPressureNullSpace(global_ksp)
         self._setSchurlog(global_ksp)
 
@@ -1585,7 +1583,6 @@ class NavierStokesSchur(SchurPrecon):
 
     def _converged_trueRes(self,ksp,its,rnorm):
         """ Function handle to feed to ksp's setConvergenceTest  """
-#        import pdb ; pdb.set_trace()
         r_work = ksp.getOperators()[1].getVecLeft()
         ksp.buildResidual(r_work)
         truenorm = r_work.norm()
@@ -2942,6 +2939,16 @@ class OperatorConstructor:
     """ Base class for operator constructors. """
     def __init__(self,model):
         self.OLT = model
+
+    def _create_mass_matrix(self):
+        self._mass_val = self.OLT.nzval.copy()
+        self._mass_val.fill(0.)
+        self.TPInvScaledMassOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                                 self.OLT.nFreeVDOF_global,
+                                                 self.OLT.nnz,
+                                                 self._mass_val,
+                                                 self.OLT.colind,
+                                                 self.OLT.rowptr)
             
 class OperatorConstructor_rans2p(OperatorConstructor):
     """ A class for building common discrete rans2p operators.
@@ -2956,10 +2963,46 @@ class OperatorConstructor_rans2p(OperatorConstructor):
 
     def attachTwoPhaseInvScaledMassOperator(self):
         """Create a discrete TwoPhase Mass operator matrix. """
-        from proteus.mprans.cPreconditionerOperators import *
-        self.opConstructor = cRANS2P_Op_Builder()
-        self.opConstructor.attachTwoPhaseInvScaledMassOperator()
-        import pdb ; pdb.set_trace()
+        self._create_mass_matrix()
+        self.OLT.rans2p.getTwoPhaseInvScaledMassOperator(self.OLT.u[0].femSpace.elementMaps.psi,
+                                                         self.OLT.u[0].femSpace.elementMaps.grad_psi,
+                                                         self.OLT.mesh.nodeArray,
+                                                         self.OLT.mesh.elementNodesArray,
+                                                         self.OLT.elementQuadratureWeights[('u',0)],
+                                                         self.OLT.u[0].femSpace.psi,
+                                                         self.OLT.u[0].femSpace.psi,
+                                                         self.OLT.u[1].femSpace.psi,
+                                                         self.OLT.u[1].femSpace.psi,
+                                                         self.OLT.elementDiameter,
+                                                         self.OLT.mesh.nodeDiametersArray,
+                                                         self.OLT.mesh.nElements_global,
+                                                         self.OLT.coefficients.useMetrics,
+                                                         self.OLT.coefficients.epsFact_density,
+                                                         self.OLT.coefficients.epsFact,
+                                                         self.OLT.coefficients.rho_0,
+                                                         self.OLT.coefficients.nu_0,
+                                                         self.OLT.coefficients.rho_1,
+                                                         self.OLT.coefficients.nu_1,
+                                                         self.OLT.u[0].femSpace.dofMap.l2g,
+                                                         self.OLT.u[1].femSpace.dofMap.l2g,
+                                                         self.OLT.u[0].dof,
+                                                         self.OLT.u[1].dof,
+                                                         self.OLT.u[2].dof,
+                                                         self.OLT.coefficients.useVF,
+                                                         self.OLT.coefficients.q_vf,
+                                                         self.OLT.coefficients.q_phi,
+                                                         self.OLT.csrRowIndeces[(0,0)],self.OLT.csrColumnOffsets[(0,0)],
+                                                         self.OLT.csrRowIndeces[(1,1)],self.OLT.csrColumnOffsets[(1,1)],
+                                                         self.OLT.csrRowIndeces[(2,2)],self.OLT.csrColumnOffsets[(2,2)],
+                                                         self.TPInvScaledMassOperator)
+        # Need mass matrix sparsity pattern
+        
+        # self.opConstructor.attachTwoPhaseInvScaledMassOperator(self.OLT.mesh.nElements_global,
+        #                                                        self.OLT.nQuadraturePoints_element,
+        #                                                        self.OLT.nDOF_test_element,
+        #                                                        self.OLT.nDOF_trial_element,
+        #                                                        self.MassOperator)
+        
 
 class OperatorConstructor_oneLevel(OperatorConstructor):
     """ A class for building common discrete operators. 
