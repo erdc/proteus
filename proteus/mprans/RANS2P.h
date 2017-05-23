@@ -849,11 +849,12 @@ namespace proteus
       double x = fmax(0.0, fmin( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
      
       //H_s =  (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
-      H_s1 = 0.5*(1. - cos(M_PI*x));
+      //      H_s1 = 0.5*(1. - cos(M_PI*x));
+      // Relaxation function, Jacobsen et al. 2011, Mayer et al 1998
       H_s3 = (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
       
-      x = 1. - x;
-      H_s2 = 1.- (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
+      //      x = 1. - x;
+      //      H_s2 = 1.- (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
 
 
 
