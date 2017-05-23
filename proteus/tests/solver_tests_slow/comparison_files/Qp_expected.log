@@ -1,0 +1,486 @@
+[       0] Context input options:
+nLevels[3] number of levels of uniform refinement
+
+name[drivenCavityStokesTrial] output data file name
+
+numeric_scheme[TH] specify the numerical scheme being used
+
+useWeakBoundaryConditions[True] Flag: False-Strong boundary conditions, True-Weak boundary conditions
+
+solveIteratively[True] Flag: False-Direct Solver, True-Iterative Solver
+
+solveInParallel[False] Flag: False-Serial Solve, True-Parallel Solve
+
+
+[       0] Initializing NumericalSolution for drivenCavityStokesTrial
+ System includes: 
+drivenCavityStokesTrial
+
+[       0] Setting Archiver(s)
+[       0] Setting up MultilevelMesh
+[       0] Building one multilevel mesh for all models
+[       0] Generating mesh for drivenCavityStokesTrial
+[       0] Calling Triangle to generate 2D mesh fordrivenCavityStokesTrial
+[       0] TriangleBaseMesh nbase=1 baseFlags= VApq30Dena0.01000000 
+[       0] Converting to Proteus Mesh
+[       0] Generating 3-level mesh from coarse Triangle mesh
+[       0] Partitioning mesh among 1 processors using partitioningType = 1
+[       0] Number of Subdomain Elements Owned= 624
+[       0] Number of Subdomain Elements = 624
+[       0] Number of Subdomain Nodes Owned= 345
+[       0] Number of Subdomain Nodes = 345
+[       0] Number of Subdomain elementBoundaries Owned= 968
+[       0] Number of Subdomain elementBoundaries = 968
+[       0] Number of Subdomain Edges Owned= 968
+[       0] Number of Subdomain Edges = 968
+[       0] Finished partitioning
+[       0] Partitioning mesh among 1 processors using partitioningType = 1
+[       0] Number of Subdomain Elements Owned= 2496
+[       0] Number of Subdomain Elements = 2496
+[       0] Number of Subdomain Nodes Owned= 1313
+[       0] Number of Subdomain Nodes = 1313
+[       0] Number of Subdomain elementBoundaries Owned= 3808
+[       0] Number of Subdomain elementBoundaries = 3808
+[       0] Number of Subdomain Edges Owned= 3808
+[       0] Number of Subdomain Edges = 3808
+[       0] Finished partitioning
+[       0] Partitioning mesh among 1 processors using partitioningType = 1
+[       0] Number of Subdomain Elements Owned= 9984
+[       0] Number of Subdomain Elements = 9984
+[       0] Number of Subdomain Nodes Owned= 5121
+[       0] Number of Subdomain Nodes = 5121
+[       0] Number of Subdomain elementBoundaries Owned= 15104
+[       0] Number of Subdomain elementBoundaries = 15104
+[       0] Number of Subdomain Edges Owned= 15104
+[       0] Number of Subdomain Edges = 15104
+[       0] Finished partitioning
+[       0] *** Global ***
+Number of triangles  : 624
+Number of edges : 968
+Number of nodes : 345
+
+*** Local ***
+Number of triangles  : 624
+Number of edges : 968
+Number of nodes : 345
+
+[       0] *** Global ***
+Number of triangles  : 2496
+Number of edges : 3808
+Number of nodes : 1313
+
+*** Local ***
+Number of triangles  : 2496
+Number of edges : 3808
+Number of nodes : 1313
+
+[       0] *** Global ***
+Number of triangles  : 9984
+Number of edges : 15104
+Number of nodes : 5121
+
+*** Local ***
+Number of triangles  : 9984
+Number of edges : 15104
+Number of nodes : 5121
+
+[       0] Numerical Solution Sparse diffusion information key (0, 0) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       0] Numerical Solution Sparse diffusion information key (1, 1) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       0] Numerical Solution Sparse diffusion information key (2, 2) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       0] Setting up MultilevelTransport for drivenCavityStokesTrial
+[       0] Building Transport for each mesh
+[       0] Generating Trial Space
+[       0] Generating Test Space
+[       0] Allocating u
+[       0] Allocating phi
+[       0] Setting Boundary Conditions
+[       0] Setting Boundary Conditions-1
+[       0] Setting Boundary Conditions-2
+[       0] Setting Boundary Conditions-2a
+[       0] Setting Boundary Conditions-3
+[       0] Setting Boundary Conditions-4
+[       0] Initializing OneLevelTransport
+[       0] Sparse diffusion information key (0, 0) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       0] Sparse diffusion information key (1, 1) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       0] Sparse diffusion information key (2, 2) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Shallow copy of trial shape is being used for test shape grad(w) 
+[       0] Shallow copy of trial shape is being used for test shape grad(w) 
+[       0] Shallow copy of trial shape is being used for test shape grad(w) 
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Updating local to global mappings
+[       0] Building time integration object
+[       0] Calculating numerical quadrature formulas
+[       0] Element Quadrature
+[       0] Element Boundary Quadrature
+[       0] Global Exterior Element Boundary Quadrature
+[       0] Allocating residual and solution vectors
+[       0] Allocating Jacobian
+[       0] Building sparse matrix structure
+[       0] Allocating parallel storage
+[       0] Allocating ghosted parallel vectors on rank 0
+[       0] Allocating un-ghosted parallel vectors on rank 0
+[       0] Allocating matrix on rank 0
+[       0] ParMat_petsc4py comm.rank= 0 blockSize = 1 par_n= 2971 par_N=2971 par_nghost=0 par_jacobian.getSizes()= ((2971, 2971), (2971, 2971)) 
+[       0] Generating Trial Space
+[       0] Generating Test Space
+[       0] Allocating u
+[       0] Allocating phi
+[       0] Setting Boundary Conditions
+[       0] Setting Boundary Conditions-1
+[       0] Setting Boundary Conditions-2
+[       0] Setting Boundary Conditions-2a
+[       0] Setting Boundary Conditions-3
+[       0] Setting Boundary Conditions-4
+[       0] Initializing OneLevelTransport
+[       0] Sparse diffusion information key (0, 0) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       0] Sparse diffusion information key (1, 1) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       0] Sparse diffusion information key (2, 2) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Shallow copy of trial shape is being used for test shape grad(w) 
+[       0] Shallow copy of trial shape is being used for test shape grad(w) 
+[       0] Shallow copy of trial shape is being used for test shape grad(w) 
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Shallow copy of trial shape is being used for test shape w 
+[       0] Updating local to global mappings
+[       0] Building time integration object
+[       0] Calculating numerical quadrature formulas
+[       0] Element Quadrature
+[       0] Element Boundary Quadrature
+[       0] Global Exterior Element Boundary Quadrature
+[       0] Allocating residual and solution vectors
+[       0] Allocating Jacobian
+[       0] Building sparse matrix structure
+[       1] Allocating parallel storage
+[       1] Allocating ghosted parallel vectors on rank 0
+[       1] Allocating un-ghosted parallel vectors on rank 0
+[       1] Allocating matrix on rank 0
+[       1] ParMat_petsc4py comm.rank= 0 blockSize = 1 par_n= 11555 par_N=11555 par_nghost=0 par_jacobian.getSizes()= ((11555, 11555), (11555, 11555)) 
+[       1] Generating Trial Space
+[       1] Generating Test Space
+[       1] Allocating u
+[       1] Allocating phi
+[       1] Setting Boundary Conditions
+[       1] Setting Boundary Conditions-1
+[       1] Setting Boundary Conditions-2
+[       1] Setting Boundary Conditions-2a
+[       1] Setting Boundary Conditions-3
+[       1] Setting Boundary Conditions-4
+[       1] Initializing OneLevelTransport
+[       1] Sparse diffusion information key (0, 0) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       1] Sparse diffusion information key (1, 1) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       1] Sparse diffusion information key (2, 2) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+[       1] Shallow copy of trial shape is being used for test shape w 
+[       1] Shallow copy of trial shape is being used for test shape w 
+[       1] Shallow copy of trial shape is being used for test shape w 
+[       1] Shallow copy of trial shape is being used for test shape grad(w) 
+[       1] Shallow copy of trial shape is being used for test shape grad(w) 
+[       1] Shallow copy of trial shape is being used for test shape grad(w) 
+[       1] Shallow copy of trial shape is being used for test shape w 
+[       1] Shallow copy of trial shape is being used for test shape w 
+[       1] Shallow copy of trial shape is being used for test shape w 
+[       1] Updating local to global mappings
+[       1] Building time integration object
+[       1] Calculating numerical quadrature formulas
+[       1] Element Quadrature
+[       1] Element Boundary Quadrature
+[       1] Global Exterior Element Boundary Quadrature
+[       1] Allocating residual and solution vectors
+[       1] Allocating Jacobian
+[       1] Building sparse matrix structure
+[       3] Allocating parallel storage
+[       3] Allocating ghosted parallel vectors on rank 0
+[       3] Allocating un-ghosted parallel vectors on rank 0
+[       3] Allocating matrix on rank 0
+[       3] ParMat_petsc4py comm.rank= 0 blockSize = 1 par_n= 45571 par_N=45571 par_nghost=0 par_jacobian.getSizes()= ((45571, 45571), (45571, 45571)) 
+[       3] Building Mesh Transfers
+[      17] Setting drivenCavityStokesTrial stepController to proteus.StepControl.SC_base
+[      17] Setting up MultilevelLinearSolver fordrivenCavityStokesTrial
+[      17] multilevelLinearSolverChooser type= proteus.LinearSolvers.KSP_petsc4py
+[      17] KSP atol 1.000000e-10 rtol 0.000000e+00
+[      17] NAHeader Preconditioner Qp
+[      17] KSP atol 1.000000e-10 rtol 0.000000e+00
+[      17] NAHeader Preconditioner Qp
+[      17] KSP atol 1.000000e-10 rtol 0.000000e+00
+[      17] NAHeader Preconditioner Qp
+[      17] Setting up MultilevelNonLinearSolver for drivenCavityStokesTrial
+[      17] Finished setting up models and solvers
+[      17] Setting up SimTools for drivenCavityStokesTrial
+[      17] Using tnList from so = drivenCavityStokesTrial
+[      17] Time sequence[0.0, 1.0]
+[      17] NAHeader Num Time Steps 1
+[      17] Setting drivenCavityStokesTrial systemStepController to object of type proteus.SplitOperator.Sequential_MinModelStep
+[      17] Finished NumericalSolution initialization
+[      17] Setting initial conditions
+[      17] No initial conditions provided for model drivenCavityStokesTrial
+[      17] Attaching models and running spin-up step if requested
+[      17] Attaching models to model drivenCavityStokesTrial
+[      17] Attaching models to model drivenCavityStokesTrial
+[      17] Archiving initial conditions
+[      17] Writing initial mesh for  model = drivenCavityStokesTrial
+[      17] Writing initial conditions for  model = drivenCavityStokesTrial
+[      17] Syncing Archive
+[      17] Gathering Archive Time step
+[      17] Done Gathering Archive Time Step
+[      17] Done Syncing Archive
+[      17] Estimating initial time derivative and initializing time history for model drivenCavityStokesTrial
+[      18] Choosing initial time step for model drivenCavityStokesTrial
+[      18] Initializing time step on model drivenCavityStokesTrial to dt =  1.00000e+00
+[      18] Initializing time history for model step controller
+[      18] Initializing time step on system Default System to dt =  1.00000e+00
+[      18] Initializing step sequence for system Default System to [(1.0, <proteus.Transport.MultilevelTransport instance at 0x7fb6e6a9ed40>)]
+[      18] Auxiliary variable calculations for model drivenCavityStokesTrial
+[      18] Starting time stepping
+[      18] ==============================================================
+[      18] Solving over interval [ 0.00000e+00, 1.00000e+00]
+[      18] ==============================================================
+[      18] NumericalAnalytics Time Step 1.0
+[      18] ===========================================================dt system orig1.0
+[      18] =========================================================dt system final1.0
+[      18] System time step t= 1.00000e+00, dt= 1.00000e+00
+[      18] Split operator iteration 0
+[      18] Model: drivenCavityStokesTrial
+[      18] Fractional step  1.00000e+00 for model drivenCavityStokesTrial
+[      18] Step exact called for model drivenCavityStokesTrial
+[      18] StepControl base stepExact t_model= 1.0 tOut= 1.0 t_model_last= 0.0 dt_model= 1.0 setting to 1.0 
+[      18] Model step t= 1.00000e+00, dt= 1.00000e+00 for model drivenCavityStokesTrial
+[      18] Model substep t= 1.00000e+00 for model drivenCavityStokesTrial
+[      18] Model substep t= 1.00000e+00 for model drivenCavityStokesTrial model.timeIntegration.t=  1.00000e+00
+[      18]   NumericalAnalytics Newton iteration for level 0
+[      18]   NumericalAnalytics NewtonIteration: 0, NewtonNorm:  2.42412e+01
+[      18]    Newton it 0 norm(r) =  2.42412e+01  		 norm(r)/(rtol*norm(r0)+atol) = 2.42412e+09 test=r
+[      18] before ksp.rtol= 0.0 ksp.atol= 1e-12 ksp.converged= False ksp.its= 0 ksp.norm= 0.0 
+[      18] NumericalAnalytics KSPOuterResidual:  2.42412e+01
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.00000e+00
+[      18]         KSP it 0 norm(r) = 2.424123e+01  norm(r)/|b| = 1.000000e+00 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.35513e-01
+[      18] NumericalAnalytics KSPOuterResidual(relative):  5.59020e-03
+[      18]         KSP it 1 norm(r) = 1.355133e-01  norm(r)/|b| = 5.590197e-03 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  7.27637e-02
+[      18] NumericalAnalytics KSPOuterResidual(relative):  3.00165e-03
+[      18]         KSP it 2 norm(r) = 7.276373e-02  norm(r)/|b| = 3.001651e-03 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.30484e-02
+[      18] NumericalAnalytics KSPOuterResidual(relative):  5.38275e-04
+[      18]         KSP it 3 norm(r) = 1.304845e-02  norm(r)/|b| = 5.382748e-04 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  2.49375e-03
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.02872e-04
+[      18]         KSP it 4 norm(r) = 2.493752e-03  norm(r)/|b| = 1.028723e-04 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  7.60525e-04
+[      18] NumericalAnalytics KSPOuterResidual(relative):  3.13732e-05
+[      18]         KSP it 5 norm(r) = 7.605254e-04  norm(r)/|b| = 3.137321e-05 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  2.80281e-04
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.15621e-05
+[      18]         KSP it 6 norm(r) = 2.802806e-04  norm(r)/|b| = 1.156214e-05 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.15590e-04
+[      18] NumericalAnalytics KSPOuterResidual(relative):  4.76832e-06
+[      18]         KSP it 7 norm(r) = 1.155899e-04  norm(r)/|b| = 4.768319e-06 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  3.47768e-05
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.43461e-06
+[      18]         KSP it 8 norm(r) = 3.477678e-05  norm(r)/|b| = 1.434613e-06 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.49991e-05
+[      18] NumericalAnalytics KSPOuterResidual(relative):  6.18742e-07
+[      18]         KSP it 9 norm(r) = 1.499906e-05  norm(r)/|b| = 6.187416e-07 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  4.68026e-06
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.93070e-07
+[      18]         KSP it 10 norm(r) = 4.680262e-06  norm(r)/|b| = 1.930703e-07 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.39076e-06
+[      18] NumericalAnalytics KSPOuterResidual(relative):  5.73718e-08
+[      18]         KSP it 11 norm(r) = 1.390764e-06  norm(r)/|b| = 5.737181e-08 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  5.08016e-07
+[      18] NumericalAnalytics KSPOuterResidual(relative):  2.09567e-08
+[      18]         KSP it 12 norm(r) = 5.080156e-07  norm(r)/|b| = 2.095667e-08 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  2.11619e-07
+[      18] NumericalAnalytics KSPOuterResidual(relative):  8.72971e-09
+[      18]         KSP it 13 norm(r) = 2.116190e-07  norm(r)/|b| = 8.729714e-09 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  6.82459e-08
+[      18] NumericalAnalytics KSPOuterResidual(relative):  2.81528e-09
+[      18]         KSP it 14 norm(r) = 6.824593e-08  norm(r)/|b| = 2.815283e-09 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.16875e-08
+[      18] NumericalAnalytics KSPOuterResidual(relative):  4.82134e-10
+[      18]         KSP it 15 norm(r) = 1.168752e-08  norm(r)/|b| = 4.821337e-10 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  4.37244e-09
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.80372e-10
+[      18]         KSP it 16 norm(r) = 4.372439e-09  norm(r)/|b| = 1.803720e-10 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  9.26014e-10
+[      18] NumericalAnalytics KSPOuterResidual(relative):  3.82000e-11
+[      18]         KSP it 17 norm(r) = 9.260142e-10  norm(r)/|b| = 3.819996e-11 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  3.15086e-10
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.29980e-11
+[      18]         KSP it 18 norm(r) = 3.150864e-10  norm(r)/|b| = 1.299795e-11 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  6.67083e-11
+[      18] NumericalAnalytics KSPOuterResidual(relative):  2.75185e-12
+[      18]         KSP it 19 norm(r) = 6.670834e-11  norm(r)/|b| = 2.751854e-12 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  2.14593e-11
+[      18] NumericalAnalytics KSPOuterResidual(relative):  8.85240e-13
+[      18]         KSP it 20 norm(r) = 2.145930e-11  norm(r)/|b| = 8.852398e-13 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.10994e-11
+[      18] NumericalAnalytics KSPOuterResidual(relative):  4.57871e-13
+[      18]         KSP it 21 norm(r) = 1.109935e-11  norm(r)/|b| = 4.578707e-13 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  2.64150e-12
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.08967e-13
+[      18]         KSP it 22 norm(r) = 2.641501e-12  norm(r)/|b| = 1.089673e-13 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  8.22052e-13
+[      18] NumericalAnalytics KSPOuterResidual(relative):  3.39113e-14
+[      18]         KSP it 23 norm(r) = 8.220522e-13  norm(r)/|b| = 3.391132e-14 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] after ksp.rtol= 0.0 ksp.atol= 1e-12 ksp.converged= True ksp.its= 23 ksp.norm= 8.21909720032e-13 reason = 3
+[      18]   NumericalAnalytics NewtonIteration: 0, NewtonNorm:  8.22056e-13
+[      18]    Newton it 1 norm(r) =  8.22056e-13  		 norm(r)/(rtol*norm(r0)+atol) =  8.22056e-05
+[      18]   NumericalAnalytics Newton iteration for level 1
+[      18]   NumericalAnalytics NewtonIteration: 0, NewtonNorm:  3.42982e+01
+[      18]    Newton it 0 norm(r) =  3.42982e+01  		 norm(r)/(rtol*norm(r0)+atol) = 3.42982e+09 test=r
+[      18] before ksp.rtol= 0.0 ksp.atol= 1e-12 ksp.converged= False ksp.its= 0 ksp.norm= 0.0 
+[      18] NumericalAnalytics KSPOuterResidual:  3.42982e+01
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.00000e+00
+[      18]         KSP it 0 norm(r) = 3.429815e+01  norm(r)/|b| = 1.000000e+00 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  7.69280e-02
+[      18] NumericalAnalytics KSPOuterResidual(relative):  2.24292e-03
+[      18]         KSP it 1 norm(r) = 7.692804e-02  norm(r)/|b| = 2.242921e-03 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  4.39057e-02
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.28012e-03
+[      18]         KSP it 2 norm(r) = 4.390571e-02  norm(r)/|b| = 1.280119e-03 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  8.65976e-03
+[      18] NumericalAnalytics KSPOuterResidual(relative):  2.52485e-04
+[      18]         KSP it 3 norm(r) = 8.659757e-03  norm(r)/|b| = 2.524847e-04 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  2.32705e-03
+[      18] NumericalAnalytics KSPOuterResidual(relative):  6.78478e-05
+[      18]         KSP it 4 norm(r) = 2.327054e-03  norm(r)/|b| = 6.784779e-05 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  6.71436e-04
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.95764e-05
+[      18]         KSP it 5 norm(r) = 6.714357e-04  norm(r)/|b| = 1.957644e-05 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.50192e-04
+[      18] NumericalAnalytics KSPOuterResidual(relative):  4.37900e-06
+[      18]         KSP it 6 norm(r) = 1.501917e-04  norm(r)/|b| = 4.379002e-06 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  6.91939e-05
+[      18] NumericalAnalytics KSPOuterResidual(relative):  2.01742e-06
+[      18]         KSP it 7 norm(r) = 6.919386e-05  norm(r)/|b| = 2.017422e-06 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  2.69642e-05
+[      18] NumericalAnalytics KSPOuterResidual(relative):  7.86170e-07
+[      18]         KSP it 8 norm(r) = 2.696419e-05  norm(r)/|b| = 7.861704e-07 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  9.06767e-06
+[      18] NumericalAnalytics KSPOuterResidual(relative):  2.64378e-07
+[      18]         KSP it 9 norm(r) = 9.067666e-06  norm(r)/|b| = 2.643777e-07 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  3.33706e-06
+[      18] NumericalAnalytics KSPOuterResidual(relative):  9.72955e-08
+[      18]         KSP it 10 norm(r) = 3.337056e-06  norm(r)/|b| = 9.729550e-08 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.20089e-06
+[      18] NumericalAnalytics KSPOuterResidual(relative):  3.50134e-08
+[      18]         KSP it 11 norm(r) = 1.200894e-06  norm(r)/|b| = 3.501336e-08 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  3.69031e-07
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.07595e-08
+[      18]         KSP it 12 norm(r) = 3.690305e-07  norm(r)/|b| = 1.075949e-08 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.23982e-07
+[      18] NumericalAnalytics KSPOuterResidual(relative):  3.61482e-09
+[      18]         KSP it 13 norm(r) = 1.239817e-07  norm(r)/|b| = 3.614822e-09 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  5.64599e-08
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.64615e-09
+[      18]         KSP it 14 norm(r) = 5.645986e-08  norm(r)/|b| = 1.646149e-09 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  2.24334e-08
+[      18] NumericalAnalytics KSPOuterResidual(relative):  6.54070e-10
+[      18]         KSP it 15 norm(r) = 2.243338e-08  norm(r)/|b| = 6.540695e-10 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  5.30801e-09
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.54761e-10
+[      18]         KSP it 16 norm(r) = 5.308005e-09  norm(r)/|b| = 1.547607e-10 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.69394e-09
+[      18] NumericalAnalytics KSPOuterResidual(relative):  4.93885e-11
+[      18]         KSP it 17 norm(r) = 1.693936e-09  norm(r)/|b| = 4.938855e-11 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  3.46938e-10
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.01154e-11
+[      18]         KSP it 18 norm(r) = 3.469382e-10  norm(r)/|b| = 1.011536e-11 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.34008e-10
+[      18] NumericalAnalytics KSPOuterResidual(relative):  3.90714e-12
+[      18]         KSP it 19 norm(r) = 1.340078e-10  norm(r)/|b| = 3.907144e-12 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  3.95482e-11
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.15307e-12
+[      18]         KSP it 20 norm(r) = 3.954819e-11  norm(r)/|b| = 1.153071e-12 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.04261e-11
+[      18] NumericalAnalytics KSPOuterResidual(relative):  3.03986e-13
+[      18]         KSP it 21 norm(r) = 1.042614e-11  norm(r)/|b| = 3.039856e-13 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  3.23180e-12
+[      18] NumericalAnalytics KSPOuterResidual(relative):  9.42266e-14
+[      18]         KSP it 22 norm(r) = 3.231799e-12  norm(r)/|b| = 9.422661e-14 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  8.66333e-13
+[      18] NumericalAnalytics KSPOuterResidual(relative):  2.52589e-14
+[      18]         KSP it 23 norm(r) = 8.663332e-13  norm(r)/|b| = 2.525889e-14 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] after ksp.rtol= 0.0 ksp.atol= 1e-12 ksp.converged= True ksp.its= 23 ksp.norm= 8.65779585239e-13 reason = 3
+[      18]   NumericalAnalytics NewtonIteration: 0, NewtonNorm:  8.66371e-13
+[      18]    Newton it 1 norm(r) =  8.66371e-13  		 norm(r)/(rtol*norm(r0)+atol) =  8.66371e-05
+[      18]   NumericalAnalytics Newton iteration for level 2
+[      18]   NumericalAnalytics NewtonIteration: 0, NewtonNorm:  4.85161e+01
+[      18]    Newton it 0 norm(r) =  4.85161e+01  		 norm(r)/(rtol*norm(r0)+atol) = 4.85161e+09 test=r
+[      18] before ksp.rtol= 0.0 ksp.atol= 1e-12 ksp.converged= False ksp.its= 0 ksp.norm= 0.0 
+[      18] NumericalAnalytics KSPOuterResidual:  4.85161e+01
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.00000e+00
+[      18]         KSP it 0 norm(r) = 4.851613e+01  norm(r)/|b| = 1.000000e+00 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  4.28321e-02
+[      18] NumericalAnalytics KSPOuterResidual(relative):  8.82842e-04
+[      18]         KSP it 1 norm(r) = 4.283206e-02  norm(r)/|b| = 8.828415e-04 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  2.51165e-02
+[      18] NumericalAnalytics KSPOuterResidual(relative):  5.17694e-04
+[      18]         KSP it 2 norm(r) = 2.511650e-02  norm(r)/|b| = 5.176937e-04 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  5.01477e-03
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.03363e-04
+[      18]         KSP it 3 norm(r) = 5.014774e-03  norm(r)/|b| = 1.033630e-04 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.45836e-03
+[      18] NumericalAnalytics KSPOuterResidual(relative):  3.00593e-05
+[      18]         KSP it 4 norm(r) = 1.458359e-03  norm(r)/|b| = 3.005927e-05 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  4.89533e-04
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.00901e-05
+[      18]         KSP it 5 norm(r) = 4.895328e-04  norm(r)/|b| = 1.009010e-05 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  9.38060e-05
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.93350e-06
+[      18]         KSP it 6 norm(r) = 9.380603e-05  norm(r)/|b| = 1.933502e-06 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  3.25684e-05
+[      18] NumericalAnalytics KSPOuterResidual(relative):  6.71290e-07
+[      18]         KSP it 7 norm(r) = 3.256840e-05  norm(r)/|b| = 6.712900e-07 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.56146e-05
+[      18] NumericalAnalytics KSPOuterResidual(relative):  3.21844e-07
+[      18]         KSP it 8 norm(r) = 1.561464e-05  norm(r)/|b| = 3.218443e-07 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  5.49896e-06
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.13343e-07
+[      18]         KSP it 9 norm(r) = 5.498964e-06  norm(r)/|b| = 1.133430e-07 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.85964e-06
+[      18] NumericalAnalytics KSPOuterResidual(relative):  3.83303e-08
+[      18]         KSP it 10 norm(r) = 1.859636e-06  norm(r)/|b| = 3.833025e-08 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  7.11946e-07
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.46744e-08
+[      18]         KSP it 11 norm(r) = 7.119457e-07  norm(r)/|b| = 1.467441e-08 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  2.86452e-07
+[      18] NumericalAnalytics KSPOuterResidual(relative):  5.90427e-09
+[      18]         KSP it 12 norm(r) = 2.864523e-07  norm(r)/|b| = 5.904268e-09 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  8.09520e-08
+[      18] NumericalAnalytics KSPOuterResidual(relative):  1.66856e-09
+[      18]         KSP it 13 norm(r) = 8.095201e-08  norm(r)/|b| = 1.668559e-09 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  2.91831e-08
+[      18] NumericalAnalytics KSPOuterResidual(relative):  6.01514e-10
+[      18]         KSP it 14 norm(r) = 2.918313e-08  norm(r)/|b| = 6.015140e-10 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      18] NumericalAnalytics KSPOuterResidual:  1.13425e-08
+[      18] NumericalAnalytics KSPOuterResidual(relative):  2.33788e-10
+[      18]         KSP it 15 norm(r) = 1.134249e-08  norm(r)/|b| = 2.337879e-10 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      19] NumericalAnalytics KSPOuterResidual:  4.69258e-09
+[      19] NumericalAnalytics KSPOuterResidual(relative):  9.67220e-11
+[      19]         KSP it 16 norm(r) = 4.692575e-09  norm(r)/|b| = 9.672196e-11 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      19] NumericalAnalytics KSPOuterResidual:  1.80187e-09
+[      19] NumericalAnalytics KSPOuterResidual(relative):  3.71395e-11
+[      19]         KSP it 17 norm(r) = 1.801866e-09  norm(r)/|b| = 3.713952e-11 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      19] NumericalAnalytics KSPOuterResidual:  5.08767e-10
+[      19] NumericalAnalytics KSPOuterResidual(relative):  1.04866e-11
+[      19]         KSP it 18 norm(r) = 5.087674e-10  norm(r)/|b| = 1.048656e-11 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      19] NumericalAnalytics KSPOuterResidual:  1.25297e-10
+[      19] NumericalAnalytics KSPOuterResidual(relative):  2.58258e-12
+[      19]         KSP it 19 norm(r) = 1.252967e-10  norm(r)/|b| = 2.582578e-12 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      19] NumericalAnalytics KSPOuterResidual:  4.07620e-11
+[      19] NumericalAnalytics KSPOuterResidual(relative):  8.40175e-13
+[      19]         KSP it 20 norm(r) = 4.076202e-11  norm(r)/|b| = 8.401746e-13 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      19] NumericalAnalytics KSPOuterResidual:  1.19676e-11
+[      19] NumericalAnalytics KSPOuterResidual(relative):  2.46672e-13
+[      19]         KSP it 21 norm(r) = 1.196759e-11  norm(r)/|b| = 2.466724e-13 ; atol=1.000000e-12 rtol=0.000000e+00 
+[      19] NumericalAnalytics KSPOuterResidual:  3.96536e-12
+[      19] NumericalAnalytics KSPOuterResidual(relative):  8.17328e-14
+[      19]     
