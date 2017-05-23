@@ -41,16 +41,8 @@ drivenCavityStokesTrial
 [      80] Number of Subdomain Edges = 15104
 [      80] Finished partitioning
 [      80] *** Global ***
-Number of triangles  : 624
-Number of edges : 968
-Number of nodes : 345
-
-*** Local ***
-Number of triangles  : 624
-Number of edges : 968
-Number of nodes : 345
-
 [      80] *** Global ***
+[       0] *** Global ***
 Number of triangles  : 2496
 Number of edges : 3808
 Number of nodes : 1313
@@ -60,7 +52,6 @@ Number of triangles  : 2496
 Number of edges : 3808
 Number of nodes : 1313
 
-[      88] *** Global ***
 Number of triangles  : 9984
 Number of edges : 15104
 Number of nodes : 5121
