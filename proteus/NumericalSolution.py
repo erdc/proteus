@@ -248,7 +248,7 @@ class NS_base:  # (HasTraits):
                         logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
                         check_call(gmsh_cmd, shell=True)
                         logEvent("Done running gmsh; converting to triangle")
-                        MeshTools.msh2triangle(fileprefix=p.domain.geofile, nd=2)
+                        MeshTools.msh2simplex(fileprefix=p.domain.geofile, nd=2)
 
                     comm.barrier()
                     mesh = MeshTools.TriangularMesh()
@@ -296,7 +296,7 @@ class NS_base:  # (HasTraits):
                         logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
                         check_call(gmsh_cmd, shell=True)
                         logEvent("Done running gmsh; converting to tetgen")
-                        MeshTools.msh2triangle(fileprefix=p.domain.geofile, nd=3)
+                        MeshTools.msh2simplex(fileprefix=p.domain.geofile, nd=3)
                         check_call("tetgen -Vfeen %s.ele" % (p.domain.polyfile,), shell=True)
                     else:
                         logEvent("Running tetgen to generate 3D mesh for "+p.name,level=1)

@@ -6338,7 +6338,7 @@ class MeshOptions:
         self.outputFiles['geo'] = gmsh
 
 
-def msh2triangle(fileprefix, nd):
+def msh2simplex(fileprefix, nd):
     """
     Converts a .msh file (Gmsh) to .ele .edge .node files (triangle).
     (!) Works only with triangle elements in 2D and tetrahedral elements in 3D.
@@ -6349,6 +6349,7 @@ def msh2triangle(fileprefix, nd):
         prefix of the .msh file (e.g. 'mesh' if file called 'mesh.msh')
 
     """
+    assert nd == 2 or nd == 3, 'nd must be 2 or 3'
     mshfile = open(fileprefix+'.msh', 'r')
     nodes = []
     edges_msh = []
@@ -6359,7 +6360,7 @@ def msh2triangle(fileprefix, nd):
     edge_nb = 0
     switch = None
     switch_count = -1
-    logEvent('msh2triangle: getting nodes and elements')
+    logEvent('msh2simplex: getting nodes and elements')
     for line in mshfile:
         if 'Nodes' in line:
             switch = 'nodes'
@@ -6411,7 +6412,7 @@ def msh2triangle(fileprefix, nd):
     edge_nb = 0
     edges = []
 
-    logEvent('msh2triangle: constructing edges')
+    logEvent('msh2simplex: constructing edges')
     for triangle in triangles[:,1:4]:  # take only vertices index
         for i in range(len(triangle)):
             edge = Edge(edgeNumber=edge_nb, nodes=[triangle[i-1], triangle[i]])
@@ -6420,7 +6421,7 @@ def msh2triangle(fileprefix, nd):
                 edge_nb += 1
                 edges_dict[edge.nodes] = edge
                 edges += [[edge_nb, edge.nodes[0], edge.nodes[1], 0]]
-    logEvent('msh2triangle: updating edges and nodes flags')
+    logEvent('msh2simplex: updating edges and nodes flags')
     edges = np.array(edges)
     for edge in edges_msh:
         edge_nodes = [edge[1], edge[2]]
@@ -6434,7 +6435,10 @@ def msh2triangle(fileprefix, nd):
         if nodes[edge[2]-1][-1] == 0:  # update node flags
             nodes[edge[1]-1][-1] = edge[3]
 
-    logEvent('msh2triangle: writing .node .ele .edge files')
+    if nd == 2:
+        logEvent('msh2simplex: writing .node .ele .edge files')
+    elif nd == 3:
+        logEvent('msh2simplex: writing .node .ele .edge .face files')
     header = '{0:d} {1:d} 0 1'.format(node_nb, nd)
 
     if nd == 2:
@@ -6457,4 +6461,4 @@ def msh2triangle(fileprefix, nd):
         header = '{0:d} 4 1'.format(tetrahedron_nb)
         np.savetxt(fileprefix+'.ele', tetrahedra, fmt='%d', header=header, comments='')
 
-    logEvent('msh2triangle: finished converting .msh to triangle files')
+    logEvent('msh2simplex: finished converting .msh to simplex files')
