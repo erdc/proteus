@@ -255,6 +255,7 @@ class NS_base:  # (HasTraits):
                     mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
                                                                 nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                 parallelPartitioningType=n.parallelPartitioningType)
+                    logEvent("NAHeader GridRefinements %i" % (n.nLevels) )
                     logEvent("Generating %i-level mesh from coarse Triangle mesh" % (n.nLevels,))
                     logEvent("Generating coarse global mesh from Triangle files")
                     mesh.generateFromTriangleFiles(filebase=p.domain.geofile,base=1)
@@ -560,6 +561,7 @@ class NS_base:  # (HasTraits):
             logEvent("Using tnList from so = "+so.name)
             self.tnList = so.tnList
         logEvent("Time sequence"+`self.tnList`)
+        logEvent("NAHeader Num Time Steps "+`len(self.tnList)-1`)
         logEvent("Setting "+so.name+" systemStepController to object of type "+str(so.systemStepControllerType))
         self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
         self.systemStepController.setFromOptions(so)
@@ -1141,6 +1143,7 @@ class NS_base:  # (HasTraits):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
+            logEvent("NumericalAnalytics Time Step " + `self.tn`, level=0)
             if self.opts.save_dof:
                 for m in self.modelList:
                     for lm in m.levelModelList:
