@@ -223,6 +223,7 @@ class D_base:
         geo.write('\n// Other Options\n')
         if he_max is not None:
             geo.write('Mesh.CharacteristicLengthMax = {0};\n'.format(he_max))
+        geo.write('Coherence;\n')
 
 
     def gmsh2proteus(self, geofile, BC_class):
