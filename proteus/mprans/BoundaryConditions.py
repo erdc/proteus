@@ -244,7 +244,8 @@ class BC_RANS(BC_Base):
     def __cpp_MoveMesh_hz(self, x, t):
         return self.__cpp_MoveMesh_h(x, t)[2]
 
-    def setUnsteadyTwoPhaseVelocityInlet(self, wave,smoothing, vert_axis=None, wind_speed=None, vof_air=1., vof_water=0.):
+    def setUnsteadyTwoPhaseVelocityInlet(self, wave,smoothing, vert_axis=None,
+                                         wind_speed=None, vof_air=1., vof_water=0.):
         """
         Imposes a velocity profile on the fluid with input wave and wind
         conditions.
