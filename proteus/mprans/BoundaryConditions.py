@@ -129,19 +129,18 @@ class BC_RANS(BC_Base):
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
+        self.k_dirichlet.setConstantBC(0.0)          
         self.p_advective.setConstantBC(0.)
         self.vof_advective.setConstantBC(0.)
-
-        # turbulent boundary conditions
-        self.k_dirichlet.setConstantBC(0.0)  
         self.dissipation_diffusive.setConstantBC(0.0)  
-
+        
     def setFreeSlip(self):
         """
         Sets free slip conditions at the boundary
         """
         self.reset()
         self.BC_type = 'FreeSlip'
+        self.k_dirichlet.setConstantBC(0.0)         
         self.p_advective.setConstantBC(0.)
         self.u_advective.setConstantBC(0.)
         self.v_advective.setConstantBC(0.)
@@ -150,11 +149,8 @@ class BC_RANS(BC_Base):
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
-
-        # turbulent boundary conditions
-        self.k_dirichlet.setConstantBC(0.0)  
         self.dissipation_diffusive.setConstantBC(0.0)  
-
+        
     def setAtmosphere(self, orientation=None, vof_air=1.):
         """
         Sets atmosphere boundary conditions (water can come out)
@@ -221,7 +217,6 @@ class BC_RANS(BC_Base):
         if body.nd > 2:
             self.hz_dirichlet.uOfXT = get_DBC_h(2)
 
-
     def setChMoveMesh(self, body):
         self.hx_dirichlet.uOfXT = lambda x, t: body.hx(x, t)
         self.hy_dirichlet.uOfXT = lambda x, t: body.hy(x, t)
@@ -229,7 +224,10 @@ class BC_RANS(BC_Base):
 
     def setTurbulentDirichlet(self, kVal, dissipationVal):
         """
-        Sets only dirichlet conditions for turbulence at the boundary
+        Sets only dirichlet conditions for turbulence at the boundary.
+        It's a rough approximation for evalueting the near wall turbulence
+        based on empirical assumptions.
+        More sophisticated wall functions are recommended to be used.
         
         Parameters
         ----------
@@ -239,60 +237,25 @@ class BC_RANS(BC_Base):
             constant value applied on dissipation.
         """
         # turbulent boundary conditions
-        self.k_dirichlet.setConstantBC(kVal)  
+        self.k_dirichlet.setConstantBC(kVal)
+        self.dissipation_dirichlet.setConstantBC(dissipationVal)          
         self.k_advective.resetBC()
+        self.dissipation_advective.resetBC()        
         self.k_diffusive.resetBC()
-        self.dissipation_dirichlet.setConstantBC(dissipationVal)  
-        self.dissipation_advective.resetBC()
         self.dissipation_diffusive.resetBC()
-
 
     def setTurbulentZeroGradient(self):
         """
-        Sets only zero-gradient conditions for turbulence at the boundary
+        Sets only zero-gradient conditions for turbulence at the boundary.
+        More sophisticated wall functions are recommended to be used.
         """
         # turbulent boundary conditions
-        self.k_dirichlet.resetBC() 
-        self.k_advective.setConstantBC(0.) 
+        self.k_dirichlet.setConstantBC(0.) 
+        self.dissipation_dirichlet.setConstantBC(0.)        
+        self.k_advective.resetBC() 
+        self.dissipation_advective.resetBC()        
         self.k_diffusive.setConstantBC(0.) 
-        self.dissipation_dirichlet.resetBC() 
-        self.dissipation_advective.setConstantBC(0.) 
         self.dissipation_diffusive.setConstantBC(0.) 
-
-
-    def setRigidBodyMoveMesh(self, body):
-        """
-        Sets boundary conditions for moving the mesh with a rigid body
-
-        Parameters
-        ----------
-        last_pos: array_like
-            last position of rigig body
-        h: array_like
-            displacement of the body
-        rot_matrix:
-            rotation matrix describing displament due to rotation between last
-            position and new position (3x3 array)
-
-        (!) if set manually, the input arrays should be updated externally
-            without loosing their memory address
-        """
-        def get_DBC_h(i):
-            def DBC_h(x, t):
-                x_0 = x-body.last_position
-                new_x_0 = np.dot(x_0, body.rotation_matrix)
-                hx = new_x_0-x_0+body.h
-                return hx[i]
-            return DBC_h
-        self.hx_dirichlet.uOfXT = get_DBC_h(0)
-        self.hy_dirichlet.uOfXT = get_DBC_h(1)
-        if body.nd > 2:
-            self.hz_dirichlet.uOfXT = get_DBC_h(2)
-
-    def setChMoveMesh(self, body):
-        self.hx_dirichlet.uOfXT = lambda x, t: body.hx(x, t)
-        self.hy_dirichlet.uOfXT = lambda x, t: body.hy(x, t)
-        self.hz_dirichlet.uOfXT = lambda x, t: body.hz(x, t)
 
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
@@ -410,7 +373,6 @@ class BC_RANS(BC_Base):
         xx[1] = x[1]
         xx[2] = x[2]
         return self.waves.__cpp_calculate_vof(xx, t)
-
 
     def setTwoPhaseVelocityInlet(self, U, waterLevel, smoothing, Uwind=None,
                                  vert_axis=None, air=1., water=0.,
@@ -537,8 +499,7 @@ class BC_RANS(BC_Base):
         if dissipationInflow is not None:
             self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
             self.dissipation_advective.resetBC()
-            self.dissipation_diffusive.resetBC() 
-    
+            self.dissipation_diffusive.resetBC()     
 
     def setHydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
                                               refLevel, smoothing, U=None, Uwind=None,
@@ -581,8 +542,7 @@ class BC_RANS(BC_Base):
                 H = smoothedHeaviside(smoothing, phi)
             elif phi <= -smoothing:
                 H = 0.
-            return H*air + (1-H)*water        
-
+            return H*air + (1-H)*water     
 
         self.u_dirichlet.resetBC() 
         self.v_dirichlet.resetBC() 
@@ -590,10 +550,10 @@ class BC_RANS(BC_Base):
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
         self.k_dirichlet.resetBC() 
+        self.dissipation_dirichlet.resetBC()         
         self.k_advective.resetBC()
+        self.dissipation_advective.resetBC()        
         self.k_diffusive.setConstantBC(0.0) 
-        self.dissipation_dirichlet.resetBC() 
-        self.dissipation_advective.resetBC()
         self.dissipation_diffusive.setConstantBC(0.0)
 
         if U != None:            
