@@ -6338,9 +6338,10 @@ class MeshOptions:
         self.outputFiles['geo'] = gmsh
 
 
-def msh2triangle(fileprefix):
+def msh2triangle(fileprefix, nd):
     """
-    Converts a .msh file (Gmsh) to .ele .edge .node files (triangle)
+    Converts a .msh file (Gmsh) to .ele .edge .node files (triangle).
+    (!) Works only with triangle elements in 2D and tetrahedral elements in 3D.
 
     Parameters
     ----------
@@ -6353,9 +6354,9 @@ def msh2triangle(fileprefix):
     edges_msh = []
     triangles = []
     tetrahedra = []
+    tetrahedron_nb = 0
     triangle_nb = 0
     edge_nb = 0
-    nd = 2
     switch = None
     switch_count = -1
     logEvent('msh2triangle: getting nodes and elements')
@@ -6396,6 +6397,9 @@ def msh2triangle(fileprefix):
                 elif el_type == 2: # triangle
                     triangle_nb += 1
                     triangles += [[triangle_nb, int(words[s]), int(words[s+1]), int(words[s+2]), flag]]
+                elif el_type == 4: # tetrahedron 
+                    tetrahedron_nb += 1
+                    tetrahedra += [[tetrahedron_nb, int(words[s]), int(words[s+1]), int(words[s+2]), int(words[s+3]), flag]]
                 elif el_type == 15: # node
                     nodes[el_id-1][4] = flag
         switch_count += 1
@@ -6447,5 +6451,10 @@ def msh2triangle(fileprefix):
     if nd == 2:
         header = '{0:d} 3 1'.format(triangle_nb)
         np.savetxt(fileprefix+'.ele', triangles, fmt='%d', header=header, comments='')
+    elif nd == 3:
+        header = '{0:d} 3 1'.format(triangle_nb)
+        np.savetxt(fileprefix+'.face', triangles, fmt='%d', header=header, comments='')
+        header = '{0:d} 4 1'.format(tetrahedron_nb)
+        np.savetxt(fileprefix+'.ele', tetrahedra, fmt='%d', header=header, comments='')
 
     logEvent('msh2triangle: finished converting .msh to triangle files')
