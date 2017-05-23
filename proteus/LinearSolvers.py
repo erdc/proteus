@@ -887,9 +887,11 @@ class SchurOperatorConstructor:
         Qp : matrix
            A two-phase pressure mass matrix.
         """
-        if self.L.pde.coefficients.which_region != None:
-            self._phase_function = self.L.pde.coefficients.which_region
-
+        try:
+            if self.L.pde.coefficients.which_region != None:
+                self._phase_function = self.L.pde.coefficients.which_region
+        except AttributeError:
+            pass
         Qsys_petsc4py = self._TPMassMatrix_rho()
         self.TPQp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                self.linear_smoother.isp)
@@ -1049,9 +1051,11 @@ class SchurOperatorConstructor:
         Qp : matrix
            A two-phase pressure mass matrix.
         """
-        if self.L.pde.coefficients.which_region != None:
-            self._phase_function = self.L.pde.coefficients.which_region
-
+        try:
+            if self.L.pde.coefficients.which_region != None:
+                self._phase_function = self.L.pde.coefficients.which_region
+        except AttributeError:
+            pass
         Qsys_petsc4py = self._getTPInvScaledLaplace()
         self.TPInvScaledAp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
                                                         self.linear_smoother.isp)
@@ -1267,7 +1271,10 @@ class SchurOperatorConstructor:
             The two-phase mass matrix.
 
         """
-        self.opBuilder.attachTwoPhaseMassOperator_rho(phase_function = self._phase_function)
+        try :
+            self.opBuilder.attachTwoPhaseMassOperator_rho(phase_function = self._phase_function)
+        except:
+            self.opBuilder.attachTwoPhaseScaledMassOperator()
         return superlu_2_petsc4py(self.opBuilder.TPMassOperator)
 
     def _TPMassMatrix_mu(self):
@@ -1330,7 +1337,10 @@ class SchurOperatorConstructor:
             The Laplacian  matrix.
 
         """
-        self.opBuilder.attachTPInvScaledLaplaceOperator(phase_function = self._phase_function)
+        try:
+            self.opBuilder.attachTPInvScaledLaplaceOperator(phase_function = self._phase_function)
+        except AttributeError:
+            self.opBuilder.attachTPInvScaledLaplaceOperator()
         return superlu_2_petsc4py(self.opBuilder.TPInvScaledLaplaceOperator)
     
     def _getAdvection(self,output_matrix=False):
@@ -1351,8 +1361,11 @@ class SchurOperatorConstructor:
         -------
         TPCp : petsc4py matrix
         """
-        self.opBuilder.attachTPAdvectionOperator(self._advectiveField, phase_function = self._phase_function)
-        return superlu_2_petsc4py(self.opBuilder.TPAdvectionOperator)
+        try:
+            self.opBuilder.attachTPAdvectionOperator(self._advectiveField, phase_function = self._phase_function)
+        except AttributeError:
+            self.opBuilder.attachTPAdvectionOperator()
+        return superlu_2_petsc4py(self.opBuilder.TPScaledAdvectionOperator)
 
     def _getB(self,output_matrix=False):
         """ Return the discrete B-operator.
@@ -1807,9 +1820,9 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur) :
 
     def setUp(self, global_ksp):
         # Step-1: build the necessary operators
-        self.Qp_rho = self.operator_constructor.getTwoPhaseQp_rho()
         self.Np_rho = self.operator_constructor.getTwoPhaseCp_rho()
         self.Ap_invScaledRho = self.operator_constructor.getTwoPhaseInvScaledAp()
+        self.Qp_rho = self.operator_constructor.getTwoPhaseQp_rho()
         self.Qp_invScaledVis = self.operator_constructor.getTwoPhaseInvScaledQp()
         L_sizes = self.Qp_rho.size
         
@@ -1820,7 +1833,9 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur) :
         self.matcontext_inv = TwoPhase_PCDInv_shell(self.Qp_invScaledVis,
                                                     self.Qp_rho,
                                                     self.Ap_invScaledRho,
-                                                    self.Np_rho)
+                                                    self.Np_rho,
+                                                    True,
+                                                    self.L.pde.timeIntegration.t)
         self.TP_PCDInv_shell.setPythonContext(self.matcontext_inv)
         self.TP_PCDInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
@@ -1850,7 +1865,6 @@ class NavierStokes3D_LSC(NavierStokesSchur) :
 
     def setUp(self,global_ksp):
         # initialize the Qv_diagonal operator
-#        import pdb ;  pdb.set_trace()
         self.Qv = self.operator_constructor.getQv()
         self.Qv_hat = p4pyPETSc.Mat().create()
         self.Qv_hat.setSizes(self.Qv.getSizes())
@@ -2940,7 +2954,8 @@ class OperatorConstructor:
     def __init__(self,model):
         self.OLT = model
 
-    def _create_mass_matrix(self):
+    def _create_inv_scaled_mass_matrix(self):
+        """ TODO - generalize ? / fix names ? """
         self._mass_val = self.OLT.nzval.copy()
         self._mass_val.fill(0.)
         self.TPInvScaledMassOperator = SparseMat(self.OLT.nFreeVDOF_global,
@@ -2949,6 +2964,40 @@ class OperatorConstructor:
                                                  self._mass_val,
                                                  self.OLT.colind,
                                                  self.OLT.rowptr)
+        
+    def _create_mass_matrix(self):
+        """ TODO - generalize ? / fix names ? """
+        self._mass_val = self.OLT.nzval.copy()
+        self._mass_val.fill(0.)
+        self.TPMassOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                        self.OLT.nFreeVDOF_global,
+                                        self.OLT.nnz,
+                                        self._mass_val,
+                                        self.OLT.colind,
+                                        self.OLT.rowptr)
+
+    def _create_laplace_matrix(self):
+        """ TODO - generalize ? / fix names ? """
+        self._laplace_val = self.OLT.nzval.copy()
+        self._laplace_val.fill(0.)
+        self.TPInvScaledLaplaceOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                                    self.OLT.nFreeVDOF_global,
+                                                    self.OLT.nnz,
+                                                    self._laplace_val,
+                                                    self.OLT.colind,
+                                                    self.OLT.rowptr)
+
+    def _create_advection_matrix(self):
+        """ TODO - genalize? / fix names? """
+        self._advection_val = self.OLT.nzval.copy()
+        self._advection_val.fill(0.)
+        self.TPScaledAdvectionOperator = SparseMat(self.OLT.nFreeVDOF_global,
+                                                   self.OLT.nFreeVDOF_global,
+                                                   self.OLT.nnz,
+                                                   self._advection_val,
+                                                   self.OLT.colind,
+                                                   self.OLT.rowptr)        
+
             
 class OperatorConstructor_rans2p(OperatorConstructor):
     """ A class for building common discrete rans2p operators.
@@ -2961,9 +3010,127 @@ class OperatorConstructor_rans2p(OperatorConstructor):
     def __init__(self,levelModel):
         OperatorConstructor.__init__(self,levelModel)
 
+    def attachTPAdvectionOperator(self):
+        """ Create a discrete two-phase advection operator matrix. """
+        self._create_advection_matrix()
+        self.OLT.rans2p.getTwoPhaseAdvectionOperator(self.OLT.u[0].femSpace.elementMaps.psi,
+                                                     self.OLT.u[0].femSpace.elementMaps.grad_psi,
+                                                     self.OLT.mesh.nodeArray,
+                                                     self.OLT.mesh.elementNodesArray,
+                                                     self.OLT.elementQuadratureWeights[('u',0)],
+                                                     self.OLT.u[0].femSpace.psi,
+                                                     self.OLT.u[0].femSpace.grad_psi,
+                                                     self.OLT.u[1].femSpace.psi,
+                                                     self.OLT.u[1].femSpace.grad_psi,
+                                                     self.OLT.elementDiameter,
+                                                     self.OLT.mesh.nodeDiametersArray,
+                                                     self.OLT.mesh.nElements_global,
+                                                     self.OLT.coefficients.useMetrics,
+                                                     self.OLT.coefficients.epsFact_density,
+                                                     self.OLT.coefficients.epsFact,
+                                                     1.,
+                                                     1.,
+                                                     1.,
+                                                     1.,
+                                                     # self.OLT.coefficients.rho_0,
+                                                     # self.OLT.coefficients.nu_0,
+                                                     # self.OLT.coefficients.rho_1,
+                                                     # self.OLT.coefficients.nu_1,
+                                                     self.OLT.u[1].femSpace.dofMap.l2g,
+                                                     self.OLT.u[1].dof,
+                                                     self.OLT.u[2].dof,
+                                                     self.OLT.coefficients.useVF,
+                                                     self.OLT.coefficients.q_vf,
+                                                     self.OLT.coefficients.q_phi,
+                                                     self.OLT.csrRowIndeces[(0,0)],self.OLT.csrColumnOffsets[(0,0)],
+                                                     self.OLT.csrRowIndeces[(1,1)],self.OLT.csrColumnOffsets[(1,1)],
+                                                     self.OLT.csrRowIndeces[(2,2)],self.OLT.csrColumnOffsets[(2,2)],
+                                                     self.TPScaledAdvectionOperator)
+
+    def attachTPInvScaledLaplaceOperator(self):
+        """ Create a discrete two phase laplace operator matrix. """
+        self._create_laplace_matrix()
+        self.OLT.rans2p.getTwoPhaseInvScaledLaplaceOperator(self.OLT.u[0].femSpace.elementMaps.psi,
+                                                            self.OLT.u[0].femSpace.elementMaps.grad_psi,
+                                                            self.OLT.mesh.nodeArray,
+                                                            self.OLT.mesh.elementNodesArray,
+                                                            self.OLT.elementQuadratureWeights[('u',0)],
+                                                            self.OLT.u[0].femSpace.grad_psi,
+                                                            self.OLT.u[1].femSpace.grad_psi,
+                                                            self.OLT.elementDiameter,
+                                                            self.OLT.mesh.nodeDiametersArray,
+                                                            self.OLT.mesh.nElements_global,
+                                                            self.OLT.coefficients.useMetrics,
+                                                            self.OLT.coefficients.epsFact_density,
+                                                            self.OLT.coefficients.epsFact,
+                                                            # 1.,
+                                                            # 1.,
+                                                            # 1.,
+                                                            # 1.,
+                                                            self.OLT.coefficients.rho_0,
+                                                            self.OLT.coefficients.nu_0,
+                                                            self.OLT.coefficients.rho_1,
+                                                            self.OLT.coefficients.nu_1,
+                                                            self.OLT.u[0].femSpace.dofMap.l2g,
+                                                            self.OLT.u[1].femSpace.dofMap.l2g,
+                                                            self.OLT.u[0].dof,
+                                                            self.OLT.u[1].dof,
+                                                            self.OLT.u[2].dof,
+                                                            self.OLT.coefficients.useVF,
+                                                            self.OLT.coefficients.q_vf,
+                                                            self.OLT.coefficients.q_phi,
+                                                            self.OLT.coefficients.sdInfo[(1,1)][0],self.OLT.coefficients.sdInfo[(1,1)][1], # ARB - this should work..?
+                                                            self.OLT.coefficients.sdInfo[(1,1)][0],self.OLT.coefficients.sdInfo[(1,1)][1],
+                                                            self.OLT.coefficients.sdInfo[(2,2)][0],self.OLT.coefficients.sdInfo[(2,2)][1],
+                                                            self.OLT.csrRowIndeces[(0,0)],self.OLT.csrColumnOffsets[(0,0)],
+                                                            self.OLT.csrRowIndeces[(1,1)],self.OLT.csrColumnOffsets[(1,1)],
+                                                            self.OLT.csrRowIndeces[(2,2)],self.OLT.csrColumnOffsets[(2,2)],
+                                                            self.TPInvScaledLaplaceOperator)
+
+    def attachTwoPhaseScaledMassOperator(self):
+        """ Create a discrete TwoPhase Mass operator matrix. """
+        self._create_mass_matrix()
+        self.OLT.rans2p.getTwoPhaseInvScaledMassOperator(self.OLT.u[0].femSpace.elementMaps.psi,
+                                                         self.OLT.u[0].femSpace.elementMaps.grad_psi,
+                                                         self.OLT.mesh.nodeArray,
+                                                         self.OLT.mesh.elementNodesArray,
+                                                         self.OLT.elementQuadratureWeights[('u',0)],
+                                                         self.OLT.u[0].femSpace.psi,
+                                                         self.OLT.u[0].femSpace.psi,
+                                                         self.OLT.u[1].femSpace.psi,
+                                                         self.OLT.u[1].femSpace.psi,
+                                                         self.OLT.elementDiameter,
+                                                         self.OLT.mesh.nodeDiametersArray,
+                                                         self.OLT.mesh.nElements_global,
+                                                         self.OLT.coefficients.useMetrics,
+                                                         self.OLT.coefficients.epsFact_density,
+                                                         self.OLT.coefficients.epsFact,
+                                                         1.,
+                                                         1.,
+                                                         1.,
+                                                         1.,
+                                                         # self.OLT.coefficients.rho_0,
+                                                         # self.OLT.coefficients.nu_0,
+                                                         # self.OLT.coefficients.rho_1,
+                                                         # self.OLT.coefficients.nu_1,
+                                                         self.OLT.u[0].femSpace.dofMap.l2g,
+                                                         self.OLT.u[1].femSpace.dofMap.l2g,
+                                                         self.OLT.u[0].dof,
+                                                         self.OLT.u[1].dof,
+                                                         self.OLT.u[2].dof,
+                                                         self.OLT.coefficients.useVF,
+                                                         self.OLT.coefficients.q_vf,
+                                                         self.OLT.coefficients.q_phi,
+                                                         self.OLT.csrRowIndeces[(0,0)],self.OLT.csrColumnOffsets[(0,0)],
+                                                         self.OLT.csrRowIndeces[(1,1)],self.OLT.csrColumnOffsets[(1,1)],
+                                                         self.OLT.csrRowIndeces[(2,2)],self.OLT.csrColumnOffsets[(2,2)],
+                                                         self.TPMassOperator)    
+        
+        
+
     def attachTwoPhaseInvScaledMassOperator(self):
         """Create a discrete TwoPhase Mass operator matrix. """
-        self._create_mass_matrix()
+        self._create_inv_scaled_mass_matrix()
         self.OLT.rans2p.getTwoPhaseInvScaledMassOperator(self.OLT.u[0].femSpace.elementMaps.psi,
                                                          self.OLT.u[0].femSpace.elementMaps.grad_psi,
                                                          self.OLT.mesh.nodeArray,
@@ -2995,13 +3162,6 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                          self.OLT.csrRowIndeces[(1,1)],self.OLT.csrColumnOffsets[(1,1)],
                                                          self.OLT.csrRowIndeces[(2,2)],self.OLT.csrColumnOffsets[(2,2)],
                                                          self.TPInvScaledMassOperator)
-        # Need mass matrix sparsity pattern
-        
-        # self.opConstructor.attachTwoPhaseInvScaledMassOperator(self.OLT.mesh.nElements_global,
-        #                                                        self.OLT.nQuadraturePoints_element,
-        #                                                        self.OLT.nDOF_test_element,
-        #                                                        self.OLT.nDOF_trial_element,
-        #                                                        self.MassOperator)
         
 
 class OperatorConstructor_oneLevel(OperatorConstructor):

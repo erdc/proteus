@@ -966,7 +966,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         self.kspQp_dens.solve(x,tmp1)
 
         self.Np_rho.mult(tmp1,tmp2)
-        if self.alpha==True:
+        if self.alpha is True:
             tmp2.axpy(1./self.delta_t,x)
 
         if self._options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
@@ -974,8 +974,7 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
 
         self.kspAp_rho.solve(tmp2,tmp3)
         y.axpy(1.,tmp3)
-        
- 
+
 class PCDInv_shell(InvOperatorShell):
     """ Shell class for the PCD Inverse preconditioner """
     def __init__(self,Qp_matrix,Fp_matrix,Ap_matrix,bdyAdjust):

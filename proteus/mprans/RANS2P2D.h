@@ -323,6 +323,64 @@ namespace proteus
 				   int* csrColumnOffsets_eb_w_v,
 				   int* csrColumnOffsets_eb_w_w,				   
 				   int* elementFlags)=0;
+    virtual void getTwoPhaseAdvectionOperator(double* mesh_trial_ref,
+					      double* mesh_grad_trial_ref,
+					      double* mesh_dof,
+					      int* mesh_l2g,
+					      double* dV_ref,
+					      double* p_trial_ref,
+					      double* p_grad_trial_ref,
+					      double* vel_trail_ref,
+					      double* vel_grad_trial_ref,
+					      double* elementDiameter,
+					      double* nodeDiametersArray,				      
+					      int nElements_global,
+					      double useMetrics,
+					      double epsFact_rho,
+					      double epsFact_mu,
+					      double rho_0,
+					      double nu_0,
+					      double rho_1,
+					      double nu_1,
+					      int* vel_l2g,
+					      double* u_dof, double* v_dof,
+					      const double useVF,
+					      double *vf,
+					      double *phi,
+					      int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
+					      int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
+					      int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,					     
+					      double* advection_matrix) = 0;
+    virtual void getTwoPhaseInvScaledLaplaceOperator(double* mesh_trial_ref,
+						     double* mesh_grad_trial_ref,
+						     double* mesh_dof,
+						     int* mesh_l2g,
+						     double* dV_ref,
+						     double* p_grad_trial_ref,
+						     double* vel_grad_trial_ref,
+						     double* elementDiameter,
+						     double* nodeDiametersArray,
+						     int nElements_global,
+						     double useMetrics,
+						     double epsFact_rho,
+						     double epsFact_mu,
+						     double rho_0,
+						     double nu_0,
+						     double rho_1,
+						     double nu_1,
+						     int* p_l2g,
+						     int* vel_l2g,
+						     double* p_dof, double* u_dof, double* v_dof,
+						     const double useVF,
+						     double* vf,
+						     double* phi,
+						     int* sdInfo_p_p_rowptr, int* sdInfo_p_p_colind,
+						     int* sdInfo_u_u_rowptr, int* sdInfo_u_u_colind,
+						     int* sdInfo_v_v_rowptr, int* sdInfo_v_v_colind,
+						     int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
+						     int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
+						     int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
+						     double* laplace_matrix)=0;
     virtual void getTwoPhaseInvScaledMassOperator(double *mesh_trial_ref,
 						  double *mesh_grad_trial_ref,
 						  double *mesh_dof,
@@ -836,6 +894,40 @@ namespace proteus
     }
     //VRANS specific
     inline
+      void evaluateTPAdvectionCoefficients(const double eps_rho,
+					   const double eps_mu,
+					   const double rho_0,
+					   double nu_0,
+					   const double rho_1,
+					   double nu_1,
+					   const double useVF,
+					   const double& vf,
+					   const double& phi,
+					   const double& u,
+					   const double& v,
+					   double dmass_adv_p[nSpace],
+					   double dmom_u_adv_u[nSpace],
+					   double dmom_v_adv_v[nSpace])
+    {
+    // This should be split off into a seperate function
+    double H_rho, H_mu, rho;
+    H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+    
+    rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
+
+    dmass_adv_p[0] = rho*u;
+    dmass_adv_p[1] = rho*v;
+
+    dmom_u_adv_u[0] = rho*2*u;
+    dmom_u_adv_u[1] = rho*v;
+
+    dmom_v_adv_v[0] = rho*u;
+    dmom_v_adv_v[1] = rho*2*v;
+    
+    }
+					    
+    
+    inline
       void evaluateTPInvViscosityMassCoefficients(const double eps_rho,
 						  const double eps_mu,
 						  const double rho_0,
@@ -874,6 +966,39 @@ namespace proteus
 
     mom_v_acc = v / nu;
     dmom_v_acc_v = 1. / nu;
+  }
+
+    inline
+      void evaluateTPInvDensityLaplaceCoefficients(const double eps_rho,
+						   const double eps_mu,
+						   const double rho_0,
+						   double nu_0,
+						   const double rho_1,
+						   double nu_1,
+						   const double useVF,
+						   const double& vf,
+						   const double& phi,
+						   double mom_p_diff_ten[nSpace],
+						   double mom_u_diff_ten[nSpace],
+						   double mom_v_diff_ten[nSpace])
+  {
+    double H_rho, H_mu, rho, nu, mu;
+    H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+    H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+
+    rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
+    //    nu = nu_0*(1.0-H_mu) + nu_1*H_mu;
+    //    mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu;
+    
+    mom_p_diff_ten[0] = 1.0 / rho ;
+    mom_p_diff_ten[1] = 1.0 / rho ;
+
+    mom_u_diff_ten[0] = 1.0 / rho ;
+    mom_u_diff_ten[1] = 1.0 / rho ;
+
+    mom_v_diff_ten[0] = 1.0 / rho ;
+    mom_v_diff_ten[1] = 1.0 / rho ;
+
   }
     
     inline
@@ -4839,6 +4964,314 @@ namespace proteus
 	}//ebNE
     }//computeJacobian
 
+    void getTwoPhaseAdvectionOperator(double* mesh_trial_ref,
+				      double* mesh_grad_trial_ref,
+				      double* mesh_dof,
+				      int* mesh_l2g,
+				      double* dV_ref,
+				      double* p_trial_ref,
+				      double* p_grad_trial_ref,
+				      double* vel_trial_ref,
+				      double* vel_grad_trial_ref,
+				      double* elementDiameter,
+				      double* nodeDiametersArray,				      
+				      int nElements_global,
+				      double useMetrics,
+				      double epsFact_rho,
+				      double epsFact_mu,
+				      double rho_0,
+				      double nu_0,
+				      double rho_1,
+				      double nu_1,
+				      int* vel_l2g,
+				      double* u_dof, double* v_dof,
+				      const double useVF,
+				      double *vf,
+				      double *phi,
+				      int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
+				      int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
+				      int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,					     
+				      double* advection_matrix)
+
+    {
+      for (int eN=0 ; eN < nElements_global ; ++eN)
+	{
+	  // local matrix allocations
+	  double eps_rho, eps_mu;
+
+	  double local_matrix_p_p[nDOF_test_element][nDOF_trial_element];
+	  double local_matrix_u_u[nDOF_test_element][nDOF_trial_element];
+	  double local_matrix_v_v[nDOF_test_element][nDOF_trial_element];
+
+	  // clear local matrix entries
+	  for (int i=0 ; i < nDOF_test_element ; ++i)
+	    for (int j=0 ; j < nDOF_trial_element ; ++j){
+	      local_matrix_p_p[i][j] = 0. ;
+	      local_matrix_u_u[i][j] = 0. ;
+	      local_matrix_v_v[i][j] = 0. ;	      
+	    }
+
+	  for (int k=0 ; k < nQuadraturePoints_element ; ++k){
+
+	    int eN_k = eN*nQuadraturePoints_element + k;
+	    int eN_nDOF_trial_element = eN*nDOF_trial_element;
+	    
+	    double jac[nSpace*nSpace];
+	    double jacInv[nSpace*nSpace];
+	    double u=0.0, v=0.0;
+	    double dmass_adv_p[nSpace], dmom_u_adv_u[nSpace], dmom_v_adv_v[nSpace];
+	    double p_grad_trial[nDOF_trial_element*nSpace],
+	           vel_grad_trial[nDOF_trial_element*nSpace];
+	    double p_grad_test_dV[nDOF_test_element*nSpace],
+	           vel_grad_test_dV[nDOF_test_element*nSpace];
+	    double jacDet, x, y, z, dV, h_phi;
+
+	    ck.calculateMapping_element(eN,
+					k,
+					mesh_dof,
+					mesh_l2g,
+					mesh_trial_ref,
+					mesh_grad_trial_ref,
+					jac,
+					jacDet,
+					jacInv,
+					x,y,z);
+
+	    ck.calculateH_element(eN,
+				  k,
+				  nodeDiametersArray,
+				  mesh_l2g,
+				  mesh_trial_ref,
+				  h_phi);
+
+	    dV = fabs(jacDet)*dV_ref[k];
+
+	    eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	    eps_mu = epsFact_mu * (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+
+	    ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial);
+	    ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
+	    
+	    ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
+	    ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
+
+	    for (int j=0; j<nDOF_trial_element;++j)
+	      for (int i=0; i<nSpace; ++i)
+		{
+		  p_grad_test_dV[j*nSpace+i] = p_grad_trial[j*nSpace+i]*dV;
+		  vel_grad_test_dV[j*nSpace+i] = vel_grad_trial[j*nSpace+i]*dV;
+		}
+	    
+	    
+	    evaluateTPAdvectionCoefficients(eps_rho,
+					    eps_mu,
+					    rho_0,
+					    nu_0,
+					    rho_1,
+					    nu_1,
+					    useVF,
+					    vf[eN_k],
+					    phi[eN_k],
+					    u,
+					    v,
+					    dmass_adv_p,
+					    dmom_u_adv_u,
+					    dmom_v_adv_v);
+					    
+
+	  for(int i=0; i<nDOF_test_element;++i){
+	    int i_nSpace = i*nSpace;
+	    
+  	    for(int j=0; j<nDOF_trial_element;++j){
+	      
+	      int j_nSpace = j*nSpace;
+	      local_matrix_p_p[i][j] += ck.AdvectionJacobian_weak(dmass_adv_p,p_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]);
+	      local_matrix_u_u[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);
+	      local_matrix_v_v[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);      
+	    }
+	  }
+
+	      
+	  }//k
+
+	  // Write local matrix information into global system
+	  for (int i=0 ; i < nDOF_test_element ; ++i)
+	    {
+	      int eN_i = eN*nDOF_test_element + i;
+	      for (int j=0 ; j < nDOF_trial_element ; ++j)
+		{
+		  int eN_i_j = eN_i*nDOF_trial_element + j;
+		  advection_matrix[csrRowIndeces_p_p[eN_i] + csrColumnOffsets_p_p[eN_i_j]] += local_matrix_p_p[i][j] ;
+		  advection_matrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += local_matrix_u_u[i][j] ;
+		  advection_matrix[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += local_matrix_v_v[i][j] ;		  
+		}
+	    }
+
+	}//eN
+    } // getTwoPhaseAdvectionOperator
+    
+    void getTwoPhaseInvScaledLaplaceOperator(double* mesh_trial_ref,
+					     double* mesh_grad_trial_ref,
+					     double* mesh_dof,
+					     int* mesh_l2g,
+					     double* dV_ref,
+					     double* p_grad_trial_ref,
+					     double* vel_grad_trial_ref,
+					     double* elementDiameter,
+					     double* nodeDiametersArray,
+					     int nElements_global,
+					     double useMetrics,
+					     double epsFact_rho,
+					     double epsFact_mu,
+					     double rho_0,
+					     double nu_0,
+					     double rho_1,
+					     double nu_1,
+					     int* p_l2g,
+					     int* vel_l2g,
+					     double* p_dof, double* u_dof, double* v_dof,
+					     const double useVF,
+					     double* vf,
+					     double* phi,
+					     int* sdInfo_p_p_rowptr, int* sdInfo_p_p_colind,
+					     int* sdInfo_u_u_rowptr, int* sdInfo_u_u_colind,
+					     int* sdInfo_v_v_rowptr, int* sdInfo_v_v_colind,
+					     int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
+					     int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
+					     int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,					     
+					     double* laplace_matrix)
+    {
+      for (int eN=0 ; eN < nElements_global ; ++eN)
+	{
+	  // local matrix allocations
+	  double eps_rho, eps_mu;
+
+	  double local_matrix_p_p[nDOF_test_element][nDOF_trial_element];
+ 	  double local_matrix_u_u[nDOF_test_element][nDOF_trial_element];
+	  double local_matrix_v_v[nDOF_test_element][nDOF_trial_element];	  
+
+	  // reset local matrix entries
+	  for (int i=0 ; i < nDOF_test_element ; ++i)
+	    for (int j=0 ; j < nDOF_trial_element ; ++j){
+	      // set local matrices to 0
+	      local_matrix_p_p[i][j] = 0.;
+	      local_matrix_u_u[i][j] = 0.;
+	      local_matrix_v_v[i][j] = 0.;	      
+	    }
+
+	  // Loop over quadrature points on element
+	  for (int k=0 ; k < nQuadraturePoints_element; ++k){
+
+	    int eN_k = eN*nQuadraturePoints_element + k;
+	    int eN_nDOF_trial_element = eN*nDOF_trial_element;
+	    
+	    double grad_p[nSpace], grad_u[nSpace], grad_v[nSpace];
+	    double jac[nSpace*nSpace];
+	    double jacInv[nSpace*nSpace];
+	    double mom_pp_diff_ten[nSpace];
+	    double mom_uu_diff_ten[nSpace];
+	    double mom_vv_diff_ten[nSpace];
+	    double p_grad_trial[nDOF_trial_element*nSpace],
+	           vel_grad_trial[nDOF_trial_element*nSpace];
+	    double p_grad_test_dV[nDOF_test_element*nSpace],
+	           vel_grad_test_dV[nDOF_test_element*nSpace];
+	    double jacDet, x, y, z, dV, h_phi;
+	    
+	    ck.calculateMapping_element(eN,
+					k,
+					mesh_dof,
+					mesh_l2g,
+					mesh_trial_ref,
+					mesh_grad_trial_ref,
+					jac,
+					jacDet,
+					jacInv,
+					x,y,z);
+
+	    ck.calculateH_element(eN,
+				  k,
+				  nodeDiametersArray,
+				  mesh_l2g,
+				  mesh_trial_ref,
+				  h_phi);
+
+	    dV = fabs(jacDet)*dV_ref[k];
+
+	eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	eps_mu = epsFact_mu * (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+
+	ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial);
+	ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
+
+	ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p);
+	ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
+	ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
+
+	for (int j=0; j<nDOF_trial_element;++j)
+	  for (int i=0; i<nSpace; ++i)
+	    {
+	      p_grad_test_dV[j*nSpace+i] = p_grad_trial[j*nSpace+i]*dV;
+	      vel_grad_test_dV[j*nSpace+i] = vel_grad_trial[j*nSpace+i]*dV;
+	    }
+
+	evaluateTPInvDensityLaplaceCoefficients(eps_rho,
+						eps_mu,
+						rho_0,
+						nu_0,
+						rho_1,
+						nu_1,
+						useVF,
+						vf[eN_k],
+						phi[eN_k],
+						mom_pp_diff_ten,
+						mom_uu_diff_ten,
+						mom_vv_diff_ten);
+
+	// loop over test and weighted trial functions to evaluate local inner products
+	for (int i=0 ; i < nDOF_test_element ; ++i)
+	  {
+	    int i_nSpace = i*nSpace ;
+	    for (int j=0; j < nDOF_trial_element ; ++j){
+	      int j_nSpace = j*nSpace ;
+	      local_matrix_p_p[i][j] += ck.SimpleDiffusionJacobian_weak(sdInfo_p_p_rowptr,
+									sdInfo_p_p_colind,
+									mom_pp_diff_ten,
+									&p_grad_trial[j_nSpace],
+									&p_grad_test_dV[i_nSpace]);
+	      
+	      local_matrix_u_u[i][j] += ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr,
+									sdInfo_u_u_colind,
+									mom_uu_diff_ten,
+									&vel_grad_trial[j_nSpace],
+									&vel_grad_test_dV[i_nSpace]);
+	      
+ 	      local_matrix_v_v[i][j] += ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr,
+									sdInfo_v_v_colind,
+									mom_vv_diff_ten,
+									&vel_grad_trial[j_nSpace],
+									&vel_grad_test_dV[i_nSpace]);
+								       
+	    } // j
+	  } // i
+	
+	  } // k
+
+	  // Write local matrix information into global system
+	  for (int i=0 ; i < nDOF_test_element ; ++i)
+	    {
+	      int eN_i = eN*nDOF_test_element + i;
+	      for (int j=0 ; j < nDOF_trial_element ; ++j)
+		{
+		  int eN_i_j = eN_i*nDOF_trial_element + j;
+		  laplace_matrix[csrRowIndeces_p_p[eN_i] + csrColumnOffsets_p_p[eN_i_j]] += local_matrix_p_p[i][j] ;
+		  laplace_matrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += local_matrix_u_u[i][j] ;
+		  laplace_matrix[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += local_matrix_v_v[i][j] ;		  
+		}
+	    }
+	  
+	} // eN
+    }
+
     void getTwoPhaseInvScaledMassOperator(double *mesh_trial_ref,
 					  double *mesh_grad_trial_ref,
 					  double *mesh_dof,
@@ -4905,15 +5338,15 @@ namespace proteus
 	// Step 1.2.1 Calculate integration weights
 
 	ck.calculateMapping_element(eN,
-			    k,
-			    mesh_dof,
-			    mesh_l2g,
-			    mesh_trial_ref,
-			    mesh_grad_trial_ref,
-			    jac,
-			    jacDet,
-			    jacInv,
-			    x,y,z);
+				    k,
+				    mesh_dof,
+				    mesh_l2g,
+				    mesh_trial_ref,
+				    mesh_grad_trial_ref,
+				    jac,
+				    jacDet,
+				    jacInv,
+				    x,y,z);
 
 	ck.calculateH_element(eN,
 			      k,
