@@ -133,11 +133,9 @@ class BC_RANS(BC_Base):
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
+        self.k_dirichlet.setConstantBC(0.0)          
         self.p_advective.setConstantBC(0.)
         self.vof_advective.setConstantBC(0.)
-
-        # turbulent boundary conditions
-        self.k_dirichlet.setConstantBC(0.0)  
         self.dissipation_diffusive.setConstantBC(0.0)  
 
     def setFreeSlip(self):
@@ -146,6 +144,7 @@ class BC_RANS(BC_Base):
         """
         self.reset()
         self.BC_type = 'FreeSlip'
+        self.k_dirichlet.setConstantBC(0.0)         
         self.p_advective.setConstantBC(0.)
         self.u_advective.setConstantBC(0.)
         self.v_advective.setConstantBC(0.)
@@ -154,9 +153,6 @@ class BC_RANS(BC_Base):
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
-
-        # turbulent boundary conditions
-        self.k_dirichlet.setConstantBC(0.0)  
         self.dissipation_diffusive.setConstantBC(0.0)  
 
     def setAtmosphere(self, orientation=None, vof_air=1.):
@@ -225,16 +221,17 @@ class BC_RANS(BC_Base):
         if body.nd > 2:
             self.hz_dirichlet.uOfXT = get_DBC_h(2)
 
-
     def setChMoveMesh(self, body):
         self.hx_dirichlet.uOfXT = lambda x, t: body.hx(x, t)
         self.hy_dirichlet.uOfXT = lambda x, t: body.hy(x, t)
         self.hz_dirichlet.uOfXT = lambda x, t: body.hz(x, t)
 
-
     def setTurbulentDirichlet(self, kVal, dissipationVal):
         """
-        Sets only dirichlet conditions for turbulence at the boundary
+        Sets only dirichlet conditions for turbulence at the boundary.
+        It's a rough approximation for evalueting the near wall turbulence
+        based on empirical assumptions.
+        More sophisticated wall functions are recommended to be used.
         
         Parameters
         ----------
@@ -244,99 +241,25 @@ class BC_RANS(BC_Base):
             constant value applied on dissipation.
         """
         # turbulent boundary conditions
-        self.k_dirichlet.setConstantBC(kVal)  
+        self.k_dirichlet.setConstantBC(kVal)
+        self.dissipation_dirichlet.setConstantBC(dissipationVal)          
         self.k_advective.resetBC()
+        self.dissipation_advective.resetBC()        
         self.k_diffusive.resetBC()
-        self.dissipation_dirichlet.setConstantBC(dissipationVal)  
-        self.dissipation_advective.resetBC()
         self.dissipation_diffusive.resetBC()
 
-
-    def setTurbulentOutFlow(self):
+    def setTurbulentZeroGradient(self):
         """
-        Sets zero dirichlet conditions to avoid inflow.
-        Sets zero-gradient conditions for turbulence at the boundary to superimpose outflow.
+        Sets only zero-gradient conditions for turbulence at the boundary.
+        More sophisticated wall functions are recommended to be used.
         """
         # turbulent boundary conditions
-        self.k_dirichlet.setConstantBC(0.)
-        self.k_advective.resetBC()
+        self.k_dirichlet.setConstantBC(0.) 
+        self.dissipation_dirichlet.setConstantBC(0.)        
+        self.k_advective.resetBC() 
+        self.dissipation_advective.resetBC()        
         self.k_diffusive.setConstantBC(0.) 
-        self.dissipation_dirichlet.setConstantBC(0.)  
-        self.dissipation_advective.resetBC()
         self.dissipation_diffusive.setConstantBC(0.) 
-
-
-    def setSkinFriction_ke(self, he, Ufree, Re, slip, nu=1.004e-6, rho=998.2,
-                                      Cmu=0.09, K=0.41, E=9.8 ):
-        """
-        Sets turbulent boundaries for wall treatment based on skin friction theory.
-
-        Parameters
-        ----------
-        he: float.
-            mesh size used to place the nearest poin to the wall.
-        Ufree: float.
-            free stream velocity.
-        Re: float.
-            reynolds number.
-        nu: float.
-            fluid viscosity.
-        rho: float.
-            density of the fluid.
-        Cmu: float.
-            turbulent viscosity constant.
-        K: float.
-            von Karman coefficient.
-        E: float.
-            roughness coefficient for walls.          
-        slip: string.
-            switching between either free-slip or no-slip condition.
-
-        """      
-        
-        # parameters from skin friction theory
-        # Pope 
-        #cf = 0.664*(Re**(-1./2.))
-        # Schlichting
-        cf = 0.455 / ( (np.log10(Re))**2.58 )
-        ut = Ufree*np.sqrt(cf/2.)
-        kp = (ut**2.)/np.sqrt(Cmu)
-        tau = rho*(ut**2)
-        Y = he/2.
-        dissipation = (ut**3)/(K*Y)
-        nut = Cmu*(kp**2)/dissipation
-
-        self.reset()
-
-        if slip not in ['NoSlip', 'FreeSlip']:
-            logEvent("Wrong slip_type given: Valid types are %s" %(['NoSlip', 'FreeSlip']), level=0)
-            sys.exit(1)
-
-        # slip condition
-        if slip == 'NoSlip':
-            self.BC_type = 'NoSlip'
-            self.u_dirichlet.setConstantBC(0.)
-            self.v_dirichlet.setConstantBC(0.)
-            self.w_dirichlet.setConstantBC(0.)
-            self.p_advective.setConstantBC(0.)
-            self.vof_advective.setConstantBC(0.)           
-        elif slip == 'FreeSlip':
-            self.BC_type = 'FreeSlip'
-            self.p_advective.setConstantBC(0.)
-            self.u_advective.setConstantBC(0.)
-            self.v_advective.setConstantBC(0.)
-            self.w_advective.setConstantBC(0.)
-            self.vof_advective.setConstantBC(0.)
-            self.u_diffusive.setConstantBC(0.)
-            self.v_diffusive.setConstantBC(0.)
-            self.w_diffusive.setConstantBC(0.)
-        # turbulent boundary conditions
-        self.u_diffusive.setConstantBC( tau/(rho*nut) )
-        self.v_advective.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(kp)
-        self.k_diffusive.setConstantBC(0.)
-        self.dissipation_dirichlet.setConstantBC(dissipation)
-
 
     def setWallFunction_ke_channelFlow(self, Y, U0, d, slip, nu=1.004e-6, rho=998.2,
                                       Cmu=0.09, K=0.41, E=9.8 ):
@@ -425,7 +348,6 @@ class BC_RANS(BC_Base):
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_dirichlet.setConstantBC(dissipation) 
         self.dissipation_advective.setConstantBC(0.)
-
 
     def setWallFunction_ke_boundaryLayer(self, Y, U0, slip, nu=1.004e-6, rho=998.2,
                                       Cmu=0.09, K=0.41, E=9.8 ):
@@ -537,7 +459,6 @@ class BC_RANS(BC_Base):
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_dirichlet.uOfXT = get_dissipation_dirichlet(0) 
         self.dissipation_advective.setConstantBC(0.)
-
 
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
@@ -664,7 +585,6 @@ class BC_RANS(BC_Base):
         """
         Imposes a velocity profile lower than the sea level and an open
         boundary for higher than the sealevel.
-
         Parameters
         ----------
         U: list.
@@ -691,7 +611,6 @@ class BC_RANS(BC_Base):
             Air K inflow value for turbulent model imposed at the boundary.
         dissipationInflowAir: float (optional).
             Air dissipation inflow value for turbulent model imposed at the boundary.            
-
         Below the seawater level, the condition returns the _dirichlet and
         p_advective condition according to the inflow velocity.
         Above the sea water level, the condition returns the gravity as zero,
@@ -782,8 +701,7 @@ class BC_RANS(BC_Base):
         if dissipationInflow is not None:
             self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
             self.dissipation_advective.resetBC()
-            self.dissipation_diffusive.resetBC() 
-    
+            self.dissipation_diffusive.resetBC()     
 
     def setHydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
                                               refLevel, smoothing, U=None, Uwind=None,
@@ -826,8 +744,7 @@ class BC_RANS(BC_Base):
                 H = smoothedHeaviside(smoothing, phi)
             elif phi <= -smoothing:
                 H = 0.
-            return H*air + (1-H)*water        
-
+            return H*air + (1-H)*water     
 
         self.u_dirichlet.resetBC() 
         self.v_dirichlet.resetBC() 
@@ -835,10 +752,10 @@ class BC_RANS(BC_Base):
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
         self.k_dirichlet.resetBC() 
+        self.dissipation_dirichlet.resetBC()         
         self.k_advective.resetBC()
+        self.dissipation_advective.resetBC()        
         self.k_diffusive.setConstantBC(0.0) 
-        self.dissipation_dirichlet.resetBC() 
-        self.dissipation_advective.resetBC()
         self.dissipation_diffusive.setConstantBC(0.0)
 
         if U != None:            
