@@ -248,7 +248,7 @@ class NS_base:  # (HasTraits):
                         logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
                         check_call(gmsh_cmd, shell=True)
                         logEvent("Done running gmsh; converting to triangle")
-                        MeshTools.msh2triangle(p.domain.geofile)
+                        MeshTools.msh2triangle(fileprefix=p.domain.geofile, nd=2)
 
                     comm.barrier()
                     mesh = MeshTools.TriangularMesh()
@@ -290,17 +290,29 @@ class NS_base:  # (HasTraits):
                 if comm.rank() == 0 and (p.genMesh or not (os.path.exists(p.domain.polyfile+".ele") and
                                                            os.path.exists(p.domain.polyfile+".node") and
                                                            os.path.exists(p.domain.polyfile+".face"))):
-                    logEvent("Running tetgen to generate 3D mesh for "+p.name,level=1)
-                    tetcmd = "tetgen -%s %s.poly" % (n.triangleOptions,p.domain.polyfile)
-                    logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
-
-                    check_call(tetcmd, shell=True)
-
-                    logEvent("Done running tetgen")
-                    elefile  = "%s.1.ele" % p.domain.polyfile
-                    nodefile = "%s.1.node" % p.domain.polyfile
-                    facefile = "%s.1.face" % p.domain.polyfile
-                    edgefile = "%s.1.edge" % p.domain.polyfile
+                    if p.domain.use_gmsh is True:
+                        logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
+                        gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s}  -format msh".format(p.domain.geofile+'.geo', p.domain.polyfile+'.msh')
+                        logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
+                        check_call(gmsh_cmd, shell=True)
+                        logEvent("Done running gmsh; converting to tetgen")
+                        MeshTools.msh2triangle(fileprefix=p.domain.geofile, nd=3)
+                        check_call("tetgen -Vfeen %s.ele" % (p.domain.polyfile,), shell=True)
+                    else:
+                        logEvent("Running tetgen to generate 3D mesh for "+p.name,level=1)
+                        tetcmd = "tetgen -%s %s.poly" % (n.triangleOptions,p.domain.polyfile)
+                        logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
+                        check_call(tetcmd, shell=True)
+                        logEvent("Done running tetgen")
+                    check_call("mv %s.1.ele %s.ele" % (p.domain.polyfile,p.domain.polyfile), shell=True)
+                    check_call("mv %s.1.node %s.node" % (p.domain.polyfile,p.domain.polyfile), shell=True)
+                    check_call("mv %s.1.face %s.face" % (p.domain.polyfile,p.domain.polyfile), shell=True)
+                    check_call("mv %s.1.neigh %s.neigh" % (p.domain.polyfile,p.domain.polyfile), shell=True)
+                    check_call("mv %s.1.edge %s.edge" % (p.domain.polyfile,p.domain.polyfile), shell=True)
+                    elefile  = "%s.ele" % p.domain.polyfile
+                    nodefile = "%s.node" % p.domain.polyfile
+                    facefile = "%s.face" % p.domain.polyfile
+                    edgefile = "%s.edge" % p.domain.polyfile
                     assert os.path.exists(elefile), "no 1.ele"
                     tmp = "%s.ele" % p.domain.polyfile
                     os.rename(elefile,tmp)
