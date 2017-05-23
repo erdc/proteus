@@ -482,7 +482,6 @@ class NS_base:  # (HasTraits):
                                                           parallelPartitioningType=n.parallelPartitioningType)
 
 
-            
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
