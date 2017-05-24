@@ -6335,7 +6335,7 @@ class MeshOptions:
         self.outputFiles['poly'] = poly
         self.outputFiles['ply'] = ply
         self.outputFiles['asymptote'] = asymptote
-        self.outputFiles['geo'] = gmsh
+        self.outputFiles['geo'] = geo
 
 
 def msh2simplex(fileprefix, nd):
