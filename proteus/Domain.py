@@ -152,7 +152,6 @@ class D_base:
                 for j, subf in enumerate(f):
                     lineloop = []
                     # vertices in facet
-                    print 'subf'+str(subf)
                     for k, ver in enumerate(subf):
                         if ver in lines_dict[subf[k-1]].keys():
                             lineloop += [lines_dict[subf[k-1]][ver]+1]
