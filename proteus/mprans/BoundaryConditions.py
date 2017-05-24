@@ -238,8 +238,8 @@ class BC_RANS(BC_Base):
     def __cpp_MoveMesh_hz(self, x, t):
         return self.__cpp_MoveMesh_h(x, t)[2]
 
-    def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None, wind_speed=None,
-                                         smoothing=0., vof_air=1., vof_water=0.):
+    def setUnsteadyTwoPhaseVelocityInlet(self, wave,smoothing, vert_axis=None,
+                                         wind_speed=None, vof_air=1., vof_water=0.):
         """
         Imposes a velocity profile on the fluid with input wave and wind
         conditions.
@@ -248,6 +248,8 @@ class BC_RANS(BC_Base):
         ----------
         wave: proteus.WaveTools
             class describing a wave (from proteus.WaveTools)
+        smoothing: float
+            smoothing distance (typically 3.*he)
         vert_axis: Optional[int]
             index of vertical position vector (x:0, y:1, z:2), must always be
             aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
