@@ -333,7 +333,7 @@ class TestShapeRANS(unittest.TestCase):
         tank.setSponge(x_n=1.5, x_p=2.)
         npt.assert_equal(tank.spongeLayers['x-'], 1.5)
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
-        tank.setAbsorptionZones(x_n=True, x_p=True)
+        tank.setAbsorptionZones(dragAlpha ,x_n=True, x_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         npt.assert_equal(leftzone.zone_type, 'absorption')
@@ -362,7 +362,7 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
         npt.assert_equal(tank.spongeLayers['y-'], 3)
         npt.assert_equal(tank.spongeLayers['y+'], 0.2)
-        tank.setAbsorptionZones(x_n=True, x_p=True, y_n=True, y_p=True)
+        tank.setAbsorptionZones(dragAlpha, x_n=True, x_p=True, y_n=True, y_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         frontzone = tank.zones[tank.regionFlags[tank.regionIndice['y-']]]
@@ -449,7 +449,7 @@ class TestShapeRANS(unittest.TestCase):
         tank.setSponge(x_n=1.5, x_p=2.)
         npt.assert_equal(tank.spongeLayers['x-'], 1.5)
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
-        tank.setGenerationZones(waves=waves, x_n=True, x_p=True)
+        tank.setGenerationZones(dragAlpha, smoothing = 0.,waves=waves, x_n=True, x_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         npt.assert_equal(leftzone.zone_type, 'generation')
@@ -478,7 +478,7 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
         npt.assert_equal(tank.spongeLayers['y-'], 3)
         npt.assert_equal(tank.spongeLayers['y+'], 0.2)
-        tank.setGenerationZones(waves=waves, x_n=True, x_p=True, y_n=True, y_p=True)
+        tank.setGenerationZones(dragAlpha, smoothing=0., waves=waves, x_n=True, x_p=True, y_n=True, y_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         frontzone = tank.zones[tank.regionFlags[tank.regionIndice['y-']]]

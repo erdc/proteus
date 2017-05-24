@@ -347,13 +347,15 @@ class ShapeRANS(Shape):
             self.record_filename = filename + '.csv'
 
     def setAbsorptionZones(self, flags, epsFact_solid, center, orientation,
-                           dragAlpha=0.5/1.005e-6, dragBeta=0.,
+                           dragAlpha, dragBeta=0.,
                            porosity=1.):
         """
         Sets a region (given the local flag) to an absorption zone
 
         Parameters
         ----------
+        dragAlpha: Optional
+            Relaxation zone coefficient.
         flags: array_like, int
             Local flags of the region. Can be an integer or a list.
         epsFact_solid: float
@@ -362,12 +364,10 @@ class ShapeRANS(Shape):
             Coordinates of the center of the absorption zone.
         orientation: array_like
             Orientation vector pointing TOWARDS incoming waves.
-        dragAlpha: Optional[float]
-            Porous module parameter.
         dragBeta: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         porosity: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         """
         self._attachAuxiliaryVariable('RelaxZones')
         waves = None
@@ -396,8 +396,8 @@ class ShapeRANS(Shape):
                                                  porosity=porosity[i])
 
     def setGenerationZones(self, flags, epsFact_solid, center, orientation,
-                           waves, wind_speed=(0., 0., 0.),
-                           dragAlpha=0.5/1.005e-6, dragBeta=0.,
+                           waves, dragAlpha,
+                           wind_speed=(0., 0., 0.),dragBeta=0.,
                            porosity=1., smoothing=0.):
         """
         Sets a region (given the local flag) to a generation zone
@@ -414,14 +414,14 @@ class ShapeRANS(Shape):
             Orientation vector pointing TOWARDS incoming waves.
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
+        dragAlpha: Optional[float]
+            Relaxation zone coefficient.
         wind_speed: Optional[array_like]
             Speed of wind in generation zone (default is (0., 0., 0.))
-        dragAlpha: Optional[float]
-            Porous module parameter.
         dragBeta: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         porosity: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         """
         self._attachAuxiliaryVariable('RelaxZones')
         if isinstance(flags, int):
@@ -451,8 +451,8 @@ class ShapeRANS(Shape):
                                                  porosity=porosity[i],
                                                  smoothing=smoothing[i])
 
-    def setPorousZones(self, flags, dragAlpha=0.5/1.005e-6, dragBeta=0.,
-                       porosity=1.):
+    def setPorousZones(self, flags, dragAlpha, dragBeta,
+                       porosity):
         """
         Sets a region (given the local flag) to a porous zone
 
@@ -460,12 +460,12 @@ class ShapeRANS(Shape):
         ----------
         flags: array_like, int
             Local flags of the region. Can be an integer or a list.
-        dragAlpha: Optional[float]
-            Porous module parameter.
-        dragBeta: Optional[float]
-            Porous module parameter.
-        porosity: Optional[float]
-            Porous module parameter.
+        dragAlpha: float
+            Darcy-type coefficient
+        dragBeta: float
+            Forchheimer-type coefficient 
+        porosity: float
+            Porosity 
         """
         self._attachAuxiliaryVariable('RelaxZones')
         if isinstance(flags, int):
@@ -813,14 +813,17 @@ class Tank3D(ShapeRANS):
         self.volumes = np.array(volumes)
 
 
-    def setAbsorptionZones(self, allSponge=False, y_n=False, y_p=False,
-                           x_n=False, x_p=False, dragAlpha=0.5/1.005e-6,
+    def setAbsorptionZones(self, dragAlpha,allSponge=False,
+                           y_n=False, y_p=False,
+                           x_n=False, x_p=False, 
                            dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-, y+, y-) to absorption zones
 
         Parameters
         ----------
+        dragAlpha: float
+            Relaxation zone coefficient.
         allSponge: bool
             If True, all sponge layers are converted to absorption zones.
         x_p: bool
@@ -831,12 +834,10 @@ class Tank3D(ShapeRANS):
             If True, y+ region is converted to absorption zone.
         y_n: bool
             If True, y- region is converted to absorption zone.
-        dragAlpha: Optional[float]
-            Porous module parameter.
         dragBeta: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         porosity: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         """
         self.abs_zones = {'y-': y_n, 'y+': y_p, 'x-': x_n, 'x+': x_p}
         if allSponge is True:
@@ -879,15 +880,19 @@ class Tank3D(ShapeRANS):
                                                      dragBeta=dragBeta,
                                                      porosity=porosity)
 
-    def setGenerationZones(self, waves=None, wind_speed=(0. ,0., 0.),
-                           allSponge=False, y_n=False, y_p=False, x_n=False,
-                           x_p=False, dragAlpha=0.5/1.005e-6, dragBeta=0.,
-                           porosity=1., smoothing=0.):
+    def setGenerationZones(self,  dragAlpha, smoothing, waves=None,
+                           wind_speed=(0. ,0., 0.), allSponge=False, y_n=False,
+                           y_p=False, x_n=False, x_p=False, dragBeta=0.,
+                           porosity=1.):
         """
         Sets regions (x+, x-, y+, y-) to generation zones
 
         Parameters
         ----------
+        dragAlpha: float
+            Relaxation zone coefficient.
+        smoothing: float
+            Smoothing distance (typically 3.*he)
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
         wind_speed: Optional[array_like]
@@ -902,12 +907,10 @@ class Tank3D(ShapeRANS):
             If True, y+ region is converted to generation zone.
         y_n: bool
             If True, y- region is converted to generation zone.
-        dragAlpha: Optional[float]
-            Porous module parameter.
         dragBeta: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         porosity: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         """
         self.abs_zones = {'y-': y_n, 'y+': y_p, 'x-': x_n, 'x+': x_p}
         if allSponge is True:
@@ -1174,25 +1177,25 @@ class Tank2D(ShapeRANS):
         self.spongeLayers['x+'] = x_p
         self.constructShape()
 
-    def setAbsorptionZones(self, x_n=False, x_p=False, dragAlpha=0.5/1.005e-6,
+    def setAbsorptionZones(self, dragAlpha, x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-) to absorption zones
 
         Parameters
         ----------
+        dragAlpha: float
+            Relaxation zone coefficient.
         allSponge: bool
             If True, all sponge layers are converted to absorption zones.
         x_p: bool
             If True, x+ region is converted to absorption zone.
         x_n: bool
             If True, x- region is converted to absorption zone.
-        dragAlpha: Optional[float]
-            Porous module parameter.
         dragBeta: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         porosity: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         """
         waves = None
         wind_speed = np.array([0., 0., 0.])
@@ -1233,14 +1236,19 @@ class Tank2D(ShapeRANS):
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
 
-    def setGenerationZones(self, waves=None, wind_speed=(0., 0., 0.),
-                           x_n=False, x_p=False,  dragAlpha=0.5/1.005e-6,
-                           dragBeta=0., porosity=1., smoothing=0.):
+    def setGenerationZones(self,  dragAlpha,  smoothing,
+                           waves=None, wind_speed=(0., 0., 0.),
+                           x_n=False, x_p=False,
+                           dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-) to generation zones
 
         Parameters
         ----------
+        dragAlpha: float
+            Relaxation zone coefficient
+        smoothing:  
+            Smoothing distance
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
         wind_speed: Optional[array_like]
@@ -1251,12 +1259,10 @@ class Tank2D(ShapeRANS):
             If True, x+ region is converted to generation zone.
         x_n: bool
             If True, x- region is converted to generation zone.
-        dragAlpha: Optional[float]
-            Porous module parameter.
         dragBeta: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         porosity: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         """
         waves = waves
         wind_speed = np.array(wind_speed)
@@ -1849,25 +1855,25 @@ class TankWithObstacles2D(Tank2D):
 
         return [[vertical_line, interior_point], ]
 
-    def setAbsorptionZones(self, x_n=False, x_p=False, dragAlpha=0.5/1.005e-6,
+    def setAbsorptionZones(self, dragAlpha, x_n=False, x_p=False,
                            dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-) to absorption zones
 
         Parameters
         ----------
+        dragAlpha: float
+            Relaxation zone coefficient
         allSponge: bool
             If True, all sponge layers are converted to absorption zones.
         x_p: bool
             If True, x+ region is converted to absorption zone.
         x_n: bool
             If True, x- region is converted to absorption zone.
-        dragAlpha: Optional[float]
-            Porous module parameter.
         dragBeta: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         porosity: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         """
         sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
         sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
@@ -1913,14 +1919,18 @@ class TankWithObstacles2D(Tank2D):
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
 
-    def setGenerationZones(self, waves=None, wind_speed=(0., 0., 0.),
-                           x_n=False, x_p=False,  dragAlpha=0.5/1.005e-6,
-                           dragBeta=0., porosity=1., smoothing=0.):
+    def setGenerationZones(self,  dragAlpha, smoothing, waves=None,
+                           wind_speed=(0., 0., 0.), x_n=False, x_p=False, 
+                           dragBeta=0., porosity=1.):
         """
         Sets regions (x+, x-) to generation zones
 
         Parameters
         ----------
+        dragAlpha: float
+            Relaxation zone coefficient.
+        smoothing: float
+            Smoothing distance (typically 3*he)
         waves: proteus.WaveTools
             Class instance of wave generated from proteus.WaveTools.
         wind_speed: Optional[array_like]
@@ -1931,12 +1941,10 @@ class TankWithObstacles2D(Tank2D):
             If True, x+ region is converted to generation zone.
         x_n: bool
             If True, x- region is converted to generation zone.
-        dragAlpha: Optional[float]
-            Porous module parameter.
         dragBeta: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         porosity: Optional[float]
-            Porous module parameter.
+            Relaxation zone coefficient.
         """
         sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
         sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
