@@ -22,8 +22,8 @@ from proteus.mprans.SpatialTools import (Rectangle as RectangleRANS,
                                          CustomShape as CustomShapeRANS,
                                          assembleDomain as assembleDomainRANS,
                                          Tank2D,
-                                         Tank3D,
-                                         RigidBody)
+                                         Tank3D)
+from proteus.mprans.BodyDynamics import RigidBody
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
@@ -270,35 +270,6 @@ class TestShapeRANS(unittest.TestCase):
                                 fileName='point2.csv')
         self.assertRaises(ValueError,assembleDomainRANS,domain)
 
-
-    def test_rigid_body(self):
-        domain = create_domain2D()
-        rectangle = create_rectangle(domain, dim=[2., 2.], coords=[1., 1.],
-                                     folder='mprans')
-        rectangle.setRigidBody()
-        npt.assert_equal(rectangle.holes.tolist(), [[1., 1.]])
-        npt.assert_equal(rectangle.auxiliaryVariables['RigidBody'], True)
-        assembleDomainRANS(domain)
-        isRigidBody = isinstance(domain.auxiliaryVariables['twp'][0], RigidBody)
-        npt.assert_equal(isRigidBody, True)
-
-    def test_set_constraints(self):
-        domain = create_domain2D()
-        rectangle = create_rectangle(domain, dim=[2., 2.], coords=[1., 1.],
-                                     folder='mprans')
-        free_x = [1., 1.]
-        free_r = [0., 1.]
-        rectangle.setConstraints(free_x, free_r)
-        npt.assert_equal(rectangle.free_x.tolist(), free_x)
-        npt.assert_equal(rectangle.free_r.tolist(), free_r)
-
-    def test_set_mass(self):
-        domain = create_domain2D()
-        rectangle = create_rectangle(domain, dim=[2., 2.], coords=[1., 1.],
-                                     folder='mprans')
-        mass = 50.
-        rectangle.setMass(mass)
-        npt.assert_equal(rectangle.mass, mass)
 
     def test_absorption_zones(self):
         flag = 1
