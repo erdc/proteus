@@ -1299,9 +1299,7 @@ def _assembleGeometry(domain, BC_class):
                 volumes2 = [vol for i, vol in enumerate(volumes) if i not in volumes_to_remove]
                 domain.volumes += volumes2
 
-
-
-        domain.getBoundingBox()
+    domain.getBoundingBox()
 
 
 def _generateMesh(domain):
