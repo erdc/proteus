@@ -56,6 +56,83 @@ class D_base:
         self.faceList=[] #list of the boundary IDs that have corresponding BCs, might be the same as self.facets[]
         self.regList=[] # list of regions in the domain, this might be the same as self.regions[]
 
+    #Get the mesh entity to model entity classification for every entity
+    def getMesh2ModelClassification(self,mesh):
+      #There is an implicit assumption that the mesh comprises simplices  
+
+      from CGAL.CGAL_Kernel import Point_3
+      from CGAL.CGAL_Kernel import Segment_3
+      from CGAL.CGAL_Kernel import Triangle_3
+      #import time
+
+      #startTime = time.clock()
+      from scipy import spatial
+      #initialize the necessary list
+      vertexClassifyChecklist = [0]*mesh.nNodes_owned
+      edgeClassifyChecklist = [0]*mesh.nEdges_owned
+      boundaryClassifyChecklist = [0]*mesh.nElementBoundaries_global
+      self.meshVertex2Model= [0]*mesh.nNodes_owned
+      self.meshEdge2Model=[0]*mesh.nEdges_owned
+      self.meshBoundary2Model=[0]*mesh.nElementBoundaries_global
+
+      #identify model vertices with a k-d tree
+      meshVertexTree = spatial.cKDTree(mesh.nodeArray)
+      for idx,vertex in enumerate(self.vertices):
+        if(self.nd==2): #there might be a smarter way to do this
+          vertex.append(0.0) #need to make a 3D coordinate
+        closestVertex = meshVertexTree.query(vertex)
+        self.meshVertex2Model[closestVertex[1]] = (idx,0) #in cpp will make this a 1D array?
+        vertexClassifyChecklist[closestVertex[1]] = 1 #mark mesh vertex as having found a classification
+        
+      #Construct Model vertices 
+      modelPoints = []
+      for i in range(len(self.vertices)):
+        modelPoints.append(Point_3(self.vertices[i][0],self.vertices[i][1],self.vertices[i][2]))
+      #Construct Model Polygons
+
+      modelBoundaries = []
+      if(self.nd==2):
+        for i in range(len(self.segments)):
+          pointA = self.segments[i][0]
+          temp = Segment_3(modelPoints[self.segments[i][0]],modelPoints[self.segments[i][1]])
+          modelBoundaries.append(temp)
+      #else if (self.nd==3): # 
+      #  for i in range(len(self.segments)):
+      #    temp = Polyhedron_3()
+      #    Points
+      #    temp.make_triangle()
+      #    modelBoundaries.append(temp)
+
+      #find faces
+      #self.meshEdge2Model 
+      for i in range(mesh.nExteriorElementBoundaries_global):
+        idx = mesh.exteriorElementBoundariesArray[i]
+        testPoint = Point_3(mesh.elementBoundaryBarycentersArray[idx][0],mesh.elementBoundaryBarycentersArray[idx][1],mesh.elementBoundaryBarycentersArray[idx][2])
+        for idxBoundary,modelBoundary in enumerate(modelBoundaries):
+          if(modelBoundary.has_on(testPoint)):
+            self.meshBoundary2Model[idx] = (idxBoundary,self.nd-1)
+            boundaryClassifyChecklist[idx] = 1            
+            #if vertex is not classified as model vertex, the adjacent vertices of the exterior mesh boundary in 2D must be on a model boundary 
+            for vID in mesh.elementBoundaryNodesArray[idx]:
+            #in 3D, I will need to add an additional function to check if a vertex is on model edges as well
+              if (not vertexClassifyChecklist[vID]):
+                self.meshVertex2Model[vID] = (idxBoundary,self.nd-1)
+                vertexClassifyChecklist[vID] = 1
+            #print "boundary number %i and model number %i" % (idx,idxBoundary)
+
+      #interior entities
+      for i in range(mesh.nInteriorElementBoundaries_global):
+        idx = mesh.interiorElementBoundariesArray[i]
+        self.meshBoundary2Model[idx] = (mesh.elementMaterialTypes[0],self.nd)
+        for vID in mesh.elementBoundaryNodesArray[idx]:
+          if (not vertexClassifyChecklist[vID]):
+            self.meshVertex2Model[vID] = (mesh.elementMaterialTypes[0],self.nd)
+            vertexClassifyChecklist[vID]=1
+
+      #endTime = time.clock()
+      #print "Time was %f" % (endTime-startTime)
+      #import pdb; pdb.set_trace()
+
     def writeAsymptote(self, fileprefix):
         """
         Write a representation of the domain to file using the Asymptote vector graphics language.
