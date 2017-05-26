@@ -392,7 +392,6 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh,
     int proteus_material,
     int scorec_tag)
 {
-  //int dim = m->getDimension();
   apf::ModelEntity* geomEnt = m->findModelEntity(dim, scorec_tag);
   apf::MeshIterator* it = m->begin(dim);
   apf::MeshEntity* f;
