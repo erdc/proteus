@@ -41,13 +41,13 @@ class TestGMSH(unittest.TestCase):
         check_call(gmsh_cmd, shell=True)
         MeshTools.msh2simplex(domain.geofile, nd=3)
         with open('gmsh_mesh_test_3D.node', 'r') as nodefile:
-            npt.assert_equal(nodefile.readline(), '7649 3 0 1\n')
+            npt.assert_equal(nodefile.readline(), '7674 3 0 1\n')
         with open('gmsh_mesh_test_3D.edge', 'r') as edgefile:
             npt.assert_equal(edgefile.readline(), '9384 1\n')
         with open('gmsh_mesh_test_3D.face', 'r') as facefile:
             npt.assert_equal(facefile.readline(), '6256 3 1\n')
         with open('gmsh_mesh_test_3D.ele', 'r') as elefile:
-            npt.assert_equal(elefile.readline(), '37326 4 1\n')
+            npt.assert_equal(elefile.readline(), '37473 4 1\n')
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
