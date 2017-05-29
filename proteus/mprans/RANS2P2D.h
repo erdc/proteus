@@ -381,38 +381,39 @@ namespace proteus
 						     int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
 						     int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
 						     double* laplace_matrix)=0;
-    virtual void getTwoPhaseInvScaledMassOperator(double *mesh_trial_ref,
-						  double *mesh_grad_trial_ref,
-						  double *mesh_dof,
-						  int* mesh_l2g,
-						  double* dV_ref,
-						  double* p_trial_ref,
-						  double* p_test_ref,
-						  double* vel_trial_ref,
-						  double* vel_test_ref,
-						  double* elementDiameter,
-						  double* nodeDiametersArray,
-						  int nElements_global,
-						  double useMetrics,
-						  double epsFact_rho,
-						  double epsFact_mu,
-						  double rho_0,
-						  double nu_0,
-						  double rho_1,
-						  double nu_1,
-						  int* p_l2g,
-						  int* vel_l2g,
-						  double* p_dof, double* u_dof, double* v_dof,
-						  const double useVF,
-						  double* vf,
-						  double* phi,
-						  int* csrRowIndeces_p_p,
-						  int* csrColumnOffsets_p_p,
-						  int* csrRowIndeces_u_u,
-						  int* csrColumnOffsets_u_u,
-						  int* csrRowIndeces_v_v,
-						  int* csrColumnOffsets_v_v,
-						  double* mass_matrix)=0;
+    virtual void getTwoPhaseScaledMassOperator(int scale_type,
+					       double *mesh_trial_ref,
+					       double *mesh_grad_trial_ref,
+					       double *mesh_dof,
+					       int* mesh_l2g,
+					       double* dV_ref,
+					       double* p_trial_ref,
+					       double* p_test_ref,
+					       double* vel_trial_ref,
+					       double* vel_test_ref,
+					       double* elementDiameter,
+					       double* nodeDiametersArray,
+					       int nElements_global,
+					       double useMetrics,
+					       double epsFact_rho,
+					       double epsFact_mu,
+					       double rho_0,
+					       double nu_0,
+					       double rho_1,
+					       double nu_1,
+					       int* p_l2g,
+					       int* vel_l2g,
+					       double* p_dof, double* u_dof, double* v_dof,
+					       const double useVF,
+					       double* vf,
+					       double* phi,
+					       int* csrRowIndeces_p_p,
+					       int* csrColumnOffsets_p_p,
+					       int* csrRowIndeces_u_u,
+					       int* csrColumnOffsets_u_u,
+					       int* csrRowIndeces_v_v,
+					       int* csrColumnOffsets_v_v,
+					       double* mass_matrix)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
     					  int* exteriorElementBoundariesArray,
     					  int nInteriorElementBoundaries_global,
@@ -958,16 +959,58 @@ namespace proteus
     mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu;
     // Up to here.
 
-    mom_p_acc = p / nu;
-    dmom_p_acc_p = 1. / nu;
+    mom_p_acc = p / mu;
+    dmom_p_acc_p = 1. / mu;
 
-    mom_u_acc = u / nu;
-    dmom_u_acc_u = 1. / nu;
+    mom_u_acc = u / mu;
+    dmom_u_acc_u = 1. / mu;
 
-    mom_v_acc = v / nu;
-    dmom_v_acc_v = 1. / nu;
+    mom_v_acc = v / mu;
+    dmom_v_acc_v = 1. / mu;
   }
 
+    inline
+      void evaluateTPDensityMassCoefficients(const double eps_rho,
+					     const double eps_mu,
+					     const double rho_0,
+					     double nu_0,
+					     const double rho_1,
+					     double nu_1,
+					     const double useVF,
+					     const double& vf,
+					     const double& phi,
+					     const double& p,
+					     const double& u,
+					     const double& v,
+					     double& mom_p_acc,
+					     double& dmom_p_acc_p,
+					     double& mom_u_acc,
+					     double& dmom_u_acc_u,
+					     double& mom_v_acc,
+					     double& dmom_v_acc_v)
+  {
+
+    // This should be split off into a seperate function
+    double H_rho, H_mu, rho, nu, mu;
+    H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+    H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
+
+    rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
+    nu = nu_0*(1.0-H_mu) + nu_1*H_mu;
+    mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu;
+    // Up to here.
+
+    mom_p_acc = p * rho;
+    dmom_p_acc_p = rho;
+
+    mom_u_acc = u * rho;
+    dmom_u_acc_u = rho;
+
+    mom_v_acc = v * rho;
+    dmom_v_acc_v = rho;
+  }
+
+    
     inline
       void evaluateTPInvDensityLaplaceCoefficients(const double eps_rho,
 						   const double eps_mu,
@@ -5272,36 +5315,37 @@ namespace proteus
 	} // eN
     }
 
-    void getTwoPhaseInvScaledMassOperator(double *mesh_trial_ref,
-					  double *mesh_grad_trial_ref,
-					  double *mesh_dof,
-					  int* mesh_l2g,
-					  double* dV_ref,
-					  double* p_trial_ref,
-					  double* p_test_ref,
-					  double* vel_trial_ref,
-					  double* vel_test_ref,
-					  double* elementDiameter,
-					  double* nodeDiametersArray,
-					  int nElements_global,
-					  double useMetrics,
-					  double epsFact_rho,
-					  double epsFact_mu,
-					  double rho_0,
-					  double nu_0,
-					  double rho_1,
-					  double nu_1,
-					  int* p_l2g,
-					  int* vel_l2g,
-					  double* p_dof, double* u_dof, double* v_dof,
-			       		  const double useVF,
-					  double* vf,
-					  double* phi,
-					  int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
-					  int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
-					  int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
-					  double* mass_matrix)
-    {
+    void getTwoPhaseScaledMassOperator(int scale_type,
+				       double *mesh_trial_ref,
+				       double *mesh_grad_trial_ref,
+				       double *mesh_dof,
+				       int* mesh_l2g,
+				       double* dV_ref,
+				       double* p_trial_ref,
+				       double* p_test_ref,
+				       double* vel_trial_ref,
+				       double* vel_test_ref,
+				       double* elementDiameter,
+				       double* nodeDiametersArray,
+				       int nElements_global,
+				       double useMetrics,
+				       double epsFact_rho,
+				       double epsFact_mu,
+				       double rho_0,
+				       double nu_0,
+				       double rho_1,
+				       double nu_1,
+				       int* p_l2g,
+				       int* vel_l2g,
+				       double* p_dof, double* u_dof, double* v_dof,
+				       const double useVF,
+				       double* vf,
+				       double* phi,
+				       int* csrRowIndeces_p_p, int* csrColumnOffsets_p_p,
+				       int* csrRowIndeces_u_u, int* csrColumnOffsets_u_u,
+				       int* csrRowIndeces_v_v, int* csrColumnOffsets_v_v,
+				       double* mass_matrix)
+  {
     // Step 1.1 - Initialize local matrix
       
     for (int eN=0 ; eN < nElements_global; ++eN){
@@ -5370,24 +5414,45 @@ namespace proteus
 	  }
 
 	// Step 1.2.2 Evaluate coefficients
-	evaluateTPInvViscosityMassCoefficients(eps_rho,
-					       eps_mu,
-					       rho_0,
-					       nu_0,
-					       rho_1,
-					       nu_1,
-					       useVF,
-					       vf[eN_k],
-					       phi[eN_k],
-					       p,
-					       u,
-					       v,
-					       mom_p_acc,
-					       dmom_p_acc_p,
-					       mom_u_acc,
-					       dmom_u_acc_u,
-					       mom_v_acc,
-					       dmom_v_acc_v) ;
+	  if (scale_type==0){
+	    evaluateTPInvViscosityMassCoefficients(eps_rho,
+						   eps_mu,
+						   rho_0,
+						   nu_0,
+						   rho_1,
+						   nu_1,
+						   useVF,
+						   vf[eN_k],
+						   phi[eN_k],
+						   p,
+						   u,
+						   v,
+						   mom_p_acc,
+						   dmom_p_acc_p,
+						   mom_u_acc,
+						   dmom_u_acc_u,
+						   mom_v_acc,
+						   dmom_v_acc_v) ; }
+	  else if(scale_type==1){
+	    evaluateTPDensityMassCoefficients(eps_rho,
+					      eps_mu,
+					      rho_0,
+					      nu_0,
+					      rho_1,
+					      nu_1,
+					      useVF,
+					      vf[eN_k],
+					      phi[eN_k],
+					      p,
+					      u,
+					      v,
+					      mom_p_acc,
+					      dmom_p_acc_p,
+					      mom_u_acc,
+					      dmom_u_acc_u,
+					      mom_v_acc,
+					      dmom_v_acc_v) ;
+	  }
 					       
 	// Step 1.2.3 Loop over test and weighted trial functions
 	// to evaluate local inner product contrubtions

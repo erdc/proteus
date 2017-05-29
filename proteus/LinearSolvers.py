@@ -1274,7 +1274,7 @@ class SchurOperatorConstructor:
         try :
             self.opBuilder.attachTwoPhaseMassOperator_rho(phase_function = self._phase_function)
         except:
-            self.opBuilder.attachTwoPhaseScaledMassOperator()
+            self.opBuilder.attachTwoPhaseMassOperator_rho()
         return superlu_2_petsc4py(self.opBuilder.TPMassOperator)
 
     def _TPMassMatrix_mu(self):
@@ -1830,12 +1830,13 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur) :
         self.TP_PCDInv_shell = p4pyPETSc.Mat().create()
         self.TP_PCDInv_shell.setSizes(L_sizes)
         self.TP_PCDInv_shell.setType('python')
+        dt = self.L.pde.timeIntegration.t - self.L.pde.timeIntegration.tLast
         self.matcontext_inv = TwoPhase_PCDInv_shell(self.Qp_invScaledVis,
                                                     self.Qp_rho,
                                                     self.Ap_invScaledRho,
                                                     self.Np_rho,
                                                     True,
-                                                    self.L.pde.timeIntegration.t)
+                                                    dt)
         self.TP_PCDInv_shell.setPythonContext(self.matcontext_inv)
         self.TP_PCDInv_shell.setUp()
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
@@ -3028,14 +3029,14 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                      self.OLT.coefficients.useMetrics,
                                                      self.OLT.coefficients.epsFact_density,
                                                      self.OLT.coefficients.epsFact,
-                                                     1.,
-                                                     1.,
-                                                     1.,
-                                                     1.,
-                                                     # self.OLT.coefficients.rho_0,
-                                                     # self.OLT.coefficients.nu_0,
-                                                     # self.OLT.coefficients.rho_1,
-                                                     # self.OLT.coefficients.nu_1,
+                                                     # 1.,
+                                                     # 1.,
+                                                     # 1.,
+                                                     # 1.,
+                                                     self.OLT.coefficients.rho_0,
+                                                     self.OLT.coefficients.nu_0,
+                                                     self.OLT.coefficients.rho_1,
+                                                     self.OLT.coefficients.nu_1,
                                                      self.OLT.u[1].femSpace.dofMap.l2g,
                                                      self.OLT.u[1].dof,
                                                      self.OLT.u[2].dof,
@@ -3087,81 +3088,79 @@ class OperatorConstructor_rans2p(OperatorConstructor):
                                                             self.OLT.csrRowIndeces[(2,2)],self.OLT.csrColumnOffsets[(2,2)],
                                                             self.TPInvScaledLaplaceOperator)
 
-    def attachTwoPhaseScaledMassOperator(self):
+    def attachTwoPhaseMassOperator_rho(self):
         """ Create a discrete TwoPhase Mass operator matrix. """
         self._create_mass_matrix()
-        self.OLT.rans2p.getTwoPhaseInvScaledMassOperator(self.OLT.u[0].femSpace.elementMaps.psi,
-                                                         self.OLT.u[0].femSpace.elementMaps.grad_psi,
-                                                         self.OLT.mesh.nodeArray,
-                                                         self.OLT.mesh.elementNodesArray,
-                                                         self.OLT.elementQuadratureWeights[('u',0)],
-                                                         self.OLT.u[0].femSpace.psi,
-                                                         self.OLT.u[0].femSpace.psi,
-                                                         self.OLT.u[1].femSpace.psi,
-                                                         self.OLT.u[1].femSpace.psi,
-                                                         self.OLT.elementDiameter,
-                                                         self.OLT.mesh.nodeDiametersArray,
-                                                         self.OLT.mesh.nElements_global,
-                                                         self.OLT.coefficients.useMetrics,
-                                                         self.OLT.coefficients.epsFact_density,
-                                                         self.OLT.coefficients.epsFact,
-                                                         1.,
-                                                         1.,
-                                                         1.,
-                                                         1.,
-                                                         # self.OLT.coefficients.rho_0,
-                                                         # self.OLT.coefficients.nu_0,
-                                                         # self.OLT.coefficients.rho_1,
-                                                         # self.OLT.coefficients.nu_1,
-                                                         self.OLT.u[0].femSpace.dofMap.l2g,
-                                                         self.OLT.u[1].femSpace.dofMap.l2g,
-                                                         self.OLT.u[0].dof,
-                                                         self.OLT.u[1].dof,
-                                                         self.OLT.u[2].dof,
-                                                         self.OLT.coefficients.useVF,
-                                                         self.OLT.coefficients.q_vf,
-                                                         self.OLT.coefficients.q_phi,
-                                                         self.OLT.csrRowIndeces[(0,0)],self.OLT.csrColumnOffsets[(0,0)],
-                                                         self.OLT.csrRowIndeces[(1,1)],self.OLT.csrColumnOffsets[(1,1)],
-                                                         self.OLT.csrRowIndeces[(2,2)],self.OLT.csrColumnOffsets[(2,2)],
-                                                         self.TPMassOperator)    
+        self.OLT.rans2p.getTwoPhaseScaledMassOperator(1,
+                                                     self.OLT.u[0].femSpace.elementMaps.psi,
+                                                     self.OLT.u[0].femSpace.elementMaps.grad_psi,
+                                                     self.OLT.mesh.nodeArray,
+                                                     self.OLT.mesh.elementNodesArray,
+                                                     self.OLT.elementQuadratureWeights[('u',0)],
+                                                     self.OLT.u[0].femSpace.psi,
+                                                     self.OLT.u[0].femSpace.psi,
+                                                     self.OLT.u[1].femSpace.psi,
+                                                     self.OLT.u[1].femSpace.psi,
+                                                     self.OLT.elementDiameter,
+                                                     self.OLT.mesh.nodeDiametersArray,
+                                                     self.OLT.mesh.nElements_global,
+                                                     self.OLT.coefficients.useMetrics,
+                                                     self.OLT.coefficients.epsFact_density,
+                                                     self.OLT.coefficients.epsFact,
+                                                     self.OLT.coefficients.rho_0,
+                                                     self.OLT.coefficients.nu_0,
+                                                     self.OLT.coefficients.rho_1,
+                                                     self.OLT.coefficients.nu_1,
+                                                     self.OLT.u[0].femSpace.dofMap.l2g,
+                                                     self.OLT.u[1].femSpace.dofMap.l2g,
+                                                     self.OLT.u[0].dof,
+                                                     self.OLT.u[1].dof,
+                                                     self.OLT.u[2].dof,
+                                                     self.OLT.coefficients.useVF,
+                                                     self.OLT.coefficients.q_vf,
+                                                     self.OLT.coefficients.q_phi,
+                                                     self.OLT.csrRowIndeces[(0,0)],self.OLT.csrColumnOffsets[(0,0)],
+                                                     self.OLT.csrRowIndeces[(1,1)],self.OLT.csrColumnOffsets[(1,1)],
+                                                     self.OLT.csrRowIndeces[(2,2)],self.OLT.csrColumnOffsets[(2,2)],
+                                                     self.TPMassOperator)    
         
         
 
     def attachTwoPhaseInvScaledMassOperator(self):
         """Create a discrete TwoPhase Mass operator matrix. """
         self._create_inv_scaled_mass_matrix()
-        self.OLT.rans2p.getTwoPhaseInvScaledMassOperator(self.OLT.u[0].femSpace.elementMaps.psi,
-                                                         self.OLT.u[0].femSpace.elementMaps.grad_psi,
-                                                         self.OLT.mesh.nodeArray,
-                                                         self.OLT.mesh.elementNodesArray,
-                                                         self.OLT.elementQuadratureWeights[('u',0)],
-                                                         self.OLT.u[0].femSpace.psi,
-                                                         self.OLT.u[0].femSpace.psi,
-                                                         self.OLT.u[1].femSpace.psi,
-                                                         self.OLT.u[1].femSpace.psi,
-                                                         self.OLT.elementDiameter,
-                                                         self.OLT.mesh.nodeDiametersArray,
-                                                         self.OLT.mesh.nElements_global,
-                                                         self.OLT.coefficients.useMetrics,
-                                                         self.OLT.coefficients.epsFact_density,
-                                                         self.OLT.coefficients.epsFact,
-                                                         self.OLT.coefficients.rho_0,
-                                                         self.OLT.coefficients.nu_0,
-                                                         self.OLT.coefficients.rho_1,
-                                                         self.OLT.coefficients.nu_1,
-                                                         self.OLT.u[0].femSpace.dofMap.l2g,
-                                                         self.OLT.u[1].femSpace.dofMap.l2g,
-                                                         self.OLT.u[0].dof,
-                                                         self.OLT.u[1].dof,
-                                                         self.OLT.u[2].dof,
-                                                         self.OLT.coefficients.useVF,
-                                                         self.OLT.coefficients.q_vf,
-                                                         self.OLT.coefficients.q_phi,
-                                                         self.OLT.csrRowIndeces[(0,0)],self.OLT.csrColumnOffsets[(0,0)],
-                                                         self.OLT.csrRowIndeces[(1,1)],self.OLT.csrColumnOffsets[(1,1)],
-                                                         self.OLT.csrRowIndeces[(2,2)],self.OLT.csrColumnOffsets[(2,2)],
-                                                         self.TPInvScaledMassOperator)
+        self.OLT.rans2p.getTwoPhaseScaledMassOperator(0,
+                                                     self.OLT.u[0].femSpace.elementMaps.psi,
+                                                     self.OLT.u[0].femSpace.elementMaps.grad_psi,
+                                                     self.OLT.mesh.nodeArray,
+                                                     self.OLT.mesh.elementNodesArray,
+                                                     self.OLT.elementQuadratureWeights[('u',0)],
+                                                     self.OLT.u[0].femSpace.psi,
+                                                     self.OLT.u[0].femSpace.psi,
+                                                     self.OLT.u[1].femSpace.psi,
+                                                     self.OLT.u[1].femSpace.psi,
+                                                     self.OLT.elementDiameter,
+                                                     self.OLT.mesh.nodeDiametersArray,
+                                                     self.OLT.mesh.nElements_global,
+                                                     self.OLT.coefficients.useMetrics,
+                                                     self.OLT.coefficients.epsFact_density,
+                                                     self.OLT.coefficients.epsFact,
+                                                     self.OLT.coefficients.rho_0,
+                                                     self.OLT.coefficients.nu_0,
+                                                     self.OLT.coefficients.rho_1,
+                                                     self.OLT.coefficients.nu_1,
+                                                     self.OLT.u[0].femSpace.dofMap.l2g,
+                                                     self.OLT.u[1].femSpace.dofMap.l2g,
+                                                     self.OLT.u[0].dof,
+                                                     self.OLT.u[1].dof,
+                                                     self.OLT.u[2].dof,
+                                                     self.OLT.coefficients.useVF,
+                                                     self.OLT.coefficients.q_vf,
+                                                     self.OLT.coefficients.q_phi,
+                                                     self.OLT.csrRowIndeces[(0,0)],self.OLT.csrColumnOffsets[(0,0)],
+                                                     self.OLT.csrRowIndeces[(1,1)],self.OLT.csrColumnOffsets[(1,1)],
+                                                     self.OLT.csrRowIndeces[(2,2)],self.OLT.csrColumnOffsets[(2,2)],
+                                                     self.TPInvScaledMassOperator)
         
 
 class OperatorConstructor_oneLevel(OperatorConstructor):

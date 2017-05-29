@@ -107,6 +107,7 @@ class NumericResults:
         NA_timesteps  = re.compile("Num Time Steps(.*)$")
         NA_precond    = re.compile("Preconditioner(.*)$")
         NA_pattern    = re.compile("NumericalAnalytics(.*)$")
+        NA_model      = re.compile("Model(.*)$")
         NA_time       = re.compile("Time Step(.*)$")
         NA_level      = re.compile("Newton iteration for level(.*)$")
         NA_newton     = re.compile("NewtonNorm: (.*)$")
@@ -136,29 +137,38 @@ class NumericResults:
             for match in re.finditer(NA_pattern,line):
                 new_line = NA_pattern.search(line).groups()[0]
 
+                for model_match in re.finditer(NA_model,new_line):
+                    model = str(NA_model.search(new_line).groups()[0])
+                    try:
+                        tmp = data_dictionary[model]
+                    except KeyError:
+                        data_dictionary[model] = {}
+                
                 for time_match in re.finditer(NA_time,new_line):
                     time_match = float(NA_time.search(new_line).groups()[0])
-                    data_dictionary[time_match] = {}
+                    data_dictionary[model][time_match] = [[],{}]
 
                 for level_match in re.finditer(NA_level,new_line):
                     level_match = int(NA_level.search(new_line).groups()[0])
-                    data_dictionary[time_match][level_match] = [[],{}]
+                    data_dictionary[model][time_match][0].append(level_match)
+                    level_match_key = len(data_dictionary[model][time_match][0])-1
+                    data_dictionary[model][time_match][1][level_match_key] = [[],{}]
 
                 for newton_match in re.finditer(NA_newton,new_line):
                     newton_match = float(NA_newton.search(new_line).groups()[0])
-                    data_dictionary[time_match][level_match][0].append(newton_match)
-                    newton_it_key = len(data_dictionary[time_match][level_match][0])-1
-                    data_dictionary[time_match][level_match][1][newton_it_key] = [[],{}]
+                    data_dictionary[model][time_match][1][level_match_key][0].append(newton_match)
+                    newton_it_key = len(data_dictionary[model][time_match][1][level_match_key][0])-1
+                    data_dictionary[model][time_match][1][level_match_key][1][newton_it_key] = [[],{}]
                 
                 for outerksp_match in re.finditer(NA_outersolve,new_line):
                     outerksp_match = float(NA_outersolve.search(new_line).groups()[0])
-                    data_dictionary[time_match][level_match][1][newton_it_key][0].append(outerksp_match)
-                    outerksp_match_key = len(data_dictionary[time_match][level_match][1][newton_it_key][0])-1
-                    data_dictionary[time_match][level_match][1][newton_it_key][1][outerksp_match_key] = []
+                    data_dictionary[model][time_match][1][level_match][1][newton_it_key][0].append(outerksp_match)
+                    outerksp_match_key = len(data_dictionary[model][time_match][1][level_match][1][newton_it_key][0])-1
+                    data_dictionary[model][time_match][1][level_match][1][newton_it_key][1][outerksp_match_key] = []
                 
                 for innerksp_match in re.finditer(NA_innersolve,new_line):
                     innerksp_match = float(NA_innersolve.search(new_line).groups()[0])
-                    data_dictionary[time_match][level_match][1][newton_it_key][1][outerksp_match_key].append(innerksp_match)
+                    data_dictionary[model][time_match][1][level_match][1][newton_it_key][1][outerksp_match_key].append(innerksp_match)
 
         return data_dictionary, data_dictionary_header
 
@@ -254,8 +264,11 @@ class NumericResults:
         for data_set in time_level:
             if data_set[0] in self.data_dictionary.keys():
                 if data_set[1] in self.data_dictionary[data_set[0]].keys():
-                    plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][0])
-                    legend.append((data_set[0],data_set[1]))
+                    if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
+                        plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0])
+                        legend.append((data_set[0],data_set[1]))
+                    else:
+                        print 'The third key ' + `data_set[1]` + ' is note valid.'
                 else:
                     print 'The second key ' + `data_set[1]` + ' is not valid.'
             else:
@@ -315,8 +328,11 @@ class NumericResults:
             if data_set[0] in self.data_dictionary.keys():
                 if data_set[1] in self.data_dictionary[data_set[0]].keys():
                     if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
-                        plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0])
-                        legend.append((data_set[0],data_set[1],data_set[2]))
+                        if data_set[3] in self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys():
+                            plot_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]][0])
+                            legend.append((data_set[0],data_set[1],data_set[2]))
+                        else:
+                            print 'The fourth key ' + `data_set[3]` + ' is not valid.'
                     else:
                         print 'The third key ' + `data_set[1]` + ' is not valid.'
                 else:

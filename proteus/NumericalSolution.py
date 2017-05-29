@@ -813,7 +813,6 @@ class NS_base:  # (HasTraits):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             logEvent("==============================================================",level=0)
-            logEvent("NumericalAnalytics Time Step " + `self.tn`,level=0)
             if self.opts.save_dof:
                 for m in self.modelList:
                     for lm in m.levelModelList:
@@ -831,7 +830,8 @@ class NS_base:  # (HasTraits):
                     logEvent("Split operator iteration %i" % (self.systemStepController.its,),level=3)
 
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
-
+                        logEvent("NumericalAnalytics Model %s " % (model.name), level=0)                        
+                        logEvent("NumericalAnalytics Time Step " + `self.t_stepSequence`, level=0)                        
                         logEvent("Model: %s" % (model.name),level=1)
                         logEvent("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
 
