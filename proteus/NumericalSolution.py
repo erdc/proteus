@@ -839,7 +839,6 @@ class NS_base:  # (HasTraits):
             p0.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=0.05, numIter=2,sfConfig="ERM",logType="on")
             p0.domain.hasModel = 0
             if p0.domain.vertices:
-              import pdb; pdb.set_trace()
               p0.domain.hasModel = 1 #move to domain definition
               p0.domain.getMesh2ModelVertices(self.modelList[0].levelModelList[0].mesh)
               numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
