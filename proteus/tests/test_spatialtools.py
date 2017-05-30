@@ -22,8 +22,8 @@ from proteus.mprans.SpatialTools import (Rectangle as RectangleRANS,
                                          CustomShape as CustomShapeRANS,
                                          assembleDomain as assembleDomainRANS,
                                          Tank2D,
-                                         Tank3D,
-                                         RigidBody)
+                                         Tank3D)
+from proteus.mprans.BodyDynamics import RigidBody
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
@@ -271,35 +271,6 @@ class TestShapeRANS(unittest.TestCase):
         self.assertRaises(ValueError,assembleDomainRANS,domain)
 
 
-    def test_rigid_body(self):
-        domain = create_domain2D()
-        rectangle = create_rectangle(domain, dim=[2., 2.], coords=[1., 1.],
-                                     folder='mprans')
-        rectangle.setRigidBody()
-        npt.assert_equal(rectangle.holes.tolist(), [[1., 1.]])
-        npt.assert_equal(rectangle.auxiliaryVariables['RigidBody'], True)
-        assembleDomainRANS(domain)
-        isRigidBody = isinstance(domain.auxiliaryVariables['twp'][0], RigidBody)
-        npt.assert_equal(isRigidBody, True)
-
-    def test_set_constraints(self):
-        domain = create_domain2D()
-        rectangle = create_rectangle(domain, dim=[2., 2.], coords=[1., 1.],
-                                     folder='mprans')
-        free_x = [1., 1.]
-        free_r = [0., 1.]
-        rectangle.setConstraints(free_x, free_r)
-        npt.assert_equal(rectangle.free_x.tolist(), free_x)
-        npt.assert_equal(rectangle.free_r.tolist(), free_r)
-
-    def test_set_mass(self):
-        domain = create_domain2D()
-        rectangle = create_rectangle(domain, dim=[2., 2.], coords=[1., 1.],
-                                     folder='mprans')
-        mass = 50.
-        rectangle.setMass(mass)
-        npt.assert_equal(rectangle.mass, mass)
-
     def test_absorption_zones(self):
         flag = 1
         epsFact_solid = 0.5
@@ -333,7 +304,7 @@ class TestShapeRANS(unittest.TestCase):
         tank.setSponge(x_n=1.5, x_p=2.)
         npt.assert_equal(tank.spongeLayers['x-'], 1.5)
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
-        tank.setAbsorptionZones(x_n=True, x_p=True)
+        tank.setAbsorptionZones(dragAlpha ,x_n=True, x_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         npt.assert_equal(leftzone.zone_type, 'absorption')
@@ -362,7 +333,7 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
         npt.assert_equal(tank.spongeLayers['y-'], 3)
         npt.assert_equal(tank.spongeLayers['y+'], 0.2)
-        tank.setAbsorptionZones(x_n=True, x_p=True, y_n=True, y_p=True)
+        tank.setAbsorptionZones(dragAlpha, x_n=True, x_p=True, y_n=True, y_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         frontzone = tank.zones[tank.regionFlags[tank.regionIndice['y-']]]
@@ -449,7 +420,7 @@ class TestShapeRANS(unittest.TestCase):
         tank.setSponge(x_n=1.5, x_p=2.)
         npt.assert_equal(tank.spongeLayers['x-'], 1.5)
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
-        tank.setGenerationZones(waves=waves, x_n=True, x_p=True)
+        tank.setGenerationZones(dragAlpha, smoothing = 0.,waves=waves, x_n=True, x_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         npt.assert_equal(leftzone.zone_type, 'generation')
@@ -478,7 +449,7 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
         npt.assert_equal(tank.spongeLayers['y-'], 3)
         npt.assert_equal(tank.spongeLayers['y+'], 0.2)
-        tank.setGenerationZones(waves=waves, x_n=True, x_p=True, y_n=True, y_p=True)
+        tank.setGenerationZones(dragAlpha, smoothing=0., waves=waves, x_n=True, x_p=True, y_n=True, y_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         frontzone = tank.zones[tank.regionFlags[tank.regionIndice['y-']]]

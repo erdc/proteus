@@ -105,8 +105,9 @@ RUN git clone https://github.com/erdc-cm/proteus && \
     make hashdist stack stack/default.yaml && \
     ./hashdist/bin/hit init-home && \
     ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source" && \
-    ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_debian_jessie --objects="build" && \
+    ./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_jovyan --objects="build" && \
     cd stack && \
+    git checkout stable/proteus && \
     ../hashdist/bin/hit build default.yaml -v
 
 ENV CC mpicc
@@ -123,13 +124,33 @@ RUN cd proteus && make jupyter
 
 USER root
 
-RUN pip3 install pyzmq --install-option="--zmq=/home/$NB_USER/proteus/linux2"
-RUN pip3 install notebook jupyterhub jupyterlab terminado ipyparallel ipywidgets ipyleaflet jupyter_dashboards pythreejs cesiumpy
+RUN pip3 install pyzmq==16.0.2 --install-option="--zmq=/home/$NB_USER/proteus/linux2"
+RUN pip3 install six==1.9.0
+RUN pip3 install packaging==16.8
+RUN pip3 install appdirs
+RUN pip3 install widgetsnbextension==2.0.0
+RUN pip3 install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  notebook==4.4.0 widgetsnbextension==2.0.0 ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 hide_code==0.4.0
+RUN REPO=http://cdn-fastly.deb.debian.org \
+    && echo "deb $REPO/debian jessie main\ndeb $REPO/debian-security jessie/updates main" > /etc/apt/sources.list \
+    && apt-get update && apt-get -yq dist-upgrade \
+    && apt-get install -yq --fix-missing \
+    nodejs.legacy \
+    npm \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+RUN pip3 install git+https://github.com/jupyter/jupyterhub#egg=jupytherhub
 RUN /usr/local/bin/jupyter serverextension enable --py jupyterlab --sys-prefix \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix widgetsnbextension \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix pythreejs \
     && /usr/local/bin/jupyter nbextension enable --py --sys-prefix ipyleaflet \
-    && /usr/local/bin/jupyter dashboards quick-setup --sys-prefix
+    && /usr/local/bin/jupyter nbextension install --py --sys-prefix rise \
+    && /usr/local/bin/jupyter nbextension enable --py --sys-prefix rise \
+    && /usr/local/bin/jupyter nbextension install --py --sys-prefix hide_code \
+    && /usr/local/bin/jupyter nbextension enable --py --sys-prefix hide_code \
+    && /usr/local/bin/jupyter dashboards quick-setup --sys-prefix \
+    && /usr/local/bin/jupyter nbextension install --sys-prefix --py ipyparallel \
+    && /usr/local/bin/jupyter nbextension enable --sys-prefix --py ipyparallel \
+    && /usr/local/bin/jupyter serverextension enable --sys-prefix --py ipyparallel
 
 EXPOSE 8888
 WORKDIR /home/$NB_USER
@@ -154,19 +175,9 @@ USER $NB_USER
 
 RUN cd ~/.jupyter && \
     ipython profile create mpi --parallel && \
-    ipcluster nbextension enable --user && \
     echo '\nc.NotebookApp.server_extensions.append("ipyparallel.nbextension")' >> /home/$NB_USER/.jupyter/jupyter_notebook_config.py && \
     echo "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\nc.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" \
-          >> /home/$NB_USER/.ipython/profile_mpi/ipcluster_config.py \
-    && jupyter serverextension enable --py jupyterlab --user \
-    && jupyter nbextension enable --py --user widgetsnbextension\
-    && jupyter nbextension install --py --user mayavi \
-    && jupyter nbextension enable --py --user bqplot \
-    && jupyter nbextension enable --py --user pythreejs \
-    && jupyter nbextension enable --py --user ipyleaflet \
-    && jupyter nbextension install --py --user rise \
-    && jupyter nbextension enable --py --user rise \
-    && jupyter dashboards quick-setup --user
+          >> /home/$NB_USER/.ipython/profile_mpi/ipcluster_config.py
 
 # Import matplotlib the first time to build the font cache.
 ENV XDG_CACHE_HOME /home/$NB_USER/.cache/
