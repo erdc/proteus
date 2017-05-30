@@ -840,9 +840,8 @@ class NS_base:  # (HasTraits):
             p0.domain.hasModel = 0
             if p0.domain.vertices:
               p0.domain.hasModel = 1 #move to domain definition
-              p0.domain.getMesh2ModelVertices(self.modelList[0].levelModelList[0].mesh)
+              p0.domain.getMesh2ModelClassification(self.modelList[0].levelModelList[0].mesh)
               numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
-              vertexList = numpy.asarray(p0.domain.vertices).astype("d")
               segmentList = numpy.asarray(p0.domain.segments).astype("i")
               #force initialize the unused arrays for proper cythonization
               p0.domain.facets = [(0,0)]
@@ -850,14 +849,13 @@ class NS_base:  # (HasTraits):
               #
               facetList = numpy.asarray(p0.domain.facets).astype("i")
               mesh2Model_v = numpy.asarray(p0.domain.meshVertex2Model).astype("i")
-              checkList_v = numpy.asarray(p0.domain.vertexClassifyChecklist).astype("i")
-              p0.domain.PUMIMesh.transferModelInfo(numModelEntities,vertexList,segmentList,facetList,mesh2Model_v,checkList_v)
-              p0.domain.PUMIMesh.getMesh2ModelClassification(self.modelList[0].levelModelList[0].mesh.cmesh)
-              #mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
-              #mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
-              #p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,facetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
+              mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
+              mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
+              #import pdb;pdb.set_trace()
+              p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,facetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             
             p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,p0.domain.hasModel)
+
         if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
             self.so.useOneMesh and 

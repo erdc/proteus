@@ -23,7 +23,6 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         bint isReconstructed
         int loadModelAndMesh(char *, char*)
         int getSimmetrixBC()
-        int getMesh2ModelClassification(Mesh&)
         int reconstructFromProteus(Mesh&,int)
         int constructFromSerialPUMIMesh(Mesh&)
         int constructFromParallelPUMIMesh(Mesh&, Mesh&)
@@ -32,7 +31,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int transferFieldToPUMI(char*, double*, int, int)
         int transferFieldToProteus(char*, double*, int, int)
         int transferPropertiesToPUMI(double*, double*,double*)
-        int transferModelInfo(int*,double*,int*,int*,int*,int*)
+        int transferModelInfo(int*,int*,int*,int*,int*,int*)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
         int adaptPUMIMesh()
@@ -64,9 +63,6 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.isReconstructed
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
-    def getMesh2ModelClassification(self,cmesh):
-        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        return self.thisptr.getMesh2ModelClassification(cmesh_ptr.mesh)
     def reconstructFromProteus(self,cmesh,hasModel=0):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.reconstructFromProteus(cmesh_ptr.mesh,hasModel)
@@ -95,20 +91,19 @@ cdef class MeshAdaptPUMI:
         g = np.ascontiguousarray(g)
         return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0])
     def transferModelInfo(self, np.ndarray[int,ndim=1,mode="c"] numModelEntities,
-                                np.ndarray[double,ndim=2,mode="c"] vertices,
                                 np.ndarray[int,ndim=2,mode="c"] edges,
                                 np.ndarray[int,ndim=2,mode="c"] faces,
-                                np.ndarray[int,ndim=2,mode="c"] mesh2Model_v,
-                                np.ndarray[int,ndim=1,mode="c"] checklist_v
+                                np.ndarray[int,ndim=2,mode="c"] meshVertex2Model,
+                                np.ndarray[int,ndim=2,mode="c"] meshEdge2Model,
+                                np.ndarray[int,ndim=2,mode="c"] meshBoundary2Model
     ):
         numModelEntities = np.ascontiguousarray(numModelEntities)
-        vertices = np.ascontiguousarray(vertices)
         edges = np.ascontiguousarray(edges)
         faces = np.ascontiguousarray(faces)
-        mesh2Model_v = np.ascontiguousarray(mesh2Model_v)
-        checklist_v = np.ascontiguousarray(checklist_v)
-        return self.thisptr.transferModelInfo(<int*> numModelEntities.data,<double*> vertices.data, <int*> edges.data,<int *> faces.data,<int*> mesh2Model_v.data,
-            <int*> checklist_v.data)
+        meshVertex2Model = np.ascontiguousarray(meshVertex2Model)
+        meshEdge2Model = np.ascontiguousarray(meshEdge2Model)
+        meshBoundary2Model = np.ascontiguousarray(meshBoundary2Model)
+        return self.thisptr.transferModelInfo(<int*> numModelEntities.data,<int*> edges.data,<int *> faces.data,<int*> meshVertex2Model.data,<int*> meshEdge2Model.data,<int*> meshBoundary2Model.data)
     #def transferBCtagsToProteus(self, np.ndarray[int,ndim=2,mode="c"] tagArray, int idx, np.ndarray[int,ndim=1,mode="c"] ebN, np.ndarray[int, ndim=2, mode="c"] eN_global, np.ndarray[np.double_t,ndim=2,mode="c"] fluxBC):
     #    tagArray = np.ascontiguousarray(tagArray)
     #    ebN = np.ascontiguousarray(ebN)
