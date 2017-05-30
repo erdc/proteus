@@ -1,4 +1,4 @@
-#include "chrono/physics/ChSystemDEM.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/timestepper/ChTimestepper.h"
 #include "chrono/solver/ChSolverMINRES.h"
 #include "chrono/core/ChTransform.h"
@@ -11,7 +11,7 @@ using namespace std;
 
 class cppSystem {
  public:
-  ChSystemDEM system;
+  ChSystemSMC system;
   double* gravity;
   double chrono_dt;
   std::string directory;
@@ -55,6 +55,7 @@ class cppRigidBody {
   std::shared_ptr<ChBody> body;
   cppSystem* system;
   cppRigidBody(cppSystem* system);
+  ChVector<double> hxyz(double* x, double t);
   double hx(double* x, double t);
   double hy(double* x, double t);
   double hz(double* x, double t);
@@ -98,7 +99,7 @@ gravity(gravity)
   //system.SetTolForce(1e-14); // default: 0.001
   //system.SetMaxiter(200); // default: 6. Max constraints to reach tolerance on constraints.
   //system.SetTol(1e-10); // default: 0.0002. Tolerance for keeping constraints together.
-  system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED); // used before: ChSystemDEM::INT_EULER_IMPLICIT_LINEARIZED
+  system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED); // used before: ChSystemSMC::INT_EULER_IMPLICIT_LINEARIZED
   if (auto mystepper = std::dynamic_pointer_cast<ChTimestepperHHT>(system.GetTimestepper())) {
     mystepper->SetAlpha(-0.2);
   }
@@ -198,6 +199,14 @@ void cppSystem::setDirectory(std::string dir) {
     directory = dir;
 }
 
+ChVector<double> cppRigidBody::hxyz(double* x, double t)
+{
+  /* rotm = body->GetA(); */
+  ChVector<double> xx = ChVector<double>(x[0], x[1], x[2]);
+  ChVector<double> local = ChTransform<double>::TransformParentToLocal(xx, pos_last, rotq_last);
+  ChVector<double> xNew  = ChTransform<double>::TransformLocalToParent(local, pos, rotq);
+  return xNew - xx;
+}
 
 double cppRigidBody::hx(double* x, double t)
 {
@@ -231,7 +240,7 @@ void cppRigidBody::prestep(double* force, double* torque)
   acc_last = body->GetPos_dtdt();
   rotm_last = body->GetA();
   rotq_last = body->GetRot();
-  angacc_last = body->GetWvel_loc();
+  angacc_last = body->GetWacc_loc();
   angvel_last = body->GetWvel_loc();
   F_last = body->Get_Xforce();
   M_last = body->Get_Xtorque();
@@ -271,7 +280,7 @@ void cppRigidBody::poststep()
   acc = body->GetPos_dtdt();
   rotm = body->GetA();
   rotq = body->GetRot();
-  angacc = body->GetWvel_loc();
+  angacc = body->GetWacc_loc();
   angvel = body->GetWvel_loc();
   F = body->Get_Xforce();
   M = body->Get_Xtorque();
