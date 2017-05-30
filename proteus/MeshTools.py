@@ -492,6 +492,12 @@ class Mesh:
 
     This is the base class for meshes. Contains routines for
     plotting the edges of the mesh in Matlab
+
+    Attributes
+    ----------
+    elementBoundariesArray : array type
+        This array lists the global edge number associated with every
+        edge or face of an element.
     """
     #cek adding parallel support
     def __init__(self):
@@ -1239,9 +1245,10 @@ class Mesh:
 
     def buildMatlabMeshDataStructures(self,meshFileBase='meshMatlab',writeToFile=True):
         """
-        build array data structures for matlab finite element mesh representation
-        and write to a file to view and play with in matlatb. The current matlab support
-        is mostly for 2d, but this will return basic arrays for 1d and 3d too
+        build array data structures for matlab finite element mesh
+        representation and write to a file to view and play with in
+        matlatb. The current matlab support is mostly for 2d, but this
+        will return basic arrays for 1d and 3d too
 
         in matlab can then print mesh with
 
@@ -1262,6 +1269,7 @@ class Mesh:
              row 1 = x coord,
              row 2 = y coord for nodes in mesh
              row 3 = z coord for nodes in mesh ...
+
         edge matrix is [2*nd+3 x num faces]
           format:
              row 1  = start vertex number
@@ -1280,10 +1288,11 @@ class Mesh:
             ...
             row nd+1 = vertex 3 global number
             row 4 = triangle subdomain number
+
          where 1,2,3 is a local counter clockwise numbering of vertices in
            triangle
 
-         """
+        """
         matlabBase = 1
         nd = self.nNodes_element-1
         p = np.zeros((nd,self.nNodes_global),'d')
@@ -3798,6 +3807,49 @@ class MultilevelHexahedralMesh(MultilevelMesh):
         for m in self.meshList:
             m.computeGeometricInfo()
 
+def buildReferenceSimplex(nd=2):
+    """
+    Create and return a Proteus mesh object for the reference 
+    element.
+
+    Parameters
+    ----------
+    nd : int
+        Dimension of reference element
+
+    Returns
+    -------
+    mesh : :class:`proteus.MeshTools.TriangularMesh`
+        Simplex mesh
+    """
+    from proteus import Domain
+    from proteus import TriangleTools
+
+    assert(nd in [1,2,3])
+
+    if nd==1:
+        pass # Note sure what needs to go here?!
+    
+    unit_simplex_domain = Domain.unitSimplex(nd)
+    polyfile = "reference_element"
+    unit_simplex_domain.writePoly(polyfile)
+
+    if nd==2:
+        tmesh = TriangleTools.TriangleBaseMesh(baseFlags="Yp",
+                                               nbase=1,
+                                               verbose=False)
+        tmesh.readFromPolyFile(polyfile)
+        mesh = tmesh.convertToProteusMesh(verbose=0)
+        mesh.partitionMesh()
+        mesh.globalMesh = mesh
+        return mesh
+    if nd==3:
+        runTetgen(polyfile,
+                  "Yp")
+        mesh = genMeshWithTetgen(polyfile,
+                                 nbase = 1)
+        return mesh
+
 class TriangularMesh(Mesh):
     """A mesh of triangles
 
@@ -6085,6 +6137,77 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
             intersections.update(((tuple(elementIntersections[0]), tuple(elementIntersections[1])),),)
     return intersections
 
+def runTetgen(polyfile,
+              baseFlags="Yp",
+              name = ""):
+    """
+    Generate tetgen files from a polyfile.
+
+    Arguments
+    ---------
+    polyfile : str
+        Filename with appropriate data for tengen.
+    baseFlags : str
+        Standard Tetgen options for generation
+    name : str
+        
+
+    """
+    from subprocess import check_call
+    tetcmd = "tetgen - %s %s.poly" % (baseFlags, polyfile)
+    
+    check_call(tetcmd,shell=True)
+    
+    logEvent("Done running tetgen")
+    elefile = "%s.1.ele" % polyfile
+    nodefile = "%s.1.node" % polyfile
+    facefile = "%s.1.face" % polyfile
+    edgefile = "%s.1.edge" % polyfile
+    assert os.path.exists(elefile), "no 1.ele"
+    tmp = "%s.ele" % polyfile
+    os.rename(elefile,tmp)
+    assert os.path.exists(tmp), "no .ele"
+    assert os.path.exists(nodefile), "no 1.node"
+    tmp = "%s.node" % polyfile
+    os.rename(nodefile,tmp)
+    assert os.path.exists(tmp), "no .node"
+    if os.path.exists(facefile):
+        tmp = "%s.face" % polyfile
+        os.rename(facefile,tmp)
+        assert os.path.exists(tmp), "no .face"
+    if os.path.exists(edgefile):
+        tmp = "%s.edge" % polyfile
+        os.rename(edgefile,tmp)
+        assert os.path.exists(tmp), "no .edge"
+
+def genMeshWithTetgen(polyfile,
+                      nbase=1):
+   """
+   Generate a mesh from a set of tetgen files.
+
+   Arguments
+   ---------
+   polyfile : str
+       Filename base for tetgen files
+   nbase : int
+
+   Returns
+    -------
+   mesh : :class:`proteus.MeshTools.TetrahedralMesh`
+       Simplex mesh
+   """
+   elefile = "%s.ele" % polyfile
+   nodefile = "%s.node" % polyfile
+   facefile = "%s.face" % polyfile
+   edgefile = "%s.edge" % polyfile
+   assert os.path.exists(elefile), "no .ele file"
+   assert os.path.exists(nodefile), "no  .node file"
+   assert os.path.exists(facefile), "no .face file"
+   mesh=TetrahedralMesh()
+   mesh.generateFromTetgenFiles(polyfile,
+                                base=nbase)
+   return mesh
+
 
 from proteus import default_n as dn
 from proteus import default_p as dp
@@ -6101,17 +6224,17 @@ class MeshOptions:
         self.Domain = domain
         self.he = 1.
         self.use_gmsh = False
-        self.genMesh = dp.genMesh
+        self.genMesh = True
         self.outputFiles_name = 'mesh'
         self.outputFiles = {'poly': True,     
                             'ply': False,        
                             'asymptote': False,
                             'geo': False}
-        self.restrictFineSolutionToAllMeshes = dn.restrictFineSolutionToAllMeshes
-        self.parallelPartitioningType = dn.parallelPartitioningType
-        self.nLayersOfOverlapForParallel = dn.parallelPartitioningType
-        self.triangleOptions = dn.triangleOptions  # defined when setTriangleOptions called
-        self.nLevels = dn.nLevels
+        self.restrictFineSolutionToAllMeshes = False
+        self.parallelPartitioningType = MeshParallelPartitioningTypes.node
+        self.nLayersOfOverlapForParallel = 1
+        self.triangleOptions = "q30DenA" # defined when setTriangleOptions called
+        self.nLevels = 1
         if domain is not None:
             self.nd = domain.nd
             if self.nd == 2:

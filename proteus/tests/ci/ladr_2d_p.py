@@ -1,11 +1,14 @@
 from proteus import *
 from proteus.default_p import *
 from adr import *
+reload(default_p)
 
 name = "ladr_2d"
 nd = 2; #Two dimensions
 L=(1.0,1.0,1.0); 
 T=1.0
+domain = None
+polyfile = None
 
 coefficients=LAD(M=1.0,
                  A=[[0.001,0.0],

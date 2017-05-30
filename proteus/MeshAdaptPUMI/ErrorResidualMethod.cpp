@@ -132,11 +132,11 @@ bool isInSimplex(apf::Mesh* mesh, apf::MeshEntity* ent, apf::Vector3 pt, int dim
   int numverts = dim+1;
   apf::Adjacent verts;
   mesh->getAdjacent(ent,0,verts);
-  apf::Vector3 vtxs[numverts];
+  apf::Vector3 vtxs[4];
   for(int i=0;i<numverts;i++){
     mesh->getPoint(verts[i],0,vtxs[i]); 
   } 
-  apf::Vector3 c[numverts];
+  apf::Vector3 c[4];
   if(dim==2){
     c[0] = vtxs[1]-vtxs[0];
     c[1] = vtxs[2]-vtxs[0];
@@ -149,8 +149,9 @@ bool isInSimplex(apf::Mesh* mesh, apf::MeshEntity* ent, apf::Vector3 pt, int dim
     c[3] = pt-vtxs[0];
   }
 
-  apf::Matrix3x3 K,Kinv;
-  apf::Vector3 F;
+  apf::Matrix3x3 K(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
+  apf::Matrix3x3 Kinv;
+  apf::Vector3 F(0.0,0.0,0.0);
   for(int i=0;i<dim;i++){
     for(int j=0;j<dim;j++){
       K[i][j] = getDotProduct(c[i],c[j]);
@@ -424,7 +425,7 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
           if(BCtype[1]+BCtype[2]+BCtype[3] == 3){
             for(int i=1;i<nsd+1;i++)
               m->getDoubleTag(bent,fluxtag[i],&(fluxdata[i][0]));
-            bflux = {fluxdata[1][l],fluxdata[2][l],fluxdata[3][l]};
+            bflux = apf::Vector3(fluxdata[1][l],fluxdata[2][l],fluxdata[3][l]);
             bflux = bflux-identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1)*normal;
           }
           else{
