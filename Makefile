@@ -47,7 +47,7 @@ define howto
 	@echo "${PROTEUS_PREFIX}/bin/python"
 	@echo ""
 	@echo "You should now verify that the install succeeded by running:"
-	@echo "make check"
+	@echo "make test"
 	@echo ""
 endef
 
@@ -303,7 +303,7 @@ doc:
 	@echo "**********************************"
 	-sensible-browser ../proteus-website/index.html &
 
-test:
+test: check
 	@echo "************************************"
 	@echo "Running test suite"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests --ignore proteus/tests/POD
@@ -314,12 +314,16 @@ jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/lab/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.6.1 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0
+	pip install configparser
+	pip install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0 hide_code==0.4.0
+	ipcluster nbextension enable --user
 	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
 	jupyter nbextension enable --py --sys-prefix bqplot
 	jupyter nbextension enable --py --sys-prefix pythreejs
 	jupyter nbextension enable --py --sys-prefix ipyleaflet
+	jupyter nbextension install --py --sys-prefix hide_code
+	jupyter nbextension enable --py --sys-prefix hide_code
 	jupyter nbextension install --py --sys-prefix rise
 	jupyter nbextension enable --py --sys-prefix rise
 	jupyter dashboards quick-setup --sys-prefix
@@ -328,3 +332,10 @@ jupyter:
 	jupyter serverextension enable --sys-prefix --py ipyparallel
 	ipython profile create mpi --parallel
 	echo "c.IPClusterEngines.engine_launcher_class = 'MPI'" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+
+lfs:
+	pip install pyliblzma
+	wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
+	tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
+	cd git-lfs-1.5.5 && PREFIX=${HOME} ./install.sh
+	export PATH=${HOME}/bin:${PATH}

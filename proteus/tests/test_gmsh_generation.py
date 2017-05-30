@@ -21,7 +21,7 @@ class TestBC(unittest.TestCase):
         domain.segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
         domain.facets = [[[0, 1, 2, 3]]]
         domain.writeGeo('gmsh_mesh_test', he_max=0.1)
-        gmsh_cmd = "time gmsh {0:s} -v 10 -2 -o {1:s} -format msh".format(domain.geofile+".geo", domain.geofile+".msh")
+        gmsh_cmd = "gmsh {0:s} -v 10 -2 -o {1:s} -format msh".format(domain.geofile+".geo", domain.geofile+".msh")
         check_call(gmsh_cmd, shell=True)
         MeshTools.msh2triangle(domain.geofile)
         with open('gmsh_mesh_test.node', 'r') as nodefile:

@@ -768,7 +768,7 @@ class Rectangle(Shape):
                         self.BC['y+'],
                         self.BC['x-']]
         # self.BC = BCContainer(self.BC_dict)
-        self.It = L**2+H**2/12
+        self.It = (L**2+H**2)/12
 
     def setDimensions(self, dim):
         """
@@ -855,6 +855,94 @@ class Cylinder(Shape):
                    'z+': self.BC_class(shape=self, name='z+'),
                    'cylinder': self.BC_class(shape=self, name='cylinder')}
         self.BC_list = [self.BC['z-'], self.BC['z+'], self.BC['cylinder']]
+
+
+class Circle(Shape):
+    """
+    Class to create a circular shape.
+
+    Parameters
+    ----------
+    domain: proteus.Domain.D_base
+        Domain class instance that hold all the geometrical informations and
+        boundary conditions of the shape.
+    radius:
+        Radius of the circular shape.
+    coords: Optional[array_like]
+        Coordinates of the centroid of the shape.
+    """
+
+    count = 0
+
+    def __init__(self, domain, radius, coords, barycenter, nPoints):
+        super(Circle, self).__init__(domain, nd=2)
+        self.__class__.count += 1
+        self.name = "Circle" + str(self.__class__.count)
+
+        pi=np.pi
+        self.radius = radius
+        self.coords = xc, yc = np.array(coords)
+        self.nPoints = nPoints
+        self.arc=2.0*pi*self.radius/self.nPoints
+        self.ang=self.arc/self.radius
+        verti=[]
+        segm=[]
+
+        # points
+        for iii in range(0,nPoints):
+            vert=np.array([xc+self.radius*cos(self.ang*iii),
+                           yc+self.radius*sin(self.ang*iii),
+                           ])
+            verti.append(vert,)
+        self.vertices=np.array(verti)
+        nVertices=len(self.vertices)
+
+        # segments
+        for jjj in range(1,nVertices):
+            seg=[jjj-1, jjj]
+            segm.append(seg,)
+        seg_last=[nVertices-1,0]
+        segm.append(seg_last,)
+        self.segments=np.array(segm)
+        
+        # facets
+        facets=[]
+        for kkk in range(nVertices):
+            facets.append(kkk)
+        self.facets=np.array([[facets]])
+
+        # barycenter, orientations, region
+        if barycenter is not None:
+            self.barycenter[0:2] = barycenter[0:2]
+        else:
+            self.barycenter[0:2] = coords[0:2]
+
+        self.b_or = np.array([[1., 0.],
+                              ])
+        self.regions = np.array([[xc, yc]])
+
+        # boundary tags
+        self.boundaryTags = bt = {'circle':1}
+        vertFlag=[]
+        segmFlag=[]
+        for kkk in range(nVertices):
+                vertFlag.append(bt['circle'],)
+                segmFlag.append(bt['circle'],)
+        self.vertexFlags = np.array(vertFlag)
+        self.segmentFlags = np.array(segmFlag)
+        self.facetFlags=np.array([1])
+        self.regionFlags = np.array([1])
+
+        # boundary list
+        self.BC = {'circle': self.BC_class(shape=self, name='circle',
+                                       b_or=self.b_or, b_i=0),
+                  }
+        self.BC_list = [self.BC['circle'],
+                       ]
+
+        # set the inertia
+        self.It = pi*(radius**4)/2.
+
 
 
 class CustomShape(Shape):
