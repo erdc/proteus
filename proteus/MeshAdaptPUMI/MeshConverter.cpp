@@ -506,43 +506,98 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
 #include <gmi_lookup.h>
 
 #include<iostream>
-#include<CGAL/Exact_predicates_exact_constructions_kernel.h>
+//#include<CGAL/Exact_predicates_exact_constructions_kernel.h>
+//#include<CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include<CGAL/Gmpq.h>
+#include <CGAL/Simple_cartesian.h>
+//#include <CGAL/Point_3.h>
+//#include <CGAL/Segment_3.h>
 
-typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
+//typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
+//typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
+typedef CGAL::Simple_cartesian<CGAL::Gmpq> Kernel;
 typedef Kernel::Point_3 Point_3;
 typedef Kernel::Segment_3 Segment_3;
+typedef Kernel::Point_2 Point_2;
+typedef Kernel::Segment_2 Segment_2;
 
 int MeshAdaptPUMIDrvr::getMesh2ModelClassification(Mesh& mesh){
 
   //initialize checklists
   std::cout<<"mesh.nNodes_global "<<mesh.nNodes_global<<std::endl;
   std::cout<<"mesh.nNodes_element "<<mesh.nNodes_element<<std::endl;
+  std::cout<<"mesh.nNodes_elementBoundary "<<mesh.nNodes_elementBoundary<<std::endl;
   std::cout<<"mesh.nElements_global "<<mesh.nElements_global<<std::endl;
   std::cout<<"mesh.nElementBoundaries_global "<<mesh.nElementBoundaries_global<<std::endl;
   checklist_b = (int*) malloc(sizeof(int)*mesh.nElementBoundaries_global);
   meshBoundary2Model = (int*) malloc(sizeof(int)*mesh.nElementBoundaries_global*2);
   
   //Construct the model vertices
-  std::vector<Point_3> modelPoints;
+  //std::vector<Point_3> modelPoints;
+  std::vector<Point_2> modelPoints;
   for(int i=0; i<numModelEntities[0];i++){
-    modelPoints.push_back(Point_3(vertexList[3*i+0],vertexList[3*i+1],vertexList[3*i+2]));
+    //modelPoints.push_back(Point_3(vertexList[3*i+0],vertexList[3*i+1],vertexList[3*i+2]));
+    modelPoints.push_back(Point_2(vertexList[3*i+0],vertexList[3*i+1]));
   } 
   //Construct the model boundaries
-  std::vector<Segment_3> modelBoundaries;
+  //std::vector<Segment_3> modelBoundaries;
+  std::vector<Segment_2> modelBoundaries;
   int numDim = 2;
   int numBoundaries = numModelEntities[numDim-1];
   for(int i=0; i<numBoundaries;i++){
     std::cout<<i<<" model points "<<edgeList[numDim*i+0]<<" "<<edgeList[numDim*i+1]<<std::endl;
-    modelBoundaries.push_back(Segment_3(modelPoints[edgeList[numDim*i+0]],modelPoints[edgeList[numDim*i+1]]));
+    //modelBoundaries.push_back(Segment_3(modelPoints[edgeList[numDim*i+0]],modelPoints[edgeList[numDim*i+1]]));
+    modelBoundaries.push_back(Segment_2(modelPoints[edgeList[numDim*i+0]],modelPoints[edgeList[numDim*i+1]]));
   }
   
+  //Construct a more exact barycenters array
+  //std::vector<Point_3> elementBoundaryCentroidsArray;
+  //std::vector<Point_3> centroid_temp;
+  std::vector<Point_2> elementBoundaryCentroidsArray;
+  std::vector<Point_2> centroid_temp;
+
+  for(int ebN=0;ebN<mesh.nElementBoundaries_global;ebN++){
+    for(int nN=0; nN<mesh.nNodes_elementBoundary;nN++){
+      int idx = mesh.elementBoundaryNodesArray[mesh.nNodes_elementBoundary*ebN+nN];
+      //std::cout<<ebN<<" idx "<<idx<<" "<<mesh.nodeArray[3*idx+0]<<" "<<mesh.nodeArray[3*idx+1]<<mesh.nodeArray[3*idx+2]<<std::endl;
+      //centroid_temp.push_back(Point_3(mesh.nodeArray[3*idx+0],mesh.nodeArray[3*idx+1],mesh.nodeArray[3*idx+2]));
+      centroid_temp.push_back(Point_2(mesh.nodeArray[3*idx+0],mesh.nodeArray[3*idx+1]));
+    }
+    //Point_3 centroid;
+    Point_2 centroid;
+    if(numDim==2){
+      centroid = CGAL::midpoint(centroid_temp[0],centroid_temp[1]);
+    }
+    else{ //3D
+      std::abort();
+    }
+    assert(centroid_temp.size()==mesh.nNodes_elementBoundary);
+    centroid_temp.clear();
+    //std::cout<<"What is the mesh boundary barycenter "<<barycenter<<std::endl;
+    elementBoundaryCentroidsArray.push_back(centroid);
+  }
+  std::cout<<"End construction of barycenters\n";
+
   //Loop through external element boundaries
   for(int i=0;i<mesh.nExteriorElementBoundaries_global;i++){
     int idx = mesh.exteriorElementBoundariesArray[i];
-    Point_3 testPoint = Point_3(mesh.elementBoundaryBarycentersArray[3*idx+0],mesh.elementBoundaryBarycentersArray[3*idx+1],mesh.elementBoundaryBarycentersArray[3*idx+2]);
+    //Point_3 testPoint = Point_3(mesh.elementBoundaryBarycentersArray[3*idx+0],mesh.elementBoundaryBarycentersArray[3*idx+1],mesh.elementBoundaryBarycentersArray[3*idx+2]);
+    //Point_3 testPoint = elementBoundaryCentroidsArray[idx];
+    Point_2 testPoint = elementBoundaryCentroidsArray[idx];
     for(int idxBoundary=0;idxBoundary<numBoundaries;idxBoundary++){
-      Segment_3 modelBoundary = modelBoundaries[idxBoundary]; 
-      std::cout<<idx<<" What is modelBoundary "<<modelBoundary.vertex(0)<<" "<<modelBoundary.vertex(1)<<" "<<testPoint<<std::endl;
+      //Segment_3 modelBoundary = modelBoundaries[idxBoundary]; 
+      Segment_2 modelBoundary = modelBoundaries[idxBoundary]; 
+      if(idx == 0){
+        std::cout<<idx<<" What is modelBoundary ("<<modelBoundary.vertex(0).x()<<","<<modelBoundary.vertex(1).y()<<"),("<<modelBoundary.vertex(1)<<"),("<<testPoint<<")"<<std::endl;
+        std::cout<<"What is the orientation? "<<CGAL::orientation(modelBoundary.vertex(0),testPoint,modelBoundary.vertex(1))<<std::endl;
+/*
+        std::cout<<"is on? "<<modelBoundary.has_on(testPoint)<<std::endl;
+        Point_3 testPoint2 = Point_3(3.137,1.566,0);
+        std::cout<<"is on2? "<<modelBoundary.has_on(testPoint2)<<std::endl;
+        Point_3 testPoint3 = CGAL::midpoint(modelBoundary.vertex(0),modelBoundary.vertex(1));
+        std::cout<<"is on3? "<<modelBoundary.has_on(testPoint3)<<" "<<testPoint3<<std::endl;  
+*/
+      }
       if(modelBoundary.has_on(testPoint)){
         meshBoundary2Model[2*idx+0] = idxBoundary;
         meshBoundary2Model[2*idx+1] = numDim-1;
@@ -573,7 +628,9 @@ int MeshAdaptPUMIDrvr::getMesh2ModelClassification(Mesh& mesh){
     }
   }
   for(int i=0;i<mesh.nInteriorElementBoundaries_global;i++){
-    std::cout<<"checklist_b "<<i<<" "<<checklist_b[i]<<std::endl;
+    if(checklist_b[i]!=1){
+      std::cout<<"checklist_b "<<i<<" "<<checklist_b[i]<<std::endl;
+    }
   }
   //free(modelPoints);
   //free(modelBoundaries);
@@ -721,7 +778,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, int hasModel)
     pt[0]=mesh.nodeArray[vID*3+0];
     pt[1]=mesh.nodeArray[vID*3+1];
     pt[2]=mesh.nodeArray[vID*3+2];
-    std::cout<<"Mesh Vertex Dimension is "<<m->getModelType(gEnt)<<std::endl;
+    //std::cout<<"Mesh Vertex Dimension is "<<m->getModelType(gEnt)<<std::endl;
     vertices[vID] = m->createVert(gEnt);
     m->setPoint(vertices[vID],0,pt);
   }
