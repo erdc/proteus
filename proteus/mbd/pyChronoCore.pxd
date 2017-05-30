@@ -36,6 +36,8 @@ cdef class ChFrameMoving(ChFrame):
     cpdef np.ndarray GetPos_dtdt(self)
     cpdef np.ndarray GetRot_dt(self)
     cpdef np.ndarray GetRot_dtdt(self)
+    cpdef np.ndarray GetWvel_loc(self)
+    cpdef np.ndarray GetWacc_loc(self)
 
 cdef class ChBodyFrame(ChFrameMoving):
     cdef shared_ptr[ch.ChBodyFrame] sharedptr_chbodyframe
@@ -43,7 +45,7 @@ cdef class ChBodyFrame(ChFrameMoving):
 cdef class ChBody(ChBodyFrame):
     cdef shared_ptr[ch.ChBody] sharedptr_chbody
     cpdef void SetBodyFixed(self, bool state)
-    cpdef void SetMaterialSurface(self, ChMaterialSurfaceDEM mat)
+    cpdef void SetMaterialSurface(self, ChMaterialSurfaceSMC mat)
     cpdef void SetInertiaXX(self, ChVector iner)
     cpdef void SetInertiaXY(self, ChVector iner)
     cpdef void SetMass(self, double newmass)
@@ -52,8 +54,8 @@ cdef class ChBody(ChBodyFrame):
 cdef class ChBodyEasyBox(ChBody):
     cdef shared_ptr[ch.ChBodyEasyBox] sharedptr_chbodyeasybox
 
-cdef class ChMaterialSurfaceDEM:
-    cdef shared_ptr[ch.ChMaterialSurfaceDEM] sharedptr
+cdef class ChMaterialSurfaceSMC:
+    cdef shared_ptr[ch.ChMaterialSurfaceSMC] sharedptr
     cpdef void SetYoungModulus(self, float val)
     cpdef void SetPoissonRatio(self, float val)
     cpdef void SetSfriction(self, float val)

@@ -127,6 +127,16 @@ cdef class ChFrameMoving(ChFrame):
     cpdef np.ndarray GetRot_dtdt(self):
         return ChQuaternion_to_npArray(deref(self.sharedptr_chframemoving).GetRot_dtdt())
 
+    cpdef np.ndarray GetWvel_loc(self):
+        cdef ch.ChVector vec
+        vec = deref(self.sharedptr_chframemoving).GetWvel_loc()
+        return ChVector_to_npArray(vec)
+
+    cpdef np.ndarray GetWacc_loc(self):
+        cdef ch.ChVector vec
+        vec = deref(self.sharedptr_chframemoving).GetWacc_loc()
+        return ChVector_to_npArray(vec)
+
 
 cdef class ChBodyFrame(ChFrameMoving):
     """Cython class for ChBodyFrame
@@ -157,8 +167,8 @@ cdef class ChBody(ChBodyFrame):
     cpdef void SetBodyFixed(self, bool state):
         deref(self.sharedptr_chbody).SetBodyFixed(state)
 
-    cpdef void SetMaterialSurface(self, ChMaterialSurfaceDEM mat):
-        deref(self.sharedptr_chbody).SetMaterialSurface(<shared_ptr[ch.ChMaterialSurfaceBase]> mat.sharedptr)
+    cpdef void SetMaterialSurface(self, ChMaterialSurfaceSMC mat):
+        deref(self.sharedptr_chbody).SetMaterialSurface(<shared_ptr[ch.ChMaterialSurface]> mat.sharedptr)
 
     cpdef void SetInertiaXX(self, ChVector iner):
         deref(self.sharedptr_chbody).SetInertiaXX(iner.cppobj)
@@ -188,13 +198,13 @@ cdef class ChBodyEasyBox(ChBody):
             # to remove below
 
 
-cdef class ChMaterialSurfaceDEM:
+cdef class ChMaterialSurfaceSMC:
     """cython class for chmaterialsurfacedem
     (!) uses shared_ptr
     """
 
     def __cinit__(self):
-        self.sharedptr = make_shared[ch.ChMaterialSurfaceDEM]()
+        self.sharedptr = make_shared[ch.ChMaterialSurfaceSMC]()
 
     cpdef void SetYoungModulus(self, float val):
         deref(self.sharedptr).SetYoungModulus(val)

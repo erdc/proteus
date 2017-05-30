@@ -6,7 +6,7 @@
 #include <math.h>
 #include <string> 
 #include "chrono/physics/ChSystem.h"
-#include "chrono/physics/ChSystemDEM.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono/physics/ChLoadContainer.h"
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono_fea/ChElementBeamANCF.h"
@@ -31,7 +31,7 @@ using namespace chrono::fea;
 
 class cppCable {
 public:
-	ChSystemDEM& system;  // global system
+	ChSystemSMC& system;  // global system
 	std::shared_ptr<ChMesh> mesh;  // mesh
 	int nb_nodes;   // number of nodes along cable
 	int nb_elems;   // number of nodes along cable
@@ -57,7 +57,7 @@ public:
 	std::vector<ChVector<>> fluid_acceleration;
 	std::vector<double> fluid_density;
   std::vector<double> nodes_density; // density of (cable-fluid) at nodes
-	cppCable(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, double length,
+	cppCable(ChSystemSMC& system, std::shared_ptr<ChMesh> mesh, double length,
            int nb_elems, double d, double rho, double E, double L0, std::string beam_type);  // constructor
 	void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
 	void setFluidAccelerationAtNodes(std::vector<ChVector<>> acc);
@@ -90,9 +90,9 @@ public:
 
 class cppMultiSegmentedCable {
 public:
-	ChSystemDEM& system;  // global system
+	ChSystemSMC& system;  // global system
   std::string beam_type;
-	std::shared_ptr<ChMaterialSurfaceDEM> mysurfmaterial;
+	std::shared_ptr<ChMaterialSurfaceSMC> mysurfmaterial;
 	std::shared_ptr<ChMesh> mesh;  // mesh
 	std::shared_ptr<ChBody> fairleadd;
 	std::shared_ptr<ChLinkPointFrame> fairlead2;
@@ -100,7 +100,7 @@ public:
 	std::vector<int> nb_elems;   // number of nodes along cable
 	std::vector<ChVector<>> mvecs;  // vectors (nodes coordinates)
 	std::vector<std::shared_ptr<cppCable>> cables;
-	std::shared_ptr<ChMaterialSurfaceDEM> contact_material;  // mesh
+	std::shared_ptr<ChMaterialSurfaceSMC> contact_material;  // mesh
 	std::vector<double>  d;
 	std::vector<double> rho;
 	std::vector<double> E;
@@ -116,7 +116,7 @@ public:
   std::shared_ptr<ChBody> body_back;
   std::shared_ptr<ChBody> body_front;
   bool nodes_built;
-	cppMultiSegmentedCable(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh, std::vector<double> length,
+	cppMultiSegmentedCable(ChSystemSMC& system, std::shared_ptr<ChMesh> mesh, std::vector<double> length,
                          std::vector<int> nb_nodes, std::vector<double> d, std::vector<double> rho, std::vector<double> E, std::string beam_type);
 	void setFluidVelocityAtNodes(std::vector<ChVector<>> vel);
 	void setFluidAccelerationAtNodes(std::vector<ChVector<>> vel);
@@ -131,20 +131,20 @@ public:
 
 	void attachBackNodeToBody(std::shared_ptr<ChBody> body);
 	void attachFrontNodeToBody(std::shared_ptr<ChBody> body);
-  void setContactMaterial(std::shared_ptr<ChMaterialSurfaceDEM> material);
+  void setContactMaterial(std::shared_ptr<ChMaterialSurfaceSMC> material);
   void buildNodesCloud();
   ChVector<> getTensionElement(int i);
 };
 
 class cppMesh {
 public:
-  ChSystemDEM& system;
+  ChSystemSMC& system;
 	std::shared_ptr<ChMesh> mesh;
-	cppMesh(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh);
+	cppMesh(ChSystemSMC& system, std::shared_ptr<ChMesh> mesh);
   void SetAutomaticGravity(bool val);
 };
 
-cppMesh::cppMesh(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh) :
+cppMesh::cppMesh(ChSystemSMC& system, std::shared_ptr<ChMesh> mesh) :
   system(system),
 	mesh(mesh)
 {
@@ -158,7 +158,7 @@ void cppMesh::SetAutomaticGravity(bool val) {
 
  
 cppMultiSegmentedCable::cppMultiSegmentedCable(
-	ChSystemDEM& system,
+	ChSystemSMC& system,
 	std::shared_ptr<ChMesh> mesh,
 	std::vector<double> length,
 	std::vector<int> nb_elems,
@@ -341,7 +341,7 @@ void cppMultiSegmentedCable::attachFrontNodeToBody(std::shared_ptr<ChBody> body)
   body_front = body;
 };
 
-void cppMultiSegmentedCable::setContactMaterial(std::shared_ptr<ChMaterialSurfaceDEM> material) {
+void cppMultiSegmentedCable::setContactMaterial(std::shared_ptr<ChMaterialSurfaceSMC> material) {
   contact_material = material;
 };
 
@@ -360,7 +360,7 @@ void cppMultiSegmentedCable::buildNodesCloud() {
 
 
 cppCable::cppCable(
-	ChSystemDEM& system, // system in which the cable belong
+	ChSystemSMC& system, // system in which the cable belong
 	std::shared_ptr<ChMesh> mesh, // mesh of the cable
 	double length, // length of cable
 	int nb_elems,  // number of nodes along cable
@@ -800,7 +800,7 @@ void cppCable::addNodestoContactCloud(std::shared_ptr<ChContactSurfaceNodeCloud>
 };
 
 cppMultiSegmentedCable * newMoorings(
-	ChSystemDEM& system,
+	ChSystemSMC& system,
 	std::shared_ptr<ChMesh> mesh,
 	std::vector<double> length,
 	std::vector<int> nb_elems,
@@ -812,7 +812,7 @@ cppMultiSegmentedCable * newMoorings(
 	return new cppMultiSegmentedCable(system, mesh, length, nb_elems, d, rho, E, beam_type);
 }
 
-cppMesh * newMesh(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh) {
+cppMesh * newMesh(ChSystemSMC& system, std::shared_ptr<ChMesh> mesh) {
 	return new cppMesh(system, mesh);
 }
 
@@ -824,21 +824,21 @@ cppMesh * newMesh(ChSystemDEM& system, std::shared_ptr<ChMesh> mesh) {
 
 class cppSurfaceBoxNodesCloud {
  public:
-  ChSystemDEM& system;
+  ChSystemSMC& system;
   std::shared_ptr<ChMesh> mesh;
   ChVector<> position;
   ChVector<> dimensions;
   std::shared_ptr<ChBodyEasyBox> box;
-  std::shared_ptr<ChMaterialSurfaceDEM> material;
+  std::shared_ptr<ChMaterialSurfaceSMC> material;
   std::shared_ptr<ChContactSurfaceNodeCloud> contact_cloud;
-  cppSurfaceBoxNodesCloud(ChSystemDEM& system,
+  cppSurfaceBoxNodesCloud(ChSystemSMC& system,
                           std::shared_ptr<ChMesh> mesh,
                           ChVector<> position,
                           ChVector<> dimensions);
   void setNodesSize(double size);
 };
 
-cppSurfaceBoxNodesCloud::cppSurfaceBoxNodesCloud(ChSystemDEM& system,
+cppSurfaceBoxNodesCloud::cppSurfaceBoxNodesCloud(ChSystemSMC& system,
                                                  std::shared_ptr<ChMesh> mesh,
                                                  ChVector<> position,
                                                  ChVector<> dimensions) :
@@ -848,7 +848,7 @@ cppSurfaceBoxNodesCloud::cppSurfaceBoxNodesCloud(ChSystemDEM& system,
 	dimensions(dimensions)
 {
 	// Create a surface material to be shared with some objects
-	material = std::make_shared<ChMaterialSurfaceDEM>();
+	material = std::make_shared<ChMaterialSurfaceSMC>();
 	material->SetYoungModulus(2e4);
 	material->SetFriction(0.3f);
 	material->SetRestitution(0.2f);
@@ -881,7 +881,7 @@ void cppSurfaceBoxNodesCloud::setNodesSize(double size) {
   contact_cloud->AddAllNodes(size);
 }
 
-cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ChSystemDEM& system,
+cppSurfaceBoxNodesCloud * newSurfaceBoxNodesCloud(ChSystemSMC& system,
                                                   std::shared_ptr<ChMesh> mesh,
                                                   ChVector<> position,
                                                   ChVector<> dimensions) {
