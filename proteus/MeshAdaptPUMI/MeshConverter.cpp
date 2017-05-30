@@ -505,16 +505,99 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
 #include <cassert>
 #include <gmi_lookup.h>
 
-int MeshAdaptPUMIDrvr::transferModelInfo(int* numGeomEntities, int* edges, int* faces, int* mVertex2Model, int*mEdge2Model, int*mBoundary2Model){
+#include<iostream>
+#include<CGAL/Exact_predicates_exact_constructions_kernel.h>
+
+typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel;
+typedef Kernel::Point_3 Point_3;
+typedef Kernel::Segment_3 Segment_3;
+
+int MeshAdaptPUMIDrvr::getMesh2ModelClassification(Mesh& mesh){
+
+  //initialize checklists
+  std::cout<<"mesh.nNodes_global "<<mesh.nNodes_global<<std::endl;
+  std::cout<<"mesh.nNodes_element "<<mesh.nNodes_element<<std::endl;
+  std::cout<<"mesh.nElements_global "<<mesh.nElements_global<<std::endl;
+  std::cout<<"mesh.nElementBoundaries_global "<<mesh.nElementBoundaries_global<<std::endl;
+  checklist_b = (int*) malloc(sizeof(int)*mesh.nElementBoundaries_global);
+  meshBoundary2Model = (int*) malloc(sizeof(int)*mesh.nElementBoundaries_global*2);
+  
+  //Construct the model vertices
+  std::vector<Point_3> modelPoints;
+  for(int i=0; i<numModelEntities[0];i++){
+    modelPoints.push_back(Point_3(vertexList[3*i+0],vertexList[3*i+1],vertexList[3*i+2]));
+  } 
+  //Construct the model boundaries
+  std::vector<Segment_3> modelBoundaries;
+  int numDim = 2;
+  int numBoundaries = numModelEntities[numDim-1];
+  for(int i=0; i<numBoundaries;i++){
+    std::cout<<i<<" model points "<<edgeList[numDim*i+0]<<" "<<edgeList[numDim*i+1]<<std::endl;
+    modelBoundaries.push_back(Segment_3(modelPoints[edgeList[numDim*i+0]],modelPoints[edgeList[numDim*i+1]]));
+  }
+  
+  //Loop through external element boundaries
+  for(int i=0;i<mesh.nExteriorElementBoundaries_global;i++){
+    int idx = mesh.exteriorElementBoundariesArray[i];
+    Point_3 testPoint = Point_3(mesh.elementBoundaryBarycentersArray[3*idx+0],mesh.elementBoundaryBarycentersArray[3*idx+1],mesh.elementBoundaryBarycentersArray[3*idx+2]);
+    for(int idxBoundary=0;idxBoundary<numBoundaries;idxBoundary++){
+      Segment_3 modelBoundary = modelBoundaries[idxBoundary]; 
+      std::cout<<idx<<" What is modelBoundary "<<modelBoundary.vertex(0)<<" "<<modelBoundary.vertex(1)<<" "<<testPoint<<std::endl;
+      if(modelBoundary.has_on(testPoint)){
+        meshBoundary2Model[2*idx+0] = idxBoundary;
+        meshBoundary2Model[2*idx+1] = numDim-1;
+        checklist_b[idx] = 1; 
+        for(int j=0; j<numDim;j++){
+          int vID=mesh.elementBoundaryNodesArray[numDim*idx+j];
+          if(!checklist_v[vID]){
+            meshVertex2Model[2*vID+0] = idxBoundary;
+            meshVertex2Model[2*vID+1] = numDim-1;
+            checklist_v[vID] = 1;
+          }
+        }
+      } //end if has_on
+    }
+  }
+  for(int i=0;i<mesh.nInteriorElementBoundaries_global;i++){
+    int idx = mesh.interiorElementBoundariesArray[i];
+    meshBoundary2Model[2*idx+0] = mesh.elementMaterialTypes[0];   
+    meshBoundary2Model[2*idx+1] = numDim;
+    checklist_b[idx] = 1;
+    for(int j=0; j<numDim;j++){
+      int vID=mesh.elementBoundaryNodesArray[numDim*idx+j];
+      if(!checklist_v[vID]){
+        meshVertex2Model[2*vID+0] = mesh.elementMaterialTypes[0];
+        meshVertex2Model[2*vID+1] = numDim;
+        checklist_v[vID] = 1;
+      }
+    }
+  }
+  for(int i=0;i<mesh.nInteriorElementBoundaries_global;i++){
+    std::cout<<"checklist_b "<<i<<" "<<checklist_b[i]<<std::endl;
+  }
+  //free(modelPoints);
+  //free(modelBoundaries);
+  //free(meshBoundary2Model);
+  //free(checklist_b);
+  std::cerr<<"Reached the end of mesh2model classification\n";
+}
+
+int MeshAdaptPUMIDrvr::transferModelInfo(int* numGeomEntities, double* vertices, int* edges, int* faces,int* mVertex2Model, int* vertexChecklist){
   numModelEntities[0] = numGeomEntities[0];
   numModelEntities[1] = numGeomEntities[1];
   numModelEntities[2] = numGeomEntities[2];
   numModelEntities[3] = numGeomEntities[3];
+  std::cout<<"How many v e b r "<< numModelEntities[0]<<" "<<numModelEntities[1]<<" "<<numModelEntities[2]<<" "<<numModelEntities[3]<<std::endl;
+
+  vertexList = vertices;
   edgeList = edges;
   faceList = faces;
   meshVertex2Model = mVertex2Model;
-  meshEdge2Model = mEdge2Model;
-  meshBoundary2Model = mBoundary2Model;
+  checklist_v = vertexChecklist;
+  for(int i=0;i<numModelEntities[0];i++){
+    std::cout<<"vertex "<<i<<" "<<vertexList[3*i+0]<<" "<<vertexList[3*i+1]<<std::endl;
+  }
+  std::cout<<"What is meshVertex2Model? "<<meshVertex2Model[0]<<" "<<meshVertex2Model[1]<<" "<<meshVertex2Model[2]<<std::endl;
   std::cerr<<"Finished Transferring Model Info\n";
   return 0;
 }

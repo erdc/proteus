@@ -34,11 +34,18 @@ class MeshAdaptPUMIDrvr{
   int dumpMesh(Mesh& mesh);
 
   //Functions used to transfer proteus model data structures
-  int transferModelInfo(int*numGeomEntities,int*edges,int*faces,int*mVertex2Model,int*mEdgeVertex2Model,int*mBoundary2Model);
+  int getMesh2ModelClassification(Mesh& mesh);
+  int transferModelInfo(int*numGeomEntities,double* vertices,int*edges,int*faces,int* mVertex2Model,int* vertexChecklist);
+  double* vertexList;
   int* edgeList;
   int* faceList;
   int* meshVertex2Model, *meshEdge2Model, *meshBoundary2Model;
   int numModelEntities[4];
+  int* checklist_v,*checklist_e,*checklist_b;
+  int numModelNodes;
+  int numModelEdges;
+  int numModelBoundaries;
+  int numModelRegions;
 
   //Functions used to transfer information between PUMI and proteus
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
