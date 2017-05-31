@@ -679,6 +679,7 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
                 logEvent("NAHeader Preconditioner selfp" )
+                # TODO - fix this
                 self.preconditioner = SimpleNavierStokes(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Qp:
@@ -996,7 +997,7 @@ class Schur_Qp(SchurPrecon) :
         self.matcontext_inv = MatrixInvShell(self.Qp)
         self.QpInv_shell.setPythonContext(self.matcontext_inv)
         self.QpInv_shell.setUp()
-
+#        import pdb ; pdb.set_trace()
         # Set PETSc Schur operator
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
