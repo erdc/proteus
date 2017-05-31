@@ -5,6 +5,7 @@ import sys
 import inspect
 import pickle
 import petsc4py
+import numpy
 
 def get_include_dir():
     return os.path.dirname(os.path.realpath(__file__))
@@ -341,7 +342,6 @@ class NumericResults:
             self._init_ipython_plot(plot_data,legend,title,plot_relative=plot_relative)
 
 
-
     def get_ksp_resid_it_info(self,time_level):
         """ Collect the total number of iterations to converge for a given time-step
             and mesh level.
@@ -372,6 +372,31 @@ class NumericResults:
 
         return return_data
 
+    def get_ksp_resid_info(self,data_set):
+        """ Collect and return the ksp_residual information for a given timestep
+            and mesh level.
+
+        Parameters
+        ----------
+        data_set : tuples
+
+        Returns
+        -------
+        return_data :
+        """
+        return_data = []
+        data_set = data_set[0]
+        if data_set[0] in self.data_dictionary.keys():
+            if data_set[1] in self.data_dictionary[data_set[0]].keys():
+                if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
+                        return_data.append(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0])
+                else:
+                    print 'The third key ' + `data_set[2]` + ' is not valid.'
+            else:
+                print 'The second key ' + `data_set[1]` + ' is not valid.'
+        else:
+            print 'The first key ' + `data_set[0]` + ' is not valid.'
+        return return_data[0]
 
     def ipython_plot_ksp_schur_residual(self,time_level_it,axis=False):
         """ Plot the inner KSP residual in a jupyter notebook.
@@ -404,6 +429,30 @@ class NumericResults:
         else:
             self._init_ipython_plot(plot_data,legend,title)
 
+class NumericResults_Comparison_Tools():
+            
+    @staticmethod
+    def compareResidualVectors(x,y,instance):
+        """
+        Parameters
+        ----------
+        x: NumericResults
+        y: NumericResults
+        instance: tuple
+
+        Returns
+        -------
+        c : lst
+        """
+        a = numpy.asarray(x.get_ksp_resid_info(instance))
+        b = numpy.asarray(y.get_ksp_resid_info(instance))
+        min_len = min(len(a),len(b))
+        c = numpy.zeros(shape=(min_len,1))
+        for i in range(min_len):
+            c[i] = a[i] - b[i]
+        return c
+
+            
 class BasicTest():
     """ A base class for tests. """
     @classmethod
