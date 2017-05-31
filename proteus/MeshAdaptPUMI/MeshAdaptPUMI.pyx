@@ -31,7 +31,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int transferFieldToPUMI(char*, double*, int, int)
         int transferFieldToProteus(char*, double*, int, int)
         int transferPropertiesToPUMI(double*, double*,double*)
-        int transferModelInfo(int*,int*,int*,int*,int*,int*)
+        int transferModelInfo(int*,int*,int*,int*,int*,int*,int)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
         int adaptPUMIMesh()
@@ -99,11 +99,12 @@ cdef class MeshAdaptPUMI:
     ):
         numModelEntities = np.ascontiguousarray(numModelEntities)
         edges = np.ascontiguousarray(edges)
+        nMaxSegments = faces.shape[1]
         faces = np.ascontiguousarray(faces)
         meshVertex2Model = np.ascontiguousarray(meshVertex2Model)
         meshEdge2Model = np.ascontiguousarray(meshEdge2Model)
         meshBoundary2Model = np.ascontiguousarray(meshBoundary2Model)
-        return self.thisptr.transferModelInfo(<int*> numModelEntities.data,<int*> edges.data,<int *> faces.data,<int*> meshVertex2Model.data,<int*> meshEdge2Model.data,<int*> meshBoundary2Model.data)
+        return self.thisptr.transferModelInfo(<int*> numModelEntities.data,<int*> edges.data,<int *> faces.data,<int*> meshVertex2Model.data,<int*> meshEdge2Model.data,<int*> meshBoundary2Model.data,nMaxSegments)
     #def transferBCtagsToProteus(self, np.ndarray[int,ndim=2,mode="c"] tagArray, int idx, np.ndarray[int,ndim=1,mode="c"] ebN, np.ndarray[int, ndim=2, mode="c"] eN_global, np.ndarray[np.double_t,ndim=2,mode="c"] fluxBC):
     #    tagArray = np.ascontiguousarray(tagArray)
     #    ebN = np.ascontiguousarray(ebN)

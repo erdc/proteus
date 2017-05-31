@@ -85,7 +85,7 @@ class D_base:
       edgeClassifyChecklist = [0]*mesh.nEdges_owned
       boundaryClassifyChecklist = [0]*mesh.nElementBoundaries_global
       self.meshVertex2Model= [0]*mesh.nNodes_owned
-      self.meshEdge2Model=[0]*mesh.nEdges_owned
+      self.meshEdge2Model=[(0,0)]*mesh.nEdges_owned
       self.meshBoundary2Model=[0]*mesh.nElementBoundaries_global
 
       #identify model vertices with a k-d tree
@@ -133,11 +133,12 @@ class D_base:
               self.meshVertex2Model[vID] = (idxBoundary,self.nd-1)
               vertexClassifyChecklist[vID]=1
         else:
-          self.meshBoundary2Model[idx] = (mesh.elementMaterialTypes[0],self.nd)
+          regionID = mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[idx][0]]
+          self.meshBoundary2Model[idx] = (regionID,self.nd)
           boundaryClassifyChecklist[idx] = 1            
           for vID in mesh.elementBoundaryNodesArray[idx]:
             if (not vertexClassifyChecklist[vID]):
-              self.meshVertex2Model[vID] = (mesh.elementMaterialTypes[0],self.nd)
+              self.meshVertex2Model[vID] = (regionID,self.nd)
               vertexClassifyChecklist[vID]=1
   
       assert(min(vertexClassifyChecklist)==1)

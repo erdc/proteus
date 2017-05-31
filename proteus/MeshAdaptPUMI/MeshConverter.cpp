@@ -505,7 +505,7 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
 #include <cassert>
 #include <gmi_lookup.h>
 
-int MeshAdaptPUMIDrvr::transferModelInfo(int* numGeomEntities, int* edges, int* faces, int* mVertex2Model, int*mEdge2Model, int*mBoundary2Model){
+int MeshAdaptPUMIDrvr::transferModelInfo(int* numGeomEntities, int* edges, int* faces, int* mVertex2Model, int*mEdge2Model, int*mBoundary2Model,int nMaxSegments){
   numModelEntities[0] = numGeomEntities[0];
   numModelEntities[1] = numGeomEntities[1];
   numModelEntities[2] = numGeomEntities[2];
@@ -515,6 +515,7 @@ int MeshAdaptPUMIDrvr::transferModelInfo(int* numGeomEntities, int* edges, int* 
   meshVertex2Model = mVertex2Model;
   meshEdge2Model = mEdge2Model;
   meshBoundary2Model = mBoundary2Model;
+  numSegments = nMaxSegments;
   std::cerr<<"Finished Transferring Model Info\n";
   return 0;
 }
@@ -536,13 +537,17 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, int hasModel)
       nBoundaryNodes++;
     }    
   }
-
+  int numDim;
+  if(mesh.nNodes_element==3)
+    numDim = 2;
+  else
+    numDim = 3;
   if(hasModel){
     numModelNodes=numModelEntities[0];
     numModelEdges=numModelEntities[1];
     numModelBoundaries=numModelEntities[2];
     numModelRegions=numModelEntities[3];
-    if(numModelBoundaries==0){
+    if(numDim=2){
       //should add some sort of assertion statement here
       numModelBoundaries = numModelEdges;
     }
@@ -587,9 +592,19 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, int hasModel)
 
   //gfaces
   gmi_base_reserve(gMod_base,AGM_FACE,numModelRegions);
-
-  e = agm_add_ent(gMod_base->topo, AGM_FACE);
-  gmi_set_lookup(gMod_base->lookup, e, mesh.elementMaterialTypes[0]); //assumes material types are uniform
+  for(int i=0;i<numModelRegions;i++){
+    e = agm_add_ent(gMod_base->topo, AGM_FACE);
+    gmi_set_lookup(gMod_base->lookup, e, i+1); //assumes material types are enumerated starting from 1
+    b = agm_add_bdry(gMod_base->topo, e);
+    for(int k=0;k<numSegments;k++){
+      if(faceList[(i)*numSegments+k]==-1) break;
+      else{
+        std::cout<<"edge "<<faceList[(i)*numSegments+k]<<" "<<numSegments<<std::endl;
+        d = gmi_look_up(gMod_base->lookup,AGM_EDGE,faceList[(i)*numSegments+k]);
+        agm_add_use(gMod_base->topo,b,d);
+      }
+    }
+  }
 
   gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)2);
 
@@ -638,7 +653,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, int hasModel)
     pt[0]=mesh.nodeArray[vID*3+0];
     pt[1]=mesh.nodeArray[vID*3+1];
     pt[2]=mesh.nodeArray[vID*3+2];
-    std::cout<<"Mesh Vertex Dimension is "<<m->getModelType(gEnt)<<std::endl;
+    //std::cout<<"Mesh Vertex Dimension is "<<m->getModelType(gEnt)<<std::endl;
     vertices[vID] = m->createVert(gEnt);
     m->setPoint(vertices[vID],0,pt);
   }
@@ -668,7 +683,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, int hasModel)
   for(int edgID=0;edgID<mesh.nElementBoundaries_global;edgID++){
     if(hasModel){
       gEnt = m->findModelEntity(meshBoundary2Model[2*edgID+1],meshBoundary2Model[2*edgID]);
-      std::cout<<"What is the search say? "<<m->getModelType(gEnt)<<" "<<m->getModelTag(gEnt)<<" Type "<<meshBoundary2Model[2*edgID+1]<<" ID "<<meshBoundary2Model[2*edgID]<<std::endl;
+      //std::cout<<"What is the search say? "<<m->getModelType(gEnt)<<" "<<m->getModelTag(gEnt)<<" Type "<<meshBoundary2Model[2*edgID+1]<<" ID "<<meshBoundary2Model[2*edgID]<<std::endl;
       if(meshBoundary2Model[2*edgID+1]==1) //if entity is a on a model boundary
         modelBoundaryMaterial[meshBoundary2Model[2*edgID]] = mesh.elementBoundaryMaterialTypes[edgID];
     }
@@ -703,7 +718,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, int hasModel)
         elemverts[i]=vertices[vID];
       }
       gEnt = m->findModelEntity(2,mesh.elementMaterialTypes[fID]);
-      std::cout<<"Mesh Face Dimension is "<<m->getModelType(gEnt)<<std::endl;
+      //std::cout<<"Mesh Face Dimension is "<<m->getModelType(gEnt)<<std::endl;
       apf::buildElement(m,gEnt,apf::Mesh::TRIANGLE,elemverts);
   }
 
