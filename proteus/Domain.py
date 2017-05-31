@@ -152,7 +152,6 @@ class D_base:
                 for j, subf in enumerate(f):
                     lineloop = []
                     # vertices in facet
-                    print 'subf'+str(subf)
                     for k, ver in enumerate(subf):
                         if ver in lines_dict[subf[k-1]].keys():
                             lineloop += [lines_dict[subf[k-1]][ver]+1]
@@ -223,6 +222,7 @@ class D_base:
         geo.write('\n// Other Options\n')
         if he_max is not None:
             geo.write('Mesh.CharacteristicLengthMax = {0};\n'.format(he_max))
+        geo.write('Coherence;\n')
 
 
     def gmsh2proteus(self, geofile, BC_class):
