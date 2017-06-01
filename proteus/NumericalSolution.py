@@ -836,7 +836,7 @@ class NS_base:  # (HasTraits):
         #will need to move this to earlier when the mesh is created
         from proteus.MeshAdaptPUMI import MeshAdaptPUMI
         if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
-            p0.domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=0.05, numIter=2,sfConfig="ERM",logType="on")
+            p0.domain.PUMIMesh=n0.MeshAdaptMesh
             p0.domain.hasModel = 0 
             if p0.domain.vertices:
               p0.domain.hasModel = 1 #move to domain definition
