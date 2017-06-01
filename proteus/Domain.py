@@ -129,7 +129,7 @@ class D_base:
               self.meshBoundary2Model[idx] = (idxBoundary,self.nd-1)
           boundaryClassifyChecklist[idx] = 1            
           for vID in mesh.elementBoundaryNodesArray[idx]:
-            if (not vertexClassifyChecklist[vID]):
+            if (vertexClassifyChecklist[vID] != 1): #it can be 0 or it can be 2 
               self.meshVertex2Model[vID] = (idxBoundary,self.nd-1)
               vertexClassifyChecklist[vID]=1
         else:
@@ -139,9 +139,9 @@ class D_base:
           for vID in mesh.elementBoundaryNodesArray[idx]:
             if (not vertexClassifyChecklist[vID]):
               self.meshVertex2Model[vID] = (regionID,self.nd)
-              vertexClassifyChecklist[vID]=1
+              vertexClassifyChecklist[vID]=2
   
-      assert(min(vertexClassifyChecklist)==1)
+      assert(len(boundaryClassifyChecklist)==sum(boundaryClassifyChecklist))
       assert(min(boundaryClassifyChecklist)==1)
 
     def writeAsymptote(self, fileprefix):
@@ -605,7 +605,7 @@ class PlanarStraightLineGraphDomain(D_base):
     2D domains described by planar straight line graphs.
     """
 
-    def __init__(self, fileprefix=None, vertices=None, segments=None, holes=None, regions=None, vertexFlags=None,
+    def __init__(self, fileprefix=None, vertices=None, segments=None, facets=None, holes=None, regions=None, vertexFlags=None,
                  segmentFlags=None, regionFlags=None, regionConstraints=None, bc=None, name="DefaultPSLGDomain", units="m"):
         """
         Construct the PSLG from lists of vertices, segments, etc. If no vertex or segment flags are given, then they are assigned as zero.
@@ -617,6 +617,7 @@ class PlanarStraightLineGraphDomain(D_base):
             self.polyfile = None
             self.vertices = vertices or []
             self.segments = segments or []
+            self.facets = facets or []
             self.holes = holes or []
             self.regions = regions or []
             self.vertexFlags = vertexFlags or []

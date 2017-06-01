@@ -853,16 +853,28 @@ class NS_base:  # (HasTraits):
                 facetList = []
                 maxFacetLength = 0
                 numHoles = len(p0.domain.holes)
-                for i in range(numHoles,len(p0.domain.facets)):
-                  for j in range(len(p0.domain.facets[i])):
-                    maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i][j]))
-                for i in range(numHoles,len(p0.domain.facets)):
-                  facetList.append(list(p0.domain.facets[i][0]))
-                  if(len(p0.domain.facets[i][0])<maxFacetLength):
-                    initLength = len(p0.domain.facets[i][0])
-                    lenDiff = maxFacetLength-initLength
-                    for j in range(lenDiff):
-                      facetList[i-numHoles].append(-1) #this seems to affect faceList directly, perhaps copy the array
+                if(numHoles): #if there are holes, there can be multiple lists of facets
+                  for i in range(numHoles,len(p0.domain.facets)):
+                    for j in range(len(p0.domain.facets[i])):
+                      maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i][j]))
+                  for i in range(numHoles,len(p0.domain.facets)):
+                    facetList.append(list(p0.domain.facets[i][0]))
+                    if(len(p0.domain.facets[i][0])<maxFacetLength):
+                      initLength = len(p0.domain.facets[i][0])
+                      lenDiff = maxFacetLength-initLength
+                      for j in range(lenDiff):
+                        facetList[i-numHoles].append(-1)
+                else:
+                  for i in range(len(p0.domain.facets)):
+                    maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i]))
+                  for i in range(len(p0.domain.facets)):
+                    facetList.append(list(p0.domain.facets[i]))
+                    if(len(p0.domain.facets[i])<maxFacetLength):
+                      initLength = len(p0.domain.facets[i])
+                      lenDiff = maxFacetLength-initLength
+                      for j in range(lenDiff):
+                        facetList[i-numHoles].append(-1)
+
                 #substitute the vertex IDs with segment IDs
                 newFacetList = copy.deepcopy(facetList)
                 for i in range(len(facetList)):
