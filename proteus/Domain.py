@@ -91,7 +91,7 @@ class D_base:
       #identify model vertices with a k-d tree
       meshVertexTree = spatial.cKDTree(mesh.nodeArray)
       for idx,vertex in enumerate(self.vertices):
-        if(self.nd==2): #there might be a smarter way to do this
+        if(self.nd==2 and len(vertex) == 2): #there might be a smarter way to do this
           vertex.append(0.0) #need to make a 3D coordinate
         closestVertex = meshVertexTree.query(vertex)
         self.meshVertex2Model[closestVertex[1]] = (idx,0) #in cpp will make this a 1D array?
