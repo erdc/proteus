@@ -60,6 +60,8 @@
 	    write(*,*) 'Input should be: (.mesh) (length scale, optional) '// &
         '(x permutation, optional) (y permutation, optional) '// &
         '(z permutation, optional)'
+      write(*,*) 'The length scale scales the vertex coordinates '// &
+        'in each dimension in the resulting mesh'
       write(*,*) 'If using the optional permutation input, all three '//&
         'permutations must be specified. The permutations dictate '//&
         'how vertices are written out in the resulting mesh. Default '//&
