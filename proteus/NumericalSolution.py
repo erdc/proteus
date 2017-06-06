@@ -818,6 +818,7 @@ class NS_base:  # (HasTraits):
                     for lm in m.levelModelList:
                         for ci in range(lm.coefficients.nc):
                             lm.u[ci].dof_last[:] = lm.u[ci].dof
+            vel_norm = max(abs(self.modelList[0].levelModelList[0].u[1].dof))**2 + max(abs(self.modelList[0].levelModelList[0].u[2].dof))**2
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
             while self.systemStepController.t_system_last < self.tn:
@@ -831,7 +832,8 @@ class NS_base:  # (HasTraits):
 
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
                         logEvent("NumericalAnalytics Model %s " % (model.name), level=0)                        
-                        logEvent("NumericalAnalytics Time Step " + `self.t_stepSequence`, level=0)                        
+                        logEvent("NumericalAnalytics Time Step " + `self.t_stepSequence`, level=0)
+                        logEvent("NumericalAnalytics Velocity Norm " + `vel_norm`, level = 0)
                         logEvent("Model: %s" % (model.name),level=1)
                         logEvent("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
 

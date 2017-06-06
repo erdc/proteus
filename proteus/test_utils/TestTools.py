@@ -50,7 +50,7 @@ class NumericResults:
     data_dictionary_header : dict
         A dictionary that stores information about the simulation.
     """
-    def __init__(self,data_dict,data_dict_header):
+    def __init__(self,data_dict,data_dict_header,velocity_data=[]):
         """ Initializes the Numeric Results class 
 
         Parameters
@@ -62,12 +62,13 @@ class NumericResults:
         """
         self.data_dictionary = data_dict
         self.data_dictionary_header = data_dict_header
+        self.velocity_data = velocity_data
 
     @classmethod
     def build_from_proteus_log(cls,file_name):
         """Initialize the class from a proteus log file. """
-        data_dict, data_dict_header = cls._parse_file(file_name)
-        return cls(data_dict,data_dict_header)
+        data_dict, data_dict_header, velocity_data = cls._parse_file(file_name)
+        return cls(data_dict,data_dict_header,velocity_data=velocity_data)
 
     @classmethod
     def load_from_pickle(cls,file_name):
@@ -99,6 +100,7 @@ class NumericResults:
 
         data_dictionary_header = {}
         data_dictionary = {}
+        velocity_data = []
         data_dictionary_header['Petsc'] = []
 
         NA_header     = re.compile("NAHeader(.*)$")
@@ -113,6 +115,7 @@ class NumericResults:
         NA_newton     = re.compile("NewtonNorm: (.*)$")
         NA_outersolve = re.compile("KSPOuterResidual: (.*)$")
         NA_innersolve = re.compile("KSPSchurResidual: (.*)$")
+        NA_velNorm    = re.compile("Velocity Norm(.*)$")
 
         for line in log_file:
             for match in re.finditer(NA_header,line):
@@ -137,6 +140,7 @@ class NumericResults:
             for match in re.finditer(NA_pattern,line):
                 new_line = NA_pattern.search(line).groups()[0]
 
+                
                 for model_match in re.finditer(NA_model,new_line):
                     model = str(NA_model.search(new_line).groups()[0])
                     try:
@@ -147,6 +151,10 @@ class NumericResults:
                 for time_match in re.finditer(NA_time,new_line):
                     time_match = float(NA_time.search(new_line).groups()[0])
                     data_dictionary[model][time_match] = [[],{}]
+
+                for velocity_match in re.finditer(NA_velNorm,new_line):
+                    vel_match = float(NA_velNorm.search(new_line).groups()[0])
+                    velocity_data.append(vel_match)
 
                 for level_match in re.finditer(NA_level,new_line):
                     level_match = int(NA_level.search(new_line).groups()[0])
@@ -170,7 +178,7 @@ class NumericResults:
                     innerksp_match = float(NA_innersolve.search(new_line).groups()[0])
                     data_dictionary[model][time_match][1][level_match][1][newton_it_key][1][outerksp_match_key].append(innerksp_match)
 
-        return data_dictionary, data_dictionary_header
+        return data_dictionary, data_dictionary_header, velocity_data
 
     def pickle_data(self,filename):
         """Pickle the dictionary created after parsing the file.
