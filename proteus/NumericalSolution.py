@@ -838,7 +838,7 @@ class NS_base:  # (HasTraits):
         if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
             p0.domain.PUMIMesh=n0.MeshAdaptMesh
             p0.domain.hasModel = 0 
-            if p0.domain.vertices:
+            if p0.domain.vertices and n0.useModel:
               p0.domain.hasModel = 1 #move to domain definition
               p0.domain.getMesh2ModelClassification(self.modelList[0].levelModelList[0].mesh)
               numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
@@ -895,7 +895,39 @@ class NS_base:  # (HasTraits):
               mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
               mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
               p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
+
+            import Comm
+            comm = Comm.get().comm.tompi4py()
+
+            #I want to create an array that indicates which rank every node exists on
+            #First, I will create the nodeRanksArray and initialize the list with the owning rank associated with each node
+            #Second, I will loop over all of the non-owned nodes on each rank and send the nodeID and rank to 0th rank.
+            # The 0th rank will update this array and then broadcast to the remaining ranks? 
+          
+            testMesh = self.modelList[0].levelModelList[0].mesh.globalMesh
+            if(comm.rank==0):
+              testMesh.nodeRanksArray = numpy.empty([testMesh.nNodes_global,comm.size],dtype="i")
+              for nodeID in range(testMesh.nNodes_global):
+                testMesh.nodeRanksArray[nodeID,0]= numpy.argwhere(nodeID <= testMesh.nodeOffsets_subdomain_owned[1:]).min()
+                #initialize the remaining values as -1
+                testMesh.nodeRanksArray[nodeID,1:]=-1
             
+            if(comm.rank>0):
+              theMesh = self.modelList[0].levelModelList[0].mesh
+              testArray = numpy.ones((theMesh.nNodes_global-theMesh.nNodes_owned,2),'i')*comm.rank
+              for i in range(theMesh.nNodes_owned, theMesh.subdomainMesh.nNodes_global):
+                testArray[i-theMesh.nNodes_owned,0]=numpy.argwhere(testMesh.nodeOffsets_subdomain_owned <= testMesh.nodeNumbering_subdomain2global[i]).max()
+                testArray[i-theMesh.nNodes_owned,1]=testMesh.nodeNumbering_subdomain2global[i]
+
+              # Sort rows of the arrays by first index for easier grouping?
+              # Send the array to the desired processor
+              comm.isend(testArray,dest=0,tag=101)
+            if(comm.rank==0):
+              req=comm.irecv(source=1,tag=101)
+              data = req.wait()
+            if(comm.rank==0):
+              from pdb_clone import pdb; pdb.set_trace_remote()
+            comm.barrier() 
             p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,p0.domain.hasModel)
         if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
