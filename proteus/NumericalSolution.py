@@ -311,8 +311,14 @@ class NS_base:  # (HasTraits):
                     check_call("mv {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
                     check_call("mv {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
                     check_call("mv {0:s}.1.face {0:s}.face".format(fileprefix), shell=True)
-                    check_call("mv {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
-                    check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+                    try:
+                        check_call("mv {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
+                    except:
+                        pass
+                    try:
+                        check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+                    except:
+                        pass
                 comm.barrier()
                 logEvent("Initializing mesh and MultilevelMesh")
                 nbase = 1
