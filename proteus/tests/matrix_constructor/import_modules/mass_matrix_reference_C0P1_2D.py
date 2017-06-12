@@ -3,6 +3,8 @@ from proteus import default_p as p
 from proteus import default_n as n
 from proteus import default_s,default_so
 import numpy
+reload(p)
+reload(n)
 import proteus as pr
 
 p.nd = 2
@@ -50,7 +52,6 @@ n.matrix = pr.LinearAlgebraTools.SparseMatrix
 n.multilevelLinearSolver = pr.LinearSolvers.LU
 n.levelLinearSolver = pr.LinearSolvers.LU#MGM#
 n.linearSolverConvergenceTest= 'r'#r-true'#'r'
-
 #########################################################################
 
 so = default_so
