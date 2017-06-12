@@ -63,6 +63,7 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         petsc4py.PETSc.Options().setValue("pc_factor_mat_solver_package","mumps")
 
     def _runTest(self):
+        Profiling.openLog('proteus.log',7)
         self._scriptdir = os.path.dirname(__file__)
         self.ns = NumericalSolution.NS_base(self.so,
                                             self.pList,
@@ -72,14 +73,13 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         self.ns.calculateSolution('stokes')
         relpath = 'comparison_files/drivenCavityStokes_expected.h5'
         expected = tables.openFile(os.path.join(self._scriptdir,relpath))
-        actual = tables.openFile(os.path.join(self._scriptdir,relpath),
-                                 '/drivenCavityStokesTrial.h5','r')
+        actual = tables.openFile('drivenCavityStokesTrial.h5','r')
         assert numpy.allclose(expected.root.velocity_t1,
                               actual.root.velocity_t1,
                               atol=1e-2)
         expected.close()
-        actual.close()        
-        
+        actual.close()
+
     def test_01_FullRun(self):
         stokesDrivenCavity_2d_n.linearSmoother = proteus.LinearSolvers.Schur_Qp
         self._setPETSc()
@@ -88,7 +88,7 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
         expected_log = TestTools.NumericResults.build_from_proteus_log(os.path.join(self._scriptdir,
                                                                                     relpath))
-        
+
         plot_lst = [(1.0,0,0),(1.0,1,0),(1.0,2,0)]
         L1 = expected_log.get_ksp_resid_it_info(plot_lst)
         L2 = actual_log.get_ksp_resid_it_info(plot_lst)
