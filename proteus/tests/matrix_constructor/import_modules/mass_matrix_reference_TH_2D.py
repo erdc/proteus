@@ -2,6 +2,8 @@ from proteus import iproteus as ip
 from proteus import default_p as p
 from proteus import default_n as n
 from proteus import default_s,default_so
+reload(n)
+reload(p)
 import numpy
 import proteus as pr
 
