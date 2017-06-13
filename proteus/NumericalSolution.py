@@ -314,8 +314,10 @@ class NS_base:  # (HasTraits):
                     try:
                         check_call("mv {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
                     except:
+                        logEvent("Warning: couldn't move {0:s}.1.neigh".format(fileprefix))
                         pass
                     try:
+                        logEvent("Warning: couldn't move {0:s}.1.edge".format(fileprefix))
                         check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
                     except:
                         pass
