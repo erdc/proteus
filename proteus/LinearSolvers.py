@@ -677,10 +677,10 @@ class KSP_petsc4py(LinearSolver):
                                                computeRates=False,
                                                printInfo=False)
                 self.pc = p4pyPETSc.PC().createPython(self.pccontext)
-            elif Preconditioner == SimpleNavierStokes3D:
+            elif Preconditioner == Schur_Sp:
                 logEvent("NAHeader Preconditioner selfp" )
                 # TODO - fix this
-                self.preconditioner = SimpleNavierStokes(par_L,prefix,self.bdyNullSpace)
+                self.preconditioner = Schur_Sp(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Qp:
                 logEvent("NAHeader Preconditioner Qp" )
@@ -960,6 +960,21 @@ class NavierStokesSchur(SchurPrecon):
         self.operator_constructor = SchurOperatorConstructor(self,
                                                              pde_type='navier_stokes')
 
+
+class Schur_Sp(SchurPrecon):
+    """ 
+    A saddle point schur preconditioner that uses petsc's built in
+    selfp as a Schur complement approximation.
+    """
+    def __init__(self,L,prefix,bdyNullSpace=False):
+        SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
+        p4pyPETSc.Options().setValue('pc_fieldsplit_schur_precondition','selfp')
+
+    def setUp(self,global_ksp):
+        self._setSchurlog(global_ksp)
+        if self.bdyNullSpace == True:
+            self._setConstantPressureNullSpace(global_ksp)
+    
 class Schur_Qp(SchurPrecon) :
     """ 
     A Navier-Stokes (or Stokes) preconditioner which uses the 
