@@ -2227,6 +2227,12 @@ class RandomWavesFast:
              Component phases (if set to None, phases are picked at random)
     Lgen : numpy.ndarray
              Length of the generation zone (np.array([0., 0., 0.]) by default
+    Nwaves : int
+             Number of waves per window
+    Nfreq : int
+             Number of Fourier components per window
+    checkAcc : bool
+             Switch for enabling accuracy checks
     fast : bool
              Switch for enabling optimised functions 
     
@@ -2286,7 +2292,8 @@ class RandomWavesFast:
         self.rec_d = False
         if self.Nwind < 3:
             logEvent("ERROR!: WaveTools.py: Found too few windows in RandomWavesFast. Consider increasing Tend (this is independent from the duration of the simulation)")
-	    sys.exit(1)
+            sys.exit(1)
+            
 
 
 
@@ -2744,6 +2751,12 @@ class RandomNLWavesFast:
     Vgen : numpy.ndarray
              Length of the generation zone (np.array([0., 0., 0.]) by default
             
+    Nwaves : int
+             Number of waves per window
+    Nfreq : int
+             Number of Fourier components per window
+    NLongw : int
+             Estmated ratio of long wave period to Tp
     fast : bool
              Switch for enabling optimised functions 
     """
