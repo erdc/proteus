@@ -2308,7 +2308,7 @@ class RandomWavesFast:
                  Lgen = Lgen,
             fast=self.fast
                  )
-
+         self.windows = TS.windows_rec
             #Checking accuracy of the approximation
 
         cut = 2.* self.cutoff * duration
@@ -2329,6 +2329,10 @@ class RandomWavesFast:
         self.windOut = TS.windOut
 
     def printOut(self):
+        """Prints some properties of the time series - ONLY FOR TESTING
+
+
+        """
         print "Number of windows=",self.Nwind
         print "Direct reconstruction? ",self.rec_d
         print "Start Time =", self.series[0,0]
@@ -2336,7 +2340,16 @@ class RandomWavesFast:
         print "Cutoff=", self.cutoff
         print "Er1 =", self.er1
 
+    def windowns(self):     
+        """Returns a list of the timeseries segmenents
 
+        Returns
+        -------
+        list
+            Index of window as an integer
+
+        """
+        return self.windows
 
 
 class RandomNLWaves:
