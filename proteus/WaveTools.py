@@ -2318,6 +2318,7 @@ class RandomWavesFast:
                  )
 
         self.windows = TS.windows_rec
+        self.ho = TS.windows_handover
         #Checking accuracy of the approximation
         cut = 2.* self.cutoff * duration
         ts = self.series[0,0]+cut
@@ -2348,16 +2349,6 @@ class RandomWavesFast:
         print "Cutoff=", self.cutoff
         print "Er1 =", self.er1
 
-    def windowns(self):     
-        """Returns a list of the timeseries segmenents
-
-        Returns
-        -------
-        list
-            Index of window as an integer
-
-        """
-        return self.windows
 
 
 class RandomNLWaves:
