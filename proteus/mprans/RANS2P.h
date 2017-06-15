@@ -837,7 +837,7 @@ namespace proteus
 					   double dmom_v_source[nSpace],
 					   double dmom_w_source[nSpace])
     {
-      double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,H_s1,H_s2;;
+      double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,H_s1,H_s2,H_s3;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
@@ -849,12 +849,16 @@ namespace proteus
       double x = fmax(0.0, fmin( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
      
       //H_s =  (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
-      H_s1 = 0.5*(1. - cos(M_PI*x));
+      //      H_s1 = 0.5*(1. - cos(M_PI*x));
+      // Relaxation function, Jacobsen et al. 2011, Mayer et al 1998
+      H_s3 = (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
+      
+      //      x = 1. - x;
+      //      H_s2 = 1.- (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
 
-      x = 1. - x;
-      H_s2 = 1.- (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
 
-      H_s = (1.-H_s2)*H_s1 + H_s2*H_s2;
+
+      H_s = H_s3; //(1.-H_s2)*H_s1 + H_s2*H_s2;
 
       //
       //implicit
