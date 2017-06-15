@@ -248,7 +248,7 @@ class NS_base:  # (HasTraits):
                         logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
                         check_call(gmsh_cmd, shell=True)
                         logEvent("Done running gmsh; converting to triangle")
-                        MeshTools.msh2triangle(p.domain.geofile)
+                        MeshTools.msh2simplex(fileprefix=p.domain.geofile, nd=2)
 
                     comm.barrier()
                     mesh = MeshTools.TriangularMesh()
@@ -287,36 +287,40 @@ class NS_base:  # (HasTraits):
             elif isinstance(p.domain,Domain.PiecewiseLinearComplexDomain):
                 from subprocess import call
                 import sys
+                if p.domain.use_gmsh is True:
+                    fileprefix = p.domain.geofile
+                else:
+                    fileprefix = p.domain.polyfile
                 if comm.rank() == 0 and (p.genMesh or not (os.path.exists(p.domain.polyfile+".ele") and
                                                            os.path.exists(p.domain.polyfile+".node") and
                                                            os.path.exists(p.domain.polyfile+".face"))):
-                    logEvent("Running tetgen to generate 3D mesh for "+p.name,level=1)
-                    tetcmd = "tetgen -%s %s.poly" % (n.triangleOptions,p.domain.polyfile)
-                    logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
-
-                    check_call(tetcmd, shell=True)
-
-                    logEvent("Done running tetgen")
-                    elefile  = "%s.1.ele" % p.domain.polyfile
-                    nodefile = "%s.1.node" % p.domain.polyfile
-                    facefile = "%s.1.face" % p.domain.polyfile
-                    edgefile = "%s.1.edge" % p.domain.polyfile
-                    assert os.path.exists(elefile), "no 1.ele"
-                    tmp = "%s.ele" % p.domain.polyfile
-                    os.rename(elefile,tmp)
-                    assert os.path.exists(tmp), "no .ele"
-                    assert os.path.exists(nodefile), "no 1.node"
-                    tmp = "%s.node" % p.domain.polyfile
-                    os.rename(nodefile,tmp)
-                    assert os.path.exists(tmp), "no .node"
-                    if os.path.exists(facefile):
-                        tmp = "%s.face" % p.domain.polyfile
-                        os.rename(facefile,tmp)
-                        assert os.path.exists(tmp), "no .face"
-                    if os.path.exists(edgefile):
-                        tmp = "%s.edge" % p.domain.polyfile
-                        os.rename(edgefile,tmp)
-                        assert os.path.exists(tmp), "no .edge"
+                    if p.domain.use_gmsh is True:
+                        logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
+                        gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh".format(fileprefix+'.geo', p.domain.geofile+'.msh')
+                        logEvent("Calling gmsh on rank 0 with command %s" % (gmsh_cmd,))
+                        check_call(gmsh_cmd, shell=True)
+                        logEvent("Done running gmsh; converting to tetgen")
+                        MeshTools.msh2simplex(fileprefix=fileprefix, nd=3)
+                        check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
+                    else:
+                        logEvent("Running tetgen to generate 3D mesh for "+p.name, level=1)
+                        tetcmd = "tetgen -{0} {1}.poly".format(n.triangleOptions, p.domain.polyfile)
+                        logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
+                        check_call(tetcmd, shell=True)
+                        logEvent("Done running tetgen")
+                    check_call("mv {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
+                    check_call("mv {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
+                    check_call("mv {0:s}.1.face {0:s}.face".format(fileprefix), shell=True)
+                    try:
+                        check_call("mv {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
+                    except:
+                        logEvent("Warning: couldn't move {0:s}.1.neigh".format(fileprefix))
+                        pass
+                    try:
+                        logEvent("Warning: couldn't move {0:s}.1.edge".format(fileprefix))
+                        check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+                    except:
+                        pass
                 comm.barrier()
                 logEvent("Initializing mesh and MultilevelMesh")
                 nbase = 1
@@ -326,12 +330,12 @@ class NS_base:  # (HasTraits):
                                                              parallelPartitioningType=n.parallelPartitioningType)
                 if opts.generatePartitionedMeshFromFiles:
                     logEvent("Generating partitioned mesh from Tetgen files")
-                    mlMesh.generatePartitionedMeshFromTetgenFiles(p.domain.polyfile,nbase,mesh,n.nLevels,
+                    mlMesh.generatePartitionedMeshFromTetgenFiles(fileprefix,nbase,mesh,n.nLevels,
                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                   parallelPartitioningType=n.parallelPartitioningType)
                 else:
                     logEvent("Generating coarse global mesh from Tetgen files")
-                    mesh.generateFromTetgenFiles(p.domain.polyfile,nbase,parallel = comm.size() > 1)
+                    mesh.generateFromTetgenFiles(fileprefix,nbase,parallel = comm.size() > 1)
                     logEvent("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
