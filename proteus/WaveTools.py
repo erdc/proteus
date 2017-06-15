@@ -1340,7 +1340,7 @@ class MultiSpectraRandomWaves:
 
         NN = 0
         for kk in range(Nspectra):
-            logEvent("ERROR! Wavetools.py: Reading spectra No %s" %kk)
+            logEvent("INFO Wavetools.py: Reading spectra No %s" %kk)
             NN1 = NN
             NN +=N[kk]
             RW = RandomWaves(
@@ -1810,7 +1810,7 @@ class TimeSeries:
             if dt_temp!=self.dt:
                 doInterp = True
         if(doInterp):
-            logEvent("ERROR! WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
+            logEvent("INFO WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
             self.time = np.linspace(time_temp[0],time_temp[-1],len(time_temp))
             self.etaS = np.interp(self.time,time_temp,tdata[:,1])
         else:
@@ -1902,19 +1902,19 @@ class TimeSeries:
 
             validWindows = [costap, tophat]
             wind_filt =  loadExistingFunction(windowName, validWindows)
-            logEvent("ERROR! WaveTools.py: performing series decomposition with spectral windows")
+            logEvent("INFO WaveTools.py: performing series decomposition with spectral windows")
             # Portion of overlap, compared to window time
             try:
                 self.overlap = window_params["Overlap"]
             except:
                 self.overlap = 0.25
-                logEvent("ERROR! WaveTools.py: Overlap entry in window_params dictionary not found. Setting default value of 0.25 (1/4 of the window length)")
+                logEvent("INFO WaveTools.py: Overlap entry in window_params dictionary not found. Setting default value of 0.25 (1/4 of the window length)")
 
             try:
                 self.cutoff = window_params["Cutoff"]
             except:
                 self.cutoff= 0.1
-                logEvent("ERROR! WaveTools.py: Cutoff entry in window_params dictionary not found. Setting default value of 0.1 (1/10 of the window length)")
+                logEvent("INFO WaveTools.py: Cutoff entry in window_params dictionary not found. Setting default value of 0.1 (1/10 of the window length)")
 
 
 
@@ -2227,6 +2227,12 @@ class RandomWavesFast:
              Component phases (if set to None, phases are picked at random)
     Lgen : numpy.ndarray
              Length of the generation zone (np.array([0., 0., 0.]) by default
+    Nwaves : int
+             Number of waves per window
+    Nfreq : int
+             Number of Fourier components per window
+    checkAcc : bool
+             Switch for enabling accuracy checks
     fast : bool
              Switch for enabling optimised functions 
     
@@ -2286,6 +2292,8 @@ class RandomWavesFast:
         self.rec_d = False
         if self.Nwind < 3:
             logEvent("ERROR!: WaveTools.py: Found too few windows in RandomWavesFast. Consider increasing Tend (this is independent from the duration of the simulation)")
+            sys.exit(1)
+            
 
 
 
@@ -2743,6 +2751,12 @@ class RandomNLWavesFast:
     Vgen : numpy.ndarray
              Length of the generation zone (np.array([0., 0., 0.]) by default
             
+    Nwaves : int
+             Number of waves per window
+    Nfreq : int
+             Number of Fourier components per window
+    NLongw : int
+             Estmated ratio of long wave period to Tp
     fast : bool
              Switch for enabling optimised functions 
     """
