@@ -492,6 +492,12 @@ class Mesh:
 
     This is the base class for meshes. Contains routines for
     plotting the edges of the mesh in Matlab
+
+    Attributes
+    ----------
+    elementBoundariesArray : array type
+        This array lists the global edge number associated with every
+        edge or face of an element.
     """
     #cek adding parallel support
     def __init__(self):
@@ -3801,6 +3807,49 @@ class MultilevelHexahedralMesh(MultilevelMesh):
         for m in self.meshList:
             m.computeGeometricInfo()
 
+def buildReferenceSimplex(nd=2):
+    """
+    Create and return a Proteus mesh object for the reference 
+    element.
+
+    Parameters
+    ----------
+    nd : int
+        Dimension of reference element
+
+    Returns
+    -------
+    mesh : :class:`proteus.MeshTools.TriangularMesh`
+        Simplex mesh
+    """
+    from proteus import Domain
+    from proteus import TriangleTools
+
+    assert(nd in [1,2,3])
+
+    if nd==1:
+        pass # Note sure what needs to go here?!
+    
+    unit_simplex_domain = Domain.unitSimplex(nd)
+    polyfile = "reference_element"
+    unit_simplex_domain.writePoly(polyfile)
+
+    if nd==2:
+        tmesh = TriangleTools.TriangleBaseMesh(baseFlags="Yp",
+                                               nbase=1,
+                                               verbose=False)
+        tmesh.readFromPolyFile(polyfile)
+        mesh = tmesh.convertToProteusMesh(verbose=0)
+        mesh.partitionMesh()
+        mesh.globalMesh = mesh
+        return mesh
+    if nd==3:
+        runTetgen(polyfile,
+                  "Yp")
+        mesh = genMeshWithTetgen(polyfile,
+                                 nbase = 1)
+        return mesh
+
 class TriangularMesh(Mesh):
     """A mesh of triangles
 
@@ -6088,6 +6137,81 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
             intersections.update(((tuple(elementIntersections[0]), tuple(elementIntersections[1])),),)
     return intersections
 
+def runTetgen(polyfile,
+              baseFlags="Yp",
+              name = ""):
+    """
+    Generate tetgen files from a polyfile.
+
+    Arguments
+    ---------
+    polyfile : str
+        Filename with appropriate data for tengen.
+    baseFlags : str
+        Standard Tetgen options for generation
+    name : str
+        
+
+    """
+    from subprocess import check_call
+    tetcmd = "tetgen - %s %s.poly" % (baseFlags, polyfile)
+    
+    check_call(tetcmd,shell=True)
+    
+    logEvent("Done running tetgen")
+    elefile = "%s.1.ele" % polyfile
+    nodefile = "%s.1.node" % polyfile
+    facefile = "%s.1.face" % polyfile
+    edgefile = "%s.1.edge" % polyfile
+    assert os.path.exists(elefile), "no 1.ele"
+    tmp = "%s.ele" % polyfile
+    os.rename(elefile,tmp)
+    assert os.path.exists(tmp), "no .ele"
+    assert os.path.exists(nodefile), "no 1.node"
+    tmp = "%s.node" % polyfile
+    os.rename(nodefile,tmp)
+    assert os.path.exists(tmp), "no .node"
+    if os.path.exists(facefile):
+        tmp = "%s.face" % polyfile
+        os.rename(facefile,tmp)
+        assert os.path.exists(tmp), "no .face"
+    if os.path.exists(edgefile):
+        tmp = "%s.edge" % polyfile
+        os.rename(edgefile,tmp)
+        assert os.path.exists(tmp), "no .edge"
+
+def genMeshWithTetgen(polyfile,
+                      nbase=1):
+   """
+   Generate a mesh from a set of tetgen files.
+
+   Arguments
+   ---------
+   polyfile : str
+       Filename base for tetgen files
+   nbase : int
+
+   Returns
+    -------
+   mesh : :class:`proteus.MeshTools.TetrahedralMesh`
+       Simplex mesh
+   """
+   elefile = "%s.ele" % polyfile
+   nodefile = "%s.node" % polyfile
+   facefile = "%s.face" % polyfile
+   edgefile = "%s.edge" % polyfile
+   assert os.path.exists(elefile), "no .ele file"
+   assert os.path.exists(nodefile), "no  .node file"
+   assert os.path.exists(facefile), "no .face file"
+   mesh=TetrahedralMesh()
+   mesh.generateFromTetgenFiles(polyfile,
+                                base=nbase)
+   return mesh
+
+
+from proteus import default_n as dn
+from proteus import default_p as dp
+
 class MeshOptions:
     """
     Mesh options for the domain
@@ -6211,12 +6335,13 @@ class MeshOptions:
         self.outputFiles['poly'] = poly
         self.outputFiles['ply'] = ply
         self.outputFiles['asymptote'] = asymptote
-        self.outputFiles['geo'] = gmsh
+        self.outputFiles['geo'] = geo
 
 
-def msh2triangle(fileprefix):
+def msh2simplex(fileprefix, nd):
     """
-    Converts a .msh file (Gmsh) to .ele .edge .node files (triangle)
+    Converts a .msh file (Gmsh) to .ele .edge .node files (triangle).
+    (!) Works only with triangle elements in 2D and tetrahedral elements in 3D.
 
     Parameters
     ----------
@@ -6224,17 +6349,18 @@ def msh2triangle(fileprefix):
         prefix of the .msh file (e.g. 'mesh' if file called 'mesh.msh')
 
     """
+    assert nd == 2 or nd == 3, 'nd must be 2 or 3'
     mshfile = open(fileprefix+'.msh', 'r')
     nodes = []
     edges_msh = []
     triangles = []
     tetrahedra = []
+    tetrahedron_nb = 0
     triangle_nb = 0
     edge_nb = 0
-    nd = 2
     switch = None
     switch_count = -1
-    logEvent('msh2triangle: getting nodes and elements')
+    logEvent('msh2simplex: getting nodes and elements')
     for line in mshfile:
         if 'Nodes' in line:
             switch = 'nodes'
@@ -6272,6 +6398,9 @@ def msh2triangle(fileprefix):
                 elif el_type == 2: # triangle
                     triangle_nb += 1
                     triangles += [[triangle_nb, int(words[s]), int(words[s+1]), int(words[s+2]), flag]]
+                elif el_type == 4: # tetrahedron 
+                    tetrahedron_nb += 1
+                    tetrahedra += [[tetrahedron_nb, int(words[s]), int(words[s+1]), int(words[s+2]), int(words[s+3]), flag]]
                 elif el_type == 15: # node
                     nodes[el_id-1][4] = flag
         switch_count += 1
@@ -6283,7 +6412,7 @@ def msh2triangle(fileprefix):
     edge_nb = 0
     edges = []
 
-    logEvent('msh2triangle: constructing edges')
+    logEvent('msh2simplex: constructing edges')
     for triangle in triangles[:,1:4]:  # take only vertices index
         for i in range(len(triangle)):
             edge = Edge(edgeNumber=edge_nb, nodes=[triangle[i-1], triangle[i]])
@@ -6292,7 +6421,7 @@ def msh2triangle(fileprefix):
                 edge_nb += 1
                 edges_dict[edge.nodes] = edge
                 edges += [[edge_nb, edge.nodes[0], edge.nodes[1], 0]]
-    logEvent('msh2triangle: updating edges and nodes flags')
+    logEvent('msh2simplex: updating edges and nodes flags')
     edges = np.array(edges)
     for edge in edges_msh:
         edge_nodes = [edge[1], edge[2]]
@@ -6306,7 +6435,10 @@ def msh2triangle(fileprefix):
         if nodes[edge[2]-1][-1] == 0:  # update node flags
             nodes[edge[1]-1][-1] = edge[3]
 
-    logEvent('msh2triangle: writing .node .ele .edge files')
+    if nd == 2:
+        logEvent('msh2simplex: writing .node .ele .edge files')
+    elif nd == 3:
+        logEvent('msh2simplex: writing .node .ele .edge .face files')
     header = '{0:d} {1:d} 0 1'.format(node_nb, nd)
 
     if nd == 2:
@@ -6323,5 +6455,10 @@ def msh2triangle(fileprefix):
     if nd == 2:
         header = '{0:d} 3 1'.format(triangle_nb)
         np.savetxt(fileprefix+'.ele', triangles, fmt='%d', header=header, comments='')
+    elif nd == 3:
+        header = '{0:d} 3 1'.format(triangle_nb)
+        np.savetxt(fileprefix+'.face', triangles, fmt='%d', header=header, comments='')
+        header = '{0:d} 4 1'.format(tetrahedron_nb)
+        np.savetxt(fileprefix+'.ele', tetrahedra, fmt='%d', header=header, comments='')
 
-    logEvent('msh2triangle: finished converting .msh to triangle files')
+    logEvent('msh2simplex: finished converting .msh to simplex files')
