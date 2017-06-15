@@ -133,10 +133,10 @@ class BC_RANS(BC_Base):
         self.u_dirichlet.setConstantBC(0.)
         self.v_dirichlet.setConstantBC(0.)
         self.w_dirichlet.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(0.0)          
+        self.k_dirichlet.setConstantBC(0.)          
         self.p_advective.setConstantBC(0.)
         self.vof_advective.setConstantBC(0.)
-        self.dissipation_diffusive.setConstantBC(0.0)  
+        self.dissipation_diffusive.setConstantBC(0.)  
 
     def setFreeSlip(self):
         """
@@ -144,7 +144,7 @@ class BC_RANS(BC_Base):
         """
         self.reset()
         self.BC_type = 'FreeSlip'
-        self.k_dirichlet.setConstantBC(0.0)         
+        self.k_dirichlet.setConstantBC(0.)         
         self.p_advective.setConstantBC(0.)
         self.u_advective.setConstantBC(0.)
         self.v_advective.setConstantBC(0.)
@@ -153,13 +153,12 @@ class BC_RANS(BC_Base):
         self.u_diffusive.setConstantBC(0.)
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
-        self.dissipation_diffusive.setConstantBC(0.0)  
+        self.dissipation_diffusive.setConstantBC(0.)  
 
     def setAtmosphere(self, orientation=None, vof_air=1.):
         """
         Sets atmosphere boundary conditions (water can come out)
         (!) pressure dirichlet set to 0 for this BC
-
         Parameters
         ----------
         orientation: Optional[array_like]
@@ -173,22 +172,16 @@ class BC_RANS(BC_Base):
             orientation = self._b_or
         self.reset()
         self.p_dirichlet.setConstantBC(0.)
-        if self._b_or[0] == 1. or self._b_or[0] == -1.:
-            self.u_dirichlet.setConstantBC(0.)
-        else:
-            self.u_dirichlet.resetBC()
-        if self._b_or[1] == 1. or self._b_or[1] == -1.:
-            self.v_dirichlet.setConstantBC(0.)
-        else:
-            self.v_dirichlet.resetBC()
-        if self._b_or[2] == 1. or self._b_or[2] == -1.:
-            self.w_dirichlet.setConstantBC(0.)
-        else:
-            self.w_dirichlet.resetBC()
+        self.u_dirichlet.setConstantBC(0.)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
         self.vof_dirichlet.setConstantBC(vof_air)  # air
-        self.u_diffusive.setConstantBC(0.)
-        self.v_diffusive.setConstantBC(0.)
-        self.w_diffusive.setConstantBC(0.)
+        if self._b_or[0] == 1. or self._b_or[0] == -1.:
+            self.u_diffusive.setConstantBC(0.)
+        if self._b_or[1] == 1. or self._b_or[1] == -1.:
+            self.v_diffusive.setConstantBC(0.)
+        if self._b_or[2] == 1. or self._b_or[2] == -1.:
+            self.w_diffusive.setConstantBC(0.)
         self.k_diffusive.setConstantBC(0.)
         self.dissipation_diffusive.setConstantBC(0.)
 
@@ -261,11 +254,10 @@ class BC_RANS(BC_Base):
         self.k_diffusive.setConstantBC(0.) 
         self.dissipation_diffusive.setConstantBC(0.) 
 
-    def setWallFunction_ke_channelFlow(self, Y, U0, d, slip, nu=1.004e-6, rho=998.2,
-                                      Cmu=0.09, K=0.41, E=9.8 ):
+    def setWallFunction_ke(self, Y, U0, d, L=0.0, skinf='turbulent', 
+                                 nu=1.004e-6, Cmu=0.09, K=0.41, B=5.2 ):
         """
-        Sets turbulent boundaries for wall treatment of channel flow test problem where both 
-        top and bottom are walls.
+        Sets turbulent boundaries for wall treatment.        
         Calculation made on nodes outside the viscous sublayer and based
         on assumption on the velocity profile close to the wall in order to
         impose the wall shear stress.
@@ -281,184 +273,180 @@ class BC_RANS(BC_Base):
         U0: float.
             stream velocity at the middle of the channel.
         d: float.
-            half height of the channel.
-        slip: string.
-            switching between either free-slip or no-slip condition.
+            characteristic dimension of the problem.
+        L: float.
+            length of the boundaryLayer (usend only in skinf=boundaryLayer).
+        skinf: string.
+            switching between different skin friction formulae.
         nu: float.
             fluid viscosity.
-        rho: float.
-            density of the fluid.
         Cmu: float.
             turbulent viscosity constant.
         K: float.
             von Karman coefficient.
-        E: float.
+        B: float.
             roughness coefficient for walls.          
 
         """      
-        
-        # Skin friction (Pope pag 265)
+        # local velocity
+        #localU = WallRegion()
+        #U0 = localU.u
+        #self.domain = domain
+        #uLocal = domain.auxiliaryVariables['twp'][1].pointGaugeVecs[0]
+        #print uLocal
+        # Skin friction (Pope pages 265,301,307 - Schlichting pag 639)
         Re0 = U0*d/nu
-        cf = 4./Re0
+        ReL = U0*L/nu
+        rangeSkin = ['laminar', 'turbulent', 'boundaryLayer']
+        if skinf not in rangeSkin:
+            logEvent("Wrong slip_type given: Valid types are %s" %rangeSkin, level=0)
+            sys.exit(1)
+        if skinf == 'laminar':
+            cf = 4./Re0
+        elif skinf == 'turbulent':
+            cf = 0.045*( Re0**(-1./4.) )
+        elif skinf == 'boundaryLayer':
+            cf = 0.074*( ReL**(-1./5.) )
         ut = U0*np.sqrt(cf/2.)
         kp = (ut**2)/np.sqrt(Cmu)        
         Yplus = Y*ut/nu
-        # the closest point to the wall can be either in viscous or log or outer layer
-        if Yplus > 30. and Y/d<0.3:
+        # layers definition according to Pope pg 275
+        # viscous layer
+        if Yplus < 11.6:
+            Uplus = Yplus
+            U = Uplus*ut
+            gradU = (ut**2)/nu
+            dissipation = (ut**3)/(K*Y) 
+            nut = Cmu*(kp**2)/dissipation
+        # log-law layer
+        elif Yplus > 30. and Y/d < 0.3:
+            E = np.exp(B*K) 
             U = ut * np.log(E*Yplus) / K
             gradU = ut / (K*Y)
             dissipation = (ut**3)/(K*Y) 
             nut = Cmu*(kp**2)/dissipation
+        #defect-velocity layer
+        #elif Yplus > 50. and Y/d < 1.:
+        #    E = np.exp(B*K) 
+        #    U = U0 - 0.7*ut + ut * np.log(Y/d) / K
+        #    gradU = ut / (K*Y)
+        #    dissipation = (ut**3)/(K*Y) 
+        #    nut = Cmu*(kp**2)/dissipation
         else:
             logEvent("Point selected is not in the log law region", level=0)
             sys.exit(1)
 
-
         self.reset()
-
-        if slip not in ['NoSlip', 'FreeSlip']:
-            logEvent("Wrong slip_type given: Valid types are %s" %(['NoSlip', 'FreeSlip']), level=0)
-            sys.exit(1)
-
-        # slip condition
-        if slip == 'NoSlip':
-            self.BC_type = 'NoSlip'
-            self.u_dirichlet.setConstantBC(0.)
-            self.v_dirichlet.setConstantBC(0.)
-            self.w_dirichlet.setConstantBC(0.)
-            self.p_advective.setConstantBC(0.)
-            self.vof_advective.setConstantBC(0.)           
-        elif slip == 'FreeSlip':
-            self.BC_type = 'FreeSlip'
-            self.p_advective.setConstantBC(0.)
-            self.u_advective.setConstantBC(0.)
-            self.v_advective.setConstantBC(0.)
-            self.w_advective.setConstantBC(0.)
-            self.vof_advective.setConstantBC(0.)
-            self.u_diffusive.setConstantBC(0.)
-            self.v_diffusive.setConstantBC(0.)
-            self.w_diffusive.setConstantBC(0.)
-
-        # extra boundaries for the wall 
         self.u_dirichlet.setConstantBC(U)
-        self.u_diffusive.setConstantBC(gradU)
-        self.v_advective.setConstantBC(0.)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
         self.k_dirichlet.setConstantBC(kp)
-        self.k_advective.setConstantBC(0.)
-        self.k_diffusive.setConstantBC(0.)
         self.dissipation_dirichlet.setConstantBC(dissipation) 
+        self.vof_advective.setConstantBC(0.)
+        self.p_advective.setConstantBC(0.)
+        self.v_advective.setConstantBC(0.)
+        self.k_advective.setConstantBC(0.)
         self.dissipation_advective.setConstantBC(0.)
+        self.u_diffusive.setConstantBC(gradU)
+        self.k_diffusive.setConstantBC(0.)
 
-    def setWallFunction_ke_boundaryLayer(self, Y, U0, slip, nu=1.004e-6, rho=998.2,
-                                      Cmu=0.09, K=0.41, E=9.8 ):
+    def setWallFunction_kw(self, Y, U0, d, L=0.0, skinf='turbulent', 
+                                 nu=1.004e-6, Cmu=0.09, K=0.41, B=5.2 ):
         """
-        Sets turbulent boundaries for wall treatment.
-
-        This is for a generic flat-plate boundary layer.
-
+        Sets turbulent boundaries for wall treatment.        
         Calculation made on nodes outside the viscous sublayer and based
         on assumption on the velocity profile close to the wall in order to
         impose the wall shear stress.
+
         - k is assumed to be constant in the fully turbulent region close to the wall,
         in this way kv = kp.
-        - dissipation is calculated for k-e model.
+        - dissipation is calculated for k-w model.
 
         Parameters
         ----------
         Y: float.
             size of the nearest element to the wall.
         U0: float.
-            free stream velocity.
-        slip: string.
-            switching between either free-slip or no-slip condition.
+            stream velocity at the middle of the channel.
+        d: float.
+            characteristic dimension of the problem.
+        L: float.
+            length of the boundaryLayer (usend only in skinf=boundaryLayer).
+        skinf: string.
+            switching between different skin friction formulae.
         nu: float.
             fluid viscosity.
-        rho: float.
-            density of the fluid.
         Cmu: float.
             turbulent viscosity constant.
         K: float.
             von Karman coefficient.
-        E: float.
+        B: float.
             roughness coefficient for walls.          
 
         """      
-        
-        # Skin friction (Schlichting pag 639)
-        def get_ux_dirichlet(i):
-            def ux_dirichlet(x,t):
-                x[i] = max(1e-3,x[i])
-                d = 0.37*x[i]*( (U0*x[i]/nu)**(-1./5.) )
-                U = U0*( (Y/d)**(1./7.) )
-                U = min(U,U0)
-                return U
-            print  ux_dirichlet
-            return ux_dirichlet
-
-        def get_ux_diffusive(i):
-            def ux_diffusive(x,t):
-                x[i] = max(1e-3,x[i])
-                d = 0.37*x[i]*( (U0*x[i]/nu)**(-1./5.) )
-                tau = rho*(U0**2)*0.0255*( (nu/(U0*d))**(1./4.) )
-                gradU = tau/rho/nu
-                return gradU
-            print  ux_diffusive
-            return ux_diffusive
-
-        def get_k_dirichlet(i):
-            def k_dirichlet(x,t):
-                x[i] = max(1e-3,x[i])
-                cf = 0.072*( (U0*x[i]/nu)**(-1./5.) )
-                ut = U0*np.sqrt(cf/2.)
-                kp = (ut**2)/np.sqrt(Cmu)
-                return kp
-            print  k_dirichlet
-            return k_dirichlet
-
-        def get_dissipation_dirichlet(i):
-            def dissipation_dirichlet(x,t):
-                x[i] = max(1e-3,x[i])
-                cf = 0.072*( (U0*x[i]/nu)**(-1./5.) )
-                ut = U0*np.sqrt(cf/2.)
-                dissipation = (ut**3)/(K*Y) 
-                return dissipation
-            print  dissipation_dirichlet
-            return dissipation_dirichlet
-
-        self.reset()
-
-        if slip not in ['NoSlip', 'FreeSlip']:
-            logEvent("Wrong slip_type given: Valid types are %s" %(['NoSlip', 'FreeSlip']), level=0)
+        # local velocity
+        #localU = WallRegion()
+        #U0 = localU.u
+        #self.domain = domain
+        #uLocal = domain.auxiliaryVariables['twp'][1].pointGaugeVecs[0]
+        #print uLocal
+        # Skin friction (Pope pages 265,301,307 - Schlichting pag 639)
+        Re0 = U0*d/nu
+        ReL = U0*L/nu
+        rangeSkin = ['laminar', 'turbulent', 'boundaryLayer']
+        if skinf not in rangeSkin:
+            logEvent("Wrong slip_type given: Valid types are %s" %rangeSkin, level=0)
+            sys.exit(1)
+        if skinf == 'laminar':
+            cf = 4./Re0
+        elif skinf == 'turbulent':
+            cf = 0.045*( Re0**(-1./4.) )
+        elif skinf == 'boundaryLayer':
+            cf = 0.074*( ReL**(-1./5.) )
+        ut = U0*np.sqrt(cf/2.)
+        kp = (ut**2)/np.sqrt(Cmu)        
+        Yplus = Y*ut/nu
+        # layers definition according to Pope pg 275
+        # viscous layer
+        if Yplus < 11.6:
+            Uplus = Yplus
+            U = Uplus*ut
+            gradU = (ut**2)/nu
+            e = (ut**3)/(K*Y)
+            dissipation = e/kp 
+            nut = Cmu*(kp**2)/dissipation
+        # log-law layer
+        elif Yplus > 30. and Y/d < 0.3:
+            E = np.exp(B*K) 
+            U = ut * np.log(E*Yplus) / K
+            gradU = ut / (K*Y)
+            e = (ut**3)/(K*Y) 
+            dissipation = e/kp
+            nut = Cmu*(kp**2)/dissipation
+        #defect-velocity layer
+        #elif Yplus > 50. and Y/d < 1.:
+        #    E = np.exp(B*K) 
+        #    U = U0 - 0.7*ut + ut * np.log(Y/d) / K
+        #    gradU = ut / (K*Y)
+        #    dissipation = (ut**3)/(K*Y) 
+        #    nut = Cmu*(kp**2)/dissipation
+        else:
+            logEvent("Point selected is not in the log law region", level=0)
             sys.exit(1)
 
-        # slip condition
-        if slip == 'NoSlip':
-            self.BC_type = 'NoSlip'
-            self.u_dirichlet.setConstantBC(0.)
-            self.v_dirichlet.setConstantBC(0.)
-            self.w_dirichlet.setConstantBC(0.)
-            self.p_advective.setConstantBC(0.)
-            self.vof_advective.setConstantBC(0.)           
-        elif slip == 'FreeSlip':
-            self.BC_type = 'FreeSlip'
-            self.p_advective.setConstantBC(0.)
-            self.u_advective.setConstantBC(0.)
-            self.v_advective.setConstantBC(0.)
-            self.w_advective.setConstantBC(0.)
-            self.vof_advective.setConstantBC(0.)
-            self.u_diffusive.setConstantBC(0.)
-            self.v_diffusive.setConstantBC(0.)
-            self.w_diffusive.setConstantBC(0.)
-
-        # extra boundaries for the wall 
-        self.u_dirichlet.uOfXT = get_ux_dirichlet(0)
-        self.u_diffusive.uOfXT = get_ux_diffusive(0)
+        self.reset()
+        self.u_dirichlet.setConstantBC(U)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
+        self.k_dirichlet.setConstantBC(kp)
+        self.dissipation_dirichlet.setConstantBC(dissipation) 
+        self.vof_advective.setConstantBC(0.)
+        self.p_advective.setConstantBC(0.)
         self.v_advective.setConstantBC(0.)
-        self.k_dirichlet.uOfXT = get_k_dirichlet(0)
         self.k_advective.setConstantBC(0.)
-        self.k_diffusive.setConstantBC(0.)
-        self.dissipation_dirichlet.uOfXT = get_dissipation_dirichlet(0) 
         self.dissipation_advective.setConstantBC(0.)
+        self.u_diffusive.setConstantBC(gradU)
+        self.k_diffusive.setConstantBC(0.)
 
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
@@ -577,6 +565,181 @@ class BC_RANS(BC_Base):
         xx[2] = x[2]
         return self.waves.__cpp_calculate_vof(xx, t)
 
+    def setTurbulentCurrent(self, U, waterLevel, smoothing, Y, d, dwind, L=0.0, skinf='turbulent', nu=1.004e-6, nuwind=1.500e-5,
+                                  Cmu=0.09, K=0.41, B=5.2, Uwind=None,
+                                  vert_axis=None, air=1., water=0.,
+                                 kInflow=None, dissipationInflow=None,
+                                 kInflowAir=None, dissipationInflowAir=None):
+        """
+        Imposes a velocity profile lower than the sea level and an open
+        boundary for higher than the sealevel.
+        Parameters
+        ----------
+        U: list.
+            Velocity vector at the global system.
+        Uwind: list.
+            Air velocity vector at the global system.            
+        waterLevel: float.
+            water level at global coordinate system.
+        smoothing: float.
+            range within smoothing function is valid.
+            [3.0 times mesh element size can be a good value].
+        Y: float.
+            nearest point's distance from the wall.
+            set equal to the average mesh size.
+        d: float.
+            characteristic dimension of the problem.
+        L: float.
+            length of the boundaryLayer (usend only in skinf=boundaryLayer).
+        skinf: string.
+            switching between different skin friction formulae.
+        vert_axis: optional. 
+            index of vertical in position vector, must always be
+            aligned with gravity, by default set to 1].      
+        air: optional. 
+            Volume fraction for air (1.0 by default).
+        water: optional.
+            Volume fraction for water (0.0 by default).
+           
+        Below the seawater level, the condition returns the velocity profile
+        of the current, taking into account wall treatment.
+        Above the sea water level, the condition returns the gravity as zero,
+        and sets _dirichlet condition to zero, only if there is a zero inflow
+        velocity component.
+        (!) This condition is best used for boundaries and gravity aligned with
+            one of the main axes.
+        """
+        self.reset()
+        self.BC_type = 'TwoPhaseVelocityInlet'
+        
+        if vert_axis is None:
+            vert_axis = self.nd-1
+        if Uwind is None:
+            Uwind = np.zeros(3)
+            
+        U = np.array(U)
+        Uwind = np.array(Uwind)
+            
+        def get_inlet_ux_dirichlet_wall(i):
+            def ux_dirichlet(x,t):
+                # Skin friction (Pope pages 265,301,307 - Schlichting pag 639)
+                Re0 = U[i]*d/nu
+                Re0wind = Uwind[i]*dwind/nuwind
+                ReL = U[i]*L/nu
+                ReLwind = Uwind[i]*L/nuwind               
+                rangeSkin = ['laminar', 'turbulent', 'boundaryLayer'] 
+                if skinf not in rangeSkin:
+                    logEvent("Wrong slip_type given: Valid types are %s" %rangeSkin, level=0)
+                    sys.exit(1)
+                if skinf is 'laminar':
+                    cf = 4./Re0
+                    cfwind = 4./Re0wind
+                elif skinf is 'turbulent':
+                    cf = 0.045*( Re0**(-1./4.) )
+                    cfwind = 0.045*( Re0wind**(-1./4.) )
+                elif skinf is 'boundaryLayer':
+                    cf = 0.074*( ReL**(-1./5.) )
+                    cfwind = 0.074*( ReLwind**(-1./5.) )
+                ut = U[i]*np.sqrt(cf/2.)
+                utwind = Uwind[i]*np.sqrt(cfwind/2.)
+                Yplus = Y*ut/nu
+                Ypluswind = Y*utwind/nuwind
+                # the closest point to the wall can be either in viscous or log or outer layer
+                if Yplus > 30. and Y/d<0.3:
+                    E = np.exp(B*K) 
+                    Ulog = ut * np.log(E*Yplus) / K
+                    Ulogwind = utwind * np.log(E*Ypluswind) / K
+                else:
+                    logEvent("Point selected is not in the log law region", level=0)
+                    sys.exit(1)
+                u = min(Ulog,U[i])
+                uwind = min(Ulogwind,Uwind[i])
+                
+                phi = x[vert_axis] - waterLevel
+                if phi <= 0.:
+                    H = 0.0
+                elif 0 < phi <= smoothing:
+                    H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
+                else:
+                    H = 1.0
+                # smoothing of the velocity field
+                Usmoo =  H*uwind + (1-H)*u 
+                return Usmoo
+            return ux_dirichlet
+
+        def get_inlet_ux_dirichlet(i):
+            def ux_dirichlet(x, t):
+                phi = x[vert_axis] - waterLevel
+                if phi <= 0.:
+                    H = 0.0
+                elif 0 < phi <= smoothing:
+                    H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
+                else:
+                    H = 1.0
+                # smoothing of the velocity field
+                u =  H*Uwind[i] + (1-H)*U[i] 
+                return u
+            return ux_dirichlet
+
+        def inlet_vof_dirichlet(x, t):
+            phi = x[vert_axis] - waterLevel
+            if phi >= smoothing:
+                H = 1.
+            elif smoothing > 0 and -smoothing < phi < smoothing:
+                H = smoothedHeaviside(smoothing, phi)
+            elif phi <= -smoothing:
+                H = 0.
+            vof =  H*air + (1-H)*water
+            return vof
+
+        def inlet_p_advective(x, t):
+            b_or = self._b_or
+            phi = x[vert_axis] - waterLevel
+            if phi <= 0.:
+                H = 0.0
+            elif 0 < phi <= smoothing:
+                H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
+            else:
+                H = 1.0
+            u =  H*Uwind + (1-H)*U 
+            # This is the normal velocity, based on the inwards boundary
+            # orientation -b_or
+            u_p = np.sum(u*np.abs(b_or)) 
+            return -u_p
+
+        def inlet_k_dirichlet(x, t):
+            phi = x[vert_axis] - waterLevel
+            if phi <= 0.:
+                H = 0.0
+            elif 0 < phi <= smoothing:
+                H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
+            else:
+                H = 1.0
+            return H*kInflowAir + (1-H)*kInflow        
+
+        def inlet_dissipation_dirichlet(x, t):
+            phi = x[vert_axis] - waterLevel
+            if phi <= 0.:
+                H = 0.0
+            elif 0 < phi <= smoothing:
+                H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
+            else:
+                H = 1.0
+            return H*dissipationInflowAir + (1-H)*dissipationInflow   
+
+        self.u_dirichlet.uOfXT = get_inlet_ux_dirichlet_wall(0)
+        self.v_dirichlet.uOfXT = get_inlet_ux_dirichlet(1)
+        self.w_dirichlet.uOfXT = get_inlet_ux_dirichlet(2)        
+        self.vof_dirichlet.uOfXT = inlet_vof_dirichlet
+        self.p_advective.uOfXT = inlet_p_advective
+        if kInflow is not None:
+            self.k_dirichlet.uOfXT = inlet_k_dirichlet
+            self.k_advective.resetBC()
+            self.k_diffusive.setConstantBC(0.)
+        if dissipationInflow is not None:
+            self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
+            self.dissipation_advective.resetBC()
+            self.dissipation_diffusive.setConstantBC(0.)     
 
     def setTwoPhaseVelocityInlet(self, U, waterLevel, smoothing, Uwind=None,
                                  vert_axis=None, air=1., water=0.,
@@ -729,12 +892,20 @@ class BC_RANS(BC_Base):
             vert_axis = self.nd-1
 
         def hydrostaticPressureOutletWithDepth_p_dirichlet(x, t):
-            if x[vert_axis] < seaLevel:
-                a0 = pRef-rhoUp*g[vert_axis]*(refLevel-seaLevel)-rhoDown*g[vert_axis]*seaLevel
-                a1 = rhoDown*g[vert_axis]
-                return a0 + a1*x[vert_axis]
-            else:
-                return pRef
+            p_top = pRef
+            phi_top = refLevel - seaLevel
+            phi = x[vert_axis] - seaLevel
+            return p_top - g[vert_axis]*(rhoDown*(phi_top - phi) + \
+                    (rhoUp -rhoDown) * \
+                    (smoothedHeaviside_integral(smoothing,phi_top)
+                     -
+                     smoothedHeaviside_integral(smoothing,phi)))
+            #if x[vert_axis] < seaLevel:
+            #    a0 = pRef-rhoUp*g[vert_axis]*(refLevel-seaLevel)-rhoDown*g[vert_axis]*seaLevel
+            #    a1 = rhoDown*g[vert_axis]
+            #    return a0 + a1*x[vert_axis]
+            #else:
+            #    return pRef
 
         def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
             phi = x[vert_axis] - seaLevel
@@ -746,17 +917,18 @@ class BC_RANS(BC_Base):
                 H = 0.
             return H*air + (1-H)*water     
 
-        self.u_dirichlet.resetBC() 
-        self.v_dirichlet.resetBC() 
-        self.w_dirichlet.resetBC() 
+        self.u_dirichlet.setConstantBC(0.) 
+        self.v_dirichlet.setConstantBC(0.) 
+        self.w_dirichlet.setConstantBC(0.) 
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
         self.k_dirichlet.resetBC() 
         self.dissipation_dirichlet.resetBC()         
         self.k_advective.resetBC()
-        self.dissipation_advective.resetBC()        
-        self.k_diffusive.setConstantBC(0.0) 
-        self.dissipation_diffusive.setConstantBC(0.0)
+        self.dissipation_advective.resetBC() 
+        self.u_diffusive.setConstantBC(0.) 
+        self.k_diffusive.setConstantBC(0.) 
+        self.dissipation_diffusive.setConstantBC(0.)
 
         if U != None:            
             def get_inlet_ux_dirichlet(i):
@@ -1115,3 +1287,4 @@ def __x_to_cpp(x):
     xx[1] = x[1]
     xx[2] = x[2]
     return xx
+
