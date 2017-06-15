@@ -2,6 +2,8 @@ from proteus import iproteus as ip
 from proteus import default_p as p
 from proteus import default_n as n
 from proteus import default_s,default_so
+reload(p)
+reload(n)
 import numpy
 import proteus as pr
 
@@ -40,8 +42,6 @@ n.elementBoundaryQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd-1,4)
 n.nn = 3
 n.nLevels = 1
 
-n.subgridError = None
-n.shockCapturing = None
 n.multilevelNonlinearSolver = pr.NonlinearSolvers.Newton
 n.levelNonlinearSolver = pr.NonlinearSolvers.Newton
 n.maxNonlinearIts = 1
