@@ -2316,9 +2316,9 @@ class RandomWavesFast:
                  Lgen = Lgen,
             fast=self.fast
                  )
-         self.windows = TS.windows_rec
-            #Checking accuracy of the approximation
 
+        self.windows = TS.windows_rec
+        #Checking accuracy of the approximation
         cut = 2.* self.cutoff * duration
         ts = self.series[0,0]+cut
         te = self.series[-1,0]-cut
