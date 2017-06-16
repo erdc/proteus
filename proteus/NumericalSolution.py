@@ -291,9 +291,9 @@ class NS_base:  # (HasTraits):
                     fileprefix = p.domain.geofile
                 else:
                     fileprefix = p.domain.polyfile
-                if comm.rank() == 0 and (p.genMesh or not (os.path.exists(p.domain.polyfile+".ele") and
-                                                           os.path.exists(p.domain.polyfile+".node") and
-                                                           os.path.exists(p.domain.polyfile+".face"))):
+                if comm.rank() == 0 and (p.genMesh or not (os.path.exists(fileprefix+".ele") and
+                                                           os.path.exists(fileprefix+".node") and
+                                                           os.path.exists(fileprefix+".face"))):
                     if p.domain.use_gmsh is True:
                         logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
                         gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh".format(fileprefix+'.geo', p.domain.geofile+'.msh')
@@ -304,7 +304,7 @@ class NS_base:  # (HasTraits):
                         check_call("tetgen -Vfeen {0:s}.ele".format(fileprefix), shell=True)
                     else:
                         logEvent("Running tetgen to generate 3D mesh for "+p.name, level=1)
-                        tetcmd = "tetgen -{0} {1}.poly".format(n.triangleOptions, p.domain.polyfile)
+                        tetcmd = "tetgen -{0} {1}.poly".format(n.triangleOptions, fileprefix)
                         logEvent("Calling tetgen on rank 0 with command %s" % (tetcmd,))
                         check_call(tetcmd, shell=True)
                         logEvent("Done running tetgen")
