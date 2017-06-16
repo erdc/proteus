@@ -121,6 +121,9 @@ void cppSystem::setTimestepperType(std::string tstype, bool verbose=false) {
     else if (tstype == "Euler") {
       system.SetTimestepperType(ChTimestepper::Type::EULER_IMPLICIT_LINEARIZED);
     }
+    else if (tstype == "Trapezoidal") {
+      system.SetTimestepperType(ChTimestepper::Type::TRAPEZOIDAL);
+    }
   }
 
 void cppSystem::setGravity(double* gravity)
