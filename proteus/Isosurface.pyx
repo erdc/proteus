@@ -8,6 +8,7 @@ AuxiliaryVariables subclasses for extracting isosurfaces and contours
 """
 from collections import defaultdict, OrderedDict
 from itertools import product
+import os
 #from proteus.EGeometry import etriple, ecross, enorm, edot
 
 from mpi4py import MPI
@@ -18,6 +19,7 @@ from numpy.linalg import norm
 
 from . import Comm
 from .AuxiliaryVariables import AV_base
+from proteus import Profiling
 from .Profiling import logEvent as log
 
 from libc.math cimport sqrt
@@ -104,6 +106,7 @@ class Isosurface(AV_base):
         self.format = format
         self.comm = Comm.get()
         self.writeBoundary = writeBoundary
+        self.fileprefix = 'isosurface'
 
     def attachModel(self, model, ar):
         """ Attach this isosurface to the given simulation model.
@@ -128,7 +131,7 @@ class Isosurface(AV_base):
         self.u = fine_grid.u
         self.timeIntegration = fine_grid.timeIntegration
         self.nFrames = 0
-        self.last_output = None
+        self.next_output = 0
         self.writeSceneHeader()
         return self
 
@@ -138,6 +141,7 @@ class Isosurface(AV_base):
         """
         from collections import namedtuple
         self.fieldNames = [isosurface[0] for isosurface in self.isosurfaces]
+        print("ATTACHING TO HDF5 !!", self.fieldNames)
         self.elementNodesArray = h5.getNode("/elementsSpatial_Domain" +
                                             repr(step))[:]
         self.nodeArray = h5.getNode("/nodesSpatial_Domain" + repr(step))[:]
@@ -149,7 +153,7 @@ class Isosurface(AV_base):
                                                       self.isosurfaces[0][0] +
                                                       repr(step))[:])
         self.nFrames = step
-        self.last_output = None
+        self.next_output = 0
         if step == 0:
             self.writeSceneHeader(cam)
         return self
@@ -348,10 +352,29 @@ class Isosurface(AV_base):
         if self.format == 'pov':
             log("Writing pov frame " + repr(frame))
             self.writeIsosurfaceMesh_povray(field, value, frame)
+        elif self.format == 'h5':
+            self.writeIsosurfaceMesh_h5(field, value, frame)
         elif self.format is None:
             pass
         else:
             log("Isosurface file format not recognized")
+
+    def writeIsosurfaceMesh_h5(self, field, value, frame):
+        import h5py
+        nodes = self.nodes[(field, value)]
+        elements = self.elements[(field, value)]
+        normals = self.normals[(field, value)]
+        normal_indices = self.normal_indices[(field, value)]
+        filename = os.path.join(Profiling.logDir, self.fileprefix+str(self.comm.rank())+'.h5')
+        if self.nFrames == 0:
+            f = h5py.File(filename, "w")
+        else:
+            f = h5py.File(filename, "a")
+        dset = f.create_dataset('nodes'+str(self.nFrames), data=nodes)
+        dset = f.create_dataset('elems'+str(self.nFrames), data=elements)
+        dset = f.create_dataset('normals'+str(self.nFrames), data=normals)
+        dset = f.create_dataset('normal_indices'+str(self.nFrames), data=normal_indices)
+        f.close()
 
     def writeIsosurfaceMesh_povray(self, field, value, frame):
         """
@@ -517,8 +540,7 @@ vertex_vectors {"""
                 return
 
             # check that gauge is ready to be sampled again
-            if (self.last_output is not None and
-                    time < self.last_output + self.sampleRate):
+            if (time < self.next_output):
                 return
         assert self.elementNodesArray.shape[1] == 4, \
             "Elements have {0:d} vertices but algorithm is for tets".format(
@@ -528,8 +550,8 @@ vertex_vectors {"""
                 self.triangulateIsosurface(field, v)
                 self.writeIsosurfaceMesh(field, v, self.nFrames)
         self.nFrames += 1
-        if checkTime:
-            self.last_output = time
+        if checkTime and time != 0:
+            self.next_output += self.sampleRate
 
     def writeSceneHeader(self, cam = None):
         """
