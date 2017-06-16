@@ -523,12 +523,20 @@ class BC_RANS(BC_Base):
             vert_axis = self.nd-1
 
         def hydrostaticPressureOutletWithDepth_p_dirichlet(x, t):
-            if x[vert_axis] < seaLevel:
-                a0 = pRef-rhoUp*g[vert_axis]*(refLevel-seaLevel)-rhoDown*g[vert_axis]*seaLevel
-                a1 = rhoDown*g[vert_axis]
-                return a0 + a1*x[vert_axis]
-            else:
-                return pRef
+            p_top = pRef
+            phi_top = refLevel - seaLevel
+            phi = x[vert_axis] - seaLevel
+            return p_top - g[vert_axis]*(rhoDown*(phi_top - phi) + \
+                         (rhoUp -rhoDown) * \
+                         (smoothedHeaviside_integral(smoothing,phi_top)
+                          -
+                          smoothedHeaviside_integral(smoothing,phi)))
+            # if x[vert_axis] < seaLevel:
+            #     a0 = pRef-rhoUp*g[vert_axis]*(refLevel-seaLevel)-rhoDown*g[vert_axis]*seaLevel
+            #     a1 = rhoDown*g[vert_axis]
+            #     return a0 + a1*x[vert_axis]
+            # else:
+            #     return pRef
 
         def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
             phi = x[vert_axis] - seaLevel
@@ -543,6 +551,10 @@ class BC_RANS(BC_Base):
         self.u_dirichlet.resetBC() 
         self.v_dirichlet.resetBC() 
         self.w_dirichlet.resetBC() 
+        self.u_dirichlet.setConstantBC(0.)
+        self.u_diffusive.setConstantBC(0.)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
         self.k_dirichlet.resetBC() 
