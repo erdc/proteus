@@ -1,11 +1,15 @@
 # distutils: language = c++
 
+
+# TO DO:
+# get velocity gradients for added mass force (moorings)
+
 import os
 import sys
 import csv
 cimport numpy as np
 import numpy as np
-import mpi4py as MPI
+from mpi4py import MPI
 from scipy import spatial
 from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
 from proteus import SpatialTools as st
@@ -20,6 +24,7 @@ from cython.operator cimport dereference as deref
 cimport ChronoHeaders as ch
 # chrono Python headers
 from proteus.mbd cimport pyChronoCore as pych
+from proteus.mprans import BodyDynamics as bd
 
 
 cdef extern from "ChMoorings.h":
@@ -195,13 +200,22 @@ cdef class ProtChBody:
       np.ndarray rotm_last
       np.ndarray rotq
       np.ndarray rotq_last
+      np.ndarray adams_vel
       string name
+      bool predicted
+      double dt_predict
+      np.ndarray h_predict  # predicted displacement
+      double h_ang_predict  # predicted angular displacement (angle)
+      np.ndarray h_ang_vel_predict  # predicted angular velocity
+      np.ndarray h_predict_last  # predicted displacement
+      double h_ang_predict_last  # predicted angular displacement (angle)
+      np.ndarray h_ang_vel_predict_last  # predicted angular velocity
       # np.ndarray free_r
       # np.ndarray free_x
     def __cinit__(self,
                   ProtChSystem system,
                   shape=None,
-                  nd=None):
+                  nd=None, sampleRate=0):
         self.ProtChSystem = system
         self.thisptr = newRigidBody(system.thisptr)
         self.ChBody = pych.ChBody()
@@ -224,6 +238,15 @@ cdef class ProtChBody:
         self.position_last = self.position
         self.ang_vel_norm = 0.  # used for mesh disp prediction
         self.ang_vel_norm_last = 0.  # used for mesh disp prediction
+        self.h_predict = np.zeros(3)
+        self.h_ang_predict = 0.
+        self.h_ang_vel_predict = np.zeros(3)
+        self.h_predict_last = np.zeros(3)
+        self.h_ang_predict_last = 0.
+        self.h_ang_vel_predict_last = np.zeros(3)
+        self.predicted = False
+        self.adams_vel = np.zeros((5, 3))
+        self.ChBody.SetBodyFixed(False)
         # if self.nd is None:
         #     assert nd is not None, "must set nd if SpatialTools.Shape is not passed"
         #     self.nd = nd
@@ -300,54 +323,82 @@ cdef class ProtChBody:
             self.thisptr.setRotation(<double*> self.rotation_init.data)
         self.thisptr.poststep()
 
-    def hxyz(self, np.ndarray x, double t):
+    def hxyz(self, np.ndarray x, double t, debug=False):
         cdef np.ndarray h
         cdef np.ndarray xx
         cdef double ang, and_last
-        cdef double dt_half, dt_half_last
         cdef np.ndarray d_tra, d_tra_last # translational displacements
         cdef np.ndarray d_rot, d_rot_last # rotational displacements
         cdef np.ndarray h_body  # displacement from body
         cdef ch.ChVector h_body_vec
         h = np.zeros(3)
+        if self.predicted is False:
+            self.prediction()
+        # if self.ProtChSystem.thisptr.system.GetChTime() > 0.0003: 
+        # if self.ProtChSystem.step_nb > self.ProtChSystem.step_start: 
+            # self.ChBody.SetBodyFixed(False)
         if self.ProtChSystem.scheme == "CSS":
             h_body_vec = self.thisptr.hxyz(<double*> x.data, t)
             h_body = pych.ChVector_to_npArray(h_body_vec)
             h += h_body
         elif self.ProtChSystem.scheme == "ISS":
-            dt_half = self.ProtChSystem.dt_fluid/2.
-            dt_half_last = self.ProtChSystem.dt_fluid_last/2.
             # remove previous prediction
             # translate back first
-            d_tra_last = -self.velocity_last*dt_half_last
-            h += d_tra_last
+            if debug is True:
+                print("$$$$$$$$$$$$$$$$$$")
+                print("x: ", x)
+            # d_tra_last = -self.velocity_last*dt_half_last
+            # h += d_tra_last
+            h += -self.h_predict_last
+            if debug is True:
+                print("h_predict_last: ", self.h_predict_last)
+                print("h_predict: ", self.h_predict)
+                print("h_ang_predict_last: ", self.h_ang_predict_last)
+                print("h_ang_predict: ", self.h_ang_predict)
+                print("h_ang_vel_predict_last: ", self.h_ang_vel_predict_last)
+                print("h_ang_vel_predict: ", self.h_ang_vel_predict)
             # rotate back
-            ang_last = -self.ang_vel_norm*dt_half_last
+            # ang_last = -self.ang_vel_norm_last*dt_half_last
+            ang_last = -self.h_ang_predict_last
             if ang > 0:
                 d_rot_last = (st.rotation3D(points=x+h,  # (translated back)
                                             rot=ang_last,
-                                            axis=self.ang_velocity_last,
+                                            axis=self.h_ang_vel_predict_last,
                                             pivot=self.position_last)
-                              -self.position_last)
+                            -x+h)
                 h += d_rot_last
             # add rigid body displacement
             xx = x+h # previous position of body
+            if debug is True:
+                print("x_old: ", x+h)
+                print("F_applied: ", self.F_applied)
             h_body_vec = self.thisptr.hxyz(<double*> xx.data, t)
             h_body = pych.ChVector_to_npArray(h_body_vec)
             h += h_body
             # add current prediction
             # rotate first
-            ang = self.ang_vel_norm*dt_half
+            # ang = self.ang_vel_norm*dt_half
+            ang = self.h_ang_predict
+            if debug is True:
+                print("x_body: ", x+h)
+                print("pos_body: ", self.ChBody.GetPos())
             if ang > 0:
                 d_rot = (st.rotation3D(points=x+h,
-                                       rot=ang,
-                                       axis=self.ang_velocity,
-                                       pivot=self.position)
-                         -self.position)
+                                    rot=ang,
+                                    axis=self.h_ang_vel_predict,
+                                    pivot=self.position)
+                        -x+h)
                 h += d_rot
+            if debug is True:
+                print("x_new_rot: ", x+h)
             # translate
-            d_tra = self.velocity*dt_half
-            h += d_tra
+            # d_tra = self.velocity*dt_half
+            # h += d_tra
+            h += self.h_predict
+            if debug is True:
+                print("x_new_trarot: ", x+h)
+        comm = Comm.get().comm.tompi4py()
+        # print(comm.rank, h, x, t)
         return h
 
     def hx(self, np.ndarray x, double t):
@@ -544,31 +595,45 @@ cdef class ProtChBody:
         """Called before Chrono system step.
         Sets external forces automatically from Proteus solution.
         """
-
-
         self.storeValues()
+        # if self.ProtChSystem.thisptr.system.GetChTime() > 0.0003 or self.ProtChSystem.model is None:  # CHANGE
+        #     # if self.ProtChSystem.step_nb > self.ProtChSystem.step_start:
+        #     self.ChBody.SetBodyFixed(False)
         if self.ProtChSystem.model is not None:
             self.F_prot = self.getPressureForces()+self.getShearForces()
             self.M_prot = self.getMoments()
             if self.ProtChSystem.first_step is True:
                 # just apply initial conditions for 1st time step
-                self.F_applied = self.F_prot
-                self.M_applied = self.M_prot
+                F_bar = self.F_prot
+                M_bar = self.M_prot
             else:
                 # actual force applied to body
-                if self.ProtChSystem.scheme == "CSS":
-                    self.F_applied = self.F_prot
-                    self.M_applied = self.M_prot
-                elif self.ProtChSystem.scheme == "ISS":
+                if self.ProtChSystem.prediction == "backwardEuler":
+                    F_bar = self.F_prot
+                    M_bar = self.M_prot
+                if self.ProtChSystem.prediction == "forwardEuler":
+                    F_bar = self.F_prot_last
+                    M_bar = self.M_prot_last
+                if self.ProtChSystem.prediction == "implicitOrder2":
                     F_bar = (self.F_prot+self.F_prot_last)/2.
                     M_bar = (self.M_prot+self.M_prot_last)/2.
-                    self.F_applied = F_bar
-                    self.M_applied = M_bar
                     # self.F_applied = self.F_prot
                     # self.M_applied = self.M_prot
                     # self.F_applied = 2*F_bar - self.F_applied_last
                     # self.M_applied = 2*M_bar - self.M_applied_last
-        self.setExternalForces(self.F_applied, self.M_applied)
+            F_solid_type = 1
+            if F_solid_type == 1:
+                F_body = F_bar
+                M_body = M_bar
+            elif F_solid_type == 2:
+                if np.linalg.norm(self.F_prot_last) == 0:  # first time step
+                    F_body = F_bar
+                    M_body = M_bar
+                else:
+                    F_body = 2*F_bar-self.F_applied_last
+                    M_body = 2*M_bar-self.M_applied_last
+            self.setExternalForces(F_body, M_body)
+        self.predicted = False
 
     def setExternalForces(self, np.ndarray forces, np.ndarray moments):
         """Sets external forces to body.
@@ -582,6 +647,8 @@ cdef class ProtChBody:
         moments: array_like
             moments array (length 3)
         """
+        self.F_applied = forces
+        self.M_applied = moments
         self.thisptr.prestep(<double*> forces.data,
                              <double*> moments.data)
 
@@ -606,18 +673,15 @@ cdef class ProtChBody:
             # need to broadcast values to all processors on the C++ side
             # comm.Barrier()
             self.rotq = comm.bcast(self.rotq,
-                                  self.ProtChSystem.chrono_processor)
+                                   self.ProtChSystem.chrono_processor)
             self.rotq_last = comm.bcast(self.rotq_last,
-                                       self.ProtChSystem.chrono_processor)
+                                        self.ProtChSystem.chrono_processor)
             self.position = comm.bcast(self.position,
-                                  self.ProtChSystem.chrono_processor)
-            self.position_last = comm.bcast(self.position_last,
                                        self.ProtChSystem.chrono_processor)
-            if comm.rank == 1:
-                self._recordValues()
-        else:
-            if comm.rank == 0:
-                self._recordValues()
+            self.position_last = comm.bcast(self.position_last,
+                                            self.ProtChSystem.chrono_processor)
+        if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
+            self._recordValues()
         # need to pass position and rotation values to C++ side
         # needed for transformations when calling hx, hy, hz, hxyz
         e0, e1, e2, e3 = self.rotq
@@ -632,6 +696,77 @@ cdef class ProtChBody:
         self.thisptr.rotq_last = rotq_last
         self.thisptr.pos = pos
         self.thisptr.pos_last = pos_last
+
+    def prediction(self):
+        comm = Comm.get().comm.tompi4py()
+
+
+        cdef ch.ChVector h_body_vec
+        h_body_vec = self.thisptr.hxyz(<double*> self.position_last.data, 0.)
+        #print("MY BODY DISP: ", h_body_vec.x(), h_body_vec.y(), h_body_vec.z())
+        # if self.ProtChSystem.model is not None:
+        #     try:
+        #         dt = self.ProtChSystem.model.levelModelList[-1].dt_last
+        #     except:
+        #         dt = 0.
+        #         print("$$$$$$$$$$$$$ ERROR")
+        # else:
+        #     dt = self.ProtChSystem.dt_fluid
+        # dt_half = dt/2.
+        # # if self.ProtChSystem.scheme == "ISS":
+        # self.h_predict_last = self.h_predict
+        # self.h_ang_predict_last = self.h_ang_predict
+        # self.h_ang_vel_predict_last = self.h_ang_vel_predict
+        #     # dt_half = self.ProtChSystem.dt_fluid/2.
+        #     # dt_half = self.ProtChSystem.dt_fluid_next/2.
+        #     # if substeps is False:
+        # self.h_predict = -self.velocity*dt_half
+        # print("$$$$$$$$$$$$$$$", comm.rank, self.h_predict, dt, self.velocity[1])
+        # self.h_ang_predict = np.sqrt(self.ang_velocity[0]**2
+        #                              +self.ang_velocity[1]**2
+        #                              +self.ang_velocity[2]**2)*dt_half
+        # self.h_ang_vel_predict = self.ang_velocity
+        # self.adams_vel[1:] = self.adams_vel[:-1]
+        # self.adams_vel[0] = self.velocity
+        # av = self.adams_vel
+        # adams_bashforth = False
+        # if adams_bashforth == True:
+        #     if np.linalg.norm(av[4]) != 0:
+        #         Profiling.logEvent("$$$$$$$$$$$$$$$$$$$$$$$ ADAMS")
+        #         h = 0+dt_half*(1901./720.*av[0] - 1387./360.*av[1] + 109./20.*av[2] - 637./360.*av[3] + 251./720.*av[4])
+        #     elif np.linalg.norm(av[3]) != 0:
+        #         h = 0+dt_half*(55./24.*av[0] - 59./24.*av[1] + 37./24.*av[2] - 3./8.*av[3])
+        #     elif np.linalg.norm(av[2]) != 0:
+        #         h = 0+dt_half*(23./12.*av[0] - 4./3.*av[1] + 5./12.*av[2])
+        #     elif np.linalg.norm(av[1]) != 0:
+        #         h = 0+dt_half*(3./2.*av[0] - 1./2.*av[1])
+        #     else:
+        #         h = 0+dt_half*av[0]
+        #     # else:
+        #     #     nsteps = max(int(dt_half/self.ProtChSystem.chrono_dt), 1)
+        #     #     if nsteps < self.ProtChSystem.min_nb_steps:
+        #     #         nsteps = self.ProtChSystem.min_nb_steps
+        #     #     h = np.zeros(3)
+        #     #     h_ang = np.zeros(3)
+        #     #     v = self.velocity.copy()
+        #     #     v_ang = self.ang_velocity.copy()
+        #     #     for i in range(nsteps):
+        #     #         h, v = bd.forward_euler(h, v, self.acceleration, dt_half/nsteps)
+        #     #         h_ang, v_ang = bd.forward_euler(h_ang, v_ang, self.ang_acceleration, dt_half/nsteps)
+        #     #     self.h_predict = h
+        #     #     self.h_ang_predict = np.sqrt(h_ang[0]**2+h_ang[1]**2+h_ang[2]**2)
+        #     #     self.h_ang_vel_predict = v_ang
+        #     # h_body_vec = self.thisptr.hxyz(<double*> self.position_last.data, 0)
+        #     # h_body = pych.ChVector_to_npArray(h_body_vec)
+        #     # if self.ProtChSystem.dt != 0:
+        #     #     vel_predict = h_body/(self.ProtChSystem.dt)
+        #     #     self.h_predict = vel_predict*dt_half
+        #     # else:
+        #     #     self.h_predict = np.zeros(3)
+        #     # print("ADDED: ", self.h_predict, dt_half)
+        #     # print("BODY H:", h_body, self.velocity, self.ChBody.GetPos_dt())
+        #     self.h_predict = h
+        self.predicted = True
 
     def calculate_init(self):
         """Called from self.ProtChSystem.calculate_init()
@@ -735,6 +870,10 @@ cdef class ProtChBody:
                                           self.ProtChSystem.chrono_processor)
             self.M_prot_last = comm.bcast(self.M_prot_last,
                                           self.ProtChSystem.chrono_processor)
+            self.F_applied_last = comm.bcast(self.F_applied_last,
+                                             self.ProtChSystem.chrono_processor)
+            self.M_applied_last = comm.bcast(self.M_applied_last,
+                                             self.ProtChSystem.chrono_processor)
 
     def getValues(self):
         """Get values (pos, vel, acc, etc.) from C++ to python
@@ -774,7 +913,8 @@ cdef class ProtChBody:
 
     def setRecordValues(self, filename=None, all_values=False, pos=False,
                         rot=False, ang_disp=False, F=False, M=False,
-                        inertia=False, vel=False, acc=False, ang_vel=False, ang_acc=False):
+                        inertia=False, vel=False, acc=False, ang_vel=False,
+                        ang_acc=False, h_predict=False):
         """
         Sets the body attributes that are to be recorded in a csv file
         during the simulation.
@@ -818,16 +958,16 @@ cdef class ProtChBody:
         e.g. self.record_dict['m']['mass', None]
         """
         if all_values is True:
-            pos = rot = F = M = acc = vel = ang_acc = ang_vel = True
+            pos = rot = F = M = acc = vel = ang_acc = ang_vel = h_predict = True
         if pos is True:
-            self.record_dict['x'] = ['position_last', 0]
-            self.record_dict['y'] = ['position_last', 1]
-            self.record_dict['z'] = ['position_last', 2]
+            self.record_dict['x'] = ['position', 0]
+            self.record_dict['y'] = ['position', 1]
+            self.record_dict['z'] = ['position', 2]
         if rot is True:
-            self.record_dict['rotq_e0'] = ['rotq_last', 0]
-            self.record_dict['rotq_e1'] = ['rotq_last', 1]
-            self.record_dict['rotq_e2'] = ['rotq_last', 2]
-            self.record_dict['rotq_e3'] = ['rotq_last', 3]
+            self.record_dict['rotq_e0'] = ['rotq', 0]
+            self.record_dict['rotq_e1'] = ['rotq', 1]
+            self.record_dict['rotq_e2'] = ['rotq', 2]
+            self.record_dict['rotq_e3'] = ['rotq', 3]
         if F is True:
             self.record_dict['Fx'] = ['F', 0]
             self.record_dict['Fy'] = ['F', 1]
@@ -835,6 +975,9 @@ cdef class ProtChBody:
             self.record_dict['Fx_prot'] = ['F_prot', 0]
             self.record_dict['Fy_prot'] = ['F_prot', 1]
             self.record_dict['Fz_prot'] = ['F_prot', 2]
+            self.record_dict['Fx_applied'] = ['F_applied', 0]
+            self.record_dict['Fy_applied'] = ['F_applied', 1]
+            self.record_dict['Fz_applied'] = ['F_applied', 2]
             Fx = Fy = Fz = True
         if M is True:
             self.record_dict['Mx'] = ['M', 0]
@@ -843,24 +986,31 @@ cdef class ProtChBody:
             self.record_dict['Mx_prot'] = ['M_prot', 0]
             self.record_dict['My_prot'] = ['M_prot', 1]
             self.record_dict['Mz_prot'] = ['M_prot', 2]
+            self.record_dict['Mx_applied'] = ['M_applied', 0]
+            self.record_dict['My_applied'] = ['M_applied', 1]
+            self.record_dict['Mz_applied'] = ['M_applied', 2]
         if acc is True:
-            self.record_dict['ax'] = ['acceleration_last', 0]
-            self.record_dict['ay'] = ['acceleration_last', 1]
-            self.record_dict['az'] = ['acceleration_last', 2]
+            self.record_dict['ax'] = ['acceleration', 0]
+            self.record_dict['ay'] = ['acceleration', 1]
+            self.record_dict['az'] = ['acceleration', 2]
         if vel is True:
-            self.record_dict['ux'] = ['velocity_last', 0]
-            self.record_dict['uy'] = ['velocity_last', 1]
-            self.record_dict['uz'] = ['velocity_last', 2]
+            self.record_dict['ux'] = ['velocity', 0]
+            self.record_dict['uy'] = ['velocity', 1]
+            self.record_dict['uz'] = ['velocity', 2]
         if ang_acc is True:
-            self.record_dict['ang_ax'] = ['ang_acceleration_last', 0]
-            self.record_dict['ang_ay'] = ['ang_acceleration_last', 1]
-            self.record_dict['ang_az'] = ['ang_acceleration_last', 2]
+            self.record_dict['ang_ax'] = ['ang_acceleration', 0]
+            self.record_dict['ang_ay'] = ['ang_acceleration', 1]
+            self.record_dict['ang_az'] = ['ang_acceleration', 2]
         if ang_vel is True:
-            self.record_dict['ang_ux'] = ['ang_velocity_last', 0]
-            self.record_dict['ang_uy'] = ['ang_velocity_last', 1]
-            self.record_dict['ang_uz'] = ['ang_velocity_last', 2]
+            self.record_dict['ang_ux'] = ['ang_velocity', 0]
+            self.record_dict['ang_uy'] = ['ang_velocity', 1]
+            self.record_dict['ang_uz'] = ['ang_velocity', 2]
         if inertia is True:
             self.record_dict['intertia'] = ['inertia', None]
+        if h_predict is True:
+            self.record_dict['hx'] = ['h_predict', 0]
+            self.record_dict['hy'] = ['h_predict', 1]
+            self.record_dict['hz'] = ['h_predict', 2]
 
     def _recordValues(self):
         """Records values of body attributes in a csv file.
@@ -869,19 +1019,20 @@ cdef class ProtChBody:
             self.record_file = os.path.join(Profiling.logDir, 'record_' + self.Shape.name + '.csv')
         else:
             self.record_file = os.path.join(Profiling.logDir, 'record_' + 'body' + '.csv')
+        t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
             try:
                 dt_last = self.ProtChSystem.model.levelModelList[-1].dt_last
             except:
                 dt_last = 0
-            t = t_last-dt_last
+            t = t_last
         else:
-            t = self.ProtChSystem.thisptr.system.GetChTime()
-        t_prot = Profiling.time()-Profiling.startTime
-        values_towrite = [t, t_prot]
+            t = t_chrono
+        t_sim = Profiling.time()-Profiling.startTime
+        values_towrite = [t, t_chrono, t_sim]
         if t == 0:
-            headers = ['t', 't_prot']
+            headers = ['t', 't_ch', 't_sim']
             for key in self.record_dict:
                 headers += [key]
             with open(self.record_file, 'w') as csvfile:
@@ -934,6 +1085,7 @@ cdef class ProtChSystem:
     cdef public double dt_init
     cdef double proteus_dt
     cdef double proteus_dt_last
+    cdef double proteus_dt_next
     cdef double chrono_dt
     cdef string directory
     cdef object u
@@ -944,17 +1096,26 @@ cdef class ProtChSystem:
     cdef int min_nb_steps
     cdef double dt_fluid
     cdef double dt_fluid_last
+    cdef double dt_fluid_next
+    cdef double dt
+    cdef double dt_last
     cdef public:
         bool build_kdtree
         bool parallel_mode
         int chrono_processor
         bool first_step
-        string scheme
+        string scheme  # coupling scheme
+        string prediction  # force for prediction
+        int step_nb  # number of steps
+        int step_start  # starting step
+        double sampleRate
+        double next_sample
+        bool record_values
 
-    def __cinit__(self, np.ndarray gravity, int nd=3, dt_init=0.001):
+    def __cinit__(self, np.ndarray gravity, int nd=3, dt_init=0., sampleRate=0):
         self.thisptr = newSystem(<double*> gravity.data)
         self.subcomponents = []
-        self.dt_init = 0.001
+        self.dt_init = dt_init
         self.model = None
         self.nd = nd
         self.build_kdtree = False
@@ -970,8 +1131,16 @@ cdef class ProtChSystem:
         self.min_nb_steps = 1  # minimum number of chrono substeps
         self.proteus_dt = 0.
         self.first_step = True  # just to know if first step
-        self.scheme = "CSS"
+        self.setCouplingScheme("CSS")
         self.dt_fluid = 0
+        self.dt_fluid_next = 0
+        self.proteus_dt_next = 0.
+        self.dt = 0.
+        self.step_nb = 0
+        self.step_start = 3
+        self.sampleRate = sampleRate
+        self.next_sample = 0.
+        self.record_values = True
 
     def GetChTime(self):
         """Gives time of Chrono system simulation
@@ -984,9 +1153,11 @@ cdef class ProtChSystem:
         time = self.thisptr.system.GetChTime()
         return time
 
-    def setCouplingScheme(self, string scheme):
+    def setCouplingScheme(self, string scheme, string prediction='backwardEuler'):
         assert scheme == "CSS" or scheme == "ISS", "Coupling scheme requested unknown"
+        assert prediction == "backwardEuler" or prediction == "forwardEuler" or prediction == "implicitOrder2", "Prediction requested unknown"
         self.scheme = scheme
+        self.prediction = prediction
 
     def attachModel(self, model, ar):
         """Attaches Proteus model to auxiliary variable
@@ -1012,24 +1183,32 @@ cdef class ProtChSystem:
     def step(self, dt):
         self.dt_fluid_last = self.dt_fluid
         self.dt_fluid = dt
+        self.dt_fluid_next = self.proteus_dt_next
+        self.dt_last = self.dt
         if self.scheme == "ISS":
-            dt = (self.dt_fluid+self.dt_fluid_last)/2.
+            self.dt = (self.dt_fluid+self.dt_fluid_last)/2.
+        elif self.scheme == "CSS":
+            self.dt = dt
         # calculate number of time steps
         nb_steps = max(int(dt/self.chrono_dt), 1)
         if nb_steps < self.min_nb_steps:
             nb_steps = self.min_nb_steps
         # solve Chrono system
-        Profiling.logEvent('Solving Chrono system from t='
-                           +str(self.thisptr.system.GetChTime())
-                           +' with dt='+str(dt)
-                           +' and '+str(nb_steps)+' substeps')
-
-
-        comm = Comm.get().comm.tompi4py()
-        if comm.rank == self.chrono_processor:
-            self.thisptr.step(<double> dt, n_substeps=nb_steps)
-        Profiling.logEvent('Solved Chrono system to t='
-                           +str(self.thisptr.system.GetChTime()))
+        self.step_nb += 1
+        if self.step_nb > -self.step_start:
+            # self.thisptr.system.setChTime()
+            comm = Comm.get().comm.tompi4py()
+            t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
+            Profiling.logEvent('Solving Chrono system from t='
+                            +str(t)
+                            +' with dt='+str(self.dt)
+                            +'('+str(nb_steps)+' substeps)')
+            if comm.rank == self.chrono_processor and dt > 0:
+                self.thisptr.step(<double> self.dt, n_substeps=nb_steps)
+            t = comm.bcast(self.thisptr.system.GetChTime(), self.chrono_processor)
+            Profiling.logEvent('Solved Chrono system to t='+str(t))
+            if self.scheme == "ISS":
+                Profiling.logEvent('Chrono system to t='+str(t+self.dt_fluid_next/2.))
 
     def calculate(self, proteus_dt=None):
         """Does chrono system calculation for a Proteus time step
@@ -1046,21 +1225,37 @@ cdef class ProtChSystem:
         if self.model is not None:
             try:
                 self.proteus_dt = self.model.levelModelList[-1].dt_last
+                self.proteus_dt_next = self.model.levelModelList[-1].dt_last  # BAD PREDICTION
+                t = self.model.stepController.t_model_last
             except:
                 self.proteus_dt = self.dt_init
+                t = None
         elif proteus_dt is not None:
             self.proteus_dt = proteus_dt
+            self.proteus_dt_next = proteus_dt  # BAD PREDICTION IF TIME STEP NOT REGULAR
+            t = self.thisptr.system.GetChTime()
         else:
             sys.exit('no time step set')
         if self.model is not None and self.build_kdtree is True:
             self.nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
+        if (t >= self.next_sample):
+            self.record_values = True
+            self.next_sample += self.sampleRate
+            Profiling.logEvent("RECORD VALUES IS TRUE "+str(self.next_sample))
+        else:
+            Profiling.logEvent("RECORD VALUES IS FALSE "+str(self.next_sample))
         for s in self.subcomponents:
             s.prestep()
         self.step(self.proteus_dt)
         for s in self.subcomponents:
             s.poststep()
-        if self.first_step is True:  # check if first step passed
-            self.first_step = False
+        self.record_values = False
+        self.first_step = False  # first step passed
+
+    def addBodyEasyBox(self, pych.ChBodyEasyBox body):
+        """Hack to add BodyEasyBox
+        """
+        self.thisptr.system.AddBody(body.sharedptr_chbody)
 
     def calculate_init(self):
         """Does chrono system initialisation
@@ -1090,7 +1285,7 @@ cdef class ProtChSystem:
         tstype: str
             type of timestepper ('Euler' or 'HHT')
         """
-        tstypes = ["Euler", "HHT"]
+        tstypes = ["Euler", "HHT", "Trapezoidal"]
         assert str(tstype) in tstypes, str(tstype)+" not a valid choice."
         self.thisptr.setTimestepperType(tstype, verbose)
 
@@ -1138,7 +1333,7 @@ cdef class ProtChSystem:
             if comm.rank == 0:
                 self.thisptr.recordBodyList()
 
-    def findELementContainingCoords(self, coords):
+    def findElementContainingCoords(self, coords):
         """
         Parameters
         ----------
@@ -1154,21 +1349,52 @@ cdef class ProtChSystem:
         rank: int
             processor rank containing element
         """
+        #log Profiling.logEvent("Looking for element " +str(coords))
         comm = Comm.get().comm.tompi4py()
+        xi = owning_proc = element = rank = None  # initialised as None
         # get nearest node on each processor
+        comm.barrier()
+        #log Profiling.logEvent("get nearest node " +str(coords))
         nearest_node, nearest_node_distance = getLocalNearestNode(coords, self.nodes_kdtree)
         # look for element containing coords on each processor (if it exists)
+        comm.barrier()
+        #log Profiling.logEvent("get local element " +str(coords))
         local_element = getLocalElement(self.femSpace_velocity, coords, nearest_node)
-        # check which processor has element (if any)
-        haveElement = int(local_element is not None)
-        if haveElement:
-            owning_proc = comm.rank
+        comm.barrier()
+        #log Profiling.logEvent("got local element " +str(coords))
         if local_element:
-            # get local coords
-            xi0 = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
-            xi = comm.bcast(xi0, owning_proc)
+            xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
+        # check which processor has element (if any)
+        # if local_element:
+        #     print("Local element!")
+        #     owning_proc = comm.bcast(comm.rank, comm.rank)
+        #     # get local coords
+        #     Profiling.logEvent("getting xi" +str(coords))
+        #     xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
+        #     Profiling.logEvent("broadcasting results" +str(coords))
+        #     xi = comm.bcast(xi, owning_proc)
+        #     Profiling.logEvent("Broadcasted xi")
+        #     element = comm.bcast(local_element, owning_proc)
+        #     Profiling.logEvent("Broadcasted element")
+        #     rank = comm.bcast(owning_proc, owning_proc)
+        #     Profiling.logEvent("Broadcasted rank")
+        # Profiling.logEvent("broadcasting results" +str(coords))
+        comm.barrier()
+        #print("MYRANK ", comm.rank)
+        #log Profiling.logEvent("Starting all reduce")
+        global_have_element, owning_proc = comm.allreduce((local_element, comm.rank),
+                                                          op=MPI.MAXLOC)
+        comm.barrier()
+        #log Profiling.logEvent("Finished all reduce")
+        if global_have_element:
+            #     Profiling.logEvent("broadcasting results" +str(coords))
+            xi = comm.bcast(xi, owning_proc)
+            #log Profiling.logEvent("Broadcasted xi" +str(xi))
             element = comm.bcast(local_element, owning_proc)
+            #log Profiling.logEvent("Broadcasted element" +str(element))
             rank = comm.bcast(owning_proc, owning_proc)
+            #log Profiling.logEvent("Broadcasted owning_proc" +str(rank))
+        #log Profiling.logEvent("got element finished" +str(coords))
         return xi, element, rank
 
     def getFluidVelocityLocalCoords(self, xi, element, rank):
@@ -1182,18 +1408,22 @@ cdef class ProtChSystem:
         rank: int
             rank of processor owning the element
         """
+        #log Profiling.logEvent("FINDING VELOCITY AT RANK "+str(rank)+", "+str(element) + ", " + str(xi))
         comm = Comm.get().comm.tompi4py()
         if comm.rank == rank:
             u = self.u[1].getValue(element, xi)
-            u = comm.bcast(u, rank)
             v = self.u[2].getValue(element, xi)
-            v = comm.bcast(v, rank)
             if self.nd > 2:
                 w = self.u[3].getValue(element, xi)
             if self.nd <= 2:
                 w = 0
             # broadcast to all processors
-            w = comm.bcast(w, rank)
+        else:
+            u = v = w = None
+        u = comm.bcast(u, rank)
+        v = comm.bcast(v, rank)
+        w = comm.bcast(w, rank)
+        #log Profiling.logEvent("FOUND VELOCITY")
         return u, v, w
 
     def getFluidVelocityGradientLocalCoords(self, xi, element, rank):
@@ -1211,52 +1441,52 @@ cdef class ProtChSystem:
             w_grad = comm.bcast(w_grad, rank)
         return u_grad, v_grad, w_grad
 
-    def findFluidVelocityAtCoords(self, coords):
-        """Finds solution from NS for velocity of fluid at given coordinates
+    # def findFluidVelocityAtCoords(self, coords):
+    #     """Finds solution from NS for velocity of fluid at given coordinates
 
-        Parameters
-        ----------
-        coords: array_like
-            coordinates at which velocity solution is sought
+    #     Parameters
+    #     ----------
+    #     coords: array_like
+    #         coordinates at which velocity solution is sought
 
-        Returns
-        -------
-        u: float
-            velocity in the x direction
-        v: float
-            velocity in the y direction
-        w: float
-            velocity in the z direction (0 if 2D)
-        """
-        comm = Comm.get().comm.tompi4py()
-        # get nearest node on each processor
-        nearest_node, nearest_node_distance = getLocalNearestNode(coords, self.nodes_kdtree)
-        # look for element containing coords on each processor (if it exists)
-        local_element = getLocalElement(self.femSpace_velocity, coords, nearest_node)
-        # check which processor has element (if any)
-        haveElement = int(local_element is not None)
-        if haveElement:
-            owning_proc = comm.rank
-        if local_element:
-            # NEXT LINE TO CHANGE
-            nd = self.nd
-            # get local coords
-            xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
-            # get solution
-            u = self.u[1].getValue(local_element, xi)
-            v = self.u[2].getValue(local_element, xi)
-            if nd > 2:
-                w = self.u[3].getValue(local_element, xi)
-            # broadcast to all processors
-            u = comm.bcast(u, owning_proc)
-            v = comm.bcast(v, owning_proc)
-            if nd > 2:
-                w = comm.bcast(w, owning_proc)
-            if nd <= 2:
-                w = 0
-        else:
-            sys.exit('{coords} outside of domain'.format(coords=str(coords)))
-        return u, v, w
+    #     Returns
+    #     -------
+    #     u: float
+    #         velocity in the x direction
+    #     v: float
+    #         velocity in the y direction
+    #     w: float
+    #         velocity in the z direction (0 if 2D)
+    #     """
+    #     comm = Comm.get().comm.tompi4py()
+    #     # get nearest node on each processor
+    #     nearest_node, nearest_node_distance = getLocalNearestNode(coords, self.nodes_kdtree)
+    #     # look for element containing coords on each processor (if it exists)
+    #     local_element = getLocalElement(self.femSpace_velocity, coords, nearest_node)
+    #     # check which processor has element (if any)
+    #     haveElement = int(local_element is not None)
+    #     if haveElement:
+    #         owning_proc = comm.rank
+    #     if local_element:
+    #         # NEXT LINE TO CHANGE
+    #         nd = self.nd
+    #         # get local coords
+    #         xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
+    #         # get solution
+    #         u = self.u[1].getValue(local_element, xi)
+    #         v = self.u[2].getValue(local_element, xi)
+    #         if nd > 2:
+    #             w = self.u[3].getValue(local_element, xi)
+    #         # broadcast to all processors
+    #         u = comm.bcast(u, owning_proc)
+    #         v = comm.bcast(v, owning_proc)
+    #         if nd > 2:
+    #             w = comm.bcast(w, owning_proc)
+    #         if nd <= 2:
+    #             w = 0
+    #     else:
+    #         sys.exit('{coords} outside of domain'.format(coords=str(coords)))
+    #     return u, v, w
 
 # ctypedef np.ndarray vecarray(ChVector)
 
@@ -1347,6 +1577,7 @@ cdef class ProtChMoorings:
       object Mesh
       int nd
       object nodes_function
+      object fluid_velocity_function
       ProtChBody body_front
       ProtChBody body_back
       bool front_body
@@ -1360,6 +1591,7 @@ cdef class ProtChMoorings:
       np.ndarray fluid_acceleration_array
       string name
       string beam_type
+      int nodes_nb # number of nodes
     def __cinit__(self,
                   ProtChSystem system,
                   Mesh mesh,
@@ -1415,25 +1647,26 @@ cdef class ProtChMoorings:
     def _recordValues(self):
         """Records values in csv files
         """
+        t_chrono = self.ProtChSystem.thisptr.system.GetChTime()
         if self.ProtChSystem.model is not None:
             t_last = self.ProtChSystem.model.stepController.t_model_last
             try:
                 dt_last = self.ProtChSystem.model.levelModelList[-1].dt_last
             except:
                 dt_last = 0
-            t = t_last-dt_last
+            t = t_last
         else:
-            t = self.ProtChSystem.thisptr.system.GetChTime()
-        t_prot = Profiling.time()-Profiling.startTime
+            t = t_chrono
+        t_sim = Profiling.time()-Profiling.startTime
         self.record_file = os.path.join(Profiling.logDir, self.name+'_pos.csv')
         if t == 0:
-            headers = ['t', 't_prot']
+            headers = ['t', 't_ch', 't_sim']
             for i in range(self.thisptr.nodes.size()):
                 headers += ['x'+str(i), 'y'+str(i), 'z'+str(i)]
             with open(self.record_file, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
-        row = [t, t_prot]
+        row = [t, t_chrono, t_sim]
         positions = self.getNodesPosition()
         for pos in positions:
             row += [pos[0], pos[1], pos[2]]
@@ -1442,14 +1675,14 @@ cdef class ProtChMoorings:
             writer.writerow(row)
         self.record_file = os.path.join(Profiling.logDir, self.name+'_T.csv')
         if t == 0:
-            headers = ['t', 't_prot']
+            headers = ['t', 't_ch', 't_sim']
             # for i in range(self.thisptr.nodes.size()):
             #     headers += ['Tbx'+str(i), 'Tby'+str(i), 'Tbz'+str(i), 'Tfx'+str(i), 'Tfy'+str(i), 'Tfz'+str(i)]
             headers += ['Tb0', 'Tb1', 'Tb2', 'Tf0', 'Tf1', 'Tf2']
             with open(self.record_file, 'w') as csvfile:
                 writer = csv.writer(csvfile, delimiter=',')
                 writer.writerow(headers)
-        row = [t, t_prot]
+        row = [t, t_chrono, t_sim]
         Tb = self.getTensionBack()
         Tf = self.getTensionFront()
         row += [Tb[0], Tb[1], Tb[2], Tf[0], Tf[1], Tf[2]]
@@ -1498,14 +1731,15 @@ cdef class ProtChMoorings:
         if self.ProtChSystem.model is not None and self.external_forces_from_ns is True:
             Profiling.logEvent('moorings extern forces')
             self.setExternalForces()
-        elif self.external_forces_manual is not None:
+        elif self.external_forces_manual is True:
+            Profiling.logEvent('moorings manual extern forces')
             self.setExternalForces()
 
     def poststep(self):
         """Records values
         """
         comm = Comm.get().comm.tompi4py()
-        if comm.rank == self.ProtChSystem.chrono_processor:
+        if comm.rank == self.ProtChSystem.chrono_processor and self.ProtChSystem.record_values is True:
             self._recordValues()
 
     def setNodesPositionFunction(self, function):
@@ -1518,6 +1752,17 @@ cdef class ProtChMoorings:
             along cable) and returning 3 arguments (x, y, z) coords.
         """
         self.nodes_function = function
+
+    def setFluidVelocityFunction(self, function):
+        """Function to build nodes
+
+        Parameters
+        ----------
+        function:
+            Must be a function taking two arguments (3D coordinates
+            and time), and returning velocity (x, y, z).
+        """
+        self.fluid_velocity_function = function
 
     def fixFrontNode(self, bool fixed):
         """Fix front node of cable
@@ -1634,6 +1879,7 @@ cdef class ProtChMoorings:
     def buildNodes(self):
         self.thisptr.buildNodes()
         self.nodes_built = True
+        self.nodes_nb = self.thisptr.nodes.size()
 
     def getNodesPosition(self):
         """Gives array of nodes position
@@ -1703,17 +1949,32 @@ cdef class ProtChMoorings:
         cdef ch.ChVector[double] acc
         cdef vector[double] fluid_density
         cdef double dens
+        comm = Comm.get().comm.tompi4py()
+        Profiling.logEvent("STARTING LOOP ")
         for i in range(self.thisptr.nodes.size()):
             if self.ProtChSystem.model is not None and self.external_forces_from_ns is True:
                 vec = deref(self.thisptr.nodes[i]).GetPos()
                 x = vec.x()
                 y = vec.y()
                 z = vec.z()
+                if self.ProtChSystem.parallel_mode is True:
+                    x = comm.bcast(x, self.ProtChSystem.chrono_processor)
+                    y = comm.bcast(y, self.ProtChSystem.chrono_processor)
+                    z = comm.bcast(z, self.ProtChSystem.chrono_processor)
                 coords = np.array([x, y, z])
                 vel_arr = np.zeros(3)
                 vel_grad_arr = np.zeros(3)
                 xi, el, rank = self.ProtChSystem.findElementContainingCoords(coords[:self.nd])
-                vel_arr[:] = self.ProtChSystem.getFluidVelocityLocalCoords(xi, el, rank)
+                # print("NODE ", i, xi, el, rank)
+                #log Profiling.logEvent("Got ELEMENT")
+                comm.barrier()
+                if rank is not None:
+                    vel_arr[:] = self.ProtChSystem.getFluidVelocityLocalCoords(xi, el, rank)
+                else:
+                    vel_arr[:] = 0.
+                # print("VEL ", i, vel_arr)
+                comm.barrier()
+                #log Profiling.logEvent("Got VELOCITY")
                 #vel_grad_arr[:] = self.ProtChSystem.getFluidVelocityGradientLocalCoords(xi, el, rank)
                 # acc = du/dt+u.grad(u)
                 #acc_arr = (vel_arr-fluid_velocity_array_previous[i])/dt+vel_arr*vel_grad_arr
@@ -1728,6 +1989,7 @@ cdef class ProtChMoorings:
                 fluid_acceleration.push_back(acc)
                 dens = self.fluid_density_array[i]
                 fluid_density.push_back(dens)
+        Profiling.logEvent("FINISHED LOOP "+str(i))
         self.thisptr.setFluidAccelerationAtNodes(fluid_acceleration)
         self.thisptr.setFluidVelocityAtNodes(fluid_velocity)
         self.thisptr.setFluidDensityAtNodes(fluid_density)
@@ -1808,17 +2070,31 @@ def getLocalElement(femSpace, coords, node):
     patchBoundaryNodes=set()
     checkedElements=[]
     # nodeElementOffsets give the indices to get the elements sharing the node
-    for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
-        eN = femSpace.mesh.nodeElementsArray[eOffset]
-        checkedElements.append(eN)
-        # union of set
-        patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
-        # evaluate the inverse map for element eN (global to local)
-        xi = femSpace.elementMaps.getInverseValue(eN, coords)
-        #J = femSpace.elementMaps.getJacobianValues(eN, )
-        # query whether xi lies within the reference element
-        if femSpace.elementMaps.referenceElement.onElement(xi):
-            return eN
+    #log Profiling.logEvent("Getting Local Element")
+    if node+1 < len(femSpace.mesh.nodeElementOffsets):
+        for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+            eN = femSpace.mesh.nodeElementsArray[eOffset]
+            checkedElements.append(eN)
+            # union of set
+            patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
+            # evaluate the inverse map for element eN (global to local)
+            xi = femSpace.elementMaps.getInverseValue(eN, coords)
+            #J = femSpace.elementMaps.getJacobianValues(eN, )
+            # query whether xi lies within the reference element
+            if femSpace.elementMaps.referenceElement.onElement(xi):
+                return eN
+    else:
+        for eOffset in range(femSpace.mesh.nodeElementOffsets[node]):
+            eN = femSpace.mesh.nodeElementsArray[eOffset]
+            checkedElements.append(eN)
+            # union of set
+            patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
+            # evaluate the inverse map for element eN (global to local)
+            xi = femSpace.elementMaps.getInverseValue(eN, coords)
+            #J = femSpace.elementMaps.getJacobianValues(eN, )
+            # query whether xi lies within the reference element
+            if femSpace.elementMaps.referenceElement.onElement(xi):
+                return eN
     # extra loop if case coords is in neighbour element
     for node in patchBoundaryNodes:
         for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
