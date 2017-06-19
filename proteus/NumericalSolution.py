@@ -821,6 +821,8 @@ class NS_base:  # (HasTraits):
             vel_norm = max(abs(self.modelList[0].levelModelList[0].u[1].dof))**2 + max(abs(self.modelList[0].levelModelList[0].u[2].dof))**2
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
+            # if (self.tn == 0.02) or (self.tn == 0.5037868790450162) or (self.tn == 1.0045108824023263) or (self.tn == 1.5040997751645624):
+            #     import pdb ; pdb.set_trace()
             while self.systemStepController.t_system_last < self.tn:
 
                 logEvent("System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,

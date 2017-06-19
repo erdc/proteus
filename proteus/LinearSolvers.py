@@ -434,8 +434,8 @@ class KSP_petsc4py(LinearSolver):
         else:
             self.r_work = None
         ### DO NOT MERGE - THIS NEEDS TO BE FIXED!!!!
-#        if prefix != None:
-#            self.ksp.setOptionsPrefix(prefix)
+        if prefix != None:
+           self.ksp.setOptionsPrefix(prefix)
         # set ksp preconditioner
         if Preconditioner != None:
             self._setPreconditioner(Preconditioner,par_L,prefix)
@@ -1551,6 +1551,7 @@ class SchurPrecon(KSP_Preconditioner):
                                                 dtype="i"))
             self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
         self.pc = p4pyPETSc.PC().create()
+        self.pc.setOptionsPrefix(prefix)
         # DO NOT MERGE - THIS NEEDS TO BE FIXED!!!!
         self.pc.setType('fieldsplit')
         self.isp = p4pyPETSc.IS()

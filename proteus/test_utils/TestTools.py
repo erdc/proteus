@@ -256,7 +256,12 @@ class NumericResults:
             plt.xlim(axis[0],axis[1])
         plt.show() 
 
-    def ipython_plot_newton_it(self,time_level,axis=False):
+    def ipython_plot_newton_it(self,
+                               time_level,
+                               axis=False,
+                               user_legend = False,
+                               plot_relative = False,
+                               title = False):
         """ Plot the Newton iteration residual in a jupyter notebook.
 
         Parameters
@@ -266,7 +271,8 @@ class NumericResults:
         """
         plot_data = []
         legend = []
-        title = 'Residual From Newton Iterations'
+        if title == False:
+            title = 'Newton Iteration Residuals'
         axis_inline = axis
         
         for data_set in time_level:
@@ -282,6 +288,9 @@ class NumericResults:
             else:
                 print 'The first key ' + `data_set[1]` + ' is not valid.'
 
+        if user_legend!=False:
+            legend = user_legend
+                
         if axis!=False:
             self._init_ipython_plot(plot_data,legend,title,axis_inline)
         else:
@@ -305,12 +314,15 @@ class NumericResults:
         for data_set in time_level:
             if data_set[0] in self.data_dictionary.keys():
                 if data_set[1] in self.data_dictionary[data_set[0]].keys():
-                    result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][0]))
-                    return_data.append(result)
+                    if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
+                        result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0]))
+                        return_data.append(result)
+                    else:
+                        print 'The third key ' + data_set[2] + 'is not valid.'
                 else:
                     print 'The second key ' + `data_set[1]` + 'is not valid.'
             else:
-                print 'The first key ' + `data_set[1]` + 'is not valid.'
+                print 'The first key ' + `data_set[0]` + 'is not valid.'
 
         return return_data
             
@@ -377,8 +389,11 @@ class NumericResults:
             if data_set[0] in self.data_dictionary.keys():
                 if data_set[1] in self.data_dictionary[data_set[0]].keys():
                     if data_set[2] in self.data_dictionary[data_set[0]][data_set[1]][1].keys():
-                        result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][0]))
-                        return_data.append(result)
+                        if data_set[3] in self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1].keys():
+                            result = (data_set,len(self.data_dictionary[data_set[0]][data_set[1]][1][data_set[2]][1][data_set[3]][0]))
+                            return_data.append(result)
+                        else:
+                            print 'The fourth key ' + `data_set[3]` + ' is not valid.'
                     else:
                         print 'The third key ' + `data_set[1]` + 'is not valid.'
                 else:
@@ -419,6 +434,20 @@ class NumericResults:
             self._init_ipython_plot(plot_data,legend,title,axis_inline)
         else:
             self._init_ipython_plot(plot_data,legend,title)
+
+    def time_series_of_ksp_residuals(self,tnList=None):
+        if tnList is None:
+            tnList = sorted(self.data_dictionary[' twp_navier_stokes_p '].keys())
+        
+        self.newton_steps = []
+        for t in tnList:
+            newton_steps_l = len(self.data_dictionary[' twp_navier_stokes_p '][t][1][0][0])-2
+            self.newton_steps.append(newton_steps_l)
+
+        self.ksp_iterations = []
+        for t, newton_steps_ell in zip(tnList,self.newton_steps):
+            ksp_steps_l = len(self.data_dictionary[' twp_navier_stokes_p '][t][1][0][1][newton_steps_ell][0])
+            self.ksp_iterations.append(ksp_steps_l)
 
 class BasicTest():
     """ A base class for tests. """
