@@ -899,36 +899,87 @@ class NS_base:  # (HasTraits):
             import Comm
             comm = Comm.get().comm.tompi4py()
 
-            #I want to create an array that indicates which rank every node exists on
-            #First, I will create the nodeRanksArray and initialize the list with the owning rank associated with each node
-            #Second, I will loop over all of the non-owned nodes on each rank and send the nodeID and rank to 0th rank.
-            # The 0th rank will update this array and then broadcast to the remaining ranks? 
-          
-            testMesh = self.modelList[0].levelModelList[0].mesh.globalMesh
-            if(comm.rank==0):
-              testMesh.nodeRanksArray = numpy.empty([testMesh.nNodes_global,comm.size],dtype="i")
-              for nodeID in range(testMesh.nNodes_global):
-                testMesh.nodeRanksArray[nodeID,0]= numpy.argwhere(nodeID <= testMesh.nodeOffsets_subdomain_owned[1:]).min()
-                #initialize the remaining values as -1
-                testMesh.nodeRanksArray[nodeID,1:]=-1
-            
-            if(comm.rank>0):
-              theMesh = self.modelList[0].levelModelList[0].mesh
-              testArray = numpy.ones((theMesh.nNodes_global-theMesh.nNodes_owned,2),'i')*comm.rank
-              for i in range(theMesh.nNodes_owned, theMesh.subdomainMesh.nNodes_global):
-                testArray[i-theMesh.nNodes_owned,0]=numpy.argwhere(testMesh.nodeOffsets_subdomain_owned <= testMesh.nodeNumbering_subdomain2global[i]).max()
-                testArray[i-theMesh.nNodes_owned,1]=testMesh.nodeNumbering_subdomain2global[i]
+          #  #I want to create an array that indicates which rank every node exists on
+          #  #First, I will create the nodeRanksArray and initialize the list with the owning rank associated with each node
+          #  #Second, I will loop over all of the non-owned nodes on each rank and send the nodeID and rank to 0th rank.
+          #  # The 0th rank will update this array and then broadcast to the remaining ranks? 
+         # 
+          #  testMesh = self.modelList[0].levelModelList[0].mesh.globalMesh
+          #  if(comm.rank==0):
+          #    testMesh.nodeRanksArray = numpy.empty([testMesh.nNodes_global,comm.size],dtype="i")
+          #    for nodeID in range(testMesh.nNodes_global):
+          #      testMesh.nodeRanksArray[nodeID,0]= numpy.argwhere(nodeID <= testMesh.nodeOffsets_subdomain_owned[1:]).min()
+          #      #initialize the remaining values as -1
+          #      testMesh.nodeRanksArray[nodeID,1:]=-1
+          #  
+          #  if(comm.rank>0):
+          #    theMesh = self.modelList[0].levelModelList[0].mesh
+          #    testArray = numpy.ones((theMesh.nNodes_global-theMesh.nNodes_owned,2),'i')*comm.rank
+          #    for i in range(theMesh.nNodes_owned, theMesh.subdomainMesh.nNodes_global):
+          #      testArray[i-theMesh.nNodes_owned,0]=numpy.argwhere(testMesh.nodeOffsets_subdomain_owned <= testMesh.nodeNumbering_subdomain2global[i]).max()
+          #      testArray[i-theMesh.nNodes_owned,1]=testMesh.nodeNumbering_subdomain2global[i]
 
-              # Sort rows of the arrays by first index for easier grouping?
-              # Send the array to the desired processor
-              comm.isend(testArray,dest=0,tag=101)
+          #    # Sort rows of the arrays by first index for easier grouping?
+          #    # Send the array to the desired processor
+          #    comm.isend(testArray,dest=0,tag=101)
+          #  if(comm.rank==0):
+          #    req=comm.irecv(source=1,tag=101)
+          #    data = req.wait()
+            #if(comm.rank==1):
+            #  from pdb_clone import pdb; pdb.set_trace_remote()
+            #comm.barrier() 
+            #import pdb; pdb.set_trace()
             if(comm.rank==0):
-              req=comm.irecv(source=1,tag=101)
-              data = req.wait()
-            if(comm.rank==0):
-              from pdb_clone import pdb; pdb.set_trace_remote()
-            comm.barrier() 
-            p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,p0.domain.hasModel)
+                print "This is Comm Rank 0"
+                print self.modelList[0].levelModelList[0].mesh.nNodes_owned
+                print self.modelList[0].levelModelList[0].mesh.nNodes_global
+                print self.modelList[0].levelModelList[0].mesh.nEdges_owned
+                print self.modelList[0].levelModelList[0].mesh.nEdges_global
+                print self.modelList[0].levelModelList[0].mesh.nElements_owned
+                print self.modelList[0].levelModelList[0].mesh.nElements_global
+            comm.barrier()
+            if(comm.rank==1):
+                print "This is Comm Rank 1"
+                print self.modelList[0].levelModelList[0].mesh.nNodes_owned
+                print self.modelList[0].levelModelList[0].mesh.nNodes_global
+                print self.modelList[0].levelModelList[0].mesh.nEdges_owned
+                print self.modelList[0].levelModelList[0].mesh.nEdges_global
+                print self.modelList[0].levelModelList[0].mesh.nElements_owned
+                print self.modelList[0].levelModelList[0].mesh.nElements_global
+            comm.barrier()
+
+            p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
+            #p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
+            #    self.modelList[0].levelModelList[0].mesh.nodeArray)
+            #logEvent("Copying DOF and parameters to PUMI")
+            #for m in self.modelList:
+            #  for lm in m.levelModelList:
+            #    coef = lm.coefficients
+            #    if coef.vectorComponents != None:
+            #      vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+            #      for vci in range(len(coef.vectorComponents)):
+            #        vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
+            #      p0.domain.PUMIMesh.transferFieldToPUMI(
+            #             coef.vectorName, vector)
+            #      del vector
+            #    for ci in range(coef.nc):
+            #      if coef.vectorComponents == None or \
+            #         ci not in coef.vectorComponents:
+            #        scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+            #        scalar[:,0] = lm.u[ci].dof[:]
+            #        p0.domain.PUMIMesh.transferFieldToPUMI(
+            #            coef.variableNames[ci], scalar)
+            #        del scalar
+            #if p0.domain.nd == 3:
+            #  mesh = MeshTools.TetrahedralMesh()
+            #else:
+            #  mesh = MeshTools.TriangularMesh()
+            #mesh.convertFromPUMI(p0.domain.PUMIMesh,
+            #                 p0.domain.faceList,
+            #                 p0.domain.regList,
+            #                 parallel = self.comm.size() > 1,
+            #                 dim = p0.domain.nd)
+            #self.PUMI2Proteus(mesh)
         if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
             self.so.useOneMesh and 
@@ -1022,6 +1073,11 @@ class NS_base:  # (HasTraits):
         #    p0.domain.PUMIMesh.adaptPUMIMesh()
         #    p0.domain.PUMIMesh.get_local_error()
         
+        import cmeshTools
+        m = self.modelList[0]
+        lm = m.levelModelList[0]
+        cmeshTools.deleteMeshDataStructures(lm.mesh.cmesh)
+
         logEvent("Converting PUMI mesh to Proteus")
         #ibaned: PUMI conversion #2
         #TODO: this code is nearly identical to
@@ -1031,6 +1087,7 @@ class NS_base:  # (HasTraits):
           mesh = MeshTools.TetrahedralMesh()
         else:
           mesh = MeshTools.TriangularMesh()
+    
         mesh.convertFromPUMI(p0.domain.PUMIMesh,
                              p0.domain.faceList,
                              p0.domain.regList,
@@ -1395,6 +1452,12 @@ class NS_base:  # (HasTraits):
             if(self.PUMI_estimateError()):
               self.PUMI_adaptMesh()
 
+        import Comm
+        comm = Comm.get().comm.tompi4py()
+
+        if(comm.rank==1):
+          from pdb_clone import pdb; pdb.set_trace_remote()
+        comm.barrier() 
 
         logEvent("Finished calculating solution",level=3)
 

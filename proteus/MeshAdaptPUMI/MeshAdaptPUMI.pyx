@@ -23,7 +23,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         bint isReconstructed
         int loadModelAndMesh(char *, char*)
         int getSimmetrixBC()
-        int reconstructFromProteus(Mesh&,int)
+        int reconstructFromProteus(Mesh&,Mesh&,int)
         int constructFromSerialPUMIMesh(Mesh&)
         int constructFromParallelPUMIMesh(Mesh&, Mesh&)
         int updateMaterialArrays(Mesh&,int, int, int)
@@ -63,9 +63,10 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.isReconstructed
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
-    def reconstructFromProteus(self,cmesh,hasModel=0):
+    def reconstructFromProteus(self,cmesh,global_cmesh,hasModel=0):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        return self.thisptr.reconstructFromProteus(cmesh_ptr.mesh,hasModel)
+        cdef CMesh* global_cmesh_ptr = <CMesh*>global_cmesh
+        return self.thisptr.reconstructFromProteus(cmesh_ptr.mesh,global_cmesh_ptr.mesh,hasModel)
     def constructFromSerialPUMIMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.constructFromSerialPUMIMesh(cmesh_ptr.mesh)

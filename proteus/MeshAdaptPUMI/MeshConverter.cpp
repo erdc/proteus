@@ -808,7 +808,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   gmi_base_reserve(gMod_base,AGM_EDGE,numModelTotals[2]);
 
   //gfaces
-  gmi_base_reserve(gMod_base,AGM_FACE,numModelTotals[3]);
+  gmi_base_reserve(gMod_base,AGM_FACE,1);
 
   //gregions
   gmi_base_reserve(gMod_base,AGM_REGION,0);
@@ -975,6 +975,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   modelRegionMaterial = (int*)calloc(numModelTotals[3],sizeof(int));
 
   //gmi set entities
+/*
   gmi_unfreeze_lookups(gMod_base->lookup);
   for(int i=0;i<numModelNodes;i++){
     e = agm_add_ent(gMod_base->topo, AGM_VERTEX);
@@ -1006,6 +1007,40 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)2);
   std::cout<<"Finished creating model entities\n";
   PCU_Barrier();
+*/
+
+  gmi_unfreeze_lookups(gMod_base->lookup);
+  for(int i=0;i<numModelTotals[0];i++){
+    e = agm_add_ent(gMod_base->topo, AGM_VERTEX);
+    gmi_set_lookup(gMod_base->lookup, e, i);
+  }
+  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)0);
+
+  for(int i=0;i<numModelTotals[2];i++){
+    e = agm_add_ent(gMod_base->topo, AGM_EDGE);
+    gmi_set_lookup(gMod_base->lookup, e, i);
+  }
+  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)1);
+
+  for(int i=0;i<numModelRegions;i++){
+    e = agm_add_ent(gMod_base->topo, AGM_FACE);
+    gmi_set_lookup(gMod_base->lookup, e, i+1); //assumes material types are enumerated starting from 1
+    if(hasModel){
+      b = agm_add_bdry(gMod_base->topo, e);
+      for(int k=0;k<numSegments;k++){
+        if(faceList[(i)*numSegments+k]==-1) break;
+        else{
+          std::cout<<"edge "<<faceList[(i)*numSegments+k]<<" "<<numSegments<<std::endl;
+          d = gmi_look_up(gMod_base->lookup,AGM_EDGE,faceList[(i)*numSegments+k]);
+          agm_add_use(gMod_base->topo,b,d);
+        }
+      }
+    }
+  }
+  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)2);
+  std::cout<<"Finished creating model entities\n";
+  PCU_Barrier();
+
 
   int matTag; //mesh.elementMaterialType[fID];
   apf::ModelEntity* gEnt; 

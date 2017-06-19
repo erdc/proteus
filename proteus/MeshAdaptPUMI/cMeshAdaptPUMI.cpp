@@ -1,3 +1,4 @@
+#include <gmi.h>
 #include <gmi_mesh.h>
 #include <gmi_null.h>
 #include <ma.h>
@@ -77,6 +78,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   domainVolume = 0.0;
   THRESHOLD = 0.0;
   isReconstructed=0;
+  initialReconstructed = 0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -91,6 +93,17 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);
+  if(isReconstructed){
+    //free(numModelEntities);
+    //free(numModelOffsets);
+    //free(numModelTotals);
+    free(modelVertexMaterial);
+    free(modelBoundaryMaterial);
+    free(modelRegionMaterial);
+    m->destroyNative();
+    gmi_destroy(m->getModel());
+    apf::destroyMesh(m);
+  }
   PCU_Comm_Free();
 #ifdef PROTEUS_USE_SIMMETRIX
   SimModel_stop();
@@ -403,6 +416,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       apf::writeVtkFiles(namebuffer, m);
     }
   }
+  //isReconstructed = 0; //this is needed to maintain consistency with the post-adapt conversion back to Proteus
   nAdapt++; //counter for number of adapt steps
   return 0;
 }
