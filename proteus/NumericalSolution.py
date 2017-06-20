@@ -939,6 +939,12 @@ class NS_base:  # (HasTraits):
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
             self.closeArchive(model,index)
+
+        # print inf norm of hu
+        print ('Saving L Infinity norm of hu... for 1D well balancing')
+        aux = numpy.array(self.modelList[-1].levelModelList[-1].inf_norm_hu)
+        numpy.savetxt('Linf_of_hu.txt', aux, delimiter=', ')
+
         return systemStepFailed
     #
     #try to make preStep and postStep just manipulate "current values" and let the step controllers manage the history setting
