@@ -990,11 +990,6 @@ class NS_base:  # (HasTraits):
         #    p0.domain.PUMIMesh.adaptPUMIMesh()
         #    p0.domain.PUMIMesh.get_local_error()
         
-        import cmeshTools
-        m = self.modelList[0]
-        lm = m.levelModelList[0]
-        cmeshTools.deleteMeshDataStructures(lm.mesh.cmesh)
-
         logEvent("Converting PUMI mesh to Proteus")
         #ibaned: PUMI conversion #2
         #TODO: this code is nearly identical to
@@ -1368,13 +1363,6 @@ class NS_base:  # (HasTraits):
             self.nSolveSteps += 1
             if(self.PUMI_estimateError()):
               self.PUMI_adaptMesh()
-
-        import Comm
-        comm = Comm.get().comm.tompi4py()
-
-        if(comm.rank==1):
-          from pdb_clone import pdb; pdb.set_trace_remote()
-        comm.barrier() 
 
         logEvent("Finished calculating solution",level=3)
 
