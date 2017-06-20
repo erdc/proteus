@@ -635,34 +635,59 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
     """
 
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-
-        FIX_ROUNDOFF_ERROR = False
-
+        ###########
+        # STAGE 1 # 
+        ###########
+        # y_stage1 = yn + dt*L(yn,t) 
         self.computeResidual(u,r,b)
         u[:] = r
+        # FCT STEP ON WATER HEIGHT #
+        logEvent("   FCT Step", level=1)
+        self.F.FCTStep()
+
+        if (False):
+            # Extract hnp1 from global solution u
+            index = range(0,len(u))
+            hIndex = index[0::3]
+            huIndex = index[1::3]
+            hvIndex = index[2::3]
+            # SAVE SOLUTION OF FIRST STAGE
+            self.F.timeIntegration.u_dof_stage[0][0][:] = u[hIndex]
+            self.F.timeIntegration.u_dof_stage[1][0][:] = u[huIndex]
+            self.F.timeIntegration.u_dof_stage[2][0][:] = u[hvIndex]
+
+            ###########
+            # STAGE 2 #
+            ###########
+            # y_stage2 = y_stage1 + dt*L(y_stage1,t)
+            # ynp1 = 1/2*yn + 1/2*y_stage2
+            self.computeResidual(u,r,b)
+            u[:] = r
+
+            # FCT STEP ON WATER HEIGHT #
+            logEvent("   FCT Step", level=1)
+            self.F.FCTStep()
+
+            ##################
+            # COMBINE STAGES #
+            ##################
+            u[hIndex]  = 0.5*(self.F.h_dof_old  + u[hIndex])  
+            u[huIndex] = 0.5*(self.F.hu_dof_old + u[huIndex]) 
+            u[hvIndex] = 0.5*(self.F.hv_dof_old + u[hvIndex])
+
+        #############################################
+        # UPDATE SOLUTION THROUGH calculateResidual #
+        #############################################
         self.F.auxiliaryCallCalculateResidual = True
         self.computeResidual(u,r,b)
         self.F.auxiliaryCallCalculateResidual = False
 
-        #self.F.setUnknowns(u)        
-        # Get values at quad points (in case there is a need to do convergence tests)
-        #for ci in range(self.F.nc):
-        #    self.F.u[ci].getValues(self.F.q[('w',0)],self.F.q[('u',ci)])
+        # Compute infinity norm of vel-x. This is for 1D well balancing test
+        #exact_hu = 2 + 0.*self.F.u[1].dof
+        #error = numpy.abs(exact_hu - self.F.u[1].dof).max()
+        #self.F.inf_norm_hu.append(error)
 
         self.F.check_positivity_water_height=True
-
-        # To Fix round off error
-        #if (FIX_ROUNDOFF_ERROR):
-        #    index = range(0,len(u))
-        #    hIndex = index[0::3]
-        #    huIndex = index[1::3]
-        #    hvIndex = index[2::3]
-            # Fix the water height 
-        #    u[hIndex] = np.maximum(u[hIndex], 0.)
-        # Fix the momentum
-        #    aux = np.maximum(u[hIndex],self.F.hEps)
-        #    u[huIndex] = u[huIndex]*(2.*u[hIndex]**2./(u[hIndex]**2+aux**2.))
-        #    u[hvIndex] = u[hvIndex]*(2.*u[hIndex]**2./(u[hIndex]**2+aux**2.))
 
 class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
     """
@@ -721,7 +746,7 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
             ############################
             # END OF GALERKIN SOLUTION #
             ############################
-            
+
         ##############################
         # ENTROPY VISCOSITY SOLUTION #
         ##############################
@@ -751,6 +776,48 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         ############################
         logEvent("   FCT Step", level=1)
         self.F.FCTStep()
+
+        if (False):
+            # Extract hnp1 from global solution u
+            index = range(0,len(u))
+            hIndex = index[0::3]
+            huIndex = index[1::3]
+            hvIndex = index[2::3]
+            # SAVE SOLUTION OF FIRST STAGE
+            self.F.timeIntegration.u_dof_stage[0][0][:] = u[hIndex]
+            self.F.timeIntegration.u_dof_stage[1][0][:] = u[huIndex]
+            self.F.timeIntegration.u_dof_stage[2][0][:] = u[hvIndex]
+
+            ###########
+            # STAGE 2 #
+            ###########
+            # y_stage2 = y_stage1 + dt*L(y_stage1,t)
+            # ynp1 = 1/2*yn + 1/2*y_stage2
+            self.computeResidual(u,r,b)
+            ## SOLVE SYSTEM
+            if self.updateJacobian or self.fullNewton:
+                self.updateJacobian = False
+                self.F.getJacobian(self.J)
+                self.linearSolver.prepare(b=r)
+            self.du[:]=0.0
+            if not self.directSolver:
+                if self.EWtol:
+                    self.setLinearSolverTolerance(r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed()
+            u-=self.du
+            ###
+            # FCT STEP ON WATER HEIGHT #
+            logEvent("   FCT Step", level=1)
+            self.F.FCTStep()
+
+            ##################
+            # COMBINE STAGES #
+            ##################
+            u[hIndex]  = 0.5*(self.F.h_dof_old  + u[hIndex])  
+            u[huIndex] = 0.5*(self.F.hu_dof_old + u[huIndex]) 
+            u[hvIndex] = 0.5*(self.F.hv_dof_old + u[hvIndex])
         
         # DISTRIBUTE SOLUTION FROM u to u[ci].dof
         self.F.auxiliaryCallCalculateResidual = True
