@@ -407,9 +407,10 @@ namespace proteus
   public:
     cppHsuSedStress<2> closure;
     const int nDOF_test_X_trial_element,
-      nSpace2=4;
+      nSpace2;
     CompKernelType ck;
     cppRANS3PF2D():
+      nSpace2(4),
       closure(150.0,
               0.0,
               0.0102,
