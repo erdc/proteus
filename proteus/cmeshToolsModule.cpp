@@ -1048,6 +1048,27 @@ cmeshToolsGenerateFrom3DMFile(PyObject* self,
   return Py_None;
 }
 
+static PyObject* 
+cmeshToolsGenerateFrom2DMFile(PyObject* self,
+			      PyObject* args)
+{
+  PyObject *cmesh;
+  const char *filebase;
+  int base,failed;
+  if (!PyArg_ParseTuple(args,
+                        "Osi",
+                        &cmesh,
+                        &filebase,
+			&base))
+    return NULL;
+
+  failed = read2DM(MESH(cmesh),filebase,base);
+  constructElementBoundaryElementsArray_triangle(MESH(cmesh));
+  failed = readBC(MESH(cmesh),filebase,base);
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
 
 static PyObject* cmeshToolsComputeGeometricInfo_triangle(PyObject* self,
                                                          PyObject* args)
@@ -2015,6 +2036,10 @@ static PyMethodDef cmeshToolsMethods[] = {
    cmeshToolsGenerateFrom3DMFile,       
    METH_VARARGS,                        
    "just read from 3DM files directly"},  /*doc string for method*/
+   {"generateFrom2DMFile",            
+   cmeshToolsGenerateFrom2DMFile,       
+   METH_VARARGS,                        
+   "just read from 2DM files directly"},  /*doc string for method*/
    {"generateFromHexFile",            
    cmeshToolsGenerateFromHexFile,       
    METH_VARARGS,                        
