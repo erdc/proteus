@@ -13,7 +13,7 @@ xc=5
 domain = RectangularDomain(L=L)
 
 #This is relevant just when use_second_order_NonFlatB_with_EV_stabilization=True
-cE=1
+cE=100000000
 LUMPED_MASS_MATRIX=1
 mannings=0.0
 

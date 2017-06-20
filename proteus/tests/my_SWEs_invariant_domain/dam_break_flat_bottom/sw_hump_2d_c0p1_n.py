@@ -2,17 +2,16 @@ from proteus import *
 from proteus.default_n import *
 from sw_hump_2d_p import *
 
-refinement=7
-runCFL=0.75
-use_EV = False
+refinement=5
+runCFL=0.5
 timeIntegration_sw2d = "SSP33"
 #timeIntegration_sw2d = "FE"
 
-
-if (use_EV==True):
-    use_second_order_NonFlatB_with_EV_stabilization=True
+multilevelNonlinearSolver  = Newton
+if (LUMPED_MASS_MATRIX==1):
+    levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
 else:
-    use_second_order_NonFlatB_GP_stabilization=True
+    levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
 
 timeIntegration = SW2DCV.RKEV 
 stepController = Min_dt_controller
@@ -35,12 +34,6 @@ femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis,
 
 elementQuadrature = SimplexGaussQuadrature(nd,3)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
-
-multilevelNonlinearSolver  = Newton
-if (use_EV==True):
-    levelNonlinearSolver = ExplicitConsistentMassMatrixShallowWaterEquationsSolver
-else:
-    levelNonlinearSolver = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
 
 fullNewtonFlag = False #NOTE: False just if the method is explicit
 nDTout=100
