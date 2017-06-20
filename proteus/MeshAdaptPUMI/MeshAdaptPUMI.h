@@ -3,7 +3,6 @@
 #include <apf.h>
 #include <apfMesh2.h>
 #include <apfNumbering.h>
-#include <map>
 
 /**
    \file MeshAdaptPUMI.h
@@ -110,9 +109,6 @@ class MeshAdaptPUMIDrvr{
   int* modelRegionMaterial;
   int numModelOffsets[4];
   int numModelTotals[4];
-  std::map<int, int> modelVertexMaterialMap; //I want a map between the global model tag and 
-  std::map<int, int> modelBoundaryMaterialMap; //I want a map between the global model tag and 
-  std::map<int, int> modelRegionMaterialMap; //I want a map between the global model tag and 
 
   private: 
   apf::Mesh2* m;
