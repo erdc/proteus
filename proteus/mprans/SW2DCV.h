@@ -15,6 +15,8 @@
 #define cMax 0.25
 #define IMPLICIT 0
 #define POWER_SMOOTHNESS_INDICATOR 2
+#define BETAij 1
+#define LINEAR_FRICTION 0
 
 // FOR CELL BASED ENTROPY VISCOSITY 
 #define ENTROPY(g,h,hu,hv,one_over_hReg) 0.5*(g*h*h+hu*hu*one_over_hReg+hv*hv*one_over_hReg)
@@ -70,7 +72,8 @@ namespace proteus
 			 int* csrColumnOffsets_DofLoops, //csr column offsets 
 			 double* MassMatrix, //mass matrix
 			 double* dEV_minus_dL,
-			 double hEps
+			 double hEps, 
+			 int LUMPED_MASS_MATRIX
 			 )=0;
     virtual void calculateResidual_SUPG(//element
 				   double* mesh_trial_ref,
@@ -1238,7 +1241,11 @@ namespace proteus
 				   int LUMPED_MASS_MATRIX,
 				   int USE_EV_BASED_ON_GALERKIN,
 				   double dt,
-				   double mannings
+				   double mannings,
+				   // Quant of interests
+				   double* quantDOFs,
+				   // Lumped mass matrix
+				   double* ML
 				   )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
@@ -2786,7 +2793,8 @@ namespace proteus
 		 int* csrColumnOffsets_DofLoops, //csr column offsets 
 		 double* MassMatrix, //mass matrix
 		 double* dEV_minus_dL,
-		 double hEps
+		 double hEps, 
+		 int LUMPED_MASS_MATRIX
 		 )
     {
       double h_threshold = 1.0E-3;
@@ -2818,8 +2826,10 @@ namespace proteus
 	      double hStarji  = fmax(0., hnj + Zj - fmax(Zi,Zj));
 	      
 	      // i-th row of flux correction matrix 
-	      double ML_minus_MC = (i==j ? 1. : 0.)*mi - MassMatrix[ij];
-	      double FluxCorrectionMatrix1 = ML_minus_MC*(high_order_hnp1[j]-hnj - (high_order_hnp1i-hni)) 
+	      double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : 
+				    (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
+	      double FluxCorrectionMatrix1 
+		= ML_minus_MC*(high_order_hnp1[j]-hnj - (high_order_hnp1i-hni)) 
 		+ dt*dEV_minus_dL[ij]*(hStarji-hStarij);
 
 	      // COMPUTE P VECTORS //
@@ -2883,31 +2893,34 @@ namespace proteus
 	      double hvStarji = (hnj <= hEps ? 0. : hvnj*hStarji/hnj);
 
 	      // COMPUTE FLUX CORRECTION MATRICES
-	      double ML_minus_MC = (i==j ? 1. : 0.)*mi - MassMatrix[ij];
-	      double FluxCorrectionMatrix1 = ML_minus_MC*(high_order_hnp1[j]-hnj - (high_order_hnp1i-hni)) 
+	      double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : 
+				    (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
+	      double FluxCorrectionMatrix1 = 
+		ML_minus_MC*(high_order_hnp1[j]-hnj - (high_order_hnp1i-hni)) 
 		+ dt*dEV_minus_dL[ij]*(hStarji-hStarij);
 
-	      double FluxCorrectionMatrix2 = ML_minus_MC*(high_order_hunp1[j]-hunj - (high_order_hunp1i-huni)) 
+	      double FluxCorrectionMatrix2 = 
+		ML_minus_MC*(high_order_hunp1[j]-hunj - (high_order_hunp1i-huni)) 
 		+ dt*dEV_minus_dL[ij]*(huStarji-huStarij);
 
-	      double FluxCorrectionMatrix3 = ML_minus_MC*(high_order_hvnp1[j]-hvnj - (high_order_hvnp1i-hvni)) 
+	      double FluxCorrectionMatrix3 = 
+		ML_minus_MC*(high_order_hvnp1[j]-hvnj - (high_order_hvnp1i-hvni)) 
 		+ dt*dEV_minus_dL[ij]*(hvStarji-hvStarij);
 
 	      // compute limiter based on water height
 	      double Lij = (FluxCorrectionMatrix1 > 0. ? std::min(Rposi,Rneg[j]) : std::min(Rnegi,Rpos[j]));
-	      //double Lij = 1.;
 
 	      ith_Limiter_times_FluxCorrectionMatrix1 += Lij*FluxCorrectionMatrix1;
 	      ith_Limiter_times_FluxCorrectionMatrix2 += Lij*FluxCorrectionMatrix2;
 	      ith_Limiter_times_FluxCorrectionMatrix3 += Lij*FluxCorrectionMatrix3;
-
 	      //update ij
 	      ij+=1;
 	    }
+
 	  double one_over_mi = 1.0/lumped_mass_matrix[i];
-	  limited_hnp1[i]  = low_order_hnp1[i]  + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
-	  limited_hunp1[i] = low_order_hunp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
-	  limited_hvnp1[i] = low_order_hvnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
+	  limited_hnp1[i]  = low_order_hnp1[i]  + 0*one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
+	  limited_hunp1[i] = low_order_hunp1[i] + 0*one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
+	  limited_hvnp1[i] = low_order_hvnp1[i] + 0*one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
 
 	  if (limited_hnp1[i] < -1E-14)
 	    {
@@ -5437,6 +5450,7 @@ namespace proteus
 	  double ith_friction_term3 =  
 	    veli_norm==0 ? 0. : 2*g*n2*hvi*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
 
+
 	  // loop over the sparsity pattern of the i-th DOF
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
@@ -6669,10 +6683,14 @@ namespace proteus
 			   int LUMPED_MASS_MATRIX,
 			   int USE_EV_BASED_ON_GALERKIN,
 			   double dt,
-			   double mannings)
+			   double mannings,
+			   // Quant of interests
+			   double* quantDOFs,
+			   // Lumped mass matrix
+			   double* ML)
     {
       //FOR FRICTION//
-      double n2 = std::pow(mannings,2);
+      double n2 = std::pow(mannings,2.);
       double gamma=4./3;
       double xi=2.;
 
@@ -6783,17 +6801,48 @@ namespace proteus
 	    }
 	}
       
-      /////////////////////
-      // COMPUTE ENTROPY //
-      /////////////////////
+      //////////////////////////////////
+      // COMPUTE ENTROPY and g VECTOR //
+      //////////////////////////////////
       // compute entropy (defined as eta) corresponding to ith node
-      register double eta[numDOFsPerEqn];
+      register double eta[numDOFsPerEqn], gx[numDOFsPerEqn], gy[numDOFsPerEqn], 
+	alpha_numerator_pos[numDOFsPerEqn], alpha_numerator_neg[numDOFsPerEqn],
+	alpha_denominator_pos[numDOFsPerEqn], alpha_denominator_neg[numDOFsPerEqn];
+      int ij=0;
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
 	  // COMPUTE ENTROPY BASED ON OLD STAGE
 	  double hni = h_dof_lstage[i]; 
 	  double one_over_hniReg = 2*hni/(hni*hni+std::pow(fmax(hni,hEps),2));
 	  eta[i] = ENTROPY(g,hni,hu_dof_lstage[i],hv_dof_lstage[i],one_over_hniReg);
+	  // for copmuting g vector 
+	  gx[i]=0.;
+	  gy[i]=0.;
+	  // for smoothness indicator 
+	  alpha_numerator_pos[i] = 0.;
+	  alpha_numerator_neg[i] = 0.;
+	  alpha_denominator_pos[i] = 0.;
+	  alpha_denominator_neg[i] = 0.;
+
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    {
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double hnj = h_dof_lstage[j];
+	      // for gi vector
+	      gx[i] += Cx[ij]*hnj;
+	      gy[i] += Cy[ij]*hnj;
+
+	      double alpha_num = hnj - hni;
+	      alpha_numerator_pos[i] += alpha_num > 0 ? alpha_num : 0.;
+	      alpha_numerator_neg[i] += alpha_num < 0 ? alpha_num : 0.;
+	      alpha_denominator_pos[i] += alpha_num > 0 ? alpha_num : 0.;
+	      alpha_denominator_neg[i] += alpha_num < 0 ? fabs(alpha_num) : 0.;
+
+	      //update ij
+	      ij+=1;
+	    }
+	  gx[i] /= ML[i];
+	  gy[i] /= ML[i];
 	}
 
       /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -6801,12 +6850,17 @@ namespace proteus
       /////////////////////////////////////////////////////////////////////////////////////////////////
       // Smoothness indicator is based on the solution. psi_i = psi_i(alpha_i); 
       // alpha_i = |sum(uj-ui)|/sum|uj-ui|
-      int ij = 0;
+      ij = 0;
       register double global_entropy_residual[numDOFsPerEqn]; 
       register double psi[numDOFsPerEqn], dL[NNZ], etaMax[numDOFsPerEqn], etaMin[numDOFsPerEqn];
+      register double SumPos[numDOFsPerEqn], SumNeg[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  double alphai, alphai_numerator=0, alphai_denominator=0; // smoothness indicator of solution
+	  double alphai; // smoothness indicator of solution
+	  // get location of i-nodes (for linearity preserving) smoothness indicator
+	  double xi = mesh_dof[i*3+0];
+	  double yi = mesh_dof[i*3+1];
+
 	  double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
 	  double hui = hu_dof_lstage[i]; 
 	  double hvi = hv_dof_lstage[i]; 
@@ -6825,6 +6879,9 @@ namespace proteus
 	  double eta_prime2 = DENTROPY_DHU(g,hi,hui,hvi,one_over_hiReg); 
 	  double eta_prime3 = DENTROPY_DHV(g,hi,hui,hvi,one_over_hiReg); 
 
+	  // init SumPos and SumNeg
+	  SumPos[i] = 0.;
+	  SumNeg[i] = 0.;
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    { //loop in j (sparsity pattern)
 	      int j = csrColumnOffsets_DofLoops[offset];
@@ -6833,9 +6890,9 @@ namespace proteus
 	      double hvj = hv_dof_lstage[j];
 	      double Zj = b_dof[j];
 
-	      // FOR SMOOTHNESS INDICATOR //
-	      alphai_numerator += (hj-hi);
-	      alphai_denominator += std::abs(hj-hi);
+	      // get location of j-nodes (for linearity preserving) smoothness indicator
+	      double xj = mesh_dof[j*3+0];
+	      double yj = mesh_dof[j*3+1];
 
 	      // FOR ENTROPY RESIDUAL //
 	      double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2));
@@ -6857,6 +6914,13 @@ namespace proteus
 	      double huStarji = (hj <= hEps ? 0. : huj*hStarji/hj);
 	      double hvStarji = (hj <= hEps ? 0. : hvj*hStarji/hj);
 	   
+	      //////////////////////////////
+	      // FOR SMOOTHNESS INDICATOR //
+	      //////////////////////////////
+	      double gj_times_x = gx[j]*(xj-xi) + gy[j]*(yj-yi);
+	      SumPos[i] += gj_times_x > 0 ? gj_times_x : 0;
+	      SumNeg[i] += gj_times_x < 0 ? gj_times_x : 0;
+
 	      //////////////////
 	      // COMPUTE dLij // 
 	      //////////////////
@@ -6914,21 +6978,35 @@ namespace proteus
 	  //////////////////////////////////
 	  // COMPUTE SMOOTHNESS INDICATOR //
 	  //////////////////////////////////
-	  if (hi < hEps)
-	    alphai = 1.;
-	  else
+	  //if (hi < hEps)
+	  //alphai = 1.;
+	  //else
 	    {
-	      if (alphai_denominator==0)
-		alphai = 1.;
+	      // Compute sigmaPos and sigmaNeg
+	      double Sum = SumPos[i] + SumNeg[i];
+	      double sigmaPosi = Sum < 0 ? 1. : (-SumNeg[i])/(SumPos[i]+1E-15);
+	      double sigmaNegi = Sum > 0 ? 1. : (SumPos[i])/(-SumNeg[i]+1E-15);
+
+	      double alpha_numi = fabs(sigmaPosi*alpha_numerator_pos[i] + sigmaNegi * alpha_numerator_neg[i]);
+	      double alpha_deni = sigmaPosi*alpha_denominator_pos[i] + sigmaNegi * alpha_denominator_neg[i];
+
+	      if (BETAij == 1)
+		{
+		  alpha_numi = fabs(alpha_numerator_pos[i] + alpha_numerator_neg[i]);
+		  alpha_deni = alpha_denominator_pos[i] + alpha_denominator_neg[i];
+		}
+	      if (fabs(alpha_numerator_pos[i] + alpha_numerator_neg[i]) == 0 ) //constante state
+		alphai = 0.;
 	      else 
-		alphai = std::abs(alphai_numerator)/alphai_denominator;
+		alphai = alpha_numi/(alpha_deni+1E-15);
 	    }
+
+	  quantDOFs[i] = alphai;
 	  if (POWER_SMOOTHNESS_INDICATOR==0)
 	    psi[i] = 1.0;
 	  else
 	    psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
 	}
-
 
       //////////////////
       // Loop on DOFs // to compute flux and dissipative terms
@@ -6944,29 +7022,40 @@ namespace proteus
 	  double ui = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hui;
 	  double vi = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2))*hvi;
 
-
 	  // entropy normalization factor 
 	  double one_over_entNormFactori = etaMax[i] == etaMin[i] ? 0. : 1./(etaMax[i]-etaMin[i]);
-
 	  // regularization of 1/hi 
 	  double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2));
 
 	  double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
-	  double ith_dissipative_low_order_term1=0., ith_dissipative_low_order_term2=0., ith_dissipative_low_order_term3=0.,
-	    ith_dissipative_term1=0., ith_dissipative_term2=0., ith_dissipative_term3=0.;
-	  double ith_well_balancing_term1=0., ith_well_balancing_term2=0., ith_well_balancing_term3=0.;
-	  double aux1_to_compute_hnp1=0., aux2_to_compute_hnp1=0.;
+	  double 
+	    ith_dLij_minus_muij_times_hStarStates=0.,
+	    ith_dLij_minus_muij_times_huStarStates=0.,
+	    ith_dLij_minus_muij_times_hvStarStates=0.,
+	    ith_dHij_minus_muij_times_hStarStates=0.,
+	    ith_dHij_minus_muij_times_huStarStates=0.,
+	    ith_dHij_minus_muij_times_hvStarStates=0.,
+	    ith_muij_times_hStates=0.,
+	    ith_muij_times_huStates=0.,
+	    ith_muij_times_hvStates=0.;
+	  double aux1_to_compute_hnp1=0., aux2_to_compute_hnp1=0.;	    
 
-	  // friction term lumped
+	  ///////////////////
+	  // FRICTION TERM //
+	  ///////////////////
 	  double veli_norm = std::sqrt(ui*ui+vi*vi);
-	  double mi = lumped_mass_matrix[i];
-	  
+	  double mi = lumped_mass_matrix[i];	  
 	  double hi_to_the_gamma = std::pow(hi,gamma);
 	  double ith_friction_term2 =  
 	    veli_norm==0 ? 0. : 2*g*n2*hui*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
 	  double ith_friction_term3 =  
 	    veli_norm==0 ? 0. : 2*g*n2*hvi*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
 	  
+	  if (LINEAR_FRICTION==1)
+	    {
+	      ith_friction_term2 = mannings*hui*mi;
+	      ith_friction_term3 = mannings*hvi*mi;
+	    }
 	  // loop over the sparsity pattern of the i-th DOF
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    {
@@ -6988,9 +7077,8 @@ namespace proteus
 	      ith_flux_term3 += ( huj*hvj*one_over_hjReg*Cx[ij] + hvj*hvj*one_over_hjReg*Cy[ij] 
 				  + g*hi*(hj+Zj)*Cy[ij] );
 
-	      // Dissipative term
+	      // Dissipative well balancing term
 	      double muij = 0.;
-
 	      if (i != j) // This is not necessary. See formula for ith_dissipative_terms
 		{
 		  ///////////////////////////
@@ -7004,46 +7092,41 @@ namespace proteus
 		  double huStarji = (hj <= hEps ? 0. : huj*hStarji/hj);
 		  double hvStarji = (hj <= hEps ? 0. : hvj*hStarji/hj);
 		  
-		  //dissipative terms for well balancing
+		  ///////////////////////////////////////
+		  // WELL BALANCING DISSIPATIVE MATRIX //
+		  ///////////////////////////////////////
 		  muij = fmax(fmax(0.,-(ui*Cx[ij] + vi*Cy[ij])),fmax(0,(uj*Cx[ij] + vj*Cy[ij])));
-		  muij *= std::max(psi[i],psi[j]);
-		  // compute dissipative terms for well balancing for second and third equations
-		  ith_well_balancing_term1 += muij*(hj-hStarji-(hi-hStarij));
-		  ith_well_balancing_term2 += muij*(huj-huStarji-(hui-huStarij));
-		  ith_well_balancing_term3 += muij*(hvj-hvStarji-(hvi-hvStarij));
-
+		  muij *= std::max(psi[i],psi[j]); // enhance its order
+		  
+		  ////////////////////////
+		  // DISSIPATIVE MATRIX //
+		  ////////////////////////
 		  // compute dissipative terms for second and third equations
-		  dL[ij] *= std::max(psi[i],psi[j]);
-		  // compute dLij*(uStarji-uStarij)
-		  double ith_dissipative_low_order_term1_ij = dL[ij]*(hStarji-hStarij);
-		  double ith_dissipative_low_order_term2_ij = dL[ij]*(huStarji-huStarij);
-		  double ith_dissipative_low_order_term3_ij = dL[ij]*(hvStarji-hvStarij);
-		  // sum dissipative matrix contribution to global vectors
-		  ith_dissipative_low_order_term1 += ith_dissipative_low_order_term1_ij;
-		  ith_dissipative_low_order_term2 += ith_dissipative_low_order_term2_ij;
-		  ith_dissipative_low_order_term3 += ith_dissipative_low_order_term3_ij;
-
+		  dL[ij] *= std::max(psi[i],psi[j]); // enhance its order
 		  // compute entropy residual for each component 
 		  double one_over_entNormFactorj = etaMax[j] == etaMin[j] ? 0. : 1./(etaMax[j]-etaMin[j]);
 		  double dEVij = cE*fmax(std::abs(global_entropy_residual[i])*one_over_entNormFactori,
 					 std::abs(global_entropy_residual[j])*one_over_entNormFactorj);
-		  double ith_dissipative_term1_ij = fmin(dL[ij],dEVij)*(hStarji-hStarij);
-		  double ith_dissipative_term2_ij = fmin(dL[ij],dEVij)*(huStarji-huStarij);
-		  double ith_dissipative_term3_ij = fmin(dL[ij],dEVij)*(hvStarji-hvStarij);
+		  double dHij = fmin(dL[ij],dEVij);
+		  if (cE >= 1000)
+		    dHij = dL[ij];
 
-		  if (cE >= 1000) //HACK to switch between EV or not
-		    {
-		      ith_dissipative_term1_ij = dL[ij]*(hStarji-hStarij);
-		      ith_dissipative_term2_ij = dL[ij]*(huStarji-huStarij);
-		      ith_dissipative_term3_ij = dL[ij]*(hvStarji-hvStarij);
-		    }
-		  // sum high order dissipative matrix contribution to global vectors
-		  ith_dissipative_term1 += ith_dissipative_term1_ij;
-		  ith_dissipative_term2 += ith_dissipative_term2_ij;
-		  ith_dissipative_term3 += ith_dissipative_term3_ij;
+		  // compute dij_minus_muij times star solution terms
+		  ith_dHij_minus_muij_times_hStarStates  += (dHij - muij)*(hStarji-hStarij); 
+		  ith_dHij_minus_muij_times_huStarStates += (dHij - muij)*(huStarji-huStarij); 
+		  ith_dHij_minus_muij_times_hvStarStates += (dHij - muij)*(hvStarji-hvStarij); 
+
+		  ith_dLij_minus_muij_times_hStarStates  += (dL[ij] - muij)*(hStarji-hStarij); 
+		  ith_dLij_minus_muij_times_huStarStates += (dL[ij] - muij)*(huStarji-huStarij); 
+		  ith_dLij_minus_muij_times_hvStarStates += (dL[ij] - muij)*(hvStarji-hvStarij); 
+
+		  // compute muij times solution terms
+		  ith_muij_times_hStates  += muij*(hj-hi);
+		  ith_muij_times_huStates += muij*(huj-hui);
+		  ith_muij_times_hvStates += muij*(hvj-hvi);
 
 		  // compute dEV_minus_dL
-		  dEV_minus_dL[ij] = fmin(dL[ij],dEVij) - dL[ij];
+		  dEV_minus_dL[ij] = dHij - dL[ij];
 
 		  // compute aux quantities for first equation 
 		  // aux1 = Veli*Cii + sum_j[ muij + (dLij-muij)*hStarij/hi ]
@@ -7059,36 +7142,71 @@ namespace proteus
 	      // update ij
 	      ij+=1;
 	    }
-	  //double mi = lumped_mass_matrix[i];
-
+	  
 	  // Compute low order solution: lumped mass matrix and low order dissipative matrix
-	  low_order_hnp1[i]  = hi*(1-dt/mi*aux1_to_compute_hnp1) + dt/mi*aux2_to_compute_hnp1;
-	  //low_order_hnp1[i]  = hi  - dt/mi*(ith_flux_term1 - ith_dissipative_low_order_term1);
-	  low_order_hunp1[i] = hui - dt/mi*(ith_flux_term2 - ith_dissipative_low_order_term2 - ith_well_balancing_term2 + ith_friction_term2);
-	  low_order_hvnp1[i] = hvi - dt/mi*(ith_flux_term3 - ith_dissipative_low_order_term3 - ith_well_balancing_term3 + ith_friction_term3); 
+	  //low_order_hnp1[i]  = hi*(1-dt/mi*aux1_to_compute_hnp1) + dt/mi*aux2_to_compute_hnp1;
+	  low_order_hnp1[i]  = hi  - dt/mi*(ith_flux_term1
+					    - ith_dLij_minus_muij_times_hStarStates
+					    - ith_muij_times_hStates);
+	  low_order_hunp1[i] = hui - dt/mi*(ith_flux_term2 
+					    - ith_dLij_minus_muij_times_huStarStates
+					    - ith_muij_times_huStates
+					    + ith_friction_term2);
+	  low_order_hvnp1[i] = hvi - dt/mi*(ith_flux_term3 
+					    - ith_dLij_minus_muij_times_hvStarStates
+					    - ith_muij_times_hvStates
+					    + ith_friction_term3); 
+	  // FIX LOW ORDER SOLUTION //
+	  low_order_hnp1[i] = fmax(low_order_hnp1[i],0.);
+	  double aux = fmax(low_order_hnp1[i],hEps);
+	  low_order_hunp1[i] *= 2*std::pow(low_order_hnp1[i],2.)/(std::pow(low_order_hnp1[i],2.)+std::pow(aux,2.));
+	  low_order_hvnp1[i] *= 2*std::pow(low_order_hnp1[i],2.)/(std::pow(low_order_hnp1[i],2.)+std::pow(aux,2.));
 
-	  if (low_order_hnp1[i] < 0.)
+	  int LOW_ORDER_SOLUTION=0;
+	  if (LOW_ORDER_SOLUTION==1)
 	    {
-	      std::cout << "low order hnp1: " << low_order_hnp1[i] << std::endl;
-	      std::cout << hi << "\t"
-			<< 1-dt/mi*aux1_to_compute_hnp1 << "\t" 
-			<< dt/mi*aux2_to_compute_hnp1 
-			<< std::endl;
-	    }
-
-	  if (LUMPED_MASS_MATRIX==1)
-	    {
-	      globalResidual[offset_h+stride_h*i]   = mi*(h_dof[i]  - hi)  + dt*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
-	      globalResidual[offset_hu+stride_hu*i] = mi*(hu_dof[i] - hui) + dt*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2 + ith_friction_term2);
-	      globalResidual[offset_hv+stride_hv*i] = mi*(hv_dof[i] - hvi) + dt*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3 + ith_friction_term3);
-	    }
+	      globalResidual[offset_h+stride_h*i]   = low_order_hnp1[i];
+	      globalResidual[offset_hu+stride_hu*i] = low_order_hunp1[i];
+	      globalResidual[offset_hv+stride_hv*i] = low_order_hvnp1[i];
+	    }	    
 	  else
 	    {
-	      // Distribute residual
-	      // NOTE: MASS MATRIX IS CONSISTENT
-	      globalResidual[offset_h+stride_h*i]   += dt*(ith_flux_term1 - ith_dissipative_term1 - ith_well_balancing_term1);
-	      globalResidual[offset_hu+stride_hu*i] += dt*(ith_flux_term2 - ith_dissipative_term2 - ith_well_balancing_term2 + ith_friction_term2);
-	      globalResidual[offset_hv+stride_hv*i] += dt*(ith_flux_term3 - ith_dissipative_term3 - ith_well_balancing_term3 + ith_friction_term3);
+	      if (LUMPED_MASS_MATRIX==1)
+		{
+		  globalResidual[offset_h+stride_h*i]   
+		    = hi - dt/mi*(ith_flux_term1 
+				  - ith_dHij_minus_muij_times_hStarStates
+				  - ith_muij_times_hStates);
+		  globalResidual[offset_hu+stride_hu*i] 
+		    = hui - dt/mi*(ith_flux_term2 
+				   - ith_dHij_minus_muij_times_huStarStates
+				   - ith_muij_times_huStates
+				   + ith_friction_term2);
+		  globalResidual[offset_hv+stride_hv*i] 
+		    = hvi - dt/mi*(ith_flux_term3 
+				   - ith_dHij_minus_muij_times_hvStarStates
+				   - ith_muij_times_hvStates
+				   + ith_friction_term3); 
+		}
+	      else
+		{
+		  // Distribute residual
+		  // NOTE: MASS MATRIX IS CONSISTENT
+		  globalResidual[offset_h+stride_h*i]   
+		    += dt*(ith_flux_term1 
+			   - ith_dHij_minus_muij_times_hStarStates
+			   - ith_muij_times_hStates);   
+		  globalResidual[offset_hu+stride_hu*i] 
+		    += dt*(ith_flux_term2 
+			   - ith_dHij_minus_muij_times_huStarStates
+			   - ith_muij_times_huStates
+			   + ith_friction_term2);
+		  globalResidual[offset_hv+stride_hv*i] 
+		    += dt*(ith_flux_term3 
+			   - ith_dHij_minus_muij_times_hvStarStates
+			   - ith_muij_times_hvStates
+			   + ith_friction_term3); 
+		}
 	    }
 	}
     }

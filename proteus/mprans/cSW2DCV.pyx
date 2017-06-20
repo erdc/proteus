@@ -27,7 +27,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 		     int* csrColumnOffsets_DofLoops, 
 		     double* MassMatrix, 
 		     double* dEV_minus_dL,	
-		     double hEps)
+		     double hEps, 
+		     int LUMPED_MASS_MATRIX)
         void calculateResidual_SUPG(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -1115,7 +1116,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       int LUMPED_MASS_MATRIX, 
 			       int USE_EV_BASED_ON_GALERKIN,
 			       double dt, 
-			       double mannings)
+			       double mannings,						
+			       double* quantDOFs, 
+			       double* ML)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -1605,7 +1608,8 @@ cdef class cSW2DCV_base:
 	       numpy.ndarray csrColumnOffsets_DofLoops, 
 	       numpy.ndarray MassMatrix, 
 	       numpy.ndarray dEV_minus_dL,
-	       double hEps):
+	       double hEps, 
+	       int LUMPED_MASS_MATRIX):
        self.thisptr.FCTStep(dt, 
        			    NNZ,
 	                    numDOFs,
@@ -1627,7 +1631,8 @@ cdef class cSW2DCV_base:
 			    <int*> csrColumnOffsets_DofLoops.data,
 			    <double*> MassMatrix.data,
 			    <double*> dEV_minus_dL.data,
-			    hEps)
+			    hEps, 
+			    LUMPED_MASS_MATRIX)
    def calculateResidual_SUPG(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -3696,7 +3701,9 @@ cdef class cSW2DCV_base:
 			 int LUMPED_MASS_MATRIX, 
 			 int USE_EV_BASED_ON_GALERKIN,
 			 double dt, 
-			 double mannings):
+			 double mannings,
+			 numpy.ndarray quantDOFs, 
+			 numpy.ndarray ML):
        self.thisptr.calculateResidual(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -3835,7 +3842,10 @@ cdef class cSW2DCV_base:
 	    LUMPED_MASS_MATRIX, 
 	    USE_EV_BASED_ON_GALERKIN,
 	    dt, 
-	    mannings)
+	    mannings,
+	    <double*> quantDOFs.data,
+	    <double*> ML.data
+	    )
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,

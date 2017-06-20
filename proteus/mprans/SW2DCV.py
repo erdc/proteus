@@ -142,7 +142,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
         self.dt = 1E-6
         #self.choose_dt()
         self.t = t0+self.dt
- 
+
     def setCoefficients(self):
         """
         beta are all 1's here
@@ -412,6 +412,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  sd = True,
                  movingDomain=False):
 
+        self.inf_norm_hu=[] #To test 1D well balancing
+        self.firstCalculateResidualCall=True
         self.auxiliaryCallCalculateResidual=False
         self.postProcessing = False#this is a hack to test the effect of post-processing
         #
@@ -760,6 +762,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.low_order_hvnp1=None
         self.dEV_minus_dL=None
 
+        # Aux quantity at DOFs to be filled by optimized code (MQL)
+        self.quantDOFs = None
+
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -889,10 +894,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           self.timeIntegration.u_dof_stage[1][self.timeIntegration.lstage], #hun
                           self.timeIntegration.u_dof_stage[2][self.timeIntegration.lstage], #hvn
                           self.coefficients.b.dof,
-                          self.timeIntegration.u[hIndex],
+                          self.timeIntegration.u[hIndex], #high order solution 
                           self.timeIntegration.u[huIndex],
                           self.timeIntegration.u[hvIndex],
-                          self.low_order_hnp1, 
+                          self.low_order_hnp1, # low order solution 
                           self.low_order_hunp1, 
                           self.low_order_hvnp1, 
                           limited_hnp1, 
@@ -902,7 +907,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
                           MassMatrix,
                           self.dEV_minus_dL,
-                          self.hEps)
+                          self.hEps, 
+                          self.coefficients.LUMPED_MASS_MATRIX)
                 
         # Pass the post processed hnp1 solution to global solution u
         self.timeIntegration.u[hIndex]  = limited_hnp1
@@ -916,7 +922,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #COMPUTE hEps
         if self.hEps is None: 
             eps=1E-14
-            self.hEps = eps*(self.u[0].dof.max() - self.u[0].dof.min())
+            self.hEps = eps*self.u[0].dof.max()
         #COMPUTE C MATRIX 
         if self.cterm_global is None:
             #since we only need cterm_global to persist, we can drop the other self.'s
@@ -1092,6 +1098,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.csrColumnOffsets[(0,0)]/3,
                                                                           self.cterm_transpose[d],
                                                                           self.cterm_global_transpose[d])
+        if self.quantDOFs == None:
+            self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+
         rowptr_cMatrix, colind_cMatrix, Cx = self.cterm_global[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, Cy = self.cterm_global[1].getCSRrepresentation()        
         rowptr_cMatrix, colind_cMatrix, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
@@ -1101,7 +1110,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.low_order_hnp1 = numpy.zeros(self.u[0].dof.shape,'d')
         self.low_order_hunp1 = numpy.zeros(self.u[1].dof.shape,'d')
         self.low_order_hvnp1 = numpy.zeros(self.u[2].dof.shape,'d')
-
+        
         numDOFsPerEqn = self.u[0].dof.size #(mql): I am assuming all variables live on the same FE space
         numNonZeroEntries = len(Cx)
         #Load the unknowns into the finite element dof
@@ -1137,6 +1146,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #Make sure that the water height is positive (before computing the residual)
         if (self.check_positivity_water_height==True):
             assert self.u[0].dof.min() >= 0, ("Negative water height: ", self.u[0].dof.min())
+
+        if (self.firstCalculateResidualCall):
+            self.timeIntegration.u_dof_stage[0][self.timeIntegration.lstage][:] = self.u[0].dof
+            self.timeIntegration.u_dof_stage[1][self.timeIntegration.lstage][:] = self.u[1].dof
+            self.timeIntegration.u_dof_stage[2][self.timeIntegration.lstage][:] = self.u[2].dof
+            self.firstCalculateResidualCall = False
+
         self.calculateResidual(
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -1275,12 +1291,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.LUMPED_MASS_MATRIX, 
             self.coefficients.USE_EV_BASED_ON_GALERKIN,
             self.timeIntegration.dt, 
-            self.coefficients.mannings)
+            self.coefficients.mannings,
+            self.quantDOFs, 
+            self.ML)
 
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
+                    r[self.offset[cj]+self.stride[cj]*dofN] = 0. #g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
         #self.timeIntegration.dt=self.timeIntegration.runCFL/globalMax(self.edge_based_cfl.max())
         #logEvent("...   Time step = " + str(self.timeIntegration.dt),level=2)
