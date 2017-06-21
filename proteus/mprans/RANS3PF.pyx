@@ -77,6 +77,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double Cd_sge,
                                double C_dc,
                                double C_b,
+                               # VRANS start
                                double * eps_solid,
                                double * phi_solid,
                                double * q_velocity_solid,
@@ -89,6 +90,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_turb_var_1,
                                double * q_turb_var_grad_0,
                                double * q_eddy_viscosity,
+                               # VRANS end
                                int * p_l2g,
                                int * vel_l2g,
                                double * p_dof,
@@ -156,9 +158,11 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * bc_ebqe_phi_ext,
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
+                               # VRANS start
                                double * ebqe_vos_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
+                               # VRANS end
                                int * isDOFBoundary_p,
                                int * isDOFBoundary_u,
                                int * isDOFBoundary_v,
@@ -199,16 +203,17 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_nu,
                                double * ebqe_nu,
                                int nParticles,
-                               double particle_epsFact,
-                               double particle_alpha,
-                               double particle_beta,
-			       double particle_penalty_constant,
-			       double* particle_signed_distances,
-			       double* particle_signed_distance_normals,
+			       double particle_epsFact,
+			       double particle_alpha,
+			       double particle_beta,
+                               double particle_penalty_constant,
+                               double* particle_signed_distances,
+                               double* particle_signed_distance_normals,
 			       double* particle_velocities,
 			       double* particle_centroids,
                                double* particle_netForces,
-                               double* particle_netMoments)
+                               double* particle_netMoments,
+                               double particle_nitsche)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -383,7 +388,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* particle_signed_distances,
 			       double* particle_signed_distance_normals,
 			       double* particle_velocities,
-			       double* particle_centroids)
+			       double* particle_centroids,
+                               double particle_nitsche)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -652,7 +658,8 @@ cdef class RANS3PF:
                           numpy.ndarray particle_velocities,
                           numpy.ndarray particle_centroids,
                           numpy.ndarray particle_netForces,
-                          numpy.ndarray particle_netMoments):
+                          numpy.ndarray particle_netMoments,
+                          double particle_nitsche):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -823,7 +830,8 @@ cdef class RANS3PF:
                                         < double* > particle_velocities.data,
                                         < double* > particle_centroids.data,
                                         < double* > particle_netForces.data,
-                                        < double* > particle_netMoments.data)
+                                        < double* > particle_netMoments.data,
+                                        particle_nitsche)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -1000,8 +1008,7 @@ cdef class RANS3PF:
 			  numpy.ndarray particle_signed_distance_normals,
 			  numpy.ndarray particle_velocities,
 			  numpy.ndarray particle_centroids,
-			  numpy.ndarray particle_netForces,
-			  numpy.ndarray particle_netMoments):
+                          double particle_nitsche):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian( < double*> mesh_trial_ref.data,
@@ -1177,7 +1184,8 @@ cdef class RANS3PF:
 				        < double* > particle_signed_distances.data,
 				        < double* > particle_signed_distance_normals.data,
 				        < double* > particle_velocities.data,
-				        < double* > particle_centroids.data)
+				        < double* > particle_centroids.data,
+                                        particle_nitsche)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
