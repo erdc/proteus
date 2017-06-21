@@ -1730,7 +1730,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
 class CheckFailureRandomNLWaves(unittest.TestCase):
     def testFailures(self):
         waveDir = np.array([0.,0.,1.])
-        Vgen = np.array([0.,0.,-1])
+        Lgen = np.array([0.,0.,-1])
         from proteus.WaveTools import RandomNLWaves
         RR = RandomNLWaves(0,100,1.,1.,0.,10.,waveDir,np.array([0,-9.81,0]),100,2.,"JONSWAP", spectral_params= None )
         xi = np.array([0.,0.,0.])
@@ -1749,7 +1749,7 @@ class CheckFailureRandomNLWaves(unittest.TestCase):
             f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","blah")
         self.assertEqual(cm3.exception.code, 1 )
         with self.assertRaises(SystemExit) as cm4:
-            f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","long",False,Vgen)
+            f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","long",False,Lgen)
         self.assertEqual(cm4.exception.code, 1 )
 
 

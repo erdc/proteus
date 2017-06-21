@@ -1201,11 +1201,11 @@ class RandomWaves:
         U[2] = cppU[2]
 
         return U
-    def writeEtaSeries(self,Tstart,Tend,x0,fname,Vgen= np.array([0.,0,0])):
+    def writeEtaSeries(self,Tstart,Tend,x0,fname,Lgen= np.array([0.,0,0])):
         """Writes a timeseries of the free-surface elevation
 
         It also returns the free surface elevation as a time-eta array.
-        If Vgen !=[0.,0.,0.,] then Tstart is modified to account for the
+        If Lgen !=[0.,0.,0.,] then Tstart is modified to account for the
         wave transformation at the most remote point of the relaxation zone.
 
         Parameters
@@ -1218,7 +1218,7 @@ class RandomWaves:
             Position vector of the time series
         fname : string
             Filename for timeseries file
-        Vgen : Optional[numpy.ndarray]
+        Lgen : Optional[numpy.ndarray]
             Length vector of relaxation zone
 
 
@@ -1227,13 +1227,13 @@ class RandomWaves:
         numpy.ndarray
             2D numpy array Nx2 containing free-surface elevation in time.
         """
-        if sum(Vgen[:]*self.waveDir[:])< 0 :
+        if sum(Lgen[:]*self.waveDir[:])< 0 :
                 logEvent('ERROR! Wavetools.py: Location vector of generation zone should not be opposite to the wave direction')
                 sys.exit(1)
         dt = self.Tp/50.
         Tlag = np.zeros(len(self.omega),)
         for j in range(len(self.omega)):
-            Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
+            Tlag[j] = sum(self.kDir[j,:]*Lgen[:])/self.omega[j]
         Tlag = max(Tlag)
         Tstart = Tstart - Tlag
         Np = int((Tend - Tstart)/dt)
@@ -2621,11 +2621,11 @@ class RandomNLWaves:
 
 
 
-    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False,Vgen=np.array([0.,0.,0.])):
+    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False,Lgen=np.array([0.,0.,0.])):
         """Writes a timeseries of the free-surface elevation
 
         It also returns the free surface elevation as a time-eta array.
-        If Vgen !=[0.,0.,0.,] then Tstart is modified to account for the
+        If Lgen !=[0.,0.,0.,] then Tstart is modified to account for the
         wave transformation at the most remote point of the relaxation zone.
 
         Parameters
@@ -2644,7 +2644,7 @@ class RandomNLWaves:
             Mode of set up calculations (all, long, short, setup)
         setUp: Optional[bool]
             Switch for activating setup calculation
-        Vgen : Optional[numpy.ndarray]
+        Lgen : Optional[numpy.ndarray]
             Length vector of relaxation zone
 
 
@@ -2653,13 +2653,13 @@ class RandomNLWaves:
         numpy.ndarray
             2D numpy array Nx2 containing free-surface elevation in time.
         """
-        if sum(Vgen[:]*self.waveDir[:])< 0 :
+        if sum(Lgen[:]*self.waveDir[:])< 0 :
             logEvent('ERROR! Wavetools.py: Location vector of generation zone should not be opposite to the wave direction')
             sys.exit(1)
 
         Tlag = np.zeros(len(self.omega),)
         for j in range(len(self.omega)):
-            Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
+            Tlag[j] = sum(self.kDir[j,:]*Lgen[:])/self.omega[j]
         Tlag = max(Tlag)
         Tstart = Tstart - Tlag
 
@@ -2752,7 +2752,7 @@ class RandomNLWavesFast:
     phi : numpy.ndarray
              Component phases (if set to None, phases are picked at random)
             
-    Vgen : numpy.ndarray
+    Lgen : numpy.ndarray
              Length of the generation zone (np.array([0., 0., 0.]) by default
             
     Nwaves : int
@@ -2779,7 +2779,7 @@ class RandomNLWavesFast:
                  spectName,               #random words will result in error and return the available spectra
                  spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  phi=None,
-                 Vgen = np.array([0.,0.,0.]),    #array of component phases
+                 Lgen = np.array([0.,0.,0.]),    #array of component phases
                  Nwaves = 15,
                  Nfreq = 32,
                  NLongW = 10.,
@@ -2800,7 +2800,7 @@ class RandomNLWavesFast:
             ii+=1
             fname = "randomNLWaves_"+mode+".csv"
             dt = periods[ii]/50.
-            series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Vgen)
+            series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Lgen)
             Tstart_temp = series[0,0]
             cutoff = 0.2*periods[ii]/(Tend-Tstart_temp)
 
