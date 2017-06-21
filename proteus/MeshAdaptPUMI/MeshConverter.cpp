@@ -671,6 +671,7 @@ void construct(Mesh2* m, const int* conn, const int* conn_b, int nelem,
     int nelem_b, int nverts,int etype, int etype_b, int* local2globalMap,
     GlobalToVert& globalToVert)
 {
+  std::cout<<"Entering Custom Construct Function\n";
   constructVerts(m, nverts,local2globalMap,globalToVert);
   constructBoundaryElements(m, conn_b, nelem_b, etype_b, globalToVert);
   constructElements(m, conn, nelem, etype, globalToVert);
@@ -679,6 +680,7 @@ void construct(Mesh2* m, const int* conn, const int* conn_b, int nelem,
   PCU_Barrier();
   stitchMesh(m);
   m->acceptChanges();
+  std::cout<<"Exiting Custom Construct Function\n";
 }
 
 }
@@ -1099,39 +1101,47 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   PCU_Barrier();
 
   //Classify the mesh edge entities
+  //If the edge is on a model edge, it should have a material tag greater than 0.
+  //If the edge is on a partition boundary, the material tag should be 0.
+  //There is no direct control over ownership when constructing the mesh, so it
+  //must be left general.
   int edgID = 0;
   int edgCounter = 0;
   int edgMaterialCounter = numModelOffsets[2];
   entIter=m->begin(1);
   while(ent = m->iterate(entIter)){
-    //if(m->isOwned(ent)){
-      if(hasModel){
-        gEnt = m->findModelEntity(meshBoundary2Model[2*edgID+1],meshBoundary2Model[2*edgID]);
-        //std::cout<<"What is the search say? "<<m->getModelType(gEnt)<<" "<<m->getModelTag(gEnt)<<" Type "<<meshBoundary2Model[2*edgID+1]<<" ID "<<meshBoundary2Model[2*edgID]<<std::endl;
-        if(meshBoundary2Model[2*edgID+1]==1) //if entity is a on a model boundary
-          modelBoundaryMaterial[meshBoundary2Model[2*edgID]] = mesh.elementBoundaryMaterialTypes[edgID];
+    if(PCU_Comm_Self()==1){
+      std::cout<<"edge counter "<<edgCounter<<" boundary "<< mesh.exteriorElementBoundariesArray[edgCounter]<<" edgID "<<edgID<<" material "<<mesh.elementBoundaryMaterialTypes[edgID]<<std::endl;
+    }
+    if(hasModel){
+      gEnt = m->findModelEntity(meshBoundary2Model[2*edgID+1],meshBoundary2Model[2*edgID]);
+      //std::cout<<"What is the search say? "<<m->getModelType(gEnt)<<" "<<m->getModelTag(gEnt)<<" Type "<<meshBoundary2Model[2*edgID+1]<<" ID "<<meshBoundary2Model[2*edgID]<<std::endl;
+      if(meshBoundary2Model[2*edgID+1]==1) //if entity is a on a model boundary
+        modelBoundaryMaterial[meshBoundary2Model[2*edgID]] = mesh.elementBoundaryMaterialTypes[edgID];
+    }
+    else{
+      if(mesh.exteriorElementBoundariesArray[edgCounter]==edgID && (mesh.elementBoundaryMaterialTypes[edgID]!=0)){
+        gEnt = m->findModelEntity(1,edgMaterialCounter);
+        modelBoundaryMaterial[edgMaterialCounter] = mesh.elementBoundaryMaterialTypes[edgID]; 
+        edgCounter++;
+        edgMaterialCounter++;
       }
-      else{
-        if(mesh.exteriorElementBoundariesArray[edgCounter]==edgID && (!m->isShared(ent))){
-          gEnt = m->findModelEntity(1,edgMaterialCounter);
-          modelBoundaryMaterial[edgMaterialCounter] = mesh.elementBoundaryMaterialTypes[edgID]; 
-          edgCounter++;
-          edgMaterialCounter++;
-        }
-        else {
-          if(m->isShared(ent)) 
-            edgCounter++; //get to the next item in the exterior array
-          //std::cout<<"What is the edge before failure? "<<PCU_Comm_Self()<<" "<<mesh.elementBoundaryBarycentersArray[edgID]<<std::endl;
-          if(mesh.elementBoundaryMaterialTypes[edgID]!=0){
-            std::cout<<edgCounter<<" Failing rank is "<<PCU_Comm_Self()<<" "<<edgID<<" coordinates "<<mesh.elementBoundaryBarycentersArray[edgID*3+0]<<" "<<
-              mesh.elementBoundaryBarycentersArray[edgID*3+1]<<" material "<<mesh.elementBoundaryMaterialTypes[edgID]<<
-              " "<<local2global_elementBoundaryNodes[2*edgID]<<" "<<local2global_elementBoundaryNodes[2*edgID+1]<<std::endl;
+      else {
+        //If the current exterior entity is an edge on a partition boundary, need to check material and
+        //get to the next item in the exterior array
+        if(m->isShared(ent) && mesh.elementBoundaryMaterialTypes[mesh.exteriorElementBoundariesArray[edgCounter]]==0) 
+          edgCounter++; 
+        if(mesh.elementBoundaryMaterialTypes[edgID]!=0){
+          if(PCU_Comm_Self()==1){
+          std::cout<<edgCounter<<" Failing rank is "<<PCU_Comm_Self()<<" "<<edgID<<" coordinates "<<mesh.elementBoundaryBarycentersArray[edgID*3+0]<<" "<<
+            mesh.elementBoundaryBarycentersArray[edgID*3+1]<<" material "<<mesh.elementBoundaryMaterialTypes[edgID]<<
+            " "<<local2global_elementBoundaryNodes[2*edgID]<<" "<<local2global_elementBoundaryNodes[2*edgID+1]<<std::endl;
           }
-          gEnt = m->findModelEntity(2,mesh.elementMaterialTypes[0]);
         }
+        gEnt = m->findModelEntity(2,mesh.elementMaterialTypes[0]);
       }
-      m->setModelEntity(ent,gEnt);
-    //}
+    }
+    m->setModelEntity(ent,gEnt);
     edgID++;
   }
   m->end(entIter);
