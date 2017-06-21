@@ -94,15 +94,12 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   freeField(size_scale);
   freeField(size_frame);
   if(isReconstructed){
-    //free(numModelEntities);
-    //free(numModelOffsets);
-    //free(numModelTotals);
     free(modelVertexMaterial);
     free(modelBoundaryMaterial);
     free(modelRegionMaterial);
-    m->destroyNative();
-    gmi_destroy(m->getModel());
-    apf::destroyMesh(m);
+    //m->destroyNative();
+    //gmi_destroy(m->getModel());
+    //apf::destroyMesh(m);
   }
   PCU_Comm_Free();
 #ifdef PROTEUS_USE_SIMMETRIX
