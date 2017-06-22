@@ -841,11 +841,18 @@ class NS_base:  # (HasTraits):
         from proteus.MeshAdaptPUMI import MeshAdaptPUMI
         if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
             p0.domain.PUMIMesh=n0.MeshAdaptMesh
-            p0.domain.hasModel = 0 
-            if p0.domain.vertices and n0.useModel:
-              p0.domain.hasModel = 1 #move to domain definition
+            p0.domain.hasModel = n0.useModel
+            numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
+            #force initialization of arrays to enable passage through to C++ code
+            mesh2Model_v= numpy.asarray([[0,0]]).astype("i")
+            mesh2Model_e=numpy.asarray([[0,0]]).astype("i")
+            mesh2Model_b=numpy.asarray([[0,0]]).astype("i")
+
+            segmentList = numpy.asarray([[0,0]]).astype("i")
+            newFacetList = numpy.asarray([[0,0]]).astype("i")
+            #only appropriate for 2D use at the moment
+            if p0.domain.vertices and p0.domain.hasModel and p0.domain.nd==2:
               p0.domain.getMesh2ModelClassification(self.modelList[0].levelModelList[0].mesh)
-              numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
               segmentList = numpy.asarray(p0.domain.segments).astype("i")
               #force initialize the unused arrays for proper cythonization
               import copy
@@ -898,8 +905,8 @@ class NS_base:  # (HasTraits):
               mesh2Model_v = numpy.asarray(p0.domain.meshVertex2Model).astype("i")
               mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
               mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
-              p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
-
+            
+            p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
             p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
         if (hasattr(p0.domain, 'PUMIMesh') and
             n0.adaptMesh and
