@@ -954,63 +954,17 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   //classify mesh entities on model entities
 
   apf::Vector3 pt;
-/*
-  apf::MeshEntity* vertices[mesh.nNodes_global]; //possibly make this a growing list..
-  apf::MeshEntity* elemverts[mesh.nNodes_element];
-  apf::MeshEntity* edges[mesh.nEdges_global];
-  apf::MeshEntity* elements[mesh.nElements_global];
-*/
 
   apf::ModelEntity* g_vertEnt;
   apf::ModelEntity* g_edgeEnt;
   apf::ModelEntity* g_faceEnt;
   apf::MeshEntity* vertEnt;
   
-  //these data structures assume that every boundary entity is a model entity
-  /*
-  modelVertexMaterial = (int*)malloc(numModelNodes*sizeof(int));
-  modelBoundaryMaterial = (int*)malloc(numModelBoundaries*sizeof(int));
-  modelRegionMaterial = (int*)malloc(numModelRegions*sizeof(int));
-  */
-
   modelVertexMaterial = (int*)calloc(numModelTotals[0],sizeof(int));
   modelBoundaryMaterial = (int*)calloc(numModelTotals[2],sizeof(int));
   modelRegionMaterial = (int*)calloc(numModelTotals[3],sizeof(int));
 
   //gmi set entities
-/*
-  gmi_unfreeze_lookups(gMod_base->lookup);
-  for(int i=0;i<numModelNodes;i++){
-    e = agm_add_ent(gMod_base->topo, AGM_VERTEX);
-    gmi_set_lookup(gMod_base->lookup, e, i+numModelOffsets[0]);
-  }
-  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)0);
-
-  for(int i=0;i<numModelEdges;i++){
-    e = agm_add_ent(gMod_base->topo, AGM_EDGE);
-    gmi_set_lookup(gMod_base->lookup, e, i+numModelOffsets[2]);
-  }
-  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)1);
-
-  for(int i=0;i<numModelRegions;i++){
-    e = agm_add_ent(gMod_base->topo, AGM_FACE);
-    gmi_set_lookup(gMod_base->lookup, e, i+numModelOffsets[3]+1); //assumes material types are enumerated starting from 1
-    if(hasModel){
-      b = agm_add_bdry(gMod_base->topo, e);
-      for(int k=0;k<numSegments;k++){
-        if(faceList[(i)*numSegments+k]==-1) break;
-        else{
-          std::cout<<"edge "<<faceList[(i)*numSegments+k]<<" "<<numSegments<<std::endl;
-          d = gmi_look_up(gMod_base->lookup,AGM_EDGE,faceList[(i)*numSegments+k]);
-          agm_add_use(gMod_base->topo,b,d);
-        }
-      }
-    }
-  }
-  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)2);
-  std::cout<<"Finished creating model entities\n";
-  PCU_Barrier();
-*/
 
   gmi_unfreeze_lookups(gMod_base->lookup);
   for(int i=0;i<numModelTotals[0];i++){
