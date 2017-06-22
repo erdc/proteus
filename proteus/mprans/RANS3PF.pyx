@@ -2614,14 +2614,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,
-                 particle_sdfList=[]):
+                 particle_list=[]):
         self.nParticles=nParticles
         self.particle_nitsche=particle_nitsche
         self.particle_epsFact=particle_epsFact
         self.particle_alpha=particle_alpha
         self.particle_beta=particle_beta
         self.particle_penalty_constant=particle_penalty_constant
-        self.particle_sdfList=particle_sdfList
+        self.particle_list=particle_list
         self.aDarcy=aDarcy
         self.betaForch=betaForch
         self.grain=grain
@@ -2815,11 +2815,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_centroids = np.zeros((self.nParticles,3),'d')
         self.particle_signed_distances=np.zeros((self.nParticles,)+self.model.q[('u',0)].shape,'d')
         self.particle_signed_distance_normals=np.zeros((self.nParticles,)+self.model.q[('velocity',0)].shape,'d')
-        for i,sdf in zip(range(self.nParticles),
-                         self.particle_sdfList):
+        for i,particle in zip(range(self.nParticles),
+                         self.particle_list):
             for eN in range(self.model.q['x'].shape[0]):
                 for k in range(self.model.q['x'].shape[1]):
-                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(0, self.model.q['x'][eN,k])
+                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = particle.sdf(0, self.model.q['x'][eN,k])
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
             self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
@@ -3295,11 +3295,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
-        for i,sdf in zip(range(self.nParticles),
-                         self.particle_sdfList):
+        for i,particle in zip(range(self.nParticles),
+                         self.particle_list):
             for eN in range(self.model.q['x'].shape[0]):
                 for k in range(self.model.q['x'].shape[1]):
-                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(t, self.model.q['x'][eN,k])
+                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = particle.sdf(t, self.model.q['x'][eN,k])
         # if self.comm.isMaster():
         # print "wettedAreas"
         # print self.wettedAreas[:]
