@@ -407,16 +407,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.barycenters is None:
             self.barycenters = numpy.zeros((nBoundariesMax,3),'d')
         comm = Comm.get()
-        #import os
-        #if comm.isMaster():
-        #    self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,
-        #                                               "wettedAreaHistory.txt"),"w")
-        #    self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,
-        #                                            "forceHistory_p.txt"),"w")
-        #    self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,
-        #                                            "forceHistory_v.txt"),"w")
-        #    self.momentHistory = open(os.path.join(proteus.Profiling.logDir,
-        #                                           "momentHistory.txt"),"w")
+        import os
+        if comm.isMaster():
+            self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,"wettedAreaHistory.txt"),"w")
+            self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,"forceHistory_p.txt"),"w")
+            self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,"forceHistory_v.txt"),"w")
+            self.momentHistory = open(os.path.join(proteus.Profiling.logDir,"momentHistory.txt"),"w")
         self.comm = comm
     #initialize so it can run as single phase
     def initializeElementQuadrature(self,t,cq):

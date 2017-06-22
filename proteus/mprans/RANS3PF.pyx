@@ -39,6 +39,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
+                               double * vel_hess_trial_ref,
                                double * vel_test_ref,
                                double * vel_grad_test_ref,
                                double * mesh_trial_trace_ref,
@@ -76,6 +77,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double Cd_sge,
                                double C_dc,
                                double C_b,
+                               # VRANS start
                                double * eps_solid,
                                double * phi_solid,
                                double * q_velocity_solid,
@@ -88,6 +90,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_turb_var_1,
                                double * q_turb_var_grad_0,
                                double * q_eddy_viscosity,
+                               # VRANS end
                                int * p_l2g,
                                int * vel_l2g,
                                double * p_dof,
@@ -155,9 +158,11 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * bc_ebqe_phi_ext,
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
+                               # VRANS start
                                double * ebqe_vos_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
+                               # VRANS end
                                int * isDOFBoundary_p,
                                int * isDOFBoundary_u,
                                int * isDOFBoundary_v,
@@ -196,7 +201,19 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_rho,
                                double * ebqe_rho,
                                double * q_nu,
-                               double * ebqe_nu)
+                               double * ebqe_nu,
+                               int nParticles,
+			       double particle_epsFact,
+			       double particle_alpha,
+			       double particle_beta,
+                               double particle_penalty_constant,
+                               double* particle_signed_distances,
+                               double* particle_signed_distance_normals,
+			       double* particle_velocities,
+			       double* particle_centroids,
+                               double* particle_netForces,
+                               double* particle_netMoments,
+                               double particle_nitsche)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -215,6 +232,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
+                               double * vel_hess_trial_ref,
                                double * vel_test_ref,
                                double * vel_grad_test_ref,
                                double * mesh_trial_trace_ref,
@@ -361,7 +379,17 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                int * csrColumnOffsets_eb_w_u,
                                int * csrColumnOffsets_eb_w_v,
                                int * csrColumnOffsets_eb_w_w,
-                               int * elementFlags)
+                               int * elementFlags,
+                               int nParticles,
+			       double particle_epsFact,
+			       double particle_alpha,
+			       double particle_beta,
+			       double particle_penalty_constant,
+			       double* particle_signed_distances,
+			       double* particle_signed_distance_normals,
+			       double* particle_velocities,
+			       double* particle_centroids,
+                               double particle_nitsche)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -478,6 +506,7 @@ cdef class RANS3PF:
                           numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
+                          numpy.ndarray vel_hess_trial_ref,
                           numpy.ndarray vel_test_ref,
                           numpy.ndarray vel_grad_test_ref,
                           numpy.ndarray mesh_trial_trace_ref,
@@ -618,7 +647,19 @@ cdef class RANS3PF:
                           numpy.ndarray q_rho,
                           numpy.ndarray ebqe_rho,
                           numpy.ndarray q_nu,
-                          numpy.ndarray ebqe_nu):
+                          numpy.ndarray ebqe_nu,
+                          int nParticles,
+			  double particle_epsFact,
+			  double particle_alpha,
+			  double particle_beta,
+			  double particle_penalty_constant,
+                          numpy.ndarray particle_signed_distances,
+                          numpy.ndarray particle_signed_distance_normals,
+                          numpy.ndarray particle_velocities,
+                          numpy.ndarray particle_centroids,
+                          numpy.ndarray particle_netForces,
+                          numpy.ndarray particle_netMoments,
+                          double particle_nitsche):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -637,6 +678,7 @@ cdef class RANS3PF:
                                         < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
+                                       < double * > vel_hess_trial_ref.data,
                                        < double * > vel_test_ref.data,
                                        < double * > vel_grad_test_ref.data,
                                        < double * > mesh_trial_trace_ref.data,
@@ -777,7 +819,19 @@ cdef class RANS3PF:
                                         < double * > q_rho.data,
                                         < double * > ebqe_rho.data,
                                         < double * > q_nu.data,
-                                        < double * > ebqe_nu.data)
+                                        < double * > ebqe_nu.data,
+                                        nParticles,
+				        particle_epsFact,
+				        particle_alpha,
+				        particle_beta,
+				        particle_penalty_constant,
+                                        < double* > particle_signed_distances.data,
+                                        < double* > particle_signed_distance_normals.data,
+                                        < double* > particle_velocities.data,
+                                        < double* > particle_centroids.data,
+                                        < double* > particle_netForces.data,
+                                        < double* > particle_netMoments.data,
+                                        particle_nitsche)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -798,6 +852,7 @@ cdef class RANS3PF:
                           numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
+                          numpy.ndarray vel_hess_trial_ref,
                           numpy.ndarray vel_test_ref,
                           numpy.ndarray vel_grad_test_ref,
                           numpy.ndarray mesh_trial_trace_ref,
@@ -943,7 +998,17 @@ cdef class RANS3PF:
                           numpy.ndarray csrColumnOffsets_eb_w_u,
                           numpy.ndarray csrColumnOffsets_eb_w_v,
                           numpy.ndarray csrColumnOffsets_eb_w_w,
-                          numpy.ndarray elementFlags):
+                          numpy.ndarray elementFlags,
+                          int nParticles,
+			  double particle_epsFact,
+			  double particle_alpha,
+			  double particle_beta,
+			  double particle_penalty_constant,
+			  numpy.ndarray particle_signed_distances,
+			  numpy.ndarray particle_signed_distance_normals,
+			  numpy.ndarray particle_velocities,
+			  numpy.ndarray particle_centroids,
+                          double particle_nitsche):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian( < double*> mesh_trial_ref.data,
@@ -964,6 +1029,7 @@ cdef class RANS3PF:
                                         < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
+                                       < double * > vel_hess_trial_ref.data,
                                        < double * > vel_test_ref.data,
                                        < double * > vel_grad_test_ref.data,
                                        < double * > mesh_trial_trace_ref.data,
@@ -1109,7 +1175,17 @@ cdef class RANS3PF:
                                         < int * > csrColumnOffsets_eb_w_u.data,
                                         < int * > csrColumnOffsets_eb_w_v.data,
                                         < int * > csrColumnOffsets_eb_w_w.data,
-                                        < int * > elementFlags.data)
+                                        < int * > elementFlags.data,
+                                        nParticles,
+				        particle_epsFact,
+				        particle_alpha,
+				        particle_beta,
+				        particle_penalty_constant,
+				        < double* > particle_signed_distances.data,
+				        < double* > particle_signed_distance_normals.data,
+				        < double* > particle_velocities.data,
+				        < double* > particle_centroids.data,
+                                        particle_nitsche)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
@@ -1319,7 +1395,19 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * q_rho,
                                double * ebqe_rho,
                                double * q_nu,
-                               double * ebqe_nu)
+                               double * ebqe_nu,
+                               int nParticles,
+			       double particle_epsFact,
+			       double particle_alpha,
+			       double particle_beta,
+                               double particle_penalty_constant,
+                               double* particle_signed_distances,
+                               double* particle_signed_distance_normals,
+			       double* particle_velocities,
+			       double* particle_centroids,
+                               double* particle_netForces,
+                               double* particle_netMoments,
+                               double particle_nitsche)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1485,7 +1573,17 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                int * csrColumnOffsets_eb_w_u,
                                int * csrColumnOffsets_eb_w_v,
                                int * csrColumnOffsets_eb_w_w,
-                               int * elementFlags)
+                               int * elementFlags,
+                               int nParticles,
+			       double particle_epsFact,
+			       double particle_alpha,
+			       double particle_beta,
+			       double particle_penalty_constant,
+			       double* particle_signed_distances,
+			       double* particle_signed_distance_normals,
+			       double* particle_velocities,
+			       double* particle_centroids,
+                               double particle_nitsche)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -1743,7 +1841,19 @@ cdef class RANS3PF2D:
                           numpy.ndarray q_rho,
                           numpy.ndarray ebqe_rho,
                           numpy.ndarray q_nu,
-                          numpy.ndarray ebqe_nu):
+                          numpy.ndarray ebqe_nu,
+                          int nParticles,
+			  double particle_epsFact,
+			  double particle_alpha,
+			  double particle_beta,
+			  double particle_penalty_constant,
+			  numpy.ndarray particle_signed_distances,
+                          numpy.ndarray particle_signed_distance_normals,
+                          numpy.ndarray particle_velocities,
+                          numpy.ndarray particle_centroids,
+			  numpy.ndarray particle_netForces,
+                          numpy.ndarray particle_netMoments,
+                          double particle_nitsche):
         self.thisptr.calculateResidual(< double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1802,108 +1912,120 @@ cdef class RANS3PF2D:
                                        C_b,
                                        # VRANS start
                                         < double * > eps_solid.data,
-                                        < double * > phi_solid.data,
-                                        < double * > q_velocity_solid.data,
-                                        < double * > q_vos.data,
-                                        < double * > q_dvos_dt.data,
-                                        < double * > q_dragAlpha.data,
-                                        < double * > q_dragBeta.data,
-                                        < double * > q_mass_source.data,
-                                        < double * > q_turb_var_0.data,
-                                        < double * > q_turb_var_1.data,
-                                        < double * > q_turb_var_grad_0.data,
-                                        < double * > q_eddy_viscosity.data,
-                                        # VRANS end
+                                       < double * > phi_solid.data,
+                                       < double * > q_velocity_solid.data,
+                                       < double * > q_vos.data,
+                                       < double * > q_dvos_dt.data,
+                                       < double * > q_dragAlpha.data,
+                                       < double * > q_dragBeta.data,
+                                       < double * > q_mass_source.data,
+                                       < double * > q_turb_var_0.data,
+                                       < double * > q_turb_var_1.data,
+                                       < double * > q_turb_var_grad_0.data,
+                                       < double * > q_eddy_viscosity.data,
+                                       # VRANS end
                                         < int * > p_l2g.data,
-                                        < int * > vel_l2g.data,
-                                        < double * > p_dof.data,
-                                        < double * > u_dof.data,
-                                        < double * > v_dof.data,
-                                        < double * > w_dof.data,
-                                        < double * > g.data,
-                                        useVF,
-                                        < double * > vf.data,
-                                        < double * > phi.data,
-                                        < double * > normal_phi.data,
-                                        < double * > kappa_phi.data,
-                                        < double * > q_mom_u_acc.data,
-                                        < double * > q_mom_v_acc.data,
-                                        < double * > q_mom_w_acc.data,
-                                        < double * > q_mass_adv.data,
-                                        < double * > q_mom_u_acc_beta_bdf.data, < double * > q_mom_v_acc_beta_bdf.data, < double * > q_mom_w_acc_beta_bdf.data,
-                                        < double * > q_dV.data,
-                                        < double * > q_dV_last.data,
-                                        < double * > q_velocity_sge.data,
-                                        < double * > ebqe_velocity_star.data,
-                                        < double * > q_cfl.data,
-                                        < double * > q_numDiff_u.data, < double * > q_numDiff_v.data, < double * > q_numDiff_w.data,
-                                        < double * > q_numDiff_u_last.data, < double * > q_numDiff_v_last.data, < double * > q_numDiff_w_last.data,
-                                        < int * > sdInfo_u_u_rowptr.data, < int * > sdInfo_u_u_colind.data,
-                                        < int * > sdInfo_u_v_rowptr.data, < int * > sdInfo_u_v_colind.data,
-                                        < int * > sdInfo_u_w_rowptr.data, < int * > sdInfo_u_w_colind.data,
-                                        < int * > sdInfo_v_v_rowptr.data, < int * > sdInfo_v_v_colind.data,
-                                        < int * > sdInfo_v_u_rowptr.data, < int * > sdInfo_v_u_colind.data,
-                                        < int * > sdInfo_v_w_rowptr.data, < int * > sdInfo_v_w_colind.data,
-                                        < int * > sdInfo_w_w_rowptr.data, < int * > sdInfo_w_w_colind.data,
-                                        < int * > sdInfo_w_u_rowptr.data, < int * > sdInfo_w_u_colind.data,
-                                        < int * > sdInfo_w_v_rowptr.data, < int * > sdInfo_w_v_colind.data,
-                                        offset_p, offset_u, offset_v, offset_w,
-                                        stride_p, stride_u, stride_v, stride_w,
-                                        < double * > globalResidual.data,
-                                        nExteriorElementBoundaries_global,
-                                        < int * > exteriorElementBoundariesArray.data,
-                                        < int * > elementBoundaryElementsArray.data,
-                                        < int * > elementBoundaryLocalElementBoundariesArray.data,
-                                        < double * > ebqe_vf_ext.data,
-                                        < double * > bc_ebqe_vf_ext.data,
-                                        < double * > ebqe_phi_ext.data,
-                                        < double * > bc_ebqe_phi_ext.data,
-                                        < double * > ebqe_normal_phi_ext.data,
-                                        < double * > ebqe_kappa_phi_ext.data,
-                                        # VRANS start
+                                       < int * > vel_l2g.data,
+                                       < double * > p_dof.data,
+                                       < double * > u_dof.data,
+                                       < double * > v_dof.data,
+                                       < double * > w_dof.data,
+                                       < double * > g.data,
+                                       useVF,
+                                       < double * > vf.data,
+                                       < double * > phi.data,
+                                       < double * > normal_phi.data,
+                                       < double * > kappa_phi.data,
+                                       < double * > q_mom_u_acc.data,
+                                       < double * > q_mom_v_acc.data,
+                                       < double * > q_mom_w_acc.data,
+                                       < double * > q_mass_adv.data,
+                                       < double * > q_mom_u_acc_beta_bdf.data, < double * > q_mom_v_acc_beta_bdf.data, < double * > q_mom_w_acc_beta_bdf.data,
+                                       < double * > q_dV.data,
+                                       < double * > q_dV_last.data,
+                                       < double * > q_velocity_sge.data,
+                                       < double * > ebqe_velocity_star.data,
+                                       < double * > q_cfl.data,
+                                       < double * > q_numDiff_u.data, < double * > q_numDiff_v.data, < double * > q_numDiff_w.data,
+                                       < double * > q_numDiff_u_last.data, < double * > q_numDiff_v_last.data, < double * > q_numDiff_w_last.data,
+                                       < int * > sdInfo_u_u_rowptr.data, < int * > sdInfo_u_u_colind.data,
+                                       < int * > sdInfo_u_v_rowptr.data, < int * > sdInfo_u_v_colind.data,
+                                       < int * > sdInfo_u_w_rowptr.data, < int * > sdInfo_u_w_colind.data,
+                                       < int * > sdInfo_v_v_rowptr.data, < int * > sdInfo_v_v_colind.data,
+                                       < int * > sdInfo_v_u_rowptr.data, < int * > sdInfo_v_u_colind.data,
+                                       < int * > sdInfo_v_w_rowptr.data, < int * > sdInfo_v_w_colind.data,
+                                       < int * > sdInfo_w_w_rowptr.data, < int * > sdInfo_w_w_colind.data,
+                                       < int * > sdInfo_w_u_rowptr.data, < int * > sdInfo_w_u_colind.data,
+                                       < int * > sdInfo_w_v_rowptr.data, < int * > sdInfo_w_v_colind.data,
+                                       offset_p, offset_u, offset_v, offset_w,
+                                       stride_p, stride_u, stride_v, stride_w,
+                                       < double * > globalResidual.data,
+                                       nExteriorElementBoundaries_global,
+                                       < int * > exteriorElementBoundariesArray.data,
+                                       < int * > elementBoundaryElementsArray.data,
+                                       < int * > elementBoundaryLocalElementBoundariesArray.data,
+                                       < double * > ebqe_vf_ext.data,
+                                       < double * > bc_ebqe_vf_ext.data,
+                                       < double * > ebqe_phi_ext.data,
+                                       < double * > bc_ebqe_phi_ext.data,
+                                       < double * > ebqe_normal_phi_ext.data,
+                                       < double * > ebqe_kappa_phi_ext.data,
+                                       # VRANS start
                                         < double * > ebqe_vos_ext.data,
-                                        < double * > ebqe_turb_var_0.data,
-                                        < double * > ebqe_turb_var_1.data,
-                                        # VRANS end
+                                       < double * > ebqe_turb_var_0.data,
+                                       < double * > ebqe_turb_var_1.data,
+                                       # VRANS end
                                         < int * > isDOFBoundary_p.data,
-                                        < int * > isDOFBoundary_u.data,
-                                        < int * > isDOFBoundary_v.data,
-                                        < int * > isDOFBoundary_w.data,
-                                        < int * > isAdvectiveFluxBoundary_p.data,
-                                        < int * > isAdvectiveFluxBoundary_u.data,
-                                        < int * > isAdvectiveFluxBoundary_v.data,
-                                        < int * > isAdvectiveFluxBoundary_w.data,
-                                        < int * > isDiffusiveFluxBoundary_u.data,
-                                        < int * > isDiffusiveFluxBoundary_v.data,
-                                        < int * > isDiffusiveFluxBoundary_w.data,
-                                        < double * > ebqe_bc_p_ext.data,
-                                        < double * > ebqe_bc_flux_mass_ext.data,
-                                        < double * > ebqe_bc_flux_mom_u_adv_ext.data,
-                                        < double * > ebqe_bc_flux_mom_v_adv_ext.data,
-                                        < double * > ebqe_bc_flux_mom_w_adv_ext.data,
-                                        < double * > ebqe_bc_u_ext.data,
-                                        < double * > ebqe_bc_flux_u_diff_ext.data,
-                                        < double * > ebqe_penalty_ext.data,
-                                        < double * > ebqe_bc_v_ext.data,
-                                        < double * > ebqe_bc_flux_v_diff_ext.data,
-                                        < double * > ebqe_bc_w_ext.data,
-                                        < double * > ebqe_bc_flux_w_diff_ext.data,
-                                        < double * > q_x.data,
-                                        < double * > q_velocity.data,
-                                        < double * > ebqe_velocity.data,
-                                        < double * > flux.data,
-                                        < double * > elementResidual_p.data,
-                                        < int * > elementFlags.data,
-                                        < int * > boundaryFlags.data,
-                                        < double * > barycenters.data,
-                                        < double * > wettedAreas.data,
-                                        < double * > netForces_p.data,
-                                        < double * > netForces_v.data,
-                                        < double * > netMoments.data,
-                                        < double * > q_rho.data,
-                                        < double * > ebqe_rho.data,
-                                        < double * > q_nu.data,
-                                        < double * > ebqe_nu.data)
+                                       < int * > isDOFBoundary_u.data,
+                                       < int * > isDOFBoundary_v.data,
+                                       < int * > isDOFBoundary_w.data,
+                                       < int * > isAdvectiveFluxBoundary_p.data,
+                                       < int * > isAdvectiveFluxBoundary_u.data,
+                                       < int * > isAdvectiveFluxBoundary_v.data,
+                                       < int * > isAdvectiveFluxBoundary_w.data,
+                                       < int * > isDiffusiveFluxBoundary_u.data,
+                                       < int * > isDiffusiveFluxBoundary_v.data,
+                                       < int * > isDiffusiveFluxBoundary_w.data,
+                                       < double * > ebqe_bc_p_ext.data,
+                                       < double * > ebqe_bc_flux_mass_ext.data,
+                                       < double * > ebqe_bc_flux_mom_u_adv_ext.data,
+                                       < double * > ebqe_bc_flux_mom_v_adv_ext.data,
+                                       < double * > ebqe_bc_flux_mom_w_adv_ext.data,
+                                       < double * > ebqe_bc_u_ext.data,
+                                       < double * > ebqe_bc_flux_u_diff_ext.data,
+                                       < double * > ebqe_penalty_ext.data,
+                                       < double * > ebqe_bc_v_ext.data,
+                                       < double * > ebqe_bc_flux_v_diff_ext.data,
+                                       < double * > ebqe_bc_w_ext.data,
+                                       < double * > ebqe_bc_flux_w_diff_ext.data,
+                                       < double * > q_x.data,
+                                       < double * > q_velocity.data,
+                                       < double * > ebqe_velocity.data,
+                                       < double * > flux.data,
+                                       < double * > elementResidual_p.data,
+                                       < int * > elementFlags.data,
+                                       < int * > boundaryFlags.data,
+                                       < double * > barycenters.data,
+                                       < double * > wettedAreas.data,
+                                       < double * > netForces_p.data,
+                                       < double * > netForces_v.data,
+                                       < double * > netMoments.data,
+                                       < double * > q_rho.data,
+                                       < double * > ebqe_rho.data,
+                                       < double * > q_nu.data,
+                                       < double * > ebqe_nu.data,
+                                       nParticles,
+			               particle_epsFact,
+			               particle_alpha,
+			               particle_beta,
+			               particle_penalty_constant,
+			               < double* > particle_signed_distances.data,
+			               < double* > particle_signed_distance_normals.data,
+			               < double* > particle_velocities.data,
+			               < double* > particle_centroids.data,
+			               < double* > particle_netForces.data,
+			               < double* > particle_netMoments.data,
+                                       particle_nitsche)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -2070,7 +2192,17 @@ cdef class RANS3PF2D:
                           numpy.ndarray csrColumnOffsets_eb_w_u,
                           numpy.ndarray csrColumnOffsets_eb_w_v,
                           numpy.ndarray csrColumnOffsets_eb_w_w,
-                          numpy.ndarray elementFlags):
+                          numpy.ndarray elementFlags,
+                          int nParticles,
+			  double particle_epsFact,
+			  double particle_alpha,
+			  double particle_beta,
+			  double particle_penalty_constant,
+			  numpy.ndarray particle_signed_distances,
+			  numpy.ndarray particle_signed_distance_normals,
+			  numpy.ndarray particle_velocities,
+			  numpy.ndarray particle_centroids,
+                          double particle_nitsche):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double*> mesh_trial_ref.data,
@@ -2237,7 +2369,17 @@ cdef class RANS3PF2D:
                                         < int * > csrColumnOffsets_eb_w_u.data,
                                         < int * > csrColumnOffsets_eb_w_v.data,
                                         < int * > csrColumnOffsets_eb_w_w.data,
-                                        < int * > elementFlags.data)
+                                        < int * > elementFlags.data,
+                                       nParticles,
+			               particle_epsFact,
+			               particle_alpha,
+			               particle_beta,
+			               particle_penalty_constant,
+			               < double* > particle_signed_distances.data,
+                                       < double* > particle_signed_distance_normals.data,
+                                       < double* > particle_velocities.data,
+			               < double* > particle_centroids.data,
+                                       particle_nitsche)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
@@ -2465,7 +2607,21 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
  		 fContact=0.02,
                  mContact=2.0,
                  nContact=5.0,
-                 angFriction=pi/6.0):
+                 angFriction=pi/6.0,
+                 nParticles=0,
+                 particle_epsFact=3.0,
+                 particle_alpha=1000.0,
+                 particle_beta=1000.0,
+                 particle_penalty_constant=1000.0,
+                 particle_nitsche=1.0,
+                 particle_sdfList=[]):
+        self.nParticles=nParticles
+        self.particle_nitsche=particle_nitsche
+        self.particle_epsFact=particle_epsFact
+        self.particle_alpha=particle_alpha
+        self.particle_beta=particle_beta
+        self.particle_penalty_constant=particle_penalty_constant
+        self.particle_sdfList=particle_sdfList
         self.aDarcy=aDarcy
         self.betaForch=betaForch
         self.grain=grain
@@ -2652,6 +2808,18 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.ebqe_rho  = self.model.ebqe[('u',0)].copy()
         self.q_nu  = self.model.q[('u',0)].copy()
         self.ebqe_nu  = self.model.ebqe[('u',0)].copy()
+        #DEM particles
+        self.particle_netForces = np.zeros((self.nParticles,3),'d')
+        self.particle_netMoments = np.zeros((self.nParticles,3),'d')
+        self.particle_velocities = np.zeros((self.nParticles,3),'d')
+        self.particle_centroids = np.zeros((self.nParticles,3),'d')
+        self.particle_signed_distances=np.zeros((self.nParticles,)+self.model.q[('u',0)].shape,'d')
+        self.particle_signed_distance_normals=np.zeros((self.nParticles,)+self.model.q[('velocity',0)].shape,'d')
+        for i,sdf in zip(range(self.nParticles),
+                         self.particle_sdfList):
+            for eN in range(self.model.q['x'].shape[0]):
+                for k in range(self.model.q['x'].shape[1]):
+                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(0, self.model.q['x'][eN,k])
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
             self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
@@ -2783,11 +2951,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.barycenters = numpy.zeros((nBoundariesMax, 3), 'd')
         comm = Comm.get()
         import os
-        # if comm.isMaster():
-        #     self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,"wettedAreaHistory.txt"),"w")
-        #     self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,"forceHistory_p.txt"),"w")
-        #     self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,"forceHistory_v.txt"),"w")
-        #     self.momentHistory = open(os.path.join(proteus.Profiling.logDir,"momentHistory.txt"),"w")
+        if comm.isMaster():
+            self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,"wettedAreaHistory.txt"),"w")
+            self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,"forceHistory_p.txt"),"w")
+            self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,"forceHistory_v.txt"),"w")
+            self.momentHistory = open(os.path.join(proteus.Profiling.logDir,"momentHistory.txt"),"w")
+            self.particle_forceHistory = open(os.path.join(proteus.Profiling.logDir,"particle_forceHistory.txt"),"w")
+            self.particle_momentHistory = open(os.path.join(proteus.Profiling.logDir,"particle_momentHistory.txt"),"w")
         self.comm = comm
     # initialize so it can run as single phase
 
@@ -3125,6 +3295,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
+        for i,sdf in zip(range(self.nParticles),
+                         self.particle_sdfList):
+            for eN in range(self.model.q['x'].shape[0]):
+                for k in range(self.model.q['x'].shape[1]):
+                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(t, self.model.q['x'][eN,k])
         # if self.comm.isMaster():
         # print "wettedAreas"
         # print self.wettedAreas[:]
@@ -3132,13 +3307,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # print self.netForces_p[:,:]
         # print "Forces_v"
         # print self.netForces_v[:,:]
-        # self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
-        # self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
-        # self.forceHistory_p.flush()
-        # self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_v[-1,:]))
-        # self.forceHistory_v.flush()
-        # self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1,:]))
-        # self.momentHistory.flush()
+        self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
+        self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
+        self.forceHistory_p.flush()
+        self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_v[-1,:]))
+        self.forceHistory_v.flush()
+        self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1,:]))
+        self.momentHistory.flush()
+        self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" %tuple(self.particle_netForces[0,:]))
+        self.particle_forceHistory.flush()
+        self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0,:]))
+        self.particle_momentHistory.flush()
 
 
 class LevelModel(proteus.Transport.OneLevelTransport):
@@ -4062,6 +4241,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.netForces_p[:, :] = 0.0
         self.coefficients.netForces_v[:, :] = 0.0
         self.coefficients.netMoments[:, :] = 0.0
+        self.coefficients.particle_netForces[:,:]=0.0
+        self.coefficients.particle_netMoments[:,:]=0.0
 
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
@@ -4258,7 +4439,19 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_rho,
             self.coefficients.ebqe_rho,
             self.coefficients.q_nu,
-            self.coefficients.ebqe_nu)
+            self.coefficients.ebqe_nu,
+            self.coefficients.nParticles,
+	    self.coefficients.particle_epsFact,
+	    self.coefficients.particle_alpha,
+	    self.coefficients.particle_beta,
+	    self.coefficients.particle_penalty_constant,
+	    self.coefficients.particle_signed_distances,
+	    self.coefficients.particle_signed_distance_normals,
+	    self.coefficients.particle_velocities,
+	    self.coefficients.particle_centroids,
+            self.coefficients.particle_netForces,
+            self.coefficients.particle_netMoments,
+            self.coefficients.particle_nitsche)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
@@ -4270,6 +4463,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.coefficients.netForces_v[i, I])
                 self.coefficients.netMoments[i, I] = globalSum(
                     self.coefficients.netMoments[i, I])
+        for i in range(self.coefficients.particle_netForces.shape[0]):
+            for I in range(3):
+                self.coefficients.particle_netForces[i, I] = globalSum(
+                    self.coefficients.particle_netForces[i, I])
+                self.coefficients.particle_netMoments[i, I] = globalSum(
+                    self.coefficients.particle_netMoments[i, I])
+            logEvent("particle i="+`i`+ " force "+`self.coefficients.particle_netForces[i]`)
+            logEvent("particle i="+`i`+ " moment "+`self.coefficients.particle_netMoments[i]`)
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[
@@ -4510,7 +4711,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 0)],
             self.csrColumnOffsets_eb[(2, 1)],
             self.csrColumnOffsets_eb[(2, 2)],
-            self.mesh.elementMaterialTypes)
+            self.mesh.elementMaterialTypes,
+            self.coefficients.nParticles,
+	    self.coefficients.particle_epsFact,
+	    self.coefficients.particle_alpha,
+	    self.coefficients.particle_beta,
+	    self.coefficients.particle_penalty_constant,
+	    self.coefficients.particle_signed_distances,
+	    self.coefficients.particle_signed_distance_normals,
+	    self.coefficients.particle_velocities,
+	    self.coefficients.particle_centroids,
+            self.coefficients.particle_nitsche)
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(
