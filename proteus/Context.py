@@ -25,7 +25,9 @@ Example (use the global context)::
   nnx = ct.nnx
 
 """
-from collections import  namedtuple
+#from collections import  namedtuple
+from recordclass import recordclass as namedtuple
+
 from .Profiling import logEvent
 
 """The global context"""
