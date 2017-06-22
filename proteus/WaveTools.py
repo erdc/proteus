@@ -1907,8 +1907,8 @@ class TimeSeries:
             try:
                 self.overlap = window_params["Overlap"]
             except:
-                self.overlap = 0.25
-                logEvent("INFO WaveTools.py: Overlap entry in window_params dictionary not found. Setting default value of 0.25 (1/4 of the window length)")
+                self.overlap = 0.7
+                logEvent("INFO WaveTools.py: Overlap entry in window_params dictionary not found. Setting default value of 0.7 (70% of the window length)")
 
             try:
                 self.cutoff = window_params["Cutoff"]
@@ -2797,6 +2797,7 @@ class RandomNLWavesFast:
         self.TS= []
         ii = -1
         for mode in modes:
+            logEvent("INFO: Calculating nonlinear corrections for "+mode+" waves. This may take a while")
             ii+=1
             fname = "randomNLWaves_"+mode+".csv"
             dt = periods[ii]/50.
@@ -2825,7 +2826,7 @@ class RandomNLWavesFast:
                     g,
                     cutoffTotal = cutoff,
                     rec_direct = rec_d,
-                    window_params = {"Nwaves":Nwaves ,"Tm":periods[ii],"Window":"costap"},
+                    window_params = {"Nwaves":Nwaves ,"Tm":periods[ii],"Window":"costap","Overlap":0.7,"Cutoff":0.1},
                     arrayData = True,
                     seriesArray = series,
                 fast = self.fast)
