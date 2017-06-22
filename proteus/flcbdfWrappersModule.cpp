@@ -4357,19 +4357,6 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
 			 elementNeighbors_subdomain,
 			 PETSC_NULL,//weights_subdomain,
 			 &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
-<<<<<<< HEAD
-    MatPartitioning petscPartition;
-    MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);
-    MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
-    MatPartitioningSetFromOptions(petscPartition);
-
-    //get a petsc index set that has the new submdomain number for each element
-    IS elementPartitioningIS_new;
-    MatPartitioningApply(petscPartition,&elementPartitioningIS_new); 
-    MatPartitioningDestroy(&petscPartition);
-    //MatDestroy(&petscAdjacency);
-    //ISView(elementPartitioningIS_new,PETSC_VIEWER_STDOUT_WORLD);
-=======
   MatPartitioning petscPartition;
   MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);
   MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
@@ -4382,7 +4369,6 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
   //MatDestroy(&petscAdjacency);
   //ISView(elementPartitioningIS_new,PETSC_VIEWER_STDOUT_WORLD);
     
->>>>>>> origin/topaz_partitioning_opt
   //experiment with metis
   //mwf set some defaults and not call if size == 1 since metis crashes
   //cek commenting out for now
@@ -4677,8 +4663,6 @@ int partitionElements(Mesh& mesh, int nElements_overlap)
       elementBoundaryElementsArray_new[ebN*2+0] = elementNumbering_global_old2new[eN_L_old];
       if(eN_R_old >= 0)
         elementBoundaryElementsArray_new[ebN*2+1] = elementNumbering_global_old2new[eN_R_old];
-<<<<<<< HEAD
-=======
 
       elementBoundaryMaterialTypes_new[ebN] = mesh.elementBoundaryMaterialTypes[ebN_old];
     }
@@ -6776,17 +6760,6 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
   
   dims[0] = MESH(cmesh).subdomainp->nElementBoundaries_global;
   elementBoundaryNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-<<<<<<< HEAD
-                                                                      dims,
-                                                                      PyArray_INT,
-                                                                      (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
-  dims[0] = MESH(cmesh).nElementBoundaries_global;
-  elementBoundaryNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                                     dims,
-                                                                     PyArray_INT,
-                                                                     (char*)MESH(cmesh).elementBoundaryNumbering_global2original);
-  
-=======
 								      dims,
 								      PyArray_INT,
 								      (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
@@ -6798,23 +6771,10 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
   
   dims[0] = MESH(cmesh).subdomainp->nEdges_global;
   edgeNumbering_subdomain2global = PyArray_FromDimsAndData(1,
-<<<<<<< HEAD
-                                                           dims,
-                                                           PyArray_INT,
-                                                           (char*)MESH(cmesh).edgeNumbering_subdomain2global);
-  dims[0] = MESH(cmesh).nEdges_global;
-  edgeNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                          dims,
-                                                          PyArray_INT,
-                                                          (char*)MESH(cmesh).edgeNumbering_global2original);
-
-  return Py_BuildValue("OOOOOOOOOOOO",
-=======
 							   dims,
 							   PyArray_INT,
 							   (char*)MESH(cmesh).edgeNumbering_subdomain2global);
   return Py_BuildValue("OOOOOOOO",
->>>>>>> origin/topaz_partitioning_opt
                        elementOffsets_subdomain_owned,
                        elementNumbering_subdomain2global,
                        nodeOffsets_subdomain_owned,
