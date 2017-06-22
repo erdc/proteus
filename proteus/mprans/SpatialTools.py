@@ -93,6 +93,8 @@ class ShapeRANS(Shape):
                 self.auxiliaryVariables[key] = auxvar
                 if self.holes is None:
                     self.holes = np.array([self.barycenter[:self.nd]])
+            elif key == 'WallFunction':
+                self.auxiliaryVariables[key] = auxvar
             elif key == 'RelaxZones':
                 self.auxiliaryVariables[key] = self.zones
             elif str(key).startswith('Gauge_'):
@@ -166,6 +168,11 @@ class ShapeRANS(Shape):
         """
         for boundcond in self.BC_list:
             boundcond.setTank()
+
+
+    def setTurbulentWall(self):
+        auxvar = bc.WallFunctions
+        self._attachAuxiliaryVariable('WallFunction', auxvar)
 
 
     def setAbsorptionZones(self, flags, epsFact_solid, center, orientation,
@@ -1879,15 +1886,19 @@ def assembleAuxiliaryVariables(domain):
             # update the indice for force/moment calculations
             body.i_start = start_flag+1
             body.i_end = start_flag+1+len(shape.BC_list)
-        # ----------------------------
-        # ABSORPTION/GENERATION ZONES
         if 'ChRigidBody' in shape.auxiliaryVariables.keys():
             body = shape.auxiliaryVariables['ChRigidBody']
             for boundcond in shape.BC_list:
                 boundcond.setChMoveMesh(body)
             body.i_start = start_flag+1
             body.i_end = start_flag+1+len(shape.BC_list)
-
+        if 'WallFunction' in shape.auxiliaryVariables.keys():
+            wall = shape.auxiliaryVariables['WallFunction']
+            aux['twp'] += [wall]
+            wall.i_start = start_flag+1
+            wall.i_end = start_flag+1+len(shape.BC_list)
+        # ----------------------------
+        # ABSORPTION/GENERATION ZONES
         if 'RelaxZones' in shape.auxiliaryVariables.keys():
             if not zones_global:
                 aux['twp'] += [bc.RelaxationZoneWaveGenerator(zones_global,

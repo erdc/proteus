@@ -14,7 +14,7 @@ from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
 from proteus import WaveTools as wt
 from proteus.Profiling import logEvent
-
+from math import cos, sin, sqrt, atan2, acos, asin
 
 class BC_RANS(BC_Base):
     """
@@ -254,103 +254,7 @@ class BC_RANS(BC_Base):
         self.k_diffusive.setConstantBC(0.) 
         self.dissipation_diffusive.setConstantBC(0.) 
 
-    def setWallFunction_ke(self, Y, U0, d, L=0.0, skinf='turbulent', 
-                                 nu=1.004e-6, Cmu=0.09, K=0.41, B=5.2 ):
-        """
-        Sets turbulent boundaries for wall treatment.        
-        Calculation made on nodes outside the viscous sublayer and based
-        on assumption on the velocity profile close to the wall in order to
-        impose the wall shear stress.
-
-        - k is assumed to be constant in the fully turbulent region close to the wall,
-        in this way kv = kp.
-        - dissipation is calculated for k-e model.
-
-        Parameters
-        ----------
-        Y: float.
-            size of the nearest element to the wall.
-        U0: float.
-            stream velocity at the middle of the channel.
-        d: float.
-            characteristic dimension of the problem.
-        L: float.
-            length of the boundaryLayer (usend only in skinf=boundaryLayer).
-        skinf: string.
-            switching between different skin friction formulae.
-        nu: float.
-            fluid viscosity.
-        Cmu: float.
-            turbulent viscosity constant.
-        K: float.
-            von Karman coefficient.
-        B: float.
-            roughness coefficient for walls.          
-
-        """      
-        # local velocity
-        #localU = WallRegion()
-        #U0 = localU.u
-        #self.domain = domain
-        #uLocal = domain.auxiliaryVariables['twp'][1].pointGaugeVecs[0]
-        #print uLocal
-        # Skin friction (Pope pages 265,301,307 - Schlichting pag 639)
-        Re0 = U0*d/nu
-        ReL = U0*L/nu
-        rangeSkin = ['laminar', 'turbulent', 'boundaryLayer']
-        if skinf not in rangeSkin:
-            logEvent("Wrong slip_type given: Valid types are %s" %rangeSkin, level=0)
-            sys.exit(1)
-        if skinf == 'laminar':
-            cf = 4./Re0
-        elif skinf == 'turbulent':
-            cf = 0.045*( Re0**(-1./4.) )
-        elif skinf == 'boundaryLayer':
-            cf = 0.074*( ReL**(-1./5.) )
-        ut = U0*np.sqrt(cf/2.)
-        kp = (ut**2)/np.sqrt(Cmu)        
-        Yplus = Y*ut/nu
-        # layers definition according to Pope pg 275
-        # viscous layer
-        if Yplus < 11.6:
-            Uplus = Yplus
-            U = Uplus*ut
-            gradU = (ut**2)/nu
-            dissipation = (ut**3)/(K*Y) 
-            nut = Cmu*(kp**2)/dissipation
-        # log-law layer
-        elif Yplus > 30. and Y/d < 0.3:
-            E = np.exp(B*K) 
-            U = ut * np.log(E*Yplus) / K
-            gradU = ut / (K*Y)
-            dissipation = (ut**3)/(K*Y) 
-            nut = Cmu*(kp**2)/dissipation
-        #defect-velocity layer
-        #elif Yplus > 50. and Y/d < 1.:
-        #    E = np.exp(B*K) 
-        #    U = U0 - 0.7*ut + ut * np.log(Y/d) / K
-        #    gradU = ut / (K*Y)
-        #    dissipation = (ut**3)/(K*Y) 
-        #    nut = Cmu*(kp**2)/dissipation
-        else:
-            logEvent("Point selected is not in the log law region", level=0)
-            sys.exit(1)
-
-        self.reset()
-        self.u_dirichlet.setConstantBC(U)
-        self.v_dirichlet.setConstantBC(0.)
-        self.w_dirichlet.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(kp)
-        self.dissipation_dirichlet.setConstantBC(dissipation) 
-        self.vof_advective.setConstantBC(0.)
-        self.p_advective.setConstantBC(0.)
-        self.v_advective.setConstantBC(0.)
-        self.k_advective.setConstantBC(0.)
-        self.dissipation_advective.setConstantBC(0.)
-        self.u_diffusive.setConstantBC(gradU)
-        self.k_diffusive.setConstantBC(0.)
-
-    def setWallFunction_kw(self, Y, U0, d, L=0.0, skinf='turbulent', 
+    def setWallFunction(self, model, Y, U0, d, L=0.0, skinf='turbulent', 
                                  nu=1.004e-6, Cmu=0.09, K=0.41, B=5.2 ):
         """
         Sets turbulent boundaries for wall treatment.        
@@ -364,10 +268,12 @@ class BC_RANS(BC_Base):
 
         Parameters
         ----------
+        model: string.
+            'ke' or 'kw', is for switching between k-epsilon and k-omega models.
         Y: float.
             size of the nearest element to the wall.
-        U0: float.
-            stream velocity at the middle of the channel.
+        U0: array_like.
+            stream velocity.
         d: float.
             characteristic dimension of the problem.
         L: float.
@@ -384,69 +290,20 @@ class BC_RANS(BC_Base):
             roughness coefficient for walls.          
 
         """      
-        # local velocity
-        #localU = WallRegion()
-        #U0 = localU.u
-        #self.domain = domain
-        #uLocal = domain.auxiliaryVariables['twp'][1].pointGaugeVecs[0]
-        #print uLocal
-        # Skin friction (Pope pages 265,301,307 - Schlichting pag 639)
-        Re0 = U0*d/nu
-        ReL = U0*L/nu
-        rangeSkin = ['laminar', 'turbulent', 'boundaryLayer']
-        if skinf not in rangeSkin:
-            logEvent("Wrong slip_type given: Valid types are %s" %rangeSkin, level=0)
-            sys.exit(1)
-        if skinf == 'laminar':
-            cf = 4./Re0
-        elif skinf == 'turbulent':
-            cf = 0.045*( Re0**(-1./4.) )
-        elif skinf == 'boundaryLayer':
-            cf = 0.074*( ReL**(-1./5.) )
-        ut = U0*np.sqrt(cf/2.)
-        kp = (ut**2)/np.sqrt(Cmu)        
-        Yplus = Y*ut/nu
-        # layers definition according to Pope pg 275
-        # viscous layer
-        if Yplus < 11.6:
-            Uplus = Yplus
-            U = Uplus*ut
-            gradU = (ut**2)/nu
-            e = (ut**3)/(K*Y)
-            dissipation = e/kp 
-            nut = Cmu*(kp**2)/dissipation
-        # log-law layer
-        elif Yplus > 30. and Y/d < 0.3:
-            E = np.exp(B*K) 
-            U = ut * np.log(E*Yplus) / K
-            gradU = ut / (K*Y)
-            e = (ut**3)/(K*Y) 
-            dissipation = e/kp
-            nut = Cmu*(kp**2)/dissipation
-        #defect-velocity layer
-        #elif Yplus > 50. and Y/d < 1.:
-        #    E = np.exp(B*K) 
-        #    U = U0 - 0.7*ut + ut * np.log(Y/d) / K
-        #    gradU = ut / (K*Y)
-        #    dissipation = (ut**3)/(K*Y) 
-        #    nut = Cmu*(kp**2)/dissipation
-        else:
-            logEvent("Point selected is not in the log law region", level=0)
-            sys.exit(1)
-
+        b_or = self._b_or
+        wf = WallFunctions(model, b_or, Y, U0, d, L, skinf, nu, Cmu, K, B)
         self.reset()
-        self.u_dirichlet.setConstantBC(U)
-        self.v_dirichlet.setConstantBC(0.)
-        self.w_dirichlet.setConstantBC(0.)
-        self.k_dirichlet.setConstantBC(kp)
-        self.dissipation_dirichlet.setConstantBC(dissipation) 
+        self.u_dirichlet.uOfXT = lambda x, t: wf.get_u_dirichlet(x, t)
+        self.v_dirichlet.uOfXT = lambda x, t: wf.get_v_dirichlet(x, t)
+        self.w_dirichlet.uOfXT = lambda x, t: wf.get_w_dirichlet(x, t)
+        self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
+        self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t) 
         self.vof_advective.setConstantBC(0.)
         self.p_advective.setConstantBC(0.)
-        self.v_advective.setConstantBC(0.)
-        self.k_advective.setConstantBC(0.)
-        self.dissipation_advective.setConstantBC(0.)
-        self.u_diffusive.setConstantBC(gradU)
-        self.k_diffusive.setConstantBC(0.)
+        self.u_diffusive.uOfXT = lambda x, t: wf.get_u_diffusive(x, t)
+        self.v_diffusive.uOfXT = lambda x, t: wf.get_v_diffusive(x, t)
+        self.w_diffusive.uOfXT = lambda x, t: wf.get_w_diffusive(x, t)
+        self.k_diffusive.uOfXT = lambda x, t: wf.get_k_diffusive(x, t)
 
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
@@ -1287,4 +1144,177 @@ def __x_to_cpp(x):
     xx[1] = x[1]
     xx[2] = x[2]
     return xx
+
+
+class WallFunctions(AuxiliaryVariables.AV_base, object):
+    """
+    Auxiliary variable used to calculate attributes of an associated shape
+    class instance acting as a wall.
+    """
+
+    def __init__(self, model, b_or, Y, U0, d, L, skinf, nu, Cmu, K, B):
+        """
+        Sets turbulent boundaries for wall treatment.        
+        Calculation made on nodes outside the viscous sublayer and based
+        on assumption on the velocity profile close to the wall in order to
+        impose the wall shear stress.
+
+        - k is assumed to be constant in the fully turbulent region close to the wall,
+        in this way kv = kp.
+        - dissipation is calculated.
+
+        Parameters
+        ----------
+        model: string.
+            'ke' or 'kw', for switching between k-epsilon or k-omega models.
+        Y: float.
+            size of the nearest element to the wall.
+        U0: array_like.
+            stream velocity.
+        d: float.
+            characteristic dimension of the problem.
+        L: float.
+            length of the boundaryLayer (usend only in skinf=boundaryLayer).
+        skinf: string.
+            switching between different skin friction formulae.
+        nu: float.
+            fluid viscosity.
+        Cmu: float.
+            turbulent viscosity constant.
+        K: float.
+            von Karman coefficient.
+        B: float.
+            roughness coefficient for walls.          
+        """      
+        self.turbModel = model
+        self._b_or = b_or
+        self.Y = Y
+        self.U0 = U0
+        self.d = d
+        self.L = L
+        self.skinf = skinf
+        self.nu = nu
+        self.Cmu = Cmu
+        self.K = K
+        self.B = B
+                        
+    def attachModel(self, model, ar):
+        """
+        Attaches model to auxiliary variable
+        """
+        self.model = model
+        self.ar = ar
+        self.nd = model.levelModelList[-1].nSpace_global
+        self.m = self.model.levelModelList[-1]
+        return self
+
+    def extractVelocity(self, x, t):
+        """
+        Get the CSR representationof the Jacobian matrix.
+        """
+        i0, i1 = self.i_start, self.i_end
+        uModel = self.model.levelModelList[-1].coefficients.q_velocity_solid
+        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+        # Loop on columns of the sparsity pattern corresponding to the i-th node
+        uNeighbours = []
+        meanV = np.zeros(3, dtype=float)
+        for offset in range(rowptr[i0], rowptr[i1]):
+            j = colind[offset]
+            uNeighbours.append(uModel[j])
+        for ii in [0,1,2]:
+            listV = []
+            for jj in range(len(uNeighbours)):
+                listV.append(uNeighbours[jj][ii])
+            meanV[ii] = np.mean(listV)
+        return meanV
+        
+    def tangentialVelocity(self, x, t):
+        self.meanV = self.extractVelocity(x,t) #self.U0
+        u1, u2, u3 = self.meanV
+        b1, b2, b3 = self._b_or
+        # normal unit vector
+        self.nV = self._b_or/np.sqrt(np.sum([b1**2, b2**2, b3**2]))
+        # projection of u vector over an ortoganal plane to b_or
+        self.tanU = self.meanV - self.meanV*(self.nV**2)
+        # tangential unit vector
+        self.nT = self.tanU/np.sqrt(np.sum(self.tanU**2))
+        #return self
+
+    def getVariables(self, x, t):
+        self.tangentialVelocity(x,t)
+        Re0 = self.tanU*self.d/self.nu
+        ReL = self.tanU*self.L/self.nu
+        rangeSkin = ['laminar', 'turbulent', 'boundaryLayer']
+        skinf = self.skinf
+        self.cf, self.Ubound = np.zeros(3, dtype=float), np.zeros(3, dtype=float)
+        for i in [0, 1, 2]:
+            if skinf not in rangeSkin:
+                logEvent("Wrong slip_type given: Valid types are %s" %rangeSkin, level=0)
+                sys.exit(1)
+            elif skinf == 'laminar' and Re0[i] > 0.:
+                self.cf[i] = 4./Re0[i]
+            elif skinf == 'turbulent' and Re0[i] > 0.:
+                self.cf[i] = 0.045*( Re0[i]**(-1./4.) )
+            elif skinf == 'boundaryLayer' and ReL > 0.:
+                self.cf[i] = 0.074*( ReL[i]**(-1./5.) )
+        self.ut = self.tanU*np.sqrt(self.cf/2.)
+        self.Yplus = self.Y*self.ut/self.nu       
+        YplusAbs = np.sqrt(np.sum(self.Yplus**2))
+        if YplusAbs < 11.6:
+            Uplus = self.Yplus
+            self.Ubound = Uplus*self.ut
+        # log-law layer
+        elif YplusAbs > 30. and self.Y/self.d < 0.3:
+            E = np.exp(self.B*self.K)
+            for i in [0, 1, 2]:
+                if self.Yplus[i]>0. : self.Ubound[i] = self.ut[i] * np.log(E*self.Yplus[i]) / self.K
+        else:
+            logEvent('Point selected outside either viscous and log layers', level=0)
+            sys.exit(1)
+        self.utAbs = np.sqrt(np.sum(self.ut**2))       
+        self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu)
+        #print self.ut, self.utAbs, self.Ubound, self.kappa
+
+    def get_u_dirichlet(self, x, t):
+        self.getVariables(x, t)
+        U = self.Ubound[0]
+        return U 
+        
+    def get_v_dirichlet(self, x, t):
+        self.getVariables(x, t)
+        U = self.Ubound[1]
+        return U 
+ 
+    def get_w_dirichlet(self, x, t):
+        self.getVariables(x, t)
+        U = self.Ubound[2]
+        return U 
+
+    def get_k_dirichlet(self, x, t):
+        self.getVariables(x, t)
+        return self.kappa 
+
+    def get_dissipation_dirichlet(self, x, t):
+        self.getVariables(x, t)
+        if self.turbModel == 'ke': d = (self.utAbs**3)/(self.K*self.Y)
+        elif self.turbModel == 'kw': d = (self.utAbs**3)/(self.K*self.Y)/self.kappa
+        else:
+            logEvent("Model selected is wrong", level=0)
+            sys.exit(1)
+        return d 
+
+    def get_u_diffusive(self, x, t):
+        self.getVariables(x, t)
+        gradU = self.ut[0]/(self.K*self.Y)
+        return gradU 
+
+    def get_v_diffusive(self, x, t):
+        self.getVariables(x, t)
+        gradU = self.ut[1]/(self.K*self.Y)
+        return gradU 
+
+    def get_w_diffusive(self, x, t):
+        self.getVariables(x, t)
+        gradU = self.ut[2]/(self.K*self.Y)
+        return gradU 
 
