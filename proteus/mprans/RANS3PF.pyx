@@ -2820,6 +2820,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             for eN in range(self.model.q['x'].shape[0]):
                 for k in range(self.model.q['x'].shape[1]):
                     self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(0, self.model.q['x'][eN,k])
+            self.model.q[('phis',i)] = self.particle_signed_distances[i]
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
             self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
