@@ -447,11 +447,12 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
   int dim = 0;
   it = m->begin(dim);
   while(f = m->iterate(it)){
-    geomEnt = m->toModel(f);
     int i = localNumber(f);
-    geomTag = m->getModelTag(m->toModel(f));
+    geomEnt = m->toModel(f);
+    geomTag = m->getModelTag(geomEnt);
     if(m->getModelType(geomEnt) == dim){
       mesh.nodeMaterialTypes[i] =modelVertexMaterial[geomTag];
+      std::cout<<"This is the geomTag "<<geomTag<<" this is the material "<<modelVertexMaterial[geomTag]<<std::endl;
     }
     else if(m->getModelType(geomEnt)==(m->getDimension()-1)){ //on the boundary entity
       mesh.nodeMaterialTypes[i] =modelBoundaryMaterial[geomTag];
@@ -461,7 +462,7 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
     }
   }
   m->end(it);
-
+  //std::abort();
   if(m->getDimension()==2)
     dim = 1;
   else
@@ -481,28 +482,25 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
     else{
       geomTag = m->getModelTag(m->toModel(f));
       //std::cout<<"Entity "<<i<<" geomTag "<<geomTag<<" geomType "<<m->getModelType(geomEnt)<<" initial material "<<mesh.elementBoundaryMaterialTypes[i]<<" after "<<0<<std::endl;
-      mesh.elementBoundaryMaterialTypes[i] = 0; //This assumes that all vertices on the boundary are model vertices
+      
+
+      //THIS LOOKS LIKE A BUG THAT WILL NEED TO BE FIXED. SHOULD BE REGION DEPENDENT
+      mesh.elementBoundaryMaterialTypes[i] = 0; 
     }
   }
   m->end(it);
 
-  dim = dim+1; //the regions are necessary one dimension higher than previous dim
+  dim = dim+1; //the regions are necessarily one dimension higher than previous dim
   it = m->begin(dim);
   while(f = m->iterate(it)){
     geomEnt = m->toModel(f);
     int i = localNumber(f);
     assert(m->getModelType(geomEnt)==dim);
     geomTag = m->getModelTag(m->toModel(f));
-    mesh.elementMaterialTypes[i] =modelRegionMaterial[0];
+    //The geomTag is actually the right material for region entities
+    mesh.elementMaterialTypes[i] = geomTag; //modelRegionMaterial[geomTag];
   }
   m->end(it);
-
-/*
-  free(modelVertexMaterial);
-  free(modelBoundaryMaterial);
-  free(modelRegionMaterial);
-*/
-  
   return 0;
 }
 
@@ -733,11 +731,11 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   int nBoundaryNodes=0; //number of total boundary nodes regardless of ownership
   int nNodes_owned = globalMesh.nodeOffsets_subdomain_owned[PCU_Comm_Self()+1]-globalMesh.nodeOffsets_subdomain_owned[PCU_Comm_Self()];
   if(PCU_Comm_Self()==0){
-    std::cout<<"Hi my name is Bob dole "<<nNodes_owned<<std::endl;
+    std::cout<<"This is rank "<<0<<" nNodes_owned "<<nNodes_owned<<std::endl;
   }
   PCU_Barrier();
   if(PCU_Comm_Self()==1){
-    std::cout<<"Hi my name is TexMex "<<nNodes_owned<<std::endl;
+    std::cout<<"This is rank "<<1<<" nNodes_owned "<<nNodes_owned<<std::endl;
   }
   PCU_Barrier();
 
@@ -766,7 +764,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
     numModelNodes = nBoundaryNodes;
     numModelEdges = mesh.nEdges_global;
     numModelBoundaries = mesh.nExteriorElementBoundaries_global;
-    numModelRegions = 1; //need to loop through material types to indicate number of regions
+    numModelRegions = numModelEntities[3];
   }
 
   assert(numModelRegions>0);
@@ -801,21 +799,29 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   numModelTotals[0] = numModelNodes;
   numModelTotals[1] = numModelEdges;
   numModelTotals[2] = numModelBoundaries;
-  numModelTotals[3] = 0;//numModelRegions; what happens with multiple regions?
+  numModelTotals[3] = 0;//The total number of regions is known so no need to set a value
   PCU_Add_Ints(&numModelTotals[0],4); //get all offsets at the same time
+  numModelTotals[3] = numModelRegions;
 
   //gvertices
   gmi_base_reserve(gMod_base,AGM_VERTEX,numModelTotals[0]);
 
+  if(numDim==2){
   //gedges
-  gmi_base_reserve(gMod_base,AGM_EDGE,numModelTotals[2]);
-
+    gmi_base_reserve(gMod_base,AGM_EDGE,numModelTotals[2]);
   //gfaces
-  gmi_base_reserve(gMod_base,AGM_FACE,1);
-
+    gmi_base_reserve(gMod_base,AGM_FACE,numModelTotals[3]);
   //gregions
-  gmi_base_reserve(gMod_base,AGM_REGION,0);
-
+    gmi_base_reserve(gMod_base,AGM_REGION,0);
+  }
+  else if(numDim==3){
+  //gedges
+    gmi_base_reserve(gMod_base,AGM_EDGE,numModelTotals[1]);
+  //gfaces
+    gmi_base_reserve(gMod_base,AGM_FACE,numModelTotals[2]);
+  //gregions
+    gmi_base_reserve(gMod_base,AGM_REGION,numModelTotals[3]);
+  }
 
   gMod = &gMod_base->model;
 
@@ -902,7 +908,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
     numModelNodes = nBoundaryNodes;
     numModelEdges = mesh.nEdges_global;
     numModelBoundaries = nExteriorElementBoundaries_owned;
-    numModelRegions = 1; //need to loop through material types to indicate number of regions
+    numModelRegions = numModelEntities[3]; 
   }
 
   //////////
@@ -1014,6 +1020,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
     m->setPoint(ent,0,pt);
     if(m->isOwned(ent)){
       matTag = mesh.nodeMaterialTypes[vID];
+      std::cout<<"What is the material type? "<<matTag<<std::endl;
       if(hasModel){
         gEnt = m->findModelEntity(meshVertex2Model[2*vID+1],meshVertex2Model[2*vID]);
         if(meshVertex2Model[2*vID+1]==0) //if entity is a model vertex
@@ -1021,7 +1028,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
       }
       else{
         if(matTag==0){
-          matTag = mesh.elementMaterialTypes[0]; //also assumes that there is only a single material type
+          matTag = mesh.elementMaterialTypes[mesh.nodeElementsArray[mesh.nodeElementOffsets[vID]]];
           gEnt = m->findModelEntity(2,matTag);
         }
         else{
@@ -1092,7 +1099,10 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
             " "<<local2global_elementBoundaryNodes[2*edgID]<<" "<<local2global_elementBoundaryNodes[2*edgID+1]<<std::endl;
           }
         }
-        gEnt = m->findModelEntity(2,mesh.elementMaterialTypes[0]);
+        //There are always two entities adjacent to an element boundary
+        //Pick one and take that as the material type for classification
+        matTag = mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[2*edgID]];
+        gEnt = m->findModelEntity(2,matTag);
       }
     }
     m->setModelEntity(ent,gEnt);
@@ -1103,12 +1113,21 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   entIter = m->begin(2);
   PCU_Barrier();
   std::cout<<"Initializing RECONSTRUCTION!\n";
-  modelRegionMaterial[0] = mesh.elementMaterialTypes[0]; //single material type at the moment
+
+  //Populate the region materials
+  //Assumes that the regions are numbered sequentially from 1 onward
+  for(int i=0;i<numModelRegions;i++)
+    modelRegionMaterial[i] = i+1;
   
   int fID = 0;
   while(ent = m->iterate(entIter)){
     gEnt = m->findModelEntity(2,mesh.elementMaterialTypes[fID]);
     m->setModelEntity(ent,gEnt);
+    if(fID==215){
+      std::cout<<"THIS IS THE MATERIAL for 215 "<<mesh.elementMaterialTypes[fID]<<std::endl;
+      std::cout<<"This is the model entity "<<m->getModelTag(m->toModel(ent))<<std::endl;
+    }
+
     fID++;
   }
   m->end(entIter);

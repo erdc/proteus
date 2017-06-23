@@ -84,9 +84,9 @@ class D_base:
       vertexClassifyChecklist = [0]*mesh.nNodes_owned
       edgeClassifyChecklist = [0]*mesh.nEdges_owned
       boundaryClassifyChecklist = [0]*mesh.nElementBoundaries_global
-      self.meshVertex2Model= [0]*mesh.nNodes_owned
-      self.meshEdge2Model=[(0,0)]*mesh.nEdges_owned
-      self.meshBoundary2Model=[0]*mesh.nElementBoundaries_global
+      #self.meshVertex2Model= [0]*mesh.nNodes_owned
+      #self.meshEdge2Model=[(0,0)]*mesh.nEdges_owned
+      #self.meshBoundary2Model=[0]*mesh.nElementBoundaries_global
 
       #identify model vertices with a k-d tree
       meshVertexTree = spatial.cKDTree(mesh.nodeArray)
