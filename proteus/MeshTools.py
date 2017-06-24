@@ -492,6 +492,12 @@ class Mesh:
 
     This is the base class for meshes. Contains routines for
     plotting the edges of the mesh in Matlab
+
+    Attributes
+    ----------
+    elementBoundariesArray : array type
+        This array lists the global edge number associated with every
+        edge or face of an element.
     """
     #cek adding parallel support
     def __init__(self):
@@ -555,23 +561,19 @@ class Mesh:
         self.nEdges_owned=self.nEdges_global
         self.elementOffsets_subdomain_owned=[0,self.nElements_global]
         self.elementNumbering_subdomain2global=np.arange(self.nElements_global,dtype='i')
-        self.elementNumbering_global2original=np.arange(self.nElements_global,dtype='i')
         self.nodeOffsets_subdomain_owned=[0,self.nNodes_global]
         self.nodeNumbering_subdomain2global=np.arange(self.nNodes_global,dtype='i')
-        self.nodeNumbering_global2original=np.arange(self.nNodes_global,dtype='i')
         self.elementBoundaryOffsets_subdomain_owned=[0,self.nElementBoundaries_global]
         self.elementBoundaryNumbering_subdomain2global=np.arange(self.nElementBoundaries_global,dtype='i')
-        self.elementBoundaryNumbering_global2original=np.arange(self.nElementBoundaries_global,dtype='i')
         self.edgeOffsets_subdomain_owned=[0,self.nEdges_global]
         self.edgeNumbering_subdomain2global=np.arange(self.nEdges_global,dtype='i')
-        self.edgeNumbering_global2original=np.arange(self.nEdges_global,dtype='i')
         self.subdomainMesh=self
         self.globalMesh = None
         self.arGridCollection=None
         self.arGrid=None
         self.nLayersOfOverlap = None
         self.parallelPartitioningType = MeshParallelPartitioningTypes.element
-    def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
+    def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         import flcbdfWrappers
@@ -588,29 +590,21 @@ class Mesh:
             #mwf for now always gives 1 layer of overlap
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionNodes(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodes(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         else:
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionElements(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElements(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         #
         logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
@@ -646,7 +640,7 @@ class Mesh:
         # #cmeshTools.deleteMeshDataStructures(self.cmesh)
         # logEvent(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
-    def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
+    def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         import flcbdfWrappers
@@ -663,29 +657,21 @@ class Mesh:
             #mwf for now always gives 1 layer of overlap
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         else:
             (self.elementOffsets_subdomain_owned,
              self.elementNumbering_subdomain2global,
-             self.elementNumbering_global2original,
              self.nodeOffsets_subdomain_owned,
              self.nodeNumbering_subdomain2global,
-             self.nodeNumbering_global2original,
              self.elementBoundaryOffsets_subdomain_owned,
              self.elementBoundaryNumbering_subdomain2global,
-             self.elementBoundaryNumbering_global2original,
              self.edgeOffsets_subdomain_owned,
-             self.edgeNumbering_subdomain2global,
-             self.edgeNumbering_global2original) = flcbdfWrappers.partitionElementsFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+             self.edgeNumbering_subdomain2global) = flcbdfWrappers.partitionElementsFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         #
         logEvent(memory("partitionMesh 3","MeshTools"),level=4)
         self.buildFromCNoArrays(self.cmesh)
@@ -1259,9 +1245,10 @@ class Mesh:
 
     def buildMatlabMeshDataStructures(self,meshFileBase='meshMatlab',writeToFile=True):
         """
-        build array data structures for matlab finite element mesh representation
-        and write to a file to view and play with in matlatb. The current matlab support
-        is mostly for 2d, but this will return basic arrays for 1d and 3d too
+        build array data structures for matlab finite element mesh
+        representation and write to a file to view and play with in
+        matlatb. The current matlab support is mostly for 2d, but this
+        will return basic arrays for 1d and 3d too
 
         in matlab can then print mesh with
 
@@ -1273,6 +1260,7 @@ class Mesh:
           p is the vertex or point matrix
           e is the edge matrix, and
           t is the element matrix
+
         e will be the elementBoundary matrix in 1d and 3d, but perhaps
         should remain the edge array?
 
@@ -1281,6 +1269,7 @@ class Mesh:
              row 1 = x coord,
              row 2 = y coord for nodes in mesh
              row 3 = z coord for nodes in mesh ...
+
         edge matrix is [2*nd+3 x num faces]
           format:
              row 1  = start vertex number
@@ -1299,10 +1288,11 @@ class Mesh:
             ...
             row nd+1 = vertex 3 global number
             row 4 = triangle subdomain number
+
          where 1,2,3 is a local counter clockwise numbering of vertices in
            triangle
 
-         """
+        """
         matlabBase = 1
         nd = self.nNodes_element-1
         p = np.zeros((nd,self.nNodes_global),'d')
@@ -1544,6 +1534,79 @@ class Mesh:
             gnuplot.write(cmd+'\n')
             gnuplot.flush()
         raw_input('Please press return to continue... \n')
+
+    def convertFromPUMI(self, PUMIMesh, faceList, parallel=False, dim=3):
+        import cmeshTools
+        import MeshAdaptPUMI
+        import flcbdfWrappers
+        import Comm
+        comm = Comm.get()
+        self.cmesh = cmeshTools.CMesh()
+        if parallel:
+          self.subdomainMesh=self.__class__()
+          self.subdomainMesh.globalMesh = self
+          self.subdomainMesh.cmesh = cmeshTools.CMesh()
+          PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
+              self.subdomainMesh.cmesh)
+          for i in range(len(faceList)):
+            for j in range(len(faceList[i])):
+              PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh, i+1,
+                  faceList[i][j])
+          if dim == 3:
+            cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+            cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+          if dim == 2:
+            cmeshTools.allocateGeometricInfo_triangle(self.subdomainMesh.cmesh)
+            cmeshTools.computeGeometricInfo_triangle(self.subdomainMesh.cmesh)
+          self.buildFromCNoArrays(self.cmesh)
+          (self.elementOffsets_subdomain_owned,
+           self.elementNumbering_subdomain2global,
+           self.nodeOffsets_subdomain_owned,
+           self.nodeNumbering_subdomain2global,
+           self.elementBoundaryOffsets_subdomain_owned,
+           self.elementBoundaryNumbering_subdomain2global,
+           self.edgeOffsets_subdomain_owned,
+           self.edgeNumbering_subdomain2global) = (
+              flcbdfWrappers.convertPUMIPartitionToPython(self.cmesh,
+                  self.subdomainMesh.cmesh))
+          self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
+          self.subdomainMesh.nElements_owned = (
+              self.elementOffsets_subdomain_owned[comm.rank()+1] -
+              self.elementOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nNodes_owned = (
+              self.nodeOffsets_subdomain_owned[comm.rank()+1] -
+              self.nodeOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nElementBoundaries_owned = (
+              self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] -
+              self.elementBoundaryOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nEdges_owned = (
+              self.edgeOffsets_subdomain_owned[comm.rank()+1] -
+              self.edgeOffsets_subdomain_owned[comm.rank()])
+          comm.barrier()
+          par_nodeDiametersArray = (
+              ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
+                              bs=1,
+                              n=self.subdomainMesh.nNodes_owned,
+                              N=self.nNodes_global,
+                              nghosts = self.subdomainMesh.nNodes_global -
+                                        self.subdomainMesh.nNodes_owned,
+                              subdomain2global = 
+                                  self.nodeNumbering_subdomain2global))
+          par_nodeDiametersArray.scatter_forward_insert()
+          comm.barrier()
+        else:
+          PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
+          for i in range(len(faceList)):
+            for j in range(len(faceList[i])):
+              PUMIMesh.updateMaterialArrays(self.cmesh, i+1, faceList[i][j])
+          if dim == 3:
+            cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
+            cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
+          if dim == 2:
+            cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
+            cmeshTools.computeGeometricInfo_triangle(self.cmesh)
+          self.buildFromC(self.cmesh)
+        logEvent("meshInfo says : \n"+self.meshInfo())
 
 class MultilevelMesh(Mesh):
     """A hierchical multilevel mesh"""
@@ -2686,8 +2749,8 @@ class TetrahedralMesh(Mesh):
 Number of triangles  : %d
 Number of edges      : %d
 Number of nodes      : %d
-max(sigma_k)         : %d
-min(h_k)             : %d\n""" % (self.nElements_global,
+max(sigma_k)         : %f
+min(h_k)             : %f\n""" % (self.nElements_global,
                                   self.nElementBoundaries_global,
                                   self.nEdges_global,
                                   self.nNodes_global,
@@ -3564,7 +3627,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         MultilevelMesh.__init__(self)
@@ -3600,7 +3663,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                     logEvent(self.meshList[-1].meshInfo())
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
@@ -3632,6 +3695,16 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                 self.meshList[l].subdomainMesh = self.meshList[l]
                 logEvent(self.meshList[-1].meshInfo())
             self.buildArrayLists()
+
+    def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
+        import cmeshTools
+        self.meshList = []
+        self.meshList.append(mesh0)
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        self.buildFromC(self.cmultilevelMesh)
+        self.elementParents = None
+        self.elementChildren=[]
+
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
@@ -3669,7 +3742,7 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         MultilevelMesh.__init__(self)
@@ -3706,7 +3779,7 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                     logEvent(self.meshList[-1].meshInfo())
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
@@ -3733,6 +3806,49 @@ class MultilevelHexahedralMesh(MultilevelMesh):
     def computeGeometricInfo(self):
         for m in self.meshList:
             m.computeGeometricInfo()
+
+def buildReferenceSimplex(nd=2):
+    """
+    Create and return a Proteus mesh object for the reference 
+    element.
+
+    Parameters
+    ----------
+    nd : int
+        Dimension of reference element
+
+    Returns
+    -------
+    mesh : :class:`proteus.MeshTools.TriangularMesh`
+        Simplex mesh
+    """
+    from proteus import Domain
+    from proteus import TriangleTools
+
+    assert(nd in [1,2,3])
+
+    if nd==1:
+        pass # Note sure what needs to go here?!
+    
+    unit_simplex_domain = Domain.unitSimplex(nd)
+    polyfile = "reference_element"
+    unit_simplex_domain.writePoly(polyfile)
+
+    if nd==2:
+        tmesh = TriangleTools.TriangleBaseMesh(baseFlags="Yp",
+                                               nbase=1,
+                                               verbose=False)
+        tmesh.readFromPolyFile(polyfile)
+        mesh = tmesh.convertToProteusMesh(verbose=0)
+        mesh.partitionMesh()
+        mesh.globalMesh = mesh
+        return mesh
+    if nd==3:
+        runTetgen(polyfile,
+                  "Yp")
+        mesh = genMeshWithTetgen(polyfile,
+                                 nbase = 1)
+        return mesh
 
 class TriangularMesh(Mesh):
     """A mesh of triangles
@@ -3855,12 +3971,6 @@ class TriangularMesh(Mesh):
         wrapper function for making a triangular mesh on the rectangle
         [0,Lx] x [0,Ly].
 
-        viewMesh is a flag to allow printing mesh when constructed
-        viewMesh -- 0 no visualization
-                    1 gnuplot
-                    2 matlab
-
-        mwf
         """
         nz = 1
         Lz = 1.0
@@ -4586,7 +4696,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0):
         import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC = True
@@ -4625,7 +4735,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
     #
     #mwf what's the best way to build from an existing mesh
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
@@ -4695,7 +4805,7 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node,triangleFlag=0):
         import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC = False   # Implementing with C will take a bit more work. Disabling for now.
@@ -4793,9 +4903,9 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         logEvent("InterpolatedBathymetryMesh: Converting to Proteus Mesh")
         self.coarseMesh=tmesh.convertToProteusMesh(verbose=1)
         MultilevelTriangularMesh.__init__(self,0,0,0,skipInit=True,nLayersOfOverlap=0,
-                                          parallelPartitioningType=MeshParallelPartitioningTypes.element)
+                                          parallelPartitioningType=MeshParallelPartitioningTypes.node)
         self.generateFromExistingCoarseMesh(self.coarseMesh,1,
-                                            parallelPartitioningType=MeshParallelPartitioningTypes.element)
+                                            parallelPartitioningType=MeshParallelPartitioningTypes.node)
         self.computeGeometricInfo()
         print self.meshList[-1].volume
         #allocate some arrays based on the bathymetry data
@@ -5374,7 +5484,7 @@ class MultilevelEdgeMesh(MultilevelMesh):
                  Lx=1.0, Ly=1.0, Lz=1.0,
                  refinementLevels=1,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC=True
@@ -5516,11 +5626,9 @@ def readUniformElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topolog
 
     nElements_global  -- the number of elements in the mesh
     nNodes_element    -- number of nodes per element
-    elementNodesArray -- element --> node connectivity
-                         stored as flattened array accessed using elementNodes_offset
-    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity
-                        -- element eN nodes are in
-                           elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
+    elementNodesArray -- element --> node connectivity stored as flattened array accessed using elementNodes_offset
+    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity, 
+    element eN nodes are in elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
 
     """
 
@@ -5546,12 +5654,12 @@ def readMixedElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyi
     returns
 
     nElements_global  -- the number of elements in the mesh
-    elementNodesArray -- element --> node connectivity
-                         stored as flattened array accessed using elementNodes_offset
-    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity
-                        -- element eN nodes are in
-                           elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
-
+    elementNodesArray -- element --> node connectivity stored as flattened 
+    array accessed using elementNodes_offset
+    elementNodes_offset -- offsets into the elementNodesArray storage for element 
+    connectivity, element eN nodes are 
+    inelementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
+ 
     """
     assert elementTopologyName == 'Mixed'
 
@@ -5585,30 +5693,31 @@ def readMixedElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyi
     return nElements_global, elementNodesArray, elementNodes_offset
 
 def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHDF5=True,verbose=0):
-    """
-    start trying to read an xdmf archive with name xmf_archive_base.xmf
-    assumes heavy_file_base.h5 has heavy data
-    root Element is Xdmf
-      last child of Xdmf which should be a Domain Element
-         find child of Domain that is a Temporal Grid Collection with a name containing MeshTag, if None use first collection
-            last child of Temporal Grid Collection should be a Uniform Grid at final time
-               Attribute (usually 1) of child is  Topology
-                  set elementTopologyName to Type
-                  if Type != Mixed
-                    get text attribute and read this entry from  hdf5 file
-                    set nNodes_element based on Type, nElements_global from leading dimension of elementNodesArray
-                    create elementNodes_offset from Type and flatten elementNodesArray
-                  else
-                    get text attribute and read this entry from  hdf5 file to place in into xdmf_topology
-                    generate elementNodesArray from xdmf_topology, calculating the number of elements using
-                      walk through xdmf_topology
-               Attribute (usually 2) of child is Geometry  --> load data into nodeArray
-                   set nNodes_global from nodeArray
-               If has Attribute nodeMaterials read this from hdf file, else set to default of all zeros
-               If has Attribute elementMaterialTypes, read this from hdf file, else set to default of all zeros
+    """Read in a mesh from XDMF, assuming heavy data is in hdf5
 
-    returns a BasicMeshInfo object with the minimal information read
-    """
+    :return: a BasicMeshInfo object with the minimal information read
+    
+    """    
+    # start trying to read an xdmf archive with name xmf_archive_base.xmf
+    # assumes heavy_file_base.h5 has heavy data
+    # root Element is Xdmf
+    #   last child of Xdmf which should be a Domain Element
+    #      find child of Domain that is a Temporal Grid Collection with a name containing MeshTag, if None use first collection
+    #         last child of Temporal Grid Collection should be a Uniform Grid at final time
+    #            Attribute (usually 1) of child is  Topology
+    #               set elementTopologyName to Type
+    #               if Type != Mixed
+    #                 get text attribute and read this entry from  hdf5 file
+    #                 set nNodes_element based on Type, nElements_global from leading dimension of elementNodesArray
+    #                 create elementNodes_offset from Type and flatten elementNodesArray
+    #               else
+    #                 get text attribute and read this entry from  hdf5 file to place in into xdmf_topology
+    #                 generate elementNodesArray from xdmf_topology, calculating the number of elements using
+    #                   walk through xdmf_topology
+    #            Attribute (usually 2) of child is Geometry  --> load data into nodeArray
+    #                set nNodes_global from nodeArray
+    #            If has Attribute nodeMaterials read this from hdf file, else set to default of all zeros
+    #            If has Attribute elementMaterialTypes, read this from hdf file, else set to default of all zeros
     assert os.path.isfile(xmf_archive_base+'.xmf')
     assert os.path.isfile(heavy_file_base+'.h5')
 
@@ -5730,7 +5839,7 @@ class MultilevelNURBSMesh(MultilevelMesh):
                  refinementLevels=1,
                  skipInit=False,
                  nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         import Comm
         MultilevelMesh.__init__(self)
@@ -5753,7 +5862,7 @@ class MultilevelNURBSMesh(MultilevelMesh):
                 self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
 
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
         #blow away or just trust garbage collection
         self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
@@ -6027,3 +6136,329 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
                 continue
             intersections.update(((tuple(elementIntersections[0]), tuple(elementIntersections[1])),),)
     return intersections
+
+def runTetgen(polyfile,
+              baseFlags="Yp",
+              name = ""):
+    """
+    Generate tetgen files from a polyfile.
+
+    Arguments
+    ---------
+    polyfile : str
+        Filename with appropriate data for tengen.
+    baseFlags : str
+        Standard Tetgen options for generation
+    name : str
+        
+
+    """
+    from subprocess import check_call
+    tetcmd = "tetgen - %s %s.poly" % (baseFlags, polyfile)
+    
+    check_call(tetcmd,shell=True)
+    
+    logEvent("Done running tetgen")
+    elefile = "%s.1.ele" % polyfile
+    nodefile = "%s.1.node" % polyfile
+    facefile = "%s.1.face" % polyfile
+    edgefile = "%s.1.edge" % polyfile
+    assert os.path.exists(elefile), "no 1.ele"
+    tmp = "%s.ele" % polyfile
+    os.rename(elefile,tmp)
+    assert os.path.exists(tmp), "no .ele"
+    assert os.path.exists(nodefile), "no 1.node"
+    tmp = "%s.node" % polyfile
+    os.rename(nodefile,tmp)
+    assert os.path.exists(tmp), "no .node"
+    if os.path.exists(facefile):
+        tmp = "%s.face" % polyfile
+        os.rename(facefile,tmp)
+        assert os.path.exists(tmp), "no .face"
+    if os.path.exists(edgefile):
+        tmp = "%s.edge" % polyfile
+        os.rename(edgefile,tmp)
+        assert os.path.exists(tmp), "no .edge"
+
+def genMeshWithTetgen(polyfile,
+                      nbase=1):
+   """
+   Generate a mesh from a set of tetgen files.
+
+   Arguments
+   ---------
+   polyfile : str
+       Filename base for tetgen files
+   nbase : int
+
+   Returns
+    -------
+   mesh : :class:`proteus.MeshTools.TetrahedralMesh`
+       Simplex mesh
+   """
+   elefile = "%s.ele" % polyfile
+   nodefile = "%s.node" % polyfile
+   facefile = "%s.face" % polyfile
+   edgefile = "%s.edge" % polyfile
+   assert os.path.exists(elefile), "no .ele file"
+   assert os.path.exists(nodefile), "no  .node file"
+   assert os.path.exists(facefile), "no .face file"
+   mesh=TetrahedralMesh()
+   mesh.generateFromTetgenFiles(polyfile,
+                                base=nbase)
+   return mesh
+
+
+from proteus import default_n as dn
+from proteus import default_p as dp
+
+class MeshOptions:
+    """
+    Mesh options for the domain
+
+    Parameters
+    ----------
+    domain: proteus.Domain
+    """
+    def __init__(self, domain):
+        self.Domain = domain
+        self.he = 1.
+        self.use_gmsh = False
+        self.genMesh = True
+        self.outputFiles_name = 'mesh'
+        self.outputFiles = {'poly': True,     
+                            'ply': False,        
+                            'asymptote': False,
+                            'geo': False}
+        self.restrictFineSolutionToAllMeshes = False
+        self.parallelPartitioningType = MeshParallelPartitioningTypes.node
+        self.nLayersOfOverlapForParallel = 1
+        self.triangleOptions = "q30DenA" # defined when setTriangleOptions called
+        self.nLevels = 1
+        if domain is not None:
+            self.nd = domain.nd
+            if self.nd == 2:
+                self.triangle_string = 'VApq30Dena'
+            if self.nd == 3:
+                self.triangle_string = 'VApq1.35q12feena'
+        else:
+            self.triangle_string = None
+
+    def setElementSize(self, he):
+        """
+        Sets element size for uniform mesh.
+
+        Parameters
+        ----------
+        he: float
+            mesh characteristic element size
+        """
+        self.he = he
+
+    def setParallelPartitioningType(self, partitioning_type='node', layers_overlap=0):
+        """
+        Changes parallel partitioning type
+
+        Parameters
+        ----------
+        partitioning_type: Optional[str, int]
+            parallel partitioning type (default: 'node' (1))
+        layers: int
+            layers of overlap for paralllel (default: 0)
+        """
+        if partitioning_type == 'element' or partitioning_type == 0:
+            self.parallelPartitioningType = mpt.element
+        if partitioning_type == 'node' or partitioning_type == 1:
+            self.parallelPartitioningType = mpt.node
+        self.nLayersOfOverlapForParallel = layers_overlap
+
+    def setTriangleOptions(self, triangle_options=None):
+        """
+        Sets the trangle options
+
+        Parameters
+        ----------
+        triangle_options: Optional[str]
+            string for triangle options. If not passed, it will be
+            set with triangle_string attribute and 'he' value, with
+            default for 2D: he**2/2; default for 3D: he**3/6
+        """
+        if triangle_options is not None:
+            self.triangleOptions = triangle_options
+        else:
+            assert self.he is not None, 'Element size (he) must be set before setting triangle options'
+            assert self.triangle_string is not None, 'triangle_string must be set before setting triangle options'
+            if self.nd == 2:
+                self.triangleOptions = self.triangle_string + '%8.8f' \
+                                       % (self.he**2/2.,)
+            elif self.nd == 3:
+                self.triangleOptions = self.triangle_string + '%21.16e' \
+                                       % (self.he**3/6.,)
+
+    def setMeshGenerator(self, generator):
+        """
+        Indicates mesh generator to use
+
+        Parameters
+        ----------
+        generator: str
+            options: 'gmsh', 'triangle', 'tetgen'
+
+        (!) Only has an effect when setting to 'gmsh' in current 
+        implementation (triangle is default for 2D, tetgen for 3D)
+        """
+        generators = ['gmsh', 'triangle', 'tetgen']
+        assert generator in generators, 'Unknown mesh generator'
+        if generator == 'gmsh':
+            self.use_gmsh = True
+        else:
+            self.use_gmsh = False
+
+    def setOutputFiles(self, name='mesh', poly=True, ply=False, asymptote=False, geo=False):
+        """
+        Output files to be created 
+
+        Parameters
+        ----------
+        name: Optional[str]
+            name of the mesh files (prefix) (default: 'mesh')
+        poly: Optional[bool]
+            create a poly file
+        ply: Optional[bool]
+            create a ply file
+        asymptote: Optional[bool]
+            create an asymptote file
+        geo:
+            create a geofile
+        """
+        self.outputFiles_name = name
+        self.outputFiles['poly'] = poly
+        self.outputFiles['ply'] = ply
+        self.outputFiles['asymptote'] = asymptote
+        self.outputFiles['geo'] = geo
+
+
+def msh2simplex(fileprefix, nd):
+    """
+    Converts a .msh file (Gmsh) to .ele .edge .node files (triangle).
+    (!) Works only with triangle elements in 2D and tetrahedral elements in 3D.
+
+    Parameters
+    ----------
+    fileprefix: str
+        prefix of the .msh file (e.g. 'mesh' if file called 'mesh.msh')
+
+    """
+    assert nd == 2 or nd == 3, 'nd must be 2 or 3'
+    mshfile = open(fileprefix+'.msh', 'r')
+    nodes = []
+    edges_msh = []
+    triangles = []
+    tetrahedra = []
+    tetrahedron_nb = 0
+    triangle_nb = 0
+    edge_nb = 0
+    switch = None
+    switch_count = -1
+    logEvent('msh2simplex: getting nodes and elements')
+    for line in mshfile:
+        if 'Nodes' in line:
+            switch = 'nodes'
+            switch_count = -1
+        if 'Elements' in line:
+            switch = 'elements'
+            switch_count = -1
+        if switch == 'nodes' and switch_count >= 0:
+            words = line.split()
+            if switch_count == 0:
+                node_nb = int(words[0])
+            else:
+                nid = int(words[0])
+                if nd == 2:
+                    x, y, z = float(words[1]), float(words[2]), 0
+                elif nd == 3:
+                    x, y, z = float(words[1]), float(words[2]), float(words[3])
+                nodes += [[nid, x, y, z, 0]]
+        if switch == 'elements' and switch_count >= 0:
+            words = line.split()
+            if switch_count == 0:
+                el_nb = int(words[0])
+            else:
+                el_id = int(words[0])
+                el_type = int(words[1])
+                nb_tags = int(words[2])
+                if nb_tags == 2:
+                    flag = int(words[3])
+                else:
+                    flag = 0
+                s = 3+nb_tags # starting index on words for element info
+                if el_type == 1: # segment
+                    edge_nb += 1
+                    edges_msh += [[edge_nb, int(words[s]), int(words[s+1]), flag]]
+                elif el_type == 2: # triangle
+                    triangle_nb += 1
+                    triangles += [[triangle_nb, int(words[s]), int(words[s+1]), int(words[s+2]), flag]]
+                elif el_type == 4: # tetrahedron 
+                    tetrahedron_nb += 1
+                    tetrahedra += [[tetrahedron_nb, int(words[s]), int(words[s+1]), int(words[s+2]), int(words[s+3]), flag]]
+                elif el_type == 15: # node
+                    nodes[el_id-1][4] = flag
+        switch_count += 1
+    mshfile.close()
+
+    # construct ALL edges with flags and add flags to nodes
+    edges_dict = {}
+    triangles = np.array(triangles)
+    edge_nb = 0
+    edges = []
+
+    logEvent('msh2simplex: constructing edges')
+    for triangle in triangles[:,1:4]:  # take only vertices index
+        for i in range(len(triangle)):
+            edge = Edge(edgeNumber=edge_nb, nodes=[triangle[i-1], triangle[i]])
+            edge_exist = bool(edges_dict.get(edge.nodes))
+            if not edge_exist:
+                edge_nb += 1
+                edges_dict[edge.nodes] = edge
+                edges += [[edge_nb, edge.nodes[0], edge.nodes[1], 0]]
+    logEvent('msh2simplex: updating edges and nodes flags')
+    edges = np.array(edges)
+    for edge in edges_msh:
+        edge_nodes = [edge[1], edge[2]]
+        edge_nodes.sort()
+        edge_nodes = tuple(edge_nodes)
+        edge_class = edges_dict.get(edge_nodes)
+        edges[edge_class.N, 3] = edge[3]
+        # ! edge nodes are indexed from 1 with gmsh
+        if nodes[edge[1]-1][-1] == 0:  # update node flags
+            nodes[edge[1]-1][-1] = edge[3]
+        if nodes[edge[2]-1][-1] == 0:  # update node flags
+            nodes[edge[1]-1][-1] = edge[3]
+
+    if nd == 2:
+        logEvent('msh2simplex: writing .node .ele .edge files')
+    elif nd == 3:
+        logEvent('msh2simplex: writing .node .ele .edge .face files')
+    header = '{0:d} {1:d} 0 1'.format(node_nb, nd)
+
+    if nd == 2:
+        nodes = np.array(nodes)
+        nodes = np.delete(nodes, 3, 1)
+        fmt = ['%d', '%f', '%f', '%d']
+    elif nd == 3:
+       fmt = ['%d', '%f', '%f', '%f', '%d']
+    np.savetxt(fileprefix+'.node', nodes, fmt=fmt, header=header, comments='')
+
+    header = '{0:d} 1'.format(edge_nb)
+    np.savetxt(fileprefix+'.edge', edges, fmt='%d', header=header, comments='')
+
+    if nd == 2:
+        header = '{0:d} 3 1'.format(triangle_nb)
+        np.savetxt(fileprefix+'.ele', triangles, fmt='%d', header=header, comments='')
+    elif nd == 3:
+        header = '{0:d} 3 1'.format(triangle_nb)
+        np.savetxt(fileprefix+'.face', triangles, fmt='%d', header=header, comments='')
+        header = '{0:d} 4 1'.format(tetrahedron_nb)
+        np.savetxt(fileprefix+'.ele', tetrahedra, fmt='%d', header=header, comments='')
+
+    logEvent('msh2simplex: finished converting .msh to simplex files')

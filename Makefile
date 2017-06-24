@@ -47,7 +47,7 @@ define howto
 	@echo "${PROTEUS_PREFIX}/bin/python"
 	@echo ""
 	@echo "You should now verify that the install succeeded by running:"
-	@echo "make check"
+	@echo "make test"
 	@echo ""
 endef
 
@@ -70,6 +70,12 @@ F77=ftn
 F90=ftn
 endif 
 
+ifeq ($(PROTEUS_ARCH), topaz)
+FC=gfortran
+F77=gfortran
+F90=gfortran
+endif 
+
 ifdef VERBOSE
 HIT_FLAGS += -v
 endif
@@ -86,7 +92,7 @@ clean:
 distclean: clean
 	-rm -f stack.done
 	-rm -rf ${PROTEUS_PREFIX}
-	-rm -rf build proteus/*.pyc proteus/*.so proteus/*.a
+	-rm -rf build proteus/*.pyc proteus/*.so proteus/*.a proteus/MeshAdaptPUMI/*.so
 	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
 
 update:
@@ -102,10 +108,28 @@ update:
 	@echo "Type: git checkout -b branch_name to save changes" 
 	@echo "+======================================================================================================+"
 
+default_stack: stack hashdist
+	cd stack; git fetch origin; git checkout -q ${HASHSTACK_DEFAULT_VERSION}
+	@echo "Stack repository updated to .hashstack_default"
+	HASHSTACK_VERSION=${HASHSTACK_DEFAULT_VERSION}
+	@echo "hashdist repository updated to .hashdist_default"
+	cd hashdist; git fetch origin; git checkout -q ${HASHDIST_DEFAULT_VERSION}
+	HASHDIST_VERSION=${HASHDIST_DEFAULT_VERSION}
+
 hashdist: 
 	@echo "No hashdist found.  Cloning hashdist from GitHub"
 	git clone https://github.com/hashdist/hashdist.git 
 	cd hashdist && git checkout ${HASHDIST_DEFAULT_VERSION}
+
+hashdist_src:
+	@echo "Trying to add hashdist source cache"
+	./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_src --objects="source"
+
+hashdist_bld:
+	@echo "Trying to add hashdist build cache for your arch"
+	HASHSTACK_BLD = $(shell lsb_release -ir | python -c "import sys; rel=dict((k.split(':')[0].split()[0],k.split(':')[1].strip().replace('.','_').lower()) for k in sys.stdin.readlines()); print '{Distributor}_{Release}'.format(**rel)")
+	./hashdist/bin/hit remote add https://dl.dropboxusercontent.com/u/26353144/hashdist_${HASHSTACK_BLD} --objects="build"
+
 stack: 
 	@echo "No stack found.  Cloning stack from GitHub"
 	git clone https://github.com/hashdist/hashstack.git stack
@@ -247,6 +271,21 @@ check:
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
+check_simmetrix:
+	@echo "SCOREC-Serial Simmetrix Error-Estimator and Adapt Test"
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_errorAndSerialAdapt/errorCheck.py
+	@echo "************************"
+
+	@echo "SCOREC-Parallel Simmetrix Error Estimator and Adapt Test"
+	${PROTEUS_ENV} mpirun -np 2 ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_parallelAdapt/parallelAdaptCheck.py
+	@echo "************************"
+
+	@echo "SCOREC Simmetrix Isotropic Uniform Adapt Test"
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_isotropicAdapt/isotropicCheck.py
+	@echo "************************"
+
+
+#doc: install
 doc:
 	@echo "************************************"
 	@echo "Generating documentation with Sphinx"
@@ -255,6 +294,7 @@ doc:
 	@echo "or"
 	@echo "make install"
 	@echo "************************************"
+
 	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
 	@echo "**********************************"
 	@echo "Trying to open the html at"
@@ -262,9 +302,50 @@ doc:
 	@echo "**********************************"
 	-sensible-browser ../proteus-website/index.html &
 
-test:
+test: check
 	@echo "************************************"
 	@echo "Running test suite"
-	py.test --boxed -v proteus/tests --ignore proteus/tests/POD
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests --ignore proteus/tests/POD
 	@echo "Tests complete "
 	@echo "************************************"
+
+jupyter:
+	@echo "************************************"
+	@echo "Enabling jupyter notebook/lab/widgets"
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
+	pip install configparser
+	pip install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0 hide_code==0.4.0 matplotlib ipympl ipymesh
+	ipcluster nbextension enable --user
+	jupyter serverextension enable --py jupyterlab --sys-prefix
+	jupyter nbextension enable --py --sys-prefix widgetsnbextension
+	jupyter nbextension enable --py --sys-prefix bqplot
+	jupyter nbextension enable --py --sys-prefix pythreejs
+	jupyter nbextension enable --py --sys-prefix ipympl
+	jupyter nbextension enable --py --sys-prefix ipymesh
+	jupyter nbextension enable --py --sys-prefix ipyleaflet
+	jupyter nbextension install --py --sys-prefix hide_code
+	jupyter nbextension enable --py --sys-prefix hide_code
+	jupyter nbextension install --py --sys-prefix rise
+	jupyter nbextension enable --py --sys-prefix rise
+	jupyter dashboards quick-setup --sys-prefix
+	jupyter nbextension install --sys-prefix --py ipyparallel
+	jupyter nbextension enable --sys-prefix --py ipyparallel
+	jupyter serverextension enable --sys-prefix --py ipyparallel
+	ipython profile create mpi --parallel
+	echo "c.IPClusterEngines.engine_launcher_class = 'MPI'" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+
+lfs:
+	pip install pyliblzma
+	wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
+	tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
+	cd git-lfs-1.5.5 && PREFIX=${HOME} ./install.sh
+	export PATH=${HOME}/bin:${PATH}
+
+hashdist_package:
+	cp stack/default.yaml stack/proteus_stack.yaml
+	echo "  proteus:" >> stack/proteus_stack.yaml
+	sed -i '/sources:/c\#sources:' stack/pkgs/proteus.yaml
+	sed -i '/- key:/c\# -key:' stack/pkgs/proteus.yaml
+	sed -i '/  url:/c\#  url:' stack/pkgs/proteus.yaml
+	./hashdist/bin/hit fetch https://github.com/erdc-cm/proteus/archive/${PROTEUS_VERSION}.zip >> stack/pkgs/proteus.yaml
+	cd stack && ${PROTEUS}/hashdist/bin/hit build -v proteus_stack.yaml

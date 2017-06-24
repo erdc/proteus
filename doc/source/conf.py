@@ -50,8 +50,8 @@ extensions = [
 #    'sphinx.ext.viewcode',
     'sphinx.ext.linkcode',
     'sphinx.ext.napoleon',
-    'IPython.sphinxext.ipython_console_highlighting',
-    'IPython.sphinxext.ipython_directive',
+#    'IPython.sphinxext.ipython_console_highlighting',
+#    'IPython.sphinxext.ipython_directive',
 ]
 
 napoleon_use_ivar = True
@@ -79,6 +79,8 @@ def linkcode_resolve(domain, info):
         suffix = 'pyx'
     return "https://github.com/erdc-cm/proteus/tree/master/%s.%s" % (filename, suffix)
 
+autoclass_content = 'both'
+
 todo_include_todos = False
 
 # Add any paths that contain templates here, relative to this directory.
@@ -95,7 +97,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Proteus'
-copyright = u'2016, The Proteus Team'
+copyright = u'2017, The Proteus Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -236,7 +238,7 @@ html_short_title = u"Proteus"
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = "tritonBorder.ico"
+html_favicon = "_static/tritonBorder.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -325,7 +327,7 @@ latex_documents = [
 #latex_use_parts = False
 
 # Additional stuff for the LaTeX preamble.
-latex_preamble = '\input{macros}'
+latex_elements['preamble'] = '\input{macros}'
 
 # If true, show page references after internal links.
 #latex_show_pagerefs = False
@@ -450,5 +452,4 @@ todo_include_todos = False
 
 graphviz_output_format = 'svg'
 
-#mathjax_path = "https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
 mathjax_pth = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTM"

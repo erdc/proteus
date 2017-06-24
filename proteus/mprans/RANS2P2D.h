@@ -822,6 +822,9 @@ namespace proteus
 					   const double u,
 					   const double v,
 					   const double w,
+					   const double uStar,
+					   const double vStar,
+					   const double wStar,
 					   const double eps_s,
 					   const double phi_s,
 					   const double u_s,
@@ -834,7 +837,7 @@ namespace proteus
 					   double dmom_v_source[nSpace],
 					   double dmom_w_source[nSpace])
     {
-      double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,H_s1,H_s2;
+      double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,H_s1,H_s2,H_s3;
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
@@ -845,29 +848,35 @@ namespace proteus
 #endif
       double x = fmax(0.0, fmin( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
 
-      H_s1 = 0.5*(1. - cos(M_PI*x));
+      //      H_s1 = 0.5*(1. - cos(M_PI*x));
+      // Relaxation function, Jacobsen et al. 2011, Mayer et al 1998
+      H_s3 = (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
 
-      x = 1. - x;
-      H_s2 = 1.- (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
+      //      x = 1. - x;
+      //      H_s2 = 1.- (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
 
-      H_s = (1.-H_s2)*H_s1 + H_s2*H_s2;
+      H_s = H_s3; //(1.-H_s2)*H_s1 + H_s2*H_s2;
 
-      //
-      uc = sqrt(u*u+v*v*+w*w); 
-      duc_du = u/(uc+1.0e-12);
-      duc_dv = v/(uc+1.0e-12);
+      //implicit
+      /* uc = sqrt(u*u+v*v*+w*w);  */
+      /* duc_du = u/(uc+1.0e-12); */
+      /* duc_dv = v/(uc+1.0e-12); */
+      //semi-implicit quadratic term
+      uc = sqrt(uStar*uStar+vStar*vStar*+wStar*wStar); 
+      duc_du = 0.0;
+      duc_dv = 0.0;
       /* duc_dw = w/(uc+1.0e-12); */
 
       mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s);
       mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s);
       /* mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_s); */
-
-      dmom_u_source[0] = H_s*viscosity*(alpha + beta*(uc + u*duc_du));
-      dmom_u_source[1] = H_s*viscosity*beta*u*duc_dv;
+      
+      dmom_u_source[0] = H_s*viscosity*(alpha + beta*uc + beta*duc_du*(u-u_s));
+      dmom_u_source[1] = H_s*viscosity*beta*duc_dv*(u-u_s);
       /* dmom_u_source[2] = H_s*viscosity*beta*u*duc_dw; */
     
-      dmom_v_source[0] = H_s*viscosity*beta*v*duc_du;
-      dmom_v_source[1] = H_s*viscosity*(alpha + beta*(uc + v*duc_dv));
+      dmom_v_source[0] = H_s*viscosity*beta*duc_du*(v-v_s);
+      dmom_v_source[1] = H_s*viscosity*(alpha + beta*uc + beta*duc_dv*(v-v_s));
       /* dmom_v_source[2] = H_s*viscosity*beta*w*duc_dw; */
 
       /* dmom_w_source[0] = H_s*viscosity*beta*w*duc_du; */
@@ -2017,9 +2026,12 @@ namespace proteus
 						useVF,
 						vf[eN_k],
 						phi[eN_k],
-						u,//q_velocity_sge[eN_k_nSpace+0],//u
-						v,//q_velocity_sge[eN_k_nSpace+1],//v
-						w,//q_velocity_sge[eN_k_nSpace+2],//w
+						u,
+						v,
+						w,
+						q_velocity_sge[eN_k_nSpace+0],
+						q_velocity_sge[eN_k_nSpace+1],
+						q_velocity_sge[eN_k_nSpace+2],
 						eps_solid[elementFlags[eN]],
 						phi_solid[eN_k],
 						q_velocity_solid[eN_k_nSpace+0],
@@ -3621,9 +3633,12 @@ namespace proteus
 						useVF,
 						vf[eN_k],
 						phi[eN_k],
-						u,//q_velocity_sge[eN_k_nSpace+0],//u
-						v,//q_velocity_sge[eN_k_nSpace+1],//v
-						w,//q_velocity_sge[eN_k_nSpace+2],//w
+						u,
+						v,
+						w,
+						q_velocity_sge[eN_k_nSpace+0],
+						q_velocity_sge[eN_k_nSpace+1],
+						q_velocity_sge[eN_k_nSpace+2],
 						eps_solid[elementFlags[eN]],
 						phi_solid[eN_k],
 						q_velocity_solid[eN_k_nSpace+0],

@@ -6,7 +6,7 @@ Work in progress
 TO ADD TO TESTS:
 setTwoPhaseVelocityInlet()
 setHydrostaticPressureOutlet()
-hydrostaticPressureOutletWithDepth()
+setHydrostaticPressureOutletWithDepth()
 """
 
 
@@ -26,17 +26,17 @@ Profiling.procID = comm.rank()
 log("Testing BoundaryConditions")
 
 
-def create_BC(folder=None, b_or=None, b_i=None):
+def create_BC(folder=None, b_or=None, b_i=0, nd=2):
     if folder is None:
-        return BC_Base(b_or=b_or, b_i=b_i)
+        return BC_Base(b_or=b_or, b_i=b_i, nd=nd)
     if folder == 'mprans':
-        return BC_RANS(b_or=b_or, b_i=b_i)
+        return BC_RANS(b_or=b_or, b_i=b_i, nd=nd)
 
 def get_random_x(start=0., stop=10.):
     x1 = random.uniform(start, stop)
     x2 = random.uniform(start, stop)
     x3 = random.uniform(start, stop)
-    return [x1, x2, x3]
+    return np.array([x1, x2, x3])
 
 def get_time_array(start=0, stop=5, steps=100):
     return np.linspace(0, 5, 100)
@@ -53,9 +53,8 @@ class TestBC(unittest.TestCase):
 
     def test_bc_base(self):
         BC = create_BC()
-        BC.newGlobalBC('test1', 4)
-
-        npt.assert_equal(BC.test1, 4)
+        #BC.newGlobalBC('test1', 4)
+        #npt.assert_equal(BC.test1, 4)
 
     def test_constantBC(self):
         t_list = get_time_array()
@@ -161,45 +160,48 @@ class TestBC(unittest.TestCase):
 
     def test_open_air(self):
         BC = create_BC(folder='mprans')
-        BC.setFreeSlip()
-        u_adv, v_adv, w_adv,p_adv, u_diff, v_diff, w_diff, k_dir, d_diff, vof_adv = [], [], [], [], [], [], [], [], [], []
+        BC = create_BC(folder='mprans', b_or=np.array([[1., 1., 1.]]), b_i=0)
+        BC.setAtmosphere()
+        p_dir, u_dir, v_dir, w_dir, vof_dir, u_diff, v_diff, w_diff, k_diff, d_diff = [], [], [], [], [], [], [], [], [], []
         t_list = get_time_array()
         for t in t_list:
             x = get_random_x()
-            u_adv += [BC.u_advective.uOfXT(x, t)]
-            v_adv += [BC.v_advective.uOfXT(x, t)]
-            w_adv += [BC.w_advective.uOfXT(x, t)]
-            p_adv += [BC.p_advective.uOfXT(x, t)]
+            p_dir += [BC.p_dirichlet.uOfXT(x, t)]
+            u_dir += [BC.u_dirichlet.uOfXT(x, t)]
+            v_dir += [BC.v_dirichlet.uOfXT(x, t)]
+            w_dir += [BC.w_dirichlet.uOfXT(x, t)]
+            vof_dir += [BC.vof_dirichlet.uOfXT(x, t)]
             u_diff += [BC.u_diffusive.uOfXT(x, t)]
             v_diff += [BC.v_diffusive.uOfXT(x, t)]
             w_diff += [BC.w_diffusive.uOfXT(x, t)]
-            k_dir += [BC.k_dirichlet.uOfXT(x, t)]
+            k_diff += [BC.k_diffusive.uOfXT(x, t)]
             d_diff += [BC.dissipation_diffusive.uOfXT(x, t)]
-            vof_adv += [BC.vof_advective.uOfXT(x, t)]
         zeros = np.zeros(len(t_list))
-        npt.assert_equal(BC.p_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.u_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.v_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.w_dirichlet.uOfXT, None)
-        npt.assert_equal(BC.vof_dirichlet.uOfXT, None)
-        npt.assert_equal(k_dir, zeros)
+        vofAir = zeros + 1.
+        npt.assert_equal(p_dir, zeros)
+        npt.assert_equal(u_dir, zeros)
+        npt.assert_equal(v_dir, zeros)
+        npt.assert_equal(w_dir, zeros)
+        npt.assert_equal(vof_dir, vofAir)
+        npt.assert_equal(BC.k_dirichlet.uOfXT, None)
         npt.assert_equal(BC.dissipation_dirichlet.uOfXT, None)
-        npt.assert_equal(p_adv, zeros)
-        npt.assert_equal(u_adv, zeros)
-        npt.assert_equal(v_adv, zeros)
-        npt.assert_equal(w_adv, zeros)
-        npt.assert_equal(vof_adv, zeros)
+        npt.assert_equal(BC.p_advective.uOfXT, None)
+        npt.assert_equal(BC.u_advective.uOfXT, None)
+        npt.assert_equal(BC.v_advective.uOfXT, None)
+        npt.assert_equal(BC.w_advective.uOfXT, None)
+        npt.assert_equal(BC.vof_advective.uOfXT, None)
         npt.assert_equal(BC.k_advective.uOfXT, None)
         npt.assert_equal(BC.dissipation_advective.uOfXT, None)
         npt.assert_equal(u_diff, zeros)
         npt.assert_equal(v_diff, zeros)
         npt.assert_equal(w_diff, zeros)
+        npt.assert_equal(k_diff, zeros)
         npt.assert_equal(d_diff, zeros)
         # check if other BC are None
     # def test_unsteady_two_phase_velocity_inlet(self):
 
     def test_set_tank(self):
-        BC = create_BC(folder='mprans', b_or=[[0., 1., 0.]], b_i=0)
+        BC = create_BC(folder='mprans', b_or=np.array([[0., 1., 0.]]), b_i=0)
         BC.setTank()
         # checking if other BC leaves setTank BC as it should be
         BC.setFreeSlip()
@@ -223,8 +225,8 @@ class TestBC(unittest.TestCase):
 
     def test_move_mesh(self):
         BC = create_BC(folder='mprans')
-        last_pos = [1., 1., 1.]
-        h = [0., 0., 0.]
+        last_pos = np.array([1., 1., 1.])
+        h = np.array([0., 0., 0.])
         rot_matrix = np.eye(3)
         BC.setMoveMesh(last_pos=last_pos, h=h, rot_matrix=rot_matrix)
         # checking if other BC leaves setTank BC as it should be
@@ -256,7 +258,7 @@ class TestBC(unittest.TestCase):
 
     def test_unsteady_two_phase_velocity_inlet(self):
         from proteus.WaveTools import MonochromaticWaves
-        b_or = [[0., -1., 0.]]
+        b_or = np.array([[0., -1., 0.]])
         b_i = 0
         BC = create_BC(folder='mprans', b_or=b_or, b_i=b_i)
         # creating a wave
@@ -272,7 +274,8 @@ class TestBC(unittest.TestCase):
         #-----
         # set BC
         wind_speed=np.array([1., 2., 3.4])
-        BC.setUnsteadyTwoPhaseVelocityInlet(waves, vert_axis=1,
+        smoothing = 0.
+        BC.setUnsteadyTwoPhaseVelocityInlet(waves, smoothing, vert_axis=1,
                                             wind_speed=wind_speed)
         BC.getContext(ct)
         BC.u_dirichlet.uOfXT = BC.u_dirichlet.init_cython()
@@ -294,18 +297,25 @@ class TestBC(unittest.TestCase):
             waveHeight = waves.mwl+waves.eta(x, t)
             wavePhi = x[1]-waveHeight
             if wavePhi <= 0:
+                H = 0.
                 wave_u = waves.u(x, t)
-            elif wavePhi > 0 and wavePhi < 0.5*ct.ecH*ct.he:
+            elif smoothing > 0 and 0 < wavePhi <= smoothing:
+                H = smoothedHeaviside(0.5*smoothing, wavePhi-0.5*smoothing)
                 x_max = list(x)
                 x_max[1] = waveHeight
                 wave_u = waves.u(x_max, t)
             else:
+                H = 1.
                 wave_u = np.array([0., 0., 0.])
-            Hu = smoothedHeaviside(0.5*ct.ecH*ct.he, wavePhi-0.5*ct.ecH*ct.he)
-            U = Hu*wind_speed + (1-Hu)*wave_u
+            U = H*wind_speed + (1-H)*wave_u
             u_calc += [U]
             p_calc += [np.sum(U*b_or[b_i])]
-            Hvof = smoothedHeaviside(ct.ecH*ct.he, wavePhi)
+            if wavePhi >= smoothing/2.:
+                Hvof = 1.
+            elif smoothing > 0 and -smoothing/2. < wavePhi < smoothing/2.:
+                Hvof = smoothedHeaviside(smoothing, wavePhi)
+            elif wavePhi <= -smoothing/2.:
+                Hvof = 0.
             vof_calc += [Hvof]
         u_calc = np.array(u_calc)
         vof_calc = np.array(vof_calc)

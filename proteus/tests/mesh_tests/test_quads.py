@@ -5,16 +5,14 @@ Test module for 2D Quadrilateral Meshes
 
 """
 from proteus.iproteus import *
-from proteus.tests import TestTools
-from proteus import Comm
-comm = Comm.get()
-proteus.tests.TestTools.addSubFolders( inspect.currentframe() )
+from proteus.test_utils import TestTools
+TestTools.addSubFolders( inspect.currentframe() )
+
 import stokes_2d_p
 import stokes_2d_n
-#Profiling.logLevel=7
-#Profiling.verbose=True
 import pytest
 import inspect
+
 pytestmark = pytest.mark.meshtest
 
 def test_mesh_build():
@@ -40,15 +38,14 @@ def test_mesh_build():
     assert mlMesh.meshList[1].nElements_global == 4*(nnx-1)*(nny-1), 'Mesh generator has built incorrect number of quads'
 
 class Test2DStokesOnQuads():
-    """ Runs a simple 2D Poiseulle Stokes problem on Quads with TH elements """
+    """ Runs a 2D Poiseulle Stokes problem on Quads with TH elements """
+
     @classmethod    
     def setup_class(cls):
-        """ Initialize the test problem """
         pass
 
     @classmethod
     def teardown_class(cls):
-        """Pass """
         pass
 
     def setup_method(self,method):
@@ -76,13 +73,17 @@ class Test2DStokesOnQuads():
                     "reference_simplex.poly",
                     "proteus.log",
                     "poiseulleFlow.xmf",
-                    "poiseulleFlow.h5"]
-        proteus.tests.TestTools.closeFiles(Filelist)
+                    "poiseulleFlow.h5",
+                    "poiseulleFlow0.h5"]
+        TestTools.removeFiles(Filelist)
        
     def test_01_FullRun(self):
         import filecmp
         self.ns.calculateSolution('test1')
-        relpath = "comparison_files/poiseulle_xmf.output"
+        if self.ns.ar[0].global_sync:
+            relpath = "comparison_files/poiseulle_global_xmf.output"
+        else:
+            relpath = "comparison_files/poiseulle_xmf.output"
         xmf_file = filecmp.cmp('poiseulleFlow.xmf',os.path.join(self._scriptdir,relpath))
         assert xmf_file == True, '******** xmf_file compare failed **********'
 
