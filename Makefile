@@ -314,12 +314,14 @@ jupyter:
 	@echo "Enabling jupyter notebook/lab/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
 	pip install configparser
-	pip install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0 hide_code==0.4.0
+	pip install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0 hide_code==0.4.0 matplotlib ipympl ipymesh
 	ipcluster nbextension enable --user
 	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
 	jupyter nbextension enable --py --sys-prefix bqplot
 	jupyter nbextension enable --py --sys-prefix pythreejs
+	jupyter nbextension enable --py --sys-prefix ipympl
+	jupyter nbextension enable --py --sys-prefix ipymesh
 	jupyter nbextension enable --py --sys-prefix ipyleaflet
 	jupyter nbextension install --py --sys-prefix hide_code
 	jupyter nbextension enable --py --sys-prefix hide_code
@@ -338,3 +340,12 @@ lfs:
 	tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
 	cd git-lfs-1.5.5 && PREFIX=${HOME} ./install.sh
 	export PATH=${HOME}/bin:${PATH}
+
+hashdist_package:
+	cp stack/default.yaml stack/proteus_stack.yaml
+	echo "  proteus:" >> stack/proteus_stack.yaml
+	sed -i '/sources:/c\#sources:' stack/pkgs/proteus.yaml
+	sed -i '/- key:/c\# -key:' stack/pkgs/proteus.yaml
+	sed -i '/  url:/c\#  url:' stack/pkgs/proteus.yaml
+	./hashdist/bin/hit fetch https://github.com/erdc-cm/proteus/archive/${PROTEUS_VERSION}.zip >> stack/pkgs/proteus.yaml
+	cd stack && ${PROTEUS}/hashdist/bin/hit build -v proteus_stack.yaml
