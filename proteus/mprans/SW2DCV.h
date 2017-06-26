@@ -1245,7 +1245,8 @@ namespace proteus
 				   // Quant of interests
 				   double* quantDOFs,
 				   // Lumped mass matrix
-				   double* ML
+				   double* ML, 
+				   int SECOND_CALL_CALCULATE_RESIDUAL
 				   )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
@@ -6687,7 +6688,8 @@ namespace proteus
 			   // Quant of interests
 			   double* quantDOFs,
 			   // Lumped mass matrix
-			   double* ML)
+			   double* ML, 
+			   int SECOND_CALL_CALCULATE_RESIDUAL)
     {
       //FOR FRICTION//
       double n2 = std::pow(mannings,2.);

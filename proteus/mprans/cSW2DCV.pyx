@@ -1118,7 +1118,8 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double dt, 
 			       double mannings,						
 			       double* quantDOFs, 
-			       double* ML)
+			       double* ML, 
+			       int SECOND_CALL_CALCULATE_RESIDUAL)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -3703,7 +3704,8 @@ cdef class cSW2DCV_base:
 			 double dt, 
 			 double mannings,
 			 numpy.ndarray quantDOFs, 
-			 numpy.ndarray ML):
+			 numpy.ndarray ML, 
+			 int SECOND_CALL_CALCULATE_RESIDUAL):
        self.thisptr.calculateResidual(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -3844,7 +3846,8 @@ cdef class cSW2DCV_base:
 	    dt, 
 	    mannings,
 	    <double*> quantDOFs.data,
-	    <double*> ML.data
+	    <double*> ML.data, 
+	    SECOND_CALL_CALCULATE_RESIDUAL
 	    )
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,

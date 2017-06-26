@@ -414,7 +414,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         self.inf_norm_hu=[] #To test 1D well balancing
         self.firstCalculateResidualCall=True
-        self.auxiliaryCallCalculateResidual=False
+        self.secondCallCalculateResidual=False
         self.postProcessing = False#this is a hack to test the effect of post-processing
         #
         #set the objects describing the method and boundary conditions
@@ -1293,7 +1293,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.dt, 
             self.coefficients.mannings,
             self.quantDOFs, 
-            self.ML)
+            self.ML, 
+            self.secondCallCalculateResidual)
 
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
@@ -1303,7 +1304,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.timeIntegration.dt=self.timeIntegration.runCFL/globalMax(self.edge_based_cfl.max())
         #logEvent("...   Time step = " + str(self.timeIntegration.dt),level=2)
 
-        if (self.auxiliaryCallCalculateResidual==False):
+        if (self.secondCallCalculateResidual==False):
             edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
             cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
             logEvent("...   Current dt = " + str(self.timeIntegration.dt),level=4)
