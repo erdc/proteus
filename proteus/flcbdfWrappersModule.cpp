@@ -3000,7 +3000,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 			 weights_subdomain,
 			 &petscAdjacency);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   //const double max_rss_gb(0.75*3.25);//half max mem per  core  on topaz
-  const double max_rss_gb(0.75*990.0);//half max mem per  core  on topaz
+  const double max_rss_gb(0.9*3.25);//half max mem per  core  on topaz
   ierr = enforceMemoryLimit(rank, max_rss_gb,"Done allocating MPIAdj");CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
   MatPartitioning petscPartition;
   ierr = MatPartitioningCreate(PROTEUS_COMM_WORLD,&petscPartition);CHKERRABORT(PROTEUS_COMM_WORLD, ierr);
