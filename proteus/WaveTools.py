@@ -693,7 +693,7 @@ def decompose_tseries(time,eta,dt):
 
 class  SteadyCurrent:
     """
-    This class is used for generating 1st order solitary wave
+    This class is used for generating a steady current
 
     Parameters
     ----------
