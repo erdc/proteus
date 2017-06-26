@@ -25,12 +25,6 @@ RUN jupyter kernelspec install-self
 
 USER $NB_USER
 
-RUN cd ~/.jupyter && \
-    ipython profile create mpi --parallel && \
-    echo '\nc.NotebookApp.server_extensions.append("ipyparallel.nbextension")' >> /home/$NB_USER/.jupyter/jupyter_notebook_config.py && \
-    echo "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\nc.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" \
-          >> /home/$NB_USER/.ipython/profile_mpi/ipcluster_config.py
-
 # Import matplotlib the first time to build the font cache.
 ENV XDG_CACHE_HOME /home/$NB_USER/.cache/
 RUN MPLBACKEND=Agg python -c "import matplotlib.pyplot"
