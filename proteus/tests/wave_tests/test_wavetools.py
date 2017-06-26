@@ -382,6 +382,27 @@ class TestWaveParameters(unittest.TestCase):
         S_PM2 =  mitsuyasu(thetas,f,f0,s)
         self.assertTrue(np.array_equal(S_PM,S_PM2))
 
+class VerifySteadyCurrent(unittest.TestCase):
+    def testCurrent(self):
+        from proteus.WaveTools import SteadyCurrent
+        U = np.array([2.5,2.,1.])
+        mwl = 0.5
+        xx = np.array([2.,0.,0.,])
+        t = 0.1
+
+        # no ramptime
+        WW = SteadyCurrent(U,mwl)
+        self.assertAlmostEqual(U.all(), WW.u(xx,t).all())
+        self.assertAlmostEqual(mwl, WW.eta(xx,t))
+
+        # with ramp
+        Up = 0.5*U
+        WW = SteadyCurrent(U,mwl,0.2)
+        self.assertAlmostEqual(Up.all(), WW.u(xx,t).all())
+        self.assertAlmostEqual(mwl, WW.eta(xx,t))
+
+        
+        
 class VerifySolitaryWave(unittest.TestCase):
     def testSolitary(self):
         from proteus.WaveTools import SolitaryWave

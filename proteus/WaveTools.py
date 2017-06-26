@@ -14,8 +14,9 @@ from Profiling import logEvent
 import time as tt
 import sys as sys
 
-__all__ = ['Solitarywave',
-	    'MonochromaticWaves',
+__all__ = ['SteadyCurrent',
+           'SolitaryWave',
+	   'MonochromaticWaves',
            'RandomWaves',
            'MultiSpectraRandomWaves',
            'DirectionalWaves',
@@ -689,6 +690,66 @@ def decompose_tseries(time,eta,dt):
     results.append(pp)
     results.append(setup)
     return results
+
+class  SteadyCurrent:
+    """
+    This class is used for generating 1st order solitary wave
+
+    Parameters
+    ----------
+    U: numpy.ndarray
+            Current velocity in vector form
+    mwl : float
+            Still water level
+    rampTime : float
+            Ramp time for current
+
+            """
+    def __init__(self,
+                 U,
+                 mwl,
+                 rampTime = 0.):
+        self.mwl = mwl
+        self.U = U
+        self.ramp = rampTime
+    def eta(self,x,t):
+        """Calculates free surface elevation (SolitaryWave class)
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
+        """
+        return  self.mwl
+    def u(self,x,t):
+        """Calculates wave velocity vector (SolitaryWave class).
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
+        """
+        if(t<self.ramp):
+            return self.U*t/self.ramp
+        else:
+            return self.U
+
+
+
 
 class  SolitaryWave:
     """
