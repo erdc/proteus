@@ -252,9 +252,9 @@ Wall clock percentage of top 20 calls
 def ProfilingDtor():
     global procID, verbose
     if procID == None:
-        verbose=True
+        verbose=False
         logEvent(
             "Proteus.Profiling never initialized. Doing it at exit.")
         procID = 0
-        openLog("proteus_default.log",level=11,logLocation=".")
+        openLog("proteus_default.log",level=11,logLocation="/tmp")
     closeLog()
