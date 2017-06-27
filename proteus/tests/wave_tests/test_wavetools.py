@@ -382,6 +382,27 @@ class TestWaveParameters(unittest.TestCase):
         S_PM2 =  mitsuyasu(thetas,f,f0,s)
         self.assertTrue(np.array_equal(S_PM,S_PM2))
 
+class VerifySteadyCurrent(unittest.TestCase):
+    def testCurrent(self):
+        from proteus.WaveTools import SteadyCurrent
+        U = np.array([2.5,2.,1.])
+        mwl = 0.5
+        xx = np.array([2.,0.,0.,])
+        t = 0.1
+
+        # no ramptime
+        WW = SteadyCurrent(U,mwl)
+        self.assertAlmostEqual(U.all(), WW.u(xx,t).all())
+        self.assertAlmostEqual(mwl, WW.eta(xx,t))
+
+        # with ramp
+        Up = 0.5*U
+        WW = SteadyCurrent(U,mwl,0.2)
+        self.assertAlmostEqual(Up.all(), WW.u(xx,t).all())
+        self.assertAlmostEqual(mwl, WW.eta(xx,t))
+
+        
+        
 class VerifySolitaryWave(unittest.TestCase):
     def testSolitary(self):
         from proteus.WaveTools import SolitaryWave
@@ -1730,7 +1751,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
 class CheckFailureRandomNLWaves(unittest.TestCase):
     def testFailures(self):
         waveDir = np.array([0.,0.,1.])
-        Vgen = np.array([0.,0.,-1])
+        Lgen = np.array([0.,0.,-1])
         from proteus.WaveTools import RandomNLWaves
         RR = RandomNLWaves(0,100,1.,1.,0.,10.,waveDir,np.array([0,-9.81,0]),100,2.,"JONSWAP", spectral_params= None )
         xi = np.array([0.,0.,0.])
@@ -1749,7 +1770,7 @@ class CheckFailureRandomNLWaves(unittest.TestCase):
             f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","blah")
         self.assertEqual(cm3.exception.code, 1 )
         with self.assertRaises(SystemExit) as cm4:
-            f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","long",False,Vgen)
+            f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","long",False,Lgen)
         self.assertEqual(cm4.exception.code, 1 )
 
 
