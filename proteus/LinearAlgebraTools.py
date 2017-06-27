@@ -485,8 +485,6 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         operator : :class:`proteus.superluWrappers.SparseMatrix`
             Matrix to be turned into a parallel petsc matrix.
         """
-        comm = Comm.get()
-        
         par_bs = ParInfo_petsc4py.par_bs
         par_n = ParInfo_petsc4py.par_n
         par_N = ParInfo_petsc4py.par_N
@@ -511,7 +509,6 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         nzval_petsc2proteus = colind.copy()
         rowptr_petsc[0] = 0
 
-        comm.beginSequential()
         for i in range(par_n+par_nghost):
             start_proteus = rowptr[petsc2proteus_subdomain[i]]
             end_proteus = rowptr[petsc2proteus_subdomain[i]+1]
@@ -527,7 +524,6 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
                                           numpy.arange(start_proteus,end_proteus)[j_sorted]):
                 nzval_petsc2proteus[j_petsc] = j_proteus
                 nzval_proteus2petsc[j_proteus] = j_petsc
-        comm.endSequential()
 
         proteus_a = {}
         petsc_a = {}
