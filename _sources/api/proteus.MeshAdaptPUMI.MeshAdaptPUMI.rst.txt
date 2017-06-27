@@ -1,0 +1,7 @@
+proteus.MeshAdaptPUMI.MeshAdaptPUMI module
+==========================================
+
+.. automodule:: proteus.MeshAdaptPUMI.MeshAdaptPUMI
+    :members:
+    :undoc-members:
+    :show-inheritance:

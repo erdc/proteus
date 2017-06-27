@@ -1,0 +1,15 @@
+proteus.MeshAdaptPUMI package
+=============================
+
+.. automodule:: proteus.MeshAdaptPUMI
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   proteus.MeshAdaptPUMI.MeshAdaptPUMI
+
