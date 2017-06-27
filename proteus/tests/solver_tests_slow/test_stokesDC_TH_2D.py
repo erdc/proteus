@@ -88,7 +88,6 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
         actual_log = TestTools.NumericResults.build_from_proteus_log('proteus.log')
         expected_log = TestTools.NumericResults.build_from_proteus_log(os.path.join(self._scriptdir,
                                                                                     relpath))
-
         plot_lst = [(1.0,0,0),(1.0,1,0),(1.0,2,0)]
         L1 = expected_log.get_ksp_resid_it_info(plot_lst)
         L2 = actual_log.get_ksp_resid_it_info(plot_lst)
