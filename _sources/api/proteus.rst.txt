@@ -11,6 +11,7 @@ Subpackages
 
 .. toctree::
 
+    proteus.MeshAdaptPUMI
     proteus.config
     proteus.mprans
     proteus.test_utils
@@ -75,6 +76,7 @@ Submodules
    proteus.deim_utils
    proteus.iproteus
    proteus.subsurfaceTransportFunctions
+   proteus.test
    proteus.testStuff
    proteus.version
    proteus.waveFunctions

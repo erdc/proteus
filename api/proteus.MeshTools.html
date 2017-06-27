@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>proteus.MeshTools module &#8212; Proteus 1.3.1 documentation</title>
+    <title>proteus.MeshTools module &#8212; Proteus 1.3.3 documentation</title>
     
     <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,7 +15,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '1.3.1',
+        VERSION:     '1.3.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -56,7 +56,7 @@
         </button>
         <a class="navbar-brand" href="../index.html">
           proteus</a>
-        <span class="navbar-text navbar-version pull-left"><b>1.3.1</b></span>
+        <span class="navbar-text navbar-version pull-left"><b>1.3.3</b></span>
       </div>
 
         <div class="collapse navbar-collapse nav-collapse">
@@ -356,6 +356,15 @@ of Edges.</p>
 <dd><p>A partition of a domain in R^n into elements.</p>
 <p>This is the base class for meshes. Contains routines for
 plotting the edges of the mesh in Matlab</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><strong>elementBoundariesArray</strong> (<em>array type</em>) &#8211; This array lists the global edge number associated with every
+edge or face of an element.</td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt id="proteus.MeshTools.Mesh.partitionMesh">
 <code class="descname">partitionMesh</code><span class="sig-paren">(</span><em>nLayersOfOverlap=1</em>, <em>parallelPartitioningType=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.Mesh.partitionMesh" title="Permalink to this definition">¶</a></dt>
@@ -1066,6 +1075,25 @@ the edges and nodes from the boundary triangles.</p>
 
 </dd></dl>
 
+<dl class="function">
+<dt id="proteus.MeshTools.buildReferenceSimplex">
+<code class="descclassname">proteus.MeshTools.</code><code class="descname">buildReferenceSimplex</code><span class="sig-paren">(</span><em>nd=2</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.buildReferenceSimplex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create and return a Proteus mesh object for the reference
+element.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>nd</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Dimension of reference element</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>mesh</strong> &#8211; Simplex mesh</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#proteus.MeshTools.TriangularMesh" title="proteus.MeshTools.TriangularMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.TriangularMesh</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="class">
 <dt id="proteus.MeshTools.TriangularMesh">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">TriangularMesh</code><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.TriangularMesh" title="Permalink to this definition">¶</a></dt>
@@ -1739,6 +1767,45 @@ two non-parallel edges of the facet (in three-space).  Any vertex of the facet w
 <p>:return a list of pairs of intersections through the mesh</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="proteus.MeshTools.runTetgen">
+<code class="descclassname">proteus.MeshTools.</code><code class="descname">runTetgen</code><span class="sig-paren">(</span><em>polyfile</em>, <em>baseFlags='Yp'</em>, <em>name=''</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.runTetgen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate tetgen files from a polyfile.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>polyfile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Filename with appropriate data for tengen.</li>
+<li><strong>baseFlags</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Standard Tetgen options for generation</li>
+<li><strong>name</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="proteus.MeshTools.genMeshWithTetgen">
+<code class="descclassname">proteus.MeshTools.</code><code class="descname">genMeshWithTetgen</code><span class="sig-paren">(</span><em>polyfile</em>, <em>nbase=1</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.genMeshWithTetgen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a mesh from a set of tetgen files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>polyfile</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Filename base for tetgen files</li>
+<li><strong>nbase</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; </li>
+<li><strong>Returns</strong> &#8211; </li>
+<li><strong>mesh</strong> (<a class="reference internal" href="#proteus.MeshTools.TetrahedralMesh" title="proteus.MeshTools.TetrahedralMesh"><code class="xref py py-class docutils literal"><span class="pre">proteus.MeshTools.TetrahedralMesh</span></code></a>) &#8211; Simplex mesh</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="class">
 <dt id="proteus.MeshTools.MeshOptions">
 <em class="property">class </em><code class="descclassname">proteus.MeshTools.</code><code class="descname">MeshOptions</code><span class="sig-paren">(</span><em>domain</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.MeshOptions" title="Permalink to this definition">¶</a></dt>
@@ -1842,9 +1909,10 @@ default for 2D: he**2/2; default for 3D: he**3/6</td>
 </dd></dl>
 
 <dl class="function">
-<dt id="proteus.MeshTools.msh2triangle">
-<code class="descclassname">proteus.MeshTools.</code><code class="descname">msh2triangle</code><span class="sig-paren">(</span><em>fileprefix</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.msh2triangle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts a .msh file (Gmsh) to .ele .edge .node files (triangle)</p>
+<dt id="proteus.MeshTools.msh2simplex">
+<code class="descclassname">proteus.MeshTools.</code><code class="descname">msh2simplex</code><span class="sig-paren">(</span><em>fileprefix</em>, <em>nd</em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/erdc-cm/proteus/tree/master/proteus/MeshTools.py"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#proteus.MeshTools.msh2simplex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a .msh file (Gmsh) to .ele .edge .node files (triangle).
+(!) Works only with triangle elements in 2D and tetrahedral elements in 3D.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

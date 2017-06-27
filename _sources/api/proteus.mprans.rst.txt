@@ -12,6 +12,7 @@ Submodules
 .. toctree::
 
    proteus.mprans.ArchiveBeams
+   proteus.mprans.BodyDynamics
    proteus.mprans.BoundaryConditions
    proteus.mprans.Dissipation
    proteus.mprans.Kappa
@@ -26,6 +27,7 @@ Submodules
    proteus.mprans.RANS2P
    proteus.mprans.RANS2P_IB
    proteus.mprans.RANS3PF
+   proteus.mprans.RANS3PF_comp
    proteus.mprans.RANS3PSed
    proteus.mprans.RDLS
    proteus.mprans.RDLS3P
