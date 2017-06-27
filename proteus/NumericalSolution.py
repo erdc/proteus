@@ -295,7 +295,6 @@ class NS_base:  # (HasTraits):
                 if comm.rank() == 0 and (p.genMesh or not (os.path.exists(p.domain.polyfile+".ele") and
                                                            os.path.exists(p.domain.polyfile+".node") and
                                                            os.path.exists(p.domain.polyfile+".face"))):
-<<<<<<< c1453014ae0aae6b1046468d1c51aadf7b87d82b
                     if p.domain.use_gmsh is True:
                         logEvent("Running gmsh to generate 3D mesh for "+p.name,level=1)
                         gmsh_cmd = "time gmsh {0:s} -v 10 -3 -o {1:s} -format msh".format(fileprefix+'.geo', p.domain.geofile+'.msh')
