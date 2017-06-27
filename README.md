@@ -6,8 +6,8 @@ rapidly developing computer models and numerical methods.
 # Installation
 
 ```bash
-make
-make check
+make develop
+make test
 ```
 https://github.com/erdc-cm/proteus/wiki/How-to-Build-Proteus-Using-HashDist
 
