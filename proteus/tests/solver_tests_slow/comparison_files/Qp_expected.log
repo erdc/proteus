@@ -1,46 +1,46 @@
-[      88] Initializing NumericalSolution for drivenCavityStokesTrial
+[      80] Initializing NumericalSolution for drivenCavityStokesTrial
  System includes: 
 drivenCavityStokesTrial
 
-[      88] Setting Archiver(s)
-[      88] Setting up MultilevelMesh
-[      88] Building one multilevel mesh for all models
-[      88] Generating mesh for drivenCavityStokesTrial
-[      88] Calling Triangle to generate 2D mesh fordrivenCavityStokesTrial
-[      88] TriangleBaseMesh nbase=1 baseFlags= VApq30Dena0.01000000 
-[      88] Converting to Proteus Mesh
-[      88] Generating 3-level mesh from coarse Triangle mesh
-[      88] Partitioning mesh among 1 processors using partitioningType = 1
-[      88] Number of Subdomain Elements Owned= 624
-[      88] Number of Subdomain Elements = 624
-[      88] Number of Subdomain Nodes Owned= 345
-[      88] Number of Subdomain Nodes = 345
-[      88] Number of Subdomain elementBoundaries Owned= 968
-[      88] Number of Subdomain elementBoundaries = 968
-[      88] Number of Subdomain Edges Owned= 968
-[      88] Number of Subdomain Edges = 968
-[      88] Finished partitioning
-[      88] Partitioning mesh among 1 processors using partitioningType = 1
-[      88] Number of Subdomain Elements Owned= 2496
-[      88] Number of Subdomain Elements = 2496
-[      88] Number of Subdomain Nodes Owned= 1313
-[      88] Number of Subdomain Nodes = 1313
-[      88] Number of Subdomain elementBoundaries Owned= 3808
-[      88] Number of Subdomain elementBoundaries = 3808
-[      88] Number of Subdomain Edges Owned= 3808
-[      88] Number of Subdomain Edges = 3808
-[      88] Finished partitioning
-[      88] Partitioning mesh among 1 processors using partitioningType = 1
-[      88] Number of Subdomain Elements Owned= 9984
-[      88] Number of Subdomain Elements = 9984
-[      88] Number of Subdomain Nodes Owned= 5121
-[      88] Number of Subdomain Nodes = 5121
-[      88] Number of Subdomain elementBoundaries Owned= 15104
-[      88] Number of Subdomain elementBoundaries = 15104
-[      88] Number of Subdomain Edges Owned= 15104
-[      88] Number of Subdomain Edges = 15104
-[      88] Finished partitioning
-[      88] *** Global ***
+[      80] Setting Archiver(s)
+[      80] Setting up MultilevelMesh
+[      80] Building one multilevel mesh for all models
+[      80] Generating mesh for drivenCavityStokesTrial
+[      80] Calling Triangle to generate 2D mesh fordrivenCavityStokesTrial
+[      80] TriangleBaseMesh nbase=1 baseFlags= VApq30Dena0.01000000 
+[      80] Converting to Proteus Mesh
+[      80] Generating 3-level mesh from coarse Triangle mesh
+[      80] Partitioning mesh among 1 processors using partitioningType = 1
+[      80] Number of Subdomain Elements Owned= 624
+[      80] Number of Subdomain Elements = 624
+[      80] Number of Subdomain Nodes Owned= 345
+[      80] Number of Subdomain Nodes = 345
+[      80] Number of Subdomain elementBoundaries Owned= 968
+[      80] Number of Subdomain elementBoundaries = 968
+[      80] Number of Subdomain Edges Owned= 968
+[      80] Number of Subdomain Edges = 968
+[      80] Finished partitioning
+[      80] Partitioning mesh among 1 processors using partitioningType = 1
+[      80] Number of Subdomain Elements Owned= 2496
+[      80] Number of Subdomain Elements = 2496
+[      80] Number of Subdomain Nodes Owned= 1313
+[      80] Number of Subdomain Nodes = 1313
+[      80] Number of Subdomain elementBoundaries Owned= 3808
+[      80] Number of Subdomain elementBoundaries = 3808
+[      80] Number of Subdomain Edges Owned= 3808
+[      80] Number of Subdomain Edges = 3808
+[      80] Finished partitioning
+[      80] Partitioning mesh among 1 processors using partitioningType = 1
+[      80] Number of Subdomain Elements Owned= 9984
+[      80] Number of Subdomain Elements = 9984
+[      80] Number of Subdomain Nodes Owned= 5121
+[      80] Number of Subdomain Nodes = 5121
+[      80] Number of Subdomain elementBoundaries Owned= 15104
+[      80] Number of Subdomain elementBoundaries = 15104
+[      80] Number of Subdomain Edges Owned= 15104
+[      80] Number of Subdomain Edges = 15104
+[      80] Finished partitioning
+[      80] *** Global ***
 Number of triangles  : 624
 Number of edges : 968
 Number of nodes : 345
@@ -50,7 +50,7 @@ Number of triangles  : 624
 Number of edges : 968
 Number of nodes : 345
 
-[      88] *** Global ***
+[      80] *** Global ***
 Number of triangles  : 2496
 Number of edges : 3808
 Number of nodes : 1313
