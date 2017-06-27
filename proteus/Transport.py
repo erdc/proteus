@@ -3782,7 +3782,6 @@ class OneLevelTransport(NonlinearEquation):
 
         This function should be called only when the mesh changes.
         """
-        import pdb
         #
         #cek get rid of trickiness
         #
@@ -5645,8 +5644,6 @@ class OneLevelTransport(NonlinearEquation):
         portions of the reaction term, 'r', and boundary condition terms
         This is a temporary fix for linear model reduction.
         """
-        #import pdb
-        #pdb.set_trace()
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
         for ci in self.coefficients.reaction.keys():
@@ -6207,8 +6204,6 @@ class MultilevelTransport:
         self.strideListList=[]
         self.matType = matType
         #mwf debug
-        #import pdb
-        #pdb.set_trace()
         if PhiSpaceTypeDict == None: #by default phi in same space as u
             PhiSpaceTypeDict = TrialSpaceTypeDict
         self.phiSpaceDictList = []
@@ -6219,8 +6214,6 @@ class MultilevelTransport:
             self.trialSpaceListDict[cj]=[]
             self.bcListDict[cj]=[]
         for mesh in mlMesh.meshList:
-       #     import pdb
-       #     pdb.set_trace()
             sdmesh = mesh.subdomainMesh
             memory()
             logEvent("Generating Trial Space",level=2)
@@ -6249,8 +6242,6 @@ class MultilevelTransport:
             else:
                 useWeakDirichletConditions=numericalFluxType.useWeakDirichletConditions
             logEvent("Setting Boundary Conditions-1")
-            import pdb
-#            pdb.set_trace()
             for cj in trialSpaceDict.keys():
                 if not dirichletConditionsSetterDict.has_key(cj):
                     dirichletConditionsSetterDict[cj] = None
@@ -6569,8 +6560,6 @@ class MultilevelTransport:
                         assert(nzval_petsc.shape[0] == colind_petsc.shape[0] == rowptr_petsc[-1] - rowptr_petsc[0])
                         petsc_a = {}
                         proteus_a = {}
-#                        petsc_a = np.zeros((transport.dim, transport.dim),'d')
-#                        proteus_a = np.zeros((transport.dim, transport.dim),'d')
                         for i in range(transport.dim):
                             for j,k in zip(colind[rowptr[i]:rowptr[i+1]],range(rowptr[i],rowptr[i+1])):
                                 nzval[k] = i*transport.dim+j
@@ -6606,7 +6595,7 @@ class MultilevelTransport:
                         ParInfo_petsc4py.proteus2petsc_subdomain = proteus2petsc_subdomain
                         ParInfo_petsc4py.petsc2proteus_subdomain = petsc2proteus_subdomain
                         ParInfo_petsc4py.subdomain2global = subdomain2global
-                        ParInfo_petsc4py.dim = transport.dim                        
+                        ParInfo_petsc4py.dim = transport.dim
                         par_jacobian = ParMat_petsc4py(petsc_jacobian,1,par_n,par_N,par_nghost,
                                                        petsc_subdomain2global_petsc,pde=transport,
                                                        proteus_jacobian=jacobian, nzval_proteus2petsc=nzval_proteus2petsc)
