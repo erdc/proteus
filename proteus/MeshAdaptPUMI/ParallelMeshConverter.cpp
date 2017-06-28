@@ -234,7 +234,6 @@ int MeshAdaptPUMIDrvr::constructGlobalStructures(Mesh &mesh)
      m->end(it);
      apf::destroyGlobalNumbering(global[d]);
    }
-   mesh.edgeNumbering_subdomain2global=mesh.elementBoundaryNumbering_subdomain2global;
    std::memcpy(mesh.edgeNumbering_subdomain2global,mesh.elementBoundaryNumbering_subdomain2global,sizeof(int)*(mesh.subdomainp->nElementBoundaries_global));
   }
 

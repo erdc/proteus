@@ -5353,12 +5353,6 @@ class OneLevelTransport(NonlinearEquation):
         functions by their space
 
         """
-        partitionInfo = FemTools.FiniteElementFunction(self.u[0].femSpace)
-        partitionInfo.name='partitionInfo'
-        comm=Comm.get()
-        for idx in range(self.mesh.nNodes_owned):
-          partitionInfo.dof[idx]=comm.rank()
-
         for ci in range(self.coefficients.nc):
             femSpaceType_ci = self.u[ci].femSpace.__class__
             alreadyWritten = femSpaceWritten.has_key(femSpaceType_ci)
@@ -5382,19 +5376,6 @@ class OneLevelTransport(NonlinearEquation):
                                                                                         t,init=False,meshChanged=meshChanged,tCount=tCount)
 
             self.u[ci].femSpace.writeFunctionXdmf(archive,self.u[ci],tCount)
-        femSpaceType_ci = partitionInfo.femSpace.__class__
-        alreadyWritten = femSpaceWritten.has_key(femSpaceType_ci)
-        if(alreadyWritten):
-          femSpaceWritten[femSpaceType_ci]= partitionInfo.femSpace.writeMeshXdmf(archive,partitionInfo.name,
-                                                                                        t,init=False,
-                                                                                        meshChanged=meshChanged,
-                                                                                        arGrid=femSpaceWritten[femSpaceType_ci],tCount=tCount)
-        else:
-          femSpaceWritten[femSpaceType_ci] = partitionInfo.femSpace.writeMeshXdmf(archive,partitionInfo.name,t,init=False,meshChanged=meshChanged,tCount=tCount)
-        try:
-          partitionInfo.femSpace.writeFunctionXdmf(archive,partitionInfo,tCount)  
-        except RuntimeError:
-          pass
         if writeVectors and self.coefficients.vectorComponents is not None:
             c0 = self.coefficients.vectorComponents[0]
             self.u[c0].femSpace.writeVectorFunctionXdmf(archive,
