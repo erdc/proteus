@@ -6596,6 +6596,7 @@ class MultilevelTransport:
                         ParInfo_petsc4py.petsc2proteus_subdomain = petsc2proteus_subdomain
                         ParInfo_petsc4py.subdomain2global = subdomain2global
                         ParInfo_petsc4py.dim = transport.dim
+                        ParInfo_petsc4py.nzval_proteus2petsc = nzval_proteus2petsc
                         par_jacobian = ParMat_petsc4py(petsc_jacobian,1,par_n,par_N,par_nghost,
                                                        petsc_subdomain2global_petsc,pde=transport,
                                                        proteus_jacobian=jacobian, nzval_proteus2petsc=nzval_proteus2petsc)
@@ -6670,6 +6671,12 @@ class MultilevelTransport:
                     par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                     logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
+                ParInfo_petsc4py.par_bs = 1
+                ParInfo_petsc4py.par_n = par_n
+                ParInfo_petsc4py.par_N = par_N
+                ParInfo_petsc4py.par_nghost = par_nghost
+                ParInfo_petsc4py.subdomain2global = subdomain2global
+                ParInfo_petsc4py.dim = transport.dim
             else:
                 transport.owned_local = numpy.arange(transport.dim)
                 par_u = None

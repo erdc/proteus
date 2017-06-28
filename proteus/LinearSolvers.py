@@ -5,6 +5,7 @@ A hierarchy of classes for linear algebraic system solvers.
    :parts: 1
 """
 from LinearAlgebraTools import *
+import LinearAlgebraTools as LAT
 import FemTools
 import lapackWrappers
 import superluWrappers
@@ -401,7 +402,6 @@ class KSP_petsc4py(LinearSolver):
                               printInfo=printInfo)
         assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
         assert isinstance(par_L,ParMat_petsc4py)
-        
         self.pccontext = None
         self.preconditioner = None
         self.pc = None
@@ -732,7 +732,50 @@ class SchurOperatorConstructor:
         except:
             self.opBuilder = OperatorConstructor_oneLevel(self.L.pde)
 
-    def getQp(self, output_matrix=False, recalculate=False):
+    def _initializeMat(self,jacobian):
+        import Comm
+        comm = Comm.get()
+        transport = self.L.pde
+        rowptr, colind, nzval = jacobian.getCSRrepresentation()
+        rowptr_petsc = rowptr.copy()
+        colind_petsc = colind.copy()
+        nzval[:] = numpy.arange(nzval.shape[0])
+        nzval_petsc = nzval.copy()
+        nzval_proteus2petsc=colind.copy()
+        nzval_petsc2proteus=colind.copy()
+        rowptr_petsc[0] = 0
+        comm.beginSequential()
+        for i in range(LAT.ParInfo_petsc4py.par_n+LAT.ParInfo_petsc4py.par_nghost):
+            start_proteus = rowptr[LAT.ParInfo_petsc4py.petsc2proteus_subdomain[i]]
+            end_proteus = rowptr[LAT.ParInfo_petsc4py.petsc2proteus_subdomain[i]+1]
+            nzrow =  end_proteus - start_proteus
+            rowptr_petsc[i+1] = rowptr_petsc[i] + nzrow
+            start_petsc = rowptr_petsc[i]
+            end_petsc = rowptr_petsc[i+1]
+            petsc_cols_i = LAT.ParInfo_petsc4py.proteus2petsc_subdomain[colind[start_proteus:end_proteus]]
+            j_sorted = petsc_cols_i.argsort()
+            colind_petsc[start_petsc:end_petsc] = petsc_cols_i[j_sorted]
+            nzval_petsc[start_petsc:end_petsc] = nzval[start_proteus:end_proteus][j_sorted]
+            for j_petsc, j_proteus in zip(numpy.arange(start_petsc,end_petsc),
+                                          numpy.arange(start_proteus,end_proteus)[j_sorted]):
+                nzval_petsc2proteus[j_petsc] = j_proteus
+                nzval_proteus2petsc[j_proteus] = j_petsc
+        comm.endSequential()
+        assert(nzval_petsc.shape[0] == colind_petsc.shape[0] == rowptr_petsc[-1] - rowptr_petsc[0])
+        petsc_a = {}
+        proteus_a = {}
+        for i in range(transport.dim):
+            for j,k in zip(colind[rowptr[i]:rowptr[i+1]],range(rowptr[i],rowptr[i+1])):
+                nzval[k] = i*transport.dim+j
+                proteus_a[i,j] = nzval[k]
+                petsc_a[LAT.ParInfo_petsc4py.proteus2petsc_subdomain[i],LAT.ParInfo_petsc4py.proteus2petsc_subdomain[j]] = nzval[k]
+        for i in range(transport.dim):
+            for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],range(rowptr_petsc[i],rowptr_petsc[i+1])):
+                nzval_petsc[k] = petsc_a[i,j]
+        return SparseMat(transport.dim,transport.dim,nzval_petsc.shape[0], nzval_petsc, colind_petsc, rowptr_petsc)
+
+            
+    def initializeQ(self, output_matrix=False, recalculate=False):
         """ Return the pressure mass matrix Qp.
 
         Parameters
@@ -747,12 +790,60 @@ class SchurOperatorConstructor:
         Qp : matrix
             The pressure mass matrix.
         """
-        Qsys_petsc4py = self._massMatrix(recalculate = recalculate)
-        self.Qp = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isp,
-                                             self.linear_smoother.isp)
-        if output_matrix is True:
-            self._exportMatrix(self.Qp,"Qp")
-        return self.Qp
+        import Comm
+        comm = Comm.get()
+        self.opBuilder.attachMassOperator()
+        if comm.size() == 1:
+            self.Q = ParMat_petsc4py(self.opBuilder.MassOperator,
+                                     1,
+                                     LAT.ParInfo_petsc4py.par_n,
+                                     LAT.ParInfo_petsc4py.par_N,
+                                     LAT.ParInfo_petsc4py.par_nghost,
+                                     LAT.ParInfo_petsc4py.subdomain2global)
+        else:
+            self.petsc_Q = self._initializeMat(self.opBuilder.MassOperator)
+            self.Q = ParMat_petsc4py(self.opBuilder.MassOperator,
+                                     1,
+                                     LAT.ParInfo_petsc4py.par_n,
+                                     LAT.ParInfo_petsc4py.par_N,
+                                     LAT.ParInfo_petsc4py.par_nghost,
+                                     LAT.ParInfo_petsc4py.petsc_subdomain2global_petsc,
+                                     pde=self.L.pde,
+                                     proteus_jacobian=self.opBuilder.MassOperator,
+            nzval_proteus2petsc=LAT.ParInfo_petsc4py.nzval_proteus2petsc)
+        self.Q_csr_rep = self.Q.csr_rep
+        self.Q_csr_rep_local = self.Q.csr_rep_local
+        return self.Q
+
+    def updateQ(self, output_matrix=False):
+        """ Return the pressure mass matrix Qp.
+
+        Parameters
+        ----------
+        output_matrix : bool 
+            Determines whether matrix should be exported.
+        recalculate : bool
+            Flag indicating whther matrix should be rebuilt every time it's used
+
+        Returns
+        -------
+        Qp : matrix
+            The pressure mass matrix.
+        """
+        import Comm
+        comm = Comm.get()
+        self.opBuilder.updateMassOperator()
+        self.Q.zeroEntries()
+        if self.Q.proteus_jacobian != None:
+            self.Q_csr_rep[2][self.Q.nzval_proteus2petsc] = self.Q.proteus_csr_rep[2][:]
+        self.Q.setValuesLocalCSR(self.Q_csr_rep_local[0],
+                                 self.Q_csr_rep_local[1],
+                                 self.Q_csr_rep_local[2],
+                                 p4pyPETSc.InsertMode.INSERT_VALUES)
+        self.Q.assemblyBegin()
+        self.Q.assemblyEnd()
+#        if output_matrix is True:
+#            self._exportMatrix(self.Qp,"Qp")
 
     def _massMatrix(self,recalculate=False):
         """ Generates a mass matrix.
@@ -771,9 +862,8 @@ class SchurOperatorConstructor:
         Qsys : matrix
             The system's mass matrix.
         """
-        self.opBuilder.attachMassOperator(recalculate = recalculate)
-        return superlu_2_petsc4py(self.opBuilder.MassOperator)
-                
+        self.opBuilder.attachMassOperator(recalculate = True)
+
 class KSP_Preconditioner:
     """ Base class for PETSCc KSP precondtioners. """
     def __init__(self):
@@ -1002,6 +1092,7 @@ class Schur_Qp(SchurPrecon) :
         """
         SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
         self.operator_constructor = SchurOperatorConstructor(self)
+        self.Q = self.operator_constructor.initializeQ()
 
     def setUp(self,global_ksp):
         """ Attaches the pressure mass matrix to PETSc KSP preconditioner.
@@ -1011,7 +1102,9 @@ class Schur_Qp(SchurPrecon) :
         global_ksp : PETSc KSP object
         """
         # Create the pressure mass matrix and scaxle by the viscosity.
-        self.Qp = self.operator_constructor.getQp()
+        self.operator_constructor.updateQ()
+        self.Qp = self.Q.getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                      self.operator_constructor.linear_smoother.isp)
         self.Qp.scale(1./self.L.pde.coefficients.nu)
         L_sizes = self.Qp.size
         L_range = self.Qp.owner_range
@@ -2227,20 +2320,11 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
     def __init__(self,OLT):
         OperatorConstructor.__init__(self,OLT)
         self._initializeOperatorConstruction()
-        self.massOperatorAttached = False
 
-    def attachMassOperator(self, rho=1., recalculate=False):
-        """Builds a discrete Mass Operator matrix.
-        
-        Arguments
-        ---------
-        rho : float
-            Optional scaling factor for mass inner-products.
-        recalculate : bool
-            Flag indicating mass operator should be recalculated.
-        """
-        if self.massOperatorAttached is True and recalculate is False:
-            return
+    def attachMassOperator(self):
+        """Create the discrete Mass Operator matrix. """
+        import Comm
+        comm = Comm.get()
         self._mass_val = self.model.nzval.copy()
         self._mass_val.fill(0.)
         self.MassOperator = SparseMat(self.model.nFreeVDOF_global,
@@ -2249,6 +2333,13 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                                       self._mass_val,
                                       self.model.colind,
                                       self.model.rowptr)
+
+    def updateMassOperator(self, rho=1.0):
+        self._mass_val.fill(0.)
+        try:
+            rho = self.model.coefficients.rho
+        except:
+            pass
         _nd = self.model.coefficients.nd
         self.MassOperatorCoeff = TransportCoefficients.DiscreteMassMatrix(rho=rho, nd=_nd)
         _t = 1.0
@@ -2269,8 +2360,7 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                                                       Mass_q[('vXw*dV_m',cj,ci)],
                                                       Mass_Jacobian[ci][cj])
         self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.MassOperator)
-        self.massOperatorAttached = True
-
+        
     def _initializeOperatorConstruction(self):
         """ Collect basic values used by all attach operators functions. """
         self._operatorQ = {}
