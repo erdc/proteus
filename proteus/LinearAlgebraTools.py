@@ -338,6 +338,7 @@ class ParInfo_petsc4py:
     subdomain2global = None
     proteus2petsc_subdomain = None
     petsc2proteus_subdomain = None
+    nzval_proteus2petsc = None
     dim = None
 
     @classmethod
@@ -355,6 +356,7 @@ class ParInfo_petsc4py:
         print 'comm.rank() = ' + `comm.rank()` + ' proteus2petsc_subdomain = ' + `cls.proteus2petsc_subdomain`
         print 'comm.rank() = ' + `comm.rank()` + ' petsc2proteus_subomdain = ' + `cls.petsc2proteus_subdomain`
         print 'comm.rank() = ' + `comm.rank()` + ' dim = ' + `cls.dim`
+        print 'comm.rank() = ' + `comm.rank()` + ' nzval_proteus2petsc = ' + `cls.nzval_proteus2petsc`
 
 class ParMat_petsc4py(p4pyPETSc.Mat):
     """  Parallel matrix based on petsc4py's wrappers for PETSc. 
