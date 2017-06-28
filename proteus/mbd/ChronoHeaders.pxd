@@ -120,7 +120,7 @@ cdef extern from "ChMoorings.h":
     cdef cppclass ChNodeFEAxyzDD(ChNodeFEAxyzD):
         const ChVector& GetDD()
 
-    cdef cppclass ChNodeFEAxyzrot(ChNodeFEAbase):
+    cdef cppclass ChNodeFEAxyzrot(ChNodeFEAbase, ChBodyFrame):
         void SetForce(ChVector mf)
         ChVector& GetForce() 
         void SetTorque(ChVector mf)

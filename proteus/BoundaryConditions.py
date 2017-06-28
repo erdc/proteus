@@ -22,6 +22,8 @@ class BC_Base():
             assert nd is not None, 'Shape or nd must be passed to BC'
         if b_or is not None:
             self._b_or = b_or[b_i]  # array of orientation of all boundaries of shape
+        else:
+            self._b_or = None
 
     # @staticmethod
     # def newGlobalBC(name, default_value):
