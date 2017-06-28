@@ -6399,9 +6399,10 @@ def msh2simplex(fileprefix, nd):
                     triangle_nb += 1
                     triangles += [[triangle_nb, int(words[s]), int(words[s+1]), int(words[s+2]), flag]]
                     # update nodes flags
-                    for i in range(3):
-                        if nodes[int(words[s+i])-1][4] == 0:
-                            nodes[int(words[s+i])-1][4] = flag
+                    if nd == 3:
+                        for i in range(3):
+                            if nodes[int(words[s+i])-1][4] == 0:
+                                nodes[int(words[s+i])-1][4] = flag
                 elif el_type == 4: # tetrahedron 
                     tetrahedron_nb += 1
                     tetrahedra += [[tetrahedron_nb, int(words[s]), int(words[s+1]), int(words[s+2]), int(words[s+3]), flag]]
