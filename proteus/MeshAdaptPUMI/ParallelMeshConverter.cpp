@@ -111,6 +111,7 @@ int MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   return 0;
 } 
 
+#include <cstring>
 int MeshAdaptPUMIDrvr::constructGlobalNumbering(Mesh &mesh)
 {
   /* N^2 data structures and algorithms are terrible for scalability.
@@ -187,10 +188,8 @@ int MeshAdaptPUMIDrvr::constructGlobalNumbering(Mesh &mesh)
       global[dim] = apf::makeGlobal(apf::numberOwnedDimension(m, name.c_str(), dim));
       apf::synchronize(global[dim]);
     } //loop on entity dimensions
-    mesh.edgeOffsets_subdomain_owned = mesh.elementBoundaryOffsets_subdomain_owned;
+    std::memcpy(mesh.edgeOffsets_subdomain_owned,mesh.elementBoundaryOffsets_subdomain_owned,sizeof(int)*(comm_size+1));
   }
-
-
   return 0; 
 }
 
@@ -236,6 +235,7 @@ int MeshAdaptPUMIDrvr::constructGlobalStructures(Mesh &mesh)
      apf::destroyGlobalNumbering(global[d]);
    }
    mesh.edgeNumbering_subdomain2global=mesh.elementBoundaryNumbering_subdomain2global;
+   std::memcpy(mesh.edgeNumbering_subdomain2global,mesh.elementBoundaryNumbering_subdomain2global,sizeof(int)*(mesh.subdomainp->nElementBoundaries_global));
   }
 
   return 0;
