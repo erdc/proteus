@@ -214,6 +214,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double* particle_netForces,
                                double* particle_netMoments,
                                double particle_nitsche)
+
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -390,6 +391,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* particle_velocities,
 			       double* particle_centroids,
                                double particle_nitsche)
+
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -412,6 +414,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                       double * vel_trial_trace_ref,
                                       double * ebqe_velocity,
                                       double * velocityAverage)
+
     cppRANS3PF_base * newRANS3PF(int nSpaceIn,
                                  int nQuadraturePoints_elementIn,
                                  int nDOF_mesh_trial_elementIn,
@@ -434,6 +437,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                  double mContact,
                                  double nContact,
                                  double angFriction)
+
 
 cdef class RANS3PF:
     cdef cppRANS3PF_base * thisptr
@@ -461,6 +465,7 @@ cdef class RANS3PF:
                   double mContact,
                   double nContact,
                   double angFriction):
+
         self.thisptr = newRANS3PF(nSpaceIn,
                                   nQuadraturePoints_elementIn,
                                   nDOF_mesh_trial_elementIn,
@@ -660,6 +665,7 @@ cdef class RANS3PF:
                           numpy.ndarray particle_netForces,
                           numpy.ndarray particle_netMoments,
                           double particle_nitsche):
+
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1009,6 +1015,7 @@ cdef class RANS3PF:
 			  numpy.ndarray particle_velocities,
 			  numpy.ndarray particle_centroids,
                           double particle_nitsche):
+
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian( < double*> mesh_trial_ref.data,
@@ -1210,6 +1217,7 @@ cdef class RANS3PF:
                                  numpy.ndarray vel_trial_trace_ref,
                                  numpy.ndarray ebqe_velocity,
                                  numpy.ndarray velocityAverage):
+
         self.thisptr.calculateVelocityAverage(nExteriorElementBoundaries_global,
                                               < int * > exteriorElementBoundariesArray.data,
                                               nInteriorElementBoundaries_global,
@@ -1677,6 +1685,7 @@ cdef class RANS3PF2D:
                                     mContact,
                                     nContact,
                                     angFriction)
+
 
     def __dealloc__(self):
         del self.thisptr
@@ -2428,6 +2437,7 @@ cdef class RANS3PF2D:
                                               < double * > velocityAverage.data)
 
 
+
 class SubgridError(proteus.SubgridError.SGE_base):
 
     def __init__(
@@ -2534,7 +2544,9 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     """
-    The coefficients for two incompresslble fluids governed by the Navier-Stokes equations and separated by a sharp interface represented by a level set function
+    The coefficients for two incompresslble fluids governed by the 
+    Navier-Stokes equations and separated by a sharp interface 
+    represented by a level set function
     """
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_2D_Evaluate
     from proteus.ctransportCoefficients import TwophaseNavierStokes_ST_LS_SO_3D_Evaluate
@@ -2615,6 +2627,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,
                  particle_list=[]):
+
         self.nParticles=nParticles
         self.particle_nitsche=particle_nitsche
         self.particle_epsFact=particle_epsFact
@@ -2699,12 +2712,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nonlinearDragFactor = 1.0
         if self.killNonlinearDrag:
             self.nonlinearDragFactor = 0.0
+
+
         mass = {}
         advection = {}
         diffusion = {}
         potential = {}
         reaction = {}
         hamiltonian = {}
+
         if nd == 2:
             variableNames = ['u', 'v']
             mass = {0: {0: 'linear'},
@@ -2729,6 +2745,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         1: {0: 'nonlinear', 1: 'nonlinear'}}
             hamiltonian = {0: {0: 'linear'},
                            1: {1: 'linear'}}
+
             TC_base.__init__(self,
                              2,
                              mass,
@@ -2741,13 +2758,17 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              sparseDiffusionTensors=sdInfo,
                              useSparseDiffusion=sd,
                              movingDomain=movingDomain)
+
             self.vectorComponents = [0, 1]
-            self.vectorName="velocity"
+            self.vectorName = "velocity"
+
         elif nd == 3:
             variableNames = ['u', 'v', 'w']
+
             mass = {0: {0: 'linear'},
                     1: {1: 'linear'},
                     2: {2: 'linear'}}
+
             advection = {0: {0: 'nonlinear',
                              1: 'nonlinear',
                              2: 'nonlinear'},
@@ -2757,6 +2778,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          2: {0: 'nonlinear',
                              1: 'nonlinear',
                              2: 'nonlinear'}}
+
             diffusion = {0: {0: {0: 'constant'},
                              1: {1: 'constant'},
                              2: {2: 'constant'}},
@@ -2766,6 +2788,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          2: {0: {0: 'constant'},
                              1: {1: 'constant'},
                              2: {2: 'constant'}}}
+
             sdInfo = {}
             sdInfo = {(0, 0): (numpy.array([0, 1, 2, 3], dtype='i'), numpy.array([0, 1, 2], dtype='i')),
                       (0, 1): (numpy.array([0, 0, 1, 1], dtype='i'), numpy.array([0], dtype='i')),
@@ -2776,15 +2799,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                       (2, 0): (numpy.array([0, 1, 1, 1], dtype='i'), numpy.array([2], dtype='i')),
                       (2, 1): (numpy.array([0, 0, 1, 1], dtype='i'), numpy.array([2], dtype='i')),
                       (2, 2): (numpy.array([0, 1, 2, 3], dtype='i'), numpy.array([0, 1, 2], dtype='i'))}
+
             potential = {0: {0: 'u'},
                          1: {1: 'u'},
                          2: {2: 'u'}}
+
             reaction = {0: {0: 'nonlinear', 1: 'nonlinear', 2: 'nonlinear'},
                         1: {0: 'nonlinear', 1: 'nonlinear', 2: 'nonlinear'},
                         2: {0: 'nonlinear', 1: 'nonlinear', 2: 'nonlinear'}}
+
             hamiltonian = {0: {0: 'linear'},
                            1: {1: 'linear'},
                            2: {2: 'linear'}}
+
             TC_base.__init__(self,
                              3,
                              mass,
@@ -2800,26 +2827,41 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.vectorComponents = [0, 1, 2]
             self.vectorName="velocity"
 
+
     def attachModels(self, modelList):
-        # level set
+
+    	# level set
         self.model = modelList[self.ME_model]
         self.model.q['phi_solid'] = self.q_phi_solid
+
         self.q_rho  = self.model.q[('u',0)].copy()
         self.ebqe_rho  = self.model.ebqe[('u',0)].copy()
+
         self.q_nu  = self.model.q[('u',0)].copy()
         self.ebqe_nu  = self.model.ebqe[('u',0)].copy()
-        #DEM particles
+
+
+	#DEM particles
         self.particle_netForces = np.zeros((self.nParticles,3),'d')
         self.particle_netMoments = np.zeros((self.nParticles,3),'d')
+
         self.particle_velocities = np.zeros((self.nParticles,3),'d')
         self.particle_centroids = np.zeros((self.nParticles,3),'d')
-        self.particle_signed_distances=np.zeros((self.nParticles,)+self.model.q[('u',0)].shape,'d')
+
+        self.particle_signed_distances \
+            = np.zeros((self.nParticles,)+self.model.q[('u',0)].shape,'d')
         self.particle_signed_distance_normals=np.zeros((self.nParticles,)+self.model.q[('velocity',0)].shape,'d')
-        for i,particle in zip(range(self.nParticles),
-                         self.particle_list):
+
+        for i in range(self.nParticles)):
+
             for eN in range(self.model.q['x'].shape[0]):
+
                 for k in range(self.model.q['x'].shape[1]):
-                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = particle.sdf(0, self.model.q['x'][eN,k])
+
+                    (self.particle_signed_distances[i,eN,k],
+                     self.particle_signed_distance_normals[i,eN,k]) \
+                     = self.particle_list[0].sdf(i, self.model.q['x'][eN,k])
+
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
             self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
@@ -2935,6 +2977,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         ), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
 
     def initializeMesh(self, mesh):
+
         # cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density * mesh.h
         self.eps_viscosity = self.epsFact * mesh.h
@@ -2950,7 +2993,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.barycenters is None:
             self.barycenters = numpy.zeros((nBoundariesMax, 3), 'd')
         comm = Comm.get()
+
         import os
+
         if comm.isMaster():
             self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,"wettedAreaHistory.txt"),"w")
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,"forceHistory_p.txt"),"w")
@@ -2958,8 +3003,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.momentHistory = open(os.path.join(proteus.Profiling.logDir,"momentHistory.txt"),"w")
             self.particle_forceHistory = open(os.path.join(proteus.Profiling.logDir,"particle_forceHistory.txt"),"w")
             self.particle_momentHistory = open(os.path.join(proteus.Profiling.logDir,"particle_momentHistory.txt"),"w")
+
         self.comm = comm
     # initialize so it can run as single phase
+
 
     def initializeElementQuadrature(self, t, cq):
         # VRANS
@@ -3196,6 +3243,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 if numpy.isnan(c[('r', 0)].any()):
                     import pdb
                     pdb.set_trace()
+
             else:
                 # mwf debug
                 #import pdb
@@ -3282,6 +3330,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
+
         self.model.dt_last = self.model.timeIntegration.dt
         pass
         # if self.comm.isMaster():
@@ -3292,21 +3341,22 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # print "Forces_v"
         # print self.netForces_v[:,:]
 
+
     def postStep(self, t, firstStep=False):
+
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
-        for i,particle in zip(range(self.nParticles),
-                         self.particle_list):
+
+        for i in range(self.nParticles):
+
             for eN in range(self.model.q['x'].shape[0]):
+
                 for k in range(self.model.q['x'].shape[1]):
-                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = particle.sdf(t, self.model.q['x'][eN,k])
-        # if self.comm.isMaster():
-        # print "wettedAreas"
-        # print self.wettedAreas[:]
-        # print "Forces_p"
-        # print self.netForces_p[:,:]
-        # print "Forces_v"
-        # print self.netForces_v[:,:]
+
+                    (self.particle_signed_distances[i,eN,k],
+                     self.particle_signed_distance_normals[i,eN,k]) \
+                     = self.particle_list[0].sdf(i, self.model.q['x'][eN,k])
+
         self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
         self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
         self.forceHistory_p.flush()
@@ -3318,6 +3368,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_forceHistory.flush()
         self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0,:]))
         self.particle_momentHistory.flush()
+
 
 
 class LevelModel(proteus.Transport.OneLevelTransport):
@@ -3349,6 +3400,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
                  movingDomain=False):
+
         self.eb_adjoint_sigma = coefficients.eb_adjoint_sigma
         # this is a hack to test the effect of using a constant smoothing width
         useConstant_he = coefficients.useConstant_he
@@ -4110,8 +4162,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
         else:
             self.elementDiameter = self.mesh.elementDiametersArray
+
         if self.nSpace_global == 2:
+
             import copy
+
             self.u[2] = copy.deepcopy(self.u[1])
             self.timeIntegration.m_tmp[
                 2] = self.timeIntegration.m_tmp[1].copy()
@@ -4136,6 +4191,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[
                 ('u', 2)] = self.numericalFlux.ebqe[
                 ('u', 1)].copy()
+
             log("calling RANS3PF2D ctor")
             self.rans3pf = RANS3PF2D(
                 self.nSpace_global,
@@ -4237,6 +4293,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.mesh,
                 self.u[0].femSpace.elementMaps.psi,
                 self.mesh.elementNodesArray)
+
         self.coefficients.wettedAreas[:] = 0.0
         self.coefficients.netForces_p[:, :] = 0.0
         self.coefficients.netForces_v[:, :] = 0.0
@@ -4258,6 +4315,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
             self.coefficients.set_vos(self.ebqe['x'],self.coefficients.ebqe_vos)
+
         self.rans3pf.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -4471,6 +4529,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.coefficients.particle_netMoments[i, I])
             logEvent("particle i="+`i`+ " force "+`self.coefficients.particle_netForces[i]`)
             logEvent("particle i="+`i`+ " moment "+`self.coefficients.particle_netMoments[i]`)
+
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[

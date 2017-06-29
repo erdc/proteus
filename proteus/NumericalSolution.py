@@ -569,9 +569,13 @@ class NS_base:  # (HasTraits):
         self.modelList=[]
         self.lsList=[]
         self.nlsList=[]
-        for p,n,s,mlMesh,index in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,range(len(self.pList))):
+        
+        for p,n,s,mlMesh,index \
+            in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,range(len(self.pList))):
+
             if self.so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True
+
             if self.so.needEBQ:
                 n.needEBQ = True
             ## \todo clean up tolerances: use rtol_u,atol_u and rtol_res, atol_res; allow scaling by mesh diameter
@@ -588,13 +592,21 @@ class NS_base:  # (HasTraits):
                 linTolList.append(n.linTolFac*fac)
 
             logEvent("Setting up MultilevelTransport for "+p.name)
-            model = Transport.MultilevelTransport(p,n,mlMesh,OneLevelTransportType=p.LevelModelType)
+
+            model \
+                = Transport.MultilevelTransport(p,
+                                                n,
+                                                mlMesh,
+                                                OneLevelTransportType=p.LevelModelType)
             self.modelList.append(model)
+
             model.name = p.name
             logEvent("Setting "+model.name+" stepController to "+str(n.stepController))
             model.stepController = n.stepController(model,n)
+
             Profiling.memory("MultilevelTransport for "+p.name)
             logEvent("Setting up MultilevelLinearSolver for"+p.name)
+
             #allow options database to set model specific parameters?
             linear_solver_options_prefix = None
             if 'linear_solver_options_prefix' in dir(n):
