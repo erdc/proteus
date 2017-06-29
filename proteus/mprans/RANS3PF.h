@@ -947,43 +947,56 @@ namespace proteus
 				    double* particle_netForces,
 				    double* particle_netMoments)
     {
+
       double C,rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,D_s,phi_s,u_s,v_s,w_s,force_x,force_y,force_z,r_x,r_y,r_z;
       double* phi_s_normal;
+
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
       C=0.0;
+
       for (int i=0;i<nParticles;i++)
-	{
-	  phi_s = particle_signed_distances[i*sd_offset];
-	  phi_s_normal = &particle_signed_distance_normals[i*sd_offset*nSpace];
-	  u_s = particle_velocities[i*3+0];
-	  v_s = particle_velocities[i*3+1];
-	  w_s = particle_velocities[i*3+2];
-	  H_s = smoothedHeaviside(eps_s, phi_s);
-	  D_s = smoothedDirac(eps_s, phi_s);
-	  double rel_vel_norm=sqrt((uStar-u_s)*(uStar-u_s)+
+      {
+
+	phi_s = particle_signed_distances[i*sd_offset];
+	phi_s_normal = &particle_signed_distance_normals[i*sd_offset*nSpace];
+
+	u_s = particle_velocities[i*3+0];
+	v_s = particle_velocities[i*3+1];
+	w_s = particle_velocities[i*3+2];
+
+	H_s = smoothedHeaviside(eps_s, phi_s);
+	D_s = smoothedDirac(eps_s, phi_s);
+
+	double rel_vel_norm = sqrt((uStar-u_s)*(uStar-u_s)+
 				   (vStar-v_s)*(vStar-v_s)+
 				   (wStar-w_s)*(wStar-w_s));
-	  double C_surf = viscosity*penalty;
-	  double C_vol = alpha + beta*rel_vel_norm;
-	  C += (D_s*C_surf + (1.0 - H_s)*C_vol);
-	  force_x = dV*D_s*(p*phi_s_normal[0] + C_surf*(u-u_s)*rho);
-	  force_y = dV*D_s*(p*phi_s_normal[1] + C_surf*(v-v_s)*rho);
-	  force_z = dV*D_s*(p*phi_s_normal[2] + C_surf*(w-w_s)*rho);
-	  //always 3D for particle centroids
-	  r_x = x - particle_centroids[i*3+0];
-	  r_y = y - particle_centroids[i*3+1];
-	  r_z = z - particle_centroids[i*3+2];
-	  //always 3D for particle forces
-	  particle_netForces[i*3+0] += force_x;
-	  particle_netForces[i*3+1] += force_y;
-	  particle_netForces[i*3+2] += force_z;
-	  particle_netMoments[i*3+0] += (r_y*force_z - r_z*force_y);
-	  particle_netMoments[i*3+1] += (r_z*force_x - r_x*force_z);
-	  particle_netMoments[i*3+2] += (r_x*force_y - r_y*force_x);
-	}
+	double C_surf = viscosity*penalty;
+	double C_vol = alpha + beta*rel_vel_norm;
+
+	C += (D_s*C_surf + (1.0 - H_s)*C_vol);
+
+	force_x = dV*D_s*(p*phi_s_normal[0] + C_surf*(u-u_s)*rho);
+	force_y = dV*D_s*(p*phi_s_normal[1] + C_surf*(v-v_s)*rho);
+	force_z = dV*D_s*(p*phi_s_normal[2] + C_surf*(w-w_s)*rho);
+
+	//always 3D for particle centroids
+	r_x = x - particle_centroids[i*3+0];
+	r_y = y - particle_centroids[i*3+1];
+	r_z = z - particle_centroids[i*3+2];
+
+	//always 3D for particle forces
+	particle_netForces[i*3+0] += force_x;
+	particle_netForceps[i*3+1] += force_y;
+	particle_netForces[i*3+2] += force_z;
+
+	particle_netMoments[i*3+0] += (r_y*force_z - r_z*force_y);
+	particle_netMoments[i*3+1] += (r_z*force_x - r_x*force_z);
+	particle_netMoments[i*3+2] += (r_x*force_y - r_y*force_x);
+
+      }
       mom_u_source += C*(u-u_s);
       mom_v_source += C*(v-v_s);
       mom_w_source += C*(w-w_s);
