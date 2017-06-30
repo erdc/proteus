@@ -2626,7 +2626,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,
-                 particle_list=[]):
+                 particle_sdfList=[]):
 
         self.nParticles=nParticles
         self.particle_nitsche=particle_nitsche
@@ -2634,7 +2634,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_alpha=particle_alpha
         self.particle_beta=particle_beta
         self.particle_penalty_constant=particle_penalty_constant
-        self.particle_list=particle_list
+        self.particle_sdfList=particle_sdfList
         self.aDarcy=aDarcy
         self.betaForch=betaForch
         self.grain=grain
@@ -2860,7 +2860,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
                     (self.particle_signed_distances[i,eN,k],
                      self.particle_signed_distance_normals[i,eN,k]) \
-                     = self.particle_list[0].sdf(i, self.model.q['x'][eN,k])
+                     = self.particle_sdfList[0](i, self.model.q['x'][eN,k])
 
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
@@ -3355,7 +3355,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
                     (self.particle_signed_distances[i,eN,k],
                      self.particle_signed_distance_normals[i,eN,k]) \
-                     = self.particle_list[0].sdf(i, self.model.q['x'][eN,k])
+                     = self.particle_sdfList[0](i, self.model.q['x'][eN,k])
 
         self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
         self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
