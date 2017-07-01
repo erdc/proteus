@@ -1,5 +1,5 @@
 - To release a new version of proteus
-Update proteus/__init__.py (remove 'dev0' and increment version)
+Update proteus/__init__.py (remove '.dev0' and increment version)
 Update setup.py (remove 'dev0' and increment version)
 Update doc/source/_templates/layout.html (added line for new release in pull down, set to default download to current release)
 rebuild docs and check docs
@@ -11,5 +11,5 @@ When you are  satisified with both the current proteus commit and the docs commi
 
 - Switch back to dev
 
-Update proteus/__init__.py (add 'dev0' to version)
-Update setup.py (add 'dev0' to version)
+Update proteus/__init__.py (add '.dev0' to version)
+Update setup.py (add '.dev0' to version)
