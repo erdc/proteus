@@ -39,7 +39,7 @@ for arg in sys.argv:
         break
 
 setup(name='proteus',
-      version='1.3.3dev',
+      version='1.3.3dev0',
       description='Python tools for multiphysics modeling',
       author='The Proteus Developers',
       author_email='proteus-dev@googlegroups.com',
