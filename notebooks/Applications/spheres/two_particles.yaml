@@ -1,0 +1,65 @@
+Output prefix: particles
+
+Time:
+  timestep: 1.0e-5
+  total time: 10.0
+  output: 1000
+  search: 10
+
+Search grid:
+  N_cells: [  10, 10, 10 ]
+  origin:  [-3.3, -3.3, -3.3 ]
+  dims:    [ 6.6, 6.6, 6.6 ]
+
+
+Spheres:
+  number: 2
+  radius: [0.1, 0.1]
+  position: [ 0.0, 0.0, 0.0, 0.3, 0.0, 0.0 ]
+  velocity: [ 0.0, 0.0, 0.0,-1.0, 0.0, 0.0 ]
+  
+Boundaries:
+  names: [s_1, s_2, s_3, s_4, s_5, s_6]
+  s_1:
+    type: wall
+    normal: [ 1.0, 0.0, 0.0 ]
+    d: -1.0
+  s_2:
+    type: wall
+    normal: [-1.0, 0.0, 0.0 ]
+    d: -1.0
+  s_3:
+    type: wall
+    normal: [ 0.0, 1.0, 0.0 ]
+    d: -1.0
+  s_4:
+    type: wall
+    normal: [ 0.0, -1.0, 0.0 ]
+    d: -1.0
+  s_5:
+    type: wall
+    normal: [ 0.0, 0.0, 1.0 ]
+    d: -1.0
+  s_6:
+    type: wall
+    normal: [ 0.0, 0.0,-1.0 ]
+    d: -1.0
+
+Contact Models:
+  names: [particle, boundary]
+  particle:
+    type: Hertzian
+    G: 1.0e9
+    nu: 0.3
+    mu: 1.0
+    c_viscous: 0.05
+    k_ratio: 0.7 
+
+  boundary:
+    type: Hertzian
+    G: 1.0e9
+    nu: 0.3
+    mu: 1.0
+    c_viscous: 0.05
+    k_ratio: 0.7 
+
