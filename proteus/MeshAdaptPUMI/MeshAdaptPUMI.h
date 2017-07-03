@@ -26,7 +26,7 @@ class MeshAdaptPUMIDrvr{
   //Functions to construct proteus mesh data structures
   int constructFromSerialPUMIMesh(Mesh& mesh);
   int constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh);
-  int updateMaterialArrays(Mesh& mesh, int bdryID, int GeomTag);
+  int updateMaterialArrays(Mesh& mesh,int dim, int bdryID, int GeomTag);
   void numberLocally();
   int localNumber(apf::MeshEntity* e);
   int dumpMesh(Mesh& mesh);
