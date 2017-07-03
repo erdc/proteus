@@ -1843,7 +1843,8 @@ def assembleDomain(domain):
     _assembleGeometry(domain, BC_class=bc.BC_RANS)
     domain.bc[0].setNonMaterial()  # set BC for boundary between processors
     assembleAuxiliaryVariables(domain)
-    _generateMesh(domain)
+    if(domain.name != "PUMIDomain"):
+      _generateMesh(domain)
 
 
 def assembleAuxiliaryVariables(domain):

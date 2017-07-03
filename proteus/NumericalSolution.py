@@ -348,6 +348,7 @@ class NS_base:  # (HasTraits):
                   mesh = MeshTools.TriangularMesh()
                 logEvent("Converting PUMI mesh to Proteus")
                 mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
+                    p.domain.regList,
                     parallel = comm.size() > 1, dim = p.domain.nd)
                 if p.domain.nd == 3:
                   mlMesh = MeshTools.MultilevelTetrahedralMesh(
@@ -786,6 +787,7 @@ class NS_base:  # (HasTraits):
           mesh = MeshTools.TriangularMesh()
         mesh.convertFromPUMI(p0.domain.PUMIMesh,
                              p0.domain.faceList,
+                             p0.domain.regList,
                              parallel = self.comm.size() > 1,
                              dim = p0.domain.nd)
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
