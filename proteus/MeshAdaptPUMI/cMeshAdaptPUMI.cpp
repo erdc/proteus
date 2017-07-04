@@ -356,6 +356,12 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
   }
+  if(logging_config=="on"){
+    char namebuffer[20];
+    sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
+    apf::writeVtkFiles(namebuffer, m);
+  }
+
 
   // These are relics from an attempt to pass BCs from proteus into the error estimator.
   // They maybe useful in the future.
@@ -413,12 +419,13 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   if(size_field_config=="ERM"){
     if (has_gBC)
       getSimmetrixBC();
-    if(logging_config=="on"){
-      char namebuffer[20];
-      sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
-      apf::writeVtkFiles(namebuffer, m);
-    }
   }
+  if(logging_config=="on"){
+    char namebuffer[20];
+    sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
+    apf::writeVtkFiles(namebuffer, m);
+  }
+
   //isReconstructed = 0; //this is needed to maintain consistency with the post-adapt conversion back to Proteus
   nAdapt++; //counter for number of adapt steps
   return 0;
