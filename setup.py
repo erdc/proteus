@@ -2,7 +2,6 @@ import sys
 import setuptools
 from distutils.core import setup, Extension
 from Cython.Build import cythonize
-from petsc4py.conf.petscconf import Extension as PetscExtension
 
 import numpy
 from Cython.Distutils import build_ext
@@ -40,7 +39,7 @@ for arg in sys.argv:
         break
 
 setup(name='proteus',
-      version='1.3.1',
+      version='1.3.3',
       description='Python tools for multiphysics modeling',
       author='Chris Kees, Matthew Farthing, et al.',
       author_email='christopher.e.kees@usace.army.mil',
@@ -138,7 +137,8 @@ setup(name='proteus',
                              include_dirs=[numpy.get_include(),'proteus']),
                    Extension("Isosurface",['proteus/Isosurface.pyx'],
                              language='c',
-                             include_dirs=[numpy.get_include(),'proteus']),
+                             include_dirs=[numpy.get_include(),'proteus'],
+                             extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
                    Extension("BoundaryConditions",['proteus/BoundaryConditions.py'],
                              language='c',
                              include_dirs=[numpy.get_include(),'proteus']),
@@ -256,8 +256,8 @@ setup(name='proteus',
                              include_dirs=[numpy.get_include(),'proteus',
                                            PROTEUS_LAPACK_INCLUDE_DIR
                                            ],
-                             library_dirs=[PROTEUS_LAPACK_LIB_DIR],
-                             libraries=['m',PROTEUS_LAPACK_LIB],
+                             library_dirs=[PROTEUS_LAPACK_LIB_DIR, PROTEUS_BLAS_LIB_DIR],
+                             libraries=['m',PROTEUS_LAPACK_LIB, PROTEUS_BLAS_LIB],
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
                              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS),
                    Extension('csmoothers',
@@ -330,7 +330,7 @@ setup(name='proteus',
                              libraries=['m'],
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
                              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS),
-                   PetscExtension('flcbdfWrappers',
+                   Extension('flcbdfWrappers',
                                   ['proteus/flcbdfWrappersModule.cpp','proteus/mesh.cpp','proteus/meshio.cpp'],
                                   define_macros=[('PROTEUS_TRIANGLE_H',PROTEUS_TRIANGLE_H),
                                                  ('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H),
