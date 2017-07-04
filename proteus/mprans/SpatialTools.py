@@ -170,8 +170,8 @@ class ShapeRANS(Shape):
             boundcond.setTank()
 
 
-    def setTurbulentWall(self):
-        auxvar = bc.WallFunctions
+    def setTurbulentWall(self, wall):
+        auxvar = wall
         self._attachAuxiliaryVariable('WallFunction', auxvar)
 
 

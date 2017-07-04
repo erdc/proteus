@@ -254,44 +254,20 @@ class BC_RANS(BC_Base):
         self.k_diffusive.setConstantBC(0.) 
         self.dissipation_diffusive.setConstantBC(0.) 
 
-    def setWallFunction(self, model, Y, U0, d, L=0.0, skinf='turbulent', 
-                                 nu=1.004e-6, Cmu=0.09, K=0.41, B=5.2 ):
+    def setWallFunction(self, wall):
         """
         Sets turbulent boundaries for wall treatment.        
         Calculation made on nodes outside the viscous sublayer and based
         on assumption on the velocity profile close to the wall in order to
         impose the wall shear stress.
 
-        - k is assumed to be constant in the fully turbulent region close to the wall,
-        in this way kv = kp.
-        - dissipation is calculated for k-w model.
-
         Parameters
         ----------
-        model: string.
-            'ke' or 'kw', is for switching between k-epsilon and k-omega models.
-        Y: float.
-            size of the nearest element to the wall.
-        U0: array_like.
-            stream velocity.
-        d: float.
-            characteristic dimension of the problem.
-        L: float.
-            length of the boundaryLayer (usend only in skinf=boundaryLayer).
-        skinf: string.
-            switching between different skin friction formulae.
-        nu: float.
-            fluid viscosity.
-        Cmu: float.
-            turbulent viscosity constant.
-        K: float.
-            von Karman coefficient.
-        B: float.
-            roughness coefficient for walls.          
-
+        wall: wall object.
+            BoundaryConditions class to be attached for setting up
+            all the turbulent parameters.         
         """      
-        b_or = self._b_or
-        wf = WallFunctions(model, b_or, Y, U0, d, L, skinf, nu, Cmu, K, B)
+        wf = wall 
         self.reset()
         self.u_dirichlet.uOfXT = lambda x, t: wf.get_u_dirichlet(x, t)
         self.v_dirichlet.uOfXT = lambda x, t: wf.get_v_dirichlet(x, t)
@@ -484,7 +460,7 @@ class BC_RANS(BC_Base):
                 Re0wind = Uwind[i]*dwind/nuwind
                 ReL = U[i]*L/nu
                 ReLwind = Uwind[i]*L/nuwind               
-                rangeSkin = ['laminar', 'turbulent', 'boundaryLayer'] 
+                rangeSkin = ['laminar', 'turbulent'] 
                 if skinf not in rangeSkin:
                     logEvent("Wrong slip_type given: Valid types are %s" %rangeSkin, level=0)
                     sys.exit(1)
@@ -494,9 +470,6 @@ class BC_RANS(BC_Base):
                 elif skinf is 'turbulent':
                     cf = 0.045*( Re0**(-1./4.) )
                     cfwind = 0.045*( Re0wind**(-1./4.) )
-                elif skinf is 'boundaryLayer':
-                    cf = 0.074*( ReL**(-1./5.) )
-                    cfwind = 0.074*( ReLwind**(-1./5.) )
                 ut = U[i]*np.sqrt(cf/2.)
                 utwind = Uwind[i]*np.sqrt(cfwind/2.)
                 Yplus = Y*ut/nu
@@ -1146,13 +1119,26 @@ def __x_to_cpp(x):
     return xx
 
 
-class WallFunctions(AuxiliaryVariables.AV_base, object):
+
+import os
+import sys
+import csv
+import numpy as np
+from mpi4py import MPI
+from scipy import spatial
+from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
+from proteus import SpatialTools as st
+from collections import OrderedDict
+from proteus.mprans import BodyDynamics as bd
+
+
+class WallFunctions():
     """
     Auxiliary variable used to calculate attributes of an associated shape
     class instance acting as a wall.
     """
 
-    def __init__(self, model, b_or, Y, U0, d, L, skinf, nu, Cmu, K, B):
+    def __init__(self, turbModel, b_or, Y, U0, d, L, skinf, nu, Cmu, K, B, vel):
         """
         Sets turbulent boundaries for wall treatment.        
         Calculation made on nodes outside the viscous sublayer and based
@@ -1165,8 +1151,10 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
 
         Parameters
         ----------
-        model: string.
+        turbModel: string.
             'ke' or 'kw', for switching between k-epsilon or k-omega models.
+        vel: string.
+            'global' or 'local' for switching from using global velocity to local one.
         Y: float.
             size of the nearest element to the wall.
         U0: array_like.
@@ -1186,7 +1174,8 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         B: float.
             roughness coefficient for walls.          
         """      
-        self.turbModel = model
+        self.turbModel = turbModel
+        self.vel = vel
         self._b_or = b_or
         self.Y = Y
         self.U0 = U0
@@ -1197,6 +1186,8 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.Cmu = Cmu
         self.K = K
         self.B = B
+        self.model = None
+        self.ar = None
                         
     def attachModel(self, model, ar):
         """
@@ -1204,36 +1195,237 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         """
         self.model = model
         self.ar = ar
-        self.nd = model.levelModelList[-1].nSpace_global
-        self.m = self.model.levelModelList[-1]
         return self
+
+    def attachAuxiliaryVariables(self,avDict):
+        pass
+
+    def calculate_init(self):
+        pass
+
+    def calculate(self):
+        pass
+
+    def getLocalNearestNode(self, coords, kdtree):
+        """Finds nearest node to coordinates (local)
+        Parameters
+        ----------
+        coords: array_like
+            coordinates from which to find nearest node
+        kdtree: scipy.spatial.cKDTree
+            instance of scipy kdtree
+        Returns
+        -------
+        node: int
+            nearest node index
+        distance: float
+            distance to nearest node
+        """
+        # determine local nearest node distance
+        print 'GETLOCALNEARESTNODE'
+        distance, node = kdtree.query(coords)
+        return node, distance
+
+    def getLocalElement(self, femSpace, coords, node):
+        """Given coordinates and its nearest node, determine if it is on a
+        local element.
+        Parameters
+        ----------
+        femSpace: object
+            finite element space
+        coords: array_like
+            coordinates from which to element
+        node: int
+            nearest node index
+        Returns
+        -------
+        eN: int or None
+            local index of element (None if not found)
+        """
+        print 'GETLOCALELEMENT'
+        patchBoundaryNodes=set()
+        checkedElements=[]
+        # nodeElementOffsets give the indices to get the elements sharing the node
+        #log Profiling.logEvent("Getting Local Element")
+        if node+1 < len(femSpace.mesh.nodeElementOffsets):
+            for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+                eN = femSpace.mesh.nodeElementsArray[eOffset]
+                checkedElements.append(eN)
+                # union of set
+                patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
+                # evaluate the inverse map for element eN (global to local)
+                xi = femSpace.elementMaps.getInverseValue(eN, coords)
+                #J = femSpace.elementMaps.getJacobianValues(eN, )
+                # query whether xi lies within the reference element
+                if femSpace.elementMaps.referenceElement.onElement(xi):
+                    return eN
+        else:
+            for eOffset in range(femSpace.mesh.nodeElementOffsets[node]):
+                eN = femSpace.mesh.nodeElementsArray[eOffset]
+                checkedElements.append(eN)
+                # union of set
+                patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
+                # evaluate the inverse map for element eN (global to local)
+                xi = femSpace.elementMaps.getInverseValue(eN, coords)
+                #J = femSpace.elementMaps.getJacobianValues(eN, )
+                # query whether xi lies within the reference element
+                if femSpace.elementMaps.referenceElement.onElement(xi):
+                    return eN
+        # extra loop if case coords is in neighbour element
+        for node in patchBoundaryNodes:
+            for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+                eN = femSpace.mesh.nodeElementsArray[eOffset]
+                if eN not in checkedElements:
+                    checkedElements.append(eN)
+                    # evaluate the inverse map for element eN
+                    xi = femSpace.elementMaps.getInverseValue(eN, coords)
+                    # query whether xi lies within the reference element
+                    if femSpace.elementMaps.referenceElement.onElement(xi):
+                        return eN
+        # no elements found
+        return None
+
+    def findElementContainingCoords(self, coords):
+        """
+        Parameters
+        ----------
+        coords: array_like
+            global coordinates to look for
+        Returns
+        -------
+        xi:
+            local coordinates 
+        eN: int
+            (local) element number
+        rank: int
+            processor rank containing element
+        """
+        print 'FINDELEMENTCONTAININGCOORDS'
+        #log Profiling.logEvent("Looking for element " +str(coords))
+        comm = Comm.get().comm.tompi4py()
+        xi = owning_proc = element = rank = None  # initialised as None
+        # get nearest node on each processor
+        comm.barrier()
+        #log Profiling.logEvent("get nearest node " +str(coords))
+        #import pdb; pdb.set_trace()
+        nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
+        print nodes_kdtree
+        print 'Before nearestNode'
+        nearest_node, nearest_node_distance = self.getLocalNearestNode(coords, nodes_kdtree)
+        print 'After nearestNode'
+        # look for element containing coords on each processor (if it exists)
+        comm.barrier()
+        #log Profiling.logEvent("get local element " +str(coords))
+        local_element = self.getLocalElement(self.femSpace_velocity, coords, nearest_node)
+        comm.barrier()
+        #log Profiling.logEvent("got local element " +str(coords))
+        if local_element:
+            xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
+        # check which processor has element (if any)
+        # if local_element:
+        #     print("Local element!")
+        #     owning_proc = comm.bcast(comm.rank, comm.rank)
+        #     # get local coords
+        #     Profiling.logEvent("getting xi" +str(coords))
+        #     xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
+        #     Profiling.logEvent("broadcasting results" +str(coords))
+        #     xi = comm.bcast(xi, owning_proc)
+        #     Profiling.logEvent("Broadcasted xi")
+        #     element = comm.bcast(local_element, owning_proc)
+        #     Profiling.logEvent("Broadcasted element")
+        #     rank = comm.bcast(owning_proc, owning_proc)
+        #     Profiling.logEvent("Broadcasted rank")
+        # Profiling.logEvent("broadcasting results" +str(coords))
+        comm.barrier()
+        #print("MYRANK ", comm.rank)
+        #log Profiling.logEvent("Starting all reduce")
+        global_have_element, owning_proc = comm.allreduce((local_element, comm.rank), op=MPI.MAXLOC)
+        comm.barrier()
+        #log Profiling.logEvent("Finished all reduce")
+        if global_have_element:
+            #     Profiling.logEvent("broadcasting results" +str(coords))
+            xi = comm.bcast(xi, owning_proc)
+            #log Profiling.logEvent("Broadcasted xi" +str(xi))
+            element = comm.bcast(local_element, owning_proc)
+            #log Profiling.logEvent("Broadcasted element" +str(element))
+            rank = comm.bcast(owning_proc, owning_proc)
+            #log Profiling.logEvent("Broadcasted owning_proc" +str(rank))
+        #log Profiling.logEvent("got element finished" +str(coords))
+        return xi, element, rank
+
+    def getFluidVelocityLocalCoords(self, xi, element, rank):
+        """
+        Parameters
+        ----------
+        xi: 
+            local coords in element
+        element: int
+            element number (local to processor 'rank')
+        rank: int
+            rank of processor owning the element
+        """
+        #log Profiling.logEvent("FINDING VELOCITY AT RANK "+str(rank)+", "+str(element) + ", " + str(xi))
+        print 'GETFLUIDVELOCITYLOCALCOORDS'
+        comm = Comm.get().comm.tompi4py()
+        if comm.rank == rank:
+            u = self.u[1].getValue(element, xi)
+            v = self.u[2].getValue(element, xi)
+            if self.nd > 2:
+                w = self.u[3].getValue(element, xi)
+            if self.nd <= 2:
+                w = 0
+            # broadcast to all processors
+        else:
+            u = v = w = None
+        u = comm.bcast(u, rank)
+        v = comm.bcast(v, rank)
+        w = comm.bcast(w, rank)
+        #log Profiling.logEvent("FOUND VELOCITY")
+        return u, v, w
+
+    def setYplusNormalDirection(self, x, t):
+        """
+        Return the point at y+ distance in normal
+        direction from the boundary.
+        """
+        print 'YPLUSNORMALDIRECTION'
+        Uinput = np.array(self.U0)
+        Re0 = Uinput*self.d/self.nu
+        rangeSkin = ['laminar', 'turbulent']
+        skinf = self.skinf
+        self.cf = np.zeros(3, dtype=float)
+        for i in [0, 1, 2]:
+            if skinf not in rangeSkin:
+                logEvent("Wrong slip_type given: Valid types are %s" %rangeSkin, level=0)
+                sys.exit(1)
+            elif skinf == 'laminar' and Re0[i] > 0.:
+                self.cf[i] = 4./Re0[i]
+            elif skinf == 'turbulent' and Re0[i] > 0.:
+                self.cf[i] = 0.045*( Re0[i]**(-1./4.) )
+        self.ut = Uinput*np.sqrt(self.cf/2.)
+        self.Yplus = self.Y*self.ut/self.nu       
+        YplusAbs = np.sqrt(np.sum(self.Yplus**2))
+        nP = (YplusAbs*self._b_or) + x
+        return nP
 
     def extractVelocity(self, x, t):
         """
-        Get the CSR representationof the Jacobian matrix.
+        Extraction of the velocity at y+ distance from the boundary.
         """
-        i0, i1 = self.i_start, self.i_end
-        uModel = self.model.levelModelList[-1].coefficients.q_velocity_solid
-        rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
-        # Loop on columns of the sparsity pattern corresponding to the i-th node
-        uNeighbours = []
-        meanV = np.zeros(3, dtype=float)
-        for offset in range(rowptr[i0], rowptr[i1]):
-            j = colind[offset]
-            uNeighbours.append(uModel[j])
-        for ii in [0,1,2]:
-            listV = []
-            for jj in range(len(uNeighbours)):
-                listV.append(uNeighbours[jj][ii])
-            meanV[ii] = np.mean(listV)
-        return meanV
+        print 'EXTRACTVELOCITY'
+        coords = self.setYplusNormalDirection(x,t)
+        xi, element, rank = self.findElementContainingCoords(coords)
+        u, v, w = self.getFluidVelocityLocalCoords(xi, element, rank)
+        return u, v, w
         
     def tangentialVelocity(self, x, t):
-        self.meanV = self.extractVelocity(x,t) #self.U0
-        u1, u2, u3 = self.meanV
-        b1, b2, b3 = self._b_or
+        if self.vel == 'global': u0, u1, u2 = self.U0
+        elif self.vel == 'local': u0, u1, u2 = self.extractVelocity(x,t) 
+        else: logEvent("Wrong input for velocity system for wall function calculation")
+        self.meanV = np.array([u0, u1, u2])  
+        b0, b1, b2 = self._b_or
         # normal unit vector
-        self.nV = self._b_or/np.sqrt(np.sum([b1**2, b2**2, b3**2]))
+        self.nV = self._b_or/np.sqrt(np.sum([b0**2, b1**2, b2**2]))
         # projection of u vector over an ortoganal plane to b_or
         self.tanU = self.meanV - self.meanV*(self.nV**2)
         # tangential unit vector
@@ -1244,7 +1436,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.tangentialVelocity(x,t)
         Re0 = self.tanU*self.d/self.nu
         ReL = self.tanU*self.L/self.nu
-        rangeSkin = ['laminar', 'turbulent', 'boundaryLayer']
+        rangeSkin = ['laminar', 'turbulent']
         skinf = self.skinf
         self.cf, self.Ubound = np.zeros(3, dtype=float), np.zeros(3, dtype=float)
         for i in [0, 1, 2]:
@@ -1255,8 +1447,6 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
                 self.cf[i] = 4./Re0[i]
             elif skinf == 'turbulent' and Re0[i] > 0.:
                 self.cf[i] = 0.045*( Re0[i]**(-1./4.) )
-            elif skinf == 'boundaryLayer' and ReL > 0.:
-                self.cf[i] = 0.074*( ReL[i]**(-1./5.) )
         self.ut = self.tanU*np.sqrt(self.cf/2.)
         self.Yplus = self.Y*self.ut/self.nu       
         YplusAbs = np.sqrt(np.sum(self.Yplus**2))
