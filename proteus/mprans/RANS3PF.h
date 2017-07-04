@@ -989,7 +989,7 @@ namespace proteus
 
 	//always 3D for particle forces
 	particle_netForces[i*3+0] += force_x;
-	particle_netForceps[i*3+1] += force_y;
+	particle_netForces[i*3+1] += force_y;
 	particle_netForces[i*3+2] += force_z;
 
 	particle_netMoments[i*3+0] += (r_y*force_z - r_z*force_y);
