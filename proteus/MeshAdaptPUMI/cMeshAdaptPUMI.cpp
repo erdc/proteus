@@ -312,6 +312,9 @@ int MeshAdaptPUMIDrvr::willAdapt()
   return adaptFlag;
 }
 
+#include <sam.h>
+#include <samSz.h>
+
 int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 /**
  * @brief Function used to trigger adaptation
@@ -344,6 +347,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       myfile.close();
     }
   }  
+  else if (size_field_config == "elementQuality"){
+    size_iso = samSz::isoSize(m);
+  }
   else if (size_field_config == "isotropic")
     testIsotropicSizeField();
   else {

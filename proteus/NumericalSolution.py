@@ -956,6 +956,12 @@ class NS_base:  # (HasTraits):
             elif(sfConfig=='interface' ):
               adaptMeshNow=True
               logEvent("Need to Adapt")
+            elif(sfConfig=='meshQuality'):
+              minQual = p0.domain.PUMIMesh.getMinimumQuality()
+              if(minQual):
+                logEvent('The quality is %f ' % minQual)
+              adaptMeshNow=True
+              logEvent("Need to Adapt")
             else:
               adaptMeshNow=True
               logEvent("Need to Adapt")
