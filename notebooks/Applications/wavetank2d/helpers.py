@@ -2,7 +2,6 @@ from matplotlib  import pyplot as  plt
 
 def plot_domain(domain):
     plt.figure()
-    plt.rcParams['figure.figsize'] = (10.0, 8.0)
     plt.title('Bathmetry')
     plt.xlabel(r'z[m]')
     plt.ylabel(r'x[m]')

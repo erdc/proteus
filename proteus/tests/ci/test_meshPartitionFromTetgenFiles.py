@@ -16,6 +16,9 @@ comm = Comm.get()
 import poisson_3d_tetgen_p
 import poisson_3d_tetgen_c0p1_n
 import poisson_3d_tetgen_c0p2_n
+reload(poisson_3d_tetgen_p)
+reload(poisson_3d_tetgen_c0p1_n)
+reload(poisson_3d_tetgen_c0p2_n)
 
 class TestPoissonTetgen():
 

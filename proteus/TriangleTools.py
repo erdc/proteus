@@ -11,13 +11,13 @@ import numpy
 import triangleWrappers
 import TriangleUtils
 import TriangleFileUtils
-
+from Profiling import logEvent
 
 class TriangleBaseMesh:
     """A triangulation interface wrapper.
 
-    This is basically a wrapper for the triangulation interface
-    that should be able to create a triangle mesh in different ways
+    This is a wrapper for the triangulation interface
+    that can create a triangle mesh in different ways
 
     * from .ele and .node files
     * from a .poly file
@@ -30,7 +30,7 @@ class TriangleBaseMesh:
 
     def __init__(self,baseFlags="zen",nbase=0,verbose=0):
         """
-        initialize the triangulateio object,
+        initialize the triangulation object,
         keep track of what numbering scheme it uses,
         create a base set of flags for triangulate (e.g., z if using base 0)
 
@@ -56,8 +56,8 @@ class TriangleBaseMesh:
         if self.baseFlags.find('v') >= 0:
             self.makeVoronoi = True
         if verbose > 0:
-            print """TriangleBaseMesh nbase=%d baseFlags= %s """ % (self.nbase,
-                                                                    self.baseFlags)
+            logEvent("""TriangleBaseMesh nbase=%d baseFlags= %s """ % (self.nbase,
+                                                                    self.baseFlags))
         #end if
         #keep track of last set of flags used to generate rep
         self.lastFlags = None

@@ -492,6 +492,12 @@ class Mesh:
 
     This is the base class for meshes. Contains routines for
     plotting the edges of the mesh in Matlab
+
+    Attributes
+    ----------
+    elementBoundariesArray : array type
+        This array lists the global edge number associated with every
+        edge or face of an element.
     """
     #cek adding parallel support
     def __init__(self):
@@ -1239,9 +1245,10 @@ class Mesh:
 
     def buildMatlabMeshDataStructures(self,meshFileBase='meshMatlab',writeToFile=True):
         """
-        build array data structures for matlab finite element mesh representation
-        and write to a file to view and play with in matlatb. The current matlab support
-        is mostly for 2d, but this will return basic arrays for 1d and 3d too
+        build array data structures for matlab finite element mesh
+        representation and write to a file to view and play with in
+        matlatb. The current matlab support is mostly for 2d, but this
+        will return basic arrays for 1d and 3d too
 
         in matlab can then print mesh with
 
@@ -1262,6 +1269,7 @@ class Mesh:
              row 1 = x coord,
              row 2 = y coord for nodes in mesh
              row 3 = z coord for nodes in mesh ...
+
         edge matrix is [2*nd+3 x num faces]
           format:
              row 1  = start vertex number
@@ -1280,10 +1288,11 @@ class Mesh:
             ...
             row nd+1 = vertex 3 global number
             row 4 = triangle subdomain number
+
          where 1,2,3 is a local counter clockwise numbering of vertices in
            triangle
 
-         """
+        """
         matlabBase = 1
         nd = self.nNodes_element-1
         p = np.zeros((nd,self.nNodes_global),'d')
@@ -1525,6 +1534,79 @@ class Mesh:
             gnuplot.write(cmd+'\n')
             gnuplot.flush()
         raw_input('Please press return to continue... \n')
+
+    def convertFromPUMI(self, PUMIMesh, faceList, parallel=False, dim=3):
+        import cmeshTools
+        import MeshAdaptPUMI
+        import flcbdfWrappers
+        import Comm
+        comm = Comm.get()
+        self.cmesh = cmeshTools.CMesh()
+        if parallel:
+          self.subdomainMesh=self.__class__()
+          self.subdomainMesh.globalMesh = self
+          self.subdomainMesh.cmesh = cmeshTools.CMesh()
+          PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
+              self.subdomainMesh.cmesh)
+          for i in range(len(faceList)):
+            for j in range(len(faceList[i])):
+              PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh, i+1,
+                  faceList[i][j])
+          if dim == 3:
+            cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+            cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+          if dim == 2:
+            cmeshTools.allocateGeometricInfo_triangle(self.subdomainMesh.cmesh)
+            cmeshTools.computeGeometricInfo_triangle(self.subdomainMesh.cmesh)
+          self.buildFromCNoArrays(self.cmesh)
+          (self.elementOffsets_subdomain_owned,
+           self.elementNumbering_subdomain2global,
+           self.nodeOffsets_subdomain_owned,
+           self.nodeNumbering_subdomain2global,
+           self.elementBoundaryOffsets_subdomain_owned,
+           self.elementBoundaryNumbering_subdomain2global,
+           self.edgeOffsets_subdomain_owned,
+           self.edgeNumbering_subdomain2global) = (
+              flcbdfWrappers.convertPUMIPartitionToPython(self.cmesh,
+                  self.subdomainMesh.cmesh))
+          self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
+          self.subdomainMesh.nElements_owned = (
+              self.elementOffsets_subdomain_owned[comm.rank()+1] -
+              self.elementOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nNodes_owned = (
+              self.nodeOffsets_subdomain_owned[comm.rank()+1] -
+              self.nodeOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nElementBoundaries_owned = (
+              self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] -
+              self.elementBoundaryOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nEdges_owned = (
+              self.edgeOffsets_subdomain_owned[comm.rank()+1] -
+              self.edgeOffsets_subdomain_owned[comm.rank()])
+          comm.barrier()
+          par_nodeDiametersArray = (
+              ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
+                              bs=1,
+                              n=self.subdomainMesh.nNodes_owned,
+                              N=self.nNodes_global,
+                              nghosts = self.subdomainMesh.nNodes_global -
+                                        self.subdomainMesh.nNodes_owned,
+                              subdomain2global = 
+                                  self.nodeNumbering_subdomain2global))
+          par_nodeDiametersArray.scatter_forward_insert()
+          comm.barrier()
+        else:
+          PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
+          for i in range(len(faceList)):
+            for j in range(len(faceList[i])):
+              PUMIMesh.updateMaterialArrays(self.cmesh, i+1, faceList[i][j])
+          if dim == 3:
+            cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
+            cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
+          if dim == 2:
+            cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
+            cmeshTools.computeGeometricInfo_triangle(self.cmesh)
+          self.buildFromC(self.cmesh)
+        logEvent("meshInfo says : \n"+self.meshInfo())
 
 class MultilevelMesh(Mesh):
     """A hierchical multilevel mesh"""
@@ -2667,8 +2749,8 @@ class TetrahedralMesh(Mesh):
 Number of triangles  : %d
 Number of edges      : %d
 Number of nodes      : %d
-max(sigma_k)         : %d
-min(h_k)             : %d\n""" % (self.nElements_global,
+max(sigma_k)         : %f
+min(h_k)             : %f\n""" % (self.nElements_global,
                                   self.nElementBoundaries_global,
                                   self.nEdges_global,
                                   self.nNodes_global,
@@ -3613,6 +3695,16 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                 self.meshList[l].subdomainMesh = self.meshList[l]
                 logEvent(self.meshList[-1].meshInfo())
             self.buildArrayLists()
+
+    def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
+        import cmeshTools
+        self.meshList = []
+        self.meshList.append(mesh0)
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        self.buildFromC(self.cmultilevelMesh)
+        self.elementParents = None
+        self.elementChildren=[]
+
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
@@ -3714,6 +3806,49 @@ class MultilevelHexahedralMesh(MultilevelMesh):
     def computeGeometricInfo(self):
         for m in self.meshList:
             m.computeGeometricInfo()
+
+def buildReferenceSimplex(nd=2):
+    """
+    Create and return a Proteus mesh object for the reference 
+    element.
+
+    Parameters
+    ----------
+    nd : int
+        Dimension of reference element
+
+    Returns
+    -------
+    mesh : :class:`proteus.MeshTools.TriangularMesh`
+        Simplex mesh
+    """
+    from proteus import Domain
+    from proteus import TriangleTools
+
+    assert(nd in [1,2,3])
+
+    if nd==1:
+        pass # Note sure what needs to go here?!
+    
+    unit_simplex_domain = Domain.unitSimplex(nd)
+    polyfile = "reference_element"
+    unit_simplex_domain.writePoly(polyfile)
+
+    if nd==2:
+        tmesh = TriangleTools.TriangleBaseMesh(baseFlags="Yp",
+                                               nbase=1,
+                                               verbose=False)
+        tmesh.readFromPolyFile(polyfile)
+        mesh = tmesh.convertToProteusMesh(verbose=0)
+        mesh.partitionMesh()
+        mesh.globalMesh = mesh
+        return mesh
+    if nd==3:
+        runTetgen(polyfile,
+                  "Yp")
+        mesh = genMeshWithTetgen(polyfile,
+                                 nbase = 1)
+        return mesh
 
 class TriangularMesh(Mesh):
     """A mesh of triangles
@@ -6003,6 +6138,78 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
     return intersections
 
 
+def runTetgen(polyfile,
+              baseFlags="Yp",
+              name = ""):
+    """
+    Generate tetgen files from a polyfile.
+
+    Arguments
+    ---------
+    polyfile : str
+        Filename with appropriate data for tengen.
+    baseFlags : str
+        Standard Tetgen options for generation
+    name : str
+        
+
+    """
+    from subprocess import check_call
+    tetcmd = "tetgen - %s %s.poly" % (baseFlags, polyfile)
+    
+    check_call(tetcmd,shell=True)
+    
+    logEvent("Done running tetgen")
+    elefile = "%s.1.ele" % polyfile
+    nodefile = "%s.1.node" % polyfile
+    facefile = "%s.1.face" % polyfile
+    edgefile = "%s.1.edge" % polyfile
+    assert os.path.exists(elefile), "no 1.ele"
+    tmp = "%s.ele" % polyfile
+    os.rename(elefile,tmp)
+    assert os.path.exists(tmp), "no .ele"
+    assert os.path.exists(nodefile), "no 1.node"
+    tmp = "%s.node" % polyfile
+    os.rename(nodefile,tmp)
+    assert os.path.exists(tmp), "no .node"
+    if os.path.exists(facefile):
+        tmp = "%s.face" % polyfile
+        os.rename(facefile,tmp)
+        assert os.path.exists(tmp), "no .face"
+    if os.path.exists(edgefile):
+        tmp = "%s.edge" % polyfile
+        os.rename(edgefile,tmp)
+        assert os.path.exists(tmp), "no .edge"
+
+def genMeshWithTetgen(polyfile,
+                      nbase=1):
+   """
+   Generate a mesh from a set of tetgen files.
+
+   Arguments
+   ---------
+   polyfile : str
+       Filename base for tetgen files
+   nbase : int
+
+   Returns
+    -------
+   mesh : :class:`proteus.MeshTools.TetrahedralMesh`
+       Simplex mesh
+   """
+   elefile = "%s.ele" % polyfile
+   nodefile = "%s.node" % polyfile
+   facefile = "%s.face" % polyfile
+   edgefile = "%s.edge" % polyfile
+   assert os.path.exists(elefile), "no .ele file"
+   assert os.path.exists(nodefile), "no  .node file"
+   assert os.path.exists(facefile), "no .face file"
+   mesh=TetrahedralMesh()
+   mesh.generateFromTetgenFiles(polyfile,
+                                base=nbase)
+   return mesh
+
+
 from proteus import default_n as dn
 from proteus import default_p as dp
 
@@ -6018,17 +6225,17 @@ class MeshOptions:
         self.Domain = domain
         self.he = 1.
         self.use_gmsh = False
-        self.genMesh = dp.genMesh
+        self.genMesh = True
         self.outputFiles_name = 'mesh'
         self.outputFiles = {'poly': True,     
                             'ply': False,        
                             'asymptote': False,
                             'geo': False}
-        self.restrictFineSolutionToAllMeshes = dn.restrictFineSolutionToAllMeshes
-        self.parallelPartitioningType = dn.parallelPartitioningType
-        self.nLayersOfOverlapForParallel = dn.parallelPartitioningType
-        self.triangleOptions = dn.triangleOptions  # defined when setTriangleOptions called
-        self.nLevels = dn.nLevels
+        self.restrictFineSolutionToAllMeshes = False
+        self.parallelPartitioningType = MeshParallelPartitioningTypes.node
+        self.nLayersOfOverlapForParallel = 1
+        self.triangleOptions = "q30DenA" # defined when setTriangleOptions called
+        self.nLevels = 1
         if domain is not None:
             self.nd = domain.nd
             if self.nd == 2:
