@@ -138,7 +138,26 @@ def test_2DgmshLoadAndAdapt(verbose=0):
     nElements_final = mesh.nElements_global
     ok(nElements_final>nElements_initial)
 
+def test_2DmultiRegion(verbose=0):
+    """Test for loading gmsh mesh through PUMI with multiple-regions"""
+    testDir=os.path.dirname(os.path.abspath(__file__))
+    Model=testDir + '/TwoQuads.dmg'
+    Mesh=testDir + '/TwoQuads.smb'
+    domain = Domain.PUMIDomain(dim=2) #initialize the domain
+    domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI()
+    domain.PUMIMesh.loadModelAndMesh(Model, Mesh)
+    domain.faceList=[[14],[12],[11],[13],[15],[16]]
+    domain.regList=[[41],[42]]
+
+    mesh = MeshTools.TriangularMesh()
+    mesh.cmesh = cmeshTools.CMesh()
+    comm = Comm.init()
+
+    mesh.convertFromPUMI(domain.PUMIMesh, domain.faceList,domain.regList, parallel = comm.size() > 1, dim = domain.nd)
+    ok(mesh.elementMaterialTypes[0]==1)
+    ok(mesh.elementMaterialTypes[-1]==2)
+
 if __name__ == '__main__':
     import nose
-    nose.main(defaultTest='test_gmshCheck:test_gmshLoadAndAdapt,test_gmshCheck:test_2DgmshLoadAndAdapt')
+    nose.main(defaultTest='test_gmshCheck:test_gmshLoadAndAdapt,test_gmshCheck:test_2DgmshLoadAndAdapt,test_gmshCheck:test_2DmultiRegion')
 
