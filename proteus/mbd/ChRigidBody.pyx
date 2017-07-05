@@ -444,6 +444,78 @@ cdef class ProtChBody:
         """
         return self.hxyz(x, t)[2]
 
+    def hx_translation(self, np.ndarray x, double t):
+        """BC function for mesh nodes displacement (x component)
+
+        Parameters
+        ----------
+        x: array_like
+            coordinates of the node before displacement
+        t: double
+            simulation time
+        """
+        return (self.position-self.position_last)[0]
+
+    def hy_translation(self, np.ndarray x, double t):
+        """BC function for mesh nodes displacement (y component)
+
+        Parameters
+        ----------
+        x: array_like
+            coordinates of the node before displacement
+        t: double
+            simulation time
+        """
+        return (self.position-self.position_last)[1]
+
+    def hz_translation(self, np.ndarray x, double t):
+        """BC function for mesh nodes displacement (z component)
+
+        Parameters
+        ----------
+        x: array_like
+            coordinates of the node before displacement
+        t: double
+            simulation time
+        """
+        return (self.position-self.position_last)[2]
+
+    def hx_rotation(self, np.ndarray x, double t):
+        """BC function for mesh nodes displacement (x component)
+
+        Parameters
+        ----------
+        x: array_like
+            coordinates of the node before displacement
+        t: double
+            simulation time
+        """
+        return self.hxyz(x, t)[0]-(self.position-self.position_last)[0]
+
+    def hy_rotation(self, np.ndarray x, double t):
+        """BC function for mesh nodes displacement (y component)
+
+        Parameters
+        ----------
+        x: array_like
+            coordinates of the node before displacement
+        t: double
+            simulation time
+        """
+        return self.hxyz(x, t)[1]-(self.position-self.position_last)[1]
+
+    def hz_rotation(self, np.ndarray x, double t):
+        """BC function for mesh nodes displacement (z component)
+
+        Parameters
+        ----------
+        x: array_like
+            coordinates of the node before displacement
+        t: double
+            simulation time
+        """
+        return self.hxyz(x, t)[2]-(self.position-self.position_last)[2]
+
     def addSpring(self, double stiffness, double damping, np.ndarray fairlead,
                   np.ndarray anchor, double rest_length):
         self.thisptr.addSpring(stiffness, damping, <double*> fairlead.data,
@@ -1704,6 +1776,40 @@ cdef class ProtChMoorings:
         with open(self.record_file, 'a') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(row)
+        # Tensions
+        self.record_file = os.path.join(Profiling.logDir, self.name+'_TT.csv')
+        if t == 0:
+            headers = ['t', 't_ch', 't_sim']
+            for i in range(self.thisptr.nodes.size()-1):
+                headers += ['Tx'+str(i), 'Ty'+str(i), 'Tz'+str(i)]
+            with open(self.record_file, 'w') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(headers)
+        if t > 0:
+            row = [t, t_chrono, t_sim]
+            tensions = self.getNodesTension()
+            for T in tensions:
+                row += [T[0], T[1], T[2]]
+            with open(self.record_file, 'a') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(row)
+        # Drag
+        self.record_file = os.path.join(Profiling.logDir, self.name+'_drag.csv')
+        if t == 0:
+            headers = ['t', 't_ch', 't_sim']
+            for i in range(self.thisptr.nodes.size()-1):
+                headers += ['Fx'+str(i), 'Fy'+str(i), 'Fz'+str(i)]
+            with open(self.record_file, 'w') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(headers)
+        if t > 0:
+            row = [t, t_chrono, t_sim]
+            forces = self.getDragForces()
+            for F in forces:
+                row += [F[0], F[1], F[2]]
+            with open(self.record_file, 'a') as csvfile:
+                writer = csv.writer(csvfile, delimiter=',')
+                writer.writerow(row)
 
     def getTensionBack(self):
         """

@@ -68,6 +68,17 @@ cdef class ChMaterialSurfaceSMC:
     cpdef void SetKt(self, float val)
     cpdef void SetGn(self, float val)
     cpdef void SetGt(self, float val)
+    cpdef double GetYoungModulus(self)
+    cpdef double GetPoissonRatio(self)
+    cpdef double GetSfriction(self)
+    cpdef double GetKfriction(self)
+    cpdef double GetRestitution(self)
+    cpdef double GetAdhesion(self)
+    cpdef double GetAdhesionMultDMT(self)
+    cpdef double GetKn(self)
+    cpdef double GetKt(self)
+    cpdef double GetGn(self)
+    cpdef double GetGt(self)
 
 
 cdef class ChContactSurfaceNodeCloud:
