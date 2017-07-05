@@ -242,6 +242,39 @@ cdef class ChMaterialSurfaceSMC:
     cpdef void SetGt(self, float val):
         deref(self.sharedptr).SetGt(val)
 
+    cpdef double GetYoungModulus(self):
+        return deref(self.sharedptr).GetYoungModulus()
+
+    cpdef double GetPoissonRatio(self):
+        return deref(self.sharedptr).GetPoissonRatio()
+
+    cpdef double GetSfriction(self):
+        return deref(self.sharedptr).GetSfriction()
+
+    cpdef double GetKfriction(self):
+        return deref(self.sharedptr).GetKfriction()
+
+    cpdef double GetRestitution(self):
+        return deref(self.sharedptr).GetRestitution()
+
+    cpdef double GetAdhesion(self):
+        return deref(self.sharedptr).GetAdhesion()
+
+    cpdef double GetAdhesionMultDMT(self):
+        return deref(self.sharedptr).GetAdhesionMultDMT()
+    
+    cpdef double GetKn(self):
+        return deref(self.sharedptr).GetKn()
+
+    cpdef double GetKt(self):
+        return deref(self.sharedptr).GetKt()
+
+    cpdef double GetGn(self):
+        return deref(self.sharedptr).GetGn()
+
+    cpdef double GetGt(self):
+        return deref(self.sharedptr).GetGt()
+
 
 cdef class ChContactSurfaceNodeCloud:
     """Cython class for ChContactSurfaceNodeCloud
