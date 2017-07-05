@@ -2852,7 +2852,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             = np.zeros((self.nParticles,)+self.model.q[('u',0)].shape,'d')
         self.particle_signed_distance_normals=np.zeros((self.nParticles,)+self.model.q[('velocity',0)].shape,'d')
 
-        for i in range(self.nParticles)):
+        for i in range(self.nParticles):
 
             for eN in range(self.model.q['x'].shape[0]):
 
