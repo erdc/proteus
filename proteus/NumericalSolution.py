@@ -311,8 +311,16 @@ class NS_base:  # (HasTraits):
                     check_call("mv {0:s}.1.ele {0:s}.ele".format(fileprefix), shell=True)
                     check_call("mv {0:s}.1.node {0:s}.node".format(fileprefix), shell=True)
                     check_call("mv {0:s}.1.face {0:s}.face".format(fileprefix), shell=True)
-                    check_call("mv {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
-                    check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+                    try:
+                        check_call("mv {0:s}.1.neigh {0:s}.neigh".format(fileprefix), shell=True)
+                    except:
+                        logEvent("Warning: couldn't move {0:s}.1.neigh".format(fileprefix))
+                        pass
+                    try:
+                        logEvent("Warning: couldn't move {0:s}.1.edge".format(fileprefix))
+                        check_call("mv {0:s}.1.edge {0:s}.edge".format(fileprefix), shell=True)
+                    except:
+                        pass
                 comm.barrier()
                 logEvent("Initializing mesh and MultilevelMesh")
                 nbase = 1
@@ -340,6 +348,7 @@ class NS_base:  # (HasTraits):
                   mesh = MeshTools.TriangularMesh()
                 logEvent("Converting PUMI mesh to Proteus")
                 mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
+                    p.domain.regList,
                     parallel = comm.size() > 1, dim = p.domain.nd)
                 if p.domain.nd == 3:
                   mlMesh = MeshTools.MultilevelTetrahedralMesh(
@@ -778,6 +787,7 @@ class NS_base:  # (HasTraits):
           mesh = MeshTools.TriangularMesh()
         mesh.convertFromPUMI(p0.domain.PUMIMesh,
                              p0.domain.faceList,
+                             p0.domain.regList,
                              parallel = self.comm.size() > 1,
                              dim = p0.domain.nd)
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))

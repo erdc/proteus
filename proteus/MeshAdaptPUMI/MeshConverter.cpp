@@ -214,7 +214,6 @@ int MeshAdaptPUMIDrvr::constructBoundaries(Mesh& mesh)
     //left and right regions are shared by this face we are currntly on
     int leftRgnID = RgnID[0]; int leftLocalBoundaryNumber = localBoundaryNumber[0];
     int rightRgnID = RgnID[1]; int rightLocalBoundaryNumber = localBoundaryNumber[1];
-
     /*left region is always there, so either rightRgnID will have
       an actual ID if this face is shared, or will contain -1
       if it is an exterior face */
@@ -389,25 +388,35 @@ int MeshAdaptPUMIDrvr::constructMaterialArrays(Mesh& mesh)
  * array slot.
  */
 int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh,
+    int dim,
     int proteus_material,
     int scorec_tag)
 {
-  int dim = m->getDimension();
-  apf::ModelEntity* geomEnt = m->findModelEntity(dim - 1, scorec_tag);
-  apf::MeshIterator* it = m->begin(dim - 1);
+  apf::ModelEntity* geomEnt = m->findModelEntity(dim, scorec_tag);
+  apf::MeshIterator* it = m->begin(dim);
   apf::MeshEntity* f;
-  while ((f = m->iterate(it))) {
-    if (m->toModel(f) == geomEnt) {
+  if(dim==m->getDimension()){
+    while ((f = m->iterate(it))) {
+     if (m->toModel(f) == geomEnt) {
       int i = localNumber(f);
-      mesh.elementBoundaryMaterialTypes[i] = proteus_material;
+      mesh.elementMaterialTypes[i] = proteus_material;
+     }
+    }
+  }
+  else{
+    while ((f = m->iterate(it))) {
+      if (m->toModel(f) == geomEnt) {
+        int i = localNumber(f);
+        mesh.elementBoundaryMaterialTypes[i] = proteus_material;
+      }
+    }
+    apf::DynamicArray<apf::Node> nodes;
+    apf::getNodesOnClosure(m, geomEnt, nodes);
+    for (size_t i = 0; i < nodes.getSize(); ++i) {
+      int vtxId = localNumber(nodes[i].entity);
+      mesh.nodeMaterialTypes[vtxId] = proteus_material;
     }
   }
   m->end(it);
-  apf::DynamicArray<apf::Node> nodes;
-  apf::getNodesOnClosure(m, geomEnt, nodes);
-  for (size_t i = 0; i < nodes.getSize(); ++i) {
-    int vtxId = localNumber(nodes[i].entity);
-    mesh.nodeMaterialTypes[vtxId] = proteus_material;
-  }
   return 0;
 }
