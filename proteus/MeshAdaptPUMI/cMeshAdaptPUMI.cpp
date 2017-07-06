@@ -347,7 +347,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       myfile.close();
     }
   }  
-  else if (size_field_config == "elementQuality"){
+  else if (size_field_config == "meshQuality"){
     size_iso = samSz::isoSize(m);
   }
   else if (size_field_config == "isotropic")
@@ -361,7 +361,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
     apf::writeVtkFiles(namebuffer, m);
   }
-
 
   // These are relics from an attempt to pass BCs from proteus into the error estimator.
   // They maybe useful in the future.
