@@ -1899,12 +1899,6 @@ def assembleAuxiliaryVariables(domain):
             wall.i_end = start_flag+1+len(shape.BC_list)
         # ----------------------------
         # ABSORPTION/GENERATION ZONES
-        if 'ChRigidBody' in shape.auxiliaryVariables.keys():
-            body = shape.auxiliaryVariables['ChRigidBody']
-            for boundcond in shape.BC_list:
-                boundcond.setChMoveMesh(body)
-            body.i_start = start_flag+1
-            body.i_end = start_flag+1+len(shape.BC_list)
 
         if 'RelaxZones' in shape.auxiliaryVariables.keys():
             if not zones_global:

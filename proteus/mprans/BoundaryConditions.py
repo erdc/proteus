@@ -267,8 +267,11 @@ class BC_RANS(BC_Base):
             BoundaryConditions class to be attached for setting up
             all the turbulent parameters.         
         """      
-        wf = wall 
+        
         self.reset()
+
+        wf = wall
+        lambda x, t: wf.getXT(x, t)
         self.u_dirichlet.uOfXT = lambda x, t: wf.get_u_dirichlet(x, t)
         self.v_dirichlet.uOfXT = lambda x, t: wf.get_v_dirichlet(x, t)
         self.w_dirichlet.uOfXT = lambda x, t: wf.get_w_dirichlet(x, t)
@@ -1132,7 +1135,7 @@ from collections import OrderedDict
 from proteus.mprans import BodyDynamics as bd
 
 
-class WallFunctions():
+class WallFunctions(AuxiliaryVariables.AV_base, object):
     """
     Auxiliary variable used to calculate attributes of an associated shape
     class instance acting as a wall.
@@ -1188,7 +1191,14 @@ class WallFunctions():
         self.B = B
         self.model = None
         self.ar = None
-                        
+        # initialise variables
+        self.Ubound = np.zeros(3)
+        self.kappa = 1e-5
+        self.utAbs = 1e-5
+        self.ut = np.zeros(3)
+        self.x = np.zeros(3)
+        self.t = 0.
+        
     def attachModel(self, model, ar):
         """
         Attaches model to auxiliary variable
@@ -1201,10 +1211,14 @@ class WallFunctions():
         pass
 
     def calculate_init(self):
-        pass
+        x, t = self.x, self.t    
+        self.tangentialVelocity(x,t,uInit=True)
+        self.getVariables(x, t)
 
     def calculate(self):
-        pass
+        x, t = self.x, self.t
+        self.tangentialVelocity(x,t)
+        self.getVariables(x, t)
 
     def getLocalNearestNode(self, coords, kdtree):
         """Finds nearest node to coordinates (local)
@@ -1308,6 +1322,30 @@ class WallFunctions():
         comm.barrier()
         #log Profiling.logEvent("get nearest node " +str(coords))
         #import pdb; pdb.set_trace()
+        #log 
+        Profiling.logEvent('before self model femspace!!!!!!!!!!!!')
+        #log 
+        Profiling.logEvent('self.model --> %s' % self.model)
+        #log 
+        Profiling.logEvent('self.model.levelModelList --> %s' % self.model.levelModelList)
+        #log 
+        Profiling.logEvent('self.model.levelModelList[0] --> %s' % self.model.levelModelList[0])    
+        Profiling.logEvent('self.model.levelModelList[-1] --> %s' % self.model.levelModelList[-1])
+        #log 
+        Profiling.logEvent('self.model.levelModelList[-1].u --> %s' % self.model.levelModelList[-1].u)
+
+        Profiling.logEvent('vvv')
+        Profiling.logEvent('vvv')
+        Profiling.logEvent('vvv')
+        Profiling.logEvent('vvv')
+        Profiling.logEvent('vvv')
+
+
+
+        #self.u = self.model.levelModelList[-1].u
+        self.femSpace_velocity = self.u[1].femSpace
+        print self.femSpace_velocity
+        print 'before nodesktree'
         nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
         print nodes_kdtree
         print 'Before nearestNode'
@@ -1418,10 +1456,12 @@ class WallFunctions():
         u, v, w = self.getFluidVelocityLocalCoords(xi, element, rank)
         return u, v, w
         
-    def tangentialVelocity(self, x, t):
-        if self.vel == 'global': u0, u1, u2 = self.U0
-        elif self.vel == 'local': u0, u1, u2 = self.extractVelocity(x,t) 
-        else: logEvent("Wrong input for velocity system for wall function calculation")
+    def tangentialVelocity(self, x, t, uInit=None):
+        if uInit: u0, u1, u2 = self.U0
+        else: 
+            if self.vel == 'global': u0, u1, u2 = self.U0
+            elif self.vel == 'local': u0, u1, u2 = self.extractVelocity(x,t) 
+            else: logEvent("Wrong input for velocity system for wall function calculation")
         self.meanV = np.array([u0, u1, u2])  
         b0, b1, b2 = self._b_or
         # normal unit vector
@@ -1433,7 +1473,6 @@ class WallFunctions():
         #return self
 
     def getVariables(self, x, t):
-        self.tangentialVelocity(x,t)
         Re0 = self.tanU*self.d/self.nu
         ReL = self.tanU*self.L/self.nu
         rangeSkin = ['laminar', 'turbulent']
@@ -1462,30 +1501,29 @@ class WallFunctions():
             logEvent('Point selected outside either viscous and log layers', level=0)
             sys.exit(1)
         self.utAbs = np.sqrt(np.sum(self.ut**2))       
-        self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu)
-        #print self.ut, self.utAbs, self.Ubound, self.kappa
+        self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu)   
 
     def get_u_dirichlet(self, x, t):
-        self.getVariables(x, t)
+        self.getXT(x,t)
         U = self.Ubound[0]
         return U 
         
     def get_v_dirichlet(self, x, t):
-        self.getVariables(x, t)
+        self.getXT(x,t)
         U = self.Ubound[1]
         return U 
  
     def get_w_dirichlet(self, x, t):
-        self.getVariables(x, t)
+        self.getXT(x,t)
         U = self.Ubound[2]
         return U 
 
     def get_k_dirichlet(self, x, t):
-        self.getVariables(x, t)
+        self.getXT(x,t)
         return self.kappa 
 
     def get_dissipation_dirichlet(self, x, t):
-        self.getVariables(x, t)
+        self.getXT(x,t)
         if self.turbModel == 'ke': d = (self.utAbs**3)/(self.K*self.Y)
         elif self.turbModel == 'kw': d = (self.utAbs**3)/(self.K*self.Y)/self.kappa
         else:
@@ -1494,17 +1532,21 @@ class WallFunctions():
         return d 
 
     def get_u_diffusive(self, x, t):
-        self.getVariables(x, t)
+        self.getXT(x,t)
         gradU = self.ut[0]/(self.K*self.Y)
         return gradU 
 
     def get_v_diffusive(self, x, t):
-        self.getVariables(x, t)
+        self.getXT(x,t)
         gradU = self.ut[1]/(self.K*self.Y)
         return gradU 
 
     def get_w_diffusive(self, x, t):
-        self.getVariables(x, t)
+        self.getXT(x,t)
         gradU = self.ut[2]/(self.K*self.Y)
-        return gradU 
+        return gradU
+
+    def getXT(self, x, t):
+        self.x = x
+        self.t = t
 
