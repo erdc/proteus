@@ -1,6 +1,16 @@
 import proteus
-from proteus.mprans.cMoveMesh import *
-from proteus.mprans.cMoveMesh2D import *
+from proteus.mprans.cMoveMesh import cMoveMesh_base
+from proteus.NonlinearSolvers import NonlinearEquation # hack
+from proteus.mprans.cMoveMesh2D import cMoveMesh2D_base
+from proteus.TransportCoefficients import TC_base
+from proteus import Quadrature
+from proteus.Profiling import (logEvent, memory)
+import proteus.FemTools as fem
+import numpy as np
+from math import sqrt
+from proteus import Comm
+from proteus import Archiver
+from proteus.Transport import OneLevelTransport
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(self,
@@ -16,7 +26,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.modelParams_block = modelParams_block
         self.materialProperties = self.modelParams_block
         self.nMaterialProperties = len(self.materialProperties[-1])
-        self.g = numpy.array(g)
+        self.g = np.array(g)
         self.gmag = sqrt(sum([gi**2 for gi in g]))
         self.rhow=rhow
         self.nd=nd
@@ -100,6 +110,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
     def initializeMesh(self,mesh):
         self.mesh = mesh
+
     def postStep(self,t,firstStep=False):
     	self.model.postStep()
         self.mesh.nodeArray[:,0]+=self.model.u[0].dof
@@ -119,6 +130,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.mesh.nodeVelocityArray/=dt
         self.dt_last = self.model.timeIntegration.dt
         copyInstructions = {'clear_uList':True}
+        #if firstStep is True:
+            #self.mesh.computeGeometricInfo()
         return copyInstructions
 
     def preStep(self,t,firstStep=False):
@@ -159,6 +172,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
                  movingDomain=False):
+        self.stored_detJ0 = False
         #
         #set the objects describing the method and boundary conditions
         #
@@ -177,7 +191,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phiTrialIsTrial=True
         self.u = uDict
         self.Hess=False
-        if isinstance(self.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
+        if isinstance(self.u[0].femSpace,fem.C0_AffineQuadraticOnSimplexWithNodalBasis):
             self.Hess=True
         self.ua = {}#analytical solutions
         self.phi  = phiDict
@@ -334,17 +348,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe={}
         self.phi_ip={}
         #mesh
-        self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-        self.q['bodyForce'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
-        self.ebqe[('u',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('u',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('u',2)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('stressFlux_bc_flag',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
-        self.ebqe[('stressFlux_bc_flag',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
-        self.ebqe[('stressFlux_bc_flag',2)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
-        self.ebqe[('stressFlux_bc',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('stressFlux_bc',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('stressFlux_bc',2)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe['x'] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+        self.q['bodyForce'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
+        self.ebqe[('u',0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe[('u',1)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe[('u',2)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe[('stressFlux_bc_flag',0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
+        self.ebqe[('stressFlux_bc_flag',1)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
+        self.ebqe[('stressFlux_bc_flag',2)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
+        self.ebqe[('stressFlux_bc',0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe[('stressFlux_bc',1)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.ebqe[('stressFlux_bc',2)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.points_elementBoundaryQuadrature= set()
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
@@ -367,11 +381,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         # allocate residual and Jacobian storage
         #
-        self.elementResidual = [numpy.zeros(
+        self.elementResidual = [np.zeros(
             (self.mesh.nElements_global,
              self.nDOF_test_element[ci]),
             'd') for ci in range(self.nc)]
-        self.elementSpatialResidual = [numpy.zeros(
+        self.elementSpatialResidual = [np.zeros(
             (self.mesh.nElements_global,
              self.nDOF_test_element[ci]),
             'd') for ci in range(self.nc)]
@@ -379,9 +393,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.inflowBoundaryBC_values = {}
         self.inflowFlux = {}
         for cj in range(self.nc):
-            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
-            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
-            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+            self.inflowBoundaryBC[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
+            self.inflowBoundaryBC_values[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
+            self.inflowFlux[cj] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.internalNodes = set(range(self.mesh.nNodes_global))
         #identify the internal nodes this is ought to be in mesh
         ##\todo move this to mesh
@@ -394,7 +408,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     I = self.mesh.elementNodesArray[eN_global,i]
                     self.internalNodes -= set([I])
         self.nNodes_internal = len(self.internalNodes)
-        self.internalNodesArray=numpy.zeros((self.nNodes_internal,),'i')
+        self.internalNodesArray=np.zeros((self.nNodes_internal,),'i')
         for nI,n in enumerate(self.internalNodes):
             self.internalNodesArray[nI]=n
         #
@@ -459,13 +473,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         for ci,sbcObject  in self.stressFluxBoundaryConditionsObjectsDict.iteritems():
-            self.ebqe[('stressFlux_bc_flag',ci)] = numpy.zeros(self.ebqe[('stressFlux_bc',ci)].shape,'i')
+            self.ebqe[('stressFlux_bc_flag',ci)] = np.zeros(self.ebqe[('stressFlux_bc',ci)].shape,'i')
             for t,g in sbcObject.stressFluxBoundaryConditionsDict.iteritems():
                 self.ebqe[('stressFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                 self.ebqe[('stressFlux_bc_flag',ci)][t[0],t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
         if self.mesh.nodeVelocityArray==None:
-            self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
+            self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')
         compKernelFlag=0
         if self.nSpace_global == 2:
             import copy
@@ -492,23 +506,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                            self.nElementBoundaryQuadraturePoints_elementBoundary,
                                            compKernelFlag)
 
-        self.disp0   = numpy.zeros( self.nSpace_global  ,'d')
-        self.disp1   = numpy.zeros( self.nSpace_global  ,'d')
-        self.vel0    = numpy.zeros( self.nSpace_global  ,'d')
-        self.vel1    = numpy.zeros( self.nSpace_global  ,'d')
-        self.rot0    = numpy.eye(self.nSpace_global, dtype=float)
-        self.rot1    = numpy.eye(self.nSpace_global, dtype=float)
-        self.angVel0 = numpy.zeros( self.nSpace_global  ,'d')
-        self.angVel1 = numpy.zeros( self.nSpace_global  ,'d')
+        self.disp0   = np.zeros( self.nSpace_global  ,'d')
+        self.disp1   = np.zeros( self.nSpace_global  ,'d')
+        self.vel0    = np.zeros( self.nSpace_global  ,'d')
+        self.vel1    = np.zeros( self.nSpace_global  ,'d')
+        self.rot0    = np.eye(self.nSpace_global, dtype=float)
+        self.rot1    = np.eye(self.nSpace_global, dtype=float)
+        self.angVel0 = np.zeros( self.nSpace_global  ,'d')
+        self.angVel1 = np.zeros( self.nSpace_global  ,'d')
 
         self.forceStrongConditions=True  ##False#True
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
-                self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
+                self.dirichletConditionsForceDOF[cj] = fem.DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
+        self.detJ_last_array = np.zeros(self.mesh.nElements_global)
+        self.detJ0_array = np.zeros(self.mesh.nElements_global)
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -536,6 +552,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         self.moveMesh.calculateResidual(#element
+            self.detJ_last_array,
+            self.detJ0_array,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -591,7 +609,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Global residual",level=9,data=r)
         self.nonlinear_function_evaluations += 1
     def getJacobian(self,jacobian):
-        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+        fem.cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                         jacobian)
         if self.nSpace_global == 2:
             self.csrRowIndeces[(0,2)]  = self.csrRowIndeces[(0,1)]
@@ -611,6 +629,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2,1)] = self.csrColumnOffsets[(0,1)]
             self.csrColumnOffsets_eb[(2,2)] = self.csrColumnOffsets[(0,1)]
         self.moveMesh.calculateJacobian(#element
+            self.detJ_last_array,
+            self.detJ0_array,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -721,7 +741,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
                                                                     self.ebqe['x'])
-        self.stressFluxBoundaryConditionsObjectsDict = dict([(cj,FluxBoundaryConditions(self.mesh,
+        self.stressFluxBoundaryConditionsObjectsDict = dict([(cj,fem.FluxBoundaryConditions(self.mesh,
                                                                                         self.nElementBoundaryQuadraturePoints_elementBoundary,
                                                                                         self.ebqe[('x')],
                                                                                         self.stressFluxBoundaryConditionsSetterDict[cj]))
@@ -736,7 +756,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def preStep(self):
         pass
     def postStep(self):
-        pass
+        if self.stored_detJ0 is False:
+            self.detJ0_array = self.detJ_last_array.copy()
+            self.stored_detJ0 = True
+        print("detJ0", self.detJ0_array)
+        print("detJ", self.detJ_last_array)
+        print("equal", np.array_equal(self.detJ0_array, self.detJ_last_array))
+
     def updateAfterMeshMotion(self):
         #cek todo: this needs to be cleaned up and generalized for other models under moving conditions
         #few  models  actually use  the ebqe['x'] for boundary conditions, but  we need  to make it

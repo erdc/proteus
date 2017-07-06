@@ -12,6 +12,8 @@ namespace proteus
   public:
     virtual ~MoveMesh2D_base(){}
     virtual void calculateResidual(//element
+               double* detJ_last_array,
+               double* detJ0_array,
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
 			   double* mesh_dof,
@@ -61,6 +63,8 @@ namespace proteus
 			   double* ebqe_bc_stressFlux_v_ext,
 			   double* ebqe_bc_stressFlux_w_ext)=0;
     virtual void calculateJacobian(//element
+                   double* detJ_last_array,
+                   double* detJ0_array,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -181,11 +185,46 @@ namespace proteus
     }
     
     inline void evaluateCoefficients(double det_J,
+                     double* J,
 				     const double* materialProperties,
 				     double* strain,
 				     double* stress,
-				     double* dstress)
+				     double* dstress,
+                     double det_J0)
     {
+      double dilation;
+      if (det_J0 != 0) {
+        dilation = 0.5*(det_J0/det_J+det_J/det_J0);
+      }
+      else {
+        dilation = 0.5;
+      }
+
+      double JT [4] = {JT[XX],JT[YX],JT[XY],JT[YY]};
+      double JTJ [4];
+      // distorsion
+      int rA = nSpace;
+      int cA = nSpace;
+      int rB = nSpace;
+      int cB = nSpace;
+      int rC = nSpace;
+      int cC = nSpace;
+      for (int ii = 0; ii < rA; ii++) {
+        for (int jj = 0; jj < cB; jj++) {
+          float sum = 0.;
+          for (int kk = 0; kk < rB; kk++) {
+            sum = sum + JT[ii*cA+kk] * J[kk*cB+jj];
+          }
+          JTJ[ii*cC+jj] = sum;
+        }
+      }
+      double trJTJ = JTJ[XX]+JTJ[YY]; // see compkernel.h calculateMapping_element
+      /* T = (1./n*(tr(JT*J))**(n/2)/det_J;  // n: number of dimensions */
+      double distorsion = pow((1./nSpace)*trJTJ, nSpace/2.)/det_J;  // in 2D
+
+      double alpha = 0.5;
+      double Eweight = (1-alpha)*distorsion+alpha*dilation;
+
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]/* +strain[sZZ] */),
 	E=materialProperties[0]/det_J,//for mesh motion penalize small elements
@@ -194,6 +233,9 @@ namespace proteus
       const double shear = E/(1.0+nu);	
       const double bulk  = shear*(nu/(1.0-2.0*nu));	
       	
+
+
+
       for (int i=0;i<nSymTen;i++)
 	for (int j=0;j<nSymTen;j++)
 	  dstress[i*nSymTen+j] = 0.0;
@@ -220,6 +262,8 @@ namespace proteus
 
       stress[sXY] = shear*0.5*strain[sXY];//the 1/2 comes from the Voigt notation
       dstress[sXY*nSymTen+sXY] = shear*0.5;
+
+
     }
     
     inline void exteriorNumericalStressFlux(const int& isDOFBoundary_u,
@@ -378,6 +422,8 @@ namespace proteus
 
     
     virtual void calculateResidual(//element
+                   double* detJ_last_array,
+                   double* detJ0_array,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -477,6 +523,7 @@ namespace proteus
 					  jacDet,
 					  jacInv,
 					  x,y,z);
+        detJ_last_array[eN] = jacDet;
 	      //get the physical integration weight
 	      dV = fabs(jacDet)*dV_ref[k];
 	      ck.calculateG(jacInv,G,G_dd_G,tr_G);
@@ -505,11 +552,14 @@ namespace proteus
 	      //q_displacement[eN_k_nSpace+2]=w;
 
 	      calculateStrain(D,strain);
+          double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet),
+                   jac,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
-				   dstress);
+				   dstress,
+                   fabs(detJ0));
 	      //
 	      //update element residual 
 	      // 
@@ -630,11 +680,14 @@ namespace proteus
 	      //calculate the pde coefficients using the solution and the boundary values for the solution 
 	      // 
 	      calculateStrain(D,strain);
+          double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet_ext),
+                   jac_ext,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
-				   dstress);
+				   dstress,
+                   fabs(detJ0));
 	      // 
 	      //calculate the numerical fluxes 
 	      // 
@@ -691,6 +744,8 @@ namespace proteus
     }
 
     virtual void calculateJacobian(//element
+                   double* detJ_last_array,
+                   double* detJ0_array,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -833,11 +888,14 @@ namespace proteus
 		    }
 		}
 	      calculateStrain(D,strain);
+          double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet),
+                   jac,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
-				   dstress);
+				   dstress,
+                   fabs(detJ0));
 	      //
 	      //omit for now
 	      //
@@ -972,11 +1030,14 @@ namespace proteus
 	      //calculate the internal and external trace of the pde coefficients 
 	      // 
 	      calculateStrain(D_ext,strain);
+          double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet_ext),
+                   jac_ext,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
-				   dstress);
+				   dstress,
+                   fabs(detJ0));
 	      //
 	      //calculate the flux jacobian
 	      //
