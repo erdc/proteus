@@ -875,6 +875,7 @@ class PUMIDomain(D_base):
   def __init__(self, name="PUMIDomain", dim=3):
       D_base.__init__(self,dim,name)
       self.faceList=[]
+      self.regList=[]
       self.PUMIMesh=None
       #
       #it would be useful to define a dictionary mapping strings to faces
@@ -1046,7 +1047,7 @@ class PiecewiseLinearComplexDomain(D_base):
                     pf.write('\n')
                 if self.facetHoles:
                     for hN, h in enumerate(self.facetHoles[fN]):
-                        pf.write(`hN+1`+' %f %f %f\n' % h)
+                        pf.write(`hN+1`+' %f %f %f\n' % (h[0],h[1],h[2]))
             if self.holes:
                 pf.write('%d\n' % (len(self.holes),))
                 for hN, h in enumerate(self.holes):
