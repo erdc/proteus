@@ -129,3 +129,5 @@ cdef class MeshAdaptPUMI:
         errTotal=0.0;
         self.thisptr.get_local_error(errTotal)
         return errTotal
+    def getMinimumQuality(self):
+        return self.thisptr.getMinimumQuality()
