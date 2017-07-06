@@ -4,11 +4,7 @@ from rotation2D import *
 
 pnList = [("vof_rotation_2d_p","vof_rotation_2d_n")]
 
-if "FLCBDF" in timeIntegration_vof:
-    systemStepControllerType = Sequential_MinFLCBDFModelStep
-else:
-    systemStepControllerType = Sequential_MinAdaptiveModelStep
-
+systemStepControllerType = Sequential_MinAdaptiveModelStep
 systemStepExact = True
 
 name=soname

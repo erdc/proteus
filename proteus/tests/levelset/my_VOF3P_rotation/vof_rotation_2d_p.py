@@ -10,14 +10,11 @@ The non-conservative level set description of a bubble in a two-phase flow
 """
 
 LevelModelType = VOF3P.LevelModel
-
 coefficients = MyCoefficients(epsFact=epsFactHeaviside,checkMass=checkMass,useMetrics=useMetrics,ME_model=0,
+                              LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,
                               EDGE_VISCOSITY=EDGE_VISCOSITY,
                               ENTROPY_VISCOSITY=ENTROPY_VISCOSITY,
-                              POWER_SMOOTHNESS_INDICATOR=POWER_SMOOTHNESS_INDICATOR, 
-                              LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX,
-                              FCT=FCT,
-                              cK=cK,cE=cE,cMax=cMax)
+                              cK=cK,cE=cE)
 
 def Heaviside(phi):
     if phi > 0:
@@ -59,8 +56,8 @@ class init_cond:
 analyticalSolutions = None
 
 def getDBC(x,flag):
-    return lambda x,t: 1.0
-    #pass
+    #return lambda x,t: 0.0
+    pass
 
 dirichletConditions = {0:getDBC}
 

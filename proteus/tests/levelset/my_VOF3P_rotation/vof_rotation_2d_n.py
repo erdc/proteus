@@ -3,20 +3,16 @@ from proteus.default_n import *
 from vof_rotation_2d_p import *
 from rotation2D import *
 
-multilevelNonlinearSolver  = NLNI
-levelNonlinearSolver = Newton
-fullNewtonFlag = fullNewton
+#multilevelNonlinearSolver  = NLNI
+#levelNonlinearSolver = Newton
+multilevelNonlinearSolver  = Newton
+levelNonlinearSolver = ExplicitConsistentMassMatrixForVOF
+
+fullNewtonFlag = False
 updateJacobian = False
 
-timeIntegration = VOF3P.RKEV # SSP33 #mwf right now need timeIntegration to be SSP33 to run
-stepController = Min_dt_controller#Min_dt_RKcontroller#Min_dt_controller #mwf we should probably    
-if timeIntegration_vof == "SSP33": #mwf hack
-    timeOrder = 3
-    nStagesTime = 3
-else:
-    timeOrder = 1
-    nStagesTime = 1
-
+timeIntegration = BackwardEuler_cfl
+stepController = Min_dt_controller
 
 if cDegree_vof==0:
     if useHex:
