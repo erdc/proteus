@@ -1012,6 +1012,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   //Iterate over the vertices and set the coordinates if owned
   int vID = 0;
   entIter = m->begin(0);
+  PCU_Comm_Begin();
   while(ent = m->iterate(entIter)){
     //int vID = it->first;
     pt[0]=mesh.nodeArray[vID*3+0];
@@ -1038,9 +1039,25 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
         }
       }
       m->setModelEntity(ent,gEnt);
+      if(m->isShared(ent)){
+        apf::Copies remotes;
+        m->getRemotes(ent,remotes);
+        for(apf::Copies::iterator it = remotes.begin(); it != remotes.end(); ++it){
+          PCU_COMM_PACK(it->first,it->second);
+          PCU_COMM_PACK(it->first,gEnt);
+        }
+      }
     } //endif owned
     vID++;
   }
+  PCU_Comm_Send();
+  //receive model entity classification from owning nodes
+  while(PCU_Comm_Receive()){
+    PCU_COMM_UNPACK(ent);
+    PCU_COMM_UNPACK(gEnt);
+    m->setModelEntity(ent,gEnt); 
+  }
+  PCU_Barrier();
   m->end(entIter);
 
   std::cout<<"Finished setting entities "<<PCU_Comm_Self()<<std::endl;
