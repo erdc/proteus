@@ -14,7 +14,7 @@
 
 #define cMax 0.25
 #define IMPLICIT 0
-#define POWER_SMOOTHNESS_INDICATOR 2
+#define POWER_SMOOTHNESS_INDICATOR 0
 #define BETAij 1
 #define LINEAR_FRICTION 0
 
