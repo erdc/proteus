@@ -34,7 +34,8 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
 		     double* MassMatrix, 
 		     double* dt_times_dC_minus_dL,
                      double* min_u_bc,
-                     double* max_u_bc) 
+                     double* max_u_bc, 
+                     int LUMPED_MASS_MATRIX) 
         void getInflowDOFs(double* mesh_dof,            
                            int* mesh_l2g,
                            double* mesh_trial_trace_ref,
@@ -136,6 +137,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * max_u_bc,
                                double cMax, 
                                double cE, 
+                               int LUMPED_MASS_MATRIX,
                                double * quantDOFs)
         void calculateResidual_edgeBased(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -223,6 +225,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double * max_u_bc,
                                double cMax, 
                                double cE, 
+                               int LUMPED_MASS_MATRIX,
                                double * quantDOFs)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -271,6 +274,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                int * isFluxBoundary_u,
                                double * ebqe_bc_flux_u_ext,
                                int * csrColumnOffsets_eb_u_u,
+                               int LUMPED_MASS_MATRIX,
                                int EDGE_VISCOSITY)
     cppVOF3P_base* newVOF3P(int nSpaceIn,
                             int nQuadraturePoints_elementIn,
@@ -316,7 +320,8 @@ cdef class VOF3P:
                 numpy.ndarray MassMatrix, 
                 numpy.ndarray dt_times_dC_minus_dL,
                 numpy.ndarray min_u_bc,
-                numpy.ndarray max_u_bc):
+                numpy.ndarray max_u_bc, 
+                int LUMPED_MASS_MATRIX):
         self.thisptr.FCTStep(dt, 
                              NNZ,
                              numDOFs,
@@ -329,7 +334,8 @@ cdef class VOF3P:
                              <double*> MassMatrix.data,
                              <double*> dt_times_dC_minus_dL.data,
                              <double*> min_u_bc.data,
-                             <double*> max_u_bc.data)
+                             <double*> max_u_bc.data, 
+                             LUMPED_MASS_MATRIX)
     def getInflowDOFs(self, 
                       numpy.ndarray mesh_dof,            
                       numpy.ndarray mesh_l2g,
@@ -448,6 +454,7 @@ cdef class VOF3P:
                           numpy.ndarray max_u_bc,
                           double cMax, 
                           double cE, 
+                          int LUMPED_MASS_MATRIX,
                           numpy.ndarray quantDOFs):
         self.thisptr.calculateResidual_cellBased(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
@@ -538,6 +545,7 @@ cdef class VOF3P:
                                        <double*> max_u_bc.data,
                                        cMax,
                                        cE,
+                                       LUMPED_MASS_MATRIX,
                                        <double*> quantDOFs.data)
     def calculateResidual_edgeBased(self,
                           numpy.ndarray mesh_trial_ref,
@@ -626,6 +634,7 @@ cdef class VOF3P:
                           numpy.ndarray max_u_bc,
                           double cMax, 
                           double cE, 
+                          int LUMPED_MASS_MATRIX,                                    
                           numpy.ndarray quantDOFs):
         self.thisptr.calculateResidual_edgeBased(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
@@ -716,6 +725,7 @@ cdef class VOF3P:
                                        <double*> max_u_bc.data,
                                        cMax,
                                        cE,
+                                       LUMPED_MASS_MATRIX,
                                        <double*> quantDOFs.data)
 
     def calculateJacobian(self,
@@ -766,6 +776,7 @@ cdef class VOF3P:
                           numpy.ndarray isFluxBoundary_u,
                           numpy.ndarray ebqe_bc_flux_u_ext,
                           numpy.ndarray csrColumnOffsets_eb_u_u,
+                          int LUMPED_MASS_MATRIX,
                           int EDGE_VISCOSITY):
         """
         Optimized jacobian calculation
@@ -819,6 +830,7 @@ cdef class VOF3P:
                                        <int*> isFluxBoundary_u.data,
                                        <double*> ebqe_bc_flux_u_ext.data,
                                        <int*> csrColumnOffsets_eb_u_u.data,
+                                       LUMPED_MASS_MATRIX,
                                        EDGE_VISCOSITY)
 
 class SubgridError(SGE_base):
@@ -900,9 +912,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def __init__(
             self,
+            LUMPED_MASS_MATRIX=0,
             EDGE_VISCOSITY=0,
             ENTROPY_VISCOSITY=0,
-            FCT=0,
             # FOR LOG BASED ENTROPY FUNCTION
             uL=0.0, 
             uR=1.0,
@@ -967,9 +979,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.flowCoefficients = None
         self.movingDomain = movingDomain
         # EDGE BASED (AND ENTROPY) VISCOSITY 
+        self.LUMPED_MASS_MATRIX=LUMPED_MASS_MATRIX
         self.EDGE_VISCOSITY=EDGE_VISCOSITY
         self.ENTROPY_VISCOSITY=ENTROPY_VISCOSITY
-        self.FCT=FCT
         self.uL=uL
         self.uR=uR
         self.cK=cK
@@ -1156,8 +1168,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
 
     def postStep(self, t, firstStep=False):
-        if (self.FCT==1):
-            self.model.FCTStep()
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.checkMass:
             self.m_post = Norms.scalarDomainIntegral(
@@ -1598,12 +1608,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.cterm_transpose_global=None
         # dL_global and dC_global are not the full matrices but just the CSR arrays containing the non zero entries
         self.low_order_solution=None
+        self.high_order_solution=None
         self.dt_times_dC_minus_dL=None
         self.min_u_bc=None
         self.max_u_bc=None
         self.inflow_DOFs=None
         # Aux quantity at DOFs to be filled by optimized code (MQL)
-        self.quantDOFs=None
+        self.quantDOFss=None
 
         comm = Comm.get()
         self.comm = comm
@@ -1709,19 +1720,23 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def FCTStep(self):
         rowptr, colind, MassMatrix = self.MC_global.getCSRrepresentation()
+        limited_solution = numpy.zeros(self.u[0].dof.shape)
+
         self.vof.FCTStep(self.timeIntegration.dt, 
                          self.nnz, #number of non zero entries 
                          len(rowptr)-1, #number of DOFs
                          self.ML, #Lumped mass matrix
                          self.coefficients.u_dof_old, #soln
-                         self.u[0].dof, #solH
+                         self.timeIntegration.u,
+                         #self.low_order_solution, 
                          self.low_order_solution, 
                          rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
                          colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
                          MassMatrix, 
                          self.dt_times_dC_minus_dL,
                          self.min_u_bc,
-                         self.max_u_bc)
+                         self.max_u_bc, 
+                         self.coefficients.LUMPED_MASS_MATRIX)
     def calculateCoefficients(self):
         pass
 
@@ -1899,8 +1914,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.min_u_bc.fill(1E10);
         self.max_u_bc.fill(-1E10);
         self.low_order_solution = numpy.zeros(self.u[0].dof.shape,'d')
+        self.high_order_solution = numpy.zeros(self.u[0].dof.shape,'d')
         self.inflow_DOFs = numpy.zeros(self.u[0].dof.shape,'d')
-        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        self.quantDOFss = numpy.zeros(self.u[0].dof.shape,'d')
         #
         #cek end computationa of cterm_global
         #
@@ -2068,7 +2084,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # PARAMETERS FOR ELEMENT BASED ENTROPY VISCOSITY
             self.coefficients.cMax,
             self.coefficients.cE,
-            self.quantDOFs) #TMP
+            self.coefficients.LUMPED_MASS_MATRIX,
+            self.quantDOFss) #TMP
 
         if self.forceStrongConditions:
             for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
@@ -2140,6 +2157,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
             self.csrColumnOffsets_eb[(0, 0)], 
+            self.coefficients.LUMPED_MASS_MATRIX,
             self.coefficients.EDGE_VISCOSITY)
         # Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:

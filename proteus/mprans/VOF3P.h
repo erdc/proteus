@@ -6,7 +6,6 @@
 #include "ModelFactory.h"
 
 #define POWER_SMOOTHNESS_INDICATOR 2
-#define LUMPED_MASS_MATRIX 0
 #define KUZMINS_METHOD 1
 #define INTEGRATE_BY_PARTS 1
 #define QUANTITIES_OF_INTEREST 1
@@ -44,7 +43,8 @@ namespace proteus
 			 double* MassMatrix, //mass matrix
 			 double* dt_times_dC_minus_dL, //low minus high order dissipative matrices
 			 double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
-			 double* max_u_bc
+			 double* max_u_bc,
+			 int LUMPED_MASS_MATRIX
 			 )=0;
     virtual void getInflowDOFs(
 			       double* mesh_dof,
@@ -160,6 +160,7 @@ namespace proteus
 				   // ELEMENT BASED ENTROPY VISCOSITY
 				   double cMax, 
 				   double cE,
+				   int LUMPED_MASS_MATRIX,
 				   // AUX QUANTITIES OF INTEREST
 				   double* quantDOFs)=0;
     virtual void calculateResidual_edgeBased(//element
@@ -261,6 +262,7 @@ namespace proteus
 				   // ELEMENT BASED ENTROPY VISCOSITY
 				   double cMax, 
 				   double cE,
+				   int LUMPED_MASS_MATRIX,
 				   // AUX QUANTITIES OF INTEREST
 				   double* quantDOFs)=0;
     virtual void calculateJacobian(//element
@@ -317,6 +319,7 @@ namespace proteus
 				   double* ebqe_bc_flux_u_ext,
 				   int* csrColumnOffsets_eb_u_u,
 				   // PARAMETERS FOR EDGE_VISCOSITY
+				   int LUMPED_MASS_MATRIX,
 				   int EDGE_VISCOSITY)=0;
   };
 
@@ -525,12 +528,12 @@ namespace proteus
 		 double* MassMatrix, //mass matrix
 		 double* dt_times_dC_minus_dL, //low minus high order dissipative matrices
 		 double* min_u_bc, //min/max value at BCs. If DOF is not at boundary then min=1E10, max=-1E10
-		 double* max_u_bc
+		 double* max_u_bc,
+		 int LUMPED_MASS_MATRIX
 		 )
     {
       register double Rpos[numDOFs], Rneg[numDOFs];
       register double FluxCorrectionMatrix[NNZ];
-      register double solL[numDOFs];
       //////////////////
       // LOOP in DOFs //
       //////////////////
@@ -538,12 +541,12 @@ namespace proteus
       for (int i=0; i<numDOFs; i++)
 	{
 	  //read some vectors 
+	  double solLi = low_order_solution[i];
 	  double solHi = solH[i];
 	  double solni = soln[i];
 	  double mi = lumped_mass_matrix[i];
 	  // compute low order solution
 	  // mi*(uLi-uni) + dt*sum_j[(Tij+dLij)*unj] = 0
-	  solL[i] = solni-dt/mi*low_order_solution[i];
 
 	  double mini=min_u_bc[i], maxi=max_u_bc[i]; // init min/max with value at BCs (NOTE: if no boundary then min=1E10, max=-1E10)
 	  //double mini=1E10, maxi=-1E-10;
@@ -560,7 +563,9 @@ namespace proteus
 	      maxi = std::max(maxi,soln[j]);
 	      
 	      // i-th row of flux correction matrix 
-	      FluxCorrectionMatrix[ij] = (((i==j) ? 1 : 0)*mi - MassMatrix[ij])*(solH[j]-soln[j] - (solHi-solni)) + dt*dt_times_dC_minus_dL[ij]*(soln[j]-solni);
+	      double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
+	      FluxCorrectionMatrix[ij] = ML_minus_MC * (solH[j]-soln[j] - (solHi-solni)) 
+		+ dt_times_dC_minus_dL[ij]*(soln[j]-solni);
 
 	      ///////////////////////
 	      // COMPUTE P VECTORS //
@@ -574,8 +579,8 @@ namespace proteus
 	  ///////////////////////
 	  // COMPUTE Q VECTORS //
 	  ///////////////////////
-	  double Qposi = mi*(maxi-solL[i]);
-	  double Qnegi = mi*(mini-solL[i]);
+	  double Qposi = mi*(maxi-solLi);
+	  double Qnegi = mi*(mini-solLi);
 
 	  ///////////////////////
 	  // COMPUTE R VECTORS //
@@ -602,7 +607,7 @@ namespace proteus
 	      //update ij
 	      ij+=1;
 	    }
-	  solH[i] = solL[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
+	  solH[i] = low_order_solution[i] + 1./lumped_mass_matrix[i]*ith_Limiter_times_FluxCorrectionMatrix;
 	}
     }
 
@@ -801,6 +806,7 @@ namespace proteus
 			   // ELEMENT BASED ENTROPY VISCOSITY
 			   double cMax, 
 			   double cE, 
+			   int LUMPED_MASS_MATRIX,
 			   // AUX QUANTITIES OF INTEREST 
 			   double* quantDOFs)
     {
@@ -1491,6 +1497,7 @@ namespace proteus
 			   // ELEMENT BASED ENTROPY VISCOSITY
 			   double cMax, 
 			   double cE, 
+			   int LUMPED_MASS_MATRIX,
 			   // AUX QUANTITIES OF INTEREST 
 			   double* quantDOFs)
     {
@@ -2010,6 +2017,7 @@ namespace proteus
 			   double* ebqe_bc_flux_u_ext,
 			   int* csrColumnOffsets_eb_u_u,
 			   // PARAMETERS FOR EDGE VISCOSITY 
+			   int LUMPED_MASS_MATRIX,
 			   int EDGE_VISCOSITY)
     {
       double dt = 1./alphaBDF; // HACKED to work just for BDF1
