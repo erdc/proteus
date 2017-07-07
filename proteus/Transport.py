@@ -6597,6 +6597,7 @@ class MultilevelTransport:
                         ParInfo_petsc4py.subdomain2global = subdomain2global
                         ParInfo_petsc4py.dim = transport.dim
                         ParInfo_petsc4py.nzval_proteus2petsc = nzval_proteus2petsc
+                        ParInfo_petsc4py.mixed = mixed
                         par_jacobian = ParMat_petsc4py(petsc_jacobian,1,par_n,par_N,par_nghost,
                                                        petsc_subdomain2global_petsc,pde=transport,
                                                        proteus_jacobian=jacobian, nzval_proteus2petsc=nzval_proteus2petsc)
@@ -6610,6 +6611,13 @@ class MultilevelTransport:
                         logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                         par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                         logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
+                        ParInfo_petsc4py.par_bs = par_bs
+                        ParInfo_petsc4py.par_n = par_n
+                        ParInfo_petsc4py.par_N = par_N
+                        ParInfo_petsc4py.par_nghost = par_nghost
+                        ParInfo_petsc4py.subdomain2global = subdomain2global
+                        ParInfo_petsc4py.dim = transport.dim
+                        ParInfo_petsc4py.mixed = mixed
                         par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
                 else:
                     par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
@@ -6661,6 +6669,13 @@ class MultilevelTransport:
                     par_du = ParVec_petsc4py(du,1,par_n,par_N)
                     logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = ParMat_petsc4py(jacobian,1,par_n,par_N,par_nghost,subdomain2global,pde=transport)
+                    ParInfo_petsc4py.par_bs = par_bs
+                    ParInfo_petsc4py.mixed = mixed
+                    ParInfo_petsc4py.par_n = par_n
+                    ParInfo_petsc4py.par_N = par_N
+                    ParInfo_petsc4py.par_nghost = par_nghost
+                    ParInfo_petsc4py.subdomain2global = subdomain2global
+                    ParInfo_petsc4py.dim = transport.dim
                 else:
                     transport.owned_local = numpy.arange(par_n*par_bs)
                     subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
@@ -6671,12 +6686,13 @@ class MultilevelTransport:
                     par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                     logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
-                ParInfo_petsc4py.par_bs = 1
-                ParInfo_petsc4py.par_n = par_n
-                ParInfo_petsc4py.par_N = par_N
-                ParInfo_petsc4py.par_nghost = par_nghost
-                ParInfo_petsc4py.subdomain2global = subdomain2global
-                ParInfo_petsc4py.dim = transport.dim
+                    ParInfo_petsc4py.par_bs = par_bs
+                    ParInfo_petsc4py.mixed = mixed
+                    ParInfo_petsc4py.par_n = par_n
+                    ParInfo_petsc4py.par_N = par_N
+                    ParInfo_petsc4py.par_nghost = par_nghost
+                    ParInfo_petsc4py.subdomain2global = subdomain2global
+                    ParInfo_petsc4py.dim = transport.dim
             else:
                 transport.owned_local = numpy.arange(transport.dim)
                 par_u = None
