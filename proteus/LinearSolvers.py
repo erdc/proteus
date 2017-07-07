@@ -4,7 +4,6 @@ A hierarchy of classes for linear algebraic system solvers.
 .. inheritance-diagram:: proteus.LinearSolvers
    :parts: 1
 """
-import proteus
 from LinearAlgebraTools import *
 import FemTools
 import lapackWrappers
@@ -742,7 +741,7 @@ class SchurOperatorConstructor:
         return self.Qp
 
     def _massMatrix(self,recalculate=False):
-        """ Generates a the mass matrix.
+        """ Generates a mass matrix.
 
         This function generates and returns the mass matrix for the system. This
         function is internal to the class and called by public functions which 
@@ -942,7 +941,6 @@ class SchurPrecon(KSP_Preconditioner):
         return False
 
     def _setConstantPressureNullSpace(self,global_ksp):
-        import pdb ; pdb.set_trace()
         nsp = global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].getNullSpace()
         global_ksp.pc.getFieldSplitSubKSP()[1].getOperators()[0].setNullSpace(nsp)
 

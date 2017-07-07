@@ -10,7 +10,6 @@ import numpy as np
 from math import *
 import math #to disambiguate math.log and log
 from LinearAlgebraTools import *
-#from LinearSolvers import *
 from .Profiling import *
 
 #mwf hack for Eikonal equation solvers
