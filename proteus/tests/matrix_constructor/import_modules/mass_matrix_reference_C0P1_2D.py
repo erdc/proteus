@@ -2,32 +2,32 @@ from proteus import iproteus as ip
 from proteus import default_p as p
 from proteus import default_n as n
 from proteus import default_s,default_so
+import numpy
 reload(p)
 reload(n)
-import numpy
 import proteus as pr
 
-p.nd = 3
-p.name = "Laplace_matrix_test"
+p.nd = 2
+p.name = "Mass_matrix_test"
 
-p.rdomain = pr.Domain.unitSimplex(3)
-p.polyfile = "reference_triangle_3d"
+p.rdomain = pr.Domain.unitSimplex(2)
+p.polyfile = "reference_triangle_2d"
 p.rdomain.writePoly(p.polyfile)
 p.domain = None
 n.triangleOptions = "Yp"
 
-p.nc = 4
+p.nc = 3
 
 def getDBC(x,flag):
     if x[0] in [0.0] and x[1] in [0.0]:
         pass
 
-p.dirichletConditions = {0:getDBC, 1:getDBC, 2:getDBC, 3:getDBC}
+p.dirichletConditions = {0:getDBC, 1:getDBC, 2:getDBC}
 p.advectiveFluxBoundaryConditions = {}
 p.diffusiveFluxBoundaryConditions = {}
 p.periodicDirichletConditions = None
 
-p.coefficients = pr.TransportCoefficients.DiscreteLaplaceOperator(p.nd)
+p.coefficients = pr.TransportCoefficients.DiscreteMassMatrix(p.nd)
 
 ############################
 
@@ -42,8 +42,6 @@ n.elementBoundaryQuadrature = pr.Quadrature.SimplexGaussQuadrature(p.nd-1,4)
 n.nn = 3
 n.nLevels = 1
 
-n.subgridError = None
-n.shockCapturing = None
 n.multilevelNonlinearSolver = pr.NonlinearSolvers.Newton
 n.levelNonlinearSolver = pr.NonlinearSolvers.Newton
 n.maxNonlinearIts = 1
@@ -54,7 +52,6 @@ n.matrix = pr.LinearAlgebraTools.SparseMatrix
 n.multilevelLinearSolver = pr.LinearSolvers.LU
 n.levelLinearSolver = pr.LinearSolvers.LU#MGM#
 n.linearSolverConvergenceTest= 'r'#r-true'#'r'
-
 #########################################################################
 
 so = default_so
@@ -65,4 +62,3 @@ so.sList=[default_s]
 from proteus import *
 opts = None
 ns = NumericalSolution.NS_base(so,[p],[n],so.sList,ip.opts)
-ns.ar[0].hdfFile.close()
