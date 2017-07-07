@@ -258,3 +258,16 @@ def ProfilingDtor():
         procID = 0
         openLog("proteus_default.log",level=11,logLocation=".")
     closeLog()
+
+
+def print_petsc_commandline_options(petsc_options):
+    """ Returns a formated string with PETSc command-line options 
+    
+    petsc_options : list
+        A list of the Petsc command line options and values.
+    """
+    str = ""
+    for i,j in zip(petsc_options[1::2], petsc_options[2::2]):
+        str += "NAHeader PETScOptions " + i + " " + j +  "\n"
+    return str
+    
