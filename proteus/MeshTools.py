@@ -249,7 +249,7 @@ class Quadrilateral(Polygon):
             if zMax < node.p[Z]:
                 zMax = node.p[Z]
 
-        # indentity degenerate coordinate space.
+        # indentify degenerate coordinate space.
         # NOTE - this is not entirely accurate, but assumes
         # 2D quadrilateral objects are orthogonal to one of
         # the cononical coordinate axes
@@ -1944,15 +1944,15 @@ class RectangularGrid(Mesh):
 
         #dimensions of hexahedra
         if self.nHx>0:
-            hx = Lx/(nx-1)
+            hx = float(Lx)/(nx-1)
         else:
             hx = 1.0
         if self.nHy>0:
-            hy = Ly/(ny-1)
+            hy = float(Ly)/(ny-1)
         else:
             hy=1.0
         if self.nHz>0:
-            hz = Lz/(nz-1)
+            hz = float(Lz)/(nz-1)
         else:
             hz=1.0
         self.nodeDict={}
@@ -2180,6 +2180,17 @@ class TetrahedralMesh(Mesh):
 
     The mesh can be generated from a rectangular grid and refined using either
     4T or Freudenthal-Bey global refinement.
+
+    Attributes
+    ----------
+    elementNodesArray : array_like
+        A list of lists storing the node values associated with each element 
+        in the triangulation.  The first index refers to the element number,
+        while the second index refers to the global node value.
+    nodeArray : array_like
+        A list of lists storing node coordinates.  The first index referes
+        to the global node number, while the second index refers to the x, y
+        and z coordinates of the node respectively.
     """
 
     def __init__(self):
@@ -4547,7 +4558,34 @@ class QuadrilateralMesh(Mesh):
                 e3 = Edge(nodes=[n3,n0])
                 self.newQuadrilateral([e0,e1,e2,e3])
         self.finalize()
-    
+
+        
+    def generateFromQuadFileIFISS(self,meshfile):
+        ''' WIP - read a matlab.mat file containing IFISS vertices
+        and elements
+        '''
+        import scipy.io
+        griddata = scipy.io.loadmat(meshfile+'.mat')
+        self.nodeList = [Node(nN,n[0],n[1],0.0) for nN,n in enumerate(griddata['vertices'])]
+        # Is the following line necessary?
+        self.nodeDict = dict([(n,n) for n in self.nodeList])
+        for q in griddata['quads']:
+            n0,n3,n2,n1 = q # clockwise ordering needed
+            e0 = Edge(nodes=[self.nodeList[n0],self.nodeList[n1]])
+            e1 = Edge(nodes=[self.nodeList[n1],self.nodeList[n2]])
+            e2 = Edge(nodes=[self.nodeList[n2],self.nodeList[n3]])
+            e3 = Edge(nodes=[self.nodeList[n3],self.nodeList[n0]])
+            self.newQuadrilateral([e0,e1,e2,e3])
+        self.finalize()
+        for F,nN in griddata['bdyflags']:
+            self.nodeMaterialTypes[nN] = F
+        for ebNE in range(self.nExteriorElementBoundaries_global):
+            ebN = self.exteriorElementBoundariesArray[ebNE]
+            n0,n1 = self.elementBoundaryNodesArray[ebN]
+            self.elementBoundaryMaterialTypes[ebN]=max(self.nodeMaterialTypes[n0],
+                                                       self.nodeMaterialTypes[n1])
+
+
     def meshType(self):
         return 'cuboid'
 
