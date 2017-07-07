@@ -840,6 +840,9 @@ class NS_base:  # (HasTraits):
         #will need to move this to earlier when the mesh is created
         from proteus.MeshAdaptPUMI import MeshAdaptPUMI
         if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
+            import sys
+            if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
+                sys.exit("The mesh must be partitioned by elements and NOT nodes. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
             p0.domain.PUMIMesh=n0.MeshAdaptMesh
             p0.domain.hasModel = n0.useModel
             numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
