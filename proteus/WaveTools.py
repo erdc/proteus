@@ -2644,7 +2644,7 @@ class RandomNLWaves:
 
 
     #overall free surface elevation
-    def eta_overall(self,x,t,setUp=False):
+    def eta_overall(self,x,t,setUp=False,vel=False):
         """Calculates the free surface elevation with 2nd order corrections
 
         Uses 2nd order random wave theory
@@ -2655,6 +2655,10 @@ class RandomNLWaves:
             Position vector
         t : float
             Time variable
+        stetUp: boolean
+            Switch for setup calculation
+        vel: boolean
+            Switch for enabling correted time series for velocity calculation
 
         Returns
         --------
@@ -2666,14 +2670,17 @@ class RandomNLWaves:
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
-        Etaoverall =  self.eta_linear(x,t) + self._cpp_eta_2ndOrder(xx,t) + self._cpp_eta_short(xx,t) + self._cpp_eta_long(xx,t)
+        if(vel):
+            Etaoverall =  self.eta_linear(x,t) + self._cpp_eta_2ndOrder_vel(xx,t) + self._cpp_eta_short_vel(xx,t) + self._cpp_eta_long_vel(xx,t)
+        else:
+            Etaoverall =  self.eta_linear(x,t) + self._cpp_eta_2ndOrder(xx,t) + self._cpp_eta_short(xx,t) + self._cpp_eta_long(xx,t)
         if setUp:
             Etaoverall -= self.eta_setUp(xx,t)
         return Etaoverall
 
 
 
-    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False,Lgen=np.array([0.,0.,0.])):
+    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False,Lgen=np.array([0.,0.,0.]),vel=False):
         """Writes a timeseries of the free-surface elevation
 
         It also returns the free surface elevation as a time-eta array.
@@ -2698,7 +2705,8 @@ class RandomNLWaves:
             Switch for activating setup calculation
         Lgen : Optional[numpy.ndarray]
             Length vector of relaxation zone
-
+        vel: boolean
+            Switch for enabling correted time series for velocity calculation
 
         Returns
         ----------
@@ -2722,13 +2730,13 @@ class RandomNLWaves:
         for i in range(len(timelst)):
             time = series[i,0]
             if mode == "all":
-                series[i,1] = self.eta_overall(x0,time,setUp)
+                series[i,1] = self.eta_overall(x0,time,setUp,vel)
             elif mode == "setup":
                 series[i,1] = self.eta_setUp(x0,time)
             elif mode == "short":
-                series[i,1] = self.eta_short(x0,time) + self.eta_2ndOrder(x0,time)
+                series[i,1] = self.eta_short(x0,time,vel) + self.eta_2ndOrder(x0,time,vel)
             elif mode == "long":
-                series[i,1] = self.eta_long(x0,time)
+                series[i,1] = self.eta_long(x0,time,vel)
             elif mode == "linear":
                 series[i,1] = self.eta_linear(x0,time)
             else:
@@ -2847,6 +2855,7 @@ class RandomNLWavesFast:
         modes = ["short","linear","long"]
         periods = [Tp/2./1.1,Tp/1.1, Tmax]
         self.TS= []
+        self.TS_v= []
         ii = -1
         for mode in modes:
             logEvent("INFO: Calculating nonlinear corrections for "+mode+" waves. This may take a while")
@@ -2854,6 +2863,7 @@ class RandomNLWavesFast:
             fname = "randomNLWaves_"+mode+".csv"
             dt = periods[ii]/50.
             series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Lgen)
+            series_v = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Lgen,True)
             Tstart_temp = series[0,0]
             cutoff = 0.2*periods[ii]/(Tend-Tstart_temp)
 
@@ -2881,6 +2891,22 @@ class RandomNLWavesFast:
                     window_params = {"Nwaves":Nwaves ,"Tm":periods[ii],"Window":"costap","Overlap":0.7,"Cutoff":0.1},
                     arrayData = True,
                     seriesArray = series,
+                fast = self.fast)
+                           )
+            self.TS_v.append(TimeSeries(
+                    fname,
+                    0,
+                    x0,
+                    depth,
+                    Nfreq,
+                    mwl,
+                    waveDir,
+                    g,
+                    cutoffTotal = cutoff,
+                    rec_direct = rec_d,
+                    window_params = {"Nwaves":Nwaves ,"Tm":periods[ii],"Window":"costap","Overlap":0.7,"Cutoff":0.1},
+                    arrayData = True,
+                    seriesArray = series_v,
                 fast = self.fast)
                            )
 
@@ -2919,6 +2945,6 @@ class RandomNLWavesFast:
             Velocity vector as 1D array
 
         """
-        uR = self.TS[0].u(x,t)+ self.TS[1].u(x,t)+self.TS[2].u(x,t)
+        uR = self.TS_v[0].u(x,t)+ self.TS_v[1].u(x,t)+self.TS_v[2].u(x,t)
         return uR
     
