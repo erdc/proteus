@@ -8,24 +8,34 @@ cimport numpy as np
 from libcpp cimport bool
 
 cdef extern from "WaveTools.h" namespace "proteus":
+#============= GLOBAL CONSTANTS AND FUNCTIONS=============
     cdef const int nDim
     cdef double fastcosh(double * hype,double k, double Z, bool fast)
     cdef double fastcos(double phase,bool fast)
+#=============== 1st order theory===========
     cdef double __cpp_eta_mode(double* x, double t, double* kDir, double omega, double phi, double amplitude,bool fast)
+    cdef void __cpp_vel_mode_p(double* U, double * x, double t, double *kDir,double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double *waveDir, double *vDir, double tanhkd, double gAbs,bool fast)
+#===============fenton
     cdef double __cpp_etaFenton(double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, int Nf, double* Ycoeff,bool fast)
     cdef void __cpp_uFenton(double * U,double* x, double t, double* kDir, double kAbs, double omega, double phi0, double amplitude, double mwl, double depth,double gAbs, int Nf, double* Bcoeff, double* mV, double* waveDir, double* vDir, double* tanhF,bool fast)
+#=====================random 1st
     cdef double __cpp_etaRandom(double* x, double t, double* kDir, double* omega, double* phi, double* amplitude, int N,bool fast)
     cdef void __cpp_uRandom(double * U, double* x,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd, double gAbs ,bool fast)
+#=================directional 1st
     cdef void __cpp_uDir(double* U, double* x,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd , double gAbs,bool fast)
+#============================Timeseries
     cdef int __cpp_findWindow(double t, double handover, double t0, double Twindow, int Nwindows, double* windows_handover)
     cdef double __cpp_etaDirect(double* x, double* x0, double t, double* kDir, double* omega, double* phi, double* amplitude, int N,bool fast)
     cdef void __cpp_uDirect(double* U, double* x,double* x0,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd, double gAbs ,bool fast)
     cdef double __cpp_etaWindow(double* x, double* x0, double t, double* t0, double* kDir, double* omega, double* phi, double* amplitude, int N, int Nw,bool fast)
     cdef  void __cpp_uWindow(double* U,double* x, double* x0, double t, double* T0, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N,int Nw, double* waveDir, double* vDir, double* tanhKd , double gAbs,bool fast)
+#========2nd order corrections
     cdef double __cpp_eta2nd(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd,bool fast)
     cdef double __cpp_eta_short(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs,bool fast)
     cdef double __cpp_eta_long(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs,bool fast)
-    cdef void __cpp_vel_mode_p(double* U, double * x, double t, double *kDir,double kAbs, double omega, double phi, double amplitude,double mwl, double depth, double *waveDir, double *vDir, double tanhkd, double gAbs,bool fast)
+    cdef double __cpp_eta2nd_vel(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd,bool fast)
+    cdef double __cpp_eta_short_vel(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs,bool fast)
+    cdef double __cpp_eta_long_vel(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs,bool fast)
 
 # pointer to eta function
 ctypedef double (*cfeta) (MonochromaticWaves, double* , double )  
@@ -212,6 +222,10 @@ cdef class RandomNLWaves:
     cdef double _cpp_eta_2ndOrder(self,double* x, double t)
     cdef double _cpp_eta_short(self,double* x, double t)
     cdef double _cpp_eta_long(self,double* x, double t)
+    cdef double _cpp_eta_2ndOrder_vel(self,double* x, double t)
+    cdef double _cpp_eta_short_vel(self,double* x, double t)
+    cdef double _cpp_eta_long_vel(self,double* x, double t)
+
     cdef public:
         object eta
         object u

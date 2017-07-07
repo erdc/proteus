@@ -2507,7 +2507,11 @@ class RandomNLWaves:
 
     def _cpp_eta_2ndOrder(self,x,t):
         return __cpp_eta2nd(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_, self.fast)
-    def eta_2ndOrder(self,x,t):
+    def _cpp_eta_2ndOrder_vel(self,x,t):
+        return __cpp_eta2nd_vel(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_, self.fast)
+
+
+    def eta_2ndOrder(self,x,t,vel=False):
         """Calculates the free surface elevation for 2nd-order terms
 
         Uses 2nd order random wave theory
@@ -2518,6 +2522,8 @@ class RandomNLWaves:
             Position vector
         t : float
             Time variable
+        vel: boolean
+            Switch for enabling correted time series for velocity calculation
 
         Returns
         --------
@@ -2530,22 +2536,20 @@ class RandomNLWaves:
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
-        return self._cpp_eta_2ndOrder(xx,t)
-        '''
-        Eta2nd = 0.
-        for i in range(0,self.N):
-            ai_2nd = (self.ai_[i]**2*self.ki_[i]*(2+3/self.sinhKd[ii]**2))/(4*tanhKd[i](self.ki[i]*self.depth))
-            wwi_2ndOrder = eta_mode(x,t,2*self.kDir[i],2*self.omega[i],2*self.phi[i],ai_2nd)
-            Eta2nd += wwi_2ndOrder
-        return Eta2nd
-        '''
+        if(vel):
+            return self._cpp_eta_2ndOrder_vel(xx,t)
+        else:
+            return self._cpp_eta_2ndOrder(xx,t)
+
 
     def _cpp_eta_short(self,x,t):
         return __cpp_eta_short(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
 
-    
+    def _cpp_eta_short_vel(self,x,t):
+        return __cpp_eta_short_vel(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
+
     #higher harmonics
-    def eta_short(self,x,t):
+    def eta_short(self,x,t,vel=False):
         """Calculates the free surface elevation for higher-order terms
 
         Uses 2nd order random wave theory
@@ -2556,7 +2560,8 @@ class RandomNLWaves:
             Position vector
         t : float
             Time variable
-
+        vel: boolean
+            Switch for enabling correted time series for velocity calculation
         Returns
         --------
         float
@@ -2567,26 +2572,21 @@ class RandomNLWaves:
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
-        return self._cpp_eta_short(xx,t)
-        '''
-        Etashort = 0.
-        for i in range(0,self.N-1):
-            for j in range(i+1,self.N):
-                Dp = (self.omega[i]+self.omega[j])**2 - self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth)
-                Bp = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) 
-                Bp = Bp-((self.omega[i]*self.omega[j])/(2*self.gAbs))*(1-1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth)))*(((self.omega[i]+self.omega[j])**2 + self.gAbs*(self.ki[i]+self.ki[j])*tanh((self.ki[i]+self.ki[j])*self.depth))/Dp)
-                Bp=Bp+ ((self.omega[i]+self.omega[j])/(2*self.gAbs*Dp))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) + (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))
-                ai_short = self.ai[i]*self.ai[j]*Bp
-                wwi_short = eta_mode(x,t,self.kDir[i]+self.kDir[j],self.omega[i]+self.omega[j],self.phi[i]+self.phi[j],ai_short)
-                Etashort += wwi_short
-        return Etashort
-        '''
+        if(vel):
+            return self._cpp_eta_short_vel(xx,t)
+        else:
+            return self._cpp_eta_short(xx,t)
+
 
     def _cpp_eta_long(self,x,t):
         return __cpp_eta_long(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
 
+    def _cpp_eta_long_vel(self,x,t):
+        return __cpp_eta_long_vel(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
+
+    
     #lower harmonics
-    def eta_long(self,x,t):
+    def eta_long(self,x,t,vel=False):
         """Calculates the free surface elevation for lower-order terms
 
         Uses 2nd order random wave theory
@@ -2597,7 +2597,8 @@ class RandomNLWaves:
             Position vector
         t : float
             Time variable
-
+        vel: boolean
+            Switch for enabling correted time series for velocity calculation
         Returns
         --------
         float
@@ -2608,21 +2609,11 @@ class RandomNLWaves:
         xx[0] = x[0]
         xx[1] = x[1]
         xx[2] = x[2]
-        return self._cpp_eta_long(xx,t)
 
-
-        '''
-        Etalong = 0.
-        for i in range(0,self.N-1):
-            for j in range(i+1,self.N):
-                Dm = (self.omega[i]-self.omega[j])**2 - self.gAbs*(self.ki[i]-self.ki[j])*tanh((self.ki[i]-self.ki[j])*self.depth)
-                Bm = (self.omega[i]**2+self.omega[j]**2)/(2*self.gAbs) + ((self.omega[i]*self.omega[j])/(2*self.gAbs))*(1+1./(tanh(self.ki[i]*self.depth)*tanh(self.ki[j]*self.depth)))*(((self.omega[i]-self.omega[j])**2 + self.gAbs*(self.ki[i]-self.ki[j])*tanh((self.ki[i]-self.ki[j])*self.depth))/Dm) + ((self.omega[i]-self.omega[j])/(2*self.gAbs*Dm))*((self.omega[i]**3/sinh(self.ki[i]*self.depth)**2) - (self.omega[j]**3/sinh(self.ki[j]*self.depth)**2))
-                ai_long = self.ai[i]*self.ai[j]*Bm
-                wwi_long = eta_mode(x,t,self.kDir[i]-self.kDir[j],self.omega[i]-self.omega[j],self.phi[i]-self.phi[j],ai_long)
-                Etalong += wwi_long
-        return Etalong
-        '''
-
+        if(vel):
+            return self._cpp_eta_long_else(xx,t)
+        else:
+            return self._cpp_eta_long(xx,t)
     #set-up calculation
     def eta_setUp(self,x,t):
         """Calculates the free surface elevation set up
