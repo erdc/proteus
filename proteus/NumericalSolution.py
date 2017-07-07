@@ -676,121 +676,9 @@ class NS_base:  # (HasTraits):
             model.viewer = Viewers.V_base(p,n,s)
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
 
-    def PUMI_estimateError(self):
-        """
-        Estimate the error using the classical element residual method by
-        Ainsworth and Oden and generates a corresponding error field.
-        """
-
-        p0 = self.pList[0]
+    def PUMI2Proteus(self,mesh):
+        p0 = self.pList[0] #This can probably be cleaned up somehow
         n0 = self.nList[0]
-        adaptMeshNow = False
-        if (isinstance(p0.domain, Domain.PUMIDomain) and
-            n0.adaptMesh and
-            self.so.useOneMesh and 
-            self.nSolveSteps%n0.adaptMesh_nSteps==0):
-            logEvent("Copying coordinates to PUMI")
-            p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
-                self.modelList[0].levelModelList[0].mesh.nodeArray)
-            logEvent("Copying DOF and parameters to PUMI")
-            for m in self.modelList:
-              for lm in m.levelModelList:
-                coef = lm.coefficients
-                if coef.vectorComponents != None:
-                  vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
-                  for vci in range(len(coef.vectorComponents)):
-                    vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
-                  p0.domain.PUMIMesh.transferFieldToPUMI(
-                         coef.vectorName, vector)
-                  del vector
-                for ci in range(coef.nc):
-                  if coef.vectorComponents == None or \
-                     ci not in coef.vectorComponents:
-                    scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-                    scalar[:,0] = lm.u[ci].dof[:]
-                    p0.domain.PUMIMesh.transferFieldToPUMI(
-                        coef.variableNames[ci], scalar)
-                    del scalar
-            #Get Physical Parameters
-            #Can we do this in a problem-independent  way?
-            rho = numpy.array([self.pList[0].rho_0,
-                               self.pList[0].rho_1])
-            nu = numpy.array([self.pList[0].nu_0,
-                              self.pList[0].nu_1])
-            g = numpy.asarray(self.pList[0].g)
-            deltaT = self.tn-self.tn_last
-            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
-            del rho, nu, g
-
-            logEvent("Estimate Error")
-            sfConfig = p0.domain.PUMIMesh.size_field_config()
-            if(sfConfig=="ERM"):
-              errorTotal= p0.domain.PUMIMesh.get_local_error()
-              
-              if(p0.domain.PUMIMesh.willAdapt()):
-                adaptMeshNow=True
-                logEvent("Need to Adapt")
-            elif(sfConfig=='interface' ):
-              adaptMeshNow=True
-              logEvent("Need to Adapt")
-            else:
-              adaptMeshNow=True
-              logEvent("Need to Adapt")
-        return adaptMeshNow
-
-    def PUMI_adaptMesh(self):
-        """
-        Uses a computed error field to construct a size field and adapts
-        the mesh using SCOREC tools (a.k.a. MeshAdapt)
-        """
-        ##
-        ## zhang-alvin's BC communication for N-S error estimation
-        ##
-        #  #for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
-        #    #if idx>0:
-        #    #    diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
-        #    #else:
-        #    #    diff_flux = numpy.empty([2,2]) #dummy diff flux
-        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
-        #    #    idx,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-        #    #    diff_flux)
-        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
-        #    #    idx,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-        #    #    diff_flux)
-        p0 = self.pList[0]
-        n0 = self.nList[0]
-        sfConfig = p0.domain.PUMIMesh.size_field_config()
-        logEvent("h-adapt mesh by calling AdaptPUMIMesh")
-        p0.domain.PUMIMesh.adaptPUMIMesh()
-
-        #code to suggest adapting until error is reduced;
-        #not fully baked and can lead to infinite loops of adaptation
-        #if(sfConfig=="ERM"):
-        #  p0.domain.PUMIMesh.get_local_error() 
-        #  while(p0.domain.PUMIMesh.willAdapt()):
-        #    p0.domain.PUMIMesh.adaptPUMIMesh()
-        #    p0.domain.PUMIMesh.get_local_error()
-        
-        logEvent("Converting PUMI mesh to Proteus")
-        #ibaned: PUMI conversion #2
-        #TODO: this code is nearly identical to
-        #PUMI conversion #1, they should be merged
-        #into a function
-        if p0.domain.nd == 3:
-          mesh = MeshTools.TetrahedralMesh()
-        else:
-          mesh = MeshTools.TriangularMesh()
-        mesh.convertFromPUMI(p0.domain.PUMIMesh,
-                             p0.domain.faceList,
-                             p0.domain.regList,
-                             parallel = self.comm.size() > 1,
-                             dim = p0.domain.nd)
         logEvent("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
         if p0.domain.nd == 3:
           mlMesh = MeshTools.MultilevelTetrahedralMesh(
@@ -940,6 +828,205 @@ class NS_base:  # (HasTraits):
                     model,
                     index,
                     self.systemStepController.t_system_last+1.0e-6)
+
+    def PUMI_estimateError(self):
+        """
+        Estimate the error using the classical element residual method by
+        Ainsworth and Oden and generates a corresponding error field.
+        """
+
+        p0 = self.pList[0]
+        n0 = self.nList[0]
+        adaptMeshNow = False
+        #will need to move this to earlier when the mesh is created
+        from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+        if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
+            import sys
+            if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
+                sys.exit("The mesh must be partitioned by elements and NOT nodes. Do this with: `domain.MeshOptions.setParallelPartitioningType('element')'.")
+            p0.domain.PUMIMesh=n0.MeshAdaptMesh
+            p0.domain.hasModel = n0.useModel
+            numModelEntities = numpy.array([len(p0.domain.vertices),len(p0.domain.segments),len(p0.domain.facets),len(p0.domain.regions)]).astype("i")
+            #force initialization of arrays to enable passage through to C++ code
+            mesh2Model_v= numpy.asarray([[0,0]]).astype("i")
+            mesh2Model_e=numpy.asarray([[0,0]]).astype("i")
+            mesh2Model_b=numpy.asarray([[0,0]]).astype("i")
+
+            segmentList = numpy.asarray([[0,0]]).astype("i")
+            newFacetList = numpy.asarray([[0,0]]).astype("i")
+            #only appropriate for 2D use at the moment
+            if p0.domain.vertices and p0.domain.hasModel and p0.domain.nd==2:
+              p0.domain.getMesh2ModelClassification(self.modelList[0].levelModelList[0].mesh)
+              segmentList = numpy.asarray(p0.domain.segments).astype("i")
+              #force initialize the unused arrays for proper cythonization
+              import copy
+              newFacetList = []
+              if(not p0.domain.facets):
+                p0.domain.facets = [(-1,-1)]
+                newFacetList = copy.deepcopy(p0.domain.facets)
+              else:
+                facetList = []
+                maxFacetLength = 0
+                numHoles = len(p0.domain.holes)
+                if(numHoles): #if there are holes, there can be multiple lists of facets
+                  for i in range(numHoles,len(p0.domain.facets)):
+                    for j in range(len(p0.domain.facets[i])):
+                      maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i][j]))
+                  for i in range(numHoles,len(p0.domain.facets)):
+                    facetList.append(list(p0.domain.facets[i][0]))
+                    if(len(p0.domain.facets[i][0])<maxFacetLength):
+                      initLength = len(p0.domain.facets[i][0])
+                      lenDiff = maxFacetLength-initLength
+                      for j in range(lenDiff):
+                        facetList[i-numHoles].append(-1)
+                else:
+                  for i in range(len(p0.domain.facets)):
+                    maxFacetLength = max(maxFacetLength,len(p0.domain.facets[i]))
+                  for i in range(len(p0.domain.facets)):
+                    facetList.append(list(p0.domain.facets[i]))
+                    if(len(p0.domain.facets[i])<maxFacetLength):
+                      initLength = len(p0.domain.facets[i])
+                      lenDiff = maxFacetLength-initLength
+                      for j in range(lenDiff):
+                        facetList[i-numHoles].append(-1)
+
+                #substitute the vertex IDs with segment IDs
+                newFacetList = copy.deepcopy(facetList)
+                for i in range(len(facetList)):
+                  for j in range(maxFacetLength):
+                    if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
+                      testSegment = [facetList[i][j],facetList[i][0]] 
+                    else:
+                      testSegment = [facetList[i][j],facetList[i][j+1]]
+                    try:
+                      edgIdx = p0.domain.segments.index(testSegment)
+                    except ValueError:
+                      edgIdx = p0.domain.segments.index(list(reversed(testSegment)))
+                    newFacetList[i][j] = edgIdx
+                    if(j==maxFacetLength-1 or facetList[i][j+1]==-1):
+                      break
+              newFacetList = numpy.asarray(newFacetList).astype("i")
+              mesh2Model_v = numpy.asarray(p0.domain.meshVertex2Model).astype("i")
+              mesh2Model_e = numpy.asarray(p0.domain.meshEdge2Model).astype("i")
+              mesh2Model_b = numpy.asarray(p0.domain.meshBoundary2Model).astype("i")
+            
+            p0.domain.PUMIMesh.transferModelInfo(numModelEntities,segmentList,newFacetList,mesh2Model_v,mesh2Model_e,mesh2Model_b)
+            p0.domain.PUMIMesh.reconstructFromProteus(self.modelList[0].levelModelList[0].mesh.cmesh,self.modelList[0].levelModelList[0].mesh.globalMesh.cmesh,p0.domain.hasModel)
+        if (hasattr(p0.domain, 'PUMIMesh') and
+            n0.adaptMesh and
+            self.so.useOneMesh and 
+            self.nSolveSteps%n0.adaptMesh_nSteps==0):
+            logEvent("Copying coordinates to PUMI")
+            p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
+                self.modelList[0].levelModelList[0].mesh.nodeArray)
+            logEvent("Copying DOF and parameters to PUMI")
+            for m in self.modelList:
+              for lm in m.levelModelList:
+                coef = lm.coefficients
+                if coef.vectorComponents != None:
+                  vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+                  for vci in range(len(coef.vectorComponents)):
+                    vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
+                  p0.domain.PUMIMesh.transferFieldToPUMI(
+                         coef.vectorName, vector)
+                  del vector
+                for ci in range(coef.nc):
+                  if coef.vectorComponents == None or \
+                     ci not in coef.vectorComponents:
+                    scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                    scalar[:,0] = lm.u[ci].dof[:]
+                    p0.domain.PUMIMesh.transferFieldToPUMI(
+                        coef.variableNames[ci], scalar)
+                    del scalar
+            #Get Physical Parameters
+            #Can we do this in a problem-independent  way?
+            rho = numpy.array([self.pList[0].rho_0,
+                               self.pList[0].rho_1])
+            nu = numpy.array([self.pList[0].nu_0,
+                              self.pList[0].nu_1])
+            g = numpy.asarray(self.pList[0].g)
+            deltaT = self.tn-self.tn_last
+            p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
+            del rho, nu, g
+
+            logEvent("Estimate Error")
+            sfConfig = p0.domain.PUMIMesh.size_field_config()
+            if(sfConfig=="ERM"):
+              errorTotal= p0.domain.PUMIMesh.get_local_error()
+              
+              if(p0.domain.PUMIMesh.willAdapt()):
+                adaptMeshNow=True
+                logEvent("Need to Adapt")
+            elif(sfConfig=='interface' ):
+              adaptMeshNow=True
+              logEvent("Need to Adapt")
+            elif(sfConfig=='meshQuality'):
+              minQual = p0.domain.PUMIMesh.getMinimumQuality()
+              if(minQual):
+                logEvent('The quality is %f ' % minQual)
+              adaptMeshNow=True
+              logEvent("Need to Adapt")
+            else:
+              adaptMeshNow=True
+              logEvent("Need to Adapt")
+        return adaptMeshNow
+
+
+    def PUMI_adaptMesh(self):
+        """
+        Uses a computed error field to construct a size field and adapts
+        the mesh using SCOREC tools (a.k.a. MeshAdapt)
+        """
+        ##
+        ## zhang-alvin's BC communication for N-S error estimation
+        ##
+        #  #for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
+        #    #if idx>0:
+        #    #    diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
+        #    #else:
+        #    #    diff_flux = numpy.empty([2,2]) #dummy diff flux
+        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
+        #    #    idx,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+        #    #    diff_flux)
+        #    #p.domain.PUMIMesh.transferBCtagsToProteus(
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
+        #    #    idx,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+        #    #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+        #    #    diff_flux)
+        p0 = self.pList[0]
+        n0 = self.nList[0]
+        sfConfig = p0.domain.PUMIMesh.size_field_config()
+        logEvent("h-adapt mesh by calling AdaptPUMIMesh")
+        p0.domain.PUMIMesh.adaptPUMIMesh()
+
+        #code to suggest adapting until error is reduced;
+        #not fully baked and can lead to infinite loops of adaptation
+        #if(sfConfig=="ERM"):
+        #  p0.domain.PUMIMesh.get_local_error() 
+        #  while(p0.domain.PUMIMesh.willAdapt()):
+        #    p0.domain.PUMIMesh.adaptPUMIMesh()
+        #    p0.domain.PUMIMesh.get_local_error()
+        
+        logEvent("Converting PUMI mesh to Proteus")
+        #ibaned: PUMI conversion #2
+        #TODO: this code is nearly identical to
+        #PUMI conversion #1, they should be merged
+        #into a function
+        if p0.domain.nd == 3:
+          mesh = MeshTools.TetrahedralMesh()
+        else:
+          mesh = MeshTools.TriangularMesh()
+    
+        mesh.convertFromPUMI(p0.domain.PUMIMesh,
+                             p0.domain.faceList,
+                             p0.domain.regList,
+                             parallel = self.comm.size() > 1,
+                             dim = p0.domain.nd)
+        self.PUMI2Proteus(mesh)
       ##chitak end Adapt
 
     ## compute the solution
@@ -1298,7 +1385,6 @@ class NS_base:  # (HasTraits):
             self.nSolveSteps += 1
             if(self.PUMI_estimateError()):
               self.PUMI_adaptMesh()
-
 
         logEvent("Finished calculating solution",level=3)
 
