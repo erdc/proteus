@@ -2611,7 +2611,7 @@ class RandomNLWaves:
         xx[2] = x[2]
 
         if(vel):
-            return self._cpp_eta_long_else(xx,t)
+            return self._cpp_eta_long_vel(xx,t)
         else:
             return self._cpp_eta_long(xx,t)
     #set-up calculation
