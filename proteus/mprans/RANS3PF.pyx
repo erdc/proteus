@@ -2827,10 +2827,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.vectorComponents = [0, 1, 2]
             self.vectorName="velocity"
 
-
     def attachModels(self, modelList):
 
-    	# level set
+        # level set
         self.model = modelList[self.ME_model]
         self.model.q['phi_solid'] = self.q_phi_solid
 
@@ -2839,14 +2838,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
         self.q_nu  = self.model.q[('u',0)].copy()
         self.ebqe_nu  = self.model.ebqe[('u',0)].copy()
-
-
-	#DEM particles
-        self.particle_netForces = np.zeros((self.nParticles,3),'d')
-        self.particle_netMoments = np.zeros((self.nParticles,3),'d')
-
-        self.particle_velocities = np.zeros((self.nParticles,3),'d')
-        self.particle_centroids = np.zeros((self.nParticles,3),'d')
 
         self.particle_signed_distances \
             = np.zeros((self.nParticles,)+self.model.q[('u',0)].shape,'d')
@@ -2977,6 +2968,13 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         ), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
 
     def initializeMesh(self, mesh):
+        
+        #DEM particles
+        self.particle_netForces = np.zeros((self.nParticles,3),'d')
+        self.particle_netMoments = np.zeros((self.nParticles,3),'d')
+
+        self.particle_velocities = np.zeros((self.nParticles,3),'d')
+        self.particle_centroids = np.zeros((self.nParticles,3),'d')
 
         # cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density * mesh.h
