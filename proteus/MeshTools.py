@@ -6287,9 +6287,9 @@ class MeshOptions:
             layers of overlap for paralllel (default: 0)
         """
         if partitioning_type == 'element' or partitioning_type == 0:
-            self.parallelPartitioningType = mpt.element
+            self.parallelPartitioningType = MeshParallelPartitioningTypes.element
         if partitioning_type == 'node' or partitioning_type == 1:
-            self.parallelPartitioningType = mpt.node
+            self.parallelPartitioningType = MeshParallelPartitioningTypes.node
         self.nLayersOfOverlapForParallel = layers_overlap
 
     def setTriangleOptions(self, triangle_options=None):
