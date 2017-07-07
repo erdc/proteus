@@ -1549,8 +1549,10 @@ class Mesh:
           PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
               self.subdomainMesh.cmesh)
           if(PUMIMesh.isReconstructed()):
+            logEvent("Material arrays updating based on reconstructed model.\n")
             PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh);
           else:
+              logEvent("Material arrays updating based on geometric model.\n")
               for i in range(len(faceList)):
                 for j in range(len(faceList[i])):
                   PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,(dim-1), i+1,
