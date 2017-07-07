@@ -1548,13 +1548,18 @@ class Mesh:
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
           PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
               self.subdomainMesh.cmesh)
-          for i in range(len(faceList)):
-            for j in range(len(faceList[i])):
-              PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,(dim-1), i+1,
-                  faceList[i][j])
-          for i in range(len(regList)):
-            for j in range(len(regList[i])):
-              PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,dim, i+1, regList[i][j])
+          if(PUMIMesh.isReconstructed()):
+            logEvent("Material arrays updating based on reconstructed model.\n")
+            PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh);
+          else:
+              logEvent("Material arrays updating based on geometric model.\n")
+              for i in range(len(faceList)):
+                for j in range(len(faceList[i])):
+                  PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,(dim-1), i+1,
+                      faceList[i][j])
+              for i in range(len(regList)):
+                for j in range(len(regList[i])):
+                  PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,dim, i+1, regList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
@@ -1599,12 +1604,15 @@ class Mesh:
           comm.barrier()
         else:
           PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
-          for i in range(len(faceList)):
-            for j in range(len(faceList[i])):
-              PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), i+1, faceList[i][j])
-          for i in range(len(regList)):
-            for j in range(len(regList[i])):
-              PUMIMesh.updateMaterialArrays(self.cmesh,dim, i+1, regList[i][j])
+          if(PUMIMesh.isReconstructed()):
+            PUMIMesh.updateMaterialArrays(self.cmesh);
+          else:
+              for i in range(len(faceList)):
+                for j in range(len(faceList[i])):
+                  PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), i+1, faceList[i][j])
+              for i in range(len(regList)):
+                for j in range(len(regList[i])):
+                  PUMIMesh.updateMaterialArrays(self.cmesh,dim, i+1, regList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
@@ -6319,9 +6327,9 @@ class MeshOptions:
             layers of overlap for paralllel (default: 0)
         """
         if partitioning_type == 'element' or partitioning_type == 0:
-            self.parallelPartitioningType = mpt.element
+            self.parallelPartitioningType = MeshParallelPartitioningTypes.element
         if partitioning_type == 'node' or partitioning_type == 1:
-            self.parallelPartitioningType = mpt.node
+            self.parallelPartitioningType = MeshParallelPartitioningTypes.node
         self.nLayersOfOverlapForParallel = layers_overlap
 
     def setTriangleOptions(self, triangle_options=None):
