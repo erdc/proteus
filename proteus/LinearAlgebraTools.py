@@ -369,6 +369,7 @@ class ParInfo_petsc4py:
     petsc2proteus_subdomain = None
     nzval_proteus2petsc = None
     dim = None
+    mixed = False
 
     @classmethod
     def print_info(cls):
@@ -446,6 +447,7 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
             self.setBlockSize(self.blockSize)
             self.subdomain2global = subdomain2global #no need to include extra block dofs?
         else:
+#            self.setType('seqaij') # ARB - in the current configuration this will give asm trouble on a single core.
             self.setType('mpiaij')
             self.setSizes([[par_n*self.blockSize,par_N*self.blockSize],[par_nc*self.blockSize,par_Nc*self.blockSize]],bsize=1)
             if self.blockSize > 1: #have to build in block dofs
@@ -817,7 +819,130 @@ class MatrixInvShell(InvOperatorShell):
 #        _petsc_view(y,'y_mpi_2')
 #        _petsc_view(self.ksp.getOperators()[0],'Qp_mpi_2')
 #        import pdb ; pdb.set_trace()
+
+class TwoPhase_PCDInv_shell(InvOperatorShell):
+    r""" Shell class for the two-phase PCD preconditioner.  The
+    two-phase PCD_inverse shell applies the following operator.
+
+    .. math::
+
+        \hat{S}^{-1} = (Q^{(1 / \mu)})^{-1} + (A_{p}^{(1 / \rho)})^{-1}
+        (N_{p}^{(\rho)} + \dfrac{\alpha}{\Delta t} Q^{(\rho)} ) 
+        (Q^{(\rho)})^{-1}
+
+    where :math:`Q^{(1 / \mu)}` and :math:`Q^{(\rho)}` denote the pressure 
+    mass matrix scaled by the inverse dynamic viscosity and density
+    respectively, :math:`(A_{p}^{(1 / \rho)})^{-1}`
+    denotes the pressure Laplacian scaled by inverse density, and
+    :math:`N_{p}^{(\rho)}` denotes the pressure advection operator scaled by
+    the density, and :math:`\alpha` is a binary operator indicating 
+    whether the problem is temporal or steady state.
+    """
+    def __init__(self,
+                 Qp_visc,
+                 Qp_dens,
+                 Ap_rho,
+                 Np_rho,
+                 alpha = False,
+                 delta_t = 0):
+        """ Initialize the two-phase PCD inverse operator.
         
+        Parameters
+        ----------
+        Qp_visc : petsc4py matrix
+                  The pressure mass matrix with dynamic viscocity
+                  scaling.
+        Qp_dens : petsc4py matrix
+                  The pressure mass matrix with density scaling.
+        Ap_rho : petsc4py matrix
+                 The pressure Laplacian scaled with density scaling.
+        Np_rho : petsc4py matrix
+                 The pressure advection operator with inverse density
+                 scaling.
+        alpha : binary
+                True if problem is temporal, False if problem is steady
+                state.
+        delta_t : float
+                Time step parameter.
+        """
+        # ARB TODO : There should be an exception to ensure each of these
+        # matrices has non-zero elements along the diagonal.  I cannot
+        # think of a case where this would not be an error.
+        self.Qp_visc = Qp_visc
+        self.Qp_dens = Qp_dens
+        self.Ap_rho = Ap_rho
+        self.Np_rho = Np_rho
+        self.alpha = alpha
+        self.delta_t = delta_t
+
+        self._options = p4pyPETSc.Options()
+        self._create_constant_nullspace()
+        # TODO ARB - Need to implement the Chebyshev semi-iteration for
+        # mass matrix solves.
+
+        # Initialize mass matrix inverses.
+        self.kspQp_visc = p4pyPETSc.KSP().create()
+        self.kspQp_visc.setOperators(self.Qp_visc,self.Qp_visc)
+        self.kspQp_visc.setOptionsPrefix('innerTPPCDsolver_Qp_visc_')
+        self.kspQp_visc.setFromOptions()
+        self.kspQp_visc.setUp()
+        
+        self.kspQp_dens = p4pyPETSc.KSP().create()
+        self.kspQp_dens.setOperators(self.Qp_dens,self.Qp_dens)
+        self.kspQp_dens.setOptionsPrefix('innerTPPCDsolver_Qp_dens_')
+        self.kspQp_dens.setFromOptions()
+        self.kspQp_dens.setUp()
+
+        # Initialize Laplacian inverse.
+        self.kspAp_rho = p4pyPETSc.KSP().create()
+        self.kspAp_rho.setOperators(self.Ap_rho,self.Ap_rho)
+        self.kspAp_rho.setOptionsPrefix('innerTPPCDsolver_Ap_rho_')
+        self.kspAp_rho.setFromOptions()
+        if self._options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
+            self.Ap_rho.setNullSpace(self.const_null_space)
+        self.kspAp_rho.setUp()
+
+    def apply(self,A,x,y):
+        """Apply the two-phase pressure-convection-diffusion preconditioner 
+
+        Parameters
+        ----------
+        A : None
+            Dummy variabled needed to interface with PETSc
+        x : petsc4py vector
+            Vector to which operator is applied
+
+        Returns
+        -------
+        y : petsc4py vector
+            Result of operator acting on x.
+        """
+        # TODO ARB - write a subroutine in InvOperatorShell
+        # to create petsc4py vectors
+        tmp1 = p4pyPETSc.Vec().create()
+        tmp2 = p4pyPETSc.Vec().create()
+        tmp3 = p4pyPETSc.Vec().create()
+        tmp1.setType('mpi')
+        tmp2.setType('mpi')
+        tmp3.setType('mpi')
+        tmp1 = x.copy()
+        tmp2 = x.copy()
+        tmp3 = x.copy()
+
+        self.kspQp_visc.solve(x,y)
+        self.kspQp_dens.solve(x,tmp1)
+        
+        self.Np_rho.mult(tmp1,tmp2)
+
+        if self.alpha is True:
+            tmp2.axpy(1./self.delta_t,x)
+
+        if self._options.hasName('innerTPPCDsolver_Ap_rho_ksp_constant_null_space'):
+            self.const_null_space.remove(tmp2)
+        
+        self.kspAp_rho.solve(tmp2,tmp3)
+        y.axpy(1.,tmp3)
+
 def l2Norm(x):
     """
     Compute the parallel :math:`l_2` norm
