@@ -216,6 +216,7 @@ namespace proteus
 				   double* particle_signed_distances,
 				   double* particle_signed_distance_normals,
 				   double* particle_velocities,
+                                   double* particle_angular_velocities,
 				   double* particle_centroids,
 				   double* particle_netForces,
 				   double* particle_netMoments,
@@ -395,6 +396,7 @@ namespace proteus
 				   double* particle_signed_distances,
 				   double* particle_signed_distance_normals,
 				   double* particle_velocities,
+                                   double* particle_angular_velocities,
 				   double* particle_centroids,
 				   double particle_nitsche)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
@@ -898,6 +900,7 @@ namespace proteus
 				    double* particle_signed_distances,
 				    double* particle_signed_distance_normals,
 				    double* particle_velocities,
+                                    double* particle_angular_velocities,
 				    double* particle_centroids,
 				    const double porosity,//VRANS specific
 				    const double penalty,
@@ -948,7 +951,7 @@ namespace proteus
 				    double* particle_netMoments)
     {
 
-      double C,rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,D_s,phi_s,u_s,v_s,w_s,force_x,force_y,force_z,r_x,r_y,r_z;
+      double C,rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,D_s,phi_s,u_s,v_s,w_s,uav_s,vav_s,wav_s,force_x,force_y,force_z,r_x,r_y,r_z;
       double* phi_s_normal;
 
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
@@ -966,6 +969,10 @@ namespace proteus
 	u_s = particle_velocities[i*3+0];
 	v_s = particle_velocities[i*3+1];
 	w_s = particle_velocities[i*3+2];
+
+        uav_s = particle_angular_velocities[i*3+0];
+        vav_s = particle_angular_velocities[i*3+1];
+        wav_s = particle_angular_velocities[i*3+2];
 
 	H_s = smoothedHeaviside(eps_s, phi_s);
 	D_s = smoothedDirac(eps_s, phi_s);
@@ -1776,6 +1783,7 @@ namespace proteus
 			   double* particle_signed_distances,
 			   double* particle_signed_distance_normals,
 			   double* particle_velocities,
+                           double* particle_angular_velocities,
 			   double* particle_centroids,
 			   double* particle_netForces,
 			   double* particle_netMoments,
@@ -2116,6 +2124,7 @@ namespace proteus
 				       &particle_signed_distances[eN_k],
 				       &particle_signed_distance_normals[eN_k_nSpace],
 				       particle_velocities,
+                                       particle_angular_velocities,
 				       particle_centroids,
 				       porosity,
 				       particle_penalty_constant/h_phi,//penalty,
@@ -3488,6 +3497,7 @@ namespace proteus
 			   double* particle_signed_distances,
 			   double* particle_signed_distance_normals,
 			   double* particle_velocities,
+                           double* particle_angular_velocities,
 			   double* particle_centroids,
 			   double particle_nitsche)
     {
@@ -3849,6 +3859,7 @@ namespace proteus
 				       &particle_signed_distances[eN_k],
 				       &particle_signed_distance_normals[eN_k_nSpace],
 				       particle_velocities,
+                                       particle_angular_velocities,
 				       particle_centroids,
 				       porosity,
 				       particle_penalty_constant/h_phi,//penalty,

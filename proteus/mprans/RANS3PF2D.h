@@ -980,6 +980,8 @@ namespace proteus
 	u_s = particle_velocities[i*3+0];
 	v_s = particle_velocities[i*3+1];
 
+	//std::cout << "\n" << u_s << ", " << v_s << "\n" << std::endl;
+
 	H_s = smoothedHeaviside(eps_s, phi_s);
 	D_s = smoothedDirac(eps_s, phi_s);
 
