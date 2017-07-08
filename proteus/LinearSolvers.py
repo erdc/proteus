@@ -684,6 +684,10 @@ class KSP_petsc4py(LinearSolver):
                 logEvent("NAHeader Preconditioner Qp" )
                 self.preconditioner = Schur_Qp(par_L,prefix,self.bdyNullSpace)
                 self.pc = self.preconditioner.pc
+            elif Preconditioner == Schur_LSC:
+                logEvent("NAHeader Preconditioner LSC")
+                self.preconditioner = Schur_LSC(par_L,prefix,self.bdyNullSpace)
+                self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleDarcyFC:
                 self.preconditioner = SimpleDarcyFC(par_L)
                 self.pc = self.preconditioner.pc
@@ -718,6 +722,28 @@ class SchurOperatorConstructor:
         except:
             self.opBuilder = OperatorConstructor_oneLevel(self.L.pde)
 
+    def getQv(self, output_matrix=False, recalculate=False):
+        """ Return the pressure mass matrix Qp.
+
+        Parameters
+        ----------
+        output_matrix : bool 
+            Determines whether matrix should be exported.
+        recalculate : bool
+            Flag indicating whther matrix should be rebuilt every time it's used
+
+        Returns
+        -------
+        Qp : matrix
+            The pressure mass matrix.
+        """
+        Qsys_petsc4py = self._massMatrix(recalculate = recalculate)
+        self.Qv = Qsys_petsc4py.getSubMatrix(self.linear_smoother.isv,
+                                             self.linear_smoother.isv)
+        if output_matrix is True:
+            self._exportMatrix(self.Qv,"Qv")
+        return self.Qv
+        
     def getQp(self, output_matrix=False, recalculate=False):
         """ Return the pressure mass matrix Qp.
 
@@ -865,6 +891,19 @@ class SchurPrecon(KSP_Preconditioner):
         """ Helper function that attaches a residual log to the inner solve """
         global_ksp.pc.getFieldSplitSubKSP()[1].setConvergenceTest(self._converged_trueRes)
 
+    def _setSchurApproximation(self,global_ksp):
+        """ Set the Schur approximation to the Schur block.
+
+        Parameters
+        ----------
+        global_ksp : 
+        """
+        # TODO - Need an assert for the matrix context
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        
+
     def _initializeIS(self,prefix):
         """ Sets the index set (IP) for the pressure and velocity 
         
@@ -985,7 +1024,6 @@ class Schur_Qp(SchurPrecon) :
         self.Qp = self.operator_constructor.getQp()
         self.Qp.scale(1./self.L.pde.coefficients.nu)
         L_sizes = self.Qp.size
-        L_range = self.Qp.owner_range
 
         # Setup a PETSc shell for the inverse Qp operator
         self.QpInv_shell = p4pyPETSc.Mat().create()
@@ -996,14 +1034,37 @@ class Schur_Qp(SchurPrecon) :
         self.QpInv_shell.setUp()
 
         # Set PETSc Schur operator
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
-        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+        self._setSchurApproximation(global_ksp)
 
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
-        
+
+class Schur_LSC(SchurPrecond):
+    """
+    The Least-Squares Communtator preconditioner for saddle
+    point problems.
+    """
+    def __init__(self,L,prefix=None, bdyNullSpace=False):
+        SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
+
+    def setUp(self,global_ksp):
+        self.Qv = self.operator_constructor.getQv()
+        self.Qv_hat = p4pyPETSc.Mat().create()
+        self.Qv_hat.setSizes(self.Qv.getSizes())
+        self.Qv_hat.setType('aij')
+        self.Qv_hat.setUp()
+        self.Qv_hat.setDiagonal(self.Qv.getDiagonal())
+
+        self.B = global_ksp.getOperators()[0].getSubMatrix(self.isp,self.isv)
+        self.F = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isv)
+        self.Bt = global_ksp.getOperators()[0].getSubMatrix(self.isv,self.isp)
+
+        self.matcontext_inv = LSCInv_shell(self.Qv_hat,self.B,self.Bt,self.F)
+
+        self._setSchurApproximation(global_ksp)
+        self._setSchurlog(global_ksp)
+            
 class NavierStokes3D:
     def __init__(self,L,prefix=None):
         self.L = L
