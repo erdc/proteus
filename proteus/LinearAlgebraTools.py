@@ -68,7 +68,30 @@ def petsc_load_vector(filename):
     except:
         print("Either you've entered an invalid file name or your object is not a vector (try petsc_load_matrix).")
     return output
-    
+
+def csr_2_petsc(size,csr):
+    """ Create an petsc4py matrix from size and CSR information.
+
+    Parameters:
+    ----------
+    size : tuple
+        Two entires: (num_rows, num_cols)
+    csr : tuple
+        (row_idx, col_idx, vals)
+
+    Returns:
+    --------
+    matrix : PETSc4py aij matrix
+    """
+    mat = p4pyPETSc.Mat().create()
+    mat.setSizes(size = size)
+    mat.setType('aij')
+    mat.setUp()
+    mat.assemblyBegin()
+    mat.setValuesCSR(csr[0],csr[1],csr[2])
+    mat.assemblyEnd()
+    return mat
+
 def _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output=False):
     """ Takes python CSR datatypes and makes a dense matrix """
     dense_matrix = numpy.zeros(shape = (nr,nc), dtype='float')
@@ -139,7 +162,7 @@ def superlu_2_petsc4py(sparse_superlu):
 
     Returns
     -------
-    sparse_matrix : PETSc4py matrix
+    sparse_matrix : :class: `p4pyPETSc.Mat`
     """
     rowptr, colind, nzval = sparse_superlu.getCSRrepresentation()
     A_rowptr = rowptr.copy()
@@ -153,11 +176,36 @@ def superlu_2_petsc4py(sparse_superlu):
                                                       A_nzval))
     return A_petsc4py
 
+def petsc_create_diagonal_inv_matrix(sparse_petsc):
+    """ Create an inverse diagonal petsc4py matrix from input matrix.
+    
+    Parameters
+    ----------
+    sparse_petsc : :class:`p4pyPETSc.Mat`
+
+    Returns
+    -------
+    sparse_matrix : :class:`p4pyPETSc.Mat`
+    """
+    diag_inv = p4pyPETSc.Mat().create()
+    diag_inv.setSizes(sparse_petsc.getSizes())
+    diag_inv.setType('aij')
+    diag_inv.setUp()
+    diag_inv.setDiagonal(1./sparse_petsc.getDiagonal())
+    return diag_inv
+
 class ParVec:
     """
     A parallel vector built on top of daetk's wrappers for petsc
     """
-    def __init__(self,array,blockSize,n,N,nghosts=None,subdomain2global=None,blockVecType="simple"):#"block"
+    def __init__(self,
+                 array,
+                 blockSize,
+                 n,
+                 N,
+                 nghosts=None,
+                 subdomain2global=None,
+                 blockVecType="simple"):#"block"
         import flcbdfWrappers
         self.dim_proc=n*blockSize
         if nghosts is None:
@@ -518,6 +566,94 @@ class InvOperatorShell(OperatorShell):
                 return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
         return False
 
+class LSCInv_shell(InvOperatorShell):
+    """ Shell class for the LSC Inverse Preconditioner 
+    
+    This class creates a shell for the least-squares commutator (LSC)
+    preconditioner, where 
+    :math:`M_{s}= (B \hat{Q^{-1}_{v}} B^{'}) (B \hat{Q^{-1}_{v}} F 
+    \hat{Q^{-1}_{v}} B^{'})^{-1} (B \hat{Q^{-1}_{v}} B^{'})` 
+    is used to approximate the Schur complement.
+    """
+    def __init__(self, Qv, B, Bt, F):
+        """Initializes the LSC inverse operator.
+        
+        Parameters
+        ----------
+        Qv : petsc4py matrix object
+            The diagonal elements of the velocity mass matrix.
+        B : petsc4py matrix object
+            The discrete divergence operator.
+        Bt : petsc4py matrix object
+            The discrete gradient operator.
+        F : petsc4py matrix object
+            The A-block of the linear system.
+        """
+        # TODO - Find a good way to assert that Qv is diagonal
+
+        self.Qv = Qv
+        self.B = B
+        self.Bt = Bt
+        self.F = F
+    
+        self._constructBQinvBt()
+        self._options = p4pyPETSc.Options()
+        
+        if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
+            self._create_constant_nullspace()
+            self.BQinvBt.setNullSpace(self.const_null_space)
+
+        self.kspBQinvBt = p4pyPETSc.KSP().create()
+        self.kspBQinvBt.setOperators(self.BQinvBt,self.BQinvBt)
+        self.kspBQinvBt.setOptionsPrefix('innerLSCsolver_BTinvBt_')
+        self.kspBQinvBt.pc.setUp()
+        self.kspBQinvBt.setFromOptions()
+        self.kspBQinvBt.setUp()
+
+        # initialize solver for Qv
+        self.kspQv = p4pyPETSc.KSP().create()
+        self.kspQv.setOperators(self.Qv,self.Qv)
+        self.kspQv.setOptionsPrefix('innerLSCsolver_T_')
+        self.kspQv.setFromOptions()
+        
+        convergenceTest = 'r-true'
+        if convergenceTest == 'r-true':
+            self.r_work = self.BQinvBt.getVecLeft()
+            self.rnorm0 = None
+            self.kspBQinvBt.setConvergenceTest(self._converged_trueRes)
+        else:
+            self.r_work = None        
+        self.kspBQinvBt.setUp()
+
+    def apply(self,A,x,y):
+        """ Apply the LSC inverse operator """
+        # create temporary vectors
+        B_sizes = self.B.getSizes()
+        x_tmp = p4pyPETSc.Vec().create()
+        x_tmp = x.copy()
+        tmp1 = self._create_tmp_vec(B_sizes[0])
+        tmp2 = self._create_tmp_vec(B_sizes[1])
+        tmp3 = self._create_tmp_vec(B_sizes[1])
+
+        if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
+            self.const_null_space.remove(x_tmp)
+        self.kspBQinvBt.solve(x_tmp,tmp1)
+        self.B.multTranspose(tmp1,tmp2)
+        self.kspQv.solve(tmp2,tmp3)
+        self.F.mult(tmp3,tmp2)
+        self.kspQv.solve(tmp2,tmp3)
+        self.B.mult(tmp3,tmp1)
+        if self._options.hasName('innerLSCsolver_BTinvBt_ksp_constant_null_space'):
+            self.const_null_space.remove(x_tmp)
+        self.kspBQinvBt.solve(tmp1,y)
+        
+    def _constructBQinvBt(self):
+        """ Private method repsonsible for building BQinvBt """
+        self.Qv_inv = petsc_create_diagonal_inv_matrix(self.Qv)
+        QinvBt = self.Qv_inv.matMult(self.Bt)
+        self.BQinvBt = self.B.matMult(QinvBt)
+
+    
 class MatrixShell(ProductOperatorShell):
     """ A shell class for a matrix. """
     def __init__(self,A):

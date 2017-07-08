@@ -898,7 +898,7 @@ class SchurPrecon(KSP_Preconditioner):
         ----------
         global_ksp : 
         """
-        # TODO - Need an assert for the matrix context
+        assert self.matcontext_inv is not None, "no matrix context has been set."
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
@@ -1040,13 +1040,14 @@ class Schur_Qp(SchurPrecon) :
         if self.bdyNullSpace == True:
             self._setConstantPressureNullSpace(global_ksp)
 
-class Schur_LSC(SchurPrecond):
+class Schur_LSC(SchurPrecon):
     """
     The Least-Squares Communtator preconditioner for saddle
     point problems.
     """
     def __init__(self,L,prefix=None, bdyNullSpace=False):
         SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
+        self.operator_constructor = SchurOperatorConstructor(self)
 
     def setUp(self,global_ksp):
         self.Qv = self.operator_constructor.getQv()
