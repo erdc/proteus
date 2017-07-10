@@ -1776,14 +1776,14 @@ class CheckFailureRandomNLWaves(unittest.TestCase):
 
 
 
-class VerifyRandomNLWaves(unittest.TestCase):
+class VerifyRandomNLWavesVel(unittest.TestCase):
     def testFunctions(self):
         from proteus.WaveTools import RandomWaves,TimeSeries,RandomNLWaves,eta_mode
         path =getpath()
         fname = path+"randomSeries.txt"
         # Assinging a random value at a field and getting the expected output
         Tp = 1.
-        Hs = 0.1
+        Hs = 10.
         mwl = 4.5
         depth = 0.9
         g = np.array([0,0,-9.81])
@@ -1812,7 +1812,8 @@ class VerifyRandomNLWaves(unittest.TestCase):
             bandFactor,              #width factor for band around peak frequency fp
             spectName,               #random words will result in error and return the available spectra
             spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
-            phi=phi                 #array of component phases
+            phi=phi,#array of component phases
+            fast=False
             )
 
 
@@ -1829,27 +1830,26 @@ class VerifyRandomNLWaves(unittest.TestCase):
             bandFactor,              #width factor for band around peak frequency fp
             spectName,               #random words will result in error and return the available spectra
             spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
-            phi = aR.phi               #array of component phases
+            phi = aR.phi,#array of component phases
+            fast=False
             )
         from proteus.WaveTools import fastcos_test as fcos
 
-        x = 150.
-        y = 135.
+        x = 0.
+        y = 0.
         z =  mwl 
-        t =  120.
+        t =  0.
         xi = np.array([x, y, z])
 #        print aR.eta(xi,t),aNL.eta(xi,t)
-        self.assertTrue(round(aR.eta(xi,t),8) == round(aNL.eta_linear(xi,t),8))
-
         etaT = 0.
         for ii in range(N):
             kh = aR.ki[ii]*aR.depth
-            ai = 0.25 * aR.ai[ii]**2 * aR.ki[ii] / tanh(kh) * (2. + 3./(sinh(kh)**2))
+            ai =  (aR.ki[ii])*(aR.ai[ii]**2)*(3./8.) *sinh(2.*kh) / sinh(kh)**4
             etaT += eta_mode(xi,t,2.*aR.kDir[ii],2.*aR.omega[ii],2.*aR.phi[ii],ai)
         # 2nd order testing
 #        print etaT,aNL.eta_2ndOrder(xi,t)
-        self.assertTrue(round(etaT/aNL.eta_2ndOrder(xi,t),2)==1)
-
+        self.assertAlmostEqual(etaT,aNL.eta_2ndOrder(xi,t,True))
+        """
         ww = aR.omega
         ki = aR.ki
 
@@ -2036,176 +2036,8 @@ class VerifyRandomNLWavesFast(unittest.TestCase):
                               spectName ,# random words will result in error and return the available spectra
                               spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                               phi)
-        aRF= RandomNLWavesFast(
-            Tstart,
-            Tend,
-            x0,
-            Tp,
-            Hs,
-            mwl,
-            depth,
-            waveDir,
-            g,
-            N,
-            bandFactor,
-            spectName,
-            None,
-            phi,
-            Lgen,
-            NLongW=NLongW)
-
-        Tm = Tp/1.1
-        Ts = Tm/2.
-        Tmax = NLongW*Tm
-
-        dt_s = Ts/50.
-        dt =  Tm/50.
-        dt_l = Tmax / 50.
-
-        series = aR.writeEtaSeries(Tstart,Tend,dt,x0,fname,"linear",False,Lgen)
-        series_l = aR.writeEtaSeries(Tstart,Tend,dt_l,x0,fname,"long",False,Lgen)
-        series_s = aR.writeEtaSeries(Tstart,Tend,dt_s,x0,fname,"short",False ,Lgen)
-
-        filenames = ['RNLWaves.txt']
-        append = ['_linear.csv','_long.csv','_short.csv']
-        filenames.extend(['randomNLWaves'+end for end in append])
-        remove_files(filenames)
-
-        Tstart = series_s[0,0]
-        Tend = series_s[-1,0]
-        cutoff = 0.2*Tp/(Tend-Tstart)
-
-
-
-
-        Nw = int((Tend-Tstart)/Ts)
-        Nw1 = min(15,Nw)
-        Nw = int(Nw/Nw1)
-
-        if Nw < 3:
-            rec_d = True
-        else:
-            rec_d = False
-
-        aT_s= TimeSeries(
-            fname,
-            0,
-            x0,
-            depth,
-            32,          #number of frequency bins
-            mwl ,
-            waveDir,
-            g,
-            cutoff,
-            rec_d,
-            {"Nwaves":15, "Tm":Ts, "Window":"costap"},
-            True,
-            series_s
-            )
-        Tstart = series[0,0]
-        Tend = series[-1,0]
-        cutoff = 0.2*Ts/(Tend-Tstart)
-
-        Nw = int((Tend-Tstart)/Tm)
-        Nw1 = min(15,Nw)
-        Nw = int(Nw/Nw1)
-
-        if Nw < 3:
-            rec_d = True
-        else:
-            rec_d = False
-
-        aT= TimeSeries(
-            fname,
-            0,
-            x0,
-            depth,
-            32,          #number of frequency bins
-            mwl ,
-            waveDir,
-            g,
-            cutoff,
-            rec_d,
-            {"Nwaves":15, "Tm":Tm, "Window":"costap"},
-            True,
-            series
-            )
-        Tstart = series_l[0,0]
-        Tend = series_l[-1,0]
-        cutoff = 0.2*Tmax/(Tend-Tstart)
-
-        Nw = int((Tend-Tstart)/Tmax)
-        Nw1 = min(15,Nw)
-        Nw = int(Nw/Nw1)
-        if Nw < 3:
-            rec_d = True
-        else:
-            rec_d = False
-
-        aT_l= TimeSeries(
-            fname,
-            0,
-            x0,
-            depth,
-            32,          #number of frequency bins
-            mwl ,
-            waveDir,
-            g,
-            cutoff,
-            rec_d,
-            {"Nwaves":15, "Tm":Tmax, "Window":"costap"},
-            True,
-            series_l
-            )
-        #print cutoff,aRF.eta(x0,50.)[8]#, aT_s.eta(x,t)+aT.eta(x,t)#+aT_l.eta(x,t)
-
-#Checking consistency with RandomNLWaves class
-        sumerr = 0
-        sumabs = 0
-
-        for aa in range(len(series)):
-            Tcut =  0.2*Tp
-            if (series[aa,0] > Tcut) and (series[aa,0] < series[-1,0] - Tcut):
-                sumerr += (aR.eta_linear(x0,series[aa,0]) - aT.eta(x0,series[aa,0]))**2
-                sumabs += abs(aR.eta_linear(x0,series[aa,0]))
-
-        err = np.sqrt(sumerr)/len(series)
-        err = err / (sumabs/len(series))
-        self.assertTrue(err < 0.005)
-#        print err
-
-
-
-        for aa in range(len(series_s)):
-            Tcut =  0.2*Tp
-            if (series_s[aa,0] > Tcut) and (series_s[aa,0] < series_s[-1,0] - Tcut):
-                sumerr += (aR.eta_short(x0,series_s[aa,0])+aR.eta_2ndOrder(x0,series_s[aa,0]) - aT_s.eta(x0,series_s[aa,0]))**2
-                sumabs += abs( aR.eta_short(x0,series_s[aa,0])+ aR.eta_2ndOrder(x0,series_s[aa,0]) )
-        err = np.sqrt(sumerr)/len(series_s)
-        err = err / (sumabs/len(series_s))
-        self.assertTrue(err < 0.005)
-#        print err
-        for aa in range(len(series_l)):
-            Tcut =  0.2*Tp
-            if (series_l[aa,0] > Tcut) and (series_l[aa,0] < series_l[-1,0] - Tcut):
-                sumerr += (aR.eta_long(x0,series_l[aa,0]) - aT_l.eta(x0,series_l[aa,0]))**2
-                sumabs += abs(aR.eta_linear(x0,series_l[aa,0]))
-        err = np.sqrt(sumerr)/len(series_l)
-        err = err / (sumabs/len(series_l))
-
-        self.assertTrue(err < 0.005)
-#        print err
-
-
-#Cjecking consistency of the timeSeriesClass
-        x = x0 + Lgen * 0.3
-        t = Tend/2.
-
-
-        self.assertTrue( round(aRF.eta(x,t) == aT_s.eta(x,t)+aT.eta(x,t)+aT_l.eta(x,t),8) )
-        self.assertTrue( aRF.u(x,t).all() == (aT_s.u(x,t)+aT.u(x,t)+aT_l.u(x,t) ).all())
-
-
+        
+        """
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 

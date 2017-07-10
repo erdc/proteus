@@ -466,7 +466,7 @@ namespace proteus
 inline double __cpp_phi_2nd(double ai,double ww, double sinhKd)
 {
 
-  return ai*ai*0.375*ww/pow(sinhKd,4.);
+  return ai*ai*0.375/pow(sinhKd,4.)*ww;
 
 
   }
@@ -491,7 +491,8 @@ inline double __cpp_eta2nd_vel(double x[nDim], double t, double* kDir, double* k
 	    kw[0] =2.* kDir[ii];
 	    kw[1] =2.* kDir[ii+1];
 	    kw[2] =2.* kDir[ii+2];
-	    ai_2nd = ki[nn]*__cpp_phi_2nd(amplitude[nn],2.*omega[nn],sinhKd[nn])*sinhKd[nn]/(2.*omega[nn]);
+	    double sinh2Kd=2.*sinhKd[nn]*(sinhKd[nn]/tanhKd[nn]);
+	    ai_2nd =(2.* ki[nn])*__cpp_phi_2nd(amplitude[nn],omega[nn],sinhKd[nn])*sinh2Kd/(2.*omega[nn]);
 	    HH= HH + __cpp_eta_mode(x,t,kw,2.*omega[nn],2.*phi[nn],ai_2nd, fast);
 	  }
         return HH;      
