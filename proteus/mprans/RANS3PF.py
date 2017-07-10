@@ -542,16 +542,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.netMoments = numpy.zeros((nBoundariesMax, 3), 'd')
         if self.barycenters is None:
             self.barycenters = numpy.zeros((nBoundariesMax, 3), 'd')
-        comm = Comm.get()
-        import os
-        if comm.isMaster():
+        if self.comm.isMaster():
             self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,"wettedAreaHistory.txt"),"w")
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,"forceHistory_p.txt"),"w")
             self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,"forceHistory_v.txt"),"w")
             self.momentHistory = open(os.path.join(proteus.Profiling.logDir,"momentHistory.txt"),"w")
-            self.particle_forceHistory = open(os.path.join(proteus.Profiling.logDir,"particle_forceHistory.txt"),"w")
-            self.particle_momentHistory = open(os.path.join(proteus.Profiling.logDir,"particle_momentHistory.txt"),"w")
-        self.comm = comm
+            if self.nParticles:
+                self.particle_forceHistory = open(os.path.join(proteus.Profiling.logDir,"particle_forceHistory.txt"),"w")
+                self.particle_momentHistory = open(os.path.join(proteus.Profiling.logDir,"particle_momentHistory.txt"),"w")
     # initialize so it can run as single phase
 
     def initializeElementQuadrature(self, t, cq):
@@ -877,13 +875,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def preStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
         pass
-        # if self.comm.isMaster():
-        # print "wettedAreas"
-        # print self.wettedAreas[:]
-        # print "Forces_p"
-        # print self.netForces_p[:,:]
-        # print "Forces_v"
-        # print self.netForces_v[:,:]
 
     def postStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
@@ -893,25 +884,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             for eN in range(self.model.q['x'].shape[0]):
                 for k in range(self.model.q['x'].shape[1]):
                     self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(t, self.model.q['x'][eN,k])
-        # if self.comm.isMaster():
-        # print "wettedAreas"
-        # print self.wettedAreas[:]
-        # print "Forces_p"
-        # print self.netForces_p[:,:]
-        # print "Forces_v"
-        # print self.netForces_v[:,:]
-        self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
-        self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
-        self.forceHistory_p.flush()
-        self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_v[-1,:]))
-        self.forceHistory_v.flush()
-        self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1,:]))
-        self.momentHistory.flush()
-        self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" %tuple(self.particle_netForces[0,:]))
-        self.particle_forceHistory.flush()
-        self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0,:]))
-        self.particle_momentHistory.flush()
-
+        if self.model.comm.isMaster():
+            self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
+            self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
+            self.forceHistory_p.flush()
+            self.forceHistory_v.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_v[-1,:]))
+            self.forceHistory_v.flush()
+            self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1,:]))
+            self.momentHistory.flush()
+            if self.nParticles:
+                self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" %tuple(self.particle_netForces[0,:]))
+                self.particle_forceHistory.flush()
+                self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0,:]))
+                self.particle_momentHistory.flush()
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls = 0
