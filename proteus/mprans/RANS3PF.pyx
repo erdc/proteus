@@ -3315,10 +3315,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.forceHistory_v.flush()
         self.momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.netMoments[-1,:]))
         self.momentHistory.flush()
-        self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" %tuple(self.particle_netForces[0,:]))
-        self.particle_forceHistory.flush()
-        self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0,:]))
-        self.particle_momentHistory.flush()
+        if self.nParticles:
+            self.particle_forceHistory.write("%21.16e %21.16e %21.16e\n" %tuple(self.particle_netForces[0,:]))
+            self.particle_forceHistory.flush()
+            self.particle_momentHistory.write("%21.15e %21.16e %21.16e\n" % tuple(self.particle_netMoments[0,:]))
+            self.particle_momentHistory.flush()
 
 
 class LevelModel(proteus.Transport.OneLevelTransport):
