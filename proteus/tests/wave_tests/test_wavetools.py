@@ -1881,32 +1881,33 @@ class VerifyRandomNLWavesVel(unittest.TestCase):
                 etaT += eta_mode(xi,t,kDir[ii] + aR.kDir[jj],w1p2,aR.phi[ii] + aR.phi[jj],ai_)
 #        print etaT,aNL.eta_short(xi,t)
         self.assertAlmostEqual(etaT,aNL.eta_short(xi,t,True))
-        """
+        del Dp,Ap
 # Testing lower harmonics
         etaT = 0.
         N = aR.N    
         for ii in range(0,N-1):
             for jj in range(ii+1,N):
                 w1p2 = ww[ii] - ww[jj]
-                w1p2_sq = ww[ii]**2 + ww[jj]**2
                 k1p2 = abs(ki[ii] - ki[jj])
                 w1b2 = ww[ii]* ww[jj]
                 kh12 = k1p2 * aR.depth
                 k1h = ki[ii] * aR.depth
                 k2h = ki[jj] * aR.depth
-                Dp = (w1p2)**2  - aR.gAbs*k1p2*tanh(kh12)
-                Bp =  w1p2_sq
-                Bp = Bp + w1b2*( 1. + 1./(tanh(k1h)*tanh(k2h))) * (w1p2**2 + aR.gAbs * k1p2  *tanh(kh12)) / Dp
-                Bp += w1p2*( ww[ii]**3/sinh(k1h)**2 - ww[jj]**3/sinh(k2h)**2)/Dp
-                Bp =0.5* Bp / aR.gAbs
+                Dm = (w1p2)**2  - aR.gAbs*k1p2*tanh(kh12)
+                Am =  ww[ii]*ww[jj]*w1p2/Dm
+                tantan = tanh(k1h)*tanh(k2h)
+                Am = Am*(1. + 1./tantan)
+                Am = Am + 0.5/Dm*( ww[ii]**3/sinh(k1h)**2 - ww[jj]**3/sinh(k2h)**2)
+                Phi0 = aR.ai[ii]*aR.ai[jj]*Am/cosh(kh12)
 
 
 
-                ai = aR.ai[ii]*aR.ai[jj]*Bp
-                etaT += eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai)
+                ai_ = aR.ai[ii]*aR.ai[jj]*Am*sinh(kh12)/w1p2
+                etaT += Am#eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai_)
 #        print etaT,aNL.eta_long(xi,t)
-        self.assertTrue(round(etaT/aNL.eta_long(xi,t),2)==1 )
+        self.assertAlmostEqual(etaT,aNL.eta_long(xi,t,True))
 
+        """
 # Testing setup
         etaT = 0.
         N = aR.N
