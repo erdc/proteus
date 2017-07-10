@@ -966,13 +966,17 @@ namespace proteus
 	phi_s = particle_signed_distances[i*sd_offset];
 	phi_s_normal = &particle_signed_distance_normals[i*sd_offset*nSpace];
 
-	u_s = particle_velocities[i*3+0];
-	v_s = particle_velocities[i*3+1];
-	w_s = particle_velocities[i*3+2];
+        r_x = x - particle_centroids[i*3+0];
+        r_y = y - particle_centroids[i*3+1];
+        r_z = z - particle_centroids[i*3+2];
 
         uav_s = particle_angular_velocities[i*3+0];
         vav_s = particle_angular_velocities[i*3+1];
         wav_s = particle_angular_velocities[i*3+2];
+
+	u_s = particle_velocities[i*3+0] + vav_s*r_z - wav_s*r_y;
+	v_s = particle_velocities[i*3+1] + wav_s*r_x - uav_s*r_z;
+	w_s = particle_velocities[i*3+2] + uav_s*r_y - vav_s*r_x;
 
 	H_s = smoothedHeaviside(eps_s, phi_s);
 	D_s = smoothedDirac(eps_s, phi_s);
@@ -980,19 +984,15 @@ namespace proteus
 	double rel_vel_norm = sqrt((uStar-u_s)*(uStar-u_s)+
 				   (vStar-v_s)*(vStar-v_s)+
 				   (wStar-w_s)*(wStar-w_s));
-	double C_surf = viscosity*penalty;
+	
+        double C_surf = viscosity*penalty;
 	double C_vol = alpha + beta*rel_vel_norm;
 
 	C += (D_s*C_surf + (1.0 - H_s)*C_vol);
 
-	force_x = dV*D_s*(p*phi_s_normal[0] + C_surf*(u-u_s)*rho);
-	force_y = dV*D_s*(p*phi_s_normal[1] + C_surf*(v-v_s)*rho);
-	force_z = dV*D_s*(p*phi_s_normal[2] + C_surf*(w-w_s)*rho);
-
-	//always 3D for particle centroids
-	r_x = x - particle_centroids[i*3+0];
-	r_y = y - particle_centroids[i*3+1];
-	r_z = z - particle_centroids[i*3+2];
+	force_x = dV*D_s*(p*phi_s_normal[0] + nu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1] + phi_s_normal[2]*grad_u[2]) + C_surf*(u-u_s)*rho);
+	force_y = dV*D_s*(p*phi_s_normal[1] + nu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1] + phi_s_normal[2]*grad_v[2]) + C_surf*(v-v_s)*rho);
+	force_z = dV*D_s*(p*phi_s_normal[2] + nu*(phi_s_normal[0]*grad_w[0] + phi_s_normal[1]*grad_w[1] + phi_s_normal[2]*grad_w[2]) + C_surf*(w-w_s)*rho);
 
 	//always 3D for particle forces
 	particle_netForces[i*3+0] += force_x;
@@ -1004,6 +1004,7 @@ namespace proteus
 	particle_netMoments[i*3+2] += (r_x*force_y - r_y*force_x);
 
       }
+     
       mom_u_source += C*(u-u_s);
       mom_v_source += C*(v-v_s);
       mom_w_source += C*(w-w_s);
@@ -1012,7 +1013,7 @@ namespace proteus
       dmom_v_source[1] += C;
       dmom_w_source[2] += C;
 
-            //Nitsche terms
+      //Nitsche terms
       mom_u_ham    -= D_s*porosity*nu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1] + phi_s_normal[2]*grad_u[2]); 
       dmom_u_ham_grad_u[0] -= D_s*porosity*nu*phi_s_normal[0];
       dmom_u_ham_grad_u[1] -= D_s*porosity*nu*phi_s_normal[1];
@@ -1022,7 +1023,12 @@ namespace proteus
       dmom_v_ham_grad_v[0] -= D_s*porosity*nu*phi_s_normal[0];
       dmom_v_ham_grad_v[1] -= D_s*porosity*nu*phi_s_normal[1];
       dmom_v_ham_grad_v[2] -= D_s*porosity*nu*phi_s_normal[2];
-      
+    
+      mom_w_ham    -= D_s*porosity*nu*(phi_s_normal[0]*grad_w[0] + phi_s_normal[1]*grad_w[1]+ phi_s_normal[2]*grad_w[2]);
+      dmom_w_ham_grad_w[0] -= D_s*porosity*nu*phi_s_normal[0];
+      dmom_w_ham_grad_w[1] -= D_s*porosity*nu*phi_s_normal[1];
+      dmom_w_ham_grad_w[2] -= D_s*porosity*nu*phi_s_normal[2];
+  
       mom_u_adv[0] += D_s*porosity*nu*phi_s_normal[0]*(u-u_s);
       mom_u_adv[1] += D_s*porosity*nu*phi_s_normal[1]*(u-u_s);
       mom_u_adv[2] += D_s*porosity*nu*phi_s_normal[2]*(u-u_s);

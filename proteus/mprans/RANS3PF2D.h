@@ -217,6 +217,7 @@ namespace proteus
 				   double* particle_signed_distances,
 				   double* particle_signed_distance_normals,
 				   double* particle_velocities,
+                                   double* particle_angular_velocities,
 				   double* particle_centroids,
 				   double* particle_netForces,
 				   double* particle_netMoments,
@@ -397,6 +398,7 @@ namespace proteus
 				   double* particle_signed_distances,
 				   double* particle_signed_distance_normals,
 				   double* particle_velocities,
+                                   double* particle_angular_velocities,
 				   double* particle_centroids,
 				   double particle_nitsche)=0;
 
@@ -903,6 +905,7 @@ namespace proteus
 				    double* particle_signed_distances,
 				    double* particle_signed_distance_normals,
 				    double* particle_velocities,
+                                    double* particle_angular_velocities,
 				    double* particle_centroids,
 				    const double porosity,//VRANS specific
 				    const double penalty,
@@ -977,8 +980,11 @@ namespace proteus
 	phi_s = particle_signed_distances[i*sd_offset];
 	phi_s_normal = &particle_signed_distance_normals[i*sd_offset*nSpace];
 
-	u_s = particle_velocities[i*3+0];
-	v_s = particle_velocities[i*3+1];
+        r_x = x - particle_centroids[i*3+0];
+        r_y = y - particle_centroids[i*3+1];
+
+	u_s = particle_velocities[i*3+0] - r_y*particle_angular_velocities[i*3+2];
+	v_s = particle_velocities[i*3+1] + r_x*particle_angular_velocities[i*3+2];
 
 	//std::cout << "\n" << u_s << ", " << v_s << "\n" << std::endl;
 
@@ -994,12 +1000,8 @@ namespace proteus
 
 	C += (D_s*C_surf + (1.0 - H_s)*C_vol);
 
-	force_x = dV*D_s*(p*phi_s_normal[0] + C_surf*(u-u_s)*rho);
-	force_y = dV*D_s*(p*phi_s_normal[1] + C_surf*(v-v_s)*rho);
-
-	//always 3D for particle centroids
-	r_x = x - particle_centroids[i*3+0];
-	r_y = y - particle_centroids[i*3+1];
+	force_x = dV*D_s*(p*phi_s_normal[0] + nu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
+	force_y = dV*D_s*(p*phi_s_normal[1] + nu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
 
 	//always 3D for particle forces
 	particle_netForces[i*3+0] += force_x;
@@ -1791,6 +1793,7 @@ namespace proteus
 			   double* particle_signed_distances,
 			   double* particle_signed_distance_normals,
 			   double* particle_velocities,
+                           double* particle_angular_velocities,
 			   double* particle_centroids,
 			   double* particle_netForces,
 			   double* particle_netMoments,
@@ -2130,6 +2133,7 @@ namespace proteus
 				       &particle_signed_distances[eN_k],
 				       &particle_signed_distance_normals[eN_k_nSpace],
 				       particle_velocities,
+                                       particle_angular_velocities,
 				       particle_centroids,
 				       porosity,
 				       particle_penalty_constant/h_phi,//penalty,
@@ -3502,6 +3506,7 @@ namespace proteus
 			   double* particle_signed_distances,
 			   double* particle_signed_distance_normals,
 			   double* particle_velocities,
+                           double* particle_angular_velocities,
 			   double* particle_centroids,
 			   double particle_nitsche)
     {
@@ -3861,6 +3866,7 @@ namespace proteus
 				       &particle_signed_distances[eN_k],
 				       &particle_signed_distance_normals[eN_k_nSpace],
 				       particle_velocities,
+                                       particle_angular_velocities,
 				       particle_centroids,
 				       porosity,
 				       particle_penalty_constant/h_phi,//penalty,
