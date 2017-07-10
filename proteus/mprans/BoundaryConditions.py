@@ -271,7 +271,6 @@ class BC_RANS(BC_Base):
         self.reset()
 
         wf = wall
-        lambda x, t: wf.getXT(x, t)
         self.u_dirichlet.uOfXT = lambda x, t: wf.get_u_dirichlet(x, t)
         self.v_dirichlet.uOfXT = lambda x, t: wf.get_v_dirichlet(x, t)
         self.w_dirichlet.uOfXT = lambda x, t: wf.get_w_dirichlet(x, t)
@@ -1189,15 +1188,14 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.Cmu = Cmu
         self.K = K
         self.B = B
-        self.model = None
-        self.ar = None
         # initialise variables
         self.Ubound = np.zeros(3)
-        self.kappa = 1e-5
-        self.utAbs = 1e-5
+        self.kappa = 1e-10
+        self.utAbs = 1e-10
         self.ut = np.zeros(3)
         self.x = np.zeros(3)
         self.t = 0.
+        self.model = None
         
     def attachModel(self, model, ar):
         """
@@ -1205,20 +1203,23 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         """
         self.model = model
         self.ar = ar
+        self.nd = model.levelModelList[0].nSpace_global
         return self
 
     def attachAuxiliaryVariables(self,avDict):
         pass
 
     def calculate_init(self):
-        x, t = self.x, self.t    
-        self.tangentialVelocity(x,t,uInit=True)
-        self.getVariables(x, t)
+        #x, t = self.x, self.t    
+        #self.tangentialVelocity(x,t,uInit=True)
+        #self.getVariables(x, t)
+        pass
 
     def calculate(self):
-        x, t = self.x, self.t
-        self.tangentialVelocity(x,t)
-        self.getVariables(x, t)
+        #x, t = self.x, self.t
+        #self.tangentialVelocity(x,t)
+        #self.getVariables(x, t)
+        pass
 
     def getLocalNearestNode(self, coords, kdtree):
         """Finds nearest node to coordinates (local)
@@ -1236,8 +1237,13 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             distance to nearest node
         """
         # determine local nearest node distance
-        print 'GETLOCALNEARESTNODE'
+        Profiling.logEvent('GETLOCALNEARESTNODE')
+        Profiling.logEvent('kdtree --> %s' % kdtree)
+        Profiling.logEvent('kdtree.query --> %s' % kdtree.query)
+        Profiling.logEvent('coords --> %s' % coords)
         distance, node = kdtree.query(coords)
+        Profiling.logEvent('distance --> %s' % distance)
+        Profiling.logEvent('node --> %s' % node)
         return node, distance
 
     def getLocalElement(self, femSpace, coords, node):
@@ -1256,14 +1262,18 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         eN: int or None
             local index of element (None if not found)
         """
-        print 'GETLOCALELEMENT'
+        Profiling.logEvent('GETLOCALELEMENT')
+        Profiling.logEvent('femspace --> %s' % femSpace)
         patchBoundaryNodes=set()
         checkedElements=[]
         # nodeElementOffsets give the indices to get the elements sharing the node
         #log Profiling.logEvent("Getting Local Element")
+        statem1 = node+1 < len(femSpace.mesh.nodeElementOffsets)
+        Profiling.logEvent('node+1 < len(femSpace.mesh.nodeElementOffsets) --> %s ' % statem1)        
         if node+1 < len(femSpace.mesh.nodeElementOffsets):
             for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
                 eN = femSpace.mesh.nodeElementsArray[eOffset]
+                Profiling.logEvent('eN --> %s ' % eN)
                 checkedElements.append(eN)
                 # union of set
                 patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
@@ -1271,11 +1281,14 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
                 xi = femSpace.elementMaps.getInverseValue(eN, coords)
                 #J = femSpace.elementMaps.getJacobianValues(eN, )
                 # query whether xi lies within the reference element
+                Profiling.logEvent('xi --> %s ' % xi)
+                Profiling.logEvent('femSpace.elementMaps.referenceElement.onElement(xi) --> %s ' % femSpace.elementMaps.referenceElement.onElement(xi))
                 if femSpace.elementMaps.referenceElement.onElement(xi):
                     return eN
         else:
             for eOffset in range(femSpace.mesh.nodeElementOffsets[node]):
                 eN = femSpace.mesh.nodeElementsArray[eOffset]
+                Profiling.logEvent('eN --> %s ' % eN)
                 checkedElements.append(eN)
                 # union of set
                 patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
@@ -1289,8 +1302,10 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         for node in patchBoundaryNodes:
             for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
                 eN = femSpace.mesh.nodeElementsArray[eOffset]
+                Profiling.logEvent('eN --> %s ' % eN)
                 if eN not in checkedElements:
                     checkedElements.append(eN)
+                    Profiling.logEvent('eN --> %s ' % eN)
                     # evaluate the inverse map for element eN
                     xi = femSpace.elementMaps.getInverseValue(eN, coords)
                     # query whether xi lies within the reference element
@@ -1314,49 +1329,25 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         rank: int
             processor rank containing element
         """
-        print 'FINDELEMENTCONTAININGCOORDS'
+        Profiling.logEvent('FINDELEMENTCONTAININGCOORDS')
         #log Profiling.logEvent("Looking for element " +str(coords))
         comm = Comm.get().comm.tompi4py()
         xi = owning_proc = element = rank = None  # initialised as None
         # get nearest node on each processor
         comm.barrier()
-        #log Profiling.logEvent("get nearest node " +str(coords))
-        #import pdb; pdb.set_trace()
-        #log 
-        Profiling.logEvent('before self model femspace!!!!!!!!!!!!')
-        #log 
-        Profiling.logEvent('self.model --> %s' % self.model)
-        #log 
-        Profiling.logEvent('self.model.levelModelList --> %s' % self.model.levelModelList)
-        #log 
-        Profiling.logEvent('self.model.levelModelList[0] --> %s' % self.model.levelModelList[0])    
-        Profiling.logEvent('self.model.levelModelList[-1] --> %s' % self.model.levelModelList[-1])
-        #log 
-        Profiling.logEvent('self.model.levelModelList[-1].u --> %s' % self.model.levelModelList[-1].u)
-
-        Profiling.logEvent('vvv')
-        Profiling.logEvent('vvv')
-        Profiling.logEvent('vvv')
-        Profiling.logEvent('vvv')
-        Profiling.logEvent('vvv')
-
-
-
-        #self.u = self.model.levelModelList[-1].u
+        self.u = self.model.levelModelList[0].u
         self.femSpace_velocity = self.u[1].femSpace
-        print self.femSpace_velocity
-        print 'before nodesktree'
-        nodes_kdtree = spatial.cKDTree(self.model.levelModelList[-1].mesh.nodeArray)
-        print nodes_kdtree
-        print 'Before nearestNode'
+        nodes_kdtree = spatial.cKDTree(self.model.levelModelList[0].mesh.nodeArray)
         nearest_node, nearest_node_distance = self.getLocalNearestNode(coords, nodes_kdtree)
-        print 'After nearestNode'
         # look for element containing coords on each processor (if it exists)
+        Profiling.logEvent('before 2nd comm.barrier')
         comm.barrier()
+        Profiling.logEvent('after 2nd comm.barrier')
         #log Profiling.logEvent("get local element " +str(coords))
         local_element = self.getLocalElement(self.femSpace_velocity, coords, nearest_node)
         comm.barrier()
         #log Profiling.logEvent("got local element " +str(coords))
+        Profiling.logEvent('local_element --> %s ' % local_element)
         if local_element:
             xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
         # check which processor has element (if any)
@@ -1403,8 +1394,10 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             rank of processor owning the element
         """
         #log Profiling.logEvent("FINDING VELOCITY AT RANK "+str(rank)+", "+str(element) + ", " + str(xi))
-        print 'GETFLUIDVELOCITYLOCALCOORDS'
+        Profiling.logEvent('GETFLUIDVELOCITYLOCALCOORDS')
         comm = Comm.get().comm.tompi4py()
+        Profiling.logEvent('comm.rank --> %s' % comm.rank)
+        Profiling.logEvent('rank --> %s' % rank)
         if comm.rank == rank:
             u = self.u[1].getValue(element, xi)
             v = self.u[2].getValue(element, xi)
@@ -1415,10 +1408,17 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             # broadcast to all processors
         else:
             u = v = w = None
+        u1= str(u)
+        Profiling.logEvent('u --> %s' % u1)
+        v1 = str(v)
+        Profiling.logEvent('v --> %s' %  v1)
+        w1 = str(w)
+        Profiling.logEvent('w --> %s' % w1)
+        print u, v, w
         u = comm.bcast(u, rank)
         v = comm.bcast(v, rank)
         w = comm.bcast(w, rank)
-        #log Profiling.logEvent("FOUND VELOCITY")
+        Profiling.logEvent("FOUND VELOCITY")
         return u, v, w
 
     def setYplusNormalDirection(self, x, t):
@@ -1426,40 +1426,30 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         Return the point at y+ distance in normal
         direction from the boundary.
         """
-        print 'YPLUSNORMALDIRECTION'
-        Uinput = np.array(self.U0)
-        Re0 = Uinput*self.d/self.nu
-        rangeSkin = ['laminar', 'turbulent']
-        skinf = self.skinf
-        self.cf = np.zeros(3, dtype=float)
-        for i in [0, 1, 2]:
-            if skinf not in rangeSkin:
-                logEvent("Wrong slip_type given: Valid types are %s" %rangeSkin, level=0)
-                sys.exit(1)
-            elif skinf == 'laminar' and Re0[i] > 0.:
-                self.cf[i] = 4./Re0[i]
-            elif skinf == 'turbulent' and Re0[i] > 0.:
-                self.cf[i] = 0.045*( Re0[i]**(-1./4.) )
-        self.ut = Uinput*np.sqrt(self.cf/2.)
-        self.Yplus = self.Y*self.ut/self.nu       
-        YplusAbs = np.sqrt(np.sum(self.Yplus**2))
-        nP = (YplusAbs*self._b_or) + x
+        Profiling.logEvent('YPLUSNORMALDIRECTION')
+        # we do need normal direction vector to the boundary and pointing the domain, -self._b_or
+        nP = ( self.Y*(-self._b_or) ) + x
+        Profiling.logEvent('self.Y --> %s ' % self.Y)
+        Profiling.logEvent('self._b_or --> %s ' % self._b_or)
+        Profiling.logEvent('x --> %s ' % x)
+        Profiling.logEvent('coords normalDirection from boundary --> %s ' % nP)
         return nP
 
     def extractVelocity(self, x, t):
         """
         Extraction of the velocity at y+ distance from the boundary.
         """
-        print 'EXTRACTVELOCITY'
+        Profiling.logEvent('EXTRACTVELOCITY')
         coords = self.setYplusNormalDirection(x,t)
         xi, element, rank = self.findElementContainingCoords(coords)
         u, v, w = self.getFluidVelocityLocalCoords(xi, element, rank)
         return u, v, w
         
     def tangentialVelocity(self, x, t, uInit=None):
+        Profiling.logEvent('tangentialVelocity function step')
         if uInit: u0, u1, u2 = self.U0
         else: 
-            if self.vel == 'global': u0, u1, u2 = self.U0
+            if self.vel == 'global' or self.model == None: u0, u1, u2 = self.U0
             elif self.vel == 'local': u0, u1, u2 = self.extractVelocity(x,t) 
             else: logEvent("Wrong input for velocity system for wall function calculation")
         self.meanV = np.array([u0, u1, u2])  
@@ -1504,49 +1494,75 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu)   
 
     def get_u_dirichlet(self, x, t):
-        self.getXT(x,t)
+        if t<0.: uInit = True
+        else: uInit = False
+        Profiling.logEvent('timestep t --> %s' % t)
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)    
         U = self.Ubound[0]
         return U 
         
     def get_v_dirichlet(self, x, t):
-        self.getXT(x,t)
+        if t<0.: uInit = True
+        else: uInit = False
+        Profiling.logEvent('timestep t --> %s' % t)
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)    
         U = self.Ubound[1]
         return U 
  
     def get_w_dirichlet(self, x, t):
-        self.getXT(x,t)
+        if t<0.: uInit = True
+        else: uInit = False
+        Profiling.logEvent('timestep t --> %s' % t)
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)    
         U = self.Ubound[2]
         return U 
 
     def get_k_dirichlet(self, x, t):
-        self.getXT(x,t)
+        if t<0.: uInit = True
+        else: uInit = False
+        Profiling.logEvent('timestep t --> %s' % t)
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)  
         return self.kappa 
 
     def get_dissipation_dirichlet(self, x, t):
-        self.getXT(x,t)
+        if t<0.: uInit = True
+        else: uInit = False
+        Profiling.logEvent('timestep t --> %s' % t)
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)  
+        d = 0.
         if self.turbModel == 'ke': d = (self.utAbs**3)/(self.K*self.Y)
-        elif self.turbModel == 'kw': d = (self.utAbs**3)/(self.K*self.Y)/self.kappa
-        else:
-            logEvent("Model selected is wrong", level=0)
-            sys.exit(1)
+        elif self.turbModel == 'kw' and self.kappa>0.: d = (self.utAbs**3)/(self.K*self.Y)/self.kappa
         return d 
 
     def get_u_diffusive(self, x, t):
-        self.getXT(x,t)
+        if t<0.: uInit = True
+        else: uInit = False
+        Profiling.logEvent('timestep t --> %s' % t)
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)    
         gradU = self.ut[0]/(self.K*self.Y)
         return gradU 
 
     def get_v_diffusive(self, x, t):
-        self.getXT(x,t)
+        if t<0.: uInit = True
+        else: uInit = False
+        Profiling.logEvent('timestep t --> %s' % t)
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)    
         gradU = self.ut[1]/(self.K*self.Y)
         return gradU 
 
     def get_w_diffusive(self, x, t):
-        self.getXT(x,t)
+        if t<0.: uInit = True
+        else: uInit = False 
+        Profiling.logEvent('timestep t --> %s' % t)
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)      
         gradU = self.ut[2]/(self.K*self.Y)
         return gradU
-
-    def getXT(self, x, t):
-        self.x = x
-        self.t = t
 
