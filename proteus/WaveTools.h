@@ -685,10 +685,10 @@ inline double __cpp_Am(double om1, double om2,double k1, double k2, int imode,in
 		kw2[1] = -kDir[jj+1]+kw[1];
 		kw2[2] = -kDir[jj+2]+kw[2];
 		
-		double tanhSum = abs(tanhKd[i]-tanhKd[j])/(1.-tanhKd[i]*tanhKd[j]);
+		double tanhSum = (tanhKd[i]-tanhKd[j])/(1.-tanhKd[i]*tanhKd[j]);
 
 		ai = amplitude[i]*amplitude[j]*__cpp_Am(omega[i],omega[j],ki[i],ki[j],i,j,sinhKd,tanhKd,gAbs)*(ki[i]-ki[j])*tanhSum/(omega[i]-omega[j]);
-		HH= HH+__cpp_Am(omega[i],omega[j],ki[i],ki[j],i,j,sinhKd,tanhKd,gAbs);// + __cpp_eta_mode(x,t,kw2,omega[i]-omega[j],phi[i]-phi[j],ai, fast);
+		HH= HH + __cpp_eta_mode(x,t,kw2,omega[i]-omega[j],phi[i]-phi[j],ai, fast);
 	      }
 	  }
         return HH;      

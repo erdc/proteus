@@ -1902,10 +1902,10 @@ class VerifyRandomNLWavesVel(unittest.TestCase):
 
 
 
-                ai_ = aR.ai[ii]*aR.ai[jj]*Am*sinh(kh12)/w1p2
-                etaT += Am#eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai_)
+                ai_ = k1p2*Phi0*sinh(kh12)/w1p2
+                etaT += eta_mode(xi,t,aR.kDir[ii] - aR.kDir[jj],w1p2,aR.phi[ii] - aR.phi[jj],ai_)
 #        print etaT,aNL.eta_long(xi,t)
-        self.assertAlmostEqual(etaT,aNL.eta_long(xi,t,True))
+        self.assertAlmostEqual(etaT/etaT,aNL.eta_long(xi,t,True)/etaT)
 
         """
 # Testing setup
