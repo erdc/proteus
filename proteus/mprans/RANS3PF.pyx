@@ -210,6 +210,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double* particle_signed_distances,
                                double* particle_signed_distance_normals,
 			       double* particle_velocities,
+                               double* particle_angular_velocities,
 			       double* particle_centroids,
                                double* particle_netForces,
                                double* particle_netMoments,
@@ -389,6 +390,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* particle_signed_distances,
 			       double* particle_signed_distance_normals,
 			       double* particle_velocities,
+                               double* particle_angular_velocities,
 			       double* particle_centroids,
                                double particle_nitsche)
 
@@ -661,6 +663,7 @@ cdef class RANS3PF:
                           numpy.ndarray particle_signed_distances,
                           numpy.ndarray particle_signed_distance_normals,
                           numpy.ndarray particle_velocities,
+                          numpy.ndarray particle_angular_velocities,
                           numpy.ndarray particle_centroids,
                           numpy.ndarray particle_netForces,
                           numpy.ndarray particle_netMoments,
@@ -834,6 +837,7 @@ cdef class RANS3PF:
                                         < double* > particle_signed_distances.data,
                                         < double* > particle_signed_distance_normals.data,
                                         < double* > particle_velocities.data,
+                                        < double* > particle_angular_velocities.data,
                                         < double* > particle_centroids.data,
                                         < double* > particle_netForces.data,
                                         < double* > particle_netMoments.data,
@@ -1013,6 +1017,7 @@ cdef class RANS3PF:
 			  numpy.ndarray particle_signed_distances,
 			  numpy.ndarray particle_signed_distance_normals,
 			  numpy.ndarray particle_velocities,
+                          numpy.ndarray particle_angular_velocities,
 			  numpy.ndarray particle_centroids,
                           double particle_nitsche):
 
@@ -1191,6 +1196,7 @@ cdef class RANS3PF:
 				        < double* > particle_signed_distances.data,
 				        < double* > particle_signed_distance_normals.data,
 				        < double* > particle_velocities.data,
+                                        < double* > particle_angular_velocities.data,
 				        < double* > particle_centroids.data,
                                         particle_nitsche)
 
@@ -1412,6 +1418,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double* particle_signed_distances,
                                double* particle_signed_distance_normals,
 			       double* particle_velocities,
+                               double* particle_angular_velocities,
 			       double* particle_centroids,
                                double* particle_netForces,
                                double* particle_netMoments,
@@ -1590,6 +1597,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double* particle_signed_distances,
 			       double* particle_signed_distance_normals,
 			       double* particle_velocities,
+                               double* particle_angular_velocities,
 			       double* particle_centroids,
                                double particle_nitsche)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
@@ -1859,6 +1867,7 @@ cdef class RANS3PF2D:
 			  numpy.ndarray particle_signed_distances,
                           numpy.ndarray particle_signed_distance_normals,
                           numpy.ndarray particle_velocities,
+                          numpy.ndarray particle_angular_velocities,
                           numpy.ndarray particle_centroids,
 			  numpy.ndarray particle_netForces,
                           numpy.ndarray particle_netMoments,
@@ -2031,6 +2040,7 @@ cdef class RANS3PF2D:
 			               < double* > particle_signed_distances.data,
 			               < double* > particle_signed_distance_normals.data,
 			               < double* > particle_velocities.data,
+                                       < double* > particle_angular_velocities.data,
 			               < double* > particle_centroids.data,
 			               < double* > particle_netForces.data,
 			               < double* > particle_netMoments.data,
@@ -2210,6 +2220,7 @@ cdef class RANS3PF2D:
 			  numpy.ndarray particle_signed_distances,
 			  numpy.ndarray particle_signed_distance_normals,
 			  numpy.ndarray particle_velocities,
+                          numpy.ndarray particle_angular_velocities,
 			  numpy.ndarray particle_centroids,
                           double particle_nitsche):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
@@ -2387,6 +2398,7 @@ cdef class RANS3PF2D:
 			               < double* > particle_signed_distances.data,
                                        < double* > particle_signed_distance_normals.data,
                                        < double* > particle_velocities.data,
+                                       < double* > particle_angular_velocities.data,
 			               < double* > particle_centroids.data,
                                        particle_nitsche)
 
@@ -2974,6 +2986,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_netMoments = np.zeros((self.nParticles,3),'d')
 
         self.particle_velocities = np.zeros((self.nParticles,3),'d')
+        self.particle_angular_velocities = np.zeros((self.nParticles,3),'d')
         self.particle_centroids = np.zeros((self.nParticles,3),'d')
 
         # cek we eventually need to use the local element diameter
@@ -4504,6 +4517,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	    self.coefficients.particle_signed_distances,
 	    self.coefficients.particle_signed_distance_normals,
 	    self.coefficients.particle_velocities,
+            self.coefficients.particle_angular_velocities,
 	    self.coefficients.particle_centroids,
             self.coefficients.particle_netForces,
             self.coefficients.particle_netMoments,
@@ -4777,6 +4791,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	    self.coefficients.particle_signed_distances,
 	    self.coefficients.particle_signed_distance_normals,
 	    self.coefficients.particle_velocities,
+            self.coefficients.particle_angular_velocities,
 	    self.coefficients.particle_centroids,
             self.coefficients.particle_nitsche)
 
