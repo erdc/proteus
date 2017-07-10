@@ -550,8 +550,9 @@ inline double __cpp_Ap(double om1, double om2, double k1,double k2, int imode,in
   double  tanhSum = (tanhKd[imode]+tanhKd[jmode])/(1.+tanhKd[imode]*tanhKd[jmode]);
   double Dp = pow(om1+om2,2) - gAbs*(k1+k2)*tanhSum;
   double Ap =  - om1*om2*(om1+om2)/Dp;
-  Ap = Ap*(1 - 1./(tanhKd[imode]*tanhKd[jmode]));
-  Ap = Ap + 0.5*Dp*(pow(om1,3)/pow(sinhKd[imode],2)+pow(om2,3)/pow(sinhKd[jmode],2));
+  double tantan = tanhKd[jmode]*tanhKd[imode];
+  Ap = Ap*(1. - 1./tantan);
+  Ap = Ap + 0.5/Dp*(pow(om1,3)/pow(sinhKd[imode],2)+pow(om2,3)/pow(sinhKd[jmode],2));
   return Ap;
     
   
@@ -586,7 +587,7 @@ inline double __cpp_Ap(double om1, double om2, double k1,double k2, int imode,in
 		
 		double tanhSum = (tanhKd[i]+tanhKd[j])/(1.+tanhKd[i]*tanhKd[j]);
 
-		ai = amplitude[i]*amplitude[j]*__cpp_Ap(omega[i],omega[j],ki[i],ki[j],i,j,sinhKd,tanhKd,gAbs)*(ki[i]+ki[j])*tanhSum;
+		ai = amplitude[i]*amplitude[j]*__cpp_Ap(omega[i],omega[j],ki[i],ki[j],i,j,sinhKd,tanhKd,gAbs)*(ki[i]+ki[j])*tanhSum/(omega[i]+omega[j]);
 		HH= HH + __cpp_eta_mode(x,t,kw2,omega[i]+omega[j],phi[i]+phi[j],ai, fast);
 	      }
 	  }

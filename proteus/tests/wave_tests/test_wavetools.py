@@ -1834,7 +1834,14 @@ class VerifyRandomNLWavesVel(unittest.TestCase):
             fast=False
             )
         from proteus.WaveTools import fastcos_test as fcos
+        ww = aR.omega
+        ki = aR.ki
+        phi = aR.phi
+        depth = aR.depth
+        ai = aR.ai
+        kDir = aR.kDir
 
+        
         x = 0.
         y = 0.
         z =  mwl 
@@ -1843,15 +1850,13 @@ class VerifyRandomNLWavesVel(unittest.TestCase):
 #        print aR.eta(xi,t),aNL.eta(xi,t)
         etaT = 0.
         for ii in range(N):
-            kh = aR.ki[ii]*aR.depth
-            ai =  (aR.ki[ii])*(aR.ai[ii]**2)*(3./8.) *sinh(2.*kh) / sinh(kh)**4
-            etaT += eta_mode(xi,t,2.*aR.kDir[ii],2.*aR.omega[ii],2.*aR.phi[ii],ai)
+            kh = ki[ii]*depth
+            ai_ =  (ki[ii])*(ai[ii]**2)*(3./8.) *sinh(2.*kh) / sinh(kh)**4
+            etaT += eta_mode(xi,t,2.*kDir[ii],2.*ww[ii],2.*phi[ii],ai_)
         # 2nd order testing
 #        print etaT,aNL.eta_2ndOrder(xi,t)
         self.assertAlmostEqual(etaT,aNL.eta_2ndOrder(xi,t,True))
-        """
-        ww = aR.omega
-        ki = aR.ki
+
 
 # Testing higher harmonics
         etaT = 0.
@@ -1862,21 +1867,21 @@ class VerifyRandomNLWavesVel(unittest.TestCase):
                 w1p2_sq = ww[ii]**2 + ww[jj]**2
                 k1p2 = abs(ki[ii] + ki[jj])
                 w1b2 = ww[ii]* ww[jj]
-                kh12 = k1p2 * aR.depth
-                k1h = ki[ii] * aR.depth
-                k2h = ki[jj] * aR.depth
+                kh12 = k1p2 * depth
+                k1h = ki[ii] * depth
+                k2h = ki[jj] * depth
                 Dp = (w1p2)**2  - aR.gAbs*k1p2*tanh(kh12)
-                Bp =  w1p2_sq
-                Bp = Bp - w1b2*( 1. - 1./(tanh(k1h)*tanh(k2h))) * (w1p2**2 + aR.gAbs * k1p2  *tanh(kh12)) / Dp
-                Bp += w1p2*( ww[ii]**3/sinh(k1h)**2 + ww[jj]**3/sinh(k2h)**2)/Dp
-                Bp =0.5* Bp / aR.gAbs
+                Ap =  -ww[ii]*ww[jj]*w1p2/Dp
+                tantan = tanh(k1h)*tanh(k2h)
+                Ap =  Ap*(1. - 1./tantan)
+                Ap = Ap + 1./(2.*Dp)*( ww[ii]**3/sinh(k1h)**2 + ww[jj]**3/sinh(k2h)**2)
 
-
-
-                ai = aR.ai[ii]*aR.ai[jj]*Bp
-                etaT += eta_mode(xi,t,aR.kDir[ii] + aR.kDir[jj],w1p2,aR.phi[ii] + aR.phi[jj],ai)
+                Phi0 = aR.ai[ii]*aR.ai[jj]*Ap/cosh(kh12)
+                ai_ = k1p2*Phi0*sinh(kh12)/w1p2
+                etaT += eta_mode(xi,t,kDir[ii] + aR.kDir[jj],w1p2,aR.phi[ii] + aR.phi[jj],ai_)
 #        print etaT,aNL.eta_short(xi,t)
-        self.assertTrue(round(etaT/aNL.eta_short(xi,t),2)==1 )
+        self.assertAlmostEqual(etaT,aNL.eta_short(xi,t,True))
+        """
 # Testing lower harmonics
         etaT = 0.
         N = aR.N    
