@@ -2408,5 +2408,3 @@ cdef class RANS3PF2D:
                                               < double * > vel_trial_trace_ref.data,
                                               < double * > ebqe_velocity.data,
                                               < double * > velocityAverage.data)
-
-
