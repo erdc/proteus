@@ -678,7 +678,11 @@ class KSP_petsc4py(LinearSolver):
                 self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
                 logEvent("NAHeader Preconditioner selfp" )
-                self.preconditioner = SimpleNavierStokes(par_L,prefix,self.bdyNullSpace)
+                self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
+                self.pc = self.preconditioner.pc
+            elif Preconditioner == SimpleNavierStokes2D:
+                logEvent("NAHeader Preconditioner selfp" )
+                self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == Schur_Qp:
                 logEvent("NAHeader Preconditioner Qp" )
@@ -765,7 +769,7 @@ class KSP_Preconditioner:
     def __init__(self):
         pass
 
-    def setup(self):
+    def setup(self, global_ksp=None):
         pass
 
 class petsc_ASM(KSP_Preconditioner):
@@ -1046,7 +1050,7 @@ class NavierStokes3D:
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
 
-    def setUp(self):
+    def setUp(self, global_ksp=None):
         try:
             if self.L.pde.pp_hasConstantNullSpace:
                 if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
@@ -1180,7 +1184,7 @@ class SimpleDarcyFC:
         self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(self.isp)
         self.pc.setFieldSplitIS(self.isv)
-    def setUp(self):
+    def setUp(self, global_ksp=None):
         pass
 
 class NavierStokes2D:
@@ -1223,7 +1227,7 @@ class NavierStokes2D:
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
-    def setUp(self):
+    def setUp(self, global_ksp=None):
         try:
             if self.L.pde.pp_hasConstantNullSpace:
                 if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
@@ -1246,7 +1250,7 @@ class NavierStokesPressureCorrection:
                                                 comm=p4pyPETSc.COMM_WORLD)
         self.L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
         self.L.setNullSpace(self.nsp)
-    def setUp(self):
+    def setUp(self, global_ksp=None):
         pass
 
 class SimpleDarcyFC:
@@ -1264,7 +1268,7 @@ class SimpleDarcyFC:
         self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(self.isp)
         self.pc.setFieldSplitIS(self.isv)
-    def setUp(self):
+    def setUp(self, global_ksp=None):
         pass
 
 class Jacobi(LinearSolver):
