@@ -1417,13 +1417,11 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             Uplus = self.Yplus
             self.Ubound = Uplus*self.ut
         # log-law layer
-        elif YplusAbs > 30. and self.Y/self.d < 0.3:
+        else: #YplusAbs > 30. and self.Y/self.d < 0.3:
             E = np.exp(self.B*self.K)
             for i in [0, 1, 2]:
                 if self.Yplus[i]>0. :
                     self.Ubound[i] = self.ut[i] * np.log(E*self.Yplus[i]) / self.K
-        else:
-            comm.Abort(1)
         self.utAbs = np.sqrt(np.sum(self.ut**2))       
         self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu)   
 
