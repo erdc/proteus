@@ -24,12 +24,22 @@ class MeshAdaptPUMIDrvr{
   int loadModelAndMesh(const char* modelFile, const char* meshFile); //load the model and mesh
 
   //Functions to construct proteus mesh data structures
+  int reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int hasModel);
   int constructFromSerialPUMIMesh(Mesh& mesh);
   int constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh);
-  int updateMaterialArrays(Mesh& mesh, int bdryID, int GeomTag);
+  int updateMaterialArrays(Mesh& mesh,int dim, int bdryID, int GeomTag);
+  int updateMaterialArrays(Mesh& mesh);
   void numberLocally();
   int localNumber(apf::MeshEntity* e);
   int dumpMesh(Mesh& mesh);
+
+  //Functions used to transfer proteus model data structures
+  int transferModelInfo(int*numGeomEntities,int*edges,int*faces,int*mVertex2Model,int*mEdgeVertex2Model,int*mBoundary2Model,int nMaxSegments);
+  int numSegments;
+  int* edgeList;
+  int* faceList;
+  int* meshVertex2Model, *meshEdge2Model, *meshBoundary2Model;
+  int numModelEntities[4];
 
   //Functions used to transfer information between PUMI and proteus
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
@@ -90,6 +100,15 @@ class MeshAdaptPUMIDrvr{
   double total_error;
   double errRho_max;
   double rel_err_total;
+
+  //Mesh Reconstruction
+  int isReconstructed;
+  int initialReconstructed;
+  int* modelVertexMaterial; 
+  int* modelBoundaryMaterial;
+  int* modelRegionMaterial;
+  int numModelOffsets[4];
+  int numModelTotals[4];
 
   private: 
   apf::Mesh2* m;

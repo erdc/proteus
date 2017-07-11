@@ -2834,6 +2834,110 @@ static PyObject* ctransportCoefficientsConservativeHeadRichardsBCBfromMVGHomEval
   return Py_None;
 }
 
+static PyObject* ctransportCoefficientsMass_2D_Evaluate(PyObject* self,
+							PyObject* args)
+{
+  int i,nPoints=1;
+  double rho;
+  PyObject *p,
+    *u,
+    *v,
+    *mom_p_acc,
+    *mom_u_acc,
+    *mom_v_acc,
+    *dmom_p_acc_p,
+    *dmom_u_acc_u,
+    *dmom_v_acc_v;
+
+  if(!PyArg_ParseTuple(args,"dOOOOOOOOO",
+		       &rho,
+		       &p,
+		       &u,
+		       &v,
+		       &mom_p_acc,
+		       &mom_u_acc,
+		       &mom_v_acc,
+		       &dmom_p_acc_p,
+		       &dmom_u_acc_u,
+		       &dmom_v_acc_v))
+    
+  return NULL;
+  for(i=0;i<ND(p);i++)
+    nPoints*=SHAPE(p)[i];
+
+  Mass_2D_Evaluate(nPoints,
+		   rho,
+		   DDATA(p),
+		   DDATA(u),
+		   DDATA(v),
+		   DDATA(mom_p_acc),
+		   DDATA(mom_u_acc),
+		   DDATA(mom_v_acc),
+		   DDATA(dmom_p_acc_p),
+		   DDATA(dmom_u_acc_u),
+		   DDATA(dmom_v_acc_v));
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject* ctransportCoefficientsMass_3D_Evaluate(PyObject* self,
+							PyObject* args)
+{
+  int i,nPoints=1;
+  double rho;
+  PyObject *p,
+    *u,
+    *v,
+    *w,
+    *mom_p_acc,
+    *mom_u_acc,
+    *mom_v_acc,
+    *mom_w_acc,
+    *dmom_p_acc_p,
+    *dmom_u_acc_u,
+    *dmom_v_acc_v,
+    *dmom_w_acc_w;
+
+  if(!PyArg_ParseTuple(args,"dOOOOOOOOOOOO",
+		       &rho,
+		       &p,
+		       &u,
+		       &v,
+		       &w,
+		       &mom_p_acc,
+		       &mom_u_acc,
+		       &mom_v_acc,
+		       &mom_w_acc,
+		       &dmom_p_acc_p,
+		       &dmom_u_acc_u,
+		       &dmom_v_acc_v,
+		       &dmom_w_acc_w))
+    
+  return NULL;
+  for(i=0;i<ND(p);i++)
+    nPoints*=SHAPE(p)[i];
+
+  Mass_3D_Evaluate(nPoints,
+		   rho,
+		   DDATA(p),
+		   DDATA(u),
+		   DDATA(v),
+		   DDATA(w),
+		   DDATA(mom_p_acc),
+		   DDATA(mom_u_acc),
+		   DDATA(mom_v_acc),
+		   DDATA(mom_w_acc),
+		   DDATA(dmom_p_acc_p),
+		   DDATA(dmom_u_acc_u),
+		   DDATA(dmom_v_acc_v),
+		   DDATA(dmom_w_acc_w));
+
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
 static PyObject* ctransportCoefficientsLaplace_2D_Evaluate(PyObject* self,
 							PyObject* args)
 {
@@ -9748,7 +9852,15 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
   { "conservativeHeadRichardsJLeverettAniEvaluate", 
     ctransportCoefficientsConservativeHeadRichardsJLeverettAniEvaluate,
     METH_VARARGS, 
-    "evaluate the coefficients  of Richards' equation"}, 
+    "evaluate the coefficients  of Richards' equation"},
+  { "Mass_2D_Evaluate", 
+    ctransportCoefficientsMass_2D_Evaluate,
+    METH_VARARGS, 
+    "evaluate the coefficients of the a 2D mass matrix"}, 
+  { "Mass_3D_Evaluate", 
+    ctransportCoefficientsMass_3D_Evaluate,
+    METH_VARARGS, 
+    "evaluate the coefficients  of a 3D mass matrix"},
   { "NavierStokes_2D_Evaluate", 
     ctransportCoefficientsNavierStokes_2D_Evaluate,
     METH_VARARGS, 

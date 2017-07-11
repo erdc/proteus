@@ -249,7 +249,7 @@ class Quadrilateral(Polygon):
             if zMax < node.p[Z]:
                 zMax = node.p[Z]
 
-        # indentity degenerate coordinate space.
+        # indentify degenerate coordinate space.
         # NOTE - this is not entirely accurate, but assumes
         # 2D quadrilateral objects are orthogonal to one of
         # the cononical coordinate axes
@@ -1535,7 +1535,7 @@ class Mesh:
             gnuplot.flush()
         raw_input('Please press return to continue... \n')
 
-    def convertFromPUMI(self, PUMIMesh, faceList, parallel=False, dim=3):
+    def convertFromPUMI(self, PUMIMesh, faceList,regList, parallel=False, dim=3):
         import cmeshTools
         import MeshAdaptPUMI
         import flcbdfWrappers
@@ -1548,10 +1548,18 @@ class Mesh:
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
           PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
               self.subdomainMesh.cmesh)
-          for i in range(len(faceList)):
-            for j in range(len(faceList[i])):
-              PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh, i+1,
-                  faceList[i][j])
+          if(PUMIMesh.isReconstructed()):
+            logEvent("Material arrays updating based on reconstructed model.\n")
+            PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh);
+          else:
+              logEvent("Material arrays updating based on geometric model.\n")
+              for i in range(len(faceList)):
+                for j in range(len(faceList[i])):
+                  PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,(dim-1), i+1,
+                      faceList[i][j])
+              for i in range(len(regList)):
+                for j in range(len(regList[i])):
+                  PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,dim, i+1, regList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
@@ -1596,9 +1604,15 @@ class Mesh:
           comm.barrier()
         else:
           PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
-          for i in range(len(faceList)):
-            for j in range(len(faceList[i])):
-              PUMIMesh.updateMaterialArrays(self.cmesh, i+1, faceList[i][j])
+          if(PUMIMesh.isReconstructed()):
+            PUMIMesh.updateMaterialArrays(self.cmesh);
+          else:
+              for i in range(len(faceList)):
+                for j in range(len(faceList[i])):
+                  PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), i+1, faceList[i][j])
+              for i in range(len(regList)):
+                for j in range(len(regList[i])):
+                  PUMIMesh.updateMaterialArrays(self.cmesh,dim, i+1, regList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
@@ -1938,15 +1952,15 @@ class RectangularGrid(Mesh):
 
         #dimensions of hexahedra
         if self.nHx>0:
-            hx = Lx/(nx-1)
+            hx = float(Lx)/(nx-1)
         else:
             hx = 1.0
         if self.nHy>0:
-            hy = Ly/(ny-1)
+            hy = float(Ly)/(ny-1)
         else:
             hy=1.0
         if self.nHz>0:
-            hz = Lz/(nz-1)
+            hz = float(Lz)/(nz-1)
         else:
             hz=1.0
         self.nodeDict={}
@@ -2174,6 +2188,17 @@ class TetrahedralMesh(Mesh):
 
     The mesh can be generated from a rectangular grid and refined using either
     4T or Freudenthal-Bey global refinement.
+
+    Attributes
+    ----------
+    elementNodesArray : array_like
+        A list of lists storing the node values associated with each element 
+        in the triangulation.  The first index refers to the element number,
+        while the second index refers to the global node value.
+    nodeArray : array_like
+        A list of lists storing node coordinates.  The first index referes
+        to the global node number, while the second index refers to the x, y
+        and z coordinates of the node respectively.
     """
 
     def __init__(self):
@@ -4541,7 +4566,34 @@ class QuadrilateralMesh(Mesh):
                 e3 = Edge(nodes=[n3,n0])
                 self.newQuadrilateral([e0,e1,e2,e3])
         self.finalize()
-    
+
+        
+    def generateFromQuadFileIFISS(self,meshfile):
+        ''' WIP - read a matlab.mat file containing IFISS vertices
+        and elements
+        '''
+        import scipy.io
+        griddata = scipy.io.loadmat(meshfile+'.mat')
+        self.nodeList = [Node(nN,n[0],n[1],0.0) for nN,n in enumerate(griddata['vertices'])]
+        # Is the following line necessary?
+        self.nodeDict = dict([(n,n) for n in self.nodeList])
+        for q in griddata['quads']:
+            n0,n3,n2,n1 = q # clockwise ordering needed
+            e0 = Edge(nodes=[self.nodeList[n0],self.nodeList[n1]])
+            e1 = Edge(nodes=[self.nodeList[n1],self.nodeList[n2]])
+            e2 = Edge(nodes=[self.nodeList[n2],self.nodeList[n3]])
+            e3 = Edge(nodes=[self.nodeList[n3],self.nodeList[n0]])
+            self.newQuadrilateral([e0,e1,e2,e3])
+        self.finalize()
+        for F,nN in griddata['bdyflags']:
+            self.nodeMaterialTypes[nN] = F
+        for ebNE in range(self.nExteriorElementBoundaries_global):
+            ebN = self.exteriorElementBoundariesArray[ebNE]
+            n0,n1 = self.elementBoundaryNodesArray[ebN]
+            self.elementBoundaryMaterialTypes[ebN]=max(self.nodeMaterialTypes[n0],
+                                                       self.nodeMaterialTypes[n1])
+
+
     def meshType(self):
         return 'cuboid'
 
@@ -4764,6 +4816,14 @@ class MultilevelTriangularMesh(MultilevelMesh):
                 self.meshList[l].subdomainMesh = self.meshList[l]
                 logEvent(self.meshList[-1].meshInfo())
             self.buildArrayLists()
+    def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
+        import cmeshTools
+        self.meshList = []
+        self.meshList.append(mesh0)
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        self.buildFromC(self.cmultilevelMesh)
+        self.elementParents = None
+        self.elementChildren=[]
 
     def refine(self):
         self.meshList.append(TriangularMesh())
@@ -6137,7 +6197,6 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
             intersections.update(((tuple(elementIntersections[0]), tuple(elementIntersections[1])),),)
     return intersections
 
-
 def runTetgen(polyfile,
               baseFlags="Yp",
               name = ""):
@@ -6268,9 +6327,9 @@ class MeshOptions:
             layers of overlap for paralllel (default: 0)
         """
         if partitioning_type == 'element' or partitioning_type == 0:
-            self.parallelPartitioningType = mpt.element
+            self.parallelPartitioningType = MeshParallelPartitioningTypes.element
         if partitioning_type == 'node' or partitioning_type == 1:
-            self.parallelPartitioningType = mpt.node
+            self.parallelPartitioningType = MeshParallelPartitioningTypes.node
         self.nLayersOfOverlapForParallel = layers_overlap
 
     def setTriangleOptions(self, triangle_options=None):
@@ -6336,12 +6395,13 @@ class MeshOptions:
         self.outputFiles['poly'] = poly
         self.outputFiles['ply'] = ply
         self.outputFiles['asymptote'] = asymptote
-        self.outputFiles['geo'] = gmsh
+        self.outputFiles['geo'] = geo
 
 
-def msh2triangle(fileprefix):
+def msh2simplex(fileprefix, nd):
     """
-    Converts a .msh file (Gmsh) to .ele .edge .node files (triangle)
+    Converts a .msh file (Gmsh) to .ele .edge .node files (triangle).
+    (!) Works only with triangle elements in 2D and tetrahedral elements in 3D.
 
     Parameters
     ----------
@@ -6349,17 +6409,18 @@ def msh2triangle(fileprefix):
         prefix of the .msh file (e.g. 'mesh' if file called 'mesh.msh')
 
     """
+    assert nd == 2 or nd == 3, 'nd must be 2 or 3'
     mshfile = open(fileprefix+'.msh', 'r')
     nodes = []
     edges_msh = []
     triangles = []
     tetrahedra = []
+    tetrahedron_nb = 0
     triangle_nb = 0
     edge_nb = 0
-    nd = 2
     switch = None
     switch_count = -1
-    logEvent('msh2triangle: getting nodes and elements')
+    logEvent('msh2simplex: getting nodes and elements')
     for line in mshfile:
         if 'Nodes' in line:
             switch = 'nodes'
@@ -6397,6 +6458,9 @@ def msh2triangle(fileprefix):
                 elif el_type == 2: # triangle
                     triangle_nb += 1
                     triangles += [[triangle_nb, int(words[s]), int(words[s+1]), int(words[s+2]), flag]]
+                elif el_type == 4: # tetrahedron 
+                    tetrahedron_nb += 1
+                    tetrahedra += [[tetrahedron_nb, int(words[s]), int(words[s+1]), int(words[s+2]), int(words[s+3]), flag]]
                 elif el_type == 15: # node
                     nodes[el_id-1][4] = flag
         switch_count += 1
@@ -6408,7 +6472,7 @@ def msh2triangle(fileprefix):
     edge_nb = 0
     edges = []
 
-    logEvent('msh2triangle: constructing edges')
+    logEvent('msh2simplex: constructing edges')
     for triangle in triangles[:,1:4]:  # take only vertices index
         for i in range(len(triangle)):
             edge = Edge(edgeNumber=edge_nb, nodes=[triangle[i-1], triangle[i]])
@@ -6417,7 +6481,7 @@ def msh2triangle(fileprefix):
                 edge_nb += 1
                 edges_dict[edge.nodes] = edge
                 edges += [[edge_nb, edge.nodes[0], edge.nodes[1], 0]]
-    logEvent('msh2triangle: updating edges and nodes flags')
+    logEvent('msh2simplex: updating edges and nodes flags')
     edges = np.array(edges)
     for edge in edges_msh:
         edge_nodes = [edge[1], edge[2]]
@@ -6431,7 +6495,10 @@ def msh2triangle(fileprefix):
         if nodes[edge[2]-1][-1] == 0:  # update node flags
             nodes[edge[1]-1][-1] = edge[3]
 
-    logEvent('msh2triangle: writing .node .ele .edge files')
+    if nd == 2:
+        logEvent('msh2simplex: writing .node .ele .edge files')
+    elif nd == 3:
+        logEvent('msh2simplex: writing .node .ele .edge .face files')
     header = '{0:d} {1:d} 0 1'.format(node_nb, nd)
 
     if nd == 2:
@@ -6448,5 +6515,10 @@ def msh2triangle(fileprefix):
     if nd == 2:
         header = '{0:d} 3 1'.format(triangle_nb)
         np.savetxt(fileprefix+'.ele', triangles, fmt='%d', header=header, comments='')
+    elif nd == 3:
+        header = '{0:d} 3 1'.format(triangle_nb)
+        np.savetxt(fileprefix+'.face', triangles, fmt='%d', header=header, comments='')
+        header = '{0:d} 4 1'.format(tetrahedron_nb)
+        np.savetxt(fileprefix+'.ele', tetrahedra, fmt='%d', header=header, comments='')
 
-    logEvent('msh2triangle: finished converting .msh to triangle files')
+    logEvent('msh2simplex: finished converting .msh to simplex files')

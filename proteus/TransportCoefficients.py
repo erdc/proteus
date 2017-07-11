@@ -10515,3 +10515,86 @@ class SinglePhaseDarcyCoefficients(TC_base):
     def evaluate(self,t,c):
         pass #need to put in eval for time varying coefficients
     #end def
+
+class DiscreteMassMatrix(TC_base):
+    r"""Coefficients class for the discrete Mass Operator.
+    
+    This class defines the coefficients necessary to construct the
+    discrete mass operator :math:`A` where
+
+    .. math::
+    
+        a^{c}_{i,j} = \int_{T} \phi^{c}_{i} \phi^{c}_{j} dT
+
+    for all :math:`T \in \Omega`, :math:`c=1,...,nc` and 
+    :math:`\phi^{c}_{i}, i=1,...,k` is a basis for component :math:`c`.
+    """
+    from ctransportCoefficients import Mass_2D_Evaluate
+    from ctransportCoefficients import Mass_3D_Evaluate
+    def __init__(self,rho=1.0,nd=2):
+        self.rho = rho
+        self.nd = nd
+        mass = {}
+        advection= {}
+        diffusion = {}
+        potential = {}
+        reaction = {}
+        hamiltonian = {}
+        if nd==2:
+            variableNames = ['p','u','v']
+            mass = {0:{0:'linear'},
+                    1:{1:'linear'},
+                    2:{2:'linear'}}
+            TC_base.__init__(self,
+                             3,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors={})
+            self.vectorComponents = [1,2]
+        elif nd==3:
+            variableNames = ['p','u','v','w']
+            mass = {0:{0:'linear'},
+                    1:{1:'linear'},
+                    2:{2:'linear'},
+                    3:{3:'linear'}}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents=[1,2,3]
+    def evaluate(self,t,c):
+        if self.nd==2:
+            self.Mass_2D_Evaluate(self.rho,
+                                  c[('u',0)],
+                                  c[('u',1)],
+                                  c[('u',2)],
+                                  c[('m',0)],
+                                  c[('m',1)],
+                                  c[('m',2)],
+                                  c[('dm',0,0)],
+                                  c[('dm',1,1)],
+                                  c[('dm',2,2)])
+        elif self.nd==3:
+            self.Mass_3D_Evaluate(self.rho,
+                                  c[('u',0)],
+                                  c[('u',1)],
+                                  c[('u',2)],
+                                  c[('u',3)],
+                                  c[('m',0)],
+                                  c[('m',1)],
+                                  c[('m',2)],
+                                  c[('m',3)],
+                                  c[('dm',0,0)],
+                                  c[('dm',1,1)],
+                                  c[('dm',2,2)],
+                                  c[('dm',3,3)])

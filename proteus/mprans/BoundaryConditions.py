@@ -333,8 +333,8 @@ class BC_RANS(BC_Base):
     def __cpp_MoveMesh_hz(self, x, t):
         return self.__cpp_MoveMesh_h(x, t)[2]
 
-    def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None, wind_speed=None,
-                                         smoothing=0., vof_air=1., vof_water=0.):
+    def setUnsteadyTwoPhaseVelocityInlet(self, wave,smoothing, vert_axis=None,
+                                         wind_speed=None, vof_air=1., vof_water=0.):
         """
         Imposes a velocity profile on the fluid with input wave and wind
         conditions.
@@ -343,6 +343,8 @@ class BC_RANS(BC_Base):
         ----------
         wave: proteus.WaveTools
             class describing a wave (from proteus.WaveTools)
+        smoothing: float
+            smoothing distance (typically 3.*he)
         vert_axis: Optional[int]
             index of vertical position vector (x:0, y:1, z:2), must always be
             aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
@@ -749,9 +751,13 @@ class BC_RANS(BC_Base):
                 H = 0.
             return H*air + (1-H)*water     
 
-        self.u_dirichlet.setConstantBC(0.) 
-        self.v_dirichlet.setConstantBC(0.) 
-        self.w_dirichlet.setConstantBC(0.) 
+        self.u_dirichlet.resetBC() 
+        self.v_dirichlet.resetBC() 
+        self.w_dirichlet.resetBC() 
+        self.u_dirichlet.setConstantBC(0.)
+        self.u_diffusive.setConstantBC(0.)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
         self.k_dirichlet.resetBC() 
@@ -1000,8 +1006,6 @@ class RelaxationZoneWaveGenerator():
                             x[0] = qx[eN, k, 0]
                             x[1] = qx[eN, k, 1]
                             x[2] = qx[eN, k, 2]
-                            #print qx.__array_interface__['data'] == m.q['x'].__array_interface__['data']
-                            #print x.__array_interface__['data'] == m.q['x'][eN, k].__array_interface__['data']
                             phi = zone.calculate_phi(x)
                             q_phi_solid[eN, k] = phi
                             u = zone.calculate_vel(x, t)
@@ -1238,13 +1242,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             distance to nearest node
         """
         # determine local nearest node distance
-        Profiling.logEvent('GETLOCALNEARESTNODE')
-        #Profiling.logEvent('kdtree --> %s' % kdtree)
-        #Profiling.logEvent('kdtree.query --> %s' % kdtree.query)
-        #Profiling.logEvent('coords --> %s' % coords)
         distance, node = kdtree.query(coords)
-        #Profiling.logEvent('distance --> %s' % distance)
-        #Profiling.logEvent('node --> %s' % node)
         return node, distance
 
     def getLocalElement(self, femSpace, coords, node):
@@ -1264,17 +1262,12 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         eN: int or None
             local index of element (None if not found)
         """
-        Profiling.logEvent('GETLOCALELEMENT')
-        #Profiling.logEvent('femspace --> %s' % femSpace)
         patchBoundaryNodes=set()
         checkedElements=[]
         # nodeElementOffsets give the indices to get the elements sharing the node
-        #log Profiling.logEvent("Getting Local Element")
-        #statem1 = node+1 < len(femSpace.mesh.nodeElementOffsets)
-        #Profiling.logEvent('node+1 < len(femSpace.mesh.nodeElementOffsets) --> %s ' % statem1)        
+        statem1 = node+1 < len(femSpace.mesh.nodeElementOffsets)
         for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
             eN = femSpace.mesh.nodeElementsArray[eOffset]
-            #Profiling.logEvent('eN --> %s ' % eN)
             checkedElements.append(eN)
             # union of set
             patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
@@ -1282,18 +1275,14 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             xi = femSpace.elementMaps.getInverseValue(eN, coords)
             #J = femSpace.elementMaps.getJacobianValues(eN, )
             # query whether xi lies within the reference element
-            #Profiling.logEvent('xi --> %s ' % xi)
-            #Profiling.logEvent('femSpace.elementMaps.referenceElement.onElement(xi) --> %s ' % femSpace.elementMaps.referenceElement.onElement(xi))
             if femSpace.elementMaps.referenceElement.onElement(xi):
                 return eN
         # extra loop if case coords is in neighbour element
         for node in patchBoundaryNodes:
             for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
                 eN = femSpace.mesh.nodeElementsArray[eOffset]
-                #Profiling.logEvent('eN --> %s ' % eN)
                 if eN not in checkedElements:
                     checkedElements.append(eN)
-                    #Profiling.logEvent('eN --> %s ' % eN)
                     # evaluate the inverse map for element eN
                     xi = femSpace.elementMaps.getInverseValue(eN, coords)
                     # query whether xi lies within the reference element
@@ -1318,16 +1307,10 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         rank: int
             processor rank containing element
         """
-        Profiling.logEvent('FINDELEMENTCONTAININGCOORDS')
-        #log Profiling.logEvent("Looking for element " +str(coords))
         comm = Comm.get().comm.tompi4py()
         xi = owning_proc = element = rank = None  # initialised as None
         # get nearest node on each processor
         #comm.barrier()
-        Profiling.logEvent('self.model --> %s ' % self.model)
-        Profiling.logEvent('self.model.levelModelList --> %s ' % self.model.levelModelList)
-        Profiling.logEvent('self.model.levelModelList[0] --> %s ' % self.model.levelModelList[0])
-        #Profiling.logEvent('self.model.levelModelList[-1] --> %s ' % self.model.levelModelList[-1])
         self.u = self.model.levelModelList[0].u
         Profiling.logEvent('self.u --> %s ' % self.u)
         self.femSpace_velocity = self.u[1].femSpace
@@ -1336,45 +1319,15 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         #Profiling.logEvent('nodes_kdtree --> %s ' % nodes_kdtree)
         nearest_node, nearest_node_distance = self.getLocalNearestNode(coords, nodes_kdtree)
         # look for element containing coords on each processor (if it exists)
-        #comm.barrier()
-        #Profiling.logEvent("get local element " +str(coords))
         local_element = self.getLocalElement(self.femSpace_velocity, coords, nearest_node)
-        #comm.barrier()
-        #log Profiling.logEvent("got local element " +str(coords))
-        #Profiling.logEvent('local_element --> %s ' % local_element)
         if local_element:
             xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
-        # check which processor has element (if any)
-        #if local_element:
-        #    print("Local element!")
-        #    owning_proc = comm.bcast(comm.rank, comm.rank)
-        #    # get local coords
-        #    Profiling.logEvent("getting xi" +str(coords))
-        #    xi = self.femSpace_velocity.elementMaps.getInverseValue(local_element, coords)
-        #    Profiling.logEvent("broadcasting results" +str(coords))
-        #    xi = comm.bcast(xi, owning_proc)
-        #    Profiling.logEvent("Broadcasted xi")
-        #    element = comm.bcast(local_element, owning_proc)
-        #    Profiling.logEvent("Broadcasted element")
-        #    rank = comm.bcast(owning_proc, owning_proc)
-        #    Profiling.logEvent("Broadcasted rank")
-        #Profiling.logEvent("broadcasting results" +str(coords))
-        #comm.barrier()
-        #print("MYRANK ", comm.rank)
-        #log Profiling.logEvent("Starting all reduce")
-        global_have_element, owning_proc = comm.allreduce((local_element, comm.rank), op=MPI.MAXLOC)
-        #comm.barrier()
-        #log Profiling.logEvent("Finished all reduce")
-        if global_have_element:
-            #     Profiling.logEvent("broadcasting results" +str(coords))
-            xi = comm.bcast(xi, owning_proc)
-            #log Profiling.logEvent("Broadcasted xi" +str(xi))
-            element = comm.bcast(local_element, owning_proc)
-            #log Profiling.logEvent("Broadcasted element" +str(element))
-            rank = comm.bcast(owning_proc, owning_proc)
-            #log Profiling.logEvent("Broadcasted owning_proc" +str(rank))
-        #log Profiling.logEvent("got element finished" +str(coords))
-        return xi, element, rank
+            rank = comm.rank
+        else:
+            xi = None
+            rank = None
+        #rank = comm.allreduce(rank, op=MPI.MAX)
+        return xi, local_element, rank
 
     def getFluidVelocityLocalCoords(self, xi, element, rank):
         """
@@ -1387,65 +1340,58 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         rank: int
             rank of processor owning the element
         """
-        #log Profiling.logEvent("FINDING VELOCITY AT RANK "+str(rank)+", "+str(element) + ", " + str(xi))
-        Profiling.logEvent('GETFLUIDVELOCITYLOCALCOORDS')
         comm = Comm.get().comm.tompi4py()
-        #Profiling.logEvent('comm.rank --> %s' % comm.rank)
-        #Profiling.logEvent('rank --> %s' % rank)
         if comm.rank == rank:
             u = self.u[1].getValue(element, xi)
             v = self.u[2].getValue(element, xi)
             if self.nd > 2:
                 w = self.u[3].getValue(element, xi)
             if self.nd <= 2:
-                w = 0
-            # broadcast to all processors
+                w = 0.
         else:
             u = v = w = None
-        #print u, v, w
-        u = comm.bcast(u, rank)
-        v = comm.bcast(v, rank)
-        w = comm.bcast(w, rank)
-        u1= str(u)
-        Profiling.logEvent('u --> %s' % u1)
-        v1 = str(v)
-        Profiling.logEvent('v --> %s' %  v1)
-        w1 = str(w)
-        Profiling.logEvent('w --> %s' % w1)
-        Profiling.logEvent("FOUND VELOCITY")
         return u, v, w
 
-    def setYplusNormalDirection(self, x, t):
+    def setYplusNormalDirection(self, x, t, relax=1.0):
         """
         Return the point at y+ distance in normal
         direction from the boundary.
         """
-        Profiling.logEvent('YPLUSNORMALDIRECTION')
         # we do need normal direction vector to the boundary and pointing the domain, -self._b_or
-        nP = ( self.Y*(-self._b_or) ) + x
-        #Profiling.logEvent('self.Y --> %s ' % self.Y)
-        #Profiling.logEvent('self._b_or --> %s ' % self._b_or)
-        #Profiling.logEvent('x --> %s ' % x)
-        #Profiling.logEvent('coords normalDirection from boundary --> %s ' % nP)
+        nP = ( relax*self.Y*(-self._b_or) ) + x
         return nP
 
     def extractVelocity(self, x, t):
         """
         Extraction of the velocity at y+ distance from the boundary.
         """
-        Profiling.logEvent('EXTRACTVELOCITY')
         coords = self.setYplusNormalDirection(x,t)
         xi, element, rank = self.findElementContainingCoords(coords)
-        u, v, w = self.getFluidVelocityLocalCoords(xi, element, rank)
+        if rank is not None:
+            u, v, w = self.getFluidVelocityLocalCoords(xi, element, rank)
+        else:
+            relax=0.5
+            while rank is None:
+                logEvent("Wall Function trying to find element to extrapolate velocity")
+                coords_relax = self.setYplusNormalDirection(x,t, relax)
+                xi, element, rank = self.findElementContainingCoords(coords_relax)
+                relax*=0.5
+            #just use the element containing the boundary quadrature point to interpolate to the y+ point
+            u, v, w = self.getFluidVelocityLocalCoords(self.femSpace_velocity.elementMaps.getInverseValue(element, coords),
+                                                       element,
+                                                       rank)
         return u, v, w
         
     def tangentialVelocity(self, x, t, uInit=None):
-        #Profiling.logEvent('tangentialVelocity function step')
-        if uInit: u0, u1, u2 = self.U0
-        else: 
-            if self.vel == 'global' or self.model == None: u0, u1, u2 = self.U0
-            elif self.vel == 'local': u0, u1, u2 = self.extractVelocity(x,t) 
-            else: logEvent("ERROR: Wrong input for velocity system for wall function calculation")
+        if uInit:
+            u0, u1, u2 = self.U0
+        else:
+            if self.vel == 'global' or self.model is None:
+                u0, u1, u2 = self.U0
+            elif self.vel == 'local':
+                u0, u1, u2 = self.extractVelocity(x,t) 
+            else:
+                sys.exit(1)
         self.meanV = np.array([u0, u1, u2])  
         b0, b1, b2 = self._b_or
         # normal unit vector
@@ -1457,6 +1403,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         #return self
 
     def getVariables(self, x, t):
+        comm = Comm.get().comm.tompi4py()
         Re0 = self.tanU*self.d/self.nu
         ReL = self.tanU*self.L/self.nu
         rangeSkin = ['laminar', 'turbulent']
@@ -1464,8 +1411,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.cf, self.Ubound = np.zeros(3, dtype=float), np.zeros(3, dtype=float)
         for i in [0, 1, 2]:
             if skinf not in rangeSkin:
-                logEvent("Wrong slip_type given: Valid types are %s" %rangeSkin, level=0)
-                sys.exit(1)
+                comm.Abort(1)
             elif skinf == 'laminar' and Re0[i] > 0.:
                 self.cf[i] = 4./Re0[i]
             elif skinf == 'turbulent' and Re0[i] > 0.:
@@ -1477,20 +1423,17 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             Uplus = self.Yplus
             self.Ubound = Uplus*self.ut
         # log-law layer
-        else:
+        else: 
             E = np.exp(self.B*self.K)
             for i in [0, 1, 2]:
-                if self.Yplus[i]>0. : self.Ubound[i] = self.ut[i] * np.log(E*self.Yplus[i]) / self.K
+                if self.Yplus[i]>0. :
+                    self.Ubound[i] = self.ut[i] * np.log(E*self.Yplus[i]) / self.K
         self.utAbs = np.sqrt(np.sum(self.ut**2))       
         self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu)   
 
     def get_u_dirichlet(self, x, t):
         if t<0.: uInit = True
         else: uInit = False
-        Profiling.logEvent('element --> %s' % x)
-        Profiling.logEvent('timestep t --> %s' % t)
-        Profiling.logEvent('Yplus --> %s' % self.Yplus)
-        Profiling.logEvent('self.ut --> %s' % self.ut)
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)    
         U = self.Ubound[0]
@@ -1499,7 +1442,6 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
     def get_v_dirichlet(self, x, t):
         if t<0.: uInit = True
         else: uInit = False
-        #Profiling.logEvent('timestep t --> %s' % t)
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)    
         U = self.Ubound[1]
@@ -1508,7 +1450,6 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
     def get_w_dirichlet(self, x, t):
         if t<0.: uInit = True
         else: uInit = False
-        #Profiling.logEvent('timestep t --> %s' % t)
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)    
         U = self.Ubound[2]
@@ -1517,7 +1458,6 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
     def get_k_dirichlet(self, x, t):
         if t<0.: uInit = True
         else: uInit = False
-        #Profiling.logEvent('timestep t --> %s' % t)
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)  
         return self.kappa 
@@ -1525,7 +1465,6 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
     def get_dissipation_dirichlet(self, x, t):
         if t<0.: uInit = True
         else: uInit = False
-        #Profiling.logEvent('timestep t --> %s' % t)
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)  
         d = 0.
@@ -1536,7 +1475,6 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
     def get_u_diffusive(self, x, t):
         if t<0.: uInit = True
         else: uInit = False
-        #Profiling.logEvent('timestep t --> %s' % t)
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)    
         gradU = self.ut[0]/(self.K*self.Y)
@@ -1545,16 +1483,14 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
     def get_v_diffusive(self, x, t):
         if t<0.: uInit = True
         else: uInit = False
-        #Profiling.logEvent('timestep t --> %s' % t)
         self.tangentialVelocity(x,t,uInit)
-        self.getVariables(x, t)    
+        self.getVariables(x, t)
         gradU = self.ut[1]/(self.K*self.Y)
         return gradU 
 
     def get_w_diffusive(self, x, t):
         if t<0.: uInit = True
-        else: uInit = False 
-        #Profiling.logEvent('timestep t --> %s' % t)
+        else: uInit = False
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)      
         gradU = self.ut[2]/(self.K*self.Y)

@@ -119,8 +119,8 @@ class TestShapeDomainBuilding(unittest.TestCase):
         domain2DRANS = create_domain2D()
         domain3D = create_domain3D()
         domain3DRANS = create_domain3D()
-        dim2D = [1., 1.]
-        dim3D = [1., 1., 1.]
+        dim2D = np.array([1., 1.])
+        dim3D = np.array([1., 1., 1.])
         coords2D = np.array([0.5, 0.5])
         coords3D = np.array([0.5, 0.5, 0.5])
         nb_bc2D = 0
@@ -129,6 +129,7 @@ class TestShapeDomainBuilding(unittest.TestCase):
         nb_bc3DRANS = 0
         for shape in range(nb_shapes):
             coords2D += 1.5
+            coords3D += 1.5
             a = create_rectangle(domain2D, dim=dim2D, coords=coords2D)
             nb_bc2D += len(a.BC_list)
             a = create_cuboid(domain3D, dim=dim3D, coords=coords3D)
@@ -139,15 +140,23 @@ class TestShapeDomainBuilding(unittest.TestCase):
             a = create_cuboid(domain3DRANS, dim=dim3D, coords=coords3D,
                             folder='mprans')
             nb_bc3DRANS += len(a.BC_list)
-        a = create_tank2D(domain2DRANS, dim=[50., 50.], coords=[25., 25.])
+        a = create_tank2D(domain2DRANS, dim=[50., 50.])
         nb_bc2DRANS += len(a.BC_list)
-        a = create_tank3D(domain3DRANS, dim=[50., 50., 50.],
-                          coords=[25., 25., 25.])
+        a = create_tank3D(domain3DRANS, dim=[50., 50., 50.])
         nb_bc3DRANS += len(a.BC_list)
         assembleDomain(domain2D)
         assembleDomain(domain3D)
         assembleDomainRANS(domain2DRANS)
         assembleDomainRANS(domain3DRANS)
+
+        x2D = domain2D.x
+        x3D = domain3D.x
+        x2DRANS = domain2DRANS.x
+        x3DRANS = domain3DRANS.x
+        L2D = domain2D.L
+        L3D = domain3D.L
+        L2DRANS = domain2DRANS.L
+        L3DRANS = domain3DRANS.L
 
         # check that each domain has the right number of shapes
         npt.assert_equal(len(domain2D.shape_list), nb_shapes)
@@ -160,6 +169,16 @@ class TestShapeDomainBuilding(unittest.TestCase):
         npt.assert_equal(len(domain3D.bc), nb_bc3D+1)
         npt.assert_equal(len(domain2DRANS.bc), nb_bc2DRANS+1)
         npt.assert_equal(len(domain3DRANS.bc), nb_bc3DRANS+1)
+
+        # check that bounding boxes are rightly calculated
+        npt.assert_equal(L2D, [14.5, 14.5])
+        npt.assert_equal(L3D, [14.5, 14.5, 14.5])
+        npt.assert_equal(L2DRANS, [50., 50.])
+        npt.assert_equal(L3DRANS, [50., 50., 50.])
+        npt.assert_equal(x2D, [1.5, 1.5])
+        npt.assert_equal(x3D, [1.5, 1.5, 1.5])
+        npt.assert_equal(x2DRANS, [0., 0.])
+        npt.assert_equal(x3DRANS, [0., 0., 0.])
 
     def test_BC_flags(self):
         """
@@ -304,7 +323,7 @@ class TestShapeRANS(unittest.TestCase):
         tank.setSponge(x_n=1.5, x_p=2.)
         npt.assert_equal(tank.spongeLayers['x-'], 1.5)
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
-        tank.setAbsorptionZones(x_n=True, x_p=True)
+        tank.setAbsorptionZones(dragAlpha ,x_n=True, x_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         npt.assert_equal(leftzone.zone_type, 'absorption')
@@ -333,7 +352,7 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
         npt.assert_equal(tank.spongeLayers['y-'], 3)
         npt.assert_equal(tank.spongeLayers['y+'], 0.2)
-        tank.setAbsorptionZones(x_n=True, x_p=True, y_n=True, y_p=True)
+        tank.setAbsorptionZones(dragAlpha, x_n=True, x_p=True, y_n=True, y_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         frontzone = tank.zones[tank.regionFlags[tank.regionIndice['y-']]]
@@ -420,7 +439,7 @@ class TestShapeRANS(unittest.TestCase):
         tank.setSponge(x_n=1.5, x_p=2.)
         npt.assert_equal(tank.spongeLayers['x-'], 1.5)
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
-        tank.setGenerationZones(waves=waves, x_n=True, x_p=True)
+        tank.setGenerationZones(dragAlpha, smoothing = 0.,waves=waves, x_n=True, x_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         npt.assert_equal(leftzone.zone_type, 'generation')
@@ -449,7 +468,7 @@ class TestShapeRANS(unittest.TestCase):
         npt.assert_equal(tank.spongeLayers['x+'], 2.)
         npt.assert_equal(tank.spongeLayers['y-'], 3)
         npt.assert_equal(tank.spongeLayers['y+'], 0.2)
-        tank.setGenerationZones(waves=waves, x_n=True, x_p=True, y_n=True, y_p=True)
+        tank.setGenerationZones(dragAlpha, smoothing=0., waves=waves, x_n=True, x_p=True, y_n=True, y_p=True)
         leftzone = tank.zones[tank.regionFlags[tank.regionIndice['x-']]]
         rightzone = tank.zones[tank.regionFlags[tank.regionIndice['x+']]]
         frontzone = tank.zones[tank.regionFlags[tank.regionIndice['y-']]]
