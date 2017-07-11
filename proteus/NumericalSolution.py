@@ -839,7 +839,7 @@ class NS_base:  # (HasTraits):
         n0 = self.nList[0]
         adaptMeshNow = False
         #will need to move this to earlier when the mesh is created
-        from proteus.MeshAdaptPUMI import MeshAdaptPUMI
+        #from proteus.MeshAdaptPUMI import MeshAdaptPUMI
         if not hasattr(p0.domain,'PUMIMesh') and not isinstance(p0.domain,Domain.PUMIDomain) and n0.adaptMesh:
             import sys
             if(self.comm.size()>1 and p0.domain.MeshOptions.parallelPartitioningType!=MeshTools.MeshParallelPartitioningTypes.element):
