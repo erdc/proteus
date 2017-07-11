@@ -10,6 +10,7 @@ Copyright 2017 Chris Kees cekees@gmail.com
 Copyright 2017 HR Wallingford Limited A.Dimakopoulos@hrwallingford.com
 Copyright 2017 Alvin Zhang alv.zhang@gmail.com
 Copyright 2017 Alistair Bentley alistairbntl@gmail.com
+Copyright 2017 Steven Mattis steve.a.mattis@gmail.com
 
 **Note for U.S. Federal Employees**
 
