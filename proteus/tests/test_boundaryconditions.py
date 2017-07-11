@@ -274,7 +274,8 @@ class TestBC(unittest.TestCase):
         #-----
         # set BC
         wind_speed=np.array([1., 2., 3.4])
-        BC.setUnsteadyTwoPhaseVelocityInlet(waves, vert_axis=1,
+        smoothing = 0.
+        BC.setUnsteadyTwoPhaseVelocityInlet(waves, smoothing, vert_axis=1,
                                             wind_speed=wind_speed)
         BC.getContext(ct)
         BC.u_dirichlet.uOfXT = BC.u_dirichlet.init_cython()
@@ -285,7 +286,6 @@ class TestBC(unittest.TestCase):
         u_dir, v_dir, w_dir, vof_dir, p_adv = [], [], [], [], []
         u_calc, vof_calc, p_calc = [], [], []
         t_list = get_time_array()
-        smoothing = 0.
         for t in t_list:
             x = np.array(get_random_x())
             u_dir += [BC.u_dirichlet.uOfXT(x, t)]

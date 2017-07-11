@@ -333,8 +333,8 @@ class BC_RANS(BC_Base):
     def __cpp_MoveMesh_hz(self, x, t):
         return self.__cpp_MoveMesh_h(x, t)[2]
 
-    def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None, wind_speed=None,
-                                         smoothing=0., vof_air=1., vof_water=0.):
+    def setUnsteadyTwoPhaseVelocityInlet(self, wave,smoothing, vert_axis=None,
+                                         wind_speed=None, vof_air=1., vof_water=0.):
         """
         Imposes a velocity profile on the fluid with input wave and wind
         conditions.
@@ -343,6 +343,8 @@ class BC_RANS(BC_Base):
         ----------
         wave: proteus.WaveTools
             class describing a wave (from proteus.WaveTools)
+        smoothing: float
+            smoothing distance (typically 3.*he)
         vert_axis: Optional[int]
             index of vertical position vector (x:0, y:1, z:2), must always be
             aligned with gravity. If not set, will be 1 in 2D (y), 2 in 3D (z).
@@ -749,9 +751,13 @@ class BC_RANS(BC_Base):
                 H = 0.
             return H*air + (1-H)*water     
 
-        self.u_dirichlet.setConstantBC(0.) 
-        self.v_dirichlet.setConstantBC(0.) 
-        self.w_dirichlet.setConstantBC(0.) 
+        self.u_dirichlet.resetBC() 
+        self.v_dirichlet.resetBC() 
+        self.w_dirichlet.resetBC() 
+        self.u_dirichlet.setConstantBC(0.)
+        self.u_diffusive.setConstantBC(0.)
+        self.v_dirichlet.setConstantBC(0.)
+        self.w_dirichlet.setConstantBC(0.)
         self.p_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet.uOfXT = hydrostaticPressureOutletWithDepth_vof_dirichlet
         self.k_dirichlet.resetBC() 
@@ -1270,34 +1276,20 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         #log Profiling.logEvent("Getting Local Element")
         statem1 = node+1 < len(femSpace.mesh.nodeElementOffsets)
         Profiling.logEvent('node+1 < len(femSpace.mesh.nodeElementOffsets) --> %s ' % statem1)        
-        if node+1 < len(femSpace.mesh.nodeElementOffsets):
-            for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
-                eN = femSpace.mesh.nodeElementsArray[eOffset]
-                Profiling.logEvent('eN --> %s ' % eN)
-                checkedElements.append(eN)
-                # union of set
-                patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
-                # evaluate the inverse map for element eN (global to local)
-                xi = femSpace.elementMaps.getInverseValue(eN, coords)
-                #J = femSpace.elementMaps.getJacobianValues(eN, )
-                # query whether xi lies within the reference element
-                Profiling.logEvent('xi --> %s ' % xi)
-                Profiling.logEvent('femSpace.elementMaps.referenceElement.onElement(xi) --> %s ' % femSpace.elementMaps.referenceElement.onElement(xi))
-                if femSpace.elementMaps.referenceElement.onElement(xi):
-                    return eN
-        else:
-            for eOffset in range(femSpace.mesh.nodeElementOffsets[node]):
-                eN = femSpace.mesh.nodeElementsArray[eOffset]
-                Profiling.logEvent('eN --> %s ' % eN)
-                checkedElements.append(eN)
-                # union of set
-                patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
-                # evaluate the inverse map for element eN (global to local)
-                xi = femSpace.elementMaps.getInverseValue(eN, coords)
-                #J = femSpace.elementMaps.getJacobianValues(eN, )
-                # query whether xi lies within the reference element
-                if femSpace.elementMaps.referenceElement.onElement(xi):
-                    return eN
+        for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+            eN = femSpace.mesh.nodeElementsArray[eOffset]
+            Profiling.logEvent('eN --> %s ' % eN)
+            checkedElements.append(eN)
+            # union of set
+            patchBoundaryNodes|=set(femSpace.mesh.elementNodesArray[eN])
+            # evaluate the inverse map for element eN (global to local)
+            xi = femSpace.elementMaps.getInverseValue(eN, coords)
+            #J = femSpace.elementMaps.getJacobianValues(eN, )
+            # query whether xi lies within the reference element
+            Profiling.logEvent('xi --> %s ' % xi)
+            Profiling.logEvent('femSpace.elementMaps.referenceElement.onElement(xi) --> %s ' % femSpace.elementMaps.referenceElement.onElement(xi))
+            if femSpace.elementMaps.referenceElement.onElement(xi):
+                return eN
         # extra loop if case coords is in neighbour element
         for node in patchBoundaryNodes:
             for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
