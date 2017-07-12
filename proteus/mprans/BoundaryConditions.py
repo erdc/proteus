@@ -1418,7 +1418,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             E = np.exp(self.B*self.K)
             for i in [0, 1, 2]:
                 if self.Yplus[i]>0. :
-                    self.ut[i] = self.K*self.tanU / np.log(E*self.Yplus[i])
+                    self.ut[i] = self.K*self.tanU[i] / np.log(E*self.Yplus[i])
         self.utAbs = np.sqrt(np.sum(self.ut**2))       
         self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu)   
 
