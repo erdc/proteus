@@ -13,6 +13,7 @@ import cfemIntegrals
 import Quadrature
 from petsc4py import PETSc as p4pyPETSc
 from math import *
+import math
 from .Profiling import logEvent
 
 class LinearSolver:
@@ -2465,3 +2466,115 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                                                                           self.model.csrColumnOffsets[(ci,cj)],
                                                                           matrixDict[ci][cj],
                                                                           A)
+
+
+class IterativeMethod:
+    """  Base class for iterative solvers.
+
+    Parameters
+    ----------
+    A : matrix
+        System coefficient matrix.
+
+    b : vector
+        Right hand side.
+
+    x : vector
+        Initial guess for solution.
+
+    save_iterations: bool
+        Flag that allows the user to save iterations.
+    """
+    def __init__(self, A, b, x, save_iterations = False):
+        self.A = A
+        self.b = b
+        self.x_k = x
+        self.n = self.A.size[0]
+        self.save_iterations = save_iterations
+        if self.save_iterations:
+            self.iteration_results = []
+
+    def _calc_residual(self, x_k):
+        Ax = x_k.copy()
+        self.A.mult(x_k,Ax)
+        Ax.axpy(-1., self.b)
+        return Ax
+
+class ChebyshevSemiIteration(IterativeMethod):
+    """ Class for implementing the ChebyshevSemiIteration. 
+    
+    Notes
+    -----
+    The Chebyshev semi-iteration was developed in the 1960s
+    by Golub and Varga.  It is an iterative technique for
+    solving linear systems Ax = b with the property of preserving
+    linearity with respect to the Krylov solves (see Wathen,
+    Rees 2009 - Chebyshev semi-iteration in preconditioning
+    for problems including the mass matrix).  This makes the method 
+    particularly well suited for solving sub-problems that arise in 
+    more complicated block preconditioners such as the Schur 
+    complement, provided one has an aprior bound on the systems 
+    eigenvalues (see Wathen 1987 - Realisitc eigenvalue bounds for 
+    Galerkin mass matrix).  The implementation adopted here is 
+    described in the 1996 text Iterative Solution Methods by Owe 
+    Axelsson starting on page 179.
+
+    When implementing this method it is important you first
+    have tight aprior bounds on the eigenvalues (denoted here as 
+    alpha and beta). This can be a challenge but, the references 
+    above do provide these results for many relevant mass matrices.
+    
+    Also, when implementing this method, it is recommended 
+    that your matrix A (and hence the right-hand side b) be 
+    preconditioned with the inverse of diag(A).  Your eigenvalue 
+    bounds should reflect the spectrum of this preconditioned system.
+
+    Arugments
+    ---------
+    A : petsc4py matrix
+        The linear system matrix
+
+    b : petsc4py vector
+        The righthand side vector
+
+    x : petsc4py vector
+        An initial guess for the solution
+
+    k : int
+        The desired number of iterations
+
+    alpha : float
+        A's smallest eigenvalue
+
+    beta : float
+        A's largest eigenvalue
+
+    save_iterations : bool
+        A flag indicating whether to store each solution iteration
+    """
+
+    def __init__(self, A, b, x, k, alpha, beta, save_iterations = False):
+        IterativeMethod.__init__(self, A, b, x, save_iterations)
+        self.k = k
+        self.alpha = alpha
+        self.beta = beta
+
+    def _calc_theta_ell(self, ell):
+        return ((2*ell + 1) / (2. * self.k) ) * math.pi
+
+    def _calc_tau(self, ell):
+        theta = self._calc_theta_ell(ell)
+        one_over_tau = ( (self.beta - self.alpha) / 2. * math.cos(theta) +
+                         (self.beta + self.alpha) / 2.)
+        return 1. / one_over_tau
+
+    def apply(self):
+        for i in range(self.k):
+            if i==0 and self.save_iterations:
+                self.iteration_results.append(self.x_k.getArray().reshape(self.n,1).copy())
+            elif i > 0:
+                tau = self._calc_tau(i-1)
+                resid = self._calc_residual(self.x_k)
+                self.x_k.axpy(-tau, resid)
+                if self.save_iterations:
+                    self.iteration_results.append(self.x_k.getArray().reshape(self.n,1).copy())
