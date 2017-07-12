@@ -153,6 +153,36 @@ def superlu_2_petsc4py(sparse_superlu):
                                                       A_nzval))
     return A_petsc4py
 
+def dense_numpy_2_petsc4py(dense_numpy, eps = 1.e-12):
+    """ Create a sparse petsc4py matrix from a dense numpy matrix.
+
+    Note - This routine has been built mainly to support testing.  
+    It would be rare for this routine to be useful for most applications.
+
+    Parameters
+    ----------
+    dense_numpy : 
+    eps : float
+        Tolerance for non-zero values.
+
+    Returns
+    -------
+    sparse_matrix : PETSc4py matrix
+    """
+    vals = []
+    colptr = []
+    rowptr = [0]
+    rowptr_track = 0
+    for i,row in enumerate(dense_numpy):
+        for j,val in enumerate(row):
+            if abs(val) > eps:
+                vals.append(val)
+                colptr.append(j)
+                rowptr_track += 1
+        rowptr.append(rowptr_track)
+    return p4pyPETSc.Mat().createAIJ(size=dense_numpy.shape,
+                                     csr = (rowptr, colptr, vals))
+
 class ParVec:
     """
     A parallel vector built on top of daetk's wrappers for petsc
