@@ -113,7 +113,7 @@ class Coefficients(TC_base):
         return copyInstructions
     def postStep(self,t,firstStep=False):
         """
-        Calculate the mean value of phi and adjust to make mean value 0.
+        Update the fluid velocities
         """
         alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
         for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
@@ -673,7 +673,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.ebqe[('diffusiveFlux_bc_flag',ck,ci)][t[0],t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
         compKernelFlag = 0
-        self.presinc = cPresInc(
+        self.presinc = cPresInc.PresInc(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
