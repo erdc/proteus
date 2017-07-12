@@ -972,13 +972,16 @@ namespace proteus
       rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 
-      C=0.0;
+      C = 0.0;
 
       for (int i=0;i<nParticles;i++)
       {
 
 	phi_s = particle_signed_distances[i*sd_offset];
 	phi_s_normal = &particle_signed_distance_normals[i*sd_offset*nSpace];
+
+        phi_s_normal[0] /= sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1]);
+        phi_s_normal[1] /= sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1]);
 
         r_x = x - particle_centroids[i*3+0];
         r_y = y - particle_centroids[i*3+1];
@@ -990,7 +993,7 @@ namespace proteus
 
 	H_s = smoothedHeaviside(eps_s, phi_s);
 	D_s = smoothedDirac(eps_s, phi_s);
-
+ 
 	double rel_vel_norm = sqrt((uStar-u_s)*(uStar-u_s)+
 				   (vStar-v_s)*(vStar-v_s)+
 				   (wStar-w_s)*(wStar-w_s));
@@ -1000,8 +1003,26 @@ namespace proteus
 
 	C += (D_s*C_surf + (1.0 - H_s)*C_vol);
 
-	force_x = dV*D_s*(p*phi_s_normal[0] + nu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
-	force_y = dV*D_s*(p*phi_s_normal[1] + nu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
+        force_x = dV*D_s*(-p*phi_s_normal[0] + nu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
+	force_y = dV*D_s*(-p*phi_s_normal[1] + nu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
+
+        //force_x = dV*D_s*(-p*phi_s_normal[0]);
+        //force_y = dV*D_s*(-p*phi_s_normal[1]);
+
+        //force_x = dV*D_s;
+        //force_y = dV*D_s;
+
+        //if (D_s > 0)
+        //{
+        //  std::cout << "\n\n" << std::endl;
+        //  std::cout << "position: " << x << ", " << y << std::endl;
+        //  std::cout << "dV: " << dV << std::endl;
+        //  std::cout << "D_s: " << D_s << std::endl;
+        //  std::cout << "p: " << p << std::endl;
+        //  std::cout << "phi_s normal: " << phi_s_normal[0] << ", " << phi_s_normal[1] << std::endl;
+        //}
+
+        //std::cout << "\n" << "phi_s normal: " << phi_s_normal[0] << ", " << phi_s_normal[1] << "\n" << std::endl;
 
 	//always 3D for particle forces
 	particle_netForces[i*3+0] += force_x;
