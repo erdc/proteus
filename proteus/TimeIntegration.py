@@ -2020,7 +2020,7 @@ class ExplicitRK_base(TI_base):
         for term in self.eqTerms:
             for ci in self.stageValues[term].keys():
                 if resetFromDOF:
-                    assert self.transportis not None, "Must supply transport to reset from DOF"
+                    assert self.transport is not None, "Must supply transport to reset from DOF"
                     if term == 'res':
                         self.stageValues[term][ci][0].flat[:] = self.stageValues['res'][ci][self.lstage+1].flat[:]
                     else:
@@ -2036,7 +2036,7 @@ class ExplicitRK_base(TI_base):
         for term in self.eqTerms:
             for ci in self.stageValues[term].keys():
                 if resetFromDOF:
-                    assert self.transportis not None, "Must supply transport to reset from DOF"
+                    assert self.transport is not None, "Must supply transport to reset from DOF"
                     if term == 'res':
                         self.stageValues[term][ci][0].flat[:] = self.stageValues['res'][ci][self.lstage+1].flat[:]
                     else:
