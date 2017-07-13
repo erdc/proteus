@@ -211,7 +211,7 @@ namespace proteus
 	    }//i
 	  q_u[eN_k] = u;
 	  for(int I=0;I<nSpace;I++)
-	    q_u[eN_k_nSpace+I] = grad_u[I];
+	    q_grad_u[eN_k_nSpace+I] = grad_u[I];
 	}
     }
     void calculateResidual(//element

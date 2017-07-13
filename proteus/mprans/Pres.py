@@ -18,6 +18,17 @@ from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
 import cPres
 
+class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_exterior):
+    def __init__(self,
+                 vt,
+                 getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions):
+        proteus.NumericalFlux.ConstantAdvection_exterior.__init__(self,
+                                                                  vt,getPointwiseBoundaryConditions,
+                                                                  getAdvectiveFluxBoundaryConditions,
+                                                                  getDiffusiveFluxBoundaryConditions)
+        
 class Coefficients(TC_base):
     r"""
     The coefficients for pressure solution
@@ -104,12 +115,20 @@ class Coefficients(TC_base):
         """
         Give the TC object an opportunity to modify itself before the time step.
         """
-        self.q_massFlux[:] = np.multiply(self.fluidModel.coefficients.q_rho[:,:,np.newaxis],
-                                         self.fluidModel.coefficients.q_nu[:,:,np.newaxis],
-                                         self.fluidModel.q[('velocity',0)])
-        self.ebqe_massFlux[:] = np.multiply(self.fluidModel.coefficients.ebqe_rho[:,:,np.newaxis],
-                                            self.fluidModel.coefficients.ebqe_nu[:,:,np.newaxis],
-                                            self.fluidModel.ebqe[('velocity',0)])
+        self.q_massFlux[:] = self.fluidModel.q[('velocity',0)]
+        np.multiply(self.fluidModel.coefficients.q_rho[:,:,np.newaxis],
+                    self.fluidModel.coefficients.q_massFlux,
+                    out=self.q_massFlux)
+        np.multiply(self.fluidModel.coefficients.q_nu[:,:,np.newaxis],
+                    self.fluidModel.coefficiens.q_massFlux,
+                    out=self.q_massFlux)
+        self.ebqe_massFlux[:] = self.fluidModel.ebqe[('velocity',0)]
+        np.multiply(self.fluidModel.coefficients.ebqe_rho[:,:,np.newaxis],
+                    self.ebqe_massFlux,
+                    out=self.ebqe_massFlux)
+        np.multiply(self.fluidModel.coefficients.ebqe_nu[:,:,np.newaxis],
+                    self.ebqe_massFlux,
+                    out=self.ebqe_massFlux)
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
@@ -391,8 +410,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 4)
             elif self.nSpace_global == 1:
                 assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 1)
-
-        # pdb.set_trace()
         #
         # simplified allocations for test==trial and also check if space is mixed or not
         #
@@ -532,6 +549,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         log(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
+        #strong Dirichlet
+        self.dirichletConditionsForceDOF= {0:DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)}
         # use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(
@@ -568,7 +587,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
         r.fill(0.0)
-        # Load the unknowns into the finite element dof
+        #set strong Dirichlet conditions
+        for dofN,g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.iteritems():
+            u[self.offset[0]+self.stride[0]*dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN],self.timeIntegration.t)#load the BC valu        # Load the unknowns into the finite element dof
         self.setUnknowns(u)
 
         # no flux boundary conditions
@@ -610,6 +631,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
+        for dofN,g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.iteritems():
+            r[self.offset[0]+self.stride[0]*dofN] = self.u[0].dof[dofN] - g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         log("Global residual", level=9, data=r)
         self.nonlinear_function_evaluations += 1
 
@@ -638,6 +661,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nElements_global,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
             jacobian)
+        for dofN in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.keys():
+            global_dofN = self.offset[0]+self.stride[0]*dofN
+            self.nzval[numpy.where(self.colind == global_dofN)] = 0.0 #column
+            self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN+1]] = 0.0 #row
+            zeroRow=True
+            for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):#row
+                if (self.colind[i] == global_dofN):
+                    self.nzval[i] = 1.0
+                    zeroRow = False
+            if zeroRow:
+                raise RuntimeError("Jacobian has a zero row because sparse matrix has no diagonal entry at row "+`global_dofN`+". You probably need add diagonal mass or reaction term")
         log("Jacobian ", level=10, data=jacobian)
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
