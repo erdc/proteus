@@ -242,7 +242,7 @@ class NumericResults:
         plt.yscale("log")
         plt.legend(legend_lst)
         plt.title(title_str)
-        if axis!=None:
+        if axis is not None:
             plt.xlim(axis[0],axis[1])
         plt.show() 
 

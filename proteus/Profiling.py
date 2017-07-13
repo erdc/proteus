@@ -92,8 +92,8 @@ def logEvent(stringIn, level=1, data=None):
                     string += stringIn
                 else:
                     string = stringIn
-                if string!=None:
-                    if data!=None:
+                if string is not None:
+                    if data is not None:
                         string += repr(data)
                     string +='\n'
                     string = ("[%8d] " % (time() - startTime)) + string

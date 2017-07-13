@@ -3680,7 +3680,7 @@ class VelocityPostProcessor_Original:
         #for skipping Neumann boundaries
         self.fluxElementBoundaries = {}
         self.fluxBoundaryNodes     = {}
-        if self.postProcessingTypes is not None and self.vt !=None:
+        if self.postProcessingTypes is not None and self.vt  is not None:
             #cek begin adding stuff for post-processing higher-order
             self.qv={}
             self.w={}

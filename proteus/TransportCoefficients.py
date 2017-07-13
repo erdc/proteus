@@ -4198,7 +4198,7 @@ class LevelSetCurvatureCoefficients(TC_base):
         potential={0:{0:'u'}}
         reaction={0:{0:'linear'}}
         if self.sd:
-            assert nd!=None,"You must set the number of dimensions to use sparse diffusion in LevelSetCurvatureCoefficients"
+            assert nd is not None,"You must set the number of dimensions to use sparse diffusion in LevelSetCurvatureCoefficients"
             sdInfo = {(0,0):(numpy.arange(start=0,stop=nd+1,step=1,dtype='i'),
                              numpy.arange(start=0,stop=nd,step=1,dtype='i'))}
         else:
@@ -4295,7 +4295,7 @@ class LevelSetConservation(TC_base):
         reaction={0:{0:'nonlinear'}}
         #reaction={}
         if self.sd:
-            assert nd!=None,"You must set the number of dimensions to use sparse diffusion in LevelSetConservationCoefficients"
+            assert nd is not None,"You must set the number of dimensions to use sparse diffusion in LevelSetConservationCoefficients"
             sdInfo = {(0,0):(numpy.arange(start=0,stop=nd+1,step=1,dtype='i'),
                              numpy.arange(start=0,stop=nd,step=1,dtype='i'))}
         else:
