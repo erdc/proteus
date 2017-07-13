@@ -218,7 +218,7 @@ class VelocityPostProcessingAlgorithmBase:
 #        TODO:
 #         get rid of temporary creation, just add a scalar argument like daxpy
         flux = -1.0*self.vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(self.vt.mesh.exteriorElementBoundariesArray,
                                                             self.vt.mesh.elementBoundaryElementsArray,
                                                             self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -238,7 +238,7 @@ class VelocityPostProcessingAlgorithmBase:
 #        TODO
 #           add scalar multiple for call like remove boundary fluxes
         flux = self.vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(self.vt.mesh.exteriorElementBoundariesArray,
                                                             self.vt.mesh.elementBoundaryElementsArray,
                                                             self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -5448,7 +5448,7 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
         """
         vt = self.vt
         flux = -1.0*vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(vt.mesh.exteriorElementBoundariesArray,
                                                             vt.mesh.elementBoundaryElementsArray,
                                                             vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -5472,7 +5472,7 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
         """
         vt = self.vt
         flux = vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(vt.mesh.exteriorElementBoundariesArray,
                                                             vt.mesh.elementBoundaryElementsArray,
                                                             vt.mesh.elementBoundaryLocalElementBoundariesArray,
