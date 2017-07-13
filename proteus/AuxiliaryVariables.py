@@ -625,7 +625,7 @@ class MassOverRegion(AV_base):
                         results['L2'] += e2*m.q[('dV_u',ci)][eN,k]
                         results['L1'] += e1*m.q[('dV_u',ci)][eN,k]
                         results['LI'] = max(results['LI'],ei)
-            if self.regionIdList==None:
+            if self.regionIdList is None:
                 logEvent("Mass Norms in Domain Total= %s L2= %s L1= %s LI= %s " % (results['total'],results['L2'],results['L1'],results['LI']))
             else:
                 logEvent("Mass Norms in Domain %s Total= %s L2= %s L1= %s LI= %s " % (self.regionIdList,results['total'],results['L2'],results['L1'],results['LI']))

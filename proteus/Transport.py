@@ -6244,7 +6244,7 @@ class MultilevelTransport:
                 phiDict[cj].setupParallelCommunication()
             logEvent(memory("finite element spaces","MultilevelTransport"),level=4)
             logEvent("Setting Boundary Conditions")
-            if numericalFluxType==None:
+            if numericalFluxType is None:
                 useWeakDirichletConditions=False
             else:
                 useWeakDirichletConditions=numericalFluxType.useWeakDirichletConditions

@@ -76,7 +76,7 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.constructFromParallelPUMIMesh(cmesh_ptr.mesh, subdomain_cmesh_ptr.mesh)
     def updateMaterialArrays(self, cmesh, dim=None,bdryId=None, geomTag=None):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        if(dim==None):
+        if(dim is None):
             return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh)
         else:
             return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh,dim, bdryId, geomTag)

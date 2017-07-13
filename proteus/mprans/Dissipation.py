@@ -797,7 +797,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #cek hack
         self.movingDomain=False
         self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')        
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):

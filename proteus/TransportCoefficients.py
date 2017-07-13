@@ -3665,7 +3665,7 @@ class NCLevelSetCoefficients(TC_base):
         #mwf added
         self.eikonalSolverFlag = EikonalSolverFlag
         if self.eikonalSolverFlag >= 1: #FMM
-            assert self.RD_modelIndex==None, "no redistance with eikonal solver too"
+            assert self.RD_modelIndex is None, "no redistance with eikonal solver too"
         self.checkMass = checkMass
     def attachModels(self,modelList):
         #the level set model

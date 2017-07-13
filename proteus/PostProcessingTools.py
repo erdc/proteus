@@ -102,7 +102,7 @@ class VelocityPostProcessingAlgorithmBase:
         self.vtComponents = vtComponents
         self.q = None
         self.ebq_global = None
-        assert self.vt is not None, "vt==None not allowed for %s " %  self.postProcessingType
+        assert self.vt is not None, "vt is None not allowed for %s " %  self.postProcessingType
 
         #quadrature arrays
         self.q = self.vt.q
@@ -3673,7 +3673,7 @@ class VelocityPostProcessor_Original:
         self.vt = vectorTransport
         self.vtComponents = vtComponents
         if self.postProcessingTypes is not None:
-            assert self.vt is not None, "postProcessTypes not None vt==None"
+            assert self.vt is not None, "postProcessTypes not None vt is None"
         self.q = None
         self.ebq_global = None
         self.BDMcomponent = None
@@ -4459,7 +4459,7 @@ class VelocityPostProcessor_Original:
         #import pdb
         #pdb.set_trace()
         if self.postProcessingTypes is not None:
-            assert self.vt is not None, "postprocess types not None vt==None"
+            assert self.vt is not None, "postprocess types not None vt is None"
         for ci in self.vtComponents:
             if self.postProcessingTypes[ci] in ['dg','dg-bdm']:
                 self.postprocessDG(ci,verbose=verbose)

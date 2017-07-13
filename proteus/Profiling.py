@@ -106,7 +106,7 @@ def logEvent(stringIn, level=1, data=None):
                         sys.stdout.write(string)
                         if flushBuffer:
                             sys.stdout.flush()
-    elif procID==None:
+    elif procID is None:
         preInitBuffer.append((stringIn,level,data))
 
 def memory(message=None,className='',memSaved=None):

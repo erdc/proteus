@@ -464,7 +464,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.ebqe[('stressFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                 self.ebqe[('stressFlux_bc_flag',ci)][t[0],t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
         compKernelFlag=0
         if self.nSpace_global == 2:

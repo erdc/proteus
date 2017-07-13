@@ -196,7 +196,7 @@ class NS_base:  # (HasTraits):
                                                                     parallelPartitioningType=n.parallelPartitioningType)
 
                 elif p.domain.nd == 3:
-                    if (n.nnx == n.nny == n.nnz ==None):
+                    if (n.nnx == n.nny == n.nnz  is None):
                         nnx = nny = nnz = n.nn
                     else:
                         nnx = n.nnx
