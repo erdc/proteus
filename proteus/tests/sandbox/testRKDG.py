@@ -492,7 +492,7 @@ def plotTimeStep(solPlot,aSolPlot,tn,test,tpars,problems,
     """
     plot initial conditions and analytical solutions
     """
-    if solPlot == None or aSolPlot == None:
+    if solPlot is None or aSolPlot is None:
         return solPlot,aSolPlot
     #end nothing to plot with
     if tpars['DG'] == False:

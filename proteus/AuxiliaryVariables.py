@@ -591,7 +591,7 @@ class MassOverRegion(AV_base):
         self.elementsInRegion = []
         for m in self.model.levelModelList:
             self.elementsInRegion.append([])
-            if self.regionIdList == None:
+            if self.regionIdList is None:
                 #where returns a tuple
                 self.elementsInRegion[-1].append((numpy.arange(m.mesh.nElements_global),))
             else:
@@ -690,7 +690,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123nodalVelocity(self,components):
         #write out velocity file for current time step
-        if self.nodal_velocity_file == None:
+        if self.nodal_velocity_file is None:
             vel_prefix = 'vn1';
             if self.nd == 2:
                 vel_prefix = 'vn2';
@@ -714,7 +714,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123elementVelocity(self,components):
         #write out velocity file for current time step
-        if self.element_velocity_file == None:
+        if self.element_velocity_file is None:
             vel_prefix = 've1';
             if self.nd == 2:
                 vel_prefix = 've2';
@@ -740,7 +740,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123MixedVelocityAsElementVelocity(self,ci):
         #write out velocity file for current time step
-        if self.element_velocity_file == None:
+        if self.element_velocity_file is None:
             vel_prefix = 've1';
             if self.nd == 2:
                 vel_prefix = 've2';
@@ -767,7 +767,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123elementPorosity(self,value=1.0):
         #write out constant value for volume fraction for now
-        if self.element_vf_file == None:
+        if self.element_vf_file is None:
             vf_prefix = 'eemc1';
             if self.nd == 2:
                 vf_prefix = 'eemc2';
@@ -787,7 +787,7 @@ class PT123velocityGenerator(AV_base):
     #
     def writePT123nodalPorosity(self,value=1.0):
         #write out constant value for volume fraction for now
-        if self.nodal_vf_file == None:
+        if self.nodal_vf_file is None:
             vf_prefix = 'nemc1';
             if self.nd == 2:
                 vf_prefix = 'nemc2';

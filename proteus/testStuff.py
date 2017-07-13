@@ -241,7 +241,7 @@ class ExplicitLevelSetIntegrator(TimeIntegration.ForwardIntegrator):
         if self.mlvTran.modelList[-1].q.has_key(('cfl',ci)):
             maxCFL = max(max(max(self.mlvTran.modelList[-1].q[('cfl',ci)])),maxCFL)
         dt = self.nOptions.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = dt
         if dt/self.dtLast  > self.dtRatioMax:
             dt = self.dtLast*self.dtRatioMax
@@ -540,7 +540,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
 
     mFine  = mlTransport.modelList[-1]
     mCoarse= mlTransport.modelList[level]
-    if mCoarse.velocityPostProcessor == None:
+    if mCoarse.velocityPostProcessor is None:
         return None
 
     P = generateParentInfo(mlTransport.mlMeshSave)

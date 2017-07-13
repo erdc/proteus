@@ -287,7 +287,7 @@ independently and lagged in time
             #
         #
     def initializeElementQuadrature(self,t,cq):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
             self.q_grad_u = numpy.ones(cq[('grad(u)',0)].shape,'d')
             self.q_grad_v = numpy.ones(cq[('grad(u)',0)].shape,'d')
@@ -295,12 +295,12 @@ independently and lagged in time
                 self.q_grad_w = self.q_grad_v.copy()
             else:
                 self.q_grad_w = numpy.ones(cq[('grad(u)',0)].shape,'d')
-        if self.dissipation_modelIndex == None:
+        if self.dissipation_modelIndex is None:
             self.q_dissipation = numpy.ones(cq[('u',0)].shape,'d')
             self.q_dissipation.fill(self.default_dissipation);
             self.q_grad_dissipation = numpy.zeros(cq[('grad(u)',0)].shape,'d'); 
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
             self.ebq_grad_u = numpy.ones(cebq[('grad(u)',0)].shape,'d')
             self.ebq_grad_v = numpy.ones(cebq[('grad(u)',0)].shape,'d')
@@ -308,11 +308,11 @@ independently and lagged in time
                 self.ebq_grad_w = self.ebq_grad_v.copy()
             else:
                 self.ebq_grad_w = numpy.ones(cebq[('grad(u)',0)].shape,'d')
-        if self.dissipation_modelIndex == None:
+        if self.dissipation_modelIndex is None:
             self.ebq_dissipation = numpy.ones(cebq[('u',0)].shape,'d')
             self.ebq_dissipation.fill(self.default_dissipation)
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
             self.ebqe_grad_u = numpy.ones(cebqe[('grad(u)',0)].shape,'d')
             self.ebqe_grad_v = numpy.ones(cebqe[('grad(u)',0)].shape,'d')
@@ -320,7 +320,7 @@ independently and lagged in time
                 self.ebqe_grad_w = self.ebqe_grad_v.copy()
             else:
                 self.ebqe_grad_w = numpy.ones(cebqe[('grad(u)',0)].shape,'d')
-        if self.dissipation_modelIndex == None:
+        if self.dissipation_modelIndex is None:
             self.ebqe_dissipation = numpy.ones(cebqe[('u',0)].shape,'d')
             self.ebqe_dissipation.fill(self.default_dissipation)
     def preStep(self,t,firstStep=False):
@@ -700,7 +700,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -922,7 +922,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Global residual",level=9,data=r)
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy == None:
+        if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
 	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,

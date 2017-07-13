@@ -285,12 +285,12 @@ if __name__ == '__main__':
         if args[0][-3:] == '.py':
             log("Loading so module = "+args[0])
             so = __import__(args[0][:-3])
-            if so.name == None:
+            if so.name is None:
                 so.name = args[0][:-3]
             for (pModule,nModule) in so.pnList:
                 log("Loading p module = "+pModule)
                 pList.append(__import__(pModule))
-                if pList[-1].name == None:
+                if pList[-1].name is None:
                     pList[-1].name = pModule
                 log("Loading n module = "+nModule)
                 nList.append(__import__(nModule))
@@ -325,7 +325,7 @@ if __name__ == '__main__':
                     pList.append(__import__(filenames[0][:-3]))
                     log("Loading n module = "+filenames[1][:-3])
                     nList.append(__import__(filenames[1][:-3]))
-                    if pList[-1].name == None:
+                    if pList[-1].name is None:
                         pList[-1].name = filenames[0][:-3]
     elif len(args) == 2: #p and n modules provided
         so=default_so
@@ -334,7 +334,7 @@ if __name__ == '__main__':
         log("Using default so module")
         log("Loading p module = "+args[0][:-3])
         pList.append(__import__(args[0][:-3]))
-        if pList[-1].name == None:
+        if pList[-1].name is None:
             pList[-1].name = args[0][:-5]
         so.name = pList[-1].name
         log("Loading n module = "+args[1][:-3])

@@ -206,7 +206,7 @@ class SimulationProcessor:
             self.dataStorage = shelve.open(absfile)
             #mwf debug
             #print "SimTools opening dataStorage file=%s dataStorage=%s " % (absfile,self.dataStorage)
-            assert self.dataStorage != None, "dataStorage == None storeTimes=%s absfile=%s " % (self.flags['storeTimes'],
+            assert self.dataStorage != None, "dataStorage is None storeTimes=%s absfile=%s " % (self.flags['storeTimes'],
                                                                                                 absfile)
 
         #end storing something
@@ -411,7 +411,7 @@ class SimulationProcessor:
 #             #import pdb
 #             #pdb.set_trace()
 
-#             if self.plotOffSet == None:
+#             if self.plotOffSet is None:
 #                self.plotOffSet = Viewers.windowNumber #keep from orphaning windows?
 #             #don't reset window number
 #             pause = False
@@ -466,7 +466,7 @@ class SimulationProcessor:
 #          n    --- numerics definition
 #
         p = self.pFile; n = self.nFile
-        if tsim == None:
+        if tsim is None:
             mlvt.levelModelList[-1].timeIntegration.t
         self.timeValues.append(tsim)
         if plotOffSet != None:
@@ -1140,15 +1140,15 @@ class SimulationProcessor:
             for ci in self.flags['components']:
                 for il,m in enumerate(mlvt.levelModelList):
                     #
-                    if self.conservationResidual[il] == None:
+                    if self.conservationResidual[il] is None:
                         self.conservationResidual[il] = numpy.zeros((m.mesh.nElements_global,),'d')
                     else:
                         self.conservationResidual[il].flat[:] = 0.0
-                    if self.elementResidual[il] == None:
+                    if self.elementResidual[il] is None:
                         self.elementResidual[il] = numpy.array(m.elementResidual[ci],'d')
                     else:
                         self.elementResidual[il].flat[:] = m.elementResidual[ci].flat[:]
-                    if n.conservativeFlux == None or ci not in n.conservativeFlux.keys() or 'dg' in n.conservativeFlux[ci]:#have to adjust residual appropriately for different methods
+                    if n.conservativeFlux is None or ci not in n.conservativeFlux.keys() or 'dg' in n.conservativeFlux[ci]:#have to adjust residual appropriately for different methods
                         pass
                     else:
                         flux = -1.0*m.ebq_global[('totalFlux',ci)]
@@ -1159,7 +1159,7 @@ class SimulationProcessor:
                                                                         m.ebq[('w*dS_u',ci)],
                                                                         self.elementResidual[il])
                     #removing boundary flux from
-                    if n.conservativeFlux == None or ci not in n.conservativeFlux.keys() or 'dg' in n.conservativeFlux[ci]:
+                    if n.conservativeFlux is None or ci not in n.conservativeFlux.keys() or 'dg' in n.conservativeFlux[ci]:
                         cfemIntegrals.calculateConservationResidualDG(self.elementResidual[il],self.conservationResidual[il])
                     else:
                         cfemIntegrals.calculateConservationResidual(m.ebq['n'],
@@ -1608,7 +1608,7 @@ class SimulationProcessor:
         meshOut.close()
 
     def writeScalarElementFunctionHeaderEnsight(self,ckey,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -1620,7 +1620,7 @@ class SimulationProcessor:
             caseOut.close()
         #
     def writeVectorElementFunctionHeaderEnsight(self,ckey,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -1946,7 +1946,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
 
     mFine  = mlTransport.levelModelList[-1]
     mCoarse= mlTransport.levelModelList[level]
-    if mCoarse.velocityPostProcessor == None:
+    if mCoarse.velocityPostProcessor is None:
         return None
 
     P = generateParentInfo(mlTransport.mlMeshSave)

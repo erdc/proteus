@@ -139,13 +139,13 @@ def memory(message=None,className='',memSaved=None):
             if mem > memHardLimit:
                 import sys
                 from mpi4py import MPI
-                if className == None:
+                if className is None:
                     className = "UnknownClass"
-                if caller == None:
+                if caller is None:
                     caller="UnknownCaller"
-                if line == None:
+                if line is None:
                     line = "Unknown Line"
-                if message == None:
+                if message is None:
                     message = ''
                 logEvent("PROTEUS ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %f MB in routine, %f MB in program, %f MB is hard limit" % (memInc,mem,memHardLimit))
                 MPI.COMM_WORLD.Abort(1)
@@ -251,7 +251,7 @@ Wall clock percentage of top 20 calls
 @atexit.register
 def ProfilingDtor():
     global procID, verbose
-    if procID == None:
+    if procID is None:
         verbose=True
         logEvent(
             "Proteus.Profiling never initialized. Doing it at exit.")

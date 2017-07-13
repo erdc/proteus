@@ -107,7 +107,7 @@ class TC_base:
         of diffusion tensors may also be provided.
         """
         self.nc = nc
-        if variableNames == None:
+        if variableNames is None:
             self.variableNames = ['u'+`i` for i in range(nc)]
         else:
             self.variableNames=variableNames
@@ -247,7 +247,7 @@ class TC_base:
         Allocate some coefficient dictionaries to use for viewing the coefficients
         """
         import copy
-        if c == None:
+        if c is None:
             ctemp = {}
             for ci in range(self.nc):
                 ctemp[('u',ci)] = numpy.zeros(nPoints,'d')
@@ -1141,7 +1141,7 @@ class ShallowWater(TC_base):
         hamiltonian={}
         self.bathymetryFunc=bathymetryFunc
         self.bathymetryGradientFunc=bathymetryGradientFunc
-        assert ((self.bathymetryFunc == None and self.bathymetryGradientFunc == None) or
+        assert ((self.bathymetryFunc is None and self.bathymetryGradientFunc is None) or
                 (self.bathymetryFunc != None and self.bathymetryGradientFunc != None))
         #index of bathymetry values in spatial points
         self.bind = 2;
@@ -2238,28 +2238,28 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
         self.eps_viscosity = self.epsFact*mesh.h
     #initialize so it can run as single phase
     def initializeElementQuadrature(self,t,cq):
-        if self.LS_model == None:
+        if self.LS_model is None:
             self.q_phi = -numpy.ones(cq[('u',1)].shape,'d')
             self.q_n = -numpy.ones(cq[('velocity',0)].shape,'d')
-        if self.KN_model == None:
+        if self.KN_model is None:
             self.q_kappa = -numpy.zeros(cq[('u',1)].shape,'d')
         #VRANS
         self.q_porosity = numpy.ones(cq[('u',1)].shape,'d')
         self.q_meanGrain= numpy.ones(cq[('u',1)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.LS_model == None:
+        if self.LS_model is None:
             self.ebq_phi = -numpy.ones(cebq[('u',1)].shape,'d')
             self.ebq_n = -numpy.ones(cebq[('velocity',0)].shape,'d')
-        if self.KN_model == None:
+        if self.KN_model is None:
             self.ebq_kappa = -numpy.zeros(cebq[('u',1)].shape,'d')
         #VRANS
         self.ebq_porosity = numpy.ones(cebq[('u',1)].shape,'d')
         self.ebq_meanGrain= numpy.ones(cebq[('u',1)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.LS_model == None:
+        if self.LS_model is None:
             self.ebqe_phi = -numpy.ones(cebqe[('u',1)].shape,'d')
             self.ebqe_n = -numpy.ones(cebqe[('velocity',0)].shape,'d')
-        if self.KN_model == None:
+        if self.KN_model is None:
             self.ebqe_kappa = -numpy.zeros(cebqe[('u',1)].shape,'d')
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',1)].shape,'d')
@@ -2726,7 +2726,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
         self.q_kappa = numpy.zeros(cq[('u',0)].shape,'d')
         self.q_phi_s = numpy.ones(cq[('u',0)].shape,'d')
         self.q_n_s = numpy.ones(cq[('f',0)].shape,'d')
-        if self.defaultSolidProfile == None:
+        if self.defaultSolidProfile is None:
             if self.nd==2:
                 for i in range(len(cq[('u',0)].flat)):
                     x = cq['x'].flat[i*3+0]
@@ -2759,7 +2759,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
         self.ebq_kappa = numpy.zeros(cebq[('u',0)].shape,'d')
         self.ebq_phi_s = numpy.ones(cebq[('u',0)].shape,'d')
         self.ebq_n_s = numpy.ones(cebq[('f',0)].shape,'d')
-        if self.defaultSolidProfile == None:
+        if self.defaultSolidProfile is None:
             if self.nd==2:
                 for i in range(len(cebq[('u',0)].flat)):
                     x = cebq['x'].flat[i*3+0]
@@ -2792,7 +2792,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
         self.ebqe_kappa = numpy.zeros(cebqe[('u',0)].shape,'d')
         self.ebqe_phi_s = numpy.ones(cebqe[('u',0)].shape,'d')
         self.ebqe_n_s = numpy.ones(cebqe[('f',0)].shape,'d')
-        if self.defaultSolidProfile == None:
+        if self.defaultSolidProfile is None:
             if self.nd==2:
                 for i in range(len(cebqe[('u',0)].flat)):
                     x = cebqe['x'].flat[i*3+0]
@@ -2810,7 +2810,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
                     phi,n = self.defaultSolidProfile(cebqe['x'].flat[3*i:3*(i+1)])
                     self.ebqe_phi_s.flat[i] = phi
                     self.ebqe_n_s.flat[self.nd*i:self.nd*(i+1)] = n[:]
-        if self.defaultFluidProfile == None:
+        if self.defaultFluidProfile is None:
             try:
                 self.defaultFluidProfile(t,cebqe['x'],self.ebqe_phi,self.ebqe_n)
             except TypeError:
@@ -3111,14 +3111,14 @@ class TwophaseStokes_LS_SO(TC_base):
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def initializeElementQuadrature(self,t,cq):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.q_phi = numpy.ones(cq[('u',0)].shape,'d')
 #         for eN in range(cq['x'].shape[0]):
 #             for q in range(cq['x'].shape[1]):
 #                 if cq['x'][eN,q,1] <= self.dummyWaterLevel:
 #                     self.q_phi[eN,q] = cq['x'][eN,q,1] -self.dummyWaterLevel
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.ebq_phi = numpy.ones(cebq[('u',0)].shape,'d')
 #         for eN in range(cebq['x'].shape[0]):
 #             for ebN in range(cebq['x'].shape[1]):
@@ -3126,7 +3126,7 @@ class TwophaseStokes_LS_SO(TC_base):
 #                     if cebq['x'][eN,ebN,q,1] <= self.dummyWaterLevel:
 #                         self.ebq_phi[eN,q] = cebq['x'][eN,ebN,q,1]-self.dummyWaterLevel
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.ebqe_phi = numpy.ones(cebqe[('u',0)].shape,'d')
     def evaluate(self,t,c):
         if c[('u',0)].shape == self.q_phi.shape:
@@ -3550,7 +3550,7 @@ class TwophaseStokes_VOF_SO(TC_base):
                 else:
                     self.ebqe_vof[ebNE,q] = 1.0
     def evaluate(self,t,c):
-        if self.q_vof == None:
+        if self.q_vof is None:
             vof = numpy.zeros(c[('u',0)].shape,'d')
         else:
             if c[('u',0)].shape == self.q_vof.shape:
@@ -3719,13 +3719,13 @@ class NCLevelSetCoefficients(TC_base):
             self.timeArray = [self.model.timeIntegration.t]
             self.ebqe_dS = self.model.ebqe['dS']
     def initializeElementQuadrature(self,t,cq):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.q_v = numpy.zeros(cq[('grad(u)',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebq_v = numpy.zeros(cebq[('grad(u)',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebqe_v = numpy.zeros(cebqe[('grad(u)',0)].shape,'d')
     def preStep(self,t,firstStep=False):
         if self.checkMass:
@@ -3855,13 +3855,13 @@ class CLevelSetCoefficients(TC_base):
                                                     useLocalPWLreconstruction = False)
 
     def initializeElementQuadrature(self,t,cq):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
     def preStep(self,t,firstStep=False):
 #         if self.RD_modelIndex >= 0:
@@ -4035,17 +4035,17 @@ class VOFCoefficients(TC_base):
                 logEvent("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
 
     def initializeElementQuadrature(self,t,cq):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
         #VRANS
         self.q_porosity = numpy.ones(cq[('u',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
         #VRANS
         self.ebq_porosity = numpy.ones(cebq[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
@@ -4227,7 +4227,7 @@ class LevelSetCurvatureCoefficients(TC_base):
         else:
             self.ebq_grad_phi  = None
     def initializeElementQuadrature(self,t,cq):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.q_grad_phi = numpy.ones(cq[('f',0)].shape,'d')
             if self.grad_phi_func != None:
                 self.grad_phi_func(cq['x'],self.q_grad_phi)
@@ -4240,7 +4240,7 @@ class LevelSetCurvatureCoefficients(TC_base):
                             cq[('a',0,0)][eN,k,I,I]=self.eps
             cq[('df',0,0)].fill(0.0)
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.ebq_grad_phi = numpy.ones(cebq[('f',0)].shape,'d')
             if self.grad_phi_func != None:
                 self.grad_phi_func(cebq['x'],self.ebq_grad_phi)
@@ -4254,7 +4254,7 @@ class LevelSetCurvatureCoefficients(TC_base):
                                 cebq[('a',0,0)][eN,ebN,k,I,I]=self.eps
             cebq[('df',0,0)].fill(0.0)
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.levelSetModelIndex == None:
+        if self.levelSetModelIndex is None:
             self.ebqe_grad_phi = numpy.ones(cebqe[('f',0)].shape,'d')
             if self.grad_phi_func != None:
                 self.grad_phi_func(cebqe['x'],self.ebqe_grad_phi)
@@ -5962,22 +5962,22 @@ class RedistanceLevelSet(TC_base):
         self.h=mesh.h
         self.eps = self.epsFact*mesh.h
     def initializeElementQuadrature(self,t,cq):
-        if self.nModelId == None:
-            if self.q_u0 == None:
+        if self.nModelId is None:
+            if self.q_u0 is None:
                 self.q_u0 = numpy.zeros(cq[('u',0)].shape,'d')
             if self.u0 != None:
                 for i in range(len(cq[('u',0)].flat)):
                     self.q_u0.flat[i]=self.u0.uOfXT(cq['x'].flat[3*i:3*(i+1)],0.)
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.nModelId == None:
-            if self.ebq_u0 == None:
+        if self.nModelId is None:
+            if self.ebq_u0 is None:
                 self.ebq_u0 = numpy.zeros(cebq[('u',0)].shape,'d')
             if self.u0 != None:
                 for i in range(len(cebq[('u',0)].flat)):
                     self.ebq_u0.flat[i]=self.u0.uOfXT(cebq['x'].flat[3*i:3*(i+1)],0.)
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.nModelId == None:
-            if self.ebqe_u0 == None:
+        if self.nModelId is None:
+            if self.ebqe_u0 is None:
                 self.ebqe_u0 = numpy.zeros(cebqe[('u',0)].shape,'d')
             if self.u0 != None:
                 for i in range(len(cebqe[('u',0)].flat)):
@@ -7760,7 +7760,7 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
                 setattr(self,name,numpy.zeros(tuple(dims),'d'))
     def evaluate(self,t,c):
         TwophaseNavierStokes_ST_LS_SO.evaluate(self,t,c)
-        if self.KEmodelID == None:
+        if self.KEmodelID is None:
             return
         k = None; epsilon = None; grad_k = None
         if c['x'].shape[:-1] == self.q_grad_k.shape[:-1]:
@@ -8933,7 +8933,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
             meanGrain= self.ebq_meanGrain
         #
         #mwf debug
-        if phi == None or n == None or kappa == None or porosity == None or meanGrain == None:
+        if phi is None or n is None or kappa is None or porosity is None or meanGrain is None:
             pdb.set_trace()
         #pdb.set_trace()
         if self.nd==2:
@@ -10200,7 +10200,7 @@ class DiffusiveWave_2D(TC_base):
                          hamiltonian={})
         self.bathymetryFunc=bathymetryFunc
         self.bathymetryGradientFunc=bathymetryGradientFunc
-        assert ((self.bathymetryFunc == None and self.bathymetryGradientFunc == None) or
+        assert ((self.bathymetryFunc is None and self.bathymetryGradientFunc is None) or
                 (self.bathymetryFunc != None and self.bathymetryGradientFunc != None))
         self.bind=2
 

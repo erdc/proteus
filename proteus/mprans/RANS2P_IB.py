@@ -921,7 +921,7 @@ class LevelModel(proteus.mprans.RANS2P.LevelModel):
         logEvent("initalizing numerical flux")
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,

@@ -718,7 +718,7 @@ class Min_dt_cfl_controller(Min_dt_controller):
             if self.cfl.has_key(ci):
                 maxCFL = max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt_model = self.runCFL/maxCFL
-        if self.dt_model_last == None:
+        if self.dt_model_last is None:
             self.dt_model_last = self.dt_model
         if self.dt_model/self.dt_model_last  > self.dt_ratio_max:
             self.dt_model = self.dt_model_last*self.dt_ratio_max
@@ -738,7 +738,7 @@ class Min_dt_cfl_controller(Min_dt_controller):
             if self.cfl.has_key(ci):
                 maxCFL = max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt_model = self.runCFL/maxCFL
-        if self.dt_model_last == None:
+        if self.dt_model_last is None:
             self.dt_model_last = self.dt_model
         if self.dt_model/self.dt_model_last  > self.dt_ratio_max:
             self.dt_model = self.dt_model_last*self.dt_ratio_max

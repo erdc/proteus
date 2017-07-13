@@ -218,7 +218,7 @@ class VelocityPostProcessingAlgorithmBase:
 #        TODO:
 #         get rid of temporary creation, just add a scalar argument like daxpy
         flux = -1.0*self.vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(self.vt.mesh.exteriorElementBoundariesArray,
                                                             self.vt.mesh.elementBoundaryElementsArray,
                                                             self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -238,7 +238,7 @@ class VelocityPostProcessingAlgorithmBase:
 #        TODO
 #           add scalar multiple for call like remove boundary fluxes
         flux = self.vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(self.vt.mesh.exteriorElementBoundariesArray,
                                                             self.vt.mesh.elementBoundaryElementsArray,
                                                             self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -676,7 +676,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                 logEvent("pwl post-processing for finite element space"+str(self.vt.u[ci].femSpace))
                 #need to set up w and w*dS_f and weights to build residuals for linears out of R_{e,i}
                 #Point1
-                if self.testSpace == None:
+                if self.testSpace is None:
                     self.testSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
                 assert isinstance(self.testSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis)
                 self.alpha[ci] = numpy.zeros((self.testSpace.referenceFiniteElement.localFunctionSpace.dim,
@@ -727,7 +727,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
             else:
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.vt.mesh.nElementBoundaries_element),dtype='i').reshape((self.vt.mesh.nElements_global,self.vt.mesh.nElementBoundaries_element))
         #ci
-        if self.testSpace == None:
+        if self.testSpace is None:
             #all the solution spaces must be C0P1
             self.testSpace = self.vt.u[self.vtComponents[0]].femSpace
     #init
@@ -1046,7 +1046,7 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                 self.solutionTestSpaceIsNotPWL[ci] = True
                 logEvent("pwl post-processing for finite element space"+str(self.vt.u[ci].femSpace))
                 #need to set up w and w*dS_f and weights to build residuals for linears out of R_{e,i}
-                if self.testSpace == None:
+                if self.testSpace is None:
                     self.testSpace = FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
                 assert isinstance(self.testSpace,FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis)
                 self.alpha[ci] = numpy.zeros((self.testSpace.referenceFiniteElement.localFunctionSpace.dim,
@@ -1102,7 +1102,7 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
             else:
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.vt.mesh.nElementBoundaries_element),dtype='i').reshape((self.vt.mesh.nElements_global,self.vt.mesh.nElementBoundaries_element))
         #ci
-        if self.testSpace == None:
+        if self.testSpace is None:
             #all the solution spaces must be C0P1
             self.testSpace = self.vt.u[self.vtComponents[0]].femSpace
     #init
@@ -2904,7 +2904,7 @@ class VPP_DG_BDM(VPP_DG_RT0):
             #build linear test space for BMD projection if test space isn't P1
 
             if not isinstance(self.vt.u[ci].femSpace,FemTools.DG_AffineLinearOnSimplexWithNodalBasis):
-                if self.testSpace == None:
+                if self.testSpace is None:
                     self.testSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
                 assert isinstance(self.testSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis)
                 self.qv[ci] = numpy.zeros(
@@ -2935,7 +2935,7 @@ class VPP_DG_BDM(VPP_DG_RT0):
                                                           self.w[ci],
                                                           self.w_dS[ci])
 
-        if self.testSpace == None:
+        if self.testSpace is None:
             #all the solution spaces must be C0P1
             self.testSpace = self.vt.u[self.vtComponents[0]].femSpace
         self.BDMcomponent=self.vtComponents[0]
@@ -3280,7 +3280,7 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                 self.solutionTestSpaceIsNotPWL[ci] = True
                 logEvent("pwl post-processing for finite element space"+str(self.vt.u[ci].femSpace))
                 #need to set up w and w*dS_f and weights to build residuals for linears out of R_{e,i}
-                if self.testSpace == None:
+                if self.testSpace is None:
                     self.testSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
                 assert isinstance(self.testSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis)
                 self.alpha[ci] = numpy.zeros((self.testSpace.referenceFiniteElement.localFunctionSpace.dim,
@@ -3334,7 +3334,7 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
             else:
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.vt.mesh.nElementBoundaries_element),dtype='i').reshape((self.vt.mesh.nElements_global,self.vt.mesh.nElementBoundaries_element))
         #ci
-        if self.testSpace == None:
+        if self.testSpace is None:
             #all the solution spaces must be C0P1
             self.testSpace = self.vt.u[self.vtComponents[0]].femSpace
 
@@ -3607,7 +3607,7 @@ class AggregateVelocityPostProcessor:
         VectorTransport object and store them in local dictionaries
 
         """
-        if self.postProcessingTypes == None:
+        if self.postProcessingTypes is None:
             return
         for vpp in self.vpp_algorithms:
             vpp.postprocess(verbose=verbose)
@@ -3616,7 +3616,7 @@ class AggregateVelocityPostProcessor:
         evaluate velocity field assuming velocity_dofs already calculated
         for now assumes x shaped like nE x nq x 3
         """
-        if self.postProcessingTypes == None:
+        if self.postProcessingTypes is None:
             return None
         for vpp in self.vpp_algorithms:
             return vpp.evaluateElementVelocityField(x,ci)
@@ -3624,7 +3624,7 @@ class AggregateVelocityPostProcessor:
         """
         write out post processed velocity values as a finite element space
         """
-        if self.postProcessingTypes == None:
+        if self.postProcessingTypes is None:
             return None
         for vpp in self.vpp_algorithms:
             return vpp.archiveVelocityValues(archive,t,tCount,initialPhase=initialPhase,meshChanged=meshChanged)
@@ -4194,7 +4194,7 @@ class VelocityPostProcessor_Original:
 
                 for ci in self.vtComponents:
                     if ((self.postProcessingTypes[ci] == 'pwl' or self.postProcessingTypes[ci] == 'pwl-bdm') and
-                        (self.useBDMpwlBasis[ci] == True and self.BDMcomponent == None)):
+                        (self.useBDMpwlBasis[ci] == True and self.BDMcomponent is None)):
                         self.BDMcomponent=ci
                         self.BDMprojectionMat_element = numpy.zeros((self.vt.mesh.nElements_global,
                                                                        self.nDOFs_element[ci],
@@ -5259,7 +5259,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
         self.ebq_global[('velocity',ci)].flat[:]=self.vt.ebq_global[('velocityAverage',ci)].flat[:]
 
         needToAddBackBoundaryFluxes = False
-        if self.vt.numericalFlux == None:
+        if self.vt.numericalFlux is None:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
             needToAddBackBoundaryFluxes = True
         else:
@@ -5448,7 +5448,7 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
         """
         vt = self.vt
         flux = -1.0*vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(vt.mesh.exteriorElementBoundariesArray,
                                                             vt.mesh.elementBoundaryElementsArray,
                                                             vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -5472,7 +5472,7 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
         """
         vt = self.vt
         flux = vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(vt.mesh.exteriorElementBoundariesArray,
                                                             vt.mesh.elementBoundaryElementsArray,
                                                             vt.mesh.elementBoundaryLocalElementBoundariesArray,

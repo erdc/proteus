@@ -59,7 +59,7 @@ class LatexResultsSummary:
             return True
         import shelve
         self.results = shelve.open(self.resFileName)
-        if self.repName == None:
+        if self.repName is None:
             repRaw = self.results['flags']['simulationName']
             self.repName = repRaw.replace('_','-')
         self.report = openLatexReport(self.repFileName,self.repName)

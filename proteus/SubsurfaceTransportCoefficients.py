@@ -59,7 +59,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                  materialValuesLocallyConstant=False):
         self.K_types = K_types
         self.source_types = source_types
-        if S_s_types == None:
+        if S_s_types is None:
             self.S_s_types = {}
             for mat in self.K_types.keys():
                 self.S_s_types[mat] = lambda x,t: 0.0
@@ -2046,8 +2046,8 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
         self.swConstant=swConstant
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
     def attachModels(self,modelList):
-        if self.nSatModel == None:
-            print 'Warning TwophaseDarcy_split_pressure_base nSatModel == None returning in attachModels'
+        if self.nSatModel is None:
+            print 'Warning TwophaseDarcy_split_pressure_base nSatModel is None returning in attachModels'
             return
         #not ideal, but need a way to force nonlinear potential to be evaluated in saturation model
         modelList[self.nSatModel].calculateElementCoefficients()
@@ -2176,8 +2176,8 @@ class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
         self.advectionScaling=advectionScaling
     def attachModels(self,modelList):
-        if self.nPressModel == None:
-            print 'Warning TwophaseDarcy_split_saturation_base nPressModel == None returning in attachModels'
+        if self.nPressModel is None:
+            print 'Warning TwophaseDarcy_split_saturation_base nPressModel is None returning in attachModels'
             return
         self.flowModel = modelList[self.nPressModel]
         #
@@ -3285,8 +3285,8 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
         self.swConstant=swConstant
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
     def attachModels(self,modelList):
-        if self.nSatModel == None:
-            print 'Warning TwophaseDarcy_split_pressure_base nSatModel == None returning in attachModels'
+        if self.nSatModel is None:
+            print 'Warning TwophaseDarcy_split_pressure_base nSatModel is None returning in attachModels'
             return
         #not ideal, but need a way to force nonlinear potential to be evaluated in saturation model
         modelList[self.nSatModel].calculateElementCoefficients()
@@ -3395,8 +3395,8 @@ class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
         self.advectionScaling=advectionScaling
     def attachModels(self,modelList):
-        if self.nPressModel == None:
-            print 'Warning TwophaseDarcy_split_saturation_base nPressModel == None returning in attachModels'
+        if self.nPressModel is None:
+            print 'Warning TwophaseDarcy_split_saturation_base nPressModel is None returning in attachModels'
             return
         self.flowModel = modelList[self.nPressModel]
         #

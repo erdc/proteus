@@ -91,11 +91,11 @@ class V_base:
                  p=None,
                  n=None,
                  s=None):
-        if p == None:
+        if p is None:
             import default_p as p
-        if n == None:
+        if n is None:
             import default_n as n
-        if s == None:
+        if s is None:
             import default_s as s
         global cmdFile,datFile,datFilename,viewerPipe,viewerType,plotNumber,windowNumber,meshDataStructuresWritten
         self.cmdFile=cmdFile
@@ -138,7 +138,7 @@ class V_base:
              tsim in self.s.viewTimes)
             and
             'u' in self.s.viewQuantities):
-            if self.plotOffSet == None:
+            if self.plotOffSet is None:
                 self.plotOffSet = self.windowNumber()
             self.windowNumberTmp= mlvt.levelModelList[-1].viewSolution(plotOffSet=self.plotOffSet,
                                                                        titleModifier='',
@@ -174,7 +174,7 @@ class V_base:
             self.windowNumberSave = self.windowNumber()
             mlvt.levelModelList[-1].viewSolution(plotOffSet=self.plotOffSet,titleModifier='',
                                                  dgridnx=self.dgridx,dgridny=self.dgridy,pause=self.s.viewerPause)
-            if self.plotOffSet == None:
+            if self.plotOffSet is None:
                 self.plotOffSet = self.windowNumberSave
         #end if
 
@@ -1239,11 +1239,11 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 """
 
         ###
-        if name == None:
+        if name is None:
             name = ckey[0];
             for i in range(len(ckey)-1):
                 name += "_%s" % ckey[1+i]
-        if title == None:
+        if title is None:
             title = name
         assert q.has_key(ckey), " ckey = %s missing from q " % ckey
         assert len(q[ckey].shape) == 2, " q[%s].shape= %s should be ( , ) " % (ckey,q[ckey].shape)
@@ -1363,11 +1363,11 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 """
 
         ###
-        if name == None:
+        if name is None:
             name = ckey[0];
             for i in range(len(ckey)-1):
                 name += "_%s" % ckey[1+i]
-        if title == None:
+        if title is None:
             title = name
         assert q.has_key(ckey), " ckey = %s missing from q " % ckey
         assert len(q[ckey].shape) == 3, " q[%s].shape= %s should be ( , , ) " % (ckey,q[ckey].shape)
@@ -1506,11 +1506,11 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %s_qg = griddata3(%s_x_q(:,1),%s_x_q(:,2),%s_x_q(:,3),%s_q,%s_qxg,%s_qyg,%s_qzg);
 """
         nplotted = 0
-        if name == None:
+        if name is None:
             name = ckey[0];
             for i in range(len(ckey)-1):
                 name += "_%s" % ckey[1+i]
-        if title == None:
+        if title is None:
             title = name
         assert q.has_key(ckey), " ckey = %s missing from q " % ckey
         assert len(q[ckey].shape) == 2, " q[%s].shape= %s should be ( , ) " % (ckey,q[ckey].shape)
@@ -1633,7 +1633,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 """
 
         ###
-        if title == None:
+        if title is None:
             title = name
 
         nPoints = 1
@@ -1670,7 +1670,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmdFile.write(cmd)
             nplotted = 1
         elif nSpace == 2:
-            if elementNodesConnectivity == None:
+            if elementNodesConnectivity is None:
                 cmd = cmd2dData % (name,name,name)
                 cmdFile.write(cmd)
             cmd = cmd2dView % (figureNumber,name,name,name,name,title)
@@ -1683,7 +1683,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmdFile.write(cmd)
             nplotted = 1
         else:
-            if elementNodesConnectivity == None:
+            if elementNodesConnectivity is None:
                 cmd = cmd3dData % (name,name,name,name)
                 cmdFile.write(cmd)
             cmd = cmd3dView % (figureNumber,name,name,title)
@@ -1767,7 +1767,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 
 
         ###
-        if title == None:
+        if title is None:
             title = name
 
         nPoints = 1
@@ -1807,7 +1807,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmdFile.write(cmd)
             nplotted = 1
         elif nSpace == 2:
-            if elementNodesConnectivity == None:
+            if elementNodesConnectivity is None:
                 cmd = cmd2dData % (name,name,name)
                 cmdFile.write(cmd)
             cmd = cmd2dView % (name,name,name,
@@ -1821,7 +1821,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmdFile.write(cmd)
             nplotted = 1
         else:
-            if elementNodesConnectivity == None:
+            if elementNodesConnectivity is None:
                 cmd = cmd3dData % (name,name,name,name)
                 cmdFile.write(cmd)
             cmd = cmd3dView % (name,name,name,name,
@@ -1898,7 +1898,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 [%s_xg,%s_yg,%s_zg] = meshgrid(XYZ(1,1):dx:XYZ(1,2),XYZ(2,1):dy:XYZ(2,2),XYZ(3,1):dz:XYZ(3,2));
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
 
         nNodes_global = nodeArray.shape[0]; nElements_global = elementNodesArray.shape[0]
@@ -2025,7 +2025,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %s_gycoord = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,2),%s_xg,%s_yg,%s_zg);
 %s_gzcoord = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,3),%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
         #
         nNodes_global = nodeArray.shape[0]; nElements_global = elementNodesArray.shape[0]
@@ -2166,7 +2166,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 [%s_xg,%s_yg,%s_zg] = meshgrid(XYZ(1,1):dx:XYZ(1,2),XYZ(2,1):dy:XYZ(2,2),XYZ(3,1):dz:XYZ(3,2));
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
 
 
@@ -2331,7 +2331,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %s_gycoord = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,2),%s_xg,%s_yg,%s_zg);
 %s_gzcoord = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,3),%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
         #
         nLagrangeNodes_global = lagrangeNodesArray.shape[0]; nElements_global = elementNodesArray.shape[0]
@@ -2540,7 +2540,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %%note, uses average of duplicate values
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
 
         nNodes_global = nodeArray.shape[0]; nElements_global = l2g.shape[0]
@@ -2728,7 +2728,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %%note, uses average of duplicate values
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
 
         nNodes_global = nodeArray.shape[0]; nElements_global = l2g.shape[0]
@@ -2890,7 +2890,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %%note, uses average of duplicate values
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
-        if title == None:
+        if title is None:
             title = name
 
         nNodes_global = nodeArray.shape[0]; nElements_global = l2g.shape[0]
@@ -3078,7 +3078,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
         import numpy
-        if title == None:
+        if title is None:
             title = name
 
         nNodes_global = nodeArray.shape[0]; nElements_global = l2g.shape[0]
@@ -3288,7 +3288,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %s_g = griddata3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s,%s_xg,%s_yg,%s_zg);
 """
         nplotted = 0
-        if title == None:
+        if title is None:
             title = name
 
         nElements_global = interpolationPoints.shape[0]; nPoints_element = interpolationPoints.shape[1];

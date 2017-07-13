@@ -328,7 +328,7 @@ class BackwardEuler_cfl(BackwardEuler):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
                 #print "mac cfl component ci",maxCFL,ci
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -720,7 +720,7 @@ class ForwardEuler(TI_base):
             if self.cfl.has_key(ci):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -901,7 +901,7 @@ class ForwardEuler_A(TI_base):
             if self.cfl.has_key(ci):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -1100,7 +1100,7 @@ class ForwardEuler_H(TI_base):
                 maxCFL=globalMax(self.cfl[ci].max())
             #end has key
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -1254,7 +1254,7 @@ class OuterTheta(TI_base):
             if self.cfl.has_key(ci):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -1971,7 +1971,7 @@ class ExplicitRK_base(TI_base):
                                                       self.transport.q[('cfl',ci)])
                     maxCFL=max(globalMax(self.cfl[ci].max()),maxCFL)
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -3820,7 +3820,7 @@ PsiTCtte!""" % self.dtMeth)
                 converged = False
                 failedFlag = False
                 while nssteps < self.maxPTCsteps and not converged:
-                    if self.dtSET == None:
+                    if self.dtSET is None:
                         model.timeIntegration.choose_dt(tOut)
                     else:
                         model.timeIntegration.dt = self.dtSET

@@ -112,7 +112,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.mesh.nodeArray[:,2]+=self.model.u[2].dof
             self.mesh.nodeVelocityArray[:,2]=self.model.u[2].dof
             self.model.u[2].dof[:] = 0.0
-        if self.dt_last == None:
+        if self.dt_last is None:
             dt = self.model.timeIntegration.dt
         else:
             dt = self.dt_last
@@ -424,7 +424,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,

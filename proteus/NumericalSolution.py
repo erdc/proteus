@@ -137,7 +137,7 @@ class NS_base:  # (HasTraits):
             else:
                 logEvent("Generating mesh for "+p.name)
             #support for old-style domain input
-            if p.domain == None:
+            if p.domain is None:
                 if p.nd == 1:
                     p.domain = Domain.RectangularDomain(L=p.L[:1],
                                                         x=p.x0[:1],
@@ -170,7 +170,7 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
                 elif p.domain.nd == 2:
-                    if (n.nnx == n.nny == None):
+                    if (n.nnx == n.nny is None):
                         nnx = nny = n.nn
                     else:
                         nnx = n.nnx
@@ -553,7 +553,7 @@ class NS_base:  # (HasTraits):
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
         logEvent(Profiling.memory("NumericalSolution memory",className='NumericalSolution',memSaved=memBase))
-        if so.tnList == None:
+        if so.tnList is None:
             logEvent("Building tnList from model = "+pList[0].name+" nDTout = "+`nList[0].nDTout`)
             self.tnList=[float(n)*nList[0].T/float(nList[0].nDTout)
                          for n in range(nList[0].nDTout+1)]
@@ -752,7 +752,7 @@ class NS_base:  # (HasTraits):
                 lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
               del vector
             for ci in range(coef.nc):
-              if coef.vectorComponents == None or \
+              if coef.vectorComponents is None or \
                  ci not in coef.vectorComponents:
                 scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                 p0.domain.PUMIMesh.transferFieldToProteus(
@@ -931,7 +931,7 @@ class NS_base:  # (HasTraits):
                          coef.vectorName, vector)
                   del vector
                 for ci in range(coef.nc):
-                  if coef.vectorComponents == None or \
+                  if coef.vectorComponents is None or \
                      ci not in coef.vectorComponents:
                     scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                     scalar[:,0] = lm.u[ci].dof[:]
@@ -1503,7 +1503,7 @@ class NS_base:  # (HasTraits):
     def archiveSolution(self,model,index,t=None):
         if self.archiveFlag == ArchiveFlags.UNDEFINED:
             return
-        if t == None:
+        if t is None:
             t = self.systemStepController.t_system
 
         logEvent("Writing mesh header for  model = "+model.name+" at time t="+str(t),level=3)
@@ -1569,7 +1569,7 @@ class NS_base:  # (HasTraits):
 
     ## clean up archive
     def closeArchive(self,model,index):
-        if self.archiveFlag == None:
+        if self.archiveFlag is None:
             return
         if self.so.useOneArchive:
             if index==0:

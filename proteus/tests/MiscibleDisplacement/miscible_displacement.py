@@ -49,7 +49,7 @@ class MiscibleDisplacementCoefficients_Flow(STC.SinglePhaseDarcyCoefficients):
                  materialValuesLocallyConstant=False): #are the material functions constants? e.g., K_j(x,t) = K^0_j ?
         if concentration_model_id != None and viscosity_a <= 1.0e-16:
             print "Warning, specified concentration model with id {0} but no viscosity dependence mu=a*c+b with a={1:10.3e} b={2:10.3e} ".format(concentration_model_id,viscosity_a,viscosity_b)
-        if concentration_model_id == None and viscosity_a > 1.0e-16:
+        if concentration_model_id is None and viscosity_a > 1.0e-16:
             print "Warning, no specified concentration model but have viscosity dependence mu=a*c+b with a={0:10.3e} b={1:10.3e} ".format(viscosity_a,viscosity_b)
         
         self.concentration_model_id = concentration_model_id; self.concentration_model = None

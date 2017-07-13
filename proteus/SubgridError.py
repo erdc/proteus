@@ -333,7 +333,7 @@ class FFDarcyFC_ASGS(SGE_base):
 
     def calculateSubgridError(self,q):
         oldTau = False
-        if self.dftemp == None or self.dftemp.shape != q[('grad(phi)',1)].shape:
+        if self.dftemp is None or self.dftemp.shape != q[('grad(phi)',1)].shape:
             self.dftemp = numpy.zeros(q[('grad(phi)',1)].shape,'d')
         ci = 0; cj = 0; ck = 1;
         if oldTau:
@@ -449,16 +449,16 @@ class DarcyFC_ASGS(SGE_base):
 
     def calculateSubgridError(self,q):
         oldTau=False
-        if self.dftemp == None or self.dftemp.shape != q[('grad(phi)',1)].shape:
+        if self.dftemp is None or self.dftemp.shape != q[('grad(phi)',1)].shape:
             self.dftemp = numpy.zeros(q[('grad(phi)',1)].shape,'d')
 
         #'w' phase equation
         ci = 0; cj = 0; ck = 0;
         if q.has_key(('dr',ci,cj)):
             self.drtmp[(ci,cj)] = q[('dr',ci,cj)]
-        elif self.drtmp[(ci,cj)] == None:
+        elif self.drtmp[(ci,cj)] is None:
             self.drtmp[(ci,cj)] = numpy.zeros(q[('r',ci)].shape,'d')
-        if self.drtmp[(ci,cj)] == None or self.drtmp[(ci,cj)].shape != q[('r',ci)].shape:
+        if self.drtmp[(ci,cj)] is None or self.drtmp[(ci,cj)].shape != q[('r',ci)].shape:
             self.drtmp[(ci,cj)] = numpy.zeros(q[('r',ci)].shape,'d')
         if oldTau:
             if self.coefficients.sd:
@@ -518,7 +518,7 @@ class DarcyFC_ASGS(SGE_base):
         ci = 1; cj = 0; ck = 1;
         if q.has_key(('dr',ci,cj)):
             self.drtmp[(ci,cj)] = q[('dr',ci,cj)]
-        elif self.drtmp[(ci,cj)] == None:
+        elif self.drtmp[(ci,cj)] is None:
             self.drtmp[(ci,cj)] = numpy.zeros(q[('r',ci)].shape,'d')
         if oldTau:
             if self.coefficients.sd:

@@ -100,7 +100,7 @@ unstructured grids for
         #import pdb
         #pdb.set_trace()
         failed = False
-        if nodalSpeeds == None:
+        if nodalSpeeds is None:
             speed = self.unitNodalSpeeds
         else:
             speed = nodalSpeeds
@@ -167,7 +167,7 @@ class FSWEikonalSolver:
             self.frontInitFlag = 0
         self.csolver = None
 
-        if self.xRefOrderingPoints == None:
+        if self.xRefOrderingPoints is None:
             self.csolver = FSWEikonalSolver.cfmmfsw.FSWEikonalSolver(self.nSpace,self.mesh.cmesh,
                                                                      atol=self.iterAtol,rtol=self.iterRtol,
                                                                      maxIts=self.maxIts,
@@ -221,7 +221,7 @@ class FSWEikonalSolver:
         assert len(T) == self.mesh.nNodes_global, "FemSpaces must be C0 P1"
 
         failed = False
-        if nodalSpeeds == None:
+        if nodalSpeeds is None:
             speed = self.unitNodalSpeeds
         else:
             speed = nodalSpeeds

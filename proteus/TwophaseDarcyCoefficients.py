@@ -812,8 +812,8 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
         #so can't turn off easily
         self.capillaryDiffusionScaling = capillaryDiffusionScaling
     def attachModels(self,modelList):
-        if self.nModel == None:
-            print 'Warning Twophase_split_pressure nModel == None returning in attachModels'
+        if self.nModel is None:
+            print 'Warning Twophase_split_pressure nModel is None returning in attachModels'
             return
         #mwf debug
         #import pdb
@@ -1111,8 +1111,8 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
         #scaling factor in evals instead
         self.capillaryDiffusionScaling = capillaryDiffusionScaling
     def attachModels(self,modelList):
-        if self.nModel == None:
-            print 'Warning Twophase_split_saturation nModel == None returning in attachModels'
+        if self.nModel is None:
+            print 'Warning Twophase_split_saturation nModel is None returning in attachModels'
             return
         #mwf debug
         self.flowModel = modelList[self.nModel]

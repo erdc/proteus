@@ -95,7 +95,7 @@ class LinearSolver:
                 self.L.matvec(u,r)
             r-=b
     def solveInitialize(self,u,r,b,initialGuessIsZero=True):
-        if r == None:
+        if r is None:
             if self.r is None:
                 self.r = Vec(self.n)
             r=self.r
@@ -239,7 +239,7 @@ class LinearSolver:
     def setUp(self, pc):
         self.prepare()
     def apply(self,pc,x,y):
-        if self.xGhosted == None:
+        if self.xGhosted is None:
             self.xGhosted = self.par_b.duplicate()
             self.yGhosted = self.par_b.duplicate()
         self.xGhosted.setArray(x.getArray())
@@ -333,7 +333,7 @@ class PETSc(LinearSolver):
         LinearSolver.__init__(self,L)
         assert type(L).__name__ == 'SparseMatrix', "PETSc can only be called with a local sparse matrix"
         self.solverName  = "PETSc"
-        if prefix == None:
+        if prefix is None:
             self.ksp = flcbdfWrappers.KSP(par_L)
         else:
             assert isinstance(prefix,str)
@@ -1847,7 +1847,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
             mgItsList.append(cycles)
             if l > 0:
                 if smootherType == Jacobi:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 4.0/5.0
                     preSmootherList.append(Jacobi(L=linearOperatorList[l],
                                                   weight=relaxationFactor,
@@ -1862,7 +1862,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                    computeRates = computeSmootherRates,
                                                    printInfo = printSmootherInfo))
                 elif smootherType == GaussSeidel:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 0.33
                     preSmootherList.append(GaussSeidel(connectionList = connectivityListList[l],
                                                        L=linearOperatorList[l],
@@ -1879,7 +1879,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                         computeRates = computeSmootherRates,
                                                         printInfo = printSmootherInfo))
                 elif smootherType == StarILU:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 1.0
                     preSmootherList.append(StarILU(connectionList = connectivityListList[l],
                                                    L=linearOperatorList[l],
@@ -1896,7 +1896,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                     computeRates = computeSmootherRates,
                                                     printInfo = printSmootherInfo))
                 elif smootherType == StarBILU:
-                    if relaxationFactor == None:
+                    if relaxationFactor is None:
                         relaxationFactor = 1.0
                     preSmootherList.append(StarBILU(connectionList = connectivityListList[l],
                                                     L=linearOperatorList[l],
@@ -1958,7 +1958,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
             #    levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == Jacobi:
-        if relaxationFactor == None:
+        if relaxationFactor is None:
             relaxationFactor = 4.0/5.0
         for l in range(nLevels):
             levelLinearSolverList.append(Jacobi(L=linearOperatorList[l],
@@ -1971,7 +1971,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                 printInfo = printLevelSolverInfo))
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == GaussSeidel:
-        if relaxationFactor == None:
+        if relaxationFactor is None:
             relaxationFactor=0.33
         for l in range(nLevels):
             levelLinearSolverList.append(GaussSeidel(connectionList = connectivityListList[l],
@@ -1985,7 +1985,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                      printInfo = printLevelSolverInfo))
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == StarILU:
-        if relaxationFactor == None:
+        if relaxationFactor is None:
             relaxationFactor=1.0
         for l in range(nLevels):
             levelLinearSolverList.append(StarILU(connectionList = connectivityListList[l],
@@ -1999,7 +1999,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                  printInfo = printLevelSolverInfo))
         levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == StarBILU:
-        if relaxationFactor == None:
+        if relaxationFactor is None:
             relaxationFactor=1.0
         for l in range(nLevels):
             levelLinearSolverList.append(StarBILU(connectionList = connectivityListList[l],

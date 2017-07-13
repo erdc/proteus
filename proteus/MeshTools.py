@@ -725,7 +725,7 @@ class Mesh:
                 self.arEBGridCollection = SubElement(ar.domain,"Grid",{"Name":"EBMesh "+name,
                                                                        "GridType":"Collection",
                                                                        "CollectionType":"Temporal"})
-        if self.arGrid == None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != str(t):
             #
             #topology and geometry
             #
@@ -1059,7 +1059,7 @@ class Mesh:
         self.hasGeometricInfo = False
         logEvent(memory("buildFromCNoArrays","MeshTools"),level=4)
     def buildNodeStarArrays(self):
-        if self.nodeStarArray == None:
+        if self.nodeStarArray is None:
             #cek old
             self.nodeStarList=[]
             for n in range(self.nNodes_global):
@@ -1664,7 +1664,7 @@ class MultilevelMesh(Mesh):
         get array elementParents[l,e] = e_c, where element e_c is the parent of element e
             elementParents[0,:] = -1
         """
-        if (self.elementParents == None or recalculate):
+        if (self.elementParents is None or recalculate):
             self.elementParents = {}
             nLevels = len(self.meshList)
             for l in range(nLevels):
@@ -3175,7 +3175,7 @@ class Mesh2DM(Mesh):
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                 "GridType":"Collection",
                                                                 "CollectionType":"Temporal"})
-        if self.arGrid == None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != str(t):
             #
             #topology and geometry
             #
@@ -3542,7 +3542,7 @@ class Mesh3DM(Mesh):
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                "GridType":"Collection",
                                                                "CollectionType":"Temporal"})
-        if self.arGrid == None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != str(t):
             if ar.global_sync:
                 #
                 #topology and geometry
@@ -5640,7 +5640,7 @@ def findXMLgridElement(xmf,MeshTag='Spatial_Domain',id_in_collection=-1,verbose=
         if 'Name' in collection.attrib and MeshTag in collection.attrib['Name']:
             GridCollection = collection
             break
-    if GridCollection == None:
+    if GridCollection is None:
         GridCollection = Domain[0]
     logEvent("Trying GridCollection.tag= %s" % (GridCollection.tag),4)
     if GridCollection.attrib['GridType'] == 'Collection':
