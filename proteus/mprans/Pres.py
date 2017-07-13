@@ -82,6 +82,7 @@ class Coefficients(TC_base):
         Give the TC object access to the element quadrature storage
         """
         cq[('u_last',0)] = cq[('u',0)].copy()
+        self.q_massFlux = cq[('grad(u)',0)].copy()
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         """
         Give the TC object access to the element boundary quadrature storage
@@ -93,6 +94,7 @@ class Coefficients(TC_base):
         Give the TC object access to the exterior element boundary quadrature storage
         """
         cebqe[('u_last',0)] = cebqe[('u',0)].copy()
+        self.ebqe_massFlux = cebqe[('grad(u)',0)].copy()
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
         """
         Give the TC object access to the generalized interpolation point storage. These points are used  to project nonlinear potentials (phi).
@@ -102,6 +104,12 @@ class Coefficients(TC_base):
         """
         Give the TC object an opportunity to modify itself before the time step.
         """
+        self.q_massFlux[:] = np.multiply(self.fluidModel.coefficients.q_rho[:,:,np.newaxis],
+                                         self.fluidModel.coefficients.q_nu[:,:,np.newaxis],
+                                         self.fluidModel.q[('velocity',0)])
+        self.ebqe_massFlux[:] = np.multiply(self.fluidModel.coefficients.ebqe_rho[:,:,np.newaxis],
+                                            self.fluidModel.coefficients.ebqe_nu[:,:,np.newaxis],
+                                            self.fluidModel.ebqe[('velocity',0)])
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
@@ -177,8 +185,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False):  # ,
-        self.useConstantH = coefficients.useConstantH
+                 movingDomain=False):
         from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
@@ -396,6 +403,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi_ip = {}
         # mesh
         #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.ebqe['x'] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             3),
+            'd')
         self.q[('u', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[
@@ -532,12 +544,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.globalResidualDummy = None
         compKernelFlag = 0
-        if self.coefficients.useConstantH:
-            self.elementDiameter = self.mesh.elementDiametersArray.copy()
-            self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
-        else:
-            self.elementDiameter = self.mesh.elementDiametersArray
-        self.pres = cPres(
+        self.pres = cPres.Pres(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -587,25 +594,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             # physics
             self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
             self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
             self.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.ebqe_u_ls,
-            self.coefficients.ebqe_n_ls,
-            self.coefficients.q_H_vof,
             self.q[('u', 0)],
             self.q[('grad(u)', 0)],
+            self.q[('u_last',0)],
+            self.coefficients.pressureIncrementModel.q[('u',0)],
+            self.coefficients.q_massFlux,
+            self.coefficients.ebqe_massFlux,
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
-            self.q[('r', 0)],
-            self.coefficients.q_vos,
             self.offset[0], self.stride[0],
             r,
             self.mesh.nExteriorElementBoundaries_global,
@@ -613,15 +611,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
         log("Global residual", level=9, data=r)
-        self.coefficients.massConservationError = fabs(
-            globalSum(sum(r.flat[:self.mesh.nNodes_owned])))
-        assert self.coefficients.massConservationError == fabs(
-            globalSum(r[:self.mesh.nNodes_owned].sum()))
-        log("   Mass Conservation Error", level=3,
-            data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy is None:
-            self.globalResidualDummy = numpy.zeros(r.shape, 'd')
 
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian, jacobian)
@@ -646,22 +636,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryNormals,
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.q_H_vof,
-            self.coefficients.q_vos,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
             jacobian)
         log("Jacobian ", level=10, data=jacobian)
-        # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
 
@@ -705,6 +682,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.getBasisGradientValuesTraceRef(
             self.elementBoundaryQuadraturePoints)
+        self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(
+            self.elementBoundaryQuadraturePoints, self.ebqe['x'])
+        # self.fluxBoundaryConditionsObjectsDict = dict([(cj, FluxBoundaryConditions(self.mesh,
+        #                                                                            self.nElementBoundaryQuadraturePoints_elementBoundary,
+        #                                                                            self.ebqe[('x')],
+        #                                                                            self.advectiveFluxBoundaryConditionsSetterDict[cj],
+        #                                                                            self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
+        #                                                for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
+        self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(
+            self.timeIntegration.t, self.ebqe)
 
     def estimate_mt(self):
         pass
