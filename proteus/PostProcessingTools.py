@@ -23,7 +23,7 @@ def VelocityPostProcessingChooser(transport):
     """
     tryNew = True
     velocityPostProcessor = None
-    if transport.conservativeFlux != None:
+    if transport.conservativeFlux is not None:
         ppcomps = []
         pptypes = {}
         for ci in transport.conservativeFlux.keys():
@@ -102,7 +102,7 @@ class VelocityPostProcessingAlgorithmBase:
         self.vtComponents = vtComponents
         self.q = None
         self.ebq_global = None
-        assert self.vt != None, "vt==None not allowed for %s " %  self.postProcessingType
+        assert self.vt is not None, "vt==None not allowed for %s " %  self.postProcessingType
 
         #quadrature arrays
         self.q = self.vt.q
@@ -170,7 +170,7 @@ class VelocityPostProcessingAlgorithmBase:
 
 
             ##determine flux boundary information as before to start?
-            if self.vt.numericalFlux != None and self.vt.numericalFlux.useWeakDirichletConditions:
+            if self.vt.numericalFlux is not None and self.vt.numericalFlux.useWeakDirichletConditions:
                 self.fluxElementBoundaries[ci] = numpy.ones((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
             else:
                 self.fluxElementBoundaries[ci] = numpy.zeros((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
@@ -1333,7 +1333,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
         cpostprocessing.factorLocalBDM1projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
     def computeGeometricInfo(self):
-        if self.BDMcomponent != None:
+        if self.BDMcomponent is not None:
             self.computeBDM1projectionMatrices()
 
     def evaluateLocalVelocityRepresentation(self,ci):
@@ -1737,7 +1737,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                 self.flux_average[edge] = flux_array[edge][0]
 
     def computeGeometricInfo(self):
-        if self.BDMcomponent != None:
+        if self.BDMcomponent is not None:
             self.computeBDM2projectionMatrices()
 
     def evaluateLocalVelocityRepresentation(self,ci,velocity_field_set=False):
@@ -2072,7 +2072,7 @@ class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
                                                               self.ebq[('w',ci)],
                                                               self.w_dS[ci])
     def computeGeometricInfo(self):
-        if self.BDMcomponent != None:
+        if self.BDMcomponent is not None:
             self.computeBDM1projectionMatrices()
 
     def evaluateLocalVelocityRepresentation(self,ci):
@@ -2683,7 +2683,7 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
         self.ebq_global[('velocity',ci)].flat[:]=self.vt.ebq_global[('velocityAverage',ci)].flat
 
         #need to add back in after solves, now skip Neumann boundaries since enforcing them explicitly
-        if self.vt.numericalFlux != None:#In general need numericalFlux since exterior boundary velocity assumed correct
+        if self.vt.numericalFlux is not None:#In general need numericalFlux since exterior boundary velocity assumed correct
             #have to set boundary flux into velocity data structure from advective and diffusive flux arrays
             #in case transport didn't to this?
             for ebNE in range(self.vt.mesh.nExteriorElementBoundaries_global):
@@ -2957,7 +2957,7 @@ class VPP_DG_BDM(VPP_DG_RT0):
         cpostprocessing.factorLocalBDM1projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
     def computeGeometricInfo(self):
-        if self.BDMcomponent != None:
+        if self.BDMcomponent is not None:
             self.computeBDM1projectionMatrices()
 
     def evaluateLocalVelocityRepresentation(self,ci):
@@ -3588,8 +3588,8 @@ class AggregateVelocityPostProcessor:
         self.vpp_algorithms = []
         self.vt = transport
         self.vpp_components = {}
-        if self.postProcessingTypes != None:
-            assert self.vt != None, "must pass in vectorTransport if doing velocity postprocessing"
+        if self.postProcessingTypes is not None:
+            assert self.vt is not None, "must pass in vectorTransport if doing velocity postprocessing"
             #collect components that share an algorithm
             for ci in transport.conservativeFlux.keys():
                 assert transport.conservativeFlux[ci] in self.vpp_types.keys(), "invalid postprocessing string"
@@ -3672,15 +3672,15 @@ class VelocityPostProcessor_Original:
         self.postProcessingTypes = postProcessingTypes
         self.vt = vectorTransport
         self.vtComponents = vtComponents
-        if self.postProcessingTypes != None:
-            assert self.vt != None, "postProcessTypes not None vt==None"
+        if self.postProcessingTypes is not None:
+            assert self.vt is not None, "postProcessTypes not None vt==None"
         self.q = None
         self.ebq_global = None
         self.BDMcomponent = None
         #for skipping Neumann boundaries
         self.fluxElementBoundaries = {}
         self.fluxBoundaryNodes     = {}
-        if self.postProcessingTypes != None and self.vt !=None:
+        if self.postProcessingTypes is not None and self.vt !=None:
             #cek begin adding stuff for post-processing higher-order
             self.qv={}
             self.w={}
@@ -3710,8 +3710,8 @@ class VelocityPostProcessor_Original:
             #use opt is for pwl also affects dg
             self.useOpt=True #parallel with weak BC's, assumes correct external boundary velocity and total flux
             for ci in self.vtComponents:
-                if self.postProcessingTypes[ci] != None:
-                    if self.vt.numericalFlux != None and self.vt.numericalFlux.useWeakDirichletConditions:
+                if self.postProcessingTypes[ci] is not None:
+                    if self.vt.numericalFlux is not None and self.vt.numericalFlux.useWeakDirichletConditions:
                         self.fluxElementBoundaries[ci] = numpy.ones((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
                     else:
                         self.fluxElementBoundaries[ci] = numpy.zeros((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
@@ -4447,7 +4447,7 @@ class VelocityPostProcessor_Original:
         cpostprocessing.factorLocalBDM1projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
     def computeGeometricInfo(self):
-        if self.BDMcomponent != None:
+        if self.BDMcomponent is not None:
             self.computeBDM1projectionMatrices()
     def postprocess(self,verbose=0):
         """
@@ -4458,8 +4458,8 @@ class VelocityPostProcessor_Original:
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        if self.postProcessingTypes != None:
-            assert self.vt != None, "postprocess types not None vt==None"
+        if self.postProcessingTypes is not None:
+            assert self.vt is not None, "postprocess types not None vt==None"
         for ci in self.vtComponents:
             if self.postProcessingTypes[ci] in ['dg','dg-bdm']:
                 self.postprocessDG(ci,verbose=verbose)

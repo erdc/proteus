@@ -61,10 +61,10 @@ def openLog(filename,level,logLocation=None):
     global logDir
     global procID
     global logAllProcesses
-    assert procID != None, "Initialize Comm and set Profiling.procID before opening log"
+    assert procID is not None, "Initialize Comm and set Profiling.procID before opening log"
     filename_full = filename
     import os
-    if logLocation != None:
+    if logLocation is not None:
         logDir = logLocation
         filename_full = os.path.join(logDir,filename)
     if  procID == 0:
@@ -84,10 +84,10 @@ def closeLog():
 
 def logEvent(stringIn, level=1, data=None):
     global logLevel,procID,logAllProcesses,flushBuffer,preInitBuffer
-    if procID != None:
+    if procID is not None:
         if logAllProcesses or procID==0:
             if level < logLevel:
-                if logAllProcesses and procID != None and stringIn != None:
+                if logAllProcesses and procID is not None and stringIn is not None:
                     string = "Proc %d : " % procID
                     string += stringIn
                 else:
@@ -124,7 +124,7 @@ def memory(message=None,className='',memSaved=None):
         mem = memList[-1]
         if mem > memMax:
             memMax = mem
-        if memSaved != None:
+        if memSaved is not None:
             memInc = mem - memSaved
         else:
             memInc = mem-memLast

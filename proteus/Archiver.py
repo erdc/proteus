@@ -247,7 +247,7 @@ class AR_base:
         if self.comm.isMaster() and self.useGlobalXMF:
             self.gatherAndWriteTimes()
             self.xmlFileGlobal.close()
-        if self.hdfFile != None:
+        if self.hdfFile is not None:
             self.hdfFile.close()
         logEvent("Done Closing Archive")
         try:
@@ -390,7 +390,7 @@ class AR_base:
             for TemporalGridCollection in Domain:
                 if self.has_h5py: #only writing xml metadata to hdf5 using h5py right now
                     del TemporalGridCollection[:]
-        if self.hdfFile != None:
+        if self.hdfFile is not None:
             if self.has_h5py:
                 self.comm.barrier()
                 self.hdfFile.flush()
@@ -453,13 +453,13 @@ class XdmfWriter:
             for child in ar.domain:
                 if child.tag == "Grid" and child.attrib["Name"] == "Mesh"+spaceSuffix:
                     self.arGridCollection = child
-        assert self.arGridCollection != None
+        assert self.arGridCollection is not None
 
         #see if dgp1 grid exists with current time?
 
         if self.shareSingleGrid:
             gridName = "Grid"+spaceSuffix
-            if arGrid != None:
+            if arGrid is not None:
                 self.arGrid = arGrid
                 gt = arGrid.find("Time")
                 self.arTime = gt
@@ -572,7 +572,7 @@ class XdmfWriter:
                                           "DataType":"Float",
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (Xdmf_NodesGlobal,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
@@ -624,7 +624,7 @@ class XdmfWriter:
                                           "DataType":"Float",
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (Xdmf_NodesGlobal,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
@@ -678,7 +678,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (Xdmf_NodesGlobal,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_t"+str(tCount),
@@ -699,7 +699,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (Xdmf_NodesGlobal,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.flat[:])
@@ -727,7 +727,7 @@ class XdmfWriter:
             tmp = numpy.zeros((self.mesh.nElements_owned*u.shape[1],Xdmf_StorageDim),'d')
             tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u[:self.mesh.nElements_owned].flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
 
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_t"+str(tCount),
@@ -752,7 +752,7 @@ class XdmfWriter:
             tmp = numpy.zeros((Xdmf_NodesGlobal,Xdmf_StorageDim),'d')
             tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
 
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = tmp)
@@ -787,7 +787,7 @@ class XdmfWriter:
                     for j in range(u.shape[3]):
                         tmp.flat[k*9 + i*3 + j]=u.flat[k*Xdmf_NumberOfComponents + i*u.shape[2] + j]
 
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_t"+str(tCount),
@@ -815,7 +815,7 @@ class XdmfWriter:
                     for j in range(u.shape[3]):
                         tmp.flat[k*9 + i*3 + j]=u.flat[k*Xdmf_NumberOfComponents + i*u.shape[2] + j]
 
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = tmp)
@@ -863,7 +863,7 @@ class XdmfWriter:
                                           "DataType":"Float",
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (dofMap.nDOF_all_processes,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
@@ -907,7 +907,7 @@ class XdmfWriter:
                                           "DataType":"Float",
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (dofMap.nDOF,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
@@ -981,7 +981,7 @@ class XdmfWriter:
                                           "DataType":"Float",
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (dofMap.nDOF_all_processes,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
@@ -1033,7 +1033,7 @@ class XdmfWriter:
                                           "DataType":"Float",
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (dofMap.nDOF,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
@@ -1125,7 +1125,7 @@ class XdmfWriter:
                                               "Dimensions":"%i %i" % (dofMap.nDOF_all_processes,3)})
                 else:
                     assert False, "Not implemented for global_sync"
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                     else:
@@ -1200,7 +1200,7 @@ class XdmfWriter:
                                                    "DataType":"Float",
                                                    "Precision":"8",
                                                    "Dimensions":"%i %i" % lagrangeNodesArray.shape})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
                     else:
@@ -1344,7 +1344,7 @@ class XdmfWriter:
                                               "Dimensions":"%i %i" % (dofMap.nDOF_all_processes, lagrangeNodesArray.shape[-1])})
                 else:
                     assert False, "not implemented  for global_sync"
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                     else:
@@ -1412,7 +1412,7 @@ class XdmfWriter:
                                                    "Precision":"8",
                                                    "Dimensions":"%i %i" % lagrangeNodesArray.shape})
 
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
                     else:
@@ -1519,7 +1519,7 @@ class XdmfWriter:
                                          {"Format":ar.dataItemFormat,
                                           "DataType":"Float",
                                           "Dimensions":"%i %i" % (Xdmf_NumberOfElements*Xdmf_NodesPerElement,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
@@ -1561,7 +1561,7 @@ class XdmfWriter:
                                          {"Format":ar.dataItemFormat,
                                           "DataType":"Float",
                                           "Dimensions":"%i %i" % (Xdmf_NumberOfElements*Xdmf_NodesPerElement,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
@@ -1608,7 +1608,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (dofMap.nDOF_all_processes,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+"_t"+str(tCount)
                     ar.create_dataset_sync(u.name+"_t"+str(tCount),
@@ -1627,7 +1627,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (u.nDOF_global,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
@@ -1649,7 +1649,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (dofMap.nDOF_all_processes,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+str(tCount)
                     ar.create_dataset_sync(u.name+str(tCount),
@@ -1668,7 +1668,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (u.nDOF_global,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+str(tCount)
                     ar.create_dataset_async(u.name+str(tCount), data = u.dof)
@@ -1720,7 +1720,7 @@ class XdmfWriter:
                                                              sum([u.dof[u.femSpace.dofMap.l2g[eN,j]] for j in range(Xdmf_NodesPerElement) if j != i])
 
 
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_t"+str(tCount),
@@ -1740,7 +1740,7 @@ class XdmfWriter:
                                    {"Format":ar.dataItemFormat,
                                     "DataType":"Float",
                                     "Dimensions":"%i" % (dofMap.nDOF_all_processes,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values_dof.text = ar.hdfFilename+":/"+name+"_dof"+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_dof"+"_t"+str(tCount),
@@ -1790,7 +1790,7 @@ class XdmfWriter:
                                                              sum([u.dof[u.femSpace.dofMap.l2g[eN,j]] for j in range(Xdmf_NodesPerElement) if j != i])
 
 
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u_tmp)
@@ -1812,7 +1812,7 @@ class XdmfWriter:
                                    {"Format":ar.dataItemFormat,
                                     "DataType":"Float",
                                     "Dimensions":"%i" % (u.nDOF_global,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values_dof.text = ar.hdfFilename+":/"+name+"_dof"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(name+"_dof"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
@@ -1845,7 +1845,7 @@ class XdmfWriter:
                 else:
                     w_dof = uList[components[2]].dof
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
                         comm = Comm.get()
@@ -1874,7 +1874,7 @@ class XdmfWriter:
                 else:
                     w_dof = uList[components[2]].dof
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                         ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
@@ -1940,7 +1940,7 @@ class XdmfWriter:
                                           "DataType":"Float",
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (Xdmf_NodesGlobal,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
@@ -1977,7 +1977,7 @@ class XdmfWriter:
                                           "DataType":"Float",
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (Xdmf_NodesGlobal,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
@@ -2021,7 +2021,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (Xdmf_NodesGlobal,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_t"+str(tCount),
@@ -2041,7 +2041,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (Xdmf_NodesGlobal,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = interpolationValues.flat[:])
@@ -2074,7 +2074,7 @@ class XdmfWriter:
             tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(interpolationValues.flat,(interpolationValues.shape[0]*interpolationValues.shape[1],
                                                                                     Xdmf_NumberOfComponents))
 
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_t"+str(tCount),
@@ -2099,7 +2099,7 @@ class XdmfWriter:
             tmp = numpy.zeros((Xdmf_NodesGlobal,3),'d')
             tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(interpolationValues.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
 
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = tmp)
@@ -2161,7 +2161,7 @@ class XdmfWriter:
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (mesh.nNodes_global,3)})
                 #just reuse spatial mesh entries
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+meshSpaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+meshSpaceSuffix+`tCount`
@@ -2208,7 +2208,7 @@ class XdmfWriter:
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (mesh.nNodes_global,3)})
                 #just reuse spatial mesh entries
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+meshSpaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+meshSpaceSuffix+`tCount`
@@ -2233,7 +2233,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (u.femSpace.elementMaps.mesh.globalMesh.nElements_global,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_t"+str(tCount),
@@ -2252,7 +2252,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (u.femSpace.elementMaps.mesh.nElements_global,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
@@ -2285,7 +2285,7 @@ class XdmfWriter:
                 else:
                     w_dof = uList[components[2]].dof
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
                         ar.create_dataset_sync(vectorName+"_t"+str(tCount),
@@ -2315,7 +2315,7 @@ class XdmfWriter:
                 else:
                     w_dof = uList[components[2]].dof
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                         ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
@@ -2376,7 +2376,7 @@ class XdmfWriter:
                                           "DataType":"Float",
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (Xdmf_NumberOfNodes,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
@@ -2409,7 +2409,7 @@ class XdmfWriter:
                                           "DataType":"Float",
                                           "Precision":"8",
                                           "Dimensions":"%i %i" % (Xdmf_NumberOfNodes,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
@@ -2452,7 +2452,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (Xdmf_NumberOfNodes,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
                     ar.create_dataset_sync(name+"_t"+str(tCount),
@@ -2477,7 +2477,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (Xdmf_NumberOfNodes,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof[0:Xdmf_NumberOfNodes])
@@ -2499,7 +2499,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (u.femSpace.dofMap.nDOF_all_processes,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+"_t"+str(tCount)
                     ar.create_dataset_sync(u.name+"_t"+str(tCount),
@@ -2515,7 +2515,7 @@ class XdmfWriter:
                                     "DataType":"Float",
                                     "Precision":"8",
                                     "Dimensions":"%i" % (u.nDOF_global,)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
@@ -2550,7 +2550,7 @@ class XdmfWriter:
                 else:
                     w_dof = uList[components[2]].dof[0:nDOF_local]
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_t"+str(tCount)
                         ar.create_dataset_sync(vectorName+"_t"+str(tCount),
@@ -2580,7 +2580,7 @@ class XdmfWriter:
                 else:
                     w_dof = uList[components[2]].dof[0:nDOF_global]
                 velocity = numpy.column_stack((u_dof,v_dof,w_dof))
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                         ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
@@ -2640,7 +2640,7 @@ class XdmfWriter:
                                       "DataType":"Float",
                                       "Precision":"8",
                                       "Dimensions":"%i %i" % (Xdmf_NodesGlobal,3)})
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
                     nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
@@ -2694,7 +2694,7 @@ class XdmfWriter:
                                 "DataType":"Float",
                                 "Precision":"8",
                                 "Dimensions":"%i" % (Xdmf_NodesGlobal,)})
-        if ar.hdfFile != None:
+        if ar.hdfFile is not None:
             if ar.has_h5py:
                 values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                 ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.flat[:])
@@ -2722,7 +2722,7 @@ class XdmfWriter:
         tmp = numpy.zeros((Xdmf_NodesGlobal,3),'d')
         tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
 
-        if ar.hdfFile != None:
+        if ar.hdfFile is not None:
             if ar.has_h5py:
                 values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                 ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = tmp)
@@ -2764,7 +2764,7 @@ class XdmfWriter:
                                          {"Format":ar.dataItemFormat,
                                           "DataType":"Float",
                                           "Dimensions":"%i %i" % (Xdmf_NumberOfElements*Xdmf_NodesPerElement,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
@@ -2800,7 +2800,7 @@ class XdmfWriter:
                                          {"Format":ar.dataItemFormat,
                                           "DataType":"Float",
                                           "Dimensions":"%i %i" % (Xdmf_NumberOfElements*Xdmf_NodesPerElement,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
                         nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
@@ -2854,7 +2854,7 @@ class XdmfWriter:
             tmp = numpy.zeros((u.shape[0]*u.shape[1],Xdmf_StorageDim),'d')
             tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u.flat,(u.shape[0]*u.shape[1],Xdmf_NumberOfComponents))
 
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_t"+str(tCount)
                     ar.create_dataset_async(name+"_t"+str(tCount), data = tmp)
@@ -2879,7 +2879,7 @@ class XdmfWriter:
             tmp = numpy.zeros((Xdmf_NodesGlobal,Xdmf_StorageDim),'d')
             tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
 
-            if ar.hdfFile != None:
+            if ar.hdfFile is not None:
                 if ar.has_h5py:
                     values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                     ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = tmp)

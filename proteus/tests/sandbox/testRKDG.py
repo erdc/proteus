@@ -205,9 +205,9 @@ def buildQuadrature(test,tpars,problems):
     for integral in OneLevelScalarTransport.integralKeys:
         quadrature[integral] = gq
     #end for
-    if tpars['stabilization'] != None:
+    if tpars['stabilization'] is not None:
         quadrature['stab'] = gq
-    if tpars['shockCapturing'] != None:
+    if tpars['shockCapturing'] is not None:
         quadrature['numDiff'] = gq
     elementBoundaryQuadrature={}
     ebgq = SimplexGaussQuadrature(problems['nd'][test]-1)
@@ -363,7 +363,7 @@ def computeErrors(eSpace,eSpaceTime,eSpaceLast,
     for m,jac,mesh in zip(mlScalarTransport.modelList,
                                   mlScalarTransport.jacobianList,
                                   mlMesh.meshList):
-        if analyticalSolution[test] != None:
+        if analyticalSolution[test] is not None:
             eCoarse=eFine
             hCoarse=hFine
             hFine = mesh.h
@@ -386,7 +386,7 @@ def computeErrors(eSpace,eSpaceTime,eSpaceLast,
 
     #end for
 
-    if analyticalSolution[test] != None:
+    if analyticalSolution[test] is not None:
         hFine = 0
         errors='||e||_{2}'
         errorsSpaceTime=''
@@ -427,7 +427,7 @@ def plotInitial(tn,test,tpars,problems,
         aSolPlot = Gnuplot.Gnuplot()
         aSolPlot("set terminal x11")
         if problems['nd'][test] == 1:
-            if problems['analyticalSolution'][test] != None:
+            if problems['analyticalSolution'][test] is not None:
                 solPlot.title(test)
                 nap=101
                 dxap=Numeric.array([1.0/(nap - 1.0),0.0,0.0])
@@ -464,7 +464,7 @@ def plotInitial(tn,test,tpars,problems,
                                            y,
                                            binary=0,
                                            inline=0))
-            if problems['analyticalSolution'][test] != None:
+            if problems['analyticalSolution'][test] is not None:
                 aSol = Numeric.zeros((nx,ny),Numeric.Float)
                 for i in range(nx):
                     for j in range(ny):
@@ -497,7 +497,7 @@ def plotTimeStep(solPlot,aSolPlot,tn,test,tpars,problems,
     #end nothing to plot with
     if tpars['DG'] == False:
         if problems['nd'][test] == 1:
-            if problems['analyticalSolution'][test] != None:
+            if problems['analyticalSolution'][test] is not None:
                 solPlot.title(testOut)
                 nap=101
                 dxap=Numeric.array([1.0/(nap - 1.0),0.0,0.0])
@@ -537,7 +537,7 @@ def plotTimeStep(solPlot,aSolPlot,tn,test,tpars,problems,
                                            y,
                                            binary=0,
                                            inline=0))
-            if problems['analyticalSolution'][test] != None:
+            if problems['analyticalSolution'][test] is not None:
                 aSol = Numeric.zeros((nx,ny),Numeric.Float)
                 for i in range(nx):
                     for j in range(ny):
@@ -671,7 +671,7 @@ if __name__ == '__main__':
             mlScalarTransport.modelList[-1].getConservationFluxPWC()
         elif pars['conservativeFlux'] == 'pwl':
             mlScalarTransport.modelList[-1].getConservationFluxPWL()
-        elif pars['numericalFlux'] != None:
+        elif pars['numericalFlux'] is not None:
             mlScalarTransport.modelList[-1].e['conservationResidual'].flat[:]=0.0
             for eN in range(mlScalarTransport.modelList[-1].mesh.nElements_global):
                 for i in range(mlScalarTransport.modelList[-1].nDOF_element):
@@ -680,7 +680,7 @@ if __name__ == '__main__':
             #print 'consRes=',mlScalarTransport.modelList[-1].e['conservationResidual']
             print "Max mass cons error "+`max(abs(mlScalarTransport.modelList[-1].e['conservationResidual']))`
 
-        #end numerical flux != None
+        #end numerical flux is not None
         mlScalarTransport.updateTimeHistory()
 
         solPlot,aSolPlot = plotTimeStep(solPlot,aSolPlot,tn,test,pars,problems,

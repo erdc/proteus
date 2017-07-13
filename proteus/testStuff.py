@@ -1047,7 +1047,7 @@ class AdaptiveForwardIntegrator:
         import Profiling
         if Profiling.logLevel < 2:
             eraseTime='\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
-            if self.tstring != None:
+            if self.tstring is not None:
                 sys.stdout.write(eraseTime)
         sys.stdout.write('T= %12.5e, tn = ' % T)
         self.tstring = '%12.5e' % (tn+dt,)
@@ -1411,7 +1411,7 @@ class SSPRKNewton(NonlinearSolvers.Newton):
                  maxLSits = 100):
         import copy
         self.par_du = par_du
-        if par_du != None:
+        if par_du is not None:
             F.dim_proc = par_du.dim_proc
         NonlinearSolvers.Newton.__init__(self,
                                          linearSolver,
@@ -1444,7 +1444,7 @@ class SSPRKNewton(NonlinearSolvers.Newton):
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
         r=self.solveInitialize(u,r,b)
-        if par_u != None:
+        if par_u is not None:
             #no overlap
             #par_r.scatter_reverse_add()
             #no overlap or overlap (until we compute norms over only owned dof)
@@ -1478,12 +1478,12 @@ class SSPRKNewton(NonlinearSolvers.Newton):
             self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
             #print self.du
             u-=self.du
-            if par_u != None:
+            if par_u is not None:
                 par_u.scatter_forward_insert()
             self.computeResidual(u,r,b)
             #no overlap
             #print "local r",r
-            if par_r != None:
+            if par_r is not None:
                 #no overlap
                 #par_r.scatter_reverse_add()
                 par_r.scatter_forward_insert()
@@ -1537,11 +1537,11 @@ class SSPRKNewton(NonlinearSolvers.Newton):
                     ls_its +=1
                     self.du *= 0.5
                     u += self.du
-                    if par_u != None:
+                    if par_u is not None:
                         par_u.scatter_forward_insert()
                     self.computeResidual(u,r,b)
                     #no overlap
-                    if par_r != None:
+                    if par_r is not None:
                         #no overlap
                         #par_r.scatter_reverse_add()
                         par_r.scatter_forward_insert()

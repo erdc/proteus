@@ -98,11 +98,11 @@ class NS_base:  # (HasTraits):
         self.archive_ebq_global        = dict([(i,False) for i in range(len(self.pList))]);
         self.archive_ebqe              = dict([(i,False) for i in range(len(self.pList))]);
         self.archive_pod_residuals = dict([(i,False) for i in range(len(self.pList))]);
-        if simFlagsList != None:
+        if simFlagsList is not None:
             assert len(simFlagsList) == len(self.pList), "len(simFlagsList) = %s should be %s " % (len(simFlagsList),len(self.pList))
             for index in range(len(self.pList)):
                 if simFlagsList[index].has_key('storeQuantities'):
-                    for quant in filter(lambda a: a != None,simFlagsList[index]['storeQuantities']):
+                    for quant in filter(lambda a: a is not None,simFlagsList[index]['storeQuantities']):
                         recType = quant.split(':')
                         if len(recType) > 1 and recType[0] == 'q':
                             self.archive_q[index] = True
@@ -143,16 +143,16 @@ class NS_base:  # (HasTraits):
                                                         x=p.x0[:1],
                                                         name=p.name)
                 elif p.nd == 2:
-                    if p.polyfile != None:
+                    if p.polyfile is not None:
                         p.domain = Domain.PlanarStraightLineGraphDomain(fileprefix=p.polyfile,name=p.polyfile)
                     else:
                         p.domain = Domain.RectangularDomain(L=p.L[:2],
                                                             x=p.x0[:2],
                                                             name=p.name)
                 elif p.nd == 3:
-                    if p.polyfile != None:
+                    if p.polyfile is not None:
                         p.domain = Domain.PiecewiseLinearComplexDomain(fileprefix=p.polyfile,name=p.polyfile)
-                    elif p.meshfile != None:
+                    elif p.meshfile is not None:
                         p.domain = Domain.Mesh3DMDomain(p.meshfile)
                     else:
                         p.domain = Domain.RectangularDomain(L=p.L[:3],
@@ -536,7 +536,7 @@ class NS_base:  # (HasTraits):
         logEvent("Setting up SimTools for "+p.name)
         self.simOutputList = []
         self.auxiliaryVariables = {}
-        if self.simFlagsList != None:
+        if self.simFlagsList is not None:
             for p,n,simFlags,model,index in zip(pList,nList,simFlagsList,self.modelList,range(len(pList))):
                 self.simOutputList.append(SimTools.SimulationProcessor(flags=simFlags,nLevels=n.nLevels,
                                                                        pFile=p,nFile=n,
@@ -710,7 +710,7 @@ class NS_base:  # (HasTraits):
         #(cut and pasted from init, need to cleanup)
         self.simOutputList = []
         self.auxiliaryVariables = {}
-        if self.simFlagsList != None:
+        if self.simFlagsList is not None:
             for p, n, simFlags, model, index in zip(
                     self.pList,
                     self.nList,
@@ -744,7 +744,7 @@ class NS_base:  # (HasTraits):
         for m in self.modelList:
           for lm in m.levelModelList:
             coef = lm.coefficients
-            if coef.vectorComponents != None:
+            if coef.vectorComponents is not None:
               vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
               p0.domain.PUMIMesh.transferFieldToProteus(
                      coef.vectorName, vector)
@@ -923,7 +923,7 @@ class NS_base:  # (HasTraits):
             for m in self.modelList:
               for lm in m.levelModelList:
                 coef = lm.coefficients
-                if coef.vectorComponents != None:
+                if coef.vectorComponents is not None:
                   vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
                   for vci in range(len(coef.vectorComponents)):
                     vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
@@ -1060,7 +1060,7 @@ class NS_base:  # (HasTraits):
                         lm.timeIntegration.t = time
                         lm.timeIntegration.dt = dt
                 self.tCount = tCount+1
-            elif p.initialConditions != None:
+            elif p.initialConditions is not None:
                 logEvent("Setting initial conditions for "+p.name)
                 m.setInitialConditions(p.initialConditions,self.tnList[0])
                 #It's only safe to calculate the solution and solution
@@ -1399,15 +1399,15 @@ class NS_base:  # (HasTraits):
     def preStep(self,model):
         for level,levelModel in enumerate(model.levelModelList):
             preCopy = levelModel.coefficients.preStep(model.stepController.t_model,firstStep=self.firstStep)
-            if (preCopy != None and preCopy.has_key(('copy_uList')) and preCopy['copy_uList'] == True):
+            if (preCopy is not None and preCopy.has_key(('copy_uList')) and preCopy['copy_uList'] == True):
                 for u_ci_lhs,u_ci_rhs in zip(levelModel.u.values(),self.modelList[preCopy['uList_model']].levelModelList[level].u.values()):
                     u_ci_lhs.dof[:] = u_ci_rhs.dof
                 levelModel.setFreeDOF(model.uList[level])
-            if preCopy != None and preCopy.has_key(('clear_uList')) and preCopy['clear_uList'] == True:
+            if preCopy is not None and preCopy.has_key(('clear_uList')) and preCopy['clear_uList'] == True:
                 for u_ci_lhs in levelModel.u.values():
                     u_ci_lhs.dof[:] = 0.0
                 levelModel.setFreeDOF(model.uList[level])
-            if preCopy != None and preCopy.has_key(('reset_uList')) and preCopy['reset_uList'] == True:
+            if preCopy is not None and preCopy.has_key(('reset_uList')) and preCopy['reset_uList'] == True:
                 levelModel.setFreeDOF(model.uList[level])
                 levelModel.getResidual(model.uList[level],model.rList[level])
 
@@ -1415,13 +1415,13 @@ class NS_base:  # (HasTraits):
     def postStep(self,model):
         for level,levelModel in enumerate(model.levelModelList):
             postCopy = levelModel.coefficients.postStep(model.stepController.t_model,firstStep=self.firstStep)
-            if postCopy != None and postCopy.has_key(('copy_uList')) and postCopy['copy_uList'] == True:
+            if postCopy is not None and postCopy.has_key(('copy_uList')) and postCopy['copy_uList'] == True:
                 for u_ci_lhs,u_ci_rhs in zip(self.modelList[postCopy['uList_model']].levelModelList[level].u.values(),model.levelModelList[level].u.values()):
                     u_ci_lhs.dof[:] = u_ci_rhs.dof
                 self.modelList[postCopy['uList_model']].levelModelList[level].setFreeDOF(self.modelList[postCopy['uList_model']].uList[level])
 
     def setWeakDirichletConditions(self,model):
-        if model.weakDirichletConditions != None:
+        if model.weakDirichletConditions is not None:
             for levelModel in model.levelModelList:
                 levelModel.dirichletNodeSetList={}
                 levelModel.dirichletGlobalNodeSet={}

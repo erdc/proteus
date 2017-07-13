@@ -35,7 +35,7 @@ class AV_base:
         for child in self.ar.domain:
             if child.tag == "Grid" and child.attrib["Name"] == "Mesh Spatial_Domain":
                 self.arGridCollection = child
-        assert self.arGridCollection != None
+        assert self.arGridCollection is not None
         self.arGrid = self.arGridCollection[-1]
         #write the attribute
         attribute = SubElement(self.arGrid,"Attribute",{"Name":name,
@@ -211,7 +211,7 @@ class PressureProfile(AV_base):
                 pass
             self.levelPlist.append(p)
             self.levelThetalist.append(theta)
-        if self.ar.hdfFile != None:
+        if self.ar.hdfFile is not None:
             self.ar.hdfFile.createArray("/",'theta',theta)
         #self.historyP=[]
         #self.historyP.append(copy.deepcopy(self.levelPlist))
@@ -236,10 +236,10 @@ class PressureProfile(AV_base):
                     if m.mesh.nodeMaterialTypes[nN] == self.flag:
                         p.append(m.u[0].dof[nN])
             self.levelPlist.append(p)
-        if self.ar.hdfFile != None:
+        if self.ar.hdfFile is not None:
             self.ar.hdfFile.createArray("/","pressure"+str(self.tCount),p)
         self.tCount+=1
-#         if self.dataStorage != None:
+#         if self.dataStorage is not None:
 #             tmp = self.dataStorage['PressureHistory']
 #             tmp.append(self.levelPlist)
 #             self.dataStorage['PressureHistory']=tmp
@@ -328,7 +328,7 @@ class RecirculationLength(AV_base):
                 self.minX = self.minX_domain
             if self.maxX < self.minX_domain:
                 self.maxX = self.minX_domain
-            if self.rcStartX != None:
+            if self.rcStartX is not None:
                 if self.maxX > self.rcStartX:
                     self.levelLlist.append(self.maxX-self.rcStartX)
                 else:
@@ -337,7 +337,7 @@ class RecirculationLength(AV_base):
                 self.levelLlist.append(self.maxX-self.minX)
         #self.historyL.append(copy.deepcopy(self.levelLlist))
         #self.writeScalarXdmf(self.levelLlist,"Recirculation Length")
-#         if self.dataStorage != None:
+#         if self.dataStorage is not None:
 #             tmp = self.dataStorage['RecirculationLengthHistory']
 #             tmp.append(self.levelLlist)
 #             self.dataStorage['RecirculationLengthHistory']=tmp
@@ -654,7 +654,7 @@ class PT123velocityGenerator(AV_base):
         self.mesh= model.levelModelList[-1].mesh
         self.writePT123inputMesh(self.nd,self.mesh)
         self.velocityPostProcessor = self.model.levelModelList[-1].velocityPostProcessor
-        if self.velocityPostProcessor != None:
+        if self.velocityPostProcessor is not None:
             self.PT123_RT0_interpolation_points = self.mesh.nodeArray[self.mesh.elementNodesArray]
             self.PT123_interpolation_values = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'d')
 
@@ -812,7 +812,7 @@ class PT123velocityGenerator(AV_base):
                 timeToPrint = True
                 break
         if timeToPrint:
-            if self.velocityPostProcessor != None:
+            if self.velocityPostProcessor is not None:
                 self.writePT123MixedVelocityAsElementVelocity(self.ci)
                 self.writePT123elementPorosity(value=1.)
         #mwf stopped here

@@ -153,7 +153,7 @@ class FSWEikonalSolver:
         self.debugLevel  = debugLevel
         self.xRefOrderingPoints = refPoints
         self.nRefOrderingPoints = None
-        if self.xRefOrderingPoints != None:
+        if self.xRefOrderingPoints is not None:
             self.nRefOrderingPoints = len(self.xRefOrderingPoints)
         #reality check
         assert 1 <= self.nSpace and self.nSpace <= 3, "1d,2d, and 3d only right now"

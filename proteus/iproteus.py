@@ -224,13 +224,13 @@ log("HashStack Version: " + version.hashstack)
 log("Proteus Version: " + version.proteus)
 
 log("Initializing MPI")
-if opts.petscOptions != None:
+if opts.petscOptions is not None:
     petsc_argv = sys.argv[:1]+opts.petscOptions.split()
     log("PETSc options from commandline")
     log(str(petsc_argv))
 else:
     petsc_argv=sys.argv[:1]
-if opts.petscOptionsFile != None:
+if opts.petscOptionsFile is not None:
 
     petsc_argv=[sys.argv[0]]
     with open(opts.petscOptionsFile) as petsc_file:

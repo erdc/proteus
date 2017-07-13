@@ -457,7 +457,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
         #want element boundary material types for evaluating heterogeneity
         #not boundary conditions
         self.isSeepageFace = numpy.zeros((mesh.nExteriorElementBoundaries_global),'i')
-        if self.getSeepageFace != None:
+        if self.getSeepageFace is not None:
             for ebNE in range(mesh.nExteriorElementBoundaries_global):
                 #mwf missing ebNE-->ebN?
                 ebN = mesh.exteriorElementBoundariesArray[ebNE]
@@ -717,7 +717,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #         for k in self.tensors_u_ip:
 #             if (self.sd
 #                 and k[0] in ['a','da']
-#                 and self.coefficients.sdInfo != None
+#                 and self.coefficients.sdInfo is not None
 #                 and (k[1],k[2]) in self.coefficients.sdInfo.keys()):
 #                 self.u_ip[k]=numpy.zeros(
 #                     (self.mesh.nElements_global,
@@ -754,7 +754,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #             if ks not in entryStrings:
 #                 return False
 #             k0 = (ks,)+(refi,)
-#             if self.reuse_test_trial_quadrature and refi != None:
+#             if self.reuse_test_trial_quadrature and refi is not None:
 #                 if k0 in sd.keys():
 #                     logEvent("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
 #                     sd[k] = sd[k0]
@@ -891,7 +891,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                                                                self.q[('pe',ci)],
                                                                self.q[('cfl',ci)])
 
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.calculateNumericalDiffusion(self.q)
 
     def calculateElementResidual(self):
@@ -1027,7 +1027,7 @@ class TwophaseDarcyFlow_base(TC_base):
         self.density_n_parameters = density_n_parameters
         for params,rwork in zip([self.density_w_parameters,self.density_n_parameters],
                                 ['rwork_density_w','rwork_density_n']):
-            if params != None:
+            if params is not None:
                 if params['model'] == 'Exponential':
                     setattr(self,rwork,numpy.array([params['rho_0']/params['rho_0'],#normalize by phase density
                                                     params['psi_0'],
@@ -1071,7 +1071,7 @@ class TwophaseDarcyFlow_base(TC_base):
         elif self.psk_model in ['BCM','BCB']:
             self.nPskParams=4
         elif self.psk_model in ['PSKspline']:
-            assert self.nPSKsplineKnots != None
+            assert self.nPSKsplineKnots is not None
             self.nPskParams=self.nPSKsplineKnots*4
             self.iwork_psk[0] = self.nPSKsplineKnots
             self.iwork_psk[1] = self.nPskParams
@@ -1152,7 +1152,7 @@ class TwophaseDarcyFlow_base(TC_base):
                 self.rwork_psk[i,0] = Sw_min
                 self.rwork_psk[i,1] = Sw_max
         elif self.psk_model in ['VGM','VGB']:
-            assert(vg_alpha_types != None and vg_m_types  != None)
+            assert(vg_alpha_types is not None and vg_m_types  is not None)
             assert self.nPskParams == 4
             self.rwork_psk = numpy.zeros((self.nMaterialTypes,self.nPskParams),'d')
             for Sw_min,Sw_max,vg_alpha,vg_m,i in zip(Sw_min_types,Sw_max_types,vg_alpha_types,vg_m_types,range(self.nMaterialTypes)):
@@ -1161,7 +1161,7 @@ class TwophaseDarcyFlow_base(TC_base):
                 self.rwork_psk[i,2] = vg_alpha
                 self.rwork_psk[i,3] = vg_m
         elif self.psk_model in ['BCM','BCB']:
-            assert(bc_lambda_types != None and bc_lambda_types  != None)
+            assert(bc_lambda_types is not None and bc_lambda_types  is not None)
             assert self.nPskParams == 4
             self.rwork_psk = numpy.zeros((self.nMaterialTypes,self.nPskParams),'d')
             for Sw_min,Sw_max,bc_pd,bc_lambda,i in zip(Sw_min_types,Sw_max_types,bc_pd_types,bc_lambda_types,range(self.nMaterialTypes)):
@@ -1170,7 +1170,7 @@ class TwophaseDarcyFlow_base(TC_base):
                 self.rwork_psk[i,2] = bc_pd
                 self.rwork_psk[i,3] = bc_lambda
         elif self.psk_model in ['PSKspline']:
-            assert psk_spline_types != None
+            assert psk_spline_types is not None
             self.rwork_psk = psk_spline_types
             assert self.rwork_psk.shape[0] == self.nMaterialTypes*self.nPskParams
 
@@ -1365,8 +1365,8 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
             vol_frac_n = self.ebq[('vol_frac',1)]
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
-        assert self.rwork_psk != None
-        assert self.iwork_psk != None
+        assert self.rwork_psk is not None
+        assert self.iwork_psk is not None
         #mwf do some debugging
         assert materialTypes.max() < self.nMaterialTypes
         assert materialTypes.min() == 0
@@ -1463,7 +1463,7 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
         self.use_spline = use_spline
         psk_model = 'VGM'
         if self.use_spline:
-            assert nPSKsplineKnots != None
+            assert nPSKsplineKnots is not None
             psk_model = 'PSKspline'
         TwophaseDarcy_fc.__init__(self,
                                   nd=nd,
@@ -1770,7 +1770,7 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
             vol_frac_n = self.ebq[('vol_frac',1)]
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         #mwf do some debugging
         assert materialTypes.max() < self.nMaterialTypes
         assert materialTypes.min() == 0
@@ -1868,7 +1868,7 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
         self.use_spline = use_spline
         psk_model = 'VGM'
         if self.use_spline:
-            assert nPSKsplineKnots != None
+            assert nPSKsplineKnots is not None
             psk_model = 'PSKspline'
 
         TwophaseDarcy_fc_pp.__init__(self,
@@ -2413,7 +2413,7 @@ class TwophaseDarcy_incompressible_split_pressure(TwophaseDarcy_split_pressure_b
             c['psi_n'] += c[('u',0)]
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
 
         self.twophaseDarcy_incompressible_split_sd_pressure_het_matType(self.psk_types[self.psk_model],
                                                                         self.sdInfo[(0,0)][0],
@@ -2620,7 +2620,7 @@ class TwophaseDarcy_incompressible_split_saturation(TwophaseDarcy_split_saturati
             psiw = self.ebq_psiw
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -2886,7 +2886,7 @@ class TwophaseDarcy_compressible_split_pressure(TwophaseDarcy_split_pressure_bas
             c['psi_n'] += c[('u',0)]
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         if self.compressibilityFlag == 2:
             self.twophaseDarcy_slightCompressible_split_sd_pressure_het_matType(self.psk_types[self.psk_model],
                                                                                   self.density_types[self.density_w_model],
@@ -3151,7 +3151,7 @@ class TwophaseDarcy_compressible_split_saturation(TwophaseDarcy_split_saturation
             psiw = self.ebq_psiw
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -3632,7 +3632,7 @@ class TwophaseDarcy_incompressible_split_pp_pressure(TwophaseDarcy_split_pp_pres
             c['psi_n'] += c[('u',0)]
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         #mwf debug
         import pdb
         pdb.set_trace()
@@ -3841,7 +3841,7 @@ class TwophaseDarcy_incompressible_split_pp_saturation(TwophaseDarcy_split_pp_sa
             psiw = self.ebq_psiw
             vol_frac_w = self.ebq[('vol_frac',0)]
             vol_frac_n = self.ebq[('vol_frac',1)]
-        assert self.rwork_psk != None
+        assert self.rwork_psk is not None
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -4074,7 +4074,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
                                                              self.u_ip[('v_other',0)])
 
     def preStep(self,t,firstStep=False):
-        if self.satModel_other != None:# and self.satModelIndex_me != 1:#mwf hack
+        if self.satModel_other is not None:# and self.satModelIndex_me != 1:#mwf hack
             #todo tLast is getting messed up
             #tLastSave =self.satModel_me.timeIntegration.tLast
             #todo need to do make sure mass conserved, handle projection from cg to dg correctly
@@ -4549,7 +4549,7 @@ class GroundwaterTransportCoefficients(TC_base):
             self.ebqe[('velocity',ci)] = numpy.zeros((cebqe['x'].shape[0],cebqe['x'].shape[1],self.nd),'d')
     def attachModels(self,modelList):
         self.vt = modelList[self.meModelId]
-        if self.flowModelId != None:
+        if self.flowModelId is not None:
             self.flowModel = modelList[self.flowModelId]
             for ci in range(self.nc):
                 self.q[('velocity',ci)]    = self.flowModel.q[('velocity',ci)]
@@ -4560,7 +4560,7 @@ class GroundwaterTransportCoefficients(TC_base):
                     self.ebq_global[('velocity',ci)] = self.flowModel.ebq_global[('velocity',ci)]
 
     def evaluateVelocity(self,t,c):
-        if self.velocityFunctions != None:
+        if self.velocityFunctions is not None:
             for ci in range(self.nc):
                 if len(c['x'].shape) == 3:
                     for i in range(c['x'].shape[0]):
@@ -4579,7 +4579,7 @@ class GroundwaterTransportCoefficients(TC_base):
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        if self.velocityFunctions != None:
+        if self.velocityFunctions is not None:
             self.evaluateVelocity(t,c)
         #
         for ci in range(self.nc):
@@ -4693,7 +4693,7 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
             self.ebqe[('vol_frac',ci)] = numpy.ones((cebqe['x'].shape[0],cebqe['x'].shape[1]),'d')
     def attachModels(self,modelList):
         self.vt = modelList[self.meModelId]
-        if self.flowModelId != None:
+        if self.flowModelId is not None:
             self.flowModel = modelList[self.flowModelId]
             for ci in range(self.nc):
                 self.q[('velocity',ci)]    = self.flowModel.q[('velocity',ci)]
@@ -4705,7 +4705,7 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
                 self.q[('vol_frac',ci)]    = self.flowModel.coefficients.q[('vol_frac',ci)]
                 self.ebqe[('vol_frac',ci)] = self.flowModel.coefficients.ebqe[('vol_frac',ci)]
     def evaluateVelocity(self,t,c):
-        if self.velocityFunctions != None:
+        if self.velocityFunctions is not None:
             for ci in range(self.nc):
                 if len(c['x'].shape) == 3:
                     for i in range(c['x'].shape[0]):
@@ -4724,7 +4724,7 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        if self.velocityFunctions != None:
+        if self.velocityFunctions is not None:
             self.evaluateVelocity(t,c)
         #
         for ci in range(self.nc):
@@ -4806,7 +4806,7 @@ class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwa
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        if self.velocityFunctions != None:
+        if self.velocityFunctions is not None:
             self.evaluateVelocity(t,c)
         #
         for ci in range(self.nc):

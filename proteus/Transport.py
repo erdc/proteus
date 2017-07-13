@@ -6019,7 +6019,7 @@ class OneLevelTransport(NonlinearEquation):
                                          self.rowptr)
 
         _nd = self.coefficients.nd
-        if self.coefficients.nu != None:
+        if self.coefficients.nu is not None:
             _nu = self.coefficients.nu
         self.LaplaceOperatorCoeff = DiscreteLaplaceOperator(nd=_nd)
         _t = 1.0
