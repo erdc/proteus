@@ -117,10 +117,10 @@ class Coefficients(TC_base):
         """
         self.q_massFlux[:] = self.fluidModel.q[('velocity',0)]
         np.multiply(self.fluidModel.coefficients.q_rho[:,:,np.newaxis],
-                    self.fluidModel.coefficients.q_massFlux,
+                    self.q_massFlux,
                     out=self.q_massFlux)
         np.multiply(self.fluidModel.coefficients.q_nu[:,:,np.newaxis],
-                    self.fluidModel.coefficiens.q_massFlux,
+                    self.q_massFlux,
                     out=self.q_massFlux)
         self.ebqe_massFlux[:] = self.fluidModel.ebqe[('velocity',0)]
         np.multiply(self.fluidModel.coefficients.ebqe_rho[:,:,np.newaxis],
