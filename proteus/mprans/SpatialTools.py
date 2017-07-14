@@ -171,6 +171,15 @@ class ShapeRANS(Shape):
 
 
     def setTurbulentWall(self, wall):
+        """
+        Sets a turbulent wall as an object to be attacched to auxiliaryVariable.
+        The objects has to be defined with WallFunction class.
+
+        Parameters
+        ----------
+        wall: list of WallFunction class object
+        """
+
         auxvar = wall
         self._attachAuxiliaryVariable('WallFunction', auxvar)
 
@@ -1903,9 +1912,8 @@ def assembleAuxiliaryVariables(domain):
             body.i_end = start_flag+1+len(shape.BC_list)
         if 'WallFunction' in shape.auxiliaryVariables.keys():
             wall = shape.auxiliaryVariables['WallFunction']
-            aux['twp'] += [wall]
-            wall.i_start = start_flag+1
-            wall.i_end = start_flag+1+len(shape.BC_list)
+            for ii in range(len(wall)):
+                aux['twp'] += [wall[ii]]
         # ----------------------------
         # ABSORPTION/GENERATION ZONES
 

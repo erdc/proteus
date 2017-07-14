@@ -271,17 +271,17 @@ class BC_RANS(BC_Base):
         self.reset()
 
         wf = wall
-        #self.u_dirichlet.uOfXT = lambda x, t: wf.get_u_dirichlet(x, t)
-        #self.v_dirichlet.uOfXT = lambda x, t: wf.get_v_dirichlet(x, t)
-        #self.w_dirichlet.uOfXT = lambda x, t: wf.get_w_dirichlet(x, t)
-        #self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
+        self.u_dirichlet.uOfXT = lambda x, t: wf.get_u_dirichlet(x, t)
+        self.v_dirichlet.uOfXT = lambda x, t: wf.get_v_dirichlet(x, t)
+        self.w_dirichlet.uOfXT = lambda x, t: wf.get_w_dirichlet(x, t)
+        self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
         self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t) 
         self.vof_advective.setConstantBC(0.)
         self.p_advective.setConstantBC(0.)
         self.u_diffusive.uOfXT = lambda x, t: wf.get_u_diffusive(x, t)
         self.v_diffusive.uOfXT = lambda x, t: wf.get_v_diffusive(x, t)
         self.w_diffusive.uOfXT = lambda x, t: wf.get_w_diffusive(x, t)
-        self.k_diffusive.setConstantBC(0.) 
+        #self.k_diffusive.setConstantBC(0.) 
 
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
@@ -1339,7 +1339,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             element number (local to processor 'rank')
         rank: int
             rank of processor owning the element
-        self.Ubound = np.zeros(3, dtype=float)        """
+        """
         comm = Comm.get().comm.tompi4py()
         if comm.rank == rank:
             u = self.u[1].getValue(element, xi)
@@ -1408,50 +1408,59 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         ReL = self.tanU*self.L/self.nu
         rangeSkin = ['laminar', 'turbulent']
         skinf = self.skinf
+        self.cf, self.Ubound = np.zeros(3, dtype=float), np.zeros(3, dtype=float)
+        for i in [0, 1, 2]:
+            if skinf not in rangeSkin:
+                comm.Abort(1)
+            elif skinf == 'laminar' and Re0[i] > 0.:
+                self.cf[i] = 4./Re0[i]
+            elif skinf == 'turbulent' and Re0[i] > 0.:
+                self.cf[i] = 0.045*( Re0[i]**(-1./4.) )
+        self.ut = self.tanU*np.sqrt(self.cf/2.)
         self.Yplus = self.Y*self.ut/self.nu       
         YplusAbs = np.sqrt(np.sum(self.Yplus**2))
         if YplusAbs < 11.6:
             Uplus = self.Yplus
-            self.ut = self.tanU/self.Yplus
+            self.Ubound = Uplus*self.ut
         # log-law layer
         else: 
             E = np.exp(self.B*self.K)
             for i in [0, 1, 2]:
                 if self.Yplus[i]>0. :
-                    self.ut[i] = self.K*self.tanU[i] / np.log(E*self.Yplus[i])
+                    self.Ubound[i] = self.ut[i] * np.log(E*self.Yplus[i]) / self.K
         self.utAbs = np.sqrt(np.sum(self.ut**2))       
         self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu)   
 
-#    def get_u_dirichlet(self, x, t):
-#        if t<0.: uInit = True
-#        else: uInit = False
-#        self.tangentialVelocity(x,t,uInit)
-#        self.getVariables(x, t)    
-#        U = self.Ubound[0]
-#        return U 
-#        
-#    def get_v_dirichlet(self, x, t):
-#        if t<0.: uInit = True
-#        else: uInit = False
-#        self.tangentialVelocity(x,t,uInit)
-#        self.getVariables(x, t)    
-#        U = self.Ubound[1]
-#        return U 
-# 
-#    def get_w_dirichlet(self, x, t):
-#        if t<0.: uInit = True
-#        else: uInit = False
-#        self.tangentialVelocity(x,t,uInit)
-#        self.getVariables(x, t)    
-#        U = self.Ubound[2]
-#        return U 
-#
-#    def get_k_dirichlet(self, x, t):
-#        if t<0.: uInit = True
-#        else: uInit = False
-#        self.tangentialVelocity(x,t,uInit)
-#        self.getVariables(x, t)  
-#        return self.kappa 
+    def get_u_dirichlet(self, x, t):
+        if t<0.: uInit = True
+        else: uInit = False
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)    
+        U = self.Ubound[0]
+        return U 
+        
+    def get_v_dirichlet(self, x, t):
+        if t<0.: uInit = True
+        else: uInit = False
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)    
+        U = self.Ubound[1]
+        return U 
+ 
+    def get_w_dirichlet(self, x, t):
+        if t<0.: uInit = True
+        else: uInit = False
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)    
+        U = self.Ubound[2]
+        return U 
+
+    def get_k_dirichlet(self, x, t):
+        if t<0.: uInit = True
+        else: uInit = False
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t)  
+        return self.kappa 
 
     def get_dissipation_dirichlet(self, x, t):
         if t<0.: uInit = True
