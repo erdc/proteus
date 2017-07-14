@@ -2802,7 +2802,7 @@ class RandomNLWaves:
             elif mode == "setup":
                 series[i,1] = self.eta_setUp(x0,time)
             elif mode == "short":
-                series[i,1] =self.eta_2ndOrder(x0,time,vel)#+self.eta_short(x0,time,vel)
+                series[i,1] =self.eta_short(x0,time,vel)+self.eta_2ndOrder(x0,time,vel)
                 
             elif mode == "long":
                 series[i,1] = self.eta_long(x0,time,vel)

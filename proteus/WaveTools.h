@@ -609,7 +609,6 @@ inline double __cpp_Ap(double om1, double om2, double k1,double k2, int imode,in
     
   
 }
-
  inline double __cpp_u_short(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs, bool fast)
 
 
@@ -622,7 +621,11 @@ inline double __cpp_Ap(double om1, double om2, double k1,double k2, int imode,in
 	double kw2[nDim] = {0.,0.,0.};
 	int ii =0;
 	int jj =0;
+	double Dp=0.;
+	double Bp=0.;
+	double tanhSum = 0.;
 	double ai =0.;
+	double scale = 1.;
         for (int i=0; i<N-1; i++)
 	  {
 	    ii = 3*i;
@@ -636,17 +639,26 @@ inline double __cpp_Ap(double om1, double om2, double k1,double k2, int imode,in
 		kw2[0] = kDir[jj]+kw[0];
 		kw2[1] = kDir[jj+1]+kw[1];
 		kw2[2] = kDir[jj+2]+kw[2];
+
 		
-		double coshk1k2 = sinhKd[i]*sinhKd[j]*(1. +1./(tanhKd[i]*tanhKd[j])) ;
+		tanhSum = (tanhKd[i]+tanhKd[j])/(1.+tanhKd[i]*tanhKd[j]);
+		
+                Dp = pow(omega[i]+omega[j],2) - gAbs*(ki[i]+ki[j])*tanhSum;
+                Bp = (pow(omega[i],2)+pow(omega[j],2))/(2*gAbs);
+		Bp = Bp -((omega[i]*omega[j])/(2*gAbs))*(1-1./(tanhKd[i]*tanhKd[j]) )*((pow(omega[i]+omega[j],2) + gAbs*(ki[i]+ki[j])*tanhSum)/Dp);
+		Bp = Bp + ((omega[i]+omega[j])/(2*gAbs*Dp))*((pow(omega[i],3)/pow(sinhKd[i],2)) + (pow(omega[j],3)/pow(sinhKd[j],2)));
+	    
+		ai = amplitude[i]*amplitude[j]*Bp;
+		
+		scale = (ki[i]+ki[j])/(omega[i]+omega[j]);
+		scale = scale* __cpp_Ap(omega[i],  omega[j],  ki[i], ki[j], i, j, sinhKd,  tanhKd,  gAbs)/Bp;
+		scale = scale*tanhSum;
 		  
-		ai = amplitude[i]*amplitude[j]*__cpp_Ap(omega[i],omega[j],ki[i],ki[j],i,j,sinhKd,tanhKd,gAbs)*(ki[i]+ki[j]) / coshk1k2;
-		HH= HH + __cpp_eta_mode(x,t,kw2,omega[i]+omega[j],phi[i]+phi[j],ai, fast);
+		HH= HH + scale*__cpp_eta_mode(x,t,kw2,omega[i]+omega[j],phi[i]+phi[j],ai, fast);
 	      }
 	  }
         return HH;      
-	}
-
-
+      }
 
 
  inline double __cpp_eta_long(double x[nDim], double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs, bool fast)
