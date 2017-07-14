@@ -28,7 +28,7 @@ class TestPoisson2D():
     def setup_method(self,method):
         self.aux_names = []
         reload(poisson_het_2d_p)
-        self.meshdir = os.path.dirname(__file__)
+        self.meshdir = os.path.dirname(os.path.abspath(__file__))
         
     def teardown_method(self,method):
         filenames = []
@@ -116,6 +116,7 @@ class TestPoisson2D():
         reload(poisson_het_2d_p)
         reload(poisson_het_2d_c0pk_n)
         poisson_het_2d_p.meshfile=os.path.join(self.meshdir,'square4x4')
+        assert os.path.isfile(poisson_het_2d_p.meshfile+'.3dm'), "could not find meshfile {0}".format(poisson_het_2d_p.meshfile+'.3dm')
         poisson_het_2d_p.x0 = (0.0,0.0,0.)
         poisson_het_2d_p.L  = (1.,1.,1.)
         poisson_het_2d_c0pk_n.nLevels = nLevels
