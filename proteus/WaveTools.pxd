@@ -29,13 +29,14 @@ cdef extern from "WaveTools.h" namespace "proteus":
     cdef void __cpp_uDirect(double* U, double* x,double* x0,double t,double* kDir,double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N, double* waveDir, double* vDir, double* tanhKd, double gAbs ,bool fast)
     cdef double __cpp_etaWindow(double* x, double* x0, double t, double* t0, double* kDir, double* omega, double* phi, double* amplitude, int N, int Nw,bool fast)
     cdef  void __cpp_uWindow(double* U,double* x, double* x0, double t, double* T0, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N,int Nw, double* waveDir, double* vDir, double* tanhKd , double gAbs,bool fast)
+    cdef  void __cpp_uWindow_setd(double* U,double* x, double* x0, double t, double* T0, double* kDir, double* kAbs, double* omega, double* phi, double* amplitude, double mwl, double depth, int N,int Nw, double* waveDir, double* vDir, double* tanhKd , double gAbs,bool fast)
 #========2nd order corrections
     cdef double __cpp_eta2nd(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd,bool fast)
     cdef double __cpp_eta_short(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs,bool fast)
     cdef double __cpp_eta_long(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs,bool fast)
-    cdef double __cpp_eta2nd_vel(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd,bool fast)
-    cdef double __cpp_eta_short_vel(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs,bool fast)
-    cdef double __cpp_eta_long_vel(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs,bool fast)
+    cdef double __cpp_u2nd(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd,bool fast)
+    cdef double __cpp_u_short(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs,bool fast)
+    cdef double __cpp_u_long(double* x, double t, double* kDir, double* ki, double* omega, double* phi, double* amplitude, int N, double* sinhKd, double* tanhKd, double gAbs,bool fast)
 
 # pointer to eta function
 ctypedef double (*cfeta) (MonochromaticWaves, double* , double )  
@@ -199,6 +200,7 @@ cdef class  TimeSeries:
     cdef double _cpp_etaWindow(self, double* x, double t) 
     cdef void _cpp_uDirect(self, double* U,double* x, double t) 
     cdef void _cpp_uWindow(self, double* U, double* x, double t) 
+    cdef void _cpp_uWindow_setd(self, double* U, double* x, double t) 
 
 cdef class RandomNLWaves:
     cdef bool fast
@@ -222,9 +224,9 @@ cdef class RandomNLWaves:
     cdef double _cpp_eta_2ndOrder(self,double* x, double t)
     cdef double _cpp_eta_short(self,double* x, double t)
     cdef double _cpp_eta_long(self,double* x, double t)
-    cdef double _cpp_eta_2ndOrder_vel(self,double* x, double t)
-    cdef double _cpp_eta_short_vel(self,double* x, double t)
-    cdef double _cpp_eta_long_vel(self,double* x, double t)
+    cdef double _cpp_u_2ndOrder(self,double* x, double t)
+    cdef double _cpp_u_short(self,double* x, double t)
+    cdef double _cpp_u_long(self,double* x, double t)
 
     cdef public:
         object eta

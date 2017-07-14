@@ -1911,12 +1911,13 @@ class TimeSeries:
             self.setup = decomp[3]
             self.kDir = np.zeros((len(self.ki),3),"d")
             for ii in range(len(self.ki)):
+                self.tanhF[ii] = np.tanh(self.ki[ii]*self.depth)
                 self.kDir[ii,:] = self.ki[ii]*self.waveDir[:]
 
-            for ij in range(self.Nf):
+            for ij in range(len(self.ki)):
                 self.omega_c[ij] = self.omega[ij]
                 self.ki_c[ij]  =self.ki[ij]
-                self.tanh_c[ij] = np.tanh(self.ki[ij]*self.depth)
+                self.tanh_c[ij] =self.tanhF[ij]
                 self.ai_c[ij] = self.ai[ij]
                 self.phi_c[ij] = self.phi[ij]
                 for kk in range(3):
@@ -2197,6 +2198,12 @@ class TimeSeries:
         Nw = __cpp_findWindow(t,self.handover, self.t0,self.Twindow,self.Nwindows, self.whand_) #Nw
         __cpp_uWindow(U,x,self.x0_,t,self.T0_,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,Nw,self.waveDir_, self.vDir_, self.tanh_, self.gAbs, self.fast)
 
+    def _cpp_uWindow_setd(self,U, x,t):
+        Nw = __cpp_findWindow(t,self.handover, self.t0,self.Twindow,self.Nwindows, self.whand_) #Nw
+        __cpp_uWindow_setd(U,x,self.x0_,t,self.T0_,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.mwl,self.depth,self.Nf,Nw,self.waveDir_, self.vDir_, self.tanh_, self.gAbs, self.fast)
+
+
+        
     def etaWindow(self, x, t):
         """Calculates free surface elevation(Timeseries class-window method
         Parameters
@@ -2241,6 +2248,34 @@ class TimeSeries:
             cppU[ii] = 0.
         U = np.zeros(3,)
         self._cpp_uWindow(cppU,xx,t)            
+        U[0] = cppU[0]
+        U[1] = cppU[1]
+        U[2] = cppU[2]
+
+        return U
+
+    def uWindow_setd(self, x, t):
+        """Calculates wave velocity vector (Timeseries class-window method)
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
+        """
+        cython.declare(xx=cython.double[3])
+        cython.declare(cppU=cython.double[3])
+        for ii in range(3):
+            xx[ii] = x[ii]
+            cppU[ii] = 0.
+        U = np.zeros(3,)
+        self._cpp_uWindow_setd(cppU,xx,t)            
         U[0] = cppU[0]
         U[1] = cppU[1]
         U[2] = cppU[2]
@@ -2317,7 +2352,8 @@ class RandomWavesFast:
                  phi=None,
                  Lgen = np.array([0., 0. ,0. ]),
                  Nwaves = 15,
-                 Nfreq = 32,
+                 Nfreq = 128,
+                 setDown = False,
                  checkAcc = True,
                  fast= True):
         RW  =         RandomWaves(
@@ -2340,7 +2376,16 @@ class RandomWavesFast:
         cutoff_win = 0.1
         overl = 0.7
         fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
+        self.fast = fast
         self.series = RW.writeEtaSeries(Tstart,Tend,x0,fname,4.*Lgen)
+        if(setDown):
+            aRN = RandomNLWaves(Tstart,Tend,Tp,Hs,mwl,depth,
+                                waveDir,g,N,bandFactor,spectName,
+                                spectral_params,phi, fast = self.fast)
+            dt = Tp/bandFactor/2./50. # 1/50th of the smallest period
+            self.series=aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname+"setdown",mode="short",Lgen=4.*Lgen)
+            self.series_u=aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname+"setdown",mode="short",Lgen=4.*Lgen,vel=True)
+
         self.cutoff = max(0.2*self.Tp , cutoff_win*Nwaves*Tp)
         duration = (self.series[-1,0]-self.series[0,0])
         self.cutoff  = self.cutoff / duration
@@ -2359,7 +2404,7 @@ class RandomWavesFast:
 
 
 
-        self.fast = fast
+
         TS = TimeSeries(
                  fname, # e.g.= "Timeseries.txt",
                  0,
@@ -2376,6 +2421,28 @@ class RandomWavesFast:
                  seriesArray = self.series,
                  Lgen = Lgen,
             fast=self.fast
+            
+                 )
+
+        if(setDown):
+            
+            TS_u = TimeSeries(
+                fname, # e.g.= "Timeseries.txt",
+                 0,
+                 x0,
+                 self.depth ,
+                 Nfreq ,          #number of frequency bins
+                 self.mwl ,        #mean water level
+                 waveDir,
+                 g,
+                 cutoffTotal = self.cutoff,
+                 rec_direct = self.rec_d,
+                 window_params = {"Nwaves":Nwaves ,"Tm":Tm,"Window":"costap","Overlap":overl,"Cutoff":cutoff_win},
+                 arrayData = True,
+                 seriesArray = self.series_u,
+                 Lgen = Lgen,
+                fast=self.fast
+            
                  )
 
         self.windows = TS.windows_rec
@@ -2397,7 +2464,8 @@ class RandomWavesFast:
         self.eta = TS.eta
         self.u = TS.u
         self.windOut = TS.windOut
-
+        if(setDown):
+            self.u = TS_u.u
     def printOut(self):
         """Prints some properties of the time series - ONLY FOR TESTING
 
@@ -2507,8 +2575,8 @@ class RandomNLWaves:
 
     def _cpp_eta_2ndOrder(self,x,t):
         return __cpp_eta2nd(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_, self.fast)
-    def _cpp_eta_2ndOrder_vel(self,x,t):
-        return __cpp_eta2nd_vel(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_, self.fast)
+    def _cpp_u_2ndOrder(self,x,t):
+        return __cpp_u2nd(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_, self.fast)
 
 
     def eta_2ndOrder(self,x,t,vel=False):
@@ -2537,7 +2605,7 @@ class RandomNLWaves:
         xx[1] = x[1]
         xx[2] = x[2]
         if(vel):
-            return self._cpp_eta_2ndOrder_vel(xx,t)
+            return self._cpp_u_2ndOrder(xx,t)
         else:
             return self._cpp_eta_2ndOrder(xx,t)
 
@@ -2545,8 +2613,8 @@ class RandomNLWaves:
     def _cpp_eta_short(self,x,t):
         return __cpp_eta_short(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
 
-    def _cpp_eta_short_vel(self,x,t):
-        return __cpp_eta_short_vel(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
+    def _cpp_u_short(self,x,t):
+        return __cpp_u_short(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
 
     #higher harmonics
     def eta_short(self,x,t,vel=False):
@@ -2573,7 +2641,7 @@ class RandomNLWaves:
         xx[1] = x[1]
         xx[2] = x[2]
         if(vel):
-            return self._cpp_eta_short_vel(xx,t)
+            return self._cpp_u_short(xx,t)
         else:
             return self._cpp_eta_short(xx,t)
 
@@ -2581,8 +2649,8 @@ class RandomNLWaves:
     def _cpp_eta_long(self,x,t):
         return __cpp_eta_long(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
 
-    def _cpp_eta_long_vel(self,x,t):
-        return __cpp_eta_long_vel(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
+    def _cpp_u_long(self,x,t):
+        return __cpp_u_long(x,t,self.kDir_,self.ki_,self.omega_,self.phi_,self.ai_,self.N,self.sinhKd_,self.tanhKd_,self.gAbs, self.fast)
 
     
     #lower harmonics
@@ -2611,7 +2679,7 @@ class RandomNLWaves:
         xx[2] = x[2]
 
         if(vel):
-            return self._cpp_eta_long_vel(xx,t)
+            return self._cpp_u_long(xx,t)
         else:
             return self._cpp_eta_long(xx,t)
     #set-up calculation
@@ -2734,7 +2802,8 @@ class RandomNLWaves:
             elif mode == "setup":
                 series[i,1] = self.eta_setUp(x0,time)
             elif mode == "short":
-                series[i,1] = self.eta_short(x0,time,vel) + self.eta_2ndOrder(x0,time,vel)
+                series[i,1] =self.eta_2ndOrder(x0,time,vel)#+self.eta_short(x0,time,vel)
+                
             elif mode == "long":
                 series[i,1] = self.eta_long(x0,time,vel)
             elif mode == "linear":
@@ -2850,7 +2919,7 @@ class RandomNLWavesFast:
         aRN = RandomNLWaves(Tstart,Tend,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi, fast = self.fast)
         self.omega = aR.omega
         self.mwl = mwl
-
+        self.ul = aR.u
         Tmax =  NLongW*Tp/1.1
         modes = ["short","linear","long"]
         periods = [Tp/2./1.1,Tp/1.1, Tmax]
@@ -2929,7 +2998,6 @@ class RandomNLWavesFast:
         etaR = self.TS[0].eta(x,t)+ self.TS[1].eta(x,t)+self.TS[2].eta(x,t)
         return etaR
 
-
     def u(self,x,t):
         """Calculates wave velocity vector (RandomNLWavesFast class)
         Parameters
@@ -2945,6 +3013,6 @@ class RandomNLWavesFast:
             Velocity vector as 1D array
 
         """
-        uR = self.TS_v[0].u(x,t)+ self.TS_v[1].u(x,t)+self.TS_v[2].u(x,t)
+        uR =  self.TS_v[0].uWindow_setd(x,t)#self.ul(x,t)+self.TS[1].u(x,t) # self.TS_v[0].uWindow_setd(x,t)+ self.TS[1].u(x,t)+self.TS_v[2].uWindow_setd(x,t)
         return uR
     
