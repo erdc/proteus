@@ -4704,9 +4704,9 @@ int writeTetgenMesh(Mesh& mesh, const char* filebase, int tetgenIndexBase)
 int read3DM(Mesh& mesh, const char* filebase, int indexBase)
 {
   /***************************************************
-    read nodes and element information from tetgen
+    read nodes and element information from XMS 3DM
      formatted mesh assuming base name in filebase
-    tetgen vertex numbering base as input
+    and base for integer indexing is indexBase
 
   **************************************************/
   using namespace std;
@@ -4788,9 +4788,9 @@ int read3DM(Mesh& mesh, const char* filebase, int indexBase)
 int read2DM(Mesh& mesh, const char* filebase, int indexBase)
 {
   /***************************************************
-    read nodes and element information from tetgen
-     formatted mesh assuming base name in filebase
-    tetgen vertex numbering base as input
+    read nodes and element information from XMS 2DM
+     formatted mesh assuming base name  filebase
+    and base for integer indexing is indexBase
 
   **************************************************/
   using namespace std;
