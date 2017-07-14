@@ -418,7 +418,7 @@ class KSP_petsc4py(LinearSolver):
         self._setMatOperators()
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
 
-        self.setResTol(rtol_r,atol_r,maxIts)
+        self.setResTol(rtol_r,atol_r)
 
         convergenceTest = 'r-true'
         if convergenceTest == 'r-true':
@@ -433,16 +433,15 @@ class KSP_petsc4py(LinearSolver):
         if Preconditioner != None:
             self._setPreconditioner(Preconditioner,par_L,prefix)
             self.ksp.setPC(self.pc)
+        self.ksp.max_it = self.maxIts
         self.ksp.setFromOptions()
         
-    def setResTol(self,rtol,atol,maxIts):
+    def setResTol(self,rtol,atol):
         """ Set the ksp object's residual and maximum interations. """
         self.rtol_r = rtol
         self.atol_r = atol
-        self.maxIts = maxIts
         self.ksp.rtol = rtol
         self.ksp.atol = atol
-        self.ksp.max_it = maxIts
         logEvent("KSP atol %e rtol %e" % (self.ksp.atol,self.ksp.rtol))
 
     def prepare(self,b=None):
@@ -492,7 +491,6 @@ class KSP_petsc4py(LinearSolver):
 
         if self.bdyNullSpace==True:
             self._setNullSpace(par_b)
-        
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
