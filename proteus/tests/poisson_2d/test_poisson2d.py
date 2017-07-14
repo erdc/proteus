@@ -28,7 +28,8 @@ class TestPoisson2D():
     def setup_method(self,method):
         self.aux_names = []
         reload(poisson_het_2d_p)
-
+        self.meshdir = os.path.dirname(__file__)
+        
     def teardown_method(self,method):
         filenames = []
         for aux_name in self.aux_names:
@@ -111,6 +112,38 @@ class TestPoisson2D():
 
     def test_c0p2_strong(self):
         return self.test_c0p2(use_strong_constraints=True)
+    def test_2dm(self,use_strong_constraints=False,nLevels=3):
+        reload(poisson_het_2d_p)
+        reload(poisson_het_2d_c0pk_n)
+        poisson_het_2d_p.meshfile=os.path.join(self.meshdir,'square4x4')
+        poisson_het_2d_p.x0 = (0.0,0.0,0.)
+        poisson_het_2d_p.L  = (1.,1.,1.)
+        poisson_het_2d_c0pk_n.nLevels = nLevels
+        pList = [poisson_het_2d_p]
+        nList = [poisson_het_2d_c0pk_n]
+        reload(default_so)
+        so = default_so
+        so.name = pList[0].name = "poisson_2d_c0p1_2dm"+"pe"+`comm.size()`
+        reload(default_s)
+        so.sList=[default_s]
+        opts.logLevel=7
+        opts.verbose=True
+        opts.profile=True
+        opts.gatherArchive=True
+        nList[0].femSpaces[0]  = default_n.C0_AffineLinearOnSimplexWithNodalBasis
+        nList[0].linearSolver=default_n.KSP_petsc4py
+        nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
+        nList[0].numericalFluxType = default_n.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
+        soln_name = 'poisson_2d_c0p1_2dm'
+        if use_strong_constraints == True:
+            nList[0].numericalFluxType = nList[0].Exterior_StrongFlux
+        soln_name = 'poisson_2d_c0p1_strong_dirichlet'
+        #nList[0].linearSolver=default_n.LU
+        #nList[0].multilevelLinearSolver=default_n.LU
+        ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
+        ns.calculateSolution(soln_name)
+        self.aux_names.append(pList[0].name)
+        del ns
 
 def compute_load_vector(use_weak_dirichlet=False):
     import poisson_het_2d_p

@@ -145,6 +145,8 @@ class NS_base:  # (HasTraits):
                 elif p.nd == 2:
                     if p.polyfile != None:
                         p.domain = Domain.PlanarStraightLineGraphDomain(fileprefix=p.polyfile,name=p.polyfile)
+                    elif p.meshfile != None:
+                        p.domain = Domain.Mesh2DMDomain(p.meshfile)
                     else:
                         p.domain = Domain.RectangularDomain(L=p.L[:2],
                                                             x=p.x0[:2],
@@ -398,6 +400,17 @@ class NS_base:  # (HasTraits):
                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                              parallelPartitioningType=n.parallelPartitioningType)
                 logEvent("Generating %i-level mesh from coarse 3DM mesh" % (n.nLevels,))
+                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=n.parallelPartitioningType)
+            elif isinstance(p.domain,Domain.Mesh2DMDomain):
+                mesh=MeshTools.TriangularMesh()
+                logEvent("Reading coarse mesh from 2DM file")
+                mesh.generateFrom2DMFile(p.domain.meshfile)
+                mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
+                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                             parallelPartitioningType=n.parallelPartitioningType)
+                logEvent("Generating %i-level mesh from coarse 2DM mesh" % (n.nLevels,))
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                       parallelPartitioningType=n.parallelPartitioningType)
