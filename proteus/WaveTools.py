@@ -2374,7 +2374,7 @@ class RandomWavesFast:
         self.depth = depth
         self.mwl = mwl
         cutoff_win = 0.1
-        overl = 0.7
+        overl = 0.8
         fname = "RandomSeries"+"_Hs_"+str(self.Hs)+"_Tp_"+str(self.Tp)+"_depth_"+str(self.depth)
         self.fast = fast
         self.series = RW.writeEtaSeries(Tstart,Tend,x0,fname,4.*Lgen)
@@ -2383,8 +2383,8 @@ class RandomWavesFast:
                                 waveDir,g,N,bandFactor,spectName,
                                 spectral_params,phi, fast = self.fast)
             dt = Tp/bandFactor/2./50. # 1/50th of the smallest period
-            self.series=aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname+"setdown",mode="short",Lgen=4.*Lgen)
-            self.series_u=aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname+"setdown",mode="short",Lgen=4.*Lgen,vel=True)
+            self.series=aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname+"setdown",mode="all",Lgen=4.*Lgen)
+            self.series_u=aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname+"setdown",mode="all",Lgen=4.*Lgen,vel=True)
 
         self.cutoff = max(0.2*self.Tp , cutoff_win*Nwaves*Tp)
         duration = (self.series[-1,0]-self.series[0,0])
@@ -2739,7 +2739,7 @@ class RandomNLWaves:
         xx[1] = x[1]
         xx[2] = x[2]
         if(vel):
-            Etaoverall =  self.eta_linear(x,t) + self._cpp_eta_2ndOrder_vel(xx,t) + self._cpp_eta_short_vel(xx,t) + self._cpp_eta_long_vel(xx,t)
+            Etaoverall =  self.eta_linear(x,t) + self._cpp_u_2ndOrder(xx,t) + self._cpp_u_short(xx,t) + self._cpp_eta_long(xx,t)
         else:
             Etaoverall =  self.eta_linear(x,t) + self._cpp_eta_2ndOrder(xx,t) + self._cpp_eta_short(xx,t) + self._cpp_eta_long(xx,t)
         if setUp:
@@ -2841,178 +2841,3 @@ class RandomNLWaves:
         logEvent("ERROR! Wavetools.py: eta and u functions not available for this class. Please use RandomNLWavesFast for generating random waves with nonlinear correction",0)
         sys.exit(1)
 
-
-
-class RandomNLWavesFast:
-    """
-    This class is used for generating plane random waves with 2ns order correction in an optimised manner
-    using linear reconstruction of components from a wave spectrum
-
-    Parameters
-    ----------
-    Tstart : float
-             Start time            
-    Tend : float
-             End time            
-    x0 : numpy.ndarray
-             Position vector for the time series            
-    Tp : float
-             Peak wave period            
-    Hs : float
-             Significant wave height            
-    mwl : float
-             Still water level            
-    depth : float
-             Water depth            
-    waveDir : np.ndarray
-             Wave direction vector            
-    g : Numpy array
-             Gravitational acceleration vector            
-    N : int
-             Number of frequency components
-    bandFactor : float
-             Spectral band factor. fmax = bandFactor/Tp, fmin = 1/(bandFactor*Tp)           
-    spectName : string
-             Name of spectral distribution
-    spectral_params : dict
-             Dictionary of arguments specific to the spectral distribution
-            Example for JONSWAP = {"gamma": 3.3, "TMA":True,"depth": depth}
-            TMA=True activates the TMA modification, which in turn needs the depth as a parameter            
-    phi : numpy.ndarray
-             Component phases (if set to None, phases are picked at random)
-            
-    Lgen : numpy.ndarray
-             Length of the generation zone (np.array([0., 0., 0.]) by default
-            
-    Nwaves : int
-             Number of waves per window
-    Nfreq : int
-             Number of Fourier components per window
-    NLongw : int
-             Estmated ratio of long wave period to Tp
-    fast : bool
-             Switch for enabling optimised functions 
-    """
-    def __init__(self,
-                 Tstart,
-                 Tend,
-                 x0,
-                 Tp,                      #wave period
-                 Hs,                      #significant wave height
-                 mwl,                     #mean water level
-                 depth,                   #water depth
-                 waveDir,                 #wave direction vector with three components
-                 g,                       #gravitational accelaration vector with three components
-                 N,                       #number of frequency bins
-                 bandFactor,              #width factor for band around peak frequency fp
-                 spectName,               #random words will result in error and return the available spectra
-                 spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
-                 phi=None,
-                 Lgen = np.array([0.,0.,0.]),    #array of component phases
-                 Nwaves = 15,
-                 Nfreq = 32,
-                 NLongW = 10.,
-                 fast = True
-                 ):
-        self.fast = fast
-        aR = RandomWaves(Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi,fast = self.fast)
-        aRN = RandomNLWaves(Tstart,Tend,Tp,Hs,mwl,depth,waveDir,g,N,bandFactor,spectName,spectral_params,phi, fast = self.fast)
-        self.omega = aR.omega
-        self.mwl = mwl
-        self.ul = aR.u
-        Tmax =  NLongW*Tp/1.1
-        modes = ["short","linear","long"]
-        periods = [Tp/2./1.1,Tp/1.1, Tmax]
-        self.TS= []
-        self.TS_v= []
-        ii = -1
-        for mode in modes:
-            logEvent("INFO: Calculating nonlinear corrections for "+mode+" waves. This may take a while")
-            ii+=1
-            fname = "randomNLWaves_"+mode+".csv"
-            dt = periods[ii]/50.
-            series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Lgen)
-            series_v = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Lgen,True)
-            Tstart_temp = series[0,0]
-            cutoff = 0.2*periods[ii]/(Tend-Tstart_temp)
-
-            #Checking if there are enough windows
-            Nwaves_tot = int((Tend-Tstart_temp)/periods[ii])
-            Nwaves = min(Nwaves,Nwaves_tot)
-            Nwind = int(Nwaves_tot/Nwaves)
-            if Nwind < 3:
-                rec_d = True
-            else:
-                rec_d = False
-
-
-            self.TS.append(TimeSeries(
-                    fname,
-                    0,
-                    x0,
-                    depth,
-                    Nfreq,
-                    mwl,
-                    waveDir,
-                    g,
-                    cutoffTotal = cutoff,
-                    rec_direct = rec_d,
-                    window_params = {"Nwaves":Nwaves ,"Tm":periods[ii],"Window":"costap","Overlap":0.7,"Cutoff":0.1},
-                    arrayData = True,
-                    seriesArray = series,
-                fast = self.fast)
-                           )
-            self.TS_v.append(TimeSeries(
-                    fname,
-                    0,
-                    x0,
-                    depth,
-                    Nfreq,
-                    mwl,
-                    waveDir,
-                    g,
-                    cutoffTotal = cutoff,
-                    rec_direct = rec_d,
-                    window_params = {"Nwaves":Nwaves ,"Tm":periods[ii],"Window":"costap","Overlap":0.7,"Cutoff":0.1},
-                    arrayData = True,
-                    seriesArray = series_v,
-                fast = self.fast)
-                           )
-
-
-    def eta(self,x,t):
-        """Calculates free surface elevation (RandomNLWavesFast class)
-        Parameters
-        ----------
-        x : numpy.ndarray
-            Position vector
-        t : float
-            Time variable
-
-        Returns
-        --------
-        float
-            Free-surface elevation as a float
-
-        """
-        etaR = self.TS[0].eta(x,t)+ self.TS[1].eta(x,t)+self.TS[2].eta(x,t)
-        return etaR
-
-    def u(self,x,t):
-        """Calculates wave velocity vector (RandomNLWavesFast class)
-        Parameters
-        ----------
-        x : numpy.ndarray
-            Position vector
-        t : float
-            Time variable
-
-        Returns
-        --------
-        numpy.ndarray
-            Velocity vector as 1D array
-
-        """
-        uR =  self.TS_v[0].uWindow_setd(x,t)#self.ul(x,t)+self.TS[1].u(x,t) # self.TS_v[0].uWindow_setd(x,t)+ self.TS[1].u(x,t)+self.TS_v[2].uWindow_setd(x,t)
-        return uR
-    
