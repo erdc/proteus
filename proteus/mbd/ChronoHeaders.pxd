@@ -203,6 +203,17 @@ cdef extern from "ChMoorings.h":
         void SetKt(float val)
         void SetGn(float val)
         void SetGt(float val)
+        double GetYoungModulus()
+        double GetPoissonRatio()
+        double GetSfriction()
+        double GetKfriction()
+        double GetRestitution()
+        double GetAdhesion()
+        double GetAdhesionMultDMT()
+        double GetKn()
+        double GetKt()
+        double GetGn()
+        double GetGt()
 
     cdef cppclass ChContactSurface:
         ChMesh* GetMesh()
