@@ -1384,7 +1384,10 @@ class NS_base:  # (HasTraits):
             #
             #assuming same for all physics and numerics  for now
         
-
+            #can only handle PUMIDomain's for now
+            self.nSolveSteps += 1
+            if(self.PUMI_estimateError()):
+              self.PUMI_adaptMesh()
         logEvent("Finished calculating solution",level=3)
 
         for index,model in enumerate(self.modelList):
