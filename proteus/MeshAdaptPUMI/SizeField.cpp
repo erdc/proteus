@@ -17,13 +17,9 @@ static void SmoothField(apf::Field* f);
    thickness of refinement near the interface */
 static double isotropicFormula(double phi, double hmin, double hmax)
 {
-  static double const epsilon = 0.02;
-  phi = fabs(phi);
   double size;
-  if (fabs(phi) < epsilon)
+  if (fabs(phi) < 5.0*hmin)
     size = hmin;
-  else if (phi < 3 * epsilon)
-    size = (hmin + hmax) / 2;
   else
     size = hmax;
   return size;
@@ -43,8 +39,22 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
     apf::setScalar(size_iso, v, 0, size);
   }
   m->end(it);
-  for(int i=0; i < 3; i++)
-    SmoothField(size_iso);
+  double err_h_max=hmax;
+  while (err_h_max > hmin)
+    {
+      SmoothField(size_iso);
+      err_h_max=0.0;
+      it = m->begin(0);
+      while ((v = m->iterate(it))) {
+	double phi = apf::getScalar(phif, v, 0);
+	double size_current = apf::getScalar(size_iso, v, 0);
+	double size = fmin(size_current,isotropicFormula(phi, hmin, hmax));
+	err_h_max = fmax(err_h_max,fabs(size_current-size));
+	apf::setScalar(size_iso, v, 0, size);
+      }
+      m->end(it);
+      std::cout<<"err_h_max "<<err_h_max<<std::endl;
+    }    
   return 0;
 }
 
@@ -692,13 +702,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     }
   }
 
-  //Get vtk files for fields prior to adaptation
-  if(logging_config=="on"){
-    char namebuffer[20];
-    sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
-    apf::writeVtkFiles(namebuffer, m);
-  }
-  
   //Destroy locally required fields
   apf::destroyField(size_iso_reg); 
   apf::destroyField(clipped_vtx);
@@ -716,11 +719,6 @@ int MeshAdaptPUMIDrvr::testIsotropicSizeField()
       double phi = hmin;
       clamp(phi,hmin,hmax);
       apf::setScalar(size_iso,v,0,phi);
-    }
-    char namebuffer[20];
-    if(logging_config=="on"){
-      sprintf(namebuffer,"pumi_adapt_%i",nAdapt);
-      apf::writeVtkFiles(namebuffer, m);
     }
 }
 

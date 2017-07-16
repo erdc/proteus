@@ -80,6 +80,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebq_H_vof = None
         #correction
         self.massCorrModel = modelList[self.me_model]
+        self.massCorrModel.setMassQuadrature()
         self.vofModel.q[('m_last',0)][:] = self.vofModel.q[('m',0)]
         if self.checkMass:
             self.m_tmp = copy.deepcopy(self.massCorrModel.q[('r',0)])
@@ -1227,8 +1228,6 @@ class Newton_controller(proteus.StepControl.Newton_controller):
         for m,u,r in zip(self.model.levelModelList,
                          self.model.uList,
                          self.model.rList):
-            #pass
-            #m.setMassQuadrature()
             u.flat[:]=0.0
             m.getResidual(u,r)
             m.coefficients.postStep(self.t_model)
