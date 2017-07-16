@@ -3,7 +3,6 @@
 An optimized volume-of-fluid  transport module
 """
 import numpy
-cimport numpy
 from math import fabs
 import proteus
 from proteus import cfemIntegrals, Quadrature, Norms, Comm
