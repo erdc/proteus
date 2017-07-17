@@ -591,12 +591,19 @@ class KSP_petsc4py(LinearSolver):
         if its == 0:
             self.rnorm0 = truenorm
             logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
-            logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
-            logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
-                                                                                              truenorm,
-                                                                                              (truenorm/ self.rnorm0),
-                                                                                              ksp.atol,
-                                                                                              ksp.rtol))
+            if self.rnorm0 == 0.:
+                logEvent("NumericalAnalytics KSPOuterResidual(relative): N/A (residual vector is zero)" )
+                logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = N/A (residual vector is zero) ; atol=%e rtol=%e " % (its,
+                                                                                                                             truenorm,
+                                                                                                                             ksp.atol,
+                                                                                                                             ksp.rtol))
+            else:
+                logEvent("NumericalAnalytics KSPOuterResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+                logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
+                                                                                                  truenorm,
+                                                                                                  (truenorm/ self.rnorm0),
+                                                                                                  ksp.atol,
+                                                                                                  ksp.rtol))
             return False
         else:
             logEvent("NumericalAnalytics KSPOuterResidual: %12.5e" %(truenorm) )
