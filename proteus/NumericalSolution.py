@@ -98,11 +98,11 @@ class NS_base:  # (HasTraits):
         self.archive_ebq_global        = dict([(i,False) for i in range(len(self.pList))]);
         self.archive_ebqe              = dict([(i,False) for i in range(len(self.pList))]);
         self.archive_pod_residuals = dict([(i,False) for i in range(len(self.pList))]);
-        if simFlagsList != None:
+        if simFlagsList is not None:
             assert len(simFlagsList) == len(self.pList), "len(simFlagsList) = %s should be %s " % (len(simFlagsList),len(self.pList))
             for index in range(len(self.pList)):
                 if simFlagsList[index].has_key('storeQuantities'):
-                    for quant in filter(lambda a: a != None,simFlagsList[index]['storeQuantities']):
+                    for quant in filter(lambda a: a is not None,simFlagsList[index]['storeQuantities']):
                         recType = quant.split(':')
                         if len(recType) > 1 and recType[0] == 'q':
                             self.archive_q[index] = True
@@ -137,22 +137,24 @@ class NS_base:  # (HasTraits):
             else:
                 logEvent("Generating mesh for "+p.name)
             #support for old-style domain input
-            if p.domain == None:
+            if p.domain is None:
                 if p.nd == 1:
                     p.domain = Domain.RectangularDomain(L=p.L[:1],
                                                         x=p.x0[:1],
                                                         name=p.name)
                 elif p.nd == 2:
-                    if p.polyfile != None:
+                    if p.polyfile is not None:
                         p.domain = Domain.PlanarStraightLineGraphDomain(fileprefix=p.polyfile,name=p.polyfile)
+                    elif p.meshfile != None:
+                        p.domain = Domain.Mesh2DMDomain(p.meshfile)
                     else:
                         p.domain = Domain.RectangularDomain(L=p.L[:2],
                                                             x=p.x0[:2],
                                                             name=p.name)
                 elif p.nd == 3:
-                    if p.polyfile != None:
+                    if p.polyfile is not None:
                         p.domain = Domain.PiecewiseLinearComplexDomain(fileprefix=p.polyfile,name=p.polyfile)
-                    elif p.meshfile != None:
+                    elif p.meshfile is not None:
                         p.domain = Domain.Mesh3DMDomain(p.meshfile)
                     else:
                         p.domain = Domain.RectangularDomain(L=p.L[:3],
@@ -170,7 +172,7 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
                 elif p.domain.nd == 2:
-                    if (n.nnx == n.nny == None):
+                    if (n.nnx == n.nny is None):
                         nnx = nny = n.nn
                     else:
                         nnx = n.nnx
@@ -196,7 +198,7 @@ class NS_base:  # (HasTraits):
                                                                     parallelPartitioningType=n.parallelPartitioningType)
 
                 elif p.domain.nd == 3:
-                    if (n.nnx == n.nny == n.nnz ==None):
+                    if (n.nnx == n.nny == n.nnz  is None):
                         nnx = nny = nnz = n.nn
                     else:
                         nnx = n.nnx
@@ -401,6 +403,17 @@ class NS_base:  # (HasTraits):
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                       parallelPartitioningType=n.parallelPartitioningType)
+            elif isinstance(p.domain,Domain.Mesh2DMDomain):
+                mesh=MeshTools.TriangularMesh()
+                logEvent("Reading coarse mesh from 2DM file")
+                mesh.generateFrom2DMFile(p.domain.meshfile)
+                mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
+                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                             parallelPartitioningType=n.parallelPartitioningType)
+                logEvent("Generating %i-level mesh from coarse 2DM mesh" % (n.nLevels,))
+                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.MeshHexDomain):
                 mesh=MeshTools.HexahedralMesh()
                 logEvent("Reading coarse mesh from file")
@@ -536,7 +549,7 @@ class NS_base:  # (HasTraits):
         logEvent("Setting up SimTools for "+p.name)
         self.simOutputList = []
         self.auxiliaryVariables = {}
-        if self.simFlagsList != None:
+        if self.simFlagsList is not None:
             for p,n,simFlags,model,index in zip(pList,nList,simFlagsList,self.modelList,range(len(pList))):
                 self.simOutputList.append(SimTools.SimulationProcessor(flags=simFlags,nLevels=n.nLevels,
                                                                        pFile=p,nFile=n,
@@ -553,7 +566,7 @@ class NS_base:  # (HasTraits):
             for av in avList:
                 av.attachAuxiliaryVariables(self.auxiliaryVariables)
         logEvent(Profiling.memory("NumericalSolution memory",className='NumericalSolution',memSaved=memBase))
-        if so.tnList == None:
+        if so.tnList is None:
             logEvent("Building tnList from model = "+pList[0].name+" nDTout = "+`nList[0].nDTout`)
             self.tnList=[float(n)*nList[0].T/float(nList[0].nDTout)
                          for n in range(nList[0].nDTout+1)]
@@ -710,7 +723,7 @@ class NS_base:  # (HasTraits):
         #(cut and pasted from init, need to cleanup)
         self.simOutputList = []
         self.auxiliaryVariables = {}
-        if self.simFlagsList != None:
+        if self.simFlagsList is not None:
             for p, n, simFlags, model, index in zip(
                     self.pList,
                     self.nList,
@@ -744,7 +757,7 @@ class NS_base:  # (HasTraits):
         for m in self.modelList:
           for lm in m.levelModelList:
             coef = lm.coefficients
-            if coef.vectorComponents != None:
+            if coef.vectorComponents is not None:
               vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
               p0.domain.PUMIMesh.transferFieldToProteus(
                      coef.vectorName, vector)
@@ -752,7 +765,7 @@ class NS_base:  # (HasTraits):
                 lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
               del vector
             for ci in range(coef.nc):
-              if coef.vectorComponents == None or \
+              if coef.vectorComponents is None or \
                  ci not in coef.vectorComponents:
                 scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                 p0.domain.PUMIMesh.transferFieldToProteus(
@@ -923,7 +936,7 @@ class NS_base:  # (HasTraits):
             for m in self.modelList:
               for lm in m.levelModelList:
                 coef = lm.coefficients
-                if coef.vectorComponents != None:
+                if coef.vectorComponents is not None:
                   vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
                   for vci in range(len(coef.vectorComponents)):
                     vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
@@ -931,7 +944,7 @@ class NS_base:  # (HasTraits):
                          coef.vectorName, vector)
                   del vector
                 for ci in range(coef.nc):
-                  if coef.vectorComponents == None or \
+                  if coef.vectorComponents is None or \
                      ci not in coef.vectorComponents:
                     scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                     scalar[:,0] = lm.u[ci].dof[:]
@@ -1060,7 +1073,7 @@ class NS_base:  # (HasTraits):
                         lm.timeIntegration.t = time
                         lm.timeIntegration.dt = dt
                 self.tCount = tCount+1
-            elif p.initialConditions != None:
+            elif p.initialConditions is not None:
                 logEvent("Setting initial conditions for "+p.name)
                 m.setInitialConditions(p.initialConditions,self.tnList[0])
                 #It's only safe to calculate the solution and solution
@@ -1401,15 +1414,15 @@ class NS_base:  # (HasTraits):
     def preStep(self,model):
         for level,levelModel in enumerate(model.levelModelList):
             preCopy = levelModel.coefficients.preStep(model.stepController.t_model,firstStep=self.firstStep)
-            if (preCopy != None and preCopy.has_key(('copy_uList')) and preCopy['copy_uList'] == True):
+            if (preCopy is not None and preCopy.has_key(('copy_uList')) and preCopy['copy_uList'] == True):
                 for u_ci_lhs,u_ci_rhs in zip(levelModel.u.values(),self.modelList[preCopy['uList_model']].levelModelList[level].u.values()):
                     u_ci_lhs.dof[:] = u_ci_rhs.dof
                 levelModel.setFreeDOF(model.uList[level])
-            if preCopy != None and preCopy.has_key(('clear_uList')) and preCopy['clear_uList'] == True:
+            if preCopy is not None and preCopy.has_key(('clear_uList')) and preCopy['clear_uList'] == True:
                 for u_ci_lhs in levelModel.u.values():
                     u_ci_lhs.dof[:] = 0.0
                 levelModel.setFreeDOF(model.uList[level])
-            if preCopy != None and preCopy.has_key(('reset_uList')) and preCopy['reset_uList'] == True:
+            if preCopy is not None and preCopy.has_key(('reset_uList')) and preCopy['reset_uList'] == True:
                 levelModel.setFreeDOF(model.uList[level])
                 levelModel.getResidual(model.uList[level],model.rList[level])
 
@@ -1417,13 +1430,13 @@ class NS_base:  # (HasTraits):
     def postStep(self,model):
         for level,levelModel in enumerate(model.levelModelList):
             postCopy = levelModel.coefficients.postStep(model.stepController.t_model,firstStep=self.firstStep)
-            if postCopy != None and postCopy.has_key(('copy_uList')) and postCopy['copy_uList'] == True:
+            if postCopy is not None and postCopy.has_key(('copy_uList')) and postCopy['copy_uList'] == True:
                 for u_ci_lhs,u_ci_rhs in zip(self.modelList[postCopy['uList_model']].levelModelList[level].u.values(),model.levelModelList[level].u.values()):
                     u_ci_lhs.dof[:] = u_ci_rhs.dof
                 self.modelList[postCopy['uList_model']].levelModelList[level].setFreeDOF(self.modelList[postCopy['uList_model']].uList[level])
 
     def setWeakDirichletConditions(self,model):
-        if model.weakDirichletConditions != None:
+        if model.weakDirichletConditions is not None:
             for levelModel in model.levelModelList:
                 levelModel.dirichletNodeSetList={}
                 levelModel.dirichletGlobalNodeSet={}
@@ -1505,7 +1518,7 @@ class NS_base:  # (HasTraits):
     def archiveSolution(self,model,index,t=None):
         if self.archiveFlag == ArchiveFlags.UNDEFINED:
             return
-        if t == None:
+        if t is None:
             t = self.systemStepController.t_system
 
         logEvent("Writing mesh header for  model = "+model.name+" at time t="+str(t),level=3)
@@ -1571,7 +1584,7 @@ class NS_base:  # (HasTraits):
 
     ## clean up archive
     def closeArchive(self,model,index):
-        if self.archiveFlag == None:
+        if self.archiveFlag is None:
             return
         if self.so.useOneArchive:
             if index==0:

@@ -709,7 +709,7 @@ class Mesh:
         # logEvent(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
-        if self.arGridCollection != None:
+        if self.arGridCollection is not None:
             init = False
         elif not init:
             grids = ar.domain.findall("Grid")
@@ -725,7 +725,7 @@ class Mesh:
                 self.arEBGridCollection = SubElement(ar.domain,"Grid",{"Name":"EBMesh "+name,
                                                                        "GridType":"Collection",
                                                                        "CollectionType":"Temporal"})
-        if self.arGrid == None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != str(t):
             #
             #topology and geometry
             #
@@ -745,7 +745,7 @@ class Mesh:
                                        "DataType":"Float",
                                        "Precision":"8",
                                        "Dimensions":"%i %i" % (self.globalMesh.nNodes_global,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
@@ -776,7 +776,7 @@ class Mesh:
                                        "DataType":"Float",
                                        "Precision":"8",
                                        "Dimensions":"%i %i" % (self.nNodes_global,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
@@ -815,7 +815,7 @@ class Mesh:
                                      "DataType":"Float",
                                      "Precision":"8",
                                      "Dimensions":"%i %i" % (self.nNodes_global,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         ebelements.text = ar.hdfFilename+":/elementBoundaries"+`ar.comm.rank()`+name+`tCount`
                         ebnodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
@@ -836,7 +836,7 @@ class Mesh:
 
             # Add the local->global index maps for collect.py and for
             # reverse mapping in hotstarts from a global XDMF file.
-            if self.globalMesh != None and not ar.global_sync:
+            if self.globalMesh is not None and not ar.global_sync:
                 nodeMapAtt = SubElement(self.arGrid,"Attribute",
                                         {"Name":"NodeMapL2G",
                                          "AttributeType":"Scalar",
@@ -856,7 +856,7 @@ class Mesh:
                                       "Precision":"4",
                                       "Dimensions":str(self.nElements_owned)})
 
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+`ar.comm.rank()`+name+`tCount`
                         elemMap.text = ar.hdfFilename+":/cellMapL2G"+`ar.comm.rank()`+name+`tCount`
@@ -908,7 +908,7 @@ class Mesh:
                                                           {"Format":ar.dataItemFormat,
                                                            "DataType":"Int",
                                                            "Dimensions":"%i" % (self.globalMesh.nElementBoundaries_global,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
                         ar.create_dataset_sync("nodeMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.nodeOffsets_subdomain_owned, data=self.nodeMaterialTypes[:self.nNodes_owned])
@@ -952,7 +952,7 @@ class Mesh:
                                                           {"Format":ar.dataItemFormat,
                                                            "DataType":"Int",
                                                            "Dimensions":"%i" % (self.nElementBoundaries_global,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                         ar.create_dataset_async("nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.nodeMaterialTypes)
@@ -1059,7 +1059,7 @@ class Mesh:
         self.hasGeometricInfo = False
         logEvent(memory("buildFromCNoArrays","MeshTools"),level=4)
     def buildNodeStarArrays(self):
-        if self.nodeStarArray == None:
+        if self.nodeStarArray is None:
             #cek old
             self.nodeStarList=[]
             for n in range(self.nNodes_global):
@@ -1664,7 +1664,7 @@ class MultilevelMesh(Mesh):
         get array elementParents[l,e] = e_c, where element e_c is the parent of element e
             elementParents[0,:] = -1
         """
-        if (self.elementParents == None or recalculate):
+        if (self.elementParents is None or recalculate):
             self.elementParents = {}
             nLevels = len(self.meshList)
             for l in range(nLevels):
@@ -3167,7 +3167,7 @@ class Mesh2DM(Mesh):
         meshOut.close()
 
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0):
-        if self.arGridCollection != None:
+        if self.arGridCollection is not None:
             init = False
         elif not init:
             self.arGridCollection = ar.domain.find("Grid")
@@ -3175,7 +3175,7 @@ class Mesh2DM(Mesh):
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                 "GridType":"Collection",
                                                                 "CollectionType":"Temporal"})
-        if self.arGrid == None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != str(t):
             #
             #topology and geometry
             #
@@ -3204,7 +3204,7 @@ class Mesh2DM(Mesh):
                                                         {"Format":ar.dataItemFormat,
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
@@ -3247,7 +3247,7 @@ class Mesh2DM(Mesh):
                                                         {"Format":ar.dataItemFormat,
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
@@ -3534,7 +3534,7 @@ class Mesh3DM(Mesh):
         meshOut.close()
 
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Tetrahedron",tCount=0):
-        if self.arGridCollection != None:
+        if self.arGridCollection is not None:
             init = False
         elif not init:
             self.arGridCollection = ar.domain.find("Grid")
@@ -3542,7 +3542,7 @@ class Mesh3DM(Mesh):
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                "GridType":"Collection",
                                                                "CollectionType":"Temporal"})
-        if self.arGrid == None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != str(t):
             if ar.global_sync:
                 #
                 #topology and geometry
@@ -3571,7 +3571,7 @@ class Mesh3DM(Mesh):
                                                         {"Format":ar.dataItemFormat,
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_owned,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
@@ -3617,7 +3617,7 @@ class Mesh3DM(Mesh):
                                                         {"Format":ar.dataItemFormat,
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
@@ -3990,6 +3990,14 @@ class TriangularMesh(Mesh):
     def writeTriangleFiles(self,filebase,base):
         import cmeshTools
         cmeshTools.writeTriangleFiles(self.cmesh,filebase,base)
+    def generateFrom2DMFile(self,filebase,base=1):
+        import cmeshTools
+        self.cmesh = cmeshTools.CMesh()
+        cmeshTools.generateFrom2DMFile(self.cmesh,filebase,base)
+        cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
+        cmeshTools.computeGeometricInfo_triangle(self.cmesh)
+        self.buildFromC(self.cmesh)
+
     def constructTriangularMeshOnRectangle(self,Lx,Ly,nx,ny,writeMesh=0,
                                            meshFileBase='mesh2d'):
         """
@@ -5640,7 +5648,7 @@ def findXMLgridElement(xmf,MeshTag='Spatial_Domain',id_in_collection=-1,verbose=
         if 'Name' in collection.attrib and MeshTag in collection.attrib['Name']:
             GridCollection = collection
             break
-    if GridCollection == None:
+    if GridCollection is None:
         GridCollection = Domain[0]
     logEvent("Trying GridCollection.tag= %s" % (GridCollection.tag),4)
     if GridCollection.attrib['GridType'] == 'Collection':
@@ -5814,26 +5822,26 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
 
     Topology,Geometry,NodeMaterials,ElementMaterials = extractPropertiesFromXdmfGridNode(Grid)
 
-    assert Geometry != None
+    assert Geometry is not None
     entry = Geometry[0].text.split(':')[-1]
     logEvent("Reading nodeArray from %s " % entry,3)
 
     MeshInfo.nodeArray = hdf5.getNode(entry).read()
     MeshInfo.nNodes_global = MeshInfo.nodeArray.shape[0]
 
-    if NodeMaterials != None:
+    if NodeMaterials is not None:
         entry = NodeMaterials[0].text.split(':')[-1]
         logEvent("Reading nodeMaterialTypes from %s " % entry,4)
         MeshInfo.nodeMaterialTypes = hdf5.getNode(entry).read()
     else:
         MeshInfo.nodeMaterialTypes = np.zeros((MeshInfo.nNodes_global,),'i')
 
-    assert Topology != None
+    assert Topology is not None
     if 'Type' in Topology.attrib:
         MeshInfo.elementTopologyName = Topology.attrib['Type']
     elif 'TopologyType' in Topology.attrib:
         MeshInfo.elementTopologyName = Topology.attrib['TopologyType']
-    assert MeshInfo.elementTopologyName != None
+    assert MeshInfo.elementTopologyName is not None
 
     logEvent("elementTopologyName= %s " % MeshInfo.elementTopologyName,3)
     assert MeshInfo.elementTopologyName in topologyid2name.values()
@@ -5848,7 +5856,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
             MeshInfo.elementNodes_offset = readMixedElementTopologyFromXdmf(MeshInfo.elementTopologyName,Topology,hdf5,topologyid2name,topology2nodes)
 
     #
-    if ElementMaterials != None:
+    if ElementMaterials is not None:
         entry = ElementMaterials[0].text.split(':')[-1]
         logEvent("Reading elementMaterialTypes from %s " % entry,3)
         MeshInfo.elementMaterialTypes = hdf5.getNode(entry).read()
