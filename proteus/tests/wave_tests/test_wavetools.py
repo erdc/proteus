@@ -521,7 +521,7 @@ class CheckMonochromaticWavesFailures(unittest.TestCase):
         self.assertEqual(cm7.exception.code, 1)
   # Success!: Give all parameters in correct form!
         a = MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1.,1.]), Bcoeff =np.array([1.,1.,1.]), Nf = 3, meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)
-        self.assertTrue(None == None)
+        self.assertTrue(None is None)
 
 class VerifyMonoChromaticLinearWaves(unittest.TestCase):
     def testLinear(self):
@@ -682,7 +682,7 @@ class CheckRandomWavesFailures(unittest.TestCase):
         RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params=None )
         RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.} )
         RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.}, phi = np.zeros(100, float) )
-        self.assertTrue(None == None)
+        self.assertTrue(None is None)
 
 class VerifyRandomWaves(unittest.TestCase):
 #    @pytest.mark.skip(reason="nosetests vs pytest issue")
@@ -925,7 +925,7 @@ class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
             phi = [phi,phi]
     )
 
-        self.assertTrue(None == None)
+        self.assertTrue(None is None)
 
 
 

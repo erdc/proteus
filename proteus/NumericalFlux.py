@@ -75,7 +75,7 @@ class NF_base:
         for k in self.vt.tensors_elementBoundaryQuadrature:
             self.ebqeTerms.append(k)
             if (self.vt.sd and k[0] in ['a','da'] and
-                self.vt.coefficients.sdInfo != None and
+                self.vt.coefficients.sdInfo is not None and
                 (k[1],k[2]) in self.vt.coefficients.sdInfo.keys()):
                 self.ebqe[k]=numpy.zeros(
                     (self.mesh.nExteriorElementBoundaries_global,
@@ -111,7 +111,7 @@ class NF_base:
         self.isDiffusiveFluxBoundary = {}
         self.isAdvectiveFluxBoundary = {}
         self.mixedDiffusion={}
-        assert(getPointwiseBoundaryConditions != None), "must supply Dirichlet conditions"
+        assert(getPointwiseBoundaryConditions is not None), "must supply Dirichlet conditions"
         class ptuple:
             """
             define a dictionary key that defines points as equal if they're "close"
@@ -171,9 +171,9 @@ class NF_base:
                             g = gReturn
                             gFlag = 1
                         p = None
-                        if getPeriodicBoundaryConditions != None and not parallelPeriodic:
+                        if getPeriodicBoundaryConditions is not None and not parallelPeriodic:
                             p = getPeriodicBoundaryConditions[ci](x,materialFlag)
-                        if p != None:
+                        if p is not None:
                             pset.add(ptuple(p))
                             #self.isDOFBoundary[ci][ebNE,k]=1
                             if ptuple(p) in self.periodicBoundaryConditionsDictList[ci].keys():#self.periodicBoundaryConditionsDictList[ci].has_key(ptuple(p)):
@@ -182,7 +182,7 @@ class NF_base:
                                 self.periodicBoundaryConditionsDictList[ci][key].append((ebNE,k))
                             else:
                                 self.periodicBoundaryConditionsDictList[ci][ptuple(p)]=[(ebNE,k)]
-                        if g != None:
+                        if g is not None:
                             self.isDOFBoundary[ci][ebNE,k]=gFlag
                             self.DOFBoundaryConditionsDictList[ci][(ebNE,k)] = g
                             self.DOFBoundaryPointDictList[ci][(ebNE,k)]=x
@@ -197,37 +197,37 @@ class NF_base:
                             g = gReturn
                             gFlag = 1
                         p = None
-                        if getPeriodicBoundaryConditions != None:
+                        if getPeriodicBoundaryConditions is not None:
                             p = getPeriodicBoundaryConditions[ci](x)
-                        if p != None and not parallelPeriodic:
+                        if p is not None and not parallelPeriodic:
                             if self.periodicBoundaryConditionsDictList[ci].has_key(ptuple(p)):#.hash()):
                                 self.periodicBoundaryConditionsDictList[ci][ptuple(p)].append((ebNE,k))
                             else:
                                 self.periodicBoundaryConditionsDictList[ci][ptuple(p)]=[(ebNE,k)]#[ptuple(p).hash()]=[(ebNE,k)]
-                        elif g != None:
+                        elif g is not None:
                             self.isDOFBoundary[ci][ebNE,k]=gFlag
                             self.DOFBoundaryConditionsDictList[ci][(ebNE,k)] = g
                             self.DOFBoundaryPointDictList[ci][(ebNE,k)]=x
                     if getAdvectiveFluxBoundaryConditions.has_key(ci):
                         try:
                             g = getAdvectiveFluxBoundaryConditions[ci](x,materialFlag)
-                            if g != None:
+                            if g is not None:
                                 self.isAdvectiveFluxBoundary[ci][ebNE,k]=1
                         except TypeError:
                             logEvent("""WARNING NumericalFlux Pointwise conditions should take arguments (x,flag) now trying without flag""")
                             g = getAdvectiveFluxBoundaryConditions[ci](x)
-                            if g != None:
+                            if g is not None:
                                 self.isAdvectiveFluxBoundary[ci][ebNE,k]=1
                     if getDiffusiveFluxBoundaryConditions.has_key(ci):
                         for ck in getDiffusiveFluxBoundaryConditions[ci].keys():
                             try:
                                 g = getDiffusiveFluxBoundaryConditions[ci][ck](x,materialFlag)
-                                if g != None:
+                                if g is not None:
                                     self.isDiffusiveFluxBoundary[ci][ebNE,k]=1
                             except TypeError:
                                 logEvent("""WARNING NumericalFlux Pointwise conditions should take arguments (x,flag) now trying without flag""")
                                 g = getDiffusiveFluxBoundaryConditions[ci][ck](x)
-                                if g != None:
+                                if g is not None:
                                     self.isDiffusiveFluxBoundary[ci][ebNE,k]=1
         #ci
         #import pdb
