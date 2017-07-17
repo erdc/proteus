@@ -479,7 +479,10 @@ setup(name='proteus',
                     'proteus/tests/MeshAdaptPUMI/Rectangle1.smb',
                     'proteus/tests/MeshAdaptPUMI/Rectangle.dmg',
                     'proteus/tests/MeshAdaptPUMI/TwoQuads0.smb',
-                    'proteus/tests/MeshAdaptPUMI/TwoQuads.dmg'])
+                    'proteus/tests/MeshAdaptPUMI/TwoQuads.dmg']),
+                  (os.path.join(proteus_install_path,'tests','poisson_2d'),
+                   ['proteus/tests/poisson_2d/square4x4.3dm',
+                    'proteus/tests/poisson_2d/square4x4.bc'])
       ],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/povgen.py',
                  'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
