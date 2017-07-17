@@ -17,8 +17,6 @@ cE=1
 LUMPED_MASS_MATRIX=0
 mannings=0.0
 
-use_SUPG=1
-
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
 bt['back'] = bt['top']
@@ -43,7 +41,7 @@ class dam_break_problem_starting_at_t0:
         if (x <= self.xc):
             h = self.hl
         else:
-            h = 0.001
+            h = 0.000
         return h
 
 class dam_break_problem_starting_at_t1:
@@ -94,12 +92,12 @@ class Zero:
     def uOfXT(self,x,t):
         return 0.0
 
-initialConditions = {0:dam_break_problem_starting_at_t0(hl=hl,xc=xc),
-                     1:Zero(),
-                     2:Zero()}
-#initialConditions = {0:dam_break_problem_starting_at_t1(hl=hl,xc=xc,g=g),
-#                     1:momX_starting_at_t1(hl=hl,xc=xc,g=g),
+#initialConditions = {0:dam_break_problem_starting_at_t0(hl=hl,xc=xc),
+#                     1:Zero(),
 #                     2:Zero()}
+initialConditions = {0:dam_break_problem_starting_at_t1(hl=hl,xc=xc,g=g),
+                     1:momX_starting_at_t1(hl=hl,xc=xc,g=g),
+                     2:Zero()}
 
 ##########################
 ##### EXACT SOLUTION #####
