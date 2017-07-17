@@ -628,6 +628,85 @@ class Newton(NonlinearSolver):
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
         logEvent(memory("Newton","Newton"),level=4)
 
+class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
+    """
+     This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        ###########
+        # STAGE 1 # 
+        ###########
+        # y_stage1 = yn + dt*L(yn,t) 
+        self.computeResidual(u,r,b)
+        u[:] = r
+        # FCT STEP ON WATER HEIGHT #
+        logEvent("   FCT Step", level=1)
+        self.F.FCTStep()
+
+        #############################################
+        # UPDATE SOLUTION THROUGH calculateResidual #
+        #############################################
+        self.F.auxiliaryCallCalculateResidual = True
+        self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
+
+        # Compute infinity norm of vel-x. This is for 1D well balancing test
+        #exact_hu = 2 + 0.*self.F.u[1].dof
+        #error = numpy.abs(exact_hu - self.F.u[1].dof).max()
+        #self.F.inf_norm_hu.append(error)
+
+        self.F.check_positivity_water_height=True
+
+class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
+    """
+     This is a fake solver meant to be used with optimized code
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        FIX_ROUNDOFF_ERROR = False
+        
+        ##############################
+        # ENTROPY VISCOSITY SOLUTION #
+        ##############################
+        logEvent("   Entropy viscosity solution with consistent mass matrix", level=1)
+        self.computeResidual(u,r,b)
+        if self.updateJacobian or self.fullNewton:
+            self.updateJacobian = False
+            self.F.getJacobian(self.J)
+            self.linearSolver.prepare(b=r)
+        self.du[:]=0.0
+        if not self.directSolver:
+            if self.EWtol:
+                self.setLinearSolverTolerance(r)
+        if not self.linearSolverFailed:
+            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+            self.linearSolverFailed = self.linearSolver.failed()
+        u-=self.du
+        logEvent("   End of entropy viscosity solution", level=4)
+
+        ############################
+        # FCT STEP ON WATER HEIGHT #
+        ############################
+        logEvent("   FCT Step", level=1)
+        self.F.FCTStep()
+
+        # DISTRIBUTE SOLUTION FROM u to u[ci].dof
+        self.F.auxiliaryCallCalculateResidual = True
+        self.computeResidual(u,r,b)
+        self.F.auxiliaryCallCalculateResidual = False
+
+        #self.F.setUnknowns(u)        
+        # Get values at quad points (in case there is a need to do convergence tests)
+        #for ci in range(self.F.nc):
+        #    self.F.u[ci].getValues(self.F.q[('w',0)],self.F.q[('u',ci)])
+
+        self.F.check_positivity_water_height=True
+
 import deim_utils
 class POD_Newton(Newton):
     """Newton's method on the reduced order system based on POD"""
@@ -2700,7 +2779,11 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                      maxLSits=100,
                                      parallelUsesFullOverlap = True,
                                      nonlinearSolverNorm = l2Norm):
-    if (multilevelNonlinearSolverType == Newton or
+    if (levelNonlinearSolverType == ExplicitLumpedMassMatrixShallowWaterEquationsSolver):
+        levelNonlinearSolverType = ExplicitLumpedMassMatrixShallowWaterEquationsSolver
+    elif (levelNonlinearSolverType == ExplicitConsistentMassMatrixShallowWaterEquationsSolver):
+        levelNonlinearSolverType = ExplicitConsistentMassMatrixShallowWaterEquationsSolver    
+    elif (multilevelNonlinearSolverType == Newton or
         multilevelNonlinearSolverType == NLJacobi or
         multilevelNonlinearSolverType == NLGaussSeidel or
         multilevelNonlinearSolverType == NLStarILU):
