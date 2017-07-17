@@ -93,7 +93,7 @@ class SimulationProcessor:
         and labels for storing things, etc
         """
         self.analyticalSolution = {}
-        if analyticalSolution != None:
+        if analyticalSolution is not None:
             self.analyticalSolution = analyticalSolution
         self.timeValues = []
         self.plotOffSet = None
@@ -109,7 +109,7 @@ class SimulationProcessor:
         self.nodalQuadratureInfo  = None
         #store p and n files now
         self.pFile = pFile; self.nFile = nFile
-        if flags != None:
+        if flags is not None:
             for key in self.flags.keys():
                 if key in flags.keys():
                     self.flags[key]=flags[key]
@@ -206,7 +206,7 @@ class SimulationProcessor:
             self.dataStorage = shelve.open(absfile)
             #mwf debug
             #print "SimTools opening dataStorage file=%s dataStorage=%s " % (absfile,self.dataStorage)
-            assert self.dataStorage != None, "dataStorage == None storeTimes=%s absfile=%s " % (self.flags['storeTimes'],
+            assert self.dataStorage is not None, "dataStorage is None storeTimes=%s absfile=%s " % (self.flags['storeTimes'],
                                                                                                 absfile)
 
         #end storing something
@@ -350,7 +350,7 @@ class SimulationProcessor:
                 mFinest.u[ci].femSpace.writeFunctionHeaderEnsight(mFinest.u[ci],case_filename,append=False,
                                                                   firstVariable=False)
             #velocity dofs
-            if mFinest.coefficients.vectorComponents != None:
+            if mFinest.coefficients.vectorComponents is not None:
                 if len(mFinest.coefficients.vectorComponents) == 2:
                     vcomp = [mFinest.coefficients.vectorComponents[0],
                              mFinest.coefficients.vectorComponents[1]]
@@ -405,13 +405,13 @@ class SimulationProcessor:
 #cek moving to Viewers.V_base
 #         if (('Init' in self.flags['plotTimes'] or 'All' in self.flags['plotTimes']) and
 #             'u' in self.flags['plotQuantities'] and 'viewerType' in dir(Viewers)):#
-#             #and  p.initialConditions != None ):
+#             #and  p.initialConditions is not None ):
 #             dgrid = (n.nn-1)*(2**n.nLevels) #default should be 50
 #             #mwf debug
 #             #import pdb
 #             #pdb.set_trace()
 
-#             if self.plotOffSet == None:
+#             if self.plotOffSet is None:
 #                self.plotOffSet = Viewers.windowNumber #keep from orphaning windows?
 #             #don't reset window number
 #             pause = False
@@ -431,7 +431,7 @@ class SimulationProcessor:
 #cek
         #
         if (('Init' in self.flags['storeTimes'] or 'All' in self.flags['storeTimes']) and
-            p.initialConditions != None):
+            p.initialConditions is not None):
             if 'u' in self.flags['storeQuantities']:
                 mlvt.levelModelList[-1].saveSolution()
             self.stepStoreQuantities(mlvt,tsim)
@@ -466,10 +466,10 @@ class SimulationProcessor:
 #          n    --- numerics definition
 #
         p = self.pFile; n = self.nFile
-        if tsim == None:
+        if tsim is None:
             mlvt.levelModelList[-1].timeIntegration.t
         self.timeValues.append(tsim)
-        if plotOffSet != None:
+        if plotOffSet is not None:
             self.plotOffSet = plotOffSet
         if 'All' in self.flags['errorTimes'] or tsim in self.flags['errorTimes']:
             self.stepProcessError(mlvt,tsim)
@@ -637,7 +637,7 @@ class SimulationProcessor:
         make sure can append if necessary?
         """
         if self.flags['storeTimes'] != [None]:
-            assert self.dataStorage != None, "dataStorage None storeTimes= %s " % self.flags['storeTimes']
+            assert self.dataStorage is not None, "dataStorage None storeTimes= %s " % self.flags['storeTimes']
             if 'simulationData' in self.flags['storeQuantities']:
                 self.dataStorage['timeValues']    = self.timeValues
                 self.dataStorage['simulationData']= self.simulationData
@@ -677,7 +677,7 @@ class SimulationProcessor:
         hasAnalyticalSolutionVelocity = {}
         for ci in range(p.coefficients.nc):
             hasAnalyticalSolution[ci] = (self.analyticalSolution.has_key(ci)  and
-                                         self.analyticalSolution[ci] != None)
+                                         self.analyticalSolution[ci] is not None)
             hasAnalyticalSolutionVelocity[ci] = ('analyticalSolutionVelocity' in dir(p) and
                                                  p.analyticalSolutionVelocity is not None and
                                                  ci in p.analyticalSolutionVelocity and
@@ -708,7 +708,7 @@ class SimulationProcessor:
                 for ci in range(p.coefficients.nc):
                     if (ci in self.flags['components']and
                         not hasAnalyticalSolutionVelocity[ci] and
-                        n.conservativeFlux != None and 'velocity' in self.flags['errorQuantities']):
+                        n.conservativeFlux is not None and 'velocity' in self.flags['errorQuantities']):
                         #mwf debug
                         logEvent("SimTools proj velocity for error calling projectVelocityToFinestLevelNC")
                         velproj[ci] = projectVelocityToFinestLevelNC(mlvt,il,ci)
@@ -1140,15 +1140,15 @@ class SimulationProcessor:
             for ci in self.flags['components']:
                 for il,m in enumerate(mlvt.levelModelList):
                     #
-                    if self.conservationResidual[il] == None:
+                    if self.conservationResidual[il] is None:
                         self.conservationResidual[il] = numpy.zeros((m.mesh.nElements_global,),'d')
                     else:
                         self.conservationResidual[il].flat[:] = 0.0
-                    if self.elementResidual[il] == None:
+                    if self.elementResidual[il] is None:
                         self.elementResidual[il] = numpy.array(m.elementResidual[ci],'d')
                     else:
                         self.elementResidual[il].flat[:] = m.elementResidual[ci].flat[:]
-                    if n.conservativeFlux == None or ci not in n.conservativeFlux.keys() or 'dg' in n.conservativeFlux[ci]:#have to adjust residual appropriately for different methods
+                    if n.conservativeFlux is None or ci not in n.conservativeFlux.keys() or 'dg' in n.conservativeFlux[ci]:#have to adjust residual appropriately for different methods
                         pass
                     else:
                         flux = -1.0*m.ebq_global[('totalFlux',ci)]
@@ -1159,7 +1159,7 @@ class SimulationProcessor:
                                                                         m.ebq[('w*dS_u',ci)],
                                                                         self.elementResidual[il])
                     #removing boundary flux from
-                    if n.conservativeFlux == None or ci not in n.conservativeFlux.keys() or 'dg' in n.conservativeFlux[ci]:
+                    if n.conservativeFlux is None or ci not in n.conservativeFlux.keys() or 'dg' in n.conservativeFlux[ci]:
                         cfemIntegrals.calculateConservationResidualDG(self.elementResidual[il],self.conservationResidual[il])
                     else:
                         cfemIntegrals.calculateConservationResidual(m.ebq['n'],
@@ -1218,7 +1218,7 @@ class SimulationProcessor:
         need to be stored
         """
         scalarElementStorageKeys = []
-        for quant in filter(lambda a: a != None,self.flags['storeQuantities']):
+        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1232,7 +1232,7 @@ class SimulationProcessor:
         need to be stored
         """
         vectorElementStorageKeys = []
-        for quant in filter(lambda a: a != None,self.flags['storeQuantities']):
+        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1246,7 +1246,7 @@ class SimulationProcessor:
         need to be stored
         """
         tensorElementStorageKeys = []
-        for quant in filter(lambda a: a != None,self.flags['storeQuantities']):
+        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1260,7 +1260,7 @@ class SimulationProcessor:
         need to be stored
         """
         scalarElementStorageKeys = []
-        for quant in filter(lambda a: a != None,self.flags['storeQuantities']):
+        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebq_global': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1274,7 +1274,7 @@ class SimulationProcessor:
         need to be stored
         """
         vectorElementStorageKeys = []
-        for quant in filter(lambda a: a != None,self.flags['storeQuantities']):
+        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebq_global': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1288,7 +1288,7 @@ class SimulationProcessor:
         need to be stored
         """
         tensorElementStorageKeys = []
-        for quant in filter(lambda a: a != None,self.flags['storeQuantities']):
+        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebq_global': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1302,7 +1302,7 @@ class SimulationProcessor:
         need to be stored
         """
         scalarElementStorageKeys = []
-        for quant in filter(lambda a: a != None,self.flags['storeQuantities']):
+        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebqe': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1316,7 +1316,7 @@ class SimulationProcessor:
         need to be stored
         """
         vectorElementStorageKeys = []
-        for quant in filter(lambda a: a != None,self.flags['storeQuantities']):
+        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebqe': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1330,7 +1330,7 @@ class SimulationProcessor:
         need to be stored
         """
         tensorElementStorageKeys = []
-        for quant in filter(lambda a: a != None,self.flags['storeQuantities']):
+        for quant in filter(lambda a: a is not None,self.flags['storeQuantities']):
             recType = quant.split(':')
             if len(recType) > 1 and recType[0] == 'ebqe': #found element quadrature quantity
                 stval = eval(recType[1])
@@ -1411,7 +1411,7 @@ class SimulationProcessor:
 
         TODO: add option for storage directory
         """
-        assert self.dataStorage != None, "dataStorage None storeTimes= %s " % self.flags['storeTimes']
+        assert self.dataStorage is not None, "dataStorage None storeTimes= %s " % self.flags['storeTimes']
         if self.storeHeavyData == False:
             return
         p = self.pFile; n = self.nFile
@@ -1545,7 +1545,7 @@ class SimulationProcessor:
                                                         append=True,
                                                         firstVariable=False)
         #ci
-        if mFinest.coefficients.vectorComponents != None:
+        if mFinest.coefficients.vectorComponents is not None:
             if len(mFinest.coefficients.vectorComponents) == 2:
                 vcomp = [mFinest.coefficients.vectorComponents[0],
                          mFinest.coefficients.vectorComponents[1]]
@@ -1608,7 +1608,7 @@ class SimulationProcessor:
         meshOut.close()
 
     def writeScalarElementFunctionHeaderEnsight(self,ckey,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -1620,7 +1620,7 @@ class SimulationProcessor:
             caseOut.close()
         #
     def writeVectorElementFunctionHeaderEnsight(self,ckey,filename,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
         if not append:
             caseOut=open(case_filename+'.case','a')
@@ -1946,7 +1946,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
 
     mFine  = mlTransport.levelModelList[-1]
     mCoarse= mlTransport.levelModelList[level]
-    if mCoarse.velocityPostProcessor == None:
+    if mCoarse.velocityPostProcessor is None:
         return None
 
     P = generateParentInfo(mlTransport.mlMeshSave)
