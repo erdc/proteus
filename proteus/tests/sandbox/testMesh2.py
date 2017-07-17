@@ -26,7 +26,7 @@ if __name__ == '__main__':
                       dest="petscOptions",
                       default=None)
     (opts,args) = parser.parse_args()
-    if opts.petscOptions != None:
+    if opts.petscOptions is not None:
         sys.argv = sys.argv[:-1]+opts.petscOptions.split()
         print sys.argv
     Comm.argv = sys.argv

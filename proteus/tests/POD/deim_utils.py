@@ -10,7 +10,7 @@ def read_from_hdf5(hdfFile,label,dof_map=None):
     If dof_map is not none, use this to map values in the array
     If dof_map is not none, this determines shape of the output array
     """
-    assert hdfFile != None, "requires hdf5 for heavy data"
+    assert hdfFile is not None, "requires hdf5 for heavy data"
     vals = hdfFile.getNode(label).read()
     if dof_map is not None:
         dof = vals[dof_map]
@@ -120,9 +120,9 @@ def visualize_zslice(variable,nnx,nny,iz,x=None,y=None,name=None):
     iend   = nnx*nny*(iz+1)
     v_slice= variable[istart:iend]
     v_slice= v_slice.reshape(nnx,nny)
-    if x == None:
+    if x is None:
         x = np.outer(np.arange(nnx),np.arange(nnx))
-    if y == None:
+    if y is None:
         y = np.outer(np.arange(nny),np.arange(nny))
     assert x.shape == v_slice.shape
     assert y.shape == v_slice.shape
@@ -135,7 +135,7 @@ def visualize_zslice(variable,nnx,nny,iz,x=None,y=None,name=None):
     ax = fig.gca(projection='3d')
     surf=ax.plot_surface(x,y,v_slice,rstride=1,cstride=1,cmap=cm.coolwarm,linewidth=0,antialiased=False)
     plt.xlabel('x'); plt.ylabel('y')
-    if name == None:
+    if name is None:
         name = 'deim_slice_z={0}.png'.format(iz)
     plt.savefig(name)
 
