@@ -1181,7 +1181,16 @@ class TankWithObstacles2D(Tank2D):
     coords: Optional[array_like]
         Coordinates of the centroid of the shape.
     from_0: Optional[bool]
-        If True (default), the tank extends from the origin to positive x, y, z
+        If True (default), the tank extends from the origin to positive x, y, za
+    hole: Optional[bool]
+        If True (default), the obstacle of the tank is just an open hole at the 
+        bottom of the tank. If False, a segment at the bottom of the obstacle is
+        created to close the hole.
+    obstacle_regions: Optional[array_like]
+        To use only if hole=False.(x,y) coordinates of a point inside the 
+        obstacle in order to fill the obstacle with what should be inside 
+        (for example a porous material).
+        
     """
     def __init__(self, domain, dim=(0., 0.),
                  obstacles = None, special_boundaries = None,
@@ -1207,7 +1216,7 @@ class TankWithObstacles2D(Tank2D):
         self.corners = {'x-y-': False, 'x+y-': False,
                         'x+y+': False, 'x-y+': False}
                         
-	self.hole = hole
+	    self.hole = hole
         self.obstacle_regions = obstacle_regions
         super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
 
