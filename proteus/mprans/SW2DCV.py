@@ -414,7 +414,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         self.inf_norm_hu=[] #To test 1D well balancing
         self.firstCalculateResidualCall=True
-        self.auxiliaryCallCalculateResidual=False
+        self.secondCallCalculateResidual=False
         self.postProcessing = False#this is a hack to test the effect of post-processing
         #
         #set the objects describing the method and boundary conditions
@@ -749,8 +749,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
         self.setupFieldStrides()
 
-        #hEps: this is use to regularize the flux and re-define the dry states
-        self.hEps=None
+        #hReg: this is use to regularize the flux and re-define the dry states
+        self.hReg=None
         self.ML=None #lumped mass matrix
         self.MC_global=None #consistent mass matrix
         #Global C Matrices (mql)
@@ -760,7 +760,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.low_order_hnp1=None
         self.low_order_hunp1=None
         self.low_order_hvnp1=None
-        self.dEV_minus_dL=None
+        self.dH_minus_dL=None
+        self.muH_minus_muL=None
 
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = None
@@ -863,11 +864,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
                                    compKernelFlag)
 
-        if 'use_second_order_NonFlatB_GP_stabilization' in dir(options):
-            self.calculateResidual = self.sw2d.calculateResidual_second_order_NonFlatB_GP
-            self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
+        if 'use_SUPG' in dir(options):
+            self.calculateResidual = self.sw2d.calculateResidual_SUPG
+            self.calculateJacobian = self.sw2d.calculateJacobian_SUPG
         else:
-            self.calculateResidual = self.sw2d.calculateResidual
+            self.calculateResidual = self.sw2d.calculateResidual_entropy_viscosity
             if (self.coefficients.LUMPED_MASS_MATRIX):
                 self.calculateJacobian = self.sw2d.calculateLumpedMassMatrix
             else:
@@ -906,8 +907,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                           rowptr, #Row indices for Sparsity Pattern (convenient for DOF loops)
                           colind, #Column indices for Sparsity Pattern (convenient for DOF loops)
                           MassMatrix,
-                          self.dEV_minus_dL,
-                          self.hEps, 
+                          self.dH_minus_dL,
+                          self.muH_minus_muL,
+                          self.hReg,
                           self.coefficients.LUMPED_MASS_MATRIX)
                 
         # Pass the post processed hnp1 solution to global solution u
@@ -919,10 +921,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-        #COMPUTE hEps
-        if self.hEps is None: 
-            eps=1E-14
-            self.hEps = eps*self.u[0].dof.max()
         #COMPUTE C MATRIX 
         if self.cterm_global is None:
             #since we only need cterm_global to persist, we can drop the other self.'s
@@ -1040,9 +1038,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                       self.csrColumnOffsets[(0,0)]/3,
                                                                       elementMassMatrix,
                                                                       self.MC_global)
+            
+            diamD2 = numpy.sum(self.q['abs(det(J))'][:]*self.elementQuadratureWeights[('u',0)])  
             self.ML = np.zeros((self.nFreeDOF_global[0],),'d')
+            self.hReg = np.zeros((self.nFreeDOF_global[0],),'d')
             for i in range(self.nFreeDOF_global[0]):
                 self.ML[i] = self.MC_a[rowptr_cMatrix[i]:rowptr_cMatrix[i+1]].sum()
+                self.hReg[i] = 1*self.ML[i]/diamD2*self.u[0].dof.max()                
             np.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
 
             for d in range(self.nSpace_global): #spatial dimensions
@@ -1106,7 +1108,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         rowptr_cMatrix, colind_cMatrix, CTx = self.cterm_global_transpose[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, CTy = self.cterm_global_transpose[1].getCSRrepresentation()
         # This is dummy. I just care about the csr structure of the sparse matrix
-        self.dEV_minus_dL = np.zeros(Cx.shape,'d')
+        self.dH_minus_dL = np.zeros(Cx.shape,'d')
+        self.muH_minus_muL = np.zeros(Cx.shape,'d')
         self.low_order_hnp1 = numpy.zeros(self.u[0].dof.shape,'d')
         self.low_order_hunp1 = numpy.zeros(self.u[1].dof.shape,'d')
         self.low_order_hvnp1 = numpy.zeros(self.u[2].dof.shape,'d')
@@ -1275,7 +1278,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.lumped_mass_matrix, 
             self.edge_based_cfl, 
             self.timeIntegration.runCFL,
-            self.hEps, 
+            self.hReg.min(), #hEps. This is used to compute the cell based cfl
+            self.hReg,
             self.recompute_lumped_mass_matrix, 
             self.q[('u',0)], 
             self.q[('u',1)], 
@@ -1286,14 +1290,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.low_order_hnp1,
             self.low_order_hunp1,
             self.low_order_hvnp1,
-            self.dEV_minus_dL,
+            self.dH_minus_dL,
+            self.muH_minus_muL,
             self.coefficients.cE, 
             self.coefficients.LUMPED_MASS_MATRIX, 
             self.coefficients.USE_EV_BASED_ON_GALERKIN,
             self.timeIntegration.dt, 
             self.coefficients.mannings,
             self.quantDOFs, 
-            self.ML)
+            self.ML, 
+            self.secondCallCalculateResidual)
 
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
@@ -1303,7 +1309,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #self.timeIntegration.dt=self.timeIntegration.runCFL/globalMax(self.edge_based_cfl.max())
         #logEvent("...   Time step = " + str(self.timeIntegration.dt),level=2)
 
-        if (self.auxiliaryCallCalculateResidual==False):
+        if (self.secondCallCalculateResidual==False):
             edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
             cell_based_cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
             logEvent("...   Current dt = " + str(self.timeIntegration.dt),level=4)
