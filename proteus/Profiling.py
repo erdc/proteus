@@ -61,10 +61,10 @@ def openLog(filename,level,logLocation=None):
     global logDir
     global procID
     global logAllProcesses
-    assert procID != None, "Initialize Comm and set Profiling.procID before opening log"
+    assert procID is not None, "Initialize Comm and set Profiling.procID before opening log"
     filename_full = filename
     import os
-    if logLocation != None:
+    if logLocation is not None:
         logDir = logLocation
         filename_full = os.path.join(logDir,filename)
     if  procID == 0:
@@ -84,16 +84,16 @@ def closeLog():
 
 def logEvent(stringIn, level=1, data=None):
     global logLevel,procID,logAllProcesses,flushBuffer,preInitBuffer
-    if procID != None:
+    if procID is not None:
         if logAllProcesses or procID==0:
             if level < logLevel:
-                if logAllProcesses and procID != None and stringIn != None:
+                if logAllProcesses and procID is not None and stringIn is not None:
                     string = "Proc %d : " % procID
                     string += stringIn
                 else:
                     string = stringIn
-                if string!=None:
-                    if data!=None:
+                if string is not None:
+                    if data is not None:
                         string += repr(data)
                     string +='\n'
                     string = ("[%8d] " % (time() - startTime)) + string
@@ -106,7 +106,7 @@ def logEvent(stringIn, level=1, data=None):
                         sys.stdout.write(string)
                         if flushBuffer:
                             sys.stdout.flush()
-    elif procID==None:
+    elif procID is None:
         preInitBuffer.append((stringIn,level,data))
 
 def memory(message=None,className='',memSaved=None):
@@ -124,7 +124,7 @@ def memory(message=None,className='',memSaved=None):
         mem = memList[-1]
         if mem > memMax:
             memMax = mem
-        if memSaved != None:
+        if memSaved is not None:
             memInc = mem - memSaved
         else:
             memInc = mem-memLast
@@ -139,13 +139,13 @@ def memory(message=None,className='',memSaved=None):
             if mem > memHardLimit:
                 import sys
                 from mpi4py import MPI
-                if className == None:
+                if className is None:
                     className = "UnknownClass"
-                if caller == None:
+                if caller is None:
                     caller="UnknownCaller"
-                if line == None:
+                if line is None:
                     line = "Unknown Line"
-                if message == None:
+                if message is None:
                     message = ''
                 logEvent("PROTEUS ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %f MB in routine, %f MB in program, %f MB is hard limit" % (memInc,mem,memHardLimit))
                 MPI.COMM_WORLD.Abort(1)
@@ -251,10 +251,23 @@ Wall clock percentage of top 20 calls
 @atexit.register
 def ProfilingDtor():
     global procID, verbose
-    if procID == None:
-        verbose=False
+    if procID is None:
+        verbose=True
         logEvent(
             "Proteus.Profiling never initialized. Doing it at exit.")
         procID = 0
         openLog("proteus_default.log",level=11,logLocation="/tmp")
     closeLog()
+
+
+def print_petsc_commandline_options(petsc_options):
+    """ Returns a formated string with PETSc command-line options 
+    
+    petsc_options : list
+        A list of the Petsc command line options and values.
+    """
+    str = ""
+    for i,j in zip(petsc_options[1::2], petsc_options[2::2]):
+        str += "NAHeader PETScOptions " + i + " " + j +  "\n"
+    return str
+    

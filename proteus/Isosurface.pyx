@@ -539,7 +539,7 @@ vertex_vectors {"""
         if self.comm.isMaster():
             look_at = [0.5 * (x + L)
                        for x, L in zip(self.domain.x, self.domain.L)]
-            if cam == None:
+            if cam is None:
                 cam = [0.5*(self.domain.x[0] + self.domain.L[0]),
                        self.domain.x[1] - 2*self.domain.L[1],
                        self.domain.x[2] + 0.85*(self.domain.L[2] + self.domain.x[2])]
