@@ -49,7 +49,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         if self.lag:
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             logEvent("Dissipation.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
             self.numDiff_last=[]
@@ -192,7 +192,7 @@ Chaper 11 or k-omega (Wilcox 1998).
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def attachModels(self,modelList):
-        assert self.modelIndex != None and self.modelIndex < len(modelList), "Dissipation: invalid index for self model allowed range: [0,%s]" % len(modelList)
+        assert self.modelIndex is not None and self.modelIndex < len(modelList), "Dissipation: invalid index for self model allowed range: [0,%s]" % len(modelList)
         #self
         self.model = modelList[self.modelIndex]
 	
@@ -200,10 +200,10 @@ Chaper 11 or k-omega (Wilcox 1998).
 	self.u_old_dof = numpy.copy(self.model.u[0].dof)
 	
         #redistanced level set
-        if self.RD_modelIndex != None:
+        if self.RD_modelIndex is not None:
             self.rdModel = modelList[self.RD_modelIndex]
         #level set
-        if self.LS_modelIndex != None:
+        if self.LS_modelIndex is not None:
             self.lsModel = modelList[self.LS_modelIndex]
             self.q_phi = modelList[self.LS_modelIndex].q[('u',0)]
             self.ebqe_phi = modelList[self.LS_modelIndex].ebqe[('u',0)]
@@ -212,9 +212,9 @@ Chaper 11 or k-omega (Wilcox 1998).
             else:
                 self.ebq_phi = None
         #flow model
-        assert self.flowModelIndex != None, "Dissipation: invalid index for flow model allowed range: [0,%s]" % len(modelList)
+        assert self.flowModelIndex is not None, "Dissipation: invalid index for flow model allowed range: [0,%s]" % len(modelList)
         #print "flow model index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))
-        if self.flowModelIndex != None: #keep for debugging for now
+        if self.flowModelIndex is not None: #keep for debugging for now
             if modelList[self.flowModelIndex].q.has_key(('velocity',0)):
                 self.q_v = modelList[self.flowModelIndex].q[('velocity',0)]
                 self.ebqe_v = modelList[self.flowModelIndex].ebqe[('velocity',0)]
@@ -276,8 +276,8 @@ Chaper 11 or k-omega (Wilcox 1998).
             self.ebqe_porosity = numpy.ones(self.ebqe[('u',0)].shape,'d')
             
         #
-        #assert self.kappa_modelIndex != None and self.kappa_modelIndex < len(modelList), "Dissipation: invalid index for dissipation model allowed range: [0,%s]" % len(modelList) 
-        if self.kappa_modelIndex != None: #keep for debugging for now
+        #assert self.kappa_modelIndex is not None and self.kappa_modelIndex < len(modelList), "Dissipation: invalid index for dissipation model allowed range: [0,%s]" % len(modelList) 
+        if self.kappa_modelIndex is not None: #keep for debugging for now
             #assume have q,ebqe always
             self.q_kappa = modelList[self.kappa_modelIndex].q[('u',0)]
             self.ebqe_kappa = modelList[self.kappa_modelIndex].ebqe[('u',0)]
@@ -295,7 +295,7 @@ Chaper 11 or k-omega (Wilcox 1998).
             #
         #
     def initializeElementQuadrature(self,t,cq):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
             self.q_grad_u = numpy.ones(cq[('grad(u)',0)].shape,'d')
             self.q_grad_v = numpy.ones(cq[('grad(u)',0)].shape,'d')
@@ -303,12 +303,12 @@ Chaper 11 or k-omega (Wilcox 1998).
                 self.q_grad_w = self.q_grad_v.copy()
             else:
                 self.q_grad_w = numpy.ones(cq[('grad(u)',0)].shape,'d')
-        if self.kappa_modelIndex == None:
+        if self.kappa_modelIndex is None:
             self.q_kappa = numpy.ones(cq[('u',0)].shape,'d')
             self.q_kappa.fill(self.default_kappa); 
             self.q_grad_kappa = numpy.zeros(cq[('grad(u)',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
             self.ebq_grad_u = numpy.ones(cebq[('grad(u)',0)].shape,'d')
             self.ebq_grad_v = numpy.ones(cebq[('grad(u)',0)].shape,'d')
@@ -316,16 +316,16 @@ Chaper 11 or k-omega (Wilcox 1998).
                 self.ebq_grad_w = self.ebq_grad_v.copy()
             else:
                 self.ebq_grad_w = numpy.ones(cebq[('grad(u)',0)].shape,'d')
-        if self.kappa_modelIndex == None:
+        if self.kappa_modelIndex is None:
             self.ebq_kappa = numpy.ones(cebq[('u',0)].shape,'d')
             self.ebq_kappa.fill(self.default_kappa)
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
-        if self.flowModelIndex == None:
+        if self.flowModelIndex is None:
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
             self.ebqe_grad_u = numpy.ones(cebqe[('grad(u)',0)].shape,'d')
             self.ebqe_grad_v = numpy.ones(cebqe[('grad(u)',0)].shape,'d')
             self.ebqe_grad_w = numpy.ones(cebqe[('grad(u)',0)].shape,'d')
-        if self.kappa_modelIndex == None:
+        if self.kappa_modelIndex is None:
             self.ebqe_kappa = numpy.ones(cebqe[('u',0)].shape,'d')
             self.ebqe_kappa.fill(self.default_kappa)
     def preStep(self,t,firstStep=False):
@@ -355,7 +355,7 @@ Chaper 11 or k-omega (Wilcox 1998).
             grad_v = self.ebqe_grad_v
             grad_w = self.ebqe_grad_w
             kappa = self.ebqe_kappa
-        elif ((self.ebq_v != None and self.ebq_phi != None and self.ebq_grad_u != None and self.ebq_grad_v != None and self.ebq_grad_w != None and self.ebq_kappa != None) and c[('f',0)].shape == self.ebq_v.shape):
+        elif ((self.ebq_v is not None and self.ebq_phi is not None and self.ebq_grad_u is not None and self.ebq_grad_v is not None and self.ebq_grad_w is not None and self.ebq_kappa is not None) and c[('f',0)].shape == self.ebq_v.shape):
             v = self.ebq_v
             phi = self.ebq_phi
             grad_u = self.ebq_grad_u
@@ -368,7 +368,7 @@ Chaper 11 or k-omega (Wilcox 1998).
             grad_u = None
             grad_v = None
             grad_w = None
-        if v != None:
+        if v is not None:
             if self.nd == 2:
                 self.kEpsilon_epsilon_2D_Evaluate_sd(self.sigma_e,
                                                      self.c_1,
@@ -479,7 +479,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization != None:
+	if self.stabilization is not None:
 	    for ci in range(self.nc):
 		if coefficients.mass.has_key(ci):
 		    for flag in coefficients.mass[ci].values():
@@ -509,8 +509,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or 
+                                                 (numericalFluxType is not None) or 
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -543,7 +543,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[I] = elementQuadrature
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(I):
@@ -552,7 +552,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature['default']
                 else:
                     elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(('numDiff',ci,ci)):
@@ -693,7 +693,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
              self.timeIntegration = TimeIntegrationClass(self)
            
-        if options != None:
+        if options is not None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
         logEvent("Calculating numerical quadrature formulas",2)
@@ -704,11 +704,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
-            assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
+            assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
-        if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+        if numericalFluxType is not None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -797,13 +797,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #cek hack
         self.movingDomain=False
         self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')        
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
     def calculateElementResidual(self):
-        if self.globalResidualDummy != None:
+        if self.globalResidualDummy is not None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
     def getResidual(self,u,r):
         import pdb
@@ -933,7 +933,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent("Global residual",level=9,data=r)
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy == None:
+        if self.globalResidualDummy is None:
             self.globalResidualDummy = numpy.zeros(r.shape,'d')
     def getJacobian(self,jacobian):
 	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
@@ -1048,10 +1048,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
     def calculateElementBoundaryQuadrature(self):
         pass
