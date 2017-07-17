@@ -1,7 +1,6 @@
 import proteus
 from proteus import Profiling
 import numpy
-cimport numpy
 from proteus import *
 from proteus.Transport import *
 from proteus.Transport import OneLevelTransport
@@ -542,7 +541,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.netMoments = numpy.zeros((nBoundariesMax, 3), 'd')
         if self.barycenters is None:
             self.barycenters = numpy.zeros((nBoundariesMax, 3), 'd')
-        if self.comm.isMaster():
+        comm = Comm.get()
+        if comm.isMaster():
             self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,"wettedAreaHistory.txt"),"w")
             self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,"forceHistory_p.txt"),"w")
             self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,"forceHistory_v.txt"),"w")
