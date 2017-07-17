@@ -2,13 +2,13 @@ from proteus import iproteus as ip
 from proteus import default_p as p
 from proteus import default_n as n
 from proteus import default_s,default_so
-reload(p)
 reload(n)
+reload(p)
 import numpy
 import proteus as pr
 
 p.nd = 2
-p.name = "Laplace_matrix_test"
+p.name = "Mass_matrix_test"
 
 p.rdomain = pr.Domain.unitSimplex(2)
 p.polyfile = "reference_triangle_2d"
@@ -27,7 +27,7 @@ p.advectiveFluxBoundaryConditions = {}
 p.diffusiveFluxBoundaryConditions = {}
 p.periodicDirichletConditions = None
 
-p.coefficients = pr.TransportCoefficients.DiscreteLaplaceOperator(p.nd)
+p.coefficients = pr.TransportCoefficients.DiscreteMassMatrix(p.nd)
 
 ############################
 
@@ -68,4 +68,3 @@ so.sList=[default_s]
 from proteus import *
 opts = None
 ns = NumericalSolution.NS_base(so,[p],[n],so.sList,ip.opts)
-ns.ar[0].hdfFile.close()

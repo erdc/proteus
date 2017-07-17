@@ -302,6 +302,8 @@ class OneLevelTransport(NonlinearEquation):
         #is just for convenience so that the input doesn't have to be
         #complete)
         #
+        self._elementQuadrature = elementQuadrature
+        self._elementBoundaryQuadrature = elementBoundaryQuadrature
         elementQuadratureDict={}
         elemQuadIsDict = isinstance(elementQuadrature,dict)
         if elemQuadIsDict: #set terms manually
@@ -1036,7 +1038,7 @@ class OneLevelTransport(NonlinearEquation):
             for ci,ckDict in diffusion.iteritems():
                 tmp = sorted(ckDict.keys())
                 if tmp:
-                    if firstComp == None or tmp[0] < firstComp:
+                    if firstComp is None or tmp[0] < firstComp:
                         firstComp = tmp[0]
             return firstComp
         #
@@ -1550,7 +1552,7 @@ class OneLevelTransport(NonlinearEquation):
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType is not None:
-            if options == None or options.periodicDirichletConditions == None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -1641,7 +1643,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         #set the initial conditions for the DOF based on the generalized interpolation conditions
         #
-        if analyticalSolutionsDict == None:
+        if analyticalSolutionsDict is None:
             return
         for cj,sol in analyticalSolutionsDict.iteritems():
             #pdb.set_trace()
@@ -2382,7 +2384,7 @@ class OneLevelTransport(NonlinearEquation):
                                                self.elementResidual[ci])
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck in ckDict.keys():
-                if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
+                if self.numericalFlux is None or self.numericalFlux.mixedDiffusion[ci] == False:
                     if self.sd:
                         cfemIntegrals.updateDiffusion_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                               self.q[('a',ci,ck)],
@@ -2744,7 +2746,7 @@ class OneLevelTransport(NonlinearEquation):
             for ck,cjDict in ckDict.iteritems():
                 for cj in set(cjDict.keys()+self.coefficients.potential[ck].keys()):
                     if self.timeIntegration.diffusionIsImplicit[ci]:
-                        if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
+                        if self.numericalFlux is None or self.numericalFlux.mixedDiffusion[ci] == False:
                             if self.sd:
                                 cfemIntegrals.updateDiffusionJacobian_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                               self.phi[ck].femSpace.dofMap.l2g,
@@ -3503,7 +3505,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                   self.ebq[('velocity',ci)],
                                                                                   self.ebq_global[('velocityAverage',ci)])
                     #mwf can never get here! Need to fix
-                    #if self.numericalFlux == None:
+                    #if self.numericalFlux is None:
                     #cfemIntegrals.calculateExteriorElementBoundaryAverageVelocity(self.mesh.exteriorElementBoundariesArray,
                     #                                                              self.mesh.elementBoundaryElementsArray,
                     #                                                              self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -5324,7 +5326,7 @@ class OneLevelTransport(NonlinearEquation):
                 pN+=1
         meshOut.close()
     def write_ebq_velocity_Ensight(self,filename,nOutput,append=False,firstVariable=True,case_filename=None):
-        if case_filename == None:
+        if case_filename is None:
             case_filename = filename
             if not append:
                 caseOut=open(case_filename+'.case','a')
@@ -6017,7 +6019,7 @@ class OneLevelTransport(NonlinearEquation):
                                          self.rowptr)
 
         _nd = self.coefficients.nd
-        if self.coefficients.nu != None:
+        if self.coefficients.nu is not None:
             _nu = self.coefficients.nu
         self.LaplaceOperatorCoeff = DiscreteLaplaceOperator(nd=_nd)
         _t = 1.0
@@ -6117,7 +6119,7 @@ class MultilevelTransport:
     def __init__(self,problem,numerics,mlMesh,OneLevelTransportType=OneLevelTransport):
         self.name = problem.name
         #cek temporary fix to get everything weaned off the old BC's
-        if numerics.numericalFluxType == None:
+        if numerics.numericalFluxType is None:
             numerics.numericalFluxType = NumericalFlux.StrongDirichletFactory(problem.fluxBoundaryConditions)
         self.OneLevelTransportType=OneLevelTransportType
         phiSpaces = None
@@ -6207,7 +6209,7 @@ class MultilevelTransport:
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        if PhiSpaceTypeDict == None: #by default phi in same space as u
+        if PhiSpaceTypeDict is None: #by default phi in same space as u
             PhiSpaceTypeDict = TrialSpaceTypeDict
         self.phiSpaceDictList = []
         #self.phiSpaceListDict = {}
@@ -6242,7 +6244,7 @@ class MultilevelTransport:
                 phiDict[cj].setupParallelCommunication()
             logEvent(memory("finite element spaces","MultilevelTransport"),level=4)
             logEvent("Setting Boundary Conditions")
-            if numericalFluxType==None:
+            if numericalFluxType is None:
                 useWeakDirichletConditions=False
             else:
                 useWeakDirichletConditions=numericalFluxType.useWeakDirichletConditions
@@ -6255,7 +6257,7 @@ class MultilevelTransport:
                 if not fluxBoundaryConditionsDict.has_key(cj):
                     fluxBoundaryConditionsDict[cj] = None
             logEvent("Setting Boundary Conditions-2")
-            if options == None or options.periodicDirichletConditions == None or options.parallelPeriodic==True:
+            if options is None or options.periodicDirichletConditions is None or options.parallelPeriodic==True:
                 logEvent("Setting Boundary Conditions-2a")
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions))
