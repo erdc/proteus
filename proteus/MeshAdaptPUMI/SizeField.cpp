@@ -39,9 +39,18 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
     apf::setScalar(size_iso, v, 0, size);
   }
   m->end(it);
+  /*
+    If you just smooth then hmax will just diffuse into the hmin band
+    and you won't really get a band around phi=0 with uniform diameter
+    hmin. Instead, reset to hmin after each smooth within the band in
+    order to ensure the band uses hmin. Iterate on that process until
+    changes in the smoothed size are less than 50% of hmin.
+   */
   double err_h_max=hmax;
-  while (err_h_max > hmin)
+  int its=0;
+  while (err_h_max > 0.5*hmin && its < 200)
     {
+      its++;
       SmoothField(size_iso);
       err_h_max=0.0;
       it = m->begin(0);
@@ -53,7 +62,6 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
 	apf::setScalar(size_iso, v, 0, size);
       }
       m->end(it);
-      std::cout<<"err_h_max "<<err_h_max<<std::endl;
     }    
   return 0;
 }
