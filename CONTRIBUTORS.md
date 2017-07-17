@@ -12,6 +12,7 @@ Copyright 2017 Alvin Zhang alv.zhang@gmail.com
 Copyright 2017 Alistair Bentley alistairbntl@gmail.com
 Copyright 2017 Steven Mattis steve.a.mattis@gmail.com
 Copyright 2017 Tristan de Lataillade delataillade.tristan@gmail.com
+Copyright 2017 Nehal J Wani nehaljw.kkd1@gmail.com
 2017 Timothy Povich Timothy.Povich@cso.nato.int
 
 **Note for U.S. Federal Employees**
