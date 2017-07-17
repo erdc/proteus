@@ -113,7 +113,7 @@ class Coefficients(TC_base):
         return copyInstructions
     def postStep(self,t,firstStep=False):
         """
-        Calculate the mean value of phi and adjust to make mean value 0.
+        Update the fluid velocities
         """
         alphaBDF = self.fluidModel.timeIntegration.alpha_bdf
         for i in range(self.fluidModel.q[('velocity',0)].shape[-1]):
@@ -394,7 +394,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             elif self.nSpace_global == 1:
                 assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 1)
 
-        # pdb.set_trace()
         #
         # simplified allocations for test==trial and also check if space is mixed or not
         #
@@ -673,7 +672,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.ebqe[('diffusiveFlux_bc_flag',ck,ci)][t[0],t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
         compKernelFlag = 0
-        self.presinc = cPresInc(
+        self.presinc = cPresInc.PresInc(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -716,11 +715,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('diffusiveFlux_bc',0,0)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
             self.ebqe[('diffusiveFlux_bc_flag',0,0)][t[0],t[1]] = 1
 
-        if False:#self.forceStrongConditions:
-            for dofN, g in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.iteritems():
-                self.u[0].dof[dofN] = g(
-                    self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
-                    self.timeIntegration.t)
         self.presinc.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -774,10 +768,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
         log("Global residual", level=9, data=r)
-        self.coefficients.massConservationError = fabs(
-            globalSum(r[:self.mesh.nNodes_owned].sum()))
-        log("   Mass Conservation Error", level=3,
-            data=self.coefficients.massConservationError)
+        #turn this on to view the global conservation residual
+        #it should be the same as the linear solver residual tolerance
+        #self.coefficients.massConservationError = fabs(
+        #    globalSum(r[:self.mesh.nNodes_owned].sum()))
+        #log("   Mass Conservation Error", level=3,
+        #    data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
 
     def getJacobian(self, jacobian):
