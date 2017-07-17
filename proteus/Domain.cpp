@@ -620,7 +620,7 @@ void PiecewiseLinearComplexDomain::writePoly(const char* filename)
 //     line = f.readline().split()
 //     while len(line) == 0 or line[0][0] == '#':
 //     line = f.readline().split()
-//     if self.base == None:
+//     if self.base is None:
 //     self.base = int(line[0])
 //     self.vertices.append([float(line[1]),float(line[2]),float(line[3])])
 //     for j in range(nVertexAttributes):
