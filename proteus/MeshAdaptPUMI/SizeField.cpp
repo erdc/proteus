@@ -692,13 +692,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     }
   }
 
-  //Get vtk files for fields prior to adaptation
-  if(logging_config=="on"){
-    char namebuffer[20];
-    sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
-    apf::writeVtkFiles(namebuffer, m);
-  }
-  
   //Destroy locally required fields
   apf::destroyField(size_iso_reg); 
   apf::destroyField(clipped_vtx);
@@ -716,11 +709,6 @@ int MeshAdaptPUMIDrvr::testIsotropicSizeField()
       double phi = hmin;
       clamp(phi,hmin,hmax);
       apf::setScalar(size_iso,v,0,phi);
-    }
-    char namebuffer[20];
-    if(logging_config=="on"){
-      sprintf(namebuffer,"pumi_adapt_%i",nAdapt);
-      apf::writeVtkFiles(namebuffer, m);
     }
 }
 
