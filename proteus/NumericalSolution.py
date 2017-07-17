@@ -1239,7 +1239,7 @@ class NS_base:  # (HasTraits):
        #     print "Min / Max residual %s / %s" %(lr.min(),lr.max())
 
         self.nSequenceSteps = 0
-        self.nSolveSteps = 0
+        self.nSolveSteps=self.nList[0].adaptMesh_nSteps-1
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             logEvent("==============================================================",level=0)
             logEvent("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
@@ -1381,7 +1381,10 @@ class NS_base:  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
-
+                #can only handle PUMIDomain's for now
+                self.nSolveSteps += 1
+                if(self.PUMI_estimateError()):
+                    self.PUMI_adaptMesh()
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
                 self.tCount+=1
@@ -1398,7 +1401,6 @@ class NS_base:  # (HasTraits):
             self.nSolveSteps += 1
             if(self.PUMI_estimateError()):
               self.PUMI_adaptMesh()
-
         logEvent("Finished calculating solution",level=3)
 
         for index,model in enumerate(self.modelList):
