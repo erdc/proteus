@@ -3990,6 +3990,14 @@ class TriangularMesh(Mesh):
     def writeTriangleFiles(self,filebase,base):
         import cmeshTools
         cmeshTools.writeTriangleFiles(self.cmesh,filebase,base)
+    def generateFrom2DMFile(self,filebase,base=1):
+        import cmeshTools
+        self.cmesh = cmeshTools.CMesh()
+        cmeshTools.generateFrom2DMFile(self.cmesh,filebase,base)
+        cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
+        cmeshTools.computeGeometricInfo_triangle(self.cmesh)
+        self.buildFromC(self.cmesh)
+
     def constructTriangularMeshOnRectangle(self,Lx,Ly,nx,ny,writeMesh=0,
                                            meshFileBase='mesh2d'):
         """
