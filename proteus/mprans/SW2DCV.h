@@ -1825,7 +1825,7 @@ namespace proteus
 	      double FluxCorrectionMatrix1 
 		= ML_minus_MC*(high_order_hnp1[j]-hnj - (high_order_hnp1i-hni)) 
 		+ dt*dH_minus_dL[ij]*(hStarji-hStarij)
-		+ dt*muH_minus_muL[ij]*(hStarji-hStarij)
+		- dt*muH_minus_muL[ij]*(hStarji-hStarij)
 		+ dt*muH_minus_muL[ij]*(hnj-hni);
 
 	      // COMPUTE P VECTORS //
@@ -1842,7 +1842,7 @@ namespace proteus
 	  ///////////////////////
 	  // COMPUTE R VECTORS //
 	  ///////////////////////
-	  if (high_order_hnp1[i] < hReg[i])
+	  if (high_order_hnp1[i] < 1.0e-2)//hReg[i])
 	    Rneg[i] = 0.;
 	  else
 	    Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
@@ -1917,10 +1917,11 @@ namespace proteus
 	    }
 
 	  double one_over_mi = 1.0/lumped_mass_matrix[i];
-	  limited_hnp1[i]  = low_order_hnp1[i]  + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
-	  limited_hunp1[i] = low_order_hunp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
-	  limited_hvnp1[i] = low_order_hvnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
-
+	  
+	  limited_hnp1[i]  = low_order_hnp1[i];//  + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
+	  limited_hunp1[i] = low_order_hunp1[i];// + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
+	  limited_hvnp1[i] = low_order_hvnp1[i];// + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
+	  
 	  if (limited_hnp1[i] < -1E-14)
 	    {
 	      std::cout << "Water height: "

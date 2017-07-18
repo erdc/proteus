@@ -363,7 +363,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         x = mesh.nodeArray[:,0]
         y = mesh.nodeArray[:,1]
         if self.bathymetry is None:
-            self.b.dof = mesh.nodeArray[:,2]
+            self.b.dof = mesh.nodeArray[:,2].copy()
         else:
             self.b.dof = self.bathymetry[0]([x,y])
     def initializeElementQuadrature(self,t,cq):
@@ -1048,7 +1048,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for i in range(self.nFreeDOF_global[0]):
                 self.ML[i] = self.MC_a[rowptr_cMatrix[i]:rowptr_cMatrix[i+1]].sum()
                 self.hReg[i] = 1*self.ML[i]/diamD2*self.u[0].dof.max()                
-            np.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
+            np.testing.assert_almost_equal(self.ML.sum(), diamD2, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
 
             for d in range(self.nSpace_global): #spatial dimensions
                 #C matrices
