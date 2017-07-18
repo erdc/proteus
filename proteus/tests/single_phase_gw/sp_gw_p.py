@@ -1,5 +1,8 @@
+import proteus
 from proteus import *
 from proteus.default_p import *
+
+reload(proteus.default_p)
 
 """
 flow equation for transient, single phase flow example

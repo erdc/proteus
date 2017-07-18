@@ -333,7 +333,7 @@ class FFDarcyFC_ASGS(SGE_base):
 
     def calculateSubgridError(self,q):
         oldTau = False
-        if self.dftemp == None or self.dftemp.shape != q[('grad(phi)',1)].shape:
+        if self.dftemp is None or self.dftemp.shape != q[('grad(phi)',1)].shape:
             self.dftemp = numpy.zeros(q[('grad(phi)',1)].shape,'d')
         ci = 0; cj = 0; ck = 1;
         if oldTau:
@@ -449,16 +449,16 @@ class DarcyFC_ASGS(SGE_base):
 
     def calculateSubgridError(self,q):
         oldTau=False
-        if self.dftemp == None or self.dftemp.shape != q[('grad(phi)',1)].shape:
+        if self.dftemp is None or self.dftemp.shape != q[('grad(phi)',1)].shape:
             self.dftemp = numpy.zeros(q[('grad(phi)',1)].shape,'d')
 
         #'w' phase equation
         ci = 0; cj = 0; ck = 0;
         if q.has_key(('dr',ci,cj)):
             self.drtmp[(ci,cj)] = q[('dr',ci,cj)]
-        elif self.drtmp[(ci,cj)] == None:
+        elif self.drtmp[(ci,cj)] is None:
             self.drtmp[(ci,cj)] = numpy.zeros(q[('r',ci)].shape,'d')
-        if self.drtmp[(ci,cj)] == None or self.drtmp[(ci,cj)].shape != q[('r',ci)].shape:
+        if self.drtmp[(ci,cj)] is None or self.drtmp[(ci,cj)].shape != q[('r',ci)].shape:
             self.drtmp[(ci,cj)] = numpy.zeros(q[('r',ci)].shape,'d')
         if oldTau:
             if self.coefficients.sd:
@@ -518,7 +518,7 @@ class DarcyFC_ASGS(SGE_base):
         ci = 1; cj = 0; ck = 1;
         if q.has_key(('dr',ci,cj)):
             self.drtmp[(ci,cj)] = q[('dr',ci,cj)]
-        elif self.drtmp[(ci,cj)] == None:
+        elif self.drtmp[(ci,cj)] is None:
             self.drtmp[(ci,cj)] = numpy.zeros(q[('r',ci)].shape,'d')
         if oldTau:
             if self.coefficients.sd:
@@ -1631,7 +1631,7 @@ class TwophaseStokes_LS_FC_ASGS(SGE_base):
                                                                  q[('dsubgridError',3,1)],
                                                                  q[('dsubgridError',3,3)])
     def updateSubgridErrorHistory(self,initializationPhase=False):
-        if self.lag != None:
+        if self.lag is not None:
             self.tau_last[:] = self.tau
 
 class ShallowWater_CFL(SGE_base):
@@ -1873,7 +1873,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS(SGE_base):
         SGE_base.__init__(self,coefficients,nd,lag)
         self.stabilizationFlag = stabFlag
         self.interpolationFemSpaceType = interpolationFemSpaceType
-        assert self.interpolationFemSpaceType != None
+        assert self.interpolationFemSpaceType is not None
         self.usesFEMinterpolant = True
         self.usesGradientStabilization = True
         self.tau_00_force=tau_00_force; self.tau_11_force = tau_11_force
@@ -1885,7 +1885,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS(SGE_base):
         import copy
         self.cq=cq
         self.cip=cip
-        assert self.cip != None
+        assert self.cip is not None
         self.tau_gradient = []
         self.tau_gradient_last = []
         self.subgridTmp = [];
@@ -1937,7 +1937,7 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS(SGE_base):
 
         #
         self.interpolationSpace = {}; self.strongResidualInterpolant = {};
-        if self.interpolationFemSpaceType != None:
+        if self.interpolationFemSpaceType is not None:
             for ci in range(self.nc):
                 self.interpolationSpace[ci] = self.interpolationFemSpaceType(self.mesh.subdomainMesh,self.nd)
                 self.strongResidualInterpolant[ci] = FemTools.FiniteElementFunction(self.interpolationSpace[ci])
@@ -2030,9 +2030,9 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolant_ASGS(SGE_base):
                 tau = self.tau[ci]
                 logEvent("Generic tau is tau.max() =%s tau.min() = %s to " % (tau[ci].max(),tau[ci].min()),1)
             #mwf hack
-            if self.tau_00_force != None:
+            if self.tau_00_force is not None:
                 tau.fill(self.tau_00_force)
-            if self.tau_11_force != None:
+            if self.tau_11_force is not None:
                 tau_gradient.fill(self.tau_11_force)
 
             for cj in range(self.nc):
@@ -2253,10 +2253,10 @@ class AdvectionDiffusionReactionHaukeSangalliInterpolantWithTransientSubScales_A
                     tau_ip=self.tau[ci]
                     tau_gradient_ip = self.tau_gradient_ip[ci]
             #mwf hack
-            if self.tau_00_force != None:
+            if self.tau_00_force is not None:
                 tau.fill(self.tau_00_force)
                 if self.trackSubScales: tau_ip.fill(self.tau_00_force)
-            if self.tau_11_force != None:
+            if self.tau_11_force is not None:
                 tau_gradient.fill(self.tau_11_force)
                 if self.trackSubScales: tau_gradient_ip.fill(self.tau_11_force)
             #mwf debug

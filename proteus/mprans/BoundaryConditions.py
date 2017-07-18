@@ -564,7 +564,7 @@ class BC_RANS(BC_Base):
         self.k_diffusive.setConstantBC(0.0) 
         self.dissipation_diffusive.setConstantBC(0.0)
 
-        if U != None:            
+        if U is not None:            
             def get_inlet_ux_dirichlet(i):
                 def ux_dirichlet(x, t):
                     phi = x[vert_axis] - seaLevel
