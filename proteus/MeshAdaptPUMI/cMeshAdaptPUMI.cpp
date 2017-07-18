@@ -1,3 +1,4 @@
+#include <gmi.h>
 #include <gmi_mesh.h>
 #include <gmi_null.h>
 #include <ma.h>
@@ -76,6 +77,8 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   target_element_count = targetElementCount;
   domainVolume = 0.0;
   THRESHOLD = 0.0;
+  isReconstructed=0;
+  initialReconstructed = 0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -90,6 +93,14 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);
+  if(isReconstructed){
+    free(modelVertexMaterial);
+    free(modelBoundaryMaterial);
+    free(modelRegionMaterial);
+    //m->destroyNative();
+    //gmi_destroy(m->getModel());
+    //apf::destroyMesh(m);
+  }
   PCU_Comm_Free();
 #ifdef PROTEUS_USE_SIMMETRIX
   SimModel_stop();
@@ -301,6 +312,9 @@ int MeshAdaptPUMIDrvr::willAdapt()
   return adaptFlag;
 }
 
+#include <sam.h>
+#include <samSz.h>
+
 int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 /**
  * @brief Function used to trigger adaptation
@@ -333,11 +347,19 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
       myfile.close();
     }
   }  
+  else if (size_field_config == "meshQuality"){
+    size_iso = samSz::isoSize(m);
+  }
   else if (size_field_config == "isotropic")
     testIsotropicSizeField();
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
+  }
+  if(logging_config=="on"){
+    char namebuffer[20];
+    sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
+    apf::writeVtkFiles(namebuffer, m);
   }
 
   // These are relics from an attempt to pass BCs from proteus into the error estimator.
@@ -396,12 +418,14 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   if(size_field_config=="ERM"){
     if (has_gBC)
       getSimmetrixBC();
-    if(logging_config=="on"){
-      char namebuffer[20];
-      sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
-      apf::writeVtkFiles(namebuffer, m);
-    }
   }
+  if(logging_config=="on"){
+    char namebuffer[20];
+    sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
+    apf::writeVtkFiles(namebuffer, m);
+  }
+
+  //isReconstructed = 0; //this is needed to maintain consistency with the post-adapt conversion back to Proteus
   nAdapt++; //counter for number of adapt steps
   return 0;
 }

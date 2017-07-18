@@ -27,6 +27,48 @@ def _petsc_view(obj, filename):
     viewer2(obj)
     viewer2.popFormat()
 
+def petsc_load_matrix(filename):
+    """ This function loads a PETSc matrix from a binary format.
+    (Eg. what is saved using the petsc_view function).
+
+    Parameters
+    ----------
+    filename : str
+        This is the name of the binary with the file stored.
+
+    Returns
+    -------
+    matrix : petsc4py matrix
+        The matrix that is stored in the binary file.
+    """
+    try:
+        viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
+        output = p4pyPETSc.Mat().load(viewer)
+    except:
+        print("Either you've entered an invalid file name or your object is not a matrix (try petsc_load_vector).")
+    return output
+
+def petsc_load_vector(filename):
+    """ This function loads a PETSc vector from a binary format.
+    (Eg. what is saved using the petsc_view function).
+
+    Parameters
+    ----------
+    filename : str
+        This is the name of the binary with the file stored.
+
+    Returns
+    -------
+    matrix : petsc4py vector
+        The matrix that is stored in the binary file.
+    """
+    try:
+        viewer = p4pyPETSc.Viewer().createBinary(filename,'r')
+        output = p4pyPETSc.Vec().load(viewer)
+    except:
+        print("Either you've entered an invalid file name or your object is not a vector (try petsc_load_matrix).")
+    return output
+    
 def _pythonCSR_2_dense(rowptr,colptr,data,nr,nc,output=False):
     """ Takes python CSR datatypes and makes a dense matrix """
     dense_matrix = numpy.zeros(shape = (nr,nc), dtype='float')
@@ -392,6 +434,149 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
 
+class OperatorShell:
+    """ A base class for operator shells """
+    def __init__(self):
+        pass
+    def create(self,A):
+        pass
+
+class ProductOperatorShell(OperatorShell):
+    """ A base class for shell operators that apply multiplcation. 
+    
+    Operators derived from this class should have working multiplication
+    functions.
+    """
+    def __init__(self):
+        pass
+    def mult(self, A, x, y):
+        raise NotImplementedError('You need to define a multiply' \
+                                  'function for your shell')
+
+class InvOperatorShell(OperatorShell):
+    """ A base class for inverse operator shells 
+    
+    Operators derived from this class should have working apply
+    functions.
+    """
+    def __init__(self):
+        pass
+    def apply(self, A, x, y):
+        raise NotImplementedError('You need to define an apply' \
+                                  'function for your shell')
+
+    def _create_tmp_vec(self,size):
+        """ Creates an empty vector of given size. 
+        
+        Arguments
+        ---------
+        size : int
+            Size of the temporary vector.
+
+        Returns
+        -------
+        vec : PETSc vector
+        """
+        tmp = p4pyPETSc.Vec().create()
+        tmp.setType('mpi')
+        tmp.setSizes(size)
+        return tmp
+
+    def _create_constant_nullspace(self):
+        """Initialize a constant null space. """
+        self.const_null_space = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
+                                                             vectors = (),
+                                                             constant = True)
+    
+    def _converged_trueRes(self,ksp,its,rnorm):
+        """ Function handle to feed to ksp's setConvergenceTest  """
+        ksp.buildResidual(self.r_work)
+        truenorm = self.r_work.norm()
+        if its == 0:
+            self.rnorm0 = truenorm
+            # ARB - Leaving these log events in for future debugging purposes.
+            # logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual: %12.5e" %(truenorm) )
+            # logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+            # logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
+            #                                                                                   truenorm,
+            #                                                                                   (truenorm/ self.rnorm0),
+            #                                                                                   ksp.atol,
+            #                                                                                   ksp.rtol))
+            return False
+        else:
+            # ARB - Leaving these log events in for future debugging purposes.
+            # logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual: %12.5e" %(truenorm) )
+            # logEvent("NumericalAnalytics KSP_LSC_LaplaceResidual(relative): %12.5e" %(truenorm / self.rnorm0) )
+            # logEvent("        KSP it %i norm(r) = %e  norm(r)/|b| = %e ; atol=%e rtol=%e " % (its,
+            #                                                                                   truenorm,
+            #                                                                                   (truenorm/ self.rnorm0),
+            #                                                                                   ksp.atol,
+            #                                                                                   ksp.rtol))
+            if truenorm < self.rnorm0*ksp.rtol:
+                return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
+            if truenorm < ksp.atol:
+                return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
+        return False
+
+class MatrixShell(ProductOperatorShell):
+    """ A shell class for a matrix. """
+    def __init__(self,A):
+        """
+        Specifies a basic matrix shell.
+
+        Parameters
+        ----------
+        A : matrix
+            A petsc4py matrix object
+        """
+        self.A = A
+    def mult(self,A,x,y):
+        """
+        Multiply the matrix and x.
+
+        Parameters
+        ----------
+        A : matrix
+            Dummy place holder for PETSc compatibility
+        x : vector
+
+        Returns
+        -------
+        y : vector
+        """
+        self.A.mult(x,y)
+
+class MatrixInvShell(InvOperatorShell):
+    """ A PETSc shell class for a inverse operator. """
+    def __init__(self, A):
+        """ Initializes operators and solvers for inverse operator.
+
+        Parameters
+        ----------
+        A : PETSc matrix
+            This is the matrix object used to construct the inverse.
+        """
+        self.A = A
+        self.ksp = p4pyPETSc.KSP().create()
+        self.ksp.setOperators(self.A,self.A)
+        self.ksp.setType('preonly')
+        self.ksp.pc.setType('lu')
+        self.ksp.setUp()
+    def apply(self,A,x,y):
+        """ Apply the inverse pressure mass matrix.
+
+        Parameters
+        ----------
+        A : matrix
+            Dummy place holder for PETSc compatibility
+        x : vector
+
+        Returns
+        -------
+        y : vector
+        """
+        self.ksp.solve(x,y)
+        
 def l2Norm(x):
     """
     Compute the parallel :math:`l_2` norm
