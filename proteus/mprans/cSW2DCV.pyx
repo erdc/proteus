@@ -151,7 +151,6 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double cfl_run,	
 			       double hEps, 
 			       double* hReg, 
-			       int recompute_lumped_mass_matrix,
 			       double* hnp1_at_quad_point,
 			       double* hunp1_at_quad_point,
 			       double* hvnp1_at_quad_point, 
@@ -165,9 +164,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* muH_minus_muL,
 			       double cE, 
 			       int LUMPED_MASS_MATRIX, 
-			       int USE_EV_BASED_ON_GALERKIN,
 			       double dt, 
-			       double mannings)
+			       double mannings,
+			       double* quantDOFs)
         void calculateResidual_entropy_viscosity(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -289,7 +288,6 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double cfl_run,	
 			       double hEps,
 			       double* hReg,
-			       int recompute_lumped_mass_matrix,
 			       double* hnp1_at_quad_point,
 			       double* hunp1_at_quad_point,
 			       double* hvnp1_at_quad_point,
@@ -303,11 +301,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       double* muH_minus_muL,
 			       double cE,
 			       int LUMPED_MASS_MATRIX, 
-			       int USE_EV_BASED_ON_GALERKIN,
 			       double dt, 
 			       double mannings,						
 			       double* quantDOFs, 
-			       double* ML, 
 			       int SECOND_CALL_CALCULATE_RESIDUAL)
         void calculateJacobian_SUPG(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -837,7 +833,6 @@ cdef class cSW2DCV_base:
 			 double cfl_run,	
 			 double hEps, 
 			 numpy.ndarray hReg, 
-			 int recompute_lumped_mass_matrix, 
 			 numpy.ndarray hnp1_at_quad_point,
 			 numpy.ndarray hunp1_at_quad_point,
 			 numpy.ndarray hvnp1_at_quad_point,
@@ -851,9 +846,9 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray muH_minus_muL,
 			 double cE, 
 			 int LUMPED_MASS_MATRIX,	
-			 int USE_EV_BASED_ON_GALERKIN,
 			 double dt, 
-			 double mannings):
+			 double mannings, 
+			 numpy.ndarray quantDOFs):
        self.thisptr.calculateResidual_SUPG(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -978,7 +973,6 @@ cdef class cSW2DCV_base:
 	    cfl_run,
 	    hEps, 
 	    <double*> hReg.data, 
-	    recompute_lumped_mass_matrix, 
 	    <double*> hnp1_at_quad_point.data,	
 	    <double*> hunp1_at_quad_point.data,	
 	    <double*> hvnp1_at_quad_point.data,
@@ -992,9 +986,9 @@ cdef class cSW2DCV_base:
 	    <double*> muH_minus_muL.data,
 	    cE, 
 	    LUMPED_MASS_MATRIX, 
-	    USE_EV_BASED_ON_GALERKIN,
 	    dt, 
-	    mannings)
+	    mannings,
+	    <double*> quantDOFs.data)
    def calculateResidual_entropy_viscosity(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -1117,7 +1111,6 @@ cdef class cSW2DCV_base:
 			 double cfl_run,	
 			 double hEps, 
 			 numpy.ndarray hReg, 
-			 int recompute_lumped_mass_matrix, 
 			 numpy.ndarray hnp1_at_quad_point,
 			 numpy.ndarray hunp1_at_quad_point,
 			 numpy.ndarray hvnp1_at_quad_point, 
@@ -1131,11 +1124,9 @@ cdef class cSW2DCV_base:
 			 numpy.ndarray muH_minus_muL,
 			 double cE,
 			 int LUMPED_MASS_MATRIX, 
-			 int USE_EV_BASED_ON_GALERKIN,
 			 double dt, 
 			 double mannings,
 			 numpy.ndarray quantDOFs, 
-			 numpy.ndarray ML, 
 			 int SECOND_CALL_CALCULATE_RESIDUAL):
        self.thisptr.calculateResidual_entropy_viscosity(#element
            <double*> mesh_trial_ref.data,
@@ -1261,7 +1252,6 @@ cdef class cSW2DCV_base:
 	    cfl_run,	
 	    hEps, 
 	    <double*> hReg.data, 
-	    recompute_lumped_mass_matrix, 
 	    <double*> hnp1_at_quad_point.data,
 	    <double*> hunp1_at_quad_point.data,	
 	    <double*> hvnp1_at_quad_point.data,
@@ -1275,11 +1265,9 @@ cdef class cSW2DCV_base:
 	    <double*> muH_minus_muL.data,
 	    cE,
 	    LUMPED_MASS_MATRIX, 
-	    USE_EV_BASED_ON_GALERKIN,
 	    dt, 
 	    mannings,
 	    <double*> quantDOFs.data,
-	    <double*> ML.data, 
 	    SECOND_CALL_CALCULATE_RESIDUAL
 	    )
    def calculateJacobian_SUPG(self,

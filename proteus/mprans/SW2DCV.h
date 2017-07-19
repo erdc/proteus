@@ -16,13 +16,13 @@
 #define LINEAR_FRICTION 0
 
 // FOR CELL BASED ENTROPY VISCOSITY 
-#define ENTROPY(g,h,hu,hv,one_over_hReg) 0.5*(g*h*h+hu*hu*one_over_hReg+hv*hv*one_over_hReg)
-#define DENTROPY_DH(g,h,hu,hv,one_over_hReg) g*h - 0.5*(hu*hu+hv*hv)*std::pow(one_over_hReg,2) 
-#define DENTROPY_DHU(g,h,hu,hv,one_over_hReg) hu*one_over_hReg
-#define DENTROPY_DHV(g,h,hu,hv,one_over_hReg) hv*one_over_hReg
+#define ENTROPY(g,h,hu,hv,z,one_over_hReg) 0.5*(g*h*h+hu*hu*one_over_hReg+hv*hv*one_over_hReg + 2.*g*h*z)
+#define DENTROPY_DH(g,h,hu,hv,z,one_over_hReg) g*h - 0.5*(hu*hu+hv*hv)*std::pow(one_over_hReg,2) + g*z 
+#define DENTROPY_DHU(g,h,hu,hv,z,one_over_hReg) hu*one_over_hReg
+#define DENTROPY_DHV(g,h,hu,hv,z,one_over_hReg) hv*one_over_hReg
 
-#define ENTROPY_FLUX1(g,h,hu,hv,one_over_hReg) (ENTROPY(g,h,hu,hv,one_over_hReg)+0.5*g*h*h)*hu*one_over_hReg
-#define ENTROPY_FLUX2(g,h,hu,hv,one_over_hReg) (ENTROPY(g,h,hu,hv,one_over_hReg)+0.5*g*h*h)*hv*one_over_hReg
+#define ENTROPY_FLUX1(g,h,hu,hv,z,one_over_hReg) (ENTROPY(g,h,hu,hv,z,one_over_hReg)+0.5*g*h*h+g*h*z)*hu*one_over_hReg
+#define ENTROPY_FLUX2(g,h,hu,hv,z,one_over_hReg) (ENTROPY(g,h,hu,hv,z,one_over_hReg)+0.5*g*h*h+g*h*z)*hv*one_over_hReg
 
 // FOR ESTIMATING MAX WAVE SPEEDS
 #define f(g,h,hZ) ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) )
@@ -199,7 +199,6 @@ namespace proteus
 				   double cfl_run,
 				   double hEps, 
 				   double* hReg,
-				   int recompute_lumped_mass_matrix,
 				   // SAVE SOLUTION (mql)
 				   double* hnp1_at_quad_point,
 				   double* hunp1_at_quad_point,
@@ -216,9 +215,10 @@ namespace proteus
 				   double* muH_minus_muL,
 				   double cE, 
 				   int LUMPED_MASS_MATRIX, 
-				   int USE_EV_BASED_ON_GALERKIN,
 				   double dt,
-				   double mannings
+				   double mannings,
+				   // Quant of interests
+				   double* quantDOFs
 				   )=0;
     virtual void calculateResidual_entropy_viscosity(// last EDGE BASED version
 						     double* mesh_trial_ref,
@@ -247,7 +247,7 @@ namespace proteus
 						     double* vel_trial_trace_ref,
 						     double* vel_grad_trial_trace_ref,
 						     double* vel_test_trace_ref,
-						     double* vel_grad_test_trace_ref,					 
+						     double* vel_grad_test_trace_ref,
 						     double* normal_ref,
 						     double* boundaryJac_ref,
 						     //physics
@@ -347,7 +347,6 @@ namespace proteus
 						     double cfl_run,
 						     double hEps,
 						     double* hReg,
-						     int recompute_lumped_mass_matrix,
 						     // SAVE SOLUTION (mql)
 						     double* hnp1_at_quad_point,
 						     double* hunp1_at_quad_point,
@@ -364,13 +363,10 @@ namespace proteus
 						     double* muH_minus_muL,
 						     double cE,
 						     int LUMPED_MASS_MATRIX,
-						     int USE_EV_BASED_ON_GALERKIN,
 						     double dt,
 						     double mannings,
 						     // Quant of interests
 						     double* quantDOFs,
-						     // Lumped mass matrix
-						     double* ML, 
 						     int SECOND_CALL_CALCULATE_RESIDUAL
 						     )=0;
     virtual void calculateJacobian_SUPG(//element
@@ -1824,8 +1820,7 @@ namespace proteus
 	      double ML_minus_MC = (LUMPED_MASS_MATRIX == 1 ? 0. : (i==j ? 1. : 0.)*mi - MassMatrix[ij]);
 	      double FluxCorrectionMatrix1 
 		= ML_minus_MC*(high_order_hnp1[j]-hnj - (high_order_hnp1i-hni)) 
-		+ dt*dH_minus_dL[ij]*(hStarji-hStarij)
-		- dt*muH_minus_muL[ij]*(hStarji-hStarij)
+		+ dt*(dH_minus_dL[ij]-muH_minus_muL[ij])*(hStarji-hStarij)
 		+ dt*muH_minus_muL[ij]*(hnj-hni);
 
 	      // COMPUTE P VECTORS //
@@ -1842,12 +1837,12 @@ namespace proteus
 	  ///////////////////////
 	  // COMPUTE R VECTORS //
 	  ///////////////////////
-	  if (high_order_hnp1[i] < 1.0e-2)//hReg[i])
+	  if (high_order_hnp1[i] < hReg[i])
 	    Rneg[i] = 0.;
 	  else
 	    Rneg[i] = ((Pnegi==0) ? 1. : std::min(1.0,Qnegi/Pnegi));
 	} // i DOFs
-      
+
       //////////////////////
       // COMPUTE LIMITERS // 
       //////////////////////
@@ -1917,11 +1912,10 @@ namespace proteus
 	    }
 
 	  double one_over_mi = 1.0/lumped_mass_matrix[i];
-	  
-	  limited_hnp1[i]  = low_order_hnp1[i];//  + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
-	  limited_hunp1[i] = low_order_hunp1[i];// + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
-	  limited_hvnp1[i] = low_order_hvnp1[i];// + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
-	  
+	  limited_hnp1[i]  = low_order_hnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix1;
+	  limited_hunp1[i] = low_order_hunp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
+	  limited_hvnp1[i] = low_order_hvnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
+
 	  if (limited_hnp1[i] < -1E-14)
 	    {
 	      std::cout << "Water height: "
@@ -1930,8 +1924,7 @@ namespace proteus
 	      abort();
 	    }
 	  else 
-	    limited_hnp1[i] = fmax(0.,limited_hnp1[i]);
-
+	    limited_hnp1[i] = fmax(0.,limited_hnp1[i]);	  
 	}
     }
 
@@ -2062,7 +2055,6 @@ namespace proteus
 			   double cfl_run,
 			   double hEps,
 			   double* hReg,
-			   int recompute_lumped_mass_matrix,
 			   // SAVE SOLUTION (mql)
 			   double* hnp1_at_quad_point,
 			   double* hunp1_at_quad_point,
@@ -2079,9 +2071,10 @@ namespace proteus
 			   double* muH_minus_muL,
 			   double cE,
 			   int LUMPED_MASS_MATRIX,
-			   int USE_EV_BASED_ON_GALERKIN,
 			   double dt, 
-			   double mannings)
+			   double mannings, 
+			   // Quant of interests
+			   double* quantDOFs)
 			   
     {
       //
@@ -3044,7 +3037,6 @@ namespace proteus
 					     double cfl_run,
 					     double hEps,
 					     double* hReg,
-					     int recompute_lumped_mass_matrix, 
 					     // SAVE SOLUTION (mql)
 					     double* hnp1_at_quad_point,
 					     double* hunp1_at_quad_point,
@@ -3061,13 +3053,10 @@ namespace proteus
 					     double* muH_minus_muL,
 					     double cE,
 					     int LUMPED_MASS_MATRIX,
-					     int USE_EV_BASED_ON_GALERKIN,
 					     double dt,
 					     double mannings,
 					     // Quant of interests
 					     double* quantDOFs,
-					     // Lumped mass matrix
-					     double* ML, 
 					     int SECOND_CALL_CALCULATE_RESIDUAL)
     {
       //FOR FRICTION//
@@ -3079,26 +3068,21 @@ namespace proteus
       // CELL LOOPS //
       ////////////////
       // To compute: 
-      //      * lumped_mass_matrix
       //      * Time derivative term
       //      * Cell based CFL
       //      * Velocity at quad points for other models       
       // init lumped mass matrix and ent residual vectors to zero
 
-      for (int i=0; i<numDOFsPerEqn; i++)
-	lumped_mass_matrix[i] = 0;
       for(int eN=0;eN<nElements_global;eN++)
 	{
 	  //declare local storage for element residual and initialize
 	  register double 
-	    element_lumped_mass_matrix[nDOF_test_element],
 	    elementResidual_h[nDOF_test_element],
 	    elementResidual_hu[nDOF_test_element],
 	    elementResidual_hv[nDOF_test_element];
 	    
 	  for (int i=0;i<nDOF_test_element;i++)
 	    {
-	      element_lumped_mass_matrix[i]=0.0;
 	      elementResidual_h[i]=0.0;
 	      elementResidual_hu[i]=0.0;
 	      elementResidual_hv[i]=0.0;
@@ -3156,8 +3140,6 @@ namespace proteus
 
 	      for(int i=0;i<nDOF_test_element;i++)
 		{
-		  // lumped mass matrix
-		  element_lumped_mass_matrix[i] += h_test_dV[i];
 		  // compute time derivative part of global residual. NOTE: no lumping
 		  elementResidual_h[i]  += (h  - h_lstage)*h_test_dV[i];
 		  elementResidual_hu[i] += (hu - hu_lstage)*h_test_dV[i];
@@ -3171,8 +3153,6 @@ namespace proteus
 	      int h_gi = h_l2g[eN_i]; //global i-th index for h
 	      int vel_gi = vel_l2g[eN_i]; //global i-th index for velocities 
 
-	      // distribute lumped mass matrix
-	      lumped_mass_matrix[h_gi]  += element_lumped_mass_matrix[i];
 	      // distribute time derivative to global residual
 	      globalResidual[offset_h+stride_h*h_gi]  += elementResidual_h[i];
 	      globalResidual[offset_hu+stride_hu*vel_gi] += elementResidual_hu[i];
@@ -3190,7 +3170,7 @@ namespace proteus
 	  // COMPUTE ENTROPY BASED ON OLD STAGE
 	  double hni = h_dof_lstage[i]; 
 	  double one_over_hniReg = 2*hni/(hni*hni+std::pow(fmax(hni,hReg[i]),2));
-	  eta[i] = ENTROPY(g,hni,hu_dof_lstage[i],hv_dof_lstage[i],one_over_hniReg);
+	  eta[i] = ENTROPY(g,hni,hu_dof_lstage[i],hv_dof_lstage[i],0*b_dof[i],one_over_hniReg);
 	}
 
       /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3209,6 +3189,7 @@ namespace proteus
 	  double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
 	  double hui = hu_dof_lstage[i]; 
 	  double hvi = hv_dof_lstage[i]; 
+	  double Zi = b_dof[i];
 	  double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hReg[i]),2));
 
 	  // For eta min and max
@@ -3218,9 +3199,9 @@ namespace proteus
 	  // FOR ENTROPY RESIDUAL
 	  double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
 	  double entropy_flux=0.;
-	  double eta_prime1 = DENTROPY_DH(g,hi,hui,hvi,one_over_hiReg); 
-	  double eta_prime2 = DENTROPY_DHU(g,hi,hui,hvi,one_over_hiReg); 
-	  double eta_prime3 = DENTROPY_DHV(g,hi,hui,hvi,one_over_hiReg); 
+	  double eta_prime1 = DENTROPY_DH(g,hi,hui,hvi,0*Zi,one_over_hiReg); 
+	  double eta_prime2 = DENTROPY_DHU(g,hi,hui,hvi,0*Zi,one_over_hiReg); 
+	  double eta_prime3 = DENTROPY_DHV(g,hi,hui,hvi,0*Zi,one_over_hiReg); 
 
 	  // FOR SMOOTHNESS INDICATOR //
 	  double alpha_numerator = 0;
@@ -3242,8 +3223,8 @@ namespace proteus
 	      ith_flux_term3 += ( huj*hvj*one_over_hjReg*Cx[ij] + hvj*hvj*one_over_hjReg*Cy[ij] 
 				  + g*hi*(hj+Zj)*Cy[ij] );
 	      
-	      entropy_flux += ( Cx[ij]*ENTROPY_FLUX1(g,hj,huj,hvj,one_over_hjReg) + 
-				Cy[ij]*ENTROPY_FLUX2(g,hj,huj,hvj,one_over_hjReg) );
+	      entropy_flux += ( Cx[ij]*ENTROPY_FLUX1(g,hj,huj,hvj,0*Zj,one_over_hjReg) + 
+				Cy[ij]*ENTROPY_FLUX2(g,hj,huj,hvj,0*Zj,one_over_hjReg) );
 
 	      /////////////////////////////////
 	      // COMPUTE ETA MIN AND ETA MAX // 
@@ -3268,11 +3249,18 @@ namespace proteus
 	  //////////////////////////////////
 	  // COMPUTE SMOOTHNESS INDICATOR //
 	  //////////////////////////////////
-	  if (fabs(alpha_numerator) <= hReg[i] ) //constante state
-	    alphai = 0.;
-	  else 
-	    alphai = fabs(alpha_numerator)/(alpha_denominator+1E-15);
-	  quantDOFs[i] = alphai;
+	  if (hi <= hReg[i])
+	    alphai = 1.;
+	  else
+	    {
+	      if (fabs(alpha_numerator) <= hReg[i] ) //constante state
+		alphai = 0.;
+	      else 
+		alphai = fabs(alpha_numerator)/(alpha_denominator+1E-15);
+	    }
+	  double one_over_entNormFactori = 2./(etaMax[i]-etaMin[i]+1E-15);
+	  quantDOFs[i] = global_entropy_residual[i]*one_over_entNormFactori;
+	  //quantDOFs[i] = global_entropy_residual[i];
 	  
 	  if (POWER_SMOOTHNESS_INDICATOR==0)
 	    psi[i] = 1.0;
@@ -3296,7 +3284,7 @@ namespace proteus
 	  double dLowii = 0.;
 	      
 	  // entropy normalization factor 
-	  double one_over_entNormFactori = 2./(etaMax[i]-etaMin[i]+1E-15);
+	  double one_over_entNormFactori = etaMax[i] == etaMin[i] ? 0. : 2./(etaMax[i]-etaMin[i]);
 	  // regularization of 1/hi 	  
 	  double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hReg[i]),2));
 
@@ -3404,7 +3392,7 @@ namespace proteus
 		  ///////////////////////
 		  // ENTROPY VISCOSITY //
 		  ///////////////////////
-		  double one_over_entNormFactorj = 2./(etaMax[j]-etaMin[j]+1E-15);
+		  double one_over_entNormFactorj = etaMax[j] == etaMin[j] ? 0. : 2./(etaMax[j]-etaMin[j]);
 		  double dEVij = cE*fmax(fabs(global_entropy_residual[i])*one_over_entNormFactori,
 					 fabs(global_entropy_residual[j])*one_over_entNormFactorj);
 		  
@@ -3472,35 +3460,45 @@ namespace proteus
 	  low_order_hunp1[i] *= 2*std::pow(low_order_hnp1[i],2.)/(std::pow(low_order_hnp1[i],2.)+std::pow(aux,2.));
 	  low_order_hvnp1[i] *= 2*std::pow(low_order_hnp1[i],2.)/(std::pow(low_order_hnp1[i],2.)+std::pow(aux,2.));
 
-	  if (LUMPED_MASS_MATRIX==1)
+	  int LOW_ORDER_SOLUTION=0; // for debugging 
+	  if (LOW_ORDER_SOLUTION==1)
 	    {
-	      globalResidual[offset_h+stride_h*i] = hi - dt/mi*(ith_flux_term1
-								- ith_dHij_minus_muHij_times_hStarStates
-								- ith_muHij_times_hStates);
-	      globalResidual[offset_hu+stride_hu*i] = hui - dt/mi*(ith_flux_term2
-								   - ith_dHij_minus_muHij_times_huStarStates
-								   - ith_muHij_times_huStates
-								   + ith_friction_term2);
-	      globalResidual[offset_hv+stride_hv*i] = hvi - dt/mi*(ith_flux_term3
-								   - ith_dHij_minus_muHij_times_hvStarStates
-								   - ith_muHij_times_hvStates
-								   + ith_friction_term3);
+	      globalResidual[offset_h+stride_h*i] = low_order_hnp1[i];
+	      globalResidual[offset_hu+stride_hu*i] = low_order_hunp1[i];
+	      globalResidual[offset_hv+stride_hv*i] = low_order_hvnp1[i];
 	    }
 	  else
 	    {
-	      // Distribute residual
-	      // NOTE: MASS MATRIX IS CONSISTENT
-	      globalResidual[offset_h+stride_h*i] += dt*(ith_flux_term1 
-							 - ith_dHij_minus_muHij_times_hStarStates 
-							 - ith_muHij_times_hStates);
-	      globalResidual[offset_hu+stride_hu*i] += dt*(ith_flux_term2 
-							   - ith_dHij_minus_muHij_times_huStarStates
-							   - ith_muHij_times_huStates 
-							   + ith_friction_term2);
-	      globalResidual[offset_hv+stride_hv*i] += dt*(ith_flux_term3 
-							   - ith_dHij_minus_muHij_times_hvStarStates
-							   - ith_muHij_times_hvStates
-							   + ith_friction_term3);
+	      if (LUMPED_MASS_MATRIX==1)
+		{
+		  globalResidual[offset_h+stride_h*i] = hi - dt/mi*(ith_flux_term1
+								    - ith_dHij_minus_muHij_times_hStarStates
+								    - ith_muHij_times_hStates);
+		  globalResidual[offset_hu+stride_hu*i] = hui - dt/mi*(ith_flux_term2
+								       - ith_dHij_minus_muHij_times_huStarStates
+								       - ith_muHij_times_huStates
+								       + ith_friction_term2);
+		  globalResidual[offset_hv+stride_hv*i] = hvi - dt/mi*(ith_flux_term3
+								       - ith_dHij_minus_muHij_times_hvStarStates
+								       - ith_muHij_times_hvStates
+								       + ith_friction_term3);
+		}
+	      else
+		{
+		  // Distribute residual
+		  // NOTE: MASS MATRIX IS CONSISTENT
+		  globalResidual[offset_h+stride_h*i] += dt*(ith_flux_term1 
+							     - ith_dHij_minus_muHij_times_hStarStates 
+							     - ith_muHij_times_hStates);
+		  globalResidual[offset_hu+stride_hu*i] += dt*(ith_flux_term2 
+							       - ith_dHij_minus_muHij_times_huStarStates
+							       - ith_muHij_times_huStates 
+							       + ith_friction_term2);
+		  globalResidual[offset_hv+stride_hv*i] += dt*(ith_flux_term3 
+							       - ith_dHij_minus_muHij_times_hvStarStates
+							       - ith_muHij_times_hvStates
+							       + ith_friction_term3);
+		}
 	    }
 	}
     }
