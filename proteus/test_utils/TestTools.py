@@ -468,6 +468,17 @@ class NumericResults:
                                      model_key,
                                      mesh_level = 0,
                                      tnList=None):
+        """ Builds the ksp_iterations list to correspond at a specific time steps
+
+        Parameters
+        ----------
+        model_key : str
+            The model key
+        mesh_level : int
+            The desired mesh
+        tnList : lst
+            The set of time steps to save the ksp residuals
+        """
         if tnList is None:
             tnList = sorted(self.data_dictionary[model_key].keys())
         
@@ -478,7 +489,7 @@ class NumericResults:
 
         self.ksp_iterations = []
         for t, newton_steps_ell in zip(tnList,self.newton_steps):
-            ksp_steps_l = len(self.data_dictionary[model_key][t][1][mesh_level][1][newton_steps_ell-1][0])
+            ksp_steps_l = len(self.data_dictionary[model_key][t][1][mesh_level][1][newton_steps_ell-1][0]) - 1
             self.ksp_iterations.append(ksp_steps_l)
 
     def export_2_csv(self, data, file_name):
@@ -491,7 +502,7 @@ class NumericResults:
         file_name : str
             A file name for exporting data.
         """
-        with open('file_name'+'.csv','w') as csvfile:
+        with open(file_name+'.csv','w') as csvfile:
             filewriter = csv.writer(csvfile, delimiter = ' ')
             for item in data:
                 filewriter.writerow([item])

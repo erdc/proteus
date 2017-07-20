@@ -349,7 +349,8 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
 
     def save(self, filename):
         """Saves to disk using a PETSc binary viewer."""
-        petsc_view(self, filename)
+        _petsc_view(self, filename)
+
 class ParInfo_petsc4py:
     """
     ARB - this class is experimental.  My idea is to store the
@@ -461,6 +462,7 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         comm = Comm.get()
         logEvent("ParMat_petsc4py comm.rank= %s blockSize = %s par_n= %s par_N=%s par_nghost=%s par_jacobian.getSizes()= %s "
                  % (comm.rank(),self.blockSize,par_n,par_N,par_nghost,self.getSizes()))
+#        import pdb ; pdb.set_trace()
         self.csr_rep = ghosted_csr_mat.getCSRrepresentation()
         if self.proteus_jacobian is not None:
             self.proteus_csr_rep = self.proteus_jacobian.getCSRrepresentation()
@@ -477,6 +479,7 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         self.colind_global = self.petsc_l2g.apply(self.csr_rep_local[1]) #prealloc needs global indices
         self.setPreallocationCSR([self.csr_rep_local[0],self.colind_global,self.csr_rep_local[2]])
         self.setFromOptions()
+
 
     @classmethod
     def create_ParMat_from_OperatorConstructor(cls,
@@ -554,7 +557,7 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
 
     def save(self, filename):
         """Saves to disk using a PETSc binary viewer. """
-        petsc_view(self, filename)
+        _petsc_view(self, filename)
 
 def Vec(n):
     """

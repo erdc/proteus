@@ -724,6 +724,8 @@ class SchurOperatorConstructor:
         pde_type :  str 
             Currently supports Stokes and navierStokes
         """
+        import proteus
+        # TODO - find away to get rid of this import statement
         if linear_smoother.PCType!='schur':
             raise Exception, 'This function only works with the' \
                 'LinearSmoothers for Schur Complements.'
