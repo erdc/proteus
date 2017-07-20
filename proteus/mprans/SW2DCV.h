@@ -1916,15 +1916,15 @@ namespace proteus
 	  limited_hunp1[i] = low_order_hunp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix2;
 	  limited_hvnp1[i] = low_order_hvnp1[i] + one_over_mi*ith_Limiter_times_FluxCorrectionMatrix3;
 
-	  if (limited_hnp1[i] < -1E-14)
-	    {
-	      std::cout << "Water height: "
-			<<  limited_hnp1[i] 
-			<< " ... aborting!" << std::endl;
-	      abort();
-	    }
-	  else 
-	    limited_hnp1[i] = fmax(0.,limited_hnp1[i]);	  
+	  //if (limited_hnp1[i] < -1E-14)
+	  //{
+	  //  std::cout << "Water height: "
+	  //		<<  limited_hnp1[i] 
+	  //		<< " ... aborting!" << std::endl;
+	  //  abort();
+	  //}
+	  //else 
+	  limited_hnp1[i] = fmax(0.,limited_hnp1[i]);	  
 	}
     }
 
