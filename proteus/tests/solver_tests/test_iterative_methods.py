@@ -40,7 +40,7 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
             
     def test_chebyshev_iteration_1(self):
         '''  Tests the pcd_shell operators produce correct output. '''
-        A = np.diag(1./np.diag(self.quad_mass_matrix)).dot(self.quad_mass_matrix)
+        A = self.quad_mass_matrix
         n = self.quad_mass_matrix.shape[0]
         alpha = 1./4
         beta = 9./4
@@ -54,14 +54,14 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
         solver = LS.ChebyshevSemiIteration(A_petsc,
                                            b1_petsc,
                                            x0_petsc,
-                                           10,
+                                           20,
                                            alpha,
                                            beta)
         solver.apply()
         expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_10.npy'))
-        actual = solver.x_k.getArray().reshape(n,1)
+        actual = solver.x_k.getArray()
         assert np.allclose(expected,actual)
-
+    
     def test_chebyshev_iteration_2(self):
         '''  Tests the pcd_shell operators produce correct output. '''
         A = np.diag(1./np.diag(self.quad_mass_matrix)).dot(self.quad_mass_matrix)
@@ -83,12 +83,11 @@ class TestIterativeMethods(proteus.test_utils.TestTools.BasicTest):
                                            beta,
                                            save_iterations=True)
         solver.apply()
-        with open(os.path.join(self._scriptdir,'import_modules/sol_20_lst'),'rb') as fp:
-            expected = pickle.load(fp)
-        x_true = np.linalg.solve(A,b1)
-        err_lst = []
+        expected = np.load(os.path.join(self._scriptdir,'import_modules/sol_20_lst.npy'))
+#        x_true = np.linalg.solve(A,b1)
+#        err_lst = []
         for i,item in enumerate(expected):
-            assert np.allclose(item.reshape(n,1),solver.iteration_results[i],1e-12)
+            assert np.allclose(item,solver.iteration_results[i],1e-12)
         
 if __name__ == '__main__':
     pass
