@@ -2,7 +2,7 @@ from proteus import *
 from proteus.default_p import *
 from proteus.mprans import SW2D
 from proteus.mprans import SW2DCV
-from proteus.Domain import RectangularDomain
+from proteus.Domain import RectangularDomain, PlanarStraightLineGraphDomain
 import numpy as np
 import math
 
@@ -16,8 +16,14 @@ g = 9.81
 # PARAMETERS #
 mannings=0.02
 
-domain = RectangularDomain(L=L)
-
+domainRect = RectangularDomain(L=L)
+structured=False
+if structured:
+    domain=domainRect
+else:
+    domainRect.writePoly("hump")
+    domain = PlanarStraightLineGraphDomain("hump")
+    domain.boundaryTags = domainRect.boundaryTags
 #This is relevant just when use_second_order_NonFlatB_with_EV_stabilization=True
 cE=1
 LUMPED_MASS_MATRIX=0
