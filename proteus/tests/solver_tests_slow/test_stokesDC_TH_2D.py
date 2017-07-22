@@ -65,7 +65,6 @@ class TestStokes(proteus.test_utils.TestTools.SimulationTest):
     def _runTest(self):
         Profiling.openLog('proteus.log',7)
         self._scriptdir = os.path.dirname(__file__)
-        import pdb ; pdb.set_trace()
         self.ns = NumericalSolution.NS_base(self.so,
                                             self.pList,
                                             self.nList,
