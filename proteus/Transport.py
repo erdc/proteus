@@ -181,6 +181,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         self.movingDomain=movingDomain
         self.tLast_mesh=None
+        self.par_info = ParInfo_petsc4py()
         #
         self.name=name
         self.sd=sd
@@ -6585,19 +6586,22 @@ class MultilevelTransport:
                             assert (rowptr_petsc == rowptr).all()
                         assert(colind.max() <= par_n+par_nghost)
                         assert(colind_petsc.max() <= par_n + par_nghost)
-                        ParInfo_petsc4py.par_bs = 1
-                        ParInfo_petsc4py.par_n = par_n
-                        ParInfo_petsc4py.par_n_lst = par_n_list
-                        ParInfo_petsc4py.par_N = par_N
-                        ParInfo_petsc4py.par_nghost = par_nghost
-                        ParInfo_petsc4py.par_nghost_lst = par_nghost_list
-                        ParInfo_petsc4py.petsc_subdomain2global_petsc = petsc_subdomain2global_petsc
-                        ParInfo_petsc4py.proteus2petsc_subdomain = proteus2petsc_subdomain
-                        ParInfo_petsc4py.petsc2proteus_subdomain = petsc2proteus_subdomain
-                        ParInfo_petsc4py.subdomain2global = subdomain2global
-                        ParInfo_petsc4py.dim = transport.dim
-                        ParInfo_petsc4py.nzval_proteus2petsc = nzval_proteus2petsc
-                        ParInfo_petsc4py.mixed = mixed
+                        try:
+                            transport.par_info.par_bs = 1
+                            transport.par_info.par_n = par_n
+                            transport.par_info.par_n_lst = par_n_list
+                            transport.par_info.par_N = par_N
+                            transport.par_info.par_nghost = par_nghost
+                            transport.par_info.par_nghost_lst = par_nghost_list
+                            transport.par_info.petsc_subdomain2global_petsc = petsc_subdomain2global_petsc
+                            transport.par_info.proteus2petsc_subdomain = proteus2petsc_subdomain
+                            transport.par_info.petsc2proteus_subdomain = petsc2proteus_subdomain
+                            transport.par_info.subdomain2global = subdomain2global
+                            transport.par_info.dim = transport.dim
+                            transport.par_info.nzval_proteus2petsc = nzval_proteus2petsc
+                            transport.par_info.mixed = mixed
+                        except AttributeError:
+                            logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
                         par_jacobian = ParMat_petsc4py(petsc_jacobian,1,par_n,par_N,par_nghost,
                                                        petsc_subdomain2global_petsc,pde=transport,
                                                        proteus_jacobian=jacobian, nzval_proteus2petsc=nzval_proteus2petsc)
@@ -6611,13 +6615,16 @@ class MultilevelTransport:
                         logEvent("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                         par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                         logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
-                        ParInfo_petsc4py.par_bs = par_bs
-                        ParInfo_petsc4py.par_n = par_n
-                        ParInfo_petsc4py.par_N = par_N
-                        ParInfo_petsc4py.par_nghost = par_nghost
-                        ParInfo_petsc4py.subdomain2global = subdomain2global
-                        ParInfo_petsc4py.dim = transport.dim
-                        ParInfo_petsc4py.mixed = mixed
+                        try:
+                            transport.par_info.par_bs = par_bs
+                            transport.par_info.par_n = par_n
+                            transport.par_info.par_N = par_N
+                            transport.par_info.par_nghost = par_nghost
+                            transport.par_info.subdomain2global = subdomain2global
+                            transport.par_info.dim = transport.dim
+                            transport.par_info.mixed = mixed
+                        except AttributeError:
+                            logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
                         par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
                 else:
                     par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
@@ -6669,13 +6676,16 @@ class MultilevelTransport:
                     par_du = ParVec_petsc4py(du,1,par_n,par_N)
                     logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = ParMat_petsc4py(jacobian,1,par_n,par_N,par_nghost,subdomain2global,pde=transport)
-                    ParInfo_petsc4py.par_bs = par_bs
-                    ParInfo_petsc4py.mixed = mixed
-                    ParInfo_petsc4py.par_n = par_n
-                    ParInfo_petsc4py.par_N = par_N
-                    ParInfo_petsc4py.par_nghost = par_nghost
-                    ParInfo_petsc4py.subdomain2global = subdomain2global
-                    ParInfo_petsc4py.dim = transport.dim
+                    try:
+                        transport.par_info.par_bs = par_bs
+                        transport.par_info.mixed = mixed
+                        transport.par_info.par_n = par_n
+                        transport.par_info.par_N = par_N
+                        transport.par_info.par_nghost = par_nghost
+                        transport.par_info.subdomain2global = subdomain2global
+                        transport.par_info.dim = transport.dim
+                    except AttributeError:
+                        logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
                 else:
                     transport.owned_local = numpy.arange(par_n*par_bs)
                     subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
@@ -6686,13 +6696,16 @@ class MultilevelTransport:
                     par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                     logEvent("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
-                    ParInfo_petsc4py.par_bs = par_bs
-                    ParInfo_petsc4py.mixed = mixed
-                    ParInfo_petsc4py.par_n = par_n
-                    ParInfo_petsc4py.par_N = par_N
-                    ParInfo_petsc4py.par_nghost = par_nghost
-                    ParInfo_petsc4py.subdomain2global = subdomain2global
-                    ParInfo_petsc4py.dim = transport.dim
+                    try:
+                        transport.par_info.par_bs = par_bs
+                        transport.par_info.mixed = mixed
+                        transport.par_info.par_n = par_n
+                        transport.par_info.par_N = par_N
+                        transport.par_info.par_nghost = par_nghost
+                        transport.par_info.subdomain2global = subdomain2global
+                        transport.par_info.dim = transport.dim
+                    except AttributeError:
+                        logEvent("Transport class has no ParInfo_petsc4py class to store parallel data.",level=4)
             else:
                 transport.owned_local = numpy.arange(transport.dim)
                 par_u = None
