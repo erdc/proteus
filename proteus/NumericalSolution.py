@@ -493,8 +493,6 @@ class NS_base:  # (HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
-
-
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
@@ -521,6 +519,11 @@ class NS_base:  # (HasTraits):
                         logEvent("NumericalSolution ViewMesh failed for mesh level %s" % l)
         if so.useOneMesh:
             for p in pList[1:]: mlMesh_nList.append(mlMesh)
+            try:
+                if (nList[0].MeshAdaptMesh.size_field_config() == 'isotropicProteus'):
+                    mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
+            except:
+                pass
         Profiling.memory("Mesh")
         from collections import OrderedDict
         self.modelSpinUp = OrderedDict()
@@ -715,6 +718,8 @@ class NS_base:  # (HasTraits):
         self.mlMesh_nList=[]
         for p in self.pList:
             self.mlMesh_nList.append(mlMesh)
+        if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
+            mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
         #may want to trigger garbage collection here
         modelListOld = self.modelList
         logEvent("Allocating models on new mesh")
@@ -930,6 +935,11 @@ class NS_base:  # (HasTraits):
             self.so.useOneMesh and 
             self.nSolveSteps%n0.adaptMesh_nSteps==0):
             logEvent("Copying coordinates to PUMI")
+            p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
+                self.modelList[0].levelModelList[0].mesh.nodeArray)
+            if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
+                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_size",
+                                                       self.modelList[0].levelModelList[0].mesh.size_field)
             p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                 self.modelList[0].levelModelList[0].mesh.nodeArray)
             logEvent("Copying DOF and parameters to PUMI")
