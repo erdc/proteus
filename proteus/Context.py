@@ -26,6 +26,8 @@ Example (use the global context)::
 
 """
 from collections import  namedtuple
+from recordtype import recordtype
+
 from .Profiling import logEvent
 
 """The global context"""
@@ -44,17 +46,21 @@ def set(contextIn):
     global context
     context = contextIn
 
-def setFromModule(moduleIn):
+def setFromModule(moduleIn,mutable=False):
     """Construct the global context object from a module"""
     global context
     fields = {}
     for key, value in moduleIn.__dict__.iteritems():
         if  key[:2] != "__":
             fields[key]=value
-    Context = namedtuple(moduleIn.__name__.split('.')[-1], fields.keys(), verbose=False)
-    context = Context._make(fields.values())
+    if mutable:
+        Context = recordtype(moduleIn.__name__.split('.')[-1], fields.iteritems())
+        context = Context()
+    else:
+        Context = namedtuple(moduleIn.__name__.split('.')[-1], fields.keys())
+        context = Context._make(fields.values())
 
-def Options(optionsList=None):
+def Options(optionsList=None,mutable=False):
     """Construct an o
     from proteus.LinearAlgebraToptions object (named tuple)
     
@@ -97,5 +103,9 @@ def Options(optionsList=None):
             else:
                 logEvent("IGNORING CONTEXT OPTION; DECLARE "+lvalue+" IF YOU WANT TO SET IT")
     #now set named tuple merging optionsList and opts_cli_dihelpct
-    ContextOptions = namedtuple("ContextOptions", contextOptionsDict.keys(), verbose=False)
-    return ContextOptions._make(contextOptionsDict.values())
+    if mutable:
+        ContextOptions = recordtype("ContextOptions", contextOptionsDit.iteritems())
+        return ContextOptions()
+    else:
+        ContextOptions = namedtuple("ContextOptions", contextOptionsDict.keys())
+        return ContextOptions._make(contextOptionsDict.values())
