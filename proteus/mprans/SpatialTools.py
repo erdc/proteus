@@ -34,6 +34,7 @@ from proteus.mprans import BodyDynamics as bd
 from proteus.SpatialTools import (Shape,
                                   Cuboid,
                                   Sphere,
+                                  Cylinder,
                                   Rectangle,
                                   Circle,
                                   CustomShape,
@@ -317,6 +318,7 @@ class ShapeRANS(Shape):
 Rectangle.__bases__ = (ShapeRANS,)
 Cuboid.__bases__ = (ShapeRANS,)
 Sphere.__bases__ = (ShapeRANS,)
+Cylinder.__bases__ = (ShapeRANS,)
 CustomShape.__bases__ = (ShapeRANS,)
 ShapeSTL.__bases__ = (ShapeRANS,)
 Circle.__bases__ = (ShapeRANS,)  
@@ -633,7 +635,7 @@ class Tank3D(ShapeRANS):
         self.facetFlags = np.array(facetFlags)
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
-        self.volumes = np.array(volumes)
+        self.volumes = volumes
 
 
     def setAbsorptionZones(self, dragAlpha,allSponge=False,
@@ -1841,7 +1843,8 @@ def assembleDomain(domain):
     _assembleGeometry(domain, BC_class=bc.BC_RANS)
     domain.bc[0].setNonMaterial()  # set BC for boundary between processors
     assembleAuxiliaryVariables(domain)
-    _generateMesh(domain)
+    if(domain.name != "PUMIDomain"):
+      _generateMesh(domain)
 
 
 def assembleAuxiliaryVariables(domain):

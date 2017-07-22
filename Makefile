@@ -230,6 +230,7 @@ install: profile $(shell find proteus -type f) $(wildcard *.py) proteus
 	$(call howto)
 
 develop: proteus profile 
+	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/* ${PROTEUS}/${PROTEUS_ARCH}/lib
 	@echo "************************"
 	@echo "Installing development version"
 	@echo "************************"
@@ -332,7 +333,11 @@ jupyter:
 	jupyter nbextension enable --sys-prefix --py ipyparallel
 	jupyter serverextension enable --sys-prefix --py ipyparallel
 	ipython profile create mpi --parallel
-	echo "c.IPClusterEngines.engine_launcher_class = 'MPI'" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	printf "\nc.NotebookApp.server_extensions.append('ipyparallel.nbextension')\n" >> ${HOME}/.jupyter/jupyter_notebook_config.py
+	printf "\nc.IPClusterEngines.engine_launcher_class = 'MPI'\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	printf "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	printf "c.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	printf "c.MPIEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
 
 lfs:
 	pip install pyliblzma
