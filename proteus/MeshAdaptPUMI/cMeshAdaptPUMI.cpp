@@ -351,7 +351,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     size_iso = samSz::isoSize(m);
   }
   else if (size_field_config == "isotropic")
-    testIsotropicSizeField();
+    calculateSizeField();
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
