@@ -1,15 +1,21 @@
-from proteus import *
 from proteus.default_p import *
-from proteus.mprans import SW2D
-from proteus.mprans import SW2DCV
+from proteus import Context
+from proteus.mprans import SW2D,SW2DCV
 from proteus.Domain import RectangularDomain, PlanarStraightLineGraphDomain
 import numpy as np
 import math
 
+opts=Context.Options([
+    ("T", 10.0, "Length of simulation in seconds"),
+    ("nDTout", 100, "number of time steps to archive"),
+    ("refinement",4,"Level of refinement"),
+    ("structured",False,"Use structured mesh")
+])
+
 nd=2
 
-T=10.0#2*math.pi/omega
-nDTout=100
+T=opts.T
+nDTout=opts.nDTout
 
 L=(75.0,30.0)
 g = 9.81
@@ -17,8 +23,7 @@ g = 9.81
 mannings=0.02
 
 domainRect = RectangularDomain(L=L)
-structured=False
-if structured:
+if opts.structured:
     domain=domainRect
 else:
     domainRect.writePoly("hump")
