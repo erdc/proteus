@@ -23,13 +23,11 @@ static double isotropicFormula(double phi, double dphi, double verr, double hmin
   if (fabs(phi) < 5.0*hmin)
     {
       dphi_size_factor = fmax(hmin/10.0,fmin(1.0,pow(((hmin/1000.0)/fabs(dphi+1.0e-8)),1.0/2.0)));
-      //std::cout<<"dphi_size_factor "<<dphi_size_factor<<std::endl;
       size = hmin*dphi_size_factor;
     }
   else
     size = hmax;
   size = fmax(hmin/100.0,fmin(size,0.001/(verr+1.0e-8))); 
-  //std::cout<<"size "<<size<<std::endl;
   return size;
 }
 
