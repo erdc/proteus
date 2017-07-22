@@ -364,6 +364,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.b.dof = mesh.nodeArray[:,2].copy()
         else:
             self.b.dof = self.bathymetry[0]([x,y])
+            mesh.nodeArray[:,2] = self.b.dof
     def initializeElementQuadrature(self,t,cq):
         pass
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
