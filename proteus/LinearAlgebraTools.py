@@ -161,6 +161,53 @@ def superlu_2_petsc4py(sparse_superlu):
                                                           A_nzval))
     return A_petsc4py
 
+def null(A, rtol=1e-16):
+    u, s, v = numpy.linalg.svd(A)
+    rank = (s > rtol*s[0]).sum()
+    return rank, v[rank:].T.copy()
+
+def petsc_create_diagonal_inv_matrix(sparse_petsc):
+    """ Create an inverse diagonal petsc4py matrix from input matrix.
+    
+    Parameters
+    ----------
+    sparse_petsc : :class:`p4pyPETSc.Mat`
+
+    Returns
+    -------
+    sparse_matrix : :class:`p4pyPETSc.Mat`
+    """
+    diag_inv = p4pyPETSc.Mat().create()
+    diag_inv.setSizes(sparse_petsc.getSizes())
+    diag_inv.setType('aij')
+    diag_inv.setUp()
+    diag_inv.setDiagonal(1./sparse_petsc.getDiagonal())
+    return diag_inv
+
+# TODO - figure out whether this function is needed
+# def csr_2_petsc_mpiaij(size,csr):
+#     """ Create an MPIaij petsc4py matrix from size and CSR information.
+
+#     Parameters:
+#     ----------
+#     size : tuple
+#         Two entires: (num_rows, num_cols)
+#     csr : tuple
+#         (row_idx, col_idx, vals)
+
+#     Returns:
+#     --------
+#     matrix : PETSc4py MPIaij matrix
+#     """
+#     mat = p4pyPETSc.Mat().create()
+#     mat.setSizes(size = size)
+#     mat.setType('mpiaij')
+#     mat.setUp()
+#     mat.assemblyBegin()
+#     mat.setValuesCSR(csr[0],csr[1],csr[2])
+#     mat.assemblyEnd()
+#     return mat
+
 def dense_numpy_2_petsc4py(dense_numpy, eps = 1.e-12):
     """ Create a sparse petsc4py matrix from a dense numpy matrix.
 
@@ -822,6 +869,37 @@ class MatrixInvShell(InvOperatorShell):
 #        _petsc_view(y,'y_mpi_2')
 #        _petsc_view(self.ksp.getOperators()[0],'Qp_mpi_2')
 #        import pdb ; pdb.set_trace()
+
+class Sp_shell(InvOperatorShell):
+    def __init__(self, A00, A11, A01, A10):
+        self.A00 = A00
+        self.A11 = A11
+        self.A01 = A01
+        self.A10 = A10
+        self._create_Sp()
+        self._options = p4pyPETSc.Options()
+        self._create_constant_nullspace()
+        
+        self.kspSp = p4pyPETSc.KSP().create()
+        self.kspSp.setOperators(self.Sp,self.Sp)
+        self.kspSp.setOptionsPrefix('innerSp_solve_')
+        self.kspSp.setFromOptions()
+        self.Sp.setNullSpace(self.const_null_space)
+        self.kspSp.setUp()
+
+    def apply(self,A,x,y):
+        tmp1 = p4pyPETSc.Vec().create()
+        tmp1 = x.copy()
+        self.const_null_space.remove(tmp1)
+        self.kspSp.solve(tmp1,y)
+
+    def _create_Sp(self):
+        self.A00_inv = petsc_create_diagonal_inv_matrix(self.A00)
+        A00_invBt = self.A00_inv.matMult(self.A01)
+        self.Sp = self.A10.matMult(A00_invBt)
+#        self.Sp.scale(-1.)
+        self.Sp.aypx(-1.,self.A11)
+    
 
 class TwoPhase_PCDInv_shell(InvOperatorShell):
     r""" Shell class for the two-phase PCD preconditioner.  The
