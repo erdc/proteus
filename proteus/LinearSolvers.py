@@ -412,7 +412,11 @@ class KSP_petsc4py(LinearSolver):
         self.petsc_L = par_L
         self.csr_rep_local = self.petsc_L.csr_rep_local
         self.csr_rep = self.petsc_L.csr_rep
-        self.bdyNullSpace = bdyNullSpace
+        # HACK FOR CLOSED BDY PROBLEM - NEED TO CHANGE
+        try:
+            self.bdyNullSpace = self.petsc_L.pde.coefficients.forceStrongDirichlet
+        except:
+            self.bdyNullSpace = False
 
         # create petsc4py KSP object and attach operators
         self.ksp = p4pyPETSc.KSP().create()
@@ -490,7 +494,7 @@ class KSP_petsc4py(LinearSolver):
         if self.matcontext is not None:
             self.matcontext.par_b = par_b
 
-        if self.bdyNullSpace==True:
+        if self.bdyNullSpace is True:
             self._setNullSpace(par_b)
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
@@ -524,37 +528,43 @@ class KSP_petsc4py(LinearSolver):
         """
         #Global null space constructor
         # Comm information
+        #### ARB TEMPORARY HACK FOR SERIAL STABILIZED ELEMETNS
         rank = p4pyPETSc.COMM_WORLD.rank
         size = p4pyPETSc.COMM_WORLD.size
+        null_space_vector = par_b.copy()
+        null_space_vector.getArray().fill(0.)
+        N_DOF_pressure = self.par_L.pde.u[0].femSpace.dofMap.nDOF_all_processes
+        tmp = null_space_vector.getArray()[::3]
+        tmp[:] = 1.0 / (sqrt(N_DOF_pressure))
         # information for par_vec
-        par_N = par_b.getSize()
-        par_n = par_b.getLocalSize()
-        par_nghosts = par_b.nghosts
-        subdomain2global = par_b.subdomain2global
-        proteus2petsc_subdomain = par_b.proteus2petsc_subdomain
-        petsc2proteus_subdomain = par_b.petsc2proteus_subdomain
-        # information for pressure uknowns
-        pSpace = self.par_L.pde.u[0].femSpace
-        pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
-        n_DOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
-#        assert par_n == n_DOF_pressure
-        N_DOF_pressure = pressure_offsets[size]
-        total_pressure_unknowns = pSpace.dofMap.nDOF_subdomain
-        t = pSpace.dofMap.nDOF_all_processes
-        assert t==N_DOF_pressure
-        self.tmp_array = numpy.zeros((par_n+par_nghosts),'d')
-        self.tmp_array[0:n_DOF_pressure] = 1.0/(sqrt(N_DOF_pressure))
-        null_space_basis = ParVec_petsc4py(self.tmp_array,
-                                           1,
-                                           par_n,
-                                           par_N,
-                                           par_nghosts,
-                                           subdomain2global,
-                                           proteus2petsc_subdomain=proteus2petsc_subdomain,
-                                           petsc2proteus_subdomain=petsc2proteus_subdomain)
-        null_space_basis.scatter_forward_insert()
-        self.tmp_array[:] = self.tmp_array[petsc2proteus_subdomain]
-        self.global_null_space = [null_space_basis]
+#         par_N = par_b.getSize()
+#         par_n = par_b.getLocalSize()
+#         par_nghosts = par_b.nghosts
+#         subdomain2global = par_b.subdomain2global
+#         proteus2petsc_subdomain = par_b.proteus2petsc_subdomain
+#         petsc2proteus_subdomain = par_b.petsc2proteus_subdomain
+#         # information for pressure uknowns
+#         pSpace = self.par_L.pde.u[0].femSpace
+#         pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
+#         n_DOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
+# #        assert par_n == n_DOF_pressure
+#         N_DOF_pressure = pressure_offsets[size]
+#         total_pressure_unknowns = pSpace.dofMap.nDOF_subdomain
+#         t = pSpace.dofMap.nDOF_all_processes
+#         assert t==N_DOF_pressure
+#         self.tmp_array = numpy.zeros((par_n+par_nghosts),'d')
+#         self.tmp_array[0:n_DOF_pressure] = 1.0/(sqrt(N_DOF_pressure))
+#         null_space_basis = ParVec_petsc4py(self.tmp_array,
+#                                            1,
+#                                            par_n,
+#                                            par_N,
+#                                            par_nghosts,
+#                                            subdomain2global,
+#                                            proteus2petsc_subdomain=proteus2petsc_subdomain,
+#                                            petsc2proteus_subdomain=petsc2proteus_subdomain)
+#         null_space_basis.scatter_forward_insert()
+#         self.tmp_array[:] = self.tmp_array[petsc2proteus_subdomain]
+        self.global_null_space = [null_space_vector]
 
 
     def _setNullSpace(self,par_b):
@@ -565,11 +575,14 @@ class KSP_petsc4py(LinearSolver):
         par_b : proteus.LinearAlgebraTools.ParVec_petsc4py
             The problem's RHS vector.
         """
-        self._defineNullSpaceVec(par_b)
-        vecs = self.global_null_space
-        self.pressure_null_space = p4pyPETSc.NullSpace().create(constant=False,
-                                                                vectors=vecs,
-                                                                comm=p4pyPETSc.COMM_WORLD)
+        try:
+            self.pressure_null_space
+        except AttributeError:
+            self._defineNullSpaceVec(par_b)
+            vecs = self.global_null_space
+            self.pressure_null_space = p4pyPETSc.NullSpace().create(constant=False,
+                                                                    vectors=vecs,
+                                                                    comm=p4pyPETSc.COMM_WORLD)
         self.ksp.getOperators()[0].setNullSpace(self.pressure_null_space)
         self.pressure_null_space.remove(par_b)
         
@@ -737,6 +750,10 @@ class SchurOperatorConstructor:
                 self.opBuilder = OperatorConstructor_rans2p(self.L.pde)
         except:
             self.opBuilder = OperatorConstructor_oneLevel(self.L.pde)
+            try:
+                self._phase_func = self.L.pde.coefficients.which_region
+            except AttributeError:
+                pass
 
     def _initializeMat(self,jacobian):
         import Comm
@@ -1311,12 +1328,35 @@ class Schur_Sp(SchurPrecon):
     """
     def __init__(self,L,prefix,bdyNullSpace=False):
         SchurPrecon.__init__(self,L,prefix,bdyNullSpace)
-        p4pyPETSc.Options().setValue('pc_fieldsplit_schur_precondition','selfp')
+        self.operator_constructor = SchurOperatorConstructor(self)
+#        p4pyPETSc.Options().setValue('pc_fieldsplit_schur_precondition','selfp')
 
     def setUp(self,global_ksp):
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace is True:
             self._setConstantPressureNullSpace(global_ksp)
+        self.A00 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+                                                             self.operator_constructor.linear_smoother.isv)
+        self.A01 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isv,
+                                                             self.operator_constructor.linear_smoother.isp)
+        self.A10 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                             self.operator_constructor.linear_smoother.isv)
+        self.A11 = global_ksp.getOperators()[0].getSubMatrix(self.operator_constructor.linear_smoother.isp,
+                                                             self.operator_constructor.linear_smoother.isp)
+        L_sizes = self.operator_constructor.linear_smoother.isp.sizes
+        self.Sp_shell = p4pyPETSc.Mat().create()
+        self.Sp_shell.setSizes(L_sizes)
+        self.Sp_shell.setType('python')
+        self.matcontext_inv = Sp_shell(self.A00,
+                                       self.A11,
+                                       self.A01,
+                                       self.A10)
+        self.Sp_shell.setPythonContext(self.matcontext_inv)
+        self.Sp_shell.setUp()
+        # Set PETSc Schur operator
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
+        global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
     
 class Schur_Qp(SchurPrecon) :
     """ 
@@ -1380,6 +1420,7 @@ class NavierStokesSchur(SchurPrecon):
         self.operator_constructor = SchurOperatorConstructor(self,
                                                              pde_type='navier_stokes')
 
+
 class NavierStokes_TwoPhasePCD(NavierStokesSchur):
     def __init__(self, L, prefix=None, bdyNullSpace=False):
         """
@@ -1438,6 +1479,7 @@ class NavierStokes_TwoPhasePCD(NavierStokesSchur):
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setType('python')
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setPythonContext(self.matcontext_inv)
         global_ksp.pc.getFieldSplitSubKSP()[1].pc.setUp()
+
         self._setSchurlog(global_ksp)
         if self.bdyNullSpace == True:
             nsp = p4pyPETSc.NullSpace().create(comm=p4pyPETSc.COMM_WORLD,
@@ -2892,15 +2934,19 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                                                       Mass_Jacobian[ci][cj])
         self._createOperator(self.MassOperatorCoeff,Mass_Jacobian,self.MassOperator)
 
-    def updateTPAdvectionOperator(self,advection_field,phase_function=None):
-        self._advective_field = advective_field
-        self._advection_val = self.OLT.nzval.copy()
+    def updateTPAdvectionOperator(self,phase_function=None):
+        self._u = numpy.copy(self.model.q[('u',1)])
+        self._v = numpy.copy(self.model.q[('u',2)])
+        self._advective_field = [self._u, self._v]
+        self._advection_val = self.model.nzval.copy()
         self._advection_val.fill(0.)
-
-        _rho_0 = self.OLT.coefficients.rho_0
-        _rho_1 = self.OLT.coefficients.rho_1
-        _nu_0 = self.OLT.coefficients.nu_0
-        _nu_1 = self.OLT.coefficients.nu_1
+        import pdb ; pdb.set_trace()
+        _nd = self.model.coefficients.nd
+        
+        _rho_0 = self.model.coefficients.rho_0
+        _rho_1 = self.model.coefficients.rho_1
+        _nu_0 = self.model.coefficients.nu_0
+        _nu_1 = self.model.coefficients.nu_1
         
         if phase_function == None:
             self.AdvectionOperatorCoeff = TransportCoefficients.DiscreteTwoPhaseAdvectionOperator(u = self._advective_field,
@@ -3275,4 +3321,56 @@ class OperatorConstructor_oneLevel(OperatorConstructor):
                                                                           matrixDict[ci][cj],
                                                                           A)
 
+                
+    def _calculateQuadratureValues(self,Q):
+        elementQuadratureDict = {}
+        elementQuadratureDict[('m',1)] = self._elementQuadrature
+        (elementQuadraturePoints,elementQuadratureWeights,
+         elementQuadratureRuleIndeces) = Quadrature.buildUnion(elementQuadratureDict)
+        self.model.u[0].femSpace.elementMaps.getValues(elementQuadraturePoints, Q['x'])
 
+    def _allocateAdvectionOperatorQStorageSpace(self,Q):
+           """Allocate storage space for the Advection operator values. """
+           scalar_quad = StorageSet(shape=(self.model.mesh.nElements_global,
+                                           self.model.nQuadraturePoints_element))
+           points_quadrature = StorageSet(shape=(self.model.mesh.nElements_global,
+                                                 self.model.nQuadraturePoints_element,
+                                                 3))
+           vector_quad = StorageSet(shape=(self.model.mesh.nElements_global,
+                                           self.model.nQuadraturePoints_element,
+                                           self.model.nSpace_global))
+           tensor_quad = StorageSet(shape=(self.model.mesh.nElements_global,
+                                           self.model.nQuadraturePoints_element,
+                                           self.model.nSpace_global))
+           gradients = StorageSet(shape={})
+
+           points_quadrature |= set(['x'])
+           scalar_quad |= set([('u',0)])
+           vector_quad |= set([('f',ci) for ci in range(self.model.nc)])
+           tensor_quad |= set([('df',0,0)])
+
+           for i in range(self.model.nc):
+               for j in range(1,self.model.nc):
+                   tensor_quad |= set([('df',i,j)])
+
+           gradients |= set([('grad(w)*dV_f',ci) for ci in self.AdvectionOperatorCoeff.advection.keys()])
+
+           scalar_quad.allocate(Q)
+           vector_quad.allocate(Q)
+
+           for k in tensor_quad:
+               Q[k] = numpy.zeros(
+                   (self.model.mesh.nElements_global,
+                    self.model.nQuadraturePoints_element,
+                    self.model.nSpace_global),
+                   'd')
+
+           for k in gradients:
+               Q[k] = numpy.zeros(
+                   (self.model.mesh.nElements_global,
+                    self.model.nQuadraturePoints_element,
+                    self.model.nDOF_test_element[k[-1]],
+                    self.model.nSpace_global),
+                   'd')
+
+           points_quadrature.allocate(Q)
