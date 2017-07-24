@@ -17,13 +17,9 @@ static void SmoothField(apf::Field* f);
    thickness of refinement near the interface */
 static double isotropicFormula(double phi, double hmin, double hmax)
 {
-  static double const epsilon = 0.02;
-  phi = fabs(phi);
   double size;
-  if (fabs(phi) < epsilon)
+  if (fabs(phi) < 5.0*hmin)
     size = hmin;
-  else if (phi < 3 * epsilon)
-    size = (hmin + hmax) / 2;
   else
     size = hmax;
   return size;
@@ -43,8 +39,30 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
     apf::setScalar(size_iso, v, 0, size);
   }
   m->end(it);
-  for(int i=0; i < 3; i++)
-    SmoothField(size_iso);
+  /*
+    If you just smooth then hmax will just diffuse into the hmin band
+    and you won't really get a band around phi=0 with uniform diameter
+    hmin. Instead, reset to hmin after each smooth within the band in
+    order to ensure the band uses hmin. Iterate on that process until
+    changes in the smoothed size are less than 50% of hmin.
+   */
+  double err_h_max=hmax;
+  int its=0;
+  while (err_h_max > 0.5*hmin && its < 200)
+    {
+      its++;
+      SmoothField(size_iso);
+      err_h_max=0.0;
+      it = m->begin(0);
+      while ((v = m->iterate(it))) {
+	double phi = apf::getScalar(phif, v, 0);
+	double size_current = apf::getScalar(size_iso, v, 0);
+	double size = fmin(size_current,isotropicFormula(phi, hmin, hmax));
+	err_h_max = fmax(err_h_max,fabs(size_current-size));
+	apf::setScalar(size_iso, v, 0, size);
+      }
+      m->end(it);
+    }    
   return 0;
 }
 
