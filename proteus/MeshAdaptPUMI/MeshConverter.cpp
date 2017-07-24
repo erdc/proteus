@@ -528,14 +528,25 @@ static void constructBoundaryElements(
     Mesh2* m, const Gid* conn_b, int nelem_b, int etype_b,
     GlobalToVert& globalToVert)
 {
+  std::cout<<"What is dim? "<<m->getDimension()<<std::endl;
   ModelEntity* interior = m->findModelEntity(m->getDimension(), 0);
   int nev = apf::Mesh::adjacentCount[etype_b][0];
+  std::cout<<"What is nev? "<<nev<<" nelem_b? "<<nelem_b<<std::endl;
   for (int i = 0; i < nelem_b; ++i) {
     Downward verts;
     int offset = i * nev;
-    for (int j = 0; j < nev; ++j)
+    std::cout<<"which i? "<<i<<std::endl;
+    for (int j = 0; j < nev; ++j){
+      std::cout<<"which j? "<<j<<std::endl;
       verts[j] = globalToVert[conn_b[j + offset]];
-    m->createEntity(etype_b,interior,verts);
+    }
+    std::cout<<"At entity creation\n";
+    //We only care about how boundary elements are created
+    //The intermediate entities need to inherit the classifications
+    if(m->getDimension()==2)
+      m->createEntity(etype_b,interior,verts);
+    else
+      apf::buildElement(m,interior,2,verts);
   }
 }
 static void constructElements(
@@ -667,10 +678,20 @@ void construct(Mesh2* m, const int* conn, const int* conn_b, int nelem,
     GlobalToVert& globalToVert)
 {
   constructVerts(m, nverts,local2globalMap,globalToVert);
+  std::cout<<"Vertices\n";
+  PCU_Barrier();
   constructBoundaryElements(m, conn_b, nelem_b, etype_b, globalToVert);
+  std::cout<<"Boundary\n";
+  PCU_Barrier();
   constructElements(m, conn, nelem, etype, globalToVert);
+  std::cout<<"Elements\n";
+  PCU_Barrier();
   constructResidence(m, globalToVert);
+  std::cout<<"Residence\n";
+  PCU_Barrier();
   constructRemotes(m, globalToVert);
+  std::cout<<"Remotes\n";
+  PCU_Barrier();
   stitchMesh(m);
   m->acceptChanges();
 }
@@ -784,7 +805,8 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
     numModelBoundaries = mesh.nExteriorElementBoundaries_global;
     numModelRegions = numModelEntities[3];
   }
-
+  
+  std::cout<<"numModelRegions "<<numModelRegions<<std::endl;
   assert(numModelRegions>0);
 
   numModelTotals[0] = numModelNodes;
@@ -836,9 +858,10 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   //to their global vertices as well as boundary elements to their global 
   //vertices and outputs a topologically correct mesh. 
   //
-  m = apf::makeEmptyMdsMesh(gMod,2,false);
+  m = apf::makeEmptyMdsMesh(gMod,numDim,false);
 
   int etype,etype_b;
+  int boundaryDim = numDim-1;
   apf::GlobalToVert outMap;
   if(numDim == 2){
     etype = apf::Mesh::TRIANGLE;
@@ -862,12 +885,18 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
     local2global_elementNodes[i] = globalMesh.nodeNumbering_subdomain2global[mesh.elementNodesArray[i]];
   }
   
+  PCU_Barrier();
+  std::cout<<"Adjacent entities elements "<<apf::Mesh::adjacentCount[etype][0]<<" boundaries  "<< apf::Mesh::adjacentCount[etype_b][0]<<std::endl;
+  std::cout<<"Number of entities "<<mesh.nElements_global<<" "<<mesh.nElementBoundaries_global<<" "<<mesh.nNodes_global<<std::endl;
+  std::cout<<"Arrived at construction site\n";
   //construct the mesh
   apf::construct(m,local2global_elementNodes,local2global_elementBoundaryNodes,
     mesh.nElements_global,mesh.nElementBoundaries_global,mesh.nNodes_global,etype,etype_b,
     globalMesh.nodeNumbering_subdomain2global,outMap);
 
 
+  PCU_Barrier();
+  std::cout<<"Finished construction\n";
   //Get the global model offsets after the mesh has been created
   //Need to get the number of owned element boundaries on the current rank
   //Also need to get the number of owned exterior entities for proper processor communication
@@ -886,7 +915,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   }
   m->end(entIter);
 
-  entIter=m->begin(1);
+  entIter=m->begin(boundaryDim);
   idx=0;
   int nExteriorElementBoundaries_owned = 0;
   while((ent=m->iterate(entIter))){
@@ -953,13 +982,20 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)0);
 
   for(int i=0;i<numModelTotals[2];i++){
-    e = agm_add_ent(gMod_base->topo, AGM_EDGE);
+    if(numDim==2)
+      e = agm_add_ent(gMod_base->topo, AGM_EDGE);
+    else
+      e = agm_add_ent(gMod_base->topo, AGM_FACE);
     gmi_set_lookup(gMod_base->lookup, e, i);
   }
-  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)1);
+  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)boundaryDim);
 
   for(int i=0;i<numModelRegions;i++){
-    e = agm_add_ent(gMod_base->topo, AGM_FACE);
+    if(numDim == 2)
+      e = agm_add_ent(gMod_base->topo, AGM_FACE);
+    else
+      e = agm_add_ent(gMod_base->topo, AGM_REGION);
+
     //assumes material types are enumerated starting from 1
     gmi_set_lookup(gMod_base->lookup, e, i+1); 
     if(hasModel){
@@ -973,7 +1009,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
       }
     }
   }
-  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)2);
+  gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)numDim);
 
   int matTag; 
   apf::ModelEntity* gEnt; 
@@ -1000,7 +1036,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
         //if entity is interior, it should be classified on a region
         if(matTag==0){
           matTag = mesh.elementMaterialTypes[mesh.nodeElementsArray[mesh.nodeElementOffsets[vID]]];
-          gEnt = m->findModelEntity(2,matTag);
+          gEnt = m->findModelEntity(numDim,matTag);
         }
         //else there is an associated model entity
         else{
@@ -1033,58 +1069,72 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   PCU_Barrier();
   m->end(entIter);
 
-  //Classify the mesh edge entities
+  //Classify the mesh boundary entities
   //If the edge is on a model edge, it should have a material tag greater than 0.
   //If the edge is on a partition boundary, the material tag should be 0.
   //There is no direct control over ownership when constructing the mesh, so it
   //must be left general.
-  int edgID = 0;
-  int edgCounter = 0;
-  int edgMaterialCounter = numModelOffsets[2];
-  entIter=m->begin(1);
+  int boundaryID = 0;
+  int boundaryCounter = 0;
+  int boundaryMaterialCounter = numModelOffsets[2];
+  entIter=m->begin(boundaryDim);
   while(ent = m->iterate(entIter)){
     if(hasModel){
-      gEnt = m->findModelEntity(meshBoundary2Model[2*edgID+1],meshBoundary2Model[2*edgID]);
+      gEnt = m->findModelEntity(meshBoundary2Model[2*boundaryID+1],meshBoundary2Model[2*boundaryID]);
       //if entity is a on a model boundary
-      if(meshBoundary2Model[2*edgID+1]==1) 
-        modelBoundaryMaterial[meshBoundary2Model[2*edgID]] = mesh.elementBoundaryMaterialTypes[edgID];
+      if(meshBoundary2Model[2*boundaryID+1]==1) 
+        modelBoundaryMaterial[meshBoundary2Model[2*boundaryID]] = mesh.elementBoundaryMaterialTypes[boundaryID];
     }
     else{
-      if(mesh.exteriorElementBoundariesArray[edgCounter]==edgID && (mesh.elementBoundaryMaterialTypes[edgID]!=0)){
-        gEnt = m->findModelEntity(1,edgMaterialCounter);
-        modelBoundaryMaterial[edgMaterialCounter] = mesh.elementBoundaryMaterialTypes[edgID]; 
-        edgCounter++;
-        edgMaterialCounter++;
+      if(mesh.exteriorElementBoundariesArray[boundaryCounter]==boundaryID && (mesh.elementBoundaryMaterialTypes[boundaryID]!=0)){
+        gEnt = m->findModelEntity(boundaryDim,boundaryMaterialCounter);
+        //std::cout<<"What is the boundary dimension entity? "<<m->getModelType(gEnt)<<" boundaryCounter? "<<boundaryCounter<<" boundaryMaterialCounter "<<boundaryMaterialCounter<<std::endl;
+        modelBoundaryMaterial[boundaryMaterialCounter] = mesh.elementBoundaryMaterialTypes[boundaryID]; 
+        boundaryCounter++;
+        boundaryMaterialCounter++;
       }
       else {
         //If the current exterior entity is an edge on a partition boundary, need to check material and
         //get to the next item in the exterior array
-        if(m->isShared(ent) && mesh.elementBoundaryMaterialTypes[mesh.exteriorElementBoundariesArray[edgCounter]]==0) 
-          edgCounter++; 
-        assert(mesh.elementBoundaryMaterialTypes[edgID]==0);
+        if(m->isShared(ent) && mesh.elementBoundaryMaterialTypes[mesh.exteriorElementBoundariesArray[boundaryCounter]]==0) 
+          boundaryCounter++; 
+        assert(mesh.elementBoundaryMaterialTypes[boundaryID]==0);
         //There are always two entities adjacent to an element boundary
         //Pick one and take that as the material type for classification
-        matTag = mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[2*edgID]];
-        gEnt = m->findModelEntity(2,matTag);
+        matTag = mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[2*boundaryID]];
+        gEnt = m->findModelEntity(numDim,matTag);
       }
     }
     m->setModelEntity(ent,gEnt);
-    edgID++;
+    //If 3D, need to set edge classification
+    if(numDim==3){      
+      apf::Adjacent adj_edges;
+      m->getAdjacent(ent,1,adj_edges);
+      for(int i=0;i<adj_edges.getSize();i++){
+        //if(m->getModelType(m->toModel(adj_edges[i]))>m->getModelType(gEnt) || (m->getModelTag(m->toModel(adj_edges[i]))==0 && m->getModelType(m->toModel(adj_edges[i]))==3))
+        if(m->getModelType(m->toModel(adj_edges[i]))>m->getModelType(gEnt) || (m->getModelType(m->toModel(adj_edges[i]))==0))
+          m->setModelEntity(adj_edges[i],gEnt);
+      }
+    }
+    boundaryID++;
   }
   m->end(entIter);
 
-  entIter = m->begin(2);
+  std::cout<<"Passed the boundary classification\n";
+  PCU_Barrier();
+  //Iterate over regions
+  entIter = m->begin(numDim);
 
   //Populate the region materials
   //Assumes that the regions are numbered sequentially from 1 onward
   for(int i=0;i<numModelRegions;i++)
     modelRegionMaterial[i] = i+1;
   
-  int fID = 0;
+  int rID = 0;
   while(ent = m->iterate(entIter)){
-    gEnt = m->findModelEntity(2,mesh.elementMaterialTypes[fID]);
+    gEnt = m->findModelEntity(numDim,mesh.elementMaterialTypes[rID]);
     m->setModelEntity(ent,gEnt);
-    fID++;
+    rID++;
   }
   m->end(entIter);
 
@@ -1098,6 +1148,37 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   //check that the mesh is consistent
   m->acceptChanges();
   apf::alignMdsRemotes(m);
+  std::cout<<"PASSED EVERYTHING ELSE\n";
+/*
+  entIter = m->begin(0);
+  while(ent=m->iterate(entIter)){
+    apf::ModelEntity* testEnt = m->toModel(ent);
+    std::cout<<"This is modelType for vertex "<<m->getModelType(testEnt)<<std::endl;
+  }    
+  m->end(entIter);
+*/
+  entIter = m->begin(1);
+  while(ent=m->iterate(entIter)){
+    apf::ModelEntity* testEnt = m->toModel(ent);
+    if(m->getModelType(testEnt) < 1)
+      std::cout<<"This is modelType for edge "<<m->getModelType(testEnt)<<std::endl;
+  }    
+  m->end(entIter);
+  entIter = m->begin(2);
+  while(ent=m->iterate(entIter)){
+    apf::ModelEntity* testEnt = m->toModel(ent);
+    if(m->getModelType(testEnt) < 2)
+      std::cout<<"This is modelType for face "<<m->getModelType(testEnt)<<std::endl;
+  }    
+  m->end(entIter);
+  entIter = m->begin(3);
+  while(ent=m->iterate(entIter)){
+    apf::ModelEntity* testEnt = m->toModel(ent);
+    if(m->getModelType(testEnt) < 3)
+      std::cout<<"This is modelType for region "<<m->getModelType(testEnt)<<std::endl;
+  }    
+  m->end(entIter);
+
   m->verify();
   initialReconstructed = 1;
   //renumber for compatibility with Proteus
