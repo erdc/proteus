@@ -249,7 +249,7 @@ class Quadrilateral(Polygon):
             if zMax < node.p[Z]:
                 zMax = node.p[Z]
 
-        # indentity degenerate coordinate space.
+        # indentify degenerate coordinate space.
         # NOTE - this is not entirely accurate, but assumes
         # 2D quadrilateral objects are orthogonal to one of
         # the cononical coordinate axes
@@ -492,6 +492,12 @@ class Mesh:
 
     This is the base class for meshes. Contains routines for
     plotting the edges of the mesh in Matlab
+
+    Attributes
+    ----------
+    elementBoundariesArray : array type
+        This array lists the global edge number associated with every
+        edge or face of an element.
     """
     #cek adding parallel support
     def __init__(self):
@@ -703,7 +709,7 @@ class Mesh:
         # logEvent(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
-        if self.arGridCollection != None:
+        if self.arGridCollection is not None:
             init = False
         elif not init:
             grids = ar.domain.findall("Grid")
@@ -719,7 +725,7 @@ class Mesh:
                 self.arEBGridCollection = SubElement(ar.domain,"Grid",{"Name":"EBMesh "+name,
                                                                        "GridType":"Collection",
                                                                        "CollectionType":"Temporal"})
-        if self.arGrid == None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != str(t):
             #
             #topology and geometry
             #
@@ -739,7 +745,7 @@ class Mesh:
                                        "DataType":"Float",
                                        "Precision":"8",
                                        "Dimensions":"%i %i" % (self.globalMesh.nNodes_global,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
@@ -770,7 +776,7 @@ class Mesh:
                                        "DataType":"Float",
                                        "Precision":"8",
                                        "Dimensions":"%i %i" % (self.nNodes_global,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
@@ -809,7 +815,7 @@ class Mesh:
                                      "DataType":"Float",
                                      "Precision":"8",
                                      "Dimensions":"%i %i" % (self.nNodes_global,3)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         ebelements.text = ar.hdfFilename+":/elementBoundaries"+`ar.comm.rank()`+name+`tCount`
                         ebnodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
@@ -830,7 +836,7 @@ class Mesh:
 
             # Add the local->global index maps for collect.py and for
             # reverse mapping in hotstarts from a global XDMF file.
-            if self.globalMesh != None and not ar.global_sync:
+            if self.globalMesh is not None and not ar.global_sync:
                 nodeMapAtt = SubElement(self.arGrid,"Attribute",
                                         {"Name":"NodeMapL2G",
                                          "AttributeType":"Scalar",
@@ -850,7 +856,7 @@ class Mesh:
                                       "Precision":"4",
                                       "Dimensions":str(self.nElements_owned)})
 
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+`ar.comm.rank()`+name+`tCount`
                         elemMap.text = ar.hdfFilename+":/cellMapL2G"+`ar.comm.rank()`+name+`tCount`
@@ -902,7 +908,7 @@ class Mesh:
                                                           {"Format":ar.dataItemFormat,
                                                            "DataType":"Int",
                                                            "Dimensions":"%i" % (self.globalMesh.nElementBoundaries_global,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_t"+str(tCount)
                         ar.create_dataset_sync("nodeMaterialTypes"+"_t"+str(tCount), offsets=self.globalMesh.nodeOffsets_subdomain_owned, data=self.nodeMaterialTypes[:self.nNodes_owned])
@@ -946,7 +952,7 @@ class Mesh:
                                                           {"Format":ar.dataItemFormat,
                                                            "DataType":"Int",
                                                            "Dimensions":"%i" % (self.nElementBoundaries_global,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
                         ar.create_dataset_async("nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.nodeMaterialTypes)
@@ -1053,7 +1059,7 @@ class Mesh:
         self.hasGeometricInfo = False
         logEvent(memory("buildFromCNoArrays","MeshTools"),level=4)
     def buildNodeStarArrays(self):
-        if self.nodeStarArray == None:
+        if self.nodeStarArray is None:
             #cek old
             self.nodeStarList=[]
             for n in range(self.nNodes_global):
@@ -1239,9 +1245,10 @@ class Mesh:
 
     def buildMatlabMeshDataStructures(self,meshFileBase='meshMatlab',writeToFile=True):
         """
-        build array data structures for matlab finite element mesh representation
-        and write to a file to view and play with in matlatb. The current matlab support
-        is mostly for 2d, but this will return basic arrays for 1d and 3d too
+        build array data structures for matlab finite element mesh
+        representation and write to a file to view and play with in
+        matlatb. The current matlab support is mostly for 2d, but this
+        will return basic arrays for 1d and 3d too
 
         in matlab can then print mesh with
 
@@ -1262,6 +1269,7 @@ class Mesh:
              row 1 = x coord,
              row 2 = y coord for nodes in mesh
              row 3 = z coord for nodes in mesh ...
+
         edge matrix is [2*nd+3 x num faces]
           format:
              row 1  = start vertex number
@@ -1280,10 +1288,11 @@ class Mesh:
             ...
             row nd+1 = vertex 3 global number
             row 4 = triangle subdomain number
+
          where 1,2,3 is a local counter clockwise numbering of vertices in
            triangle
 
-         """
+        """
         matlabBase = 1
         nd = self.nNodes_element-1
         p = np.zeros((nd,self.nNodes_global),'d')
@@ -1526,7 +1535,7 @@ class Mesh:
             gnuplot.flush()
         raw_input('Please press return to continue... \n')
 
-    def convertFromPUMI(self, PUMIMesh, faceList, parallel=False, dim=3):
+    def convertFromPUMI(self, PUMIMesh, faceList,regList, parallel=False, dim=3):
         import cmeshTools
         import MeshAdaptPUMI
         import flcbdfWrappers
@@ -1539,10 +1548,18 @@ class Mesh:
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
           PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
               self.subdomainMesh.cmesh)
-          for i in range(len(faceList)):
-            for j in range(len(faceList[i])):
-              PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh, i+1,
-                  faceList[i][j])
+          if(PUMIMesh.isReconstructed()):
+            logEvent("Material arrays updating based on reconstructed model.\n")
+            PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh);
+          else:
+              logEvent("Material arrays updating based on geometric model.\n")
+              for i in range(len(faceList)):
+                for j in range(len(faceList[i])):
+                  PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,(dim-1), i+1,
+                      faceList[i][j])
+              for i in range(len(regList)):
+                for j in range(len(regList[i])):
+                  PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh,dim, i+1, regList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
@@ -1587,9 +1604,15 @@ class Mesh:
           comm.barrier()
         else:
           PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
-          for i in range(len(faceList)):
-            for j in range(len(faceList[i])):
-              PUMIMesh.updateMaterialArrays(self.cmesh, i+1, faceList[i][j])
+          if(PUMIMesh.isReconstructed()):
+            PUMIMesh.updateMaterialArrays(self.cmesh);
+          else:
+              for i in range(len(faceList)):
+                for j in range(len(faceList[i])):
+                  PUMIMesh.updateMaterialArrays(self.cmesh,(dim-1), i+1, faceList[i][j])
+              for i in range(len(regList)):
+                for j in range(len(regList[i])):
+                  PUMIMesh.updateMaterialArrays(self.cmesh,dim, i+1, regList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
@@ -1641,7 +1664,7 @@ class MultilevelMesh(Mesh):
         get array elementParents[l,e] = e_c, where element e_c is the parent of element e
             elementParents[0,:] = -1
         """
-        if (self.elementParents == None or recalculate):
+        if (self.elementParents is None or recalculate):
             self.elementParents = {}
             nLevels = len(self.meshList)
             for l in range(nLevels):
@@ -1929,15 +1952,15 @@ class RectangularGrid(Mesh):
 
         #dimensions of hexahedra
         if self.nHx>0:
-            hx = Lx/(nx-1)
+            hx = float(Lx)/(nx-1)
         else:
             hx = 1.0
         if self.nHy>0:
-            hy = Ly/(ny-1)
+            hy = float(Ly)/(ny-1)
         else:
             hy=1.0
         if self.nHz>0:
-            hz = Lz/(nz-1)
+            hz = float(Lz)/(nz-1)
         else:
             hz=1.0
         self.nodeDict={}
@@ -2165,6 +2188,17 @@ class TetrahedralMesh(Mesh):
 
     The mesh can be generated from a rectangular grid and refined using either
     4T or Freudenthal-Bey global refinement.
+
+    Attributes
+    ----------
+    elementNodesArray : array_like
+        A list of lists storing the node values associated with each element 
+        in the triangulation.  The first index refers to the element number,
+        while the second index refers to the global node value.
+    nodeArray : array_like
+        A list of lists storing node coordinates.  The first index referes
+        to the global node number, while the second index refers to the x, y
+        and z coordinates of the node respectively.
     """
 
     def __init__(self):
@@ -3133,7 +3167,7 @@ class Mesh2DM(Mesh):
         meshOut.close()
 
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0):
-        if self.arGridCollection != None:
+        if self.arGridCollection is not None:
             init = False
         elif not init:
             self.arGridCollection = ar.domain.find("Grid")
@@ -3141,7 +3175,7 @@ class Mesh2DM(Mesh):
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                 "GridType":"Collection",
                                                                 "CollectionType":"Temporal"})
-        if self.arGrid == None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != str(t):
             #
             #topology and geometry
             #
@@ -3170,7 +3204,7 @@ class Mesh2DM(Mesh):
                                                         {"Format":ar.dataItemFormat,
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_global,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
@@ -3213,7 +3247,7 @@ class Mesh2DM(Mesh):
                                                         {"Format":ar.dataItemFormat,
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
@@ -3500,7 +3534,7 @@ class Mesh3DM(Mesh):
         meshOut.close()
 
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Tetrahedron",tCount=0):
-        if self.arGridCollection != None:
+        if self.arGridCollection is not None:
             init = False
         elif not init:
             self.arGridCollection = ar.domain.find("Grid")
@@ -3508,7 +3542,7 @@ class Mesh3DM(Mesh):
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                "GridType":"Collection",
                                                                "CollectionType":"Temporal"})
-        if self.arGrid == None or self.arTime.get('Value') != str(t):
+        if self.arGrid is None or self.arTime.get('Value') != str(t):
             if ar.global_sync:
                 #
                 #topology and geometry
@@ -3537,7 +3571,7 @@ class Mesh3DM(Mesh):
                                                         {"Format":ar.dataItemFormat,
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.globalMesh.nElements_owned,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
@@ -3583,7 +3617,7 @@ class Mesh3DM(Mesh):
                                                         {"Format":ar.dataItemFormat,
                                                          "DataType":"Int",
                                                          "Dimensions":"%i" % (self.nElements_owned,)})
-                if ar.hdfFile != None:
+                if ar.hdfFile is not None:
                     if ar.has_h5py:
                         elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
                         nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
@@ -3798,6 +3832,49 @@ class MultilevelHexahedralMesh(MultilevelMesh):
         for m in self.meshList:
             m.computeGeometricInfo()
 
+def buildReferenceSimplex(nd=2):
+    """
+    Create and return a Proteus mesh object for the reference 
+    element.
+
+    Parameters
+    ----------
+    nd : int
+        Dimension of reference element
+
+    Returns
+    -------
+    mesh : :class:`proteus.MeshTools.TriangularMesh`
+        Simplex mesh
+    """
+    from proteus import Domain
+    from proteus import TriangleTools
+
+    assert(nd in [1,2,3])
+
+    if nd==1:
+        pass # Note sure what needs to go here?!
+    
+    unit_simplex_domain = Domain.unitSimplex(nd)
+    polyfile = "reference_element"
+    unit_simplex_domain.writePoly(polyfile)
+
+    if nd==2:
+        tmesh = TriangleTools.TriangleBaseMesh(baseFlags="Yp",
+                                               nbase=1,
+                                               verbose=False)
+        tmesh.readFromPolyFile(polyfile)
+        mesh = tmesh.convertToProteusMesh(verbose=0)
+        mesh.partitionMesh()
+        mesh.globalMesh = mesh
+        return mesh
+    if nd==3:
+        runTetgen(polyfile,
+                  "Yp")
+        mesh = genMeshWithTetgen(polyfile,
+                                 nbase = 1)
+        return mesh
+
 class TriangularMesh(Mesh):
     """A mesh of triangles
 
@@ -3913,6 +3990,14 @@ class TriangularMesh(Mesh):
     def writeTriangleFiles(self,filebase,base):
         import cmeshTools
         cmeshTools.writeTriangleFiles(self.cmesh,filebase,base)
+    def generateFrom2DMFile(self,filebase,base=1):
+        import cmeshTools
+        self.cmesh = cmeshTools.CMesh()
+        cmeshTools.generateFrom2DMFile(self.cmesh,filebase,base)
+        cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
+        cmeshTools.computeGeometricInfo_triangle(self.cmesh)
+        self.buildFromC(self.cmesh)
+
     def constructTriangularMeshOnRectangle(self,Lx,Ly,nx,ny,writeMesh=0,
                                            meshFileBase='mesh2d'):
         """
@@ -4489,7 +4574,34 @@ class QuadrilateralMesh(Mesh):
                 e3 = Edge(nodes=[n3,n0])
                 self.newQuadrilateral([e0,e1,e2,e3])
         self.finalize()
-    
+
+        
+    def generateFromQuadFileIFISS(self,meshfile):
+        ''' WIP - read a matlab.mat file containing IFISS vertices
+        and elements
+        '''
+        import scipy.io
+        griddata = scipy.io.loadmat(meshfile+'.mat')
+        self.nodeList = [Node(nN,n[0],n[1],0.0) for nN,n in enumerate(griddata['vertices'])]
+        # Is the following line necessary?
+        self.nodeDict = dict([(n,n) for n in self.nodeList])
+        for q in griddata['quads']:
+            n0,n3,n2,n1 = q # clockwise ordering needed
+            e0 = Edge(nodes=[self.nodeList[n0],self.nodeList[n1]])
+            e1 = Edge(nodes=[self.nodeList[n1],self.nodeList[n2]])
+            e2 = Edge(nodes=[self.nodeList[n2],self.nodeList[n3]])
+            e3 = Edge(nodes=[self.nodeList[n3],self.nodeList[n0]])
+            self.newQuadrilateral([e0,e1,e2,e3])
+        self.finalize()
+        for F,nN in griddata['bdyflags']:
+            self.nodeMaterialTypes[nN] = F
+        for ebNE in range(self.nExteriorElementBoundaries_global):
+            ebN = self.exteriorElementBoundariesArray[ebNE]
+            n0,n1 = self.elementBoundaryNodesArray[ebN]
+            self.elementBoundaryMaterialTypes[ebN]=max(self.nodeMaterialTypes[n0],
+                                                       self.nodeMaterialTypes[n1])
+
+
     def meshType(self):
         return 'cuboid'
 
@@ -4712,6 +4824,14 @@ class MultilevelTriangularMesh(MultilevelMesh):
                 self.meshList[l].subdomainMesh = self.meshList[l]
                 logEvent(self.meshList[-1].meshInfo())
             self.buildArrayLists()
+    def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
+        import cmeshTools
+        self.meshList = []
+        self.meshList.append(mesh0)
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        self.buildFromC(self.cmultilevelMesh)
+        self.elementParents = None
+        self.elementChildren=[]
 
     def refine(self):
         self.meshList.append(TriangularMesh())
@@ -5528,7 +5648,7 @@ def findXMLgridElement(xmf,MeshTag='Spatial_Domain',id_in_collection=-1,verbose=
         if 'Name' in collection.attrib and MeshTag in collection.attrib['Name']:
             GridCollection = collection
             break
-    if GridCollection == None:
+    if GridCollection is None:
         GridCollection = Domain[0]
     logEvent("Trying GridCollection.tag= %s" % (GridCollection.tag),4)
     if GridCollection.attrib['GridType'] == 'Collection':
@@ -5702,26 +5822,26 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
 
     Topology,Geometry,NodeMaterials,ElementMaterials = extractPropertiesFromXdmfGridNode(Grid)
 
-    assert Geometry != None
+    assert Geometry is not None
     entry = Geometry[0].text.split(':')[-1]
     logEvent("Reading nodeArray from %s " % entry,3)
 
     MeshInfo.nodeArray = hdf5.getNode(entry).read()
     MeshInfo.nNodes_global = MeshInfo.nodeArray.shape[0]
 
-    if NodeMaterials != None:
+    if NodeMaterials is not None:
         entry = NodeMaterials[0].text.split(':')[-1]
         logEvent("Reading nodeMaterialTypes from %s " % entry,4)
         MeshInfo.nodeMaterialTypes = hdf5.getNode(entry).read()
     else:
         MeshInfo.nodeMaterialTypes = np.zeros((MeshInfo.nNodes_global,),'i')
 
-    assert Topology != None
+    assert Topology is not None
     if 'Type' in Topology.attrib:
         MeshInfo.elementTopologyName = Topology.attrib['Type']
     elif 'TopologyType' in Topology.attrib:
         MeshInfo.elementTopologyName = Topology.attrib['TopologyType']
-    assert MeshInfo.elementTopologyName != None
+    assert MeshInfo.elementTopologyName is not None
 
     logEvent("elementTopologyName= %s " % MeshInfo.elementTopologyName,3)
     assert MeshInfo.elementTopologyName in topologyid2name.values()
@@ -5736,7 +5856,7 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
             MeshInfo.elementNodes_offset = readMixedElementTopologyFromXdmf(MeshInfo.elementTopologyName,Topology,hdf5,topologyid2name,topology2nodes)
 
     #
-    if ElementMaterials != None:
+    if ElementMaterials is not None:
         entry = ElementMaterials[0].text.split(':')[-1]
         logEvent("Reading elementMaterialTypes from %s " % entry,3)
         MeshInfo.elementMaterialTypes = hdf5.getNode(entry).read()
@@ -6085,6 +6205,77 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
             intersections.update(((tuple(elementIntersections[0]), tuple(elementIntersections[1])),),)
     return intersections
 
+def runTetgen(polyfile,
+              baseFlags="Yp",
+              name = ""):
+    """
+    Generate tetgen files from a polyfile.
+
+    Arguments
+    ---------
+    polyfile : str
+        Filename with appropriate data for tengen.
+    baseFlags : str
+        Standard Tetgen options for generation
+    name : str
+        
+
+    """
+    from subprocess import check_call
+    tetcmd = "tetgen - %s %s.poly" % (baseFlags, polyfile)
+    
+    check_call(tetcmd,shell=True)
+    
+    logEvent("Done running tetgen")
+    elefile = "%s.1.ele" % polyfile
+    nodefile = "%s.1.node" % polyfile
+    facefile = "%s.1.face" % polyfile
+    edgefile = "%s.1.edge" % polyfile
+    assert os.path.exists(elefile), "no 1.ele"
+    tmp = "%s.ele" % polyfile
+    os.rename(elefile,tmp)
+    assert os.path.exists(tmp), "no .ele"
+    assert os.path.exists(nodefile), "no 1.node"
+    tmp = "%s.node" % polyfile
+    os.rename(nodefile,tmp)
+    assert os.path.exists(tmp), "no .node"
+    if os.path.exists(facefile):
+        tmp = "%s.face" % polyfile
+        os.rename(facefile,tmp)
+        assert os.path.exists(tmp), "no .face"
+    if os.path.exists(edgefile):
+        tmp = "%s.edge" % polyfile
+        os.rename(edgefile,tmp)
+        assert os.path.exists(tmp), "no .edge"
+
+def genMeshWithTetgen(polyfile,
+                      nbase=1):
+   """
+   Generate a mesh from a set of tetgen files.
+
+   Arguments
+   ---------
+   polyfile : str
+       Filename base for tetgen files
+   nbase : int
+
+   Returns
+    -------
+   mesh : :class:`proteus.MeshTools.TetrahedralMesh`
+       Simplex mesh
+   """
+   elefile = "%s.ele" % polyfile
+   nodefile = "%s.node" % polyfile
+   facefile = "%s.face" % polyfile
+   edgefile = "%s.edge" % polyfile
+   assert os.path.exists(elefile), "no .ele file"
+   assert os.path.exists(nodefile), "no  .node file"
+   assert os.path.exists(facefile), "no .face file"
+   mesh=TetrahedralMesh()
+   mesh.generateFromTetgenFiles(polyfile,
+                                base=nbase)
+   return mesh
+
 
 from proteus import default_n as dn
 from proteus import default_p as dp
@@ -6101,17 +6292,17 @@ class MeshOptions:
         self.Domain = domain
         self.he = 1.
         self.use_gmsh = False
-        self.genMesh = dp.genMesh
+        self.genMesh = True
         self.outputFiles_name = 'mesh'
         self.outputFiles = {'poly': True,     
                             'ply': False,        
                             'asymptote': False,
                             'geo': False}
-        self.restrictFineSolutionToAllMeshes = dn.restrictFineSolutionToAllMeshes
-        self.parallelPartitioningType = dn.parallelPartitioningType
-        self.nLayersOfOverlapForParallel = dn.parallelPartitioningType
-        self.triangleOptions = dn.triangleOptions  # defined when setTriangleOptions called
-        self.nLevels = dn.nLevels
+        self.restrictFineSolutionToAllMeshes = False
+        self.parallelPartitioningType = MeshParallelPartitioningTypes.node
+        self.nLayersOfOverlapForParallel = 1
+        self.triangleOptions = "q30DenA" # defined when setTriangleOptions called
+        self.nLevels = 1
         if domain is not None:
             self.nd = domain.nd
             if self.nd == 2:
@@ -6144,9 +6335,9 @@ class MeshOptions:
             layers of overlap for paralllel (default: 0)
         """
         if partitioning_type == 'element' or partitioning_type == 0:
-            self.parallelPartitioningType = mpt.element
+            self.parallelPartitioningType = MeshParallelPartitioningTypes.element
         if partitioning_type == 'node' or partitioning_type == 1:
-            self.parallelPartitioningType = mpt.node
+            self.parallelPartitioningType = MeshParallelPartitioningTypes.node
         self.nLayersOfOverlapForParallel = layers_overlap
 
     def setTriangleOptions(self, triangle_options=None):
@@ -6212,12 +6403,13 @@ class MeshOptions:
         self.outputFiles['poly'] = poly
         self.outputFiles['ply'] = ply
         self.outputFiles['asymptote'] = asymptote
-        self.outputFiles['geo'] = gmsh
+        self.outputFiles['geo'] = geo
 
 
-def msh2triangle(fileprefix):
+def msh2simplex(fileprefix, nd):
     """
-    Converts a .msh file (Gmsh) to .ele .edge .node files (triangle)
+    Converts a .msh file (Gmsh) to .ele .edge .node files (triangle).
+    (!) Works only with triangle elements in 2D and tetrahedral elements in 3D.
 
     Parameters
     ----------
@@ -6225,18 +6417,19 @@ def msh2triangle(fileprefix):
         prefix of the .msh file (e.g. 'mesh' if file called 'mesh.msh')
 
     """
+    assert nd == 2 or nd == 3, 'nd must be 2 or 3'
     mshfile = open(fileprefix+'.msh', 'r')
     nodes = []
     edges_msh = []
     triangles = []
     tetrahedra = []
+    tetrahedron_nb = 0
     triangle_nb = 0
     edge_nb = 0
-    nd = 2
     switch = None
     switch_count = -1
-    logEvent('msh2triangle: getting nodes and elements')
-    for line in mshfile:
+    logEvent('msh2simplex: getting nodes and elements')
+    for i, line in enumerate(mshfile):
         if 'Nodes' in line:
             switch = 'nodes'
             switch_count = -1
@@ -6273,6 +6466,14 @@ def msh2triangle(fileprefix):
                 elif el_type == 2: # triangle
                     triangle_nb += 1
                     triangles += [[triangle_nb, int(words[s]), int(words[s+1]), int(words[s+2]), flag]]
+                    # update nodes flags
+                    if nd == 3:
+                        for i in range(3):
+                            if nodes[int(words[s+i])-1][4] == 0:
+                                nodes[int(words[s+i])-1][4] = flag
+                elif el_type == 4: # tetrahedron 
+                    tetrahedron_nb += 1
+                    tetrahedra += [[tetrahedron_nb, int(words[s]), int(words[s+1]), int(words[s+2]), int(words[s+3]), flag]]
                 elif el_type == 15: # node
                     nodes[el_id-1][4] = flag
         switch_count += 1
@@ -6284,7 +6485,7 @@ def msh2triangle(fileprefix):
     edge_nb = 0
     edges = []
 
-    logEvent('msh2triangle: constructing edges')
+    logEvent('msh2simplex: constructing edges')
     for triangle in triangles[:,1:4]:  # take only vertices index
         for i in range(len(triangle)):
             edge = Edge(edgeNumber=edge_nb, nodes=[triangle[i-1], triangle[i]])
@@ -6293,7 +6494,7 @@ def msh2triangle(fileprefix):
                 edge_nb += 1
                 edges_dict[edge.nodes] = edge
                 edges += [[edge_nb, edge.nodes[0], edge.nodes[1], 0]]
-    logEvent('msh2triangle: updating edges and nodes flags')
+    logEvent('msh2simplex: updating edges and nodes flags')
     edges = np.array(edges)
     for edge in edges_msh:
         edge_nodes = [edge[1], edge[2]]
@@ -6307,7 +6508,10 @@ def msh2triangle(fileprefix):
         if nodes[edge[2]-1][-1] == 0:  # update node flags
             nodes[edge[1]-1][-1] = edge[3]
 
-    logEvent('msh2triangle: writing .node .ele .edge files')
+    if nd == 2:
+        logEvent('msh2simplex: writing .node .ele .edge files')
+    elif nd == 3:
+        logEvent('msh2simplex: writing .node .ele .edge .face files')
     header = '{0:d} {1:d} 0 1'.format(node_nb, nd)
 
     if nd == 2:
@@ -6324,5 +6528,10 @@ def msh2triangle(fileprefix):
     if nd == 2:
         header = '{0:d} 3 1'.format(triangle_nb)
         np.savetxt(fileprefix+'.ele', triangles, fmt='%d', header=header, comments='')
+    elif nd == 3:
+        header = '{0:d} 3 1'.format(triangle_nb)
+        np.savetxt(fileprefix+'.face', triangles, fmt='%d', header=header, comments='')
+        header = '{0:d} 4 1'.format(tetrahedron_nb)
+        np.savetxt(fileprefix+'.ele', tetrahedra, fmt='%d', header=header, comments='')
 
-    logEvent('msh2triangle: finished converting .msh to triangle files')
+    logEvent('msh2simplex: finished converting .msh to simplex files')

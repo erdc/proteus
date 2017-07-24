@@ -14,8 +14,9 @@ from Profiling import logEvent
 import time as tt
 import sys as sys
 
-__all__ = ['Solirarywave',
-	    'MonochromaticWaves',
+__all__ = ['SteadyCurrent',
+           'SolitaryWave',
+	   'MonochromaticWaves',
            'RandomWaves',
            'MultiSpectraRandomWaves',
            'DirectionalWaves',
@@ -499,6 +500,8 @@ def PM_mod(f,f0,Hs):
     http://www.orcina.com/SoftwareProducts/OrcaFlex/Documentation/Help/Content/html/Waves,WaveSpectra.htm
     And then to Tucker M J, 1991. Waves in Ocean Engineering. Ellis Horwood Ltd. (Chichester).
 
+    Parameters
+    --------
     f : numpy.ndarray
         Frequency array
     f0 : float
@@ -688,6 +691,66 @@ def decompose_tseries(time,eta,dt):
     results.append(setup)
     return results
 
+class  SteadyCurrent:
+    """
+    This class is used for generating a steady current
+
+    Parameters
+    ----------
+    U: numpy.ndarray
+            Current velocity in vector form
+    mwl : float
+            Still water level
+    rampTime : float
+            Ramp time for current
+
+            """
+    def __init__(self,
+                 U,
+                 mwl,
+                 rampTime = 0.):
+        self.mwl = mwl
+        self.U = U
+        self.ramp = rampTime
+    def eta(self,x,t):
+        """Calculates free surface elevation (SolitaryWave class)
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        float
+            Free-surface elevation as a float
+
+        """
+        return  self.mwl
+    def u(self,x,t):
+        """Calculates wave velocity vector (SolitaryWave class).
+        Parameters
+        ----------
+        x : numpy.ndarray
+            Position vector
+        t : float
+            Time variable
+
+        Returns
+        --------
+        numpy.ndarray
+            Velocity vector as 1D array
+
+        """
+        if(t<self.ramp):
+            return self.U*t/self.ramp
+        else:
+            return self.U
+
+
+
+
 class  SolitaryWave:
     """
     This class is used for generating 1st order solitary wave
@@ -817,6 +880,8 @@ class  MonochromaticWaves:
              Fenton Fourier coefficients for free-surface elevation             
     Bcoeff : numpy.ndarray
              Fenton Fourier coefficients for velocity (set to None for linear wave theory)  
+    Nf : integer
+             Fenton Fourier components for reconstruction (set to 1000, needs to be equal to the size of Bcoeff and Ycoeff)  
     meanVelocity : numpy.ndarray
              Mean velocity for Fenton Fourier approximation            
     phi0 : float
@@ -1197,11 +1262,11 @@ class RandomWaves:
         U[2] = cppU[2]
 
         return U
-    def writeEtaSeries(self,Tstart,Tend,x0,fname,Vgen= np.array([0.,0,0])):
+    def writeEtaSeries(self,Tstart,Tend,x0,fname,Lgen= np.array([0.,0,0])):
         """Writes a timeseries of the free-surface elevation
 
         It also returns the free surface elevation as a time-eta array.
-        If Vgen !=[0.,0.,0.,] then Tstart is modified to account for the
+        If Lgen !=[0.,0.,0.,] then Tstart is modified to account for the
         wave transformation at the most remote point of the relaxation zone.
 
         Parameters
@@ -1214,7 +1279,7 @@ class RandomWaves:
             Position vector of the time series
         fname : string
             Filename for timeseries file
-        Vgen : Optional[numpy.ndarray]
+        Lgen : Optional[numpy.ndarray]
             Length vector of relaxation zone
 
 
@@ -1223,13 +1288,13 @@ class RandomWaves:
         numpy.ndarray
             2D numpy array Nx2 containing free-surface elevation in time.
         """
-        if sum(Vgen[:]*self.waveDir[:])< 0 :
+        if sum(Lgen[:]*self.waveDir[:])< 0 :
                 logEvent('ERROR! Wavetools.py: Location vector of generation zone should not be opposite to the wave direction')
                 sys.exit(1)
         dt = self.Tp/50.
         Tlag = np.zeros(len(self.omega),)
         for j in range(len(self.omega)):
-            Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
+            Tlag[j] = sum(self.kDir[j,:]*Lgen[:])/self.omega[j]
         Tlag = max(Tlag)
         Tstart = Tstart - Tlag
         Np = int((Tend - Tstart)/dt)
@@ -1336,7 +1401,7 @@ class MultiSpectraRandomWaves:
 
         NN = 0
         for kk in range(Nspectra):
-            logEvent("ERROR! Wavetools.py: Reading spectra No %s" %kk)
+            logEvent("INFO Wavetools.py: Reading spectra No %s" %kk)
             NN1 = NN
             NN +=N[kk]
             RW = RandomWaves(
@@ -1806,7 +1871,7 @@ class TimeSeries:
             if dt_temp!=self.dt:
                 doInterp = True
         if(doInterp):
-            logEvent("ERROR! WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
+            logEvent("INFO WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
             self.time = np.linspace(time_temp[0],time_temp[-1],len(time_temp))
             self.etaS = np.interp(self.time,time_temp,tdata[:,1])
         else:
@@ -1898,19 +1963,19 @@ class TimeSeries:
 
             validWindows = [costap, tophat]
             wind_filt =  loadExistingFunction(windowName, validWindows)
-            logEvent("ERROR! WaveTools.py: performing series decomposition with spectral windows")
+            logEvent("INFO WaveTools.py: performing series decomposition with spectral windows")
             # Portion of overlap, compared to window time
             try:
                 self.overlap = window_params["Overlap"]
             except:
-                self.overlap = 0.25
-                logEvent("ERROR! WaveTools.py: Overlap entry in window_params dictionary not found. Setting default value of 0.25 (1/4 of the window length)")
+                self.overlap = 0.7
+                logEvent("INFO WaveTools.py: Overlap entry in window_params dictionary not found. Setting default value of 0.7 (70% of the window length)")
 
             try:
                 self.cutoff = window_params["Cutoff"]
             except:
                 self.cutoff= 0.1
-                logEvent("ERROR! WaveTools.py: Cutoff entry in window_params dictionary not found. Setting default value of 0.1 (1/10 of the window length)")
+                logEvent("INFO WaveTools.py: Cutoff entry in window_params dictionary not found. Setting default value of 0.1 (1/10 of the window length)")
 
 
 
@@ -2223,6 +2288,12 @@ class RandomWavesFast:
              Component phases (if set to None, phases are picked at random)
     Lgen : numpy.ndarray
              Length of the generation zone (np.array([0., 0., 0.]) by default
+    Nwaves : int
+             Number of waves per window
+    Nfreq : int
+             Number of Fourier components per window
+    checkAcc : bool
+             Switch for enabling accuracy checks
     fast : bool
              Switch for enabling optimised functions 
     
@@ -2282,6 +2353,8 @@ class RandomWavesFast:
         self.rec_d = False
         if self.Nwind < 3:
             logEvent("ERROR!: WaveTools.py: Found too few windows in RandomWavesFast. Consider increasing Tend (this is independent from the duration of the simulation)")
+            sys.exit(1)
+            
 
 
 
@@ -2305,8 +2378,9 @@ class RandomWavesFast:
             fast=self.fast
                  )
 
-            #Checking accuracy of the approximation
-
+        self.windows = TS.windows_rec
+        self.ho = TS.windows_handover
+        #Checking accuracy of the approximation
         cut = 2.* self.cutoff * duration
         ts = self.series[0,0]+cut
         te = self.series[-1,0]-cut
@@ -2325,13 +2399,16 @@ class RandomWavesFast:
         self.windOut = TS.windOut
 
     def printOut(self):
+        """Prints some properties of the time series - ONLY FOR TESTING
+
+
+        """
         print "Number of windows=",self.Nwind
         print "Direct reconstruction? ",self.rec_d
         print "Start Time =", self.series[0,0]
         print "End time= ",self.series[-1,0]
         print "Cutoff=", self.cutoff
         print "Er1 =", self.er1
-
 
 
 
@@ -2605,11 +2682,11 @@ class RandomNLWaves:
 
 
 
-    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False,Vgen=np.array([0.,0.,0.])):
+    def writeEtaSeries(self,Tstart,Tend,dt,x0,fname, mode="all",setUp=False,Lgen=np.array([0.,0.,0.])):
         """Writes a timeseries of the free-surface elevation
 
         It also returns the free surface elevation as a time-eta array.
-        If Vgen !=[0.,0.,0.,] then Tstart is modified to account for the
+        If Lgen !=[0.,0.,0.,] then Tstart is modified to account for the
         wave transformation at the most remote point of the relaxation zone.
 
         Parameters
@@ -2628,7 +2705,7 @@ class RandomNLWaves:
             Mode of set up calculations (all, long, short, setup)
         setUp: Optional[bool]
             Switch for activating setup calculation
-        Vgen : Optional[numpy.ndarray]
+        Lgen : Optional[numpy.ndarray]
             Length vector of relaxation zone
 
 
@@ -2637,13 +2714,13 @@ class RandomNLWaves:
         numpy.ndarray
             2D numpy array Nx2 containing free-surface elevation in time.
         """
-        if sum(Vgen[:]*self.waveDir[:])< 0 :
+        if sum(Lgen[:]*self.waveDir[:])< 0 :
             logEvent('ERROR! Wavetools.py: Location vector of generation zone should not be opposite to the wave direction')
             sys.exit(1)
 
         Tlag = np.zeros(len(self.omega),)
         for j in range(len(self.omega)):
-            Tlag[j] = sum(self.kDir[j,:]*Vgen[:])/self.omega[j]
+            Tlag[j] = sum(self.kDir[j,:]*Lgen[:])/self.omega[j]
         Tlag = max(Tlag)
         Tstart = Tstart - Tlag
 
@@ -2736,9 +2813,15 @@ class RandomNLWavesFast:
     phi : numpy.ndarray
              Component phases (if set to None, phases are picked at random)
             
-    Vgen : numpy.ndarray
+    Lgen : numpy.ndarray
              Length of the generation zone (np.array([0., 0., 0.]) by default
             
+    Nwaves : int
+             Number of waves per window
+    Nfreq : int
+             Number of Fourier components per window
+    NLongw : int
+             Estmated ratio of long wave period to Tp
     fast : bool
              Switch for enabling optimised functions 
     """
@@ -2757,7 +2840,7 @@ class RandomNLWavesFast:
                  spectName,               #random words will result in error and return the available spectra
                  spectral_params=None,    #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}
                  phi=None,
-                 Vgen = np.array([0.,0.,0.]),    #array of component phases
+                 Lgen = np.array([0.,0.,0.]),    #array of component phases
                  Nwaves = 15,
                  Nfreq = 32,
                  NLongW = 10.,
@@ -2775,10 +2858,11 @@ class RandomNLWavesFast:
         self.TS= []
         ii = -1
         for mode in modes:
+            logEvent("INFO: Calculating nonlinear corrections for "+mode+" waves. This may take a while")
             ii+=1
             fname = "randomNLWaves_"+mode+".csv"
             dt = periods[ii]/50.
-            series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Vgen)
+            series = aRN.writeEtaSeries(Tstart,Tend,dt,x0,fname,mode,False,Lgen)
             Tstart_temp = series[0,0]
             cutoff = 0.2*periods[ii]/(Tend-Tstart_temp)
 
@@ -2803,7 +2887,7 @@ class RandomNLWavesFast:
                     g,
                     cutoffTotal = cutoff,
                     rec_direct = rec_d,
-                    window_params = {"Nwaves":Nwaves ,"Tm":periods[ii],"Window":"costap"},
+                    window_params = {"Nwaves":Nwaves ,"Tm":periods[ii],"Window":"costap","Overlap":0.7,"Cutoff":0.1},
                     arrayData = True,
                     seriesArray = series,
                 fast = self.fast)

@@ -409,14 +409,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         comm = Comm.get()
         import os
         if comm.isMaster():
-            self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,
-                                                       "wettedAreaHistory.txt"),"w")
-            self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,
-                                                    "forceHistory_p.txt"),"w")
-            self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,
-                                                    "forceHistory_v.txt"),"w")
-            self.momentHistory = open(os.path.join(proteus.Profiling.logDir,
-                                                   "momentHistory.txt"),"w")
+            self.wettedAreaHistory = open(os.path.join(proteus.Profiling.logDir,"wettedAreaHistory.txt"),"w")
+            self.forceHistory_p = open(os.path.join(proteus.Profiling.logDir,"forceHistory_p.txt"),"w")
+            self.forceHistory_v = open(os.path.join(proteus.Profiling.logDir,"forceHistory_v.txt"),"w")
+            self.momentHistory = open(os.path.join(proteus.Profiling.logDir,"momentHistory.txt"),"w")
         self.comm = comm
     #initialize so it can run as single phase
     def initializeElementQuadrature(self,t,cq):
@@ -689,12 +685,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.comm.isMaster():
-            logEvent("wettedAreas\n"+
-                     `self.wettedAreas[:]` +
-                     "\nForces_p\n" +
-                     `self.netForces_p[:,:]` +
-                     "\nForces_v\n" +
-                     `self.netForces_v[:,:]`)
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
             self.forceHistory_p.flush()

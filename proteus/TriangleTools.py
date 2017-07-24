@@ -11,13 +11,13 @@ import numpy
 import triangleWrappers
 import TriangleUtils
 import TriangleFileUtils
-from Profiling import logEvent
+from .Profiling import logEvent
 
 class TriangleBaseMesh:
     """A triangulation interface wrapper.
 
-    This is basically a wrapper for the triangulation interface
-    that should be able to create a triangle mesh in different ways
+    This is a wrapper for the triangulation interface
+    that can create a triangle mesh in different ways
 
     * from .ele and .node files
     * from a .poly file
@@ -30,7 +30,7 @@ class TriangleBaseMesh:
 
     def __init__(self,baseFlags="zen",nbase=0,verbose=0):
         """
-        initialize the triangulateio object,
+        initialize the triangulation object,
         keep track of what numbering scheme it uses,
         create a base set of flags for triangulate (e.g., z if using base 0)
 
@@ -84,7 +84,7 @@ number of edges         = %d
         #delete the existing representation if it has been initialized
         if not self.trirepDefaultInit[index]:
             if verbose > -1:
-                print 'TriangleIface deleting current trirep[',index,']'
+                logEvent('TriangleIface deleting current trirep[',index,']')
             #end verbose
             del self.trirep[index]
             #get a new represenation
@@ -104,7 +104,7 @@ number of edges         = %d
         #delete the existing representation if it has been initialized
         if not self.vorrepDefaultInit[index]:
             if verbose > -1:
-                print 'TriangleIface deleting current vorrep[',index,']'
+                logEvent('TriangleIface deleting current vorrep[',index,']')
             #end verbose
             del self.vorrep[index]
             #get a new represenation
@@ -130,8 +130,8 @@ number of edges         = %d
         import MeshTools
         triInfo = triangleWrappers.getInfo(self.trirep[0])
         if verbose > 1:
-            print 'generating proteus Mesh:'
-            print self.infoFormat % triInfo
+            logEvent('generating proteus Mesh:')
+            logEvent(self.infoFormat % triInfo)
         #end if
 
         #create basic proteus mesh
@@ -253,7 +253,7 @@ number of edges         = %d
 # #             elif edgeDict.has_key(e0rev):     #opposite orientation
 # #                 e0_global = edgeDict[e0rev]   #could make negative to denote orientation
 # #             #end if
-# #             assert(not e0_global == None)
+# #             assert(not e0_global is None)
 # #             #1
 # #             e1 = (locNodes[2],locNodes[0]); e1rev = (locNodes[0],locNodes[2])
 # #             e1_global = None
@@ -263,7 +263,7 @@ number of edges         = %d
 # #             elif edgeDict.has_key(e1rev):     #opposite orientation
 # #                 e1_global = edgeDict[e1rev]   #could make negative to denote orientation
 # #             #end if
-# #             assert(not e1_global == None)
+# #             assert(not e1_global is None)
 # #             #2
 # #             e2 = (locNodes[0],locNodes[1]); e2rev = (locNodes[1],locNodes[0])
 # #             e2_global = None
@@ -273,7 +273,7 @@ number of edges         = %d
 # #             elif edgeDict.has_key(e2rev):     #opposite orientation
 # #                 e2_global = edgeDict[e2rev]   #could make negative to denote orientation
 # #             #end if
-# #             assert(not e2_global == None)
+# #             assert(not e2_global is None)
 # #             eI_global = numpy.array([e0_global,e1_global,e2_global],
 # #                                       'i')
 # #             meshout.elementBoundariesArray[eN,:] = eI_global
@@ -399,7 +399,7 @@ number of edges         = %d
         if flags.find('v') >= 0:
             self.makeVoronoi = True
             if verbose > 0:
-                print 'readNodeAndEle makeVoronoi= ',self.makeVoronoi,' flags= ',flags
+                logEvent('readNodeAndEle makeVoronoi= ',self.makeVoronoi,' flags= ',flags)
         #end if
         self.lastFlags = flags
         #reset data representations if necessary
@@ -433,7 +433,7 @@ number of edges         = %d
         """
         reader = TriangleUtils.TriangleInputFileReader()
         if verbose > 0:
-            print 'readFromNodeAndEleFiles filebase= ',filebase
+            logEvent('readFromNodeAndEleFiles filebase= ',filebase)
         #end if
         #could specify comment character too
         nodeDataInfo,nodeData = reader.readNodes(filebase,nbase=self.nbase)
@@ -442,9 +442,9 @@ number of edges         = %d
                                nodeData['nodeMarkers'])
 
         if verbose > 3:
-            print 'Nodes: nodeInfo= ',nodeDataInfo
-            print """Nodes: nodes= \n%s\n nodeAttributes= \n%s\n nodeMarkers= \n%s
-            """ % (nodes,nodesA,nodesM)
+            logEvent('Nodes: nodeInfo= ',nodeDataInfo)
+            logEvent("""Nodes: nodes= \n%s\n nodeAttributes= \n%s\n nodeMarkers= \n%s
+            """ % (nodes,nodesA,nodesM))
         #end if
 
         #now create an initial representation
@@ -463,7 +463,7 @@ number of edges         = %d
         if flags.find('v') >= 0:
             self.makeVoronoi = True
             if verbose > 0:
-                print 'readNodeAndEle makeVoronoi= ',self.makeVoronoi,' flags= ',flags
+                logEvent('readNodeAndEle makeVoronoi= ',self.makeVoronoi,' flags= ',flags)
         #end if
         self.lastFlags = flags
 
@@ -494,7 +494,7 @@ number of edges         = %d
         """
         reader = TriangleUtils.TriangleInputFileReader()
         if verbose > 0:
-            print 'readFromNodeAndEleFiles filebase= ',filebase
+            logEvent('readFromNodeAndEleFiles filebase= ',filebase)
         #end if
         nodeDataInfo,nodeData = reader.readNodes(filebase,nbase=self.nbase)
         nodes,nodesA,nodesM = (nodeData['nodes'],
@@ -502,18 +502,18 @@ number of edges         = %d
                                nodeData['nodeMarkers'])
 
         if verbose > 3:
-            print 'Nodes: nodeInfo= ',nodeDataInfo
-            print """Nodes: nodes= \n%s\n nodeAttributes= \n%s\n nodeMarkers= \n%s
-            """ % (nodes,nodesA,nodesM)
+            logEvent('Nodes: nodeInfo= ',nodeDataInfo)
+            logEvent("""Nodes: nodes= \n%s\n nodeAttributes= \n%s\n nodeMarkers= \n%s
+            """ % (nodes,nodesA,nodesM))
         #end if
 
         triDataInfo,triData = reader.readTriangles(filebase,nbase=self.nbase)
         triangles,trianglesA = triData['triangles'],triData['triangleAttributes']
 
         if verbose > 3:
-            print 'Triangles: triInfo= ',triDataInfo
-            print """Triangles: elems= \n%s\n triAttributes= \n%s
-            """ % (triangles,trianglesA)
+            logEvent('Triangles: triInfo= ',triDataInfo)
+            logEvent("""Triangles: elems= \n%s\n triAttributes= \n%s
+            """ % (triangles,trianglesA))
         #end if
 
         #now create an initial representation
@@ -537,7 +537,7 @@ number of edges         = %d
         if flags.find('v') >= 0:
             self.makeVoronoi = True
             if verbose > 0:
-                print 'readNodeAndEle makeVoronoi= ',self.makeVoronoi,' flags= ',flags
+                logEvent('readNodeAndEle makeVoronoi= ',self.makeVoronoi,' flags= ',flags)
         #end if
         self.lastFlags = flags
 
@@ -577,7 +577,7 @@ number of edges         = %d
         """
         reader = TriangleUtils.TriangleInputFileReader()
         if verbose > 0:
-            print 'readFromPolyFile filebase= ',filebase
+            logEvent('readFromPolyFile filebase= ',filebase)
         #end if
 
         polyDataInfo,polyData = reader.readPoly(filebase,nbase=self.nbase,
@@ -585,7 +585,7 @@ number of edges         = %d
 
         if verbose > 3:
             for type in ['node','segment','hole','region']:
-                print 'Poly: ',type,'Info= \n',polyDataInfo[type],'\n'
+                logEvent('Poly: ',type,'Info= \n',polyDataInfo[type],'\n')
             #end for
         #end if
 
@@ -598,12 +598,12 @@ number of edges         = %d
         regions               = polyData['region']['regions']
 
         if verbose > 3:
-            print """Poly file read:
+            logEvent("""Poly file read:
             nodes   = \n%s\n nodeAttributes= \n%s\n nodeMarkers= \n%s\n
             segments= \n%s\n segmentMarkers= \n%s\n
             holes   = \n%s\n
             regions = \n%s\n
-            """ % (nodes,nodesA,nodesM,segments,segmentsM,holes,regions)
+            """ % (nodes,nodesA,nodesM,segments,segmentsM,holes,regions))
         #end if
         tri0 = triangleWrappers.new()
 
@@ -632,13 +632,13 @@ number of edges         = %d
 
         flags = flagsAdd+self.baseFlags
         if flags.find('p') == -1:
-            print 'flags = ',flags,' must have p, appending'
+            logEvent('flags = ',flags,' must have p, appending')
             flags += "p"
         #end
         if flags.find('v') >= 0:
             self.makeVoronoi = True
             if verbose > 0:
-                print 'readNodeAndEle makeVoronoi= ',self.makeVoronoi,' flags= ',flags
+                logEvent('readNodeAndEle makeVoronoi= ',self.makeVoronoi,' flags= ',flags)
         #end if
         self.lastFlags = flags
         #reset data representations if necessary
@@ -707,29 +707,29 @@ def TriangleCall3(filebase="trimesh",baseFlags="zen",
 
     if flagsAdd.find('p') >= 0:
         if verbose > 0:
-            print """flagsAdd= %s trying to read %s """ % (flagsAdd,
-                                                           filebase+'.poly')
+            logEvent("""flagsAdd= %s trying to read %s """ % (flagsAdd,
+                                                           filebase+'.poly'))
         #end verbose
         mesh.readFromPolyFile(filebase,flagsAdd,verbose=verbose)
 
     elif flagsAdd.find('r') >= 0:
         if verbose > 0:
-            print """flagsAdd= %s trying to read %s and %s """ % (flagsAdd,
+            logEvent("""flagsAdd= %s trying to read %s and %s """ % (flagsAdd,
                                                                   filebase+'.node',
-                                                                  filebase+'.ele')
+                                                                  filebase+'.ele'))
         #end verbose
         mesh.readFromNodeAndEleFiles(filebase,flagsAdd,verbose=verbose)
 
     else:
         if verbose > 0:
-            print """flagsAdd= %s trying to read %s """ % (flagsAdd,
-                                                           filebase+'.node')
+            logEvent("""flagsAdd= %s trying to read %s """ % (flagsAdd,
+                                                           filebase+'.node'))
         #end verbose
 
         mesh.readFromNodeFile(filebase,flagsAdd,verbose=verbose)
     #end if on flags
 
-    print 'viewing mesh generated'
+    logEvent('viewing mesh generated')
     mesh.viewShowme()
 
 #end TriangleCall3
@@ -750,29 +750,29 @@ def exProteusMesh0(filebase="trimesh",baseFlags="zen",
 
     if flagsAdd.find('p') >= 0:
         if verbose > 0:
-            print """flagsAdd= %s trying to read %s """ % (flagsAdd,
-                                                           filebase+'.poly')
+            logEvent("""flagsAdd= %s trying to read %s """ % (flagsAdd,
+                                                           filebase+'.poly'))
         #end verbose
         mesh.readFromPolyFile(filebase,flagsAdd,verbose=verbose)
 
     elif flagsAdd.find('r') >= 0:
         if verbose > 0:
-            print """flagsAdd= %s trying to read %s and %s """ % (flagsAdd,
+            logEvent("""flagsAdd= %s trying to read %s and %s """ % (flagsAdd,
                                                                   filebase+'.node',
-                                                                  filebase+'.ele')
+                                                                  filebase+'.ele'))
         #end verbose
         mesh.readFromNodeAndEleFiles(filebase,flagsAdd,verbose=verbose)
 
     else:
         if verbose > 0:
-            print """flagsAdd= %s trying to read %s """ % (flagsAdd,
-                                                           filebase+'.node')
+            logEvent("""flagsAdd= %s trying to read %s """ % (flagsAdd,
+                                                           filebase+'.node'))
         #end verbose
 
         mesh.readFromNodeFile(filebase,flagsAdd,verbose=verbose)
     #end if on flags
     if viewMesh > 0:
-        print 'viewing mesh generated from .node and .ele files'
+        logEvent('viewing mesh generated from .node and .ele files')
         mesh.viewShowme()
     #end if
     proteusMesh = mesh.convertToProteusMesh(verbose)
@@ -812,7 +812,7 @@ def exProteusMesh1(baseFlags="zen",viewMesh=1,verbose=0):
     trimesh.convertFromProteusMesh(proteusMesh,verbose=verbose)
 
     if viewMesh > 0:
-        print 'viewing mesh generated from proteus mesh'
+        logEvent('viewing mesh generated from proteus mesh')
         trimesh.viewShowme()
     #end if
 
@@ -839,29 +839,29 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
 
     if flagsAdd.find('p') >= 0:
         if verbose > 0:
-            print """flagsAdd= %s trying to read %s """ % (flagsAdd,
-                                                           filebase+'.poly')
+            logEvent("""flagsAdd= %s trying to read %s """ % (flagsAdd,
+                                                           filebase+'.poly'))
         #end verbose
         mesh.readFromPolyFile(filebase,flagsAdd,verbose=verbose)
 
     elif flagsAdd.find('r') >= 0:
         if verbose > 0:
-            print """flagsAdd= %s trying to read %s and %s """ % (flagsAdd,
+            logEvent("""flagsAdd= %s trying to read %s and %s """ % (flagsAdd,
                                                                   filebase+'.node',
-                                                                  filebase+'.ele')
+                                                                  filebase+'.ele'))
         #end verbose
         mesh.readFromNodeAndEleFiles(filebase,flagsAdd,verbose=verbose)
 
     else:
         if verbose > 0:
-            print """flagsAdd= %s trying to read %s """ % (flagsAdd,
-                                                           filebase+'.node')
+            logEvent("""flagsAdd= %s trying to read %s """ % (flagsAdd,
+                                                           filebase+'.node'))
         #end verbose
 
         mesh.readFromNodeFile(filebase,flagsAdd,verbose=verbose)
     #end if on flags
     if viewMesh > 0:
-        print 'viewing mesh generated from .node and .ele files'
+        logEvent('viewing mesh generated from .node and .ele files')
         mesh.viewShowme()
     #end if
     proteusMesh = mesh.convertToProteusMesh(verbose)
@@ -903,7 +903,7 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
         elementBoundaryQuadrature[bintegral] = boundaryQuadrature
     ### setup finite element spaces and stuff
     if verbose > 0:
-        print 'definining finite element spaces'
+        logEvent('definining finite element spaces')
     #end verbose
     #try P^2
     if useCG:
@@ -922,14 +922,14 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
     phi = FemTools.FiniteElementFunction(FemSpace)
     #phi = u
     if verbose > 0:
-        print 'definining boundary conditions'
+        logEvent('definining boundary conditions')
     #end verbose
     dirichletBCs=FemTools.DOFBoundaryConditions(
         FemSpace,dirProb)
     fluxBndyCond='noFlow'
     ### setup numerical approximation configuration
     if verbose > 0:
-        print 'definining linear algebra'
+        logEvent('definining linear algebra')
     #end verbose
     MatType = LinearAlgebraTools.SparseMat
     matType = 'csr'
@@ -937,12 +937,12 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
     ### time integration
     #steady state
     if verbose > 0:
-        print 'definining time integration'
+        logEvent('definining time integration')
     #end verbose
     TimeIntegrationClass = TimeIntegrationTools.TimeIntegration
     ### flux approximations
     if verbose > 0:
-        print 'definining flux approximations'
+        logEvent('definining flux approximations')
     #end verbose
     #diffusion only
     if useCG:
@@ -960,7 +960,7 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
     #end
     ###create a single level solver
     if verbose > 0:
-        print 'creating single level system'
+        logEvent('creating single level system')
     #end verbose
     system = ScalarTransport.OneLevelScalarTransport(u,
                                                      phi,
@@ -978,8 +978,8 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
                                                      TimeIntegrationClass)
     #need this?
     if verbose > 0:
-        print 'femSpace dim= ',FemSpace.dim
-        print 'system dim = ',system.dim
+        logEvent('femSpace dim= ',FemSpace.dim)
+        logEvent('system dim = ',system.dim)
     #end if
     y  = numpy.zeros((system.dim,),'d')
     dy = numpy.zeros((system.dim,),'d')
@@ -992,7 +992,7 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
 
     ### create nonlinear system for solving problem
     if verbose > 0:
-        print 'creating nonlinear system'
+        logEvent('creating nonlinear system')
     #end verbose
 
     jacobian = MatType(system.dim,system.dim,min(7,system.dim))
@@ -1000,8 +1000,8 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
     jacobian = system.initializeJacobian(jacobian)
     ### create linear system for solving problem
     if verbose > 5:
-        print 'creating linear system'
-        print 'initial jacobian mat = ',jacobian
+        logEvent('creating linear system')
+        logEvent('initial jacobian mat = ',jacobian)
     #end verbose
 
     linearSolver = LinearSolvers.SparseLU(jacobian)
@@ -1010,19 +1010,19 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
     #need intial residual calculated
     system.getResidual(y,r)
     if verbose > 5:
-        print 'system y0= ',y
+        logEvent('system y0= ',y)
         system.getJacobian(jacobian)
-        print 'system residual= ',r
-        print 'system jacobian = ',jacobian
+        logEvent('system residual= ',r)
+        logEvent('system jacobian = ',jacobian)
     ### solving problem
     if verbose > 0:
-        print 'trying to solve nonlinear system'
+        logEvent('trying to solve nonlinear system')
     #end verbose
     nlSolver.solve(y,r)
 
 
     if verbose > 0:
-        print 'nonlinear solver done'
+        logEvent('nonlinear solver done')
     #end if
 
     #print out solution
@@ -1136,7 +1136,7 @@ if __name__ == '__main__':
         #can view results in matlab with
         #matlabMesh; ex1soln; pdeplot(p,e,t,'xydata',u,'contour','on')
     else:
-        print 'PROBLEM testNum= ',testNum,' not recognized'
+        logEvent('PROBLEM testNum= ',testNum,' not recognized')
     #end if
 
 def testGenerateTriangulationFromPointSet(points):

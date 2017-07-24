@@ -328,7 +328,7 @@ class BackwardEuler_cfl(BackwardEuler):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
                 #print "mac cfl component ci",maxCFL,ci
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -643,7 +643,7 @@ class ForwardEuler(TI_base):
         self.m_tmp={}
         self.r_last={}
         self.r_tmp={}
-        if transport.stabilization != None:
+        if transport.stabilization is not None:
             self.strong_r_last={}
             self.strong_r_tmp={}
         self.runCFL=runCFL
@@ -655,7 +655,7 @@ class ForwardEuler(TI_base):
                 self.m_tmp[ci] = numpy.array(transport.q[('m',ci)])
                 self.r_last[ci] = numpy.array(transport.elementResidual[ci])
                 self.r_tmp[ci] = numpy.array(transport.elementResidual[ci])
-                if self.transport.stabilization != None:
+                if self.transport.stabilization is not None:
                     self.strong_r_last[ci] = numpy.array(transport.q[('pdeResidual',ci)])
                     self.strong_r_tmp[ci] = numpy.array(transport.q[('pdeResidual',ci)])
                 self.advectionIsImplicit[ci]      = False
@@ -703,7 +703,7 @@ class ForwardEuler(TI_base):
                         q[('dmt',ci,cj)][:] = q[('dm',ci,cj)]
                         q[('dmt',ci,cj)] /= self.dt
     def calculateStrongElementSpatialResidual(self,q):
-        if self.transport.stabilization != None:
+        if self.transport.stabilization is not None:
             for ci in self.r_tmp.keys():
                 self.strong_r_tmp[ci][:]=q[('pdeResidual',ci)]
                 q[('pdeResidual',ci)][:]=self.strong_r_last[ci]
@@ -720,7 +720,7 @@ class ForwardEuler(TI_base):
             if self.cfl.has_key(ci):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -737,7 +737,7 @@ class ForwardEuler(TI_base):
         self.dtLast = self.dt
         for ci in self.m_last.keys():
             self.r_last[ci].flat[:] = self.r_tmp[ci].flat
-            if self.transport.stabilization != None:
+            if self.transport.stabilization is not None:
                 self.strong_r_last[ci].flat[:] = self.strong_r_tmp[ci].flat
     def updateTimeHistory(self,resetFromDOF=False):
         self.tLast = self.t
@@ -745,7 +745,7 @@ class ForwardEuler(TI_base):
         for ci in self.m_last.keys():
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
             self.r_last[ci].flat[:] = self.r_tmp[ci].flat
-            if self.transport.stabilization != None:
+            if self.transport.stabilization is not None:
                 self.strong_r_last[ci].flat[:] = self.strong_r_tmp[ci].flat
     def setFromOptions(self,nOptions):
         """
@@ -778,7 +778,7 @@ class ForwardEuler_A(TI_base):
         #
         self.limiter=None; self.uLimDof = None
         self.limiterType = limiterType
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter = limiterType(transport.mesh,transport.nSpace_global,
                                        transport.u,
                                        transport=transport)
@@ -901,7 +901,7 @@ class ForwardEuler_A(TI_base):
             if self.cfl.has_key(ci):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -915,12 +915,12 @@ class ForwardEuler_A(TI_base):
         #pdb.set_trace()
         #mwf hack
         #grad_phi = numpy.array(self.transport.q[('grad(phi)',0)])
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter.applySlopeLimiting(self.transport.u,
                                             self.uLimDof)
             for ci in range(self.nc):
                 self.transport.u[ci].dof.flat[:] = self.uLimDof[ci].flat[:]
-                assert self.transport.u[ci].par_dof != None
+                assert self.transport.u[ci].par_dof is not None
                 self.transport.u[ci].par_dof.scatter_forward_insert()
         #if
 
@@ -966,7 +966,7 @@ class ForwardEuler_A(TI_base):
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
 
-        if 'limiterType' in dir(nOptions) and nOptions.limiterType != None:
+        if 'limiterType' in dir(nOptions) and nOptions.limiterType is not None:
             self.limiter = None; self.limiterType = None; self.uLimDof = {}
             self.limiterType = nOptions.limiterType
             self.limiter = self.limiterType(self.transport.mesh,
@@ -1100,7 +1100,7 @@ class ForwardEuler_H(TI_base):
                 maxCFL=globalMax(self.cfl[ci].max())
             #end has key
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -1111,14 +1111,14 @@ class ForwardEuler_H(TI_base):
         self.m_last.flat[:] = self.m_tmp.flat
         self.H_last.flat[:] = self.H_tmp.flat
         self.dH_last.flat[:] = self.dH_tmp.flat
-        if self.grad_u_last != None:
+        if self.grad_u_last is not None:
             self.grad_u_last.flat[:] = self.grad_u_tmp.flat
     def initializeSpaceHistory(self,resetFromDOF=False):
         self.tLast = self.t
         self.dtLast = self.dt
         self.H_last.flat[:] = self.H_tmp.flat
         self.dH_last.flat[:] = self.dH_tmp.flat
-        if self.grad_u_last != None:
+        if self.grad_u_last is not None:
             self.grad_u_last.flat[:] = self.grad_u_tmp.flat
     def updateStage(self):
         """
@@ -1254,7 +1254,7 @@ class OuterTheta(TI_base):
             if self.cfl.has_key(ci):
                 maxCFL=max(maxCFL,globalMax(self.cfl[ci].max()))
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -1971,7 +1971,7 @@ class ExplicitRK_base(TI_base):
                                                       self.transport.q[('cfl',ci)])
                     maxCFL=max(globalMax(self.cfl[ci].max()),maxCFL)
         self.dt = self.runCFL/maxCFL
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
@@ -2020,7 +2020,7 @@ class ExplicitRK_base(TI_base):
         for term in self.eqTerms:
             for ci in self.stageValues[term].keys():
                 if resetFromDOF:
-                    assert self.transport!= None, "Must supply transport to reset from DOF"
+                    assert self.transport is not None, "Must supply transport to reset from DOF"
                     if term == 'res':
                         self.stageValues[term][ci][0].flat[:] = self.stageValues['res'][ci][self.lstage+1].flat[:]
                     else:
@@ -2036,7 +2036,7 @@ class ExplicitRK_base(TI_base):
         for term in self.eqTerms:
             for ci in self.stageValues[term].keys():
                 if resetFromDOF:
-                    assert self.transport!= None, "Must supply transport to reset from DOF"
+                    assert self.transport is not None, "Must supply transport to reset from DOF"
                     if term == 'res':
                         self.stageValues[term][ci][0].flat[:] = self.stageValues['res'][ci][self.lstage+1].flat[:]
                     else:
@@ -2211,7 +2211,7 @@ class SSPRKPIintegration(ExplicitRK_base):
 
         self.limiter=None; self.uLimDof = None
         self.limiterType = limiterType
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter = limiterType(transport.mesh,transport.nSpace_global,
                                        transport.u,
                                        transport=transport)
@@ -2271,15 +2271,15 @@ class SSPRKPIintegration(ExplicitRK_base):
         increment stage counter by 1.
         lstage here is last stage completed
         """
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter.applySlopeLimiting(self.transport.u,
                                             self.uLimDof)
             for ci in range(self.nc):
                 self.transport.u[ci].dof.flat[:] = self.uLimDof[ci].flat[:]
-                assert self.transport.u[ci].par_dof != None
+                assert self.transport.u[ci].par_dof is not None
                 self.transport.u[ci].par_dof.scatter_forward_insert()
 
-                #if par_u != None:
+                #if par_u is not None:
                 #    #mwf debug
                 #    for eN in range(self.transport.mesh.nElements_owned,self.transport.mesh.nElements_global):
                 #        for i in range(self.transport.u[ci].femSpace.dofMap.l2g.shape[1]):
@@ -2314,7 +2314,7 @@ class SSPRKPIintegration(ExplicitRK_base):
         """
         ExplicitRK_base.setFromOptions(self,nOptions)
 
-        if 'limiterType' in dir(nOptions) and nOptions.limiterType != None:
+        if 'limiterType' in dir(nOptions) and nOptions.limiterType is not None:
             self.limiter = None; self.limiterType = None; self.uLimDof = {}
             self.limiterType = nOptions.limiterType
             self.limiter = self.limiterType(self.transport.mesh,
@@ -2348,7 +2348,7 @@ class LinearSSPRKPIintegration(LinearSSPRKintegration):
         LinearSSPRKintegration.__init__(self,transport,order=order,runCFL=runCFL,usingSSPRKNewton=usingSSPRKNewton)
         self.limiter=None; self.uLimDof = None
         self.limiterType = limiterType
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter = None; self.uLimDof = {}
             self.limiter=limiterType(transport.mesh,transport.nSpace_global,
                                      transport.u,
@@ -2360,12 +2360,12 @@ class LinearSSPRKPIintegration(LinearSSPRKintegration):
         increment stage counter by 1.
         lstage here is last stage completed
         """
-        if self.limiterType != None:
+        if self.limiterType is not None:
             self.limiter.applySlopeLimiting(self.transport.u,
                                             self.uLimDof)
             for ci in range(self.nc):
                 self.transport.u[ci].dof.flat[:] = self.uLimDof[ci].flat[:]
-                assert self.transport.u[ci].par_dof != None
+                assert self.transport.u[ci].par_dof is not None
                 self.transport.u[ci].par_dof.scatter_forward_insert()
             #if
         #for
@@ -2395,7 +2395,7 @@ class LinearSSPRKPIintegration(LinearSSPRKintegration):
         """
         LinearSSPRKintegration.setFromOptions(self,nOptions)
 
-        if 'limiterType' in dir(nOptions) and nOptions.limiterType != None:
+        if 'limiterType' in dir(nOptions) and nOptions.limiterType is not None:
             self.limiter = None; self.limiterType = None; self.uLimDof = {}
             self.limiterType = nOptions.limiterType
             self.limiter = self.limiterType(self.transport.mesh,
@@ -3731,7 +3731,7 @@ class ForwardIntegrator:
         import Profiling
         if Profiling.logLevel < 2:
             eraseTime='\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
-            if self.tstring != None:
+            if self.tstring is not None:
                 sys.stdout.write(eraseTime)
         sys.stdout.write('T= %12.5e, tn = ' % T)
         self.tstring = '%12.5e' % (tn+dt,)
@@ -3820,7 +3820,7 @@ PsiTCtte!""" % self.dtMeth)
                 converged = False
                 failedFlag = False
                 while nssteps < self.maxPTCsteps and not converged:
-                    if self.dtSET == None:
+                    if self.dtSET is None:
                         model.timeIntegration.choose_dt(tOut)
                     else:
                         model.timeIntegration.dt = self.dtSET
@@ -3925,7 +3925,7 @@ PsiTCtte!""" % self.dtMeth)
         """
         if Profiling.logLevel < 2:
             eraseTime='\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
-            if self.tstring != None:
+            if self.tstring is not None:
                 sys.stdout.write(eraseTime)
         sys.stdout.write('ResSS= %12.5e, tn = ' % res)
         self.tstring = '%12.5e' % (tn+dt,)
@@ -3983,7 +3983,7 @@ class SignedDistanceIntegrator(ForwardIntegrator):
         """
         if Profiling.logLevel < 2:
             eraseTime='\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b'
-            if self.tstring != None:
+            if self.tstring is not None:
                 sys.stdout.write(eraseTime)
         sys.stdout.write('ResSS= %12.5e, tn = ' % res)
         self.tstring = '%12.5e' % (tn+dt,)
