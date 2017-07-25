@@ -791,7 +791,6 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
     numModelRegions = numModelEntities[3];
   }
   
-  std::cout<<"numModelRegions "<<numModelRegions<<std::endl;
   assert(numModelRegions>0);
 
   numModelTotals[0] = numModelNodes;
@@ -989,6 +988,14 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   }
   gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)numDim);
 
+  if(numDim==3){
+    for(int i=0;i<numModelTotals[1];i++){
+      e = agm_add_ent(gMod_base->topo, AGM_EDGE);
+      gmi_set_lookup(gMod_base->lookup, e, i);
+    }
+    gmi_freeze_lookup(gMod_base->lookup, (agm_ent_type)1);
+  }
+
   int matTag; 
   apf::ModelEntity* gEnt; 
   int vertCounter = numModelOffsets[0];
@@ -1055,7 +1062,10 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   int boundaryID = 0; //this is a counter for the set of boundary elements
   int boundaryCounter = 0; //this is a counter for the set of exterior boundary elements
   int boundaryMaterialCounter = numModelOffsets[2]; //this is a counter for the storage array used to map material types to the new mesh
+  int edgCounter = numModelOffsets[1]; //this is a counter for the set of exterior edge entities
+  apf::ModelEntity* edg_gEnt;
   entIter=m->begin(boundaryDim);
+  PCU_Comm_Begin();
   while(ent = m->iterate(entIter)){
     if(hasModel){
       gEnt = m->findModelEntity(meshBoundary2Model[2*boundaryID+1],meshBoundary2Model[2*boundaryID]);
@@ -1069,6 +1079,31 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
         modelBoundaryMaterial[boundaryMaterialCounter] = mesh.elementBoundaryMaterialTypes[boundaryID]; 
         boundaryCounter++;
         boundaryMaterialCounter++;
+
+        //If 3D, need to set exterior edge classification
+        if(numDim==3){      
+          apf::Adjacent adj_edges;
+          m->getAdjacent(ent,1,adj_edges);
+          for(int i=0;i<adj_edges.getSize();i++){
+          //If the edge is classified on a higher order entity than gEnt or if the edge hasn't been classified yet
+            if(m->getModelType(m->toModel(adj_edges[i]))>m->getModelType(gEnt) || (m->getModelType(m->toModel(adj_edges[i]))==0)){
+              edg_gEnt = m->findModelEntity(1,edgCounter);
+              m->setModelEntity(adj_edges[i],edg_gEnt);
+              edgCounter++; 
+              //if the owner and entity is shared, share the model classification with other entities
+              if(m->isShared(adj_edges[i])){
+                apf::Copies remotes;
+                m->getRemotes(ent,remotes);
+                for(apf::Copies::iterator it = remotes.begin(); it != remotes.end(); ++it){
+                  PCU_COMM_PACK(it->first,it->second);
+                  PCU_COMM_PACK(it->first,edg_gEnt);
+                }
+              }
+
+            }
+          }
+        }
+
       }
       else {
         //If the current exterior entity is an edge on a partition boundary, need to check material and
@@ -1080,21 +1115,41 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
         //Pick one and take that as the material type for classification
         matTag = mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[2*boundaryID]];
         gEnt = m->findModelEntity(numDim,matTag);
+        //If 3D, need to set edge classification
+        if(numDim==3){      
+          apf::Adjacent adj_edges;
+          m->getAdjacent(ent,1,adj_edges);
+          for(int i=0;i<adj_edges.getSize();i++){
+          //If the edge is classified on a higher order entity than gEnt or if the edge hasn't been classified yet
+            if(m->getModelType(m->toModel(adj_edges[i]))>m->getModelType(gEnt) || (m->getModelType(m->toModel(adj_edges[i]))==0)){
+              m->setModelEntity(adj_edges[i],gEnt);
+            //if the owner and entity is shared, share the model classification with other entities
+              if(m->isShared(adj_edges[i])){
+                apf::Copies remotes;
+                m->getRemotes(ent,remotes);
+                for(apf::Copies::iterator it = remotes.begin(); it != remotes.end(); ++it){
+                  PCU_COMM_PACK(it->first,it->second);
+                  PCU_COMM_PACK(it->first,gEnt);
+                }
+              }
+            }
+          }
+
+        }
       }
     }
     m->setModelEntity(ent,gEnt);
-    //If 3D, need to set edge classification
-    if(numDim==3){      
-      apf::Adjacent adj_edges;
-      m->getAdjacent(ent,1,adj_edges);
-      for(int i=0;i<adj_edges.getSize();i++){
-        //If the edge is classified on a higher order entity than gEnt or if the edge hasn't been classified yet
-        if(m->getModelType(m->toModel(adj_edges[i]))>m->getModelType(gEnt) || (m->getModelType(m->toModel(adj_edges[i]))==0))
-          m->setModelEntity(adj_edges[i],gEnt);
-      }
-    }
     boundaryID++;
   }
+  PCU_Comm_Send();
+  //receive model entity classification from owning edges
+  while(PCU_Comm_Receive()){
+    PCU_COMM_UNPACK(ent);
+    PCU_COMM_UNPACK(gEnt);
+    m->setModelEntity(ent,gEnt); 
+  }
+  PCU_Barrier();
+
   m->end(entIter);
 
   //Iterate over regions
