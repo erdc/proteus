@@ -104,7 +104,7 @@ def Options(optionsList=None,mutable=False):
                 logEvent("IGNORING CONTEXT OPTION; DECLARE "+lvalue+" IF YOU WANT TO SET IT")
     #now set named tuple merging optionsList and opts_cli_dihelpct
     if mutable:
-        ContextOptions = recordtype("ContextOptions", contextOptionsDit.iteritems())
+        ContextOptions = recordtype("ContextOptions", contextOptionsDict.iteritems())
         return ContextOptions()
     else:
         ContextOptions = namedtuple("ContextOptions", contextOptionsDict.keys())
