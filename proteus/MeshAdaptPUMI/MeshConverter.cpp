@@ -455,6 +455,17 @@ int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh)
     else if(m->getModelType(geomEnt)==(m->getDimension()-1)){ //on the boundary entity
       mesh.nodeMaterialTypes[i] =modelBoundaryMaterial[geomTag];
     }
+    //If 3D and is on an exterior edge
+    else if(m->getDimension()==3 && m->getModelType(geomEnt)==1){
+      apf::Adjacent vert_adjFace;
+      m->getAdjacent(f,2,vert_adjFace);
+      for(int j=0;j<vert_adjFace.getSize();j++){
+        apf::ModelEntity* adjEnt = m->toModel(vert_adjFace[j]);
+        if(m->getModelType(adjEnt) == 2){
+          mesh.nodeMaterialTypes[i] = modelBoundaryMaterial[m->getModelTag(adjEnt)];
+        }
+      }
+    }
     else{
       mesh.nodeMaterialTypes[i] = 0; //This assumes that all vertices on the boundary are model vertices
     }
@@ -1110,7 +1121,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
         //get to the next item in the exterior array
         if(m->isShared(ent) && mesh.elementBoundaryMaterialTypes[mesh.exteriorElementBoundariesArray[boundaryCounter]]==0) 
           boundaryCounter++; 
-        assert(mesh.elementBoundaryMaterialTypes[boundaryID]==0);
+        assert(mesh.elementBoundaryMaterialTypes[boundaryID]==0 || numModelTotals[3]>1);
         //There are always two entities adjacent to an element boundary
         //Pick one and take that as the material type for classification
         matTag = mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[2*boundaryID]];
