@@ -205,15 +205,23 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  particle_beta=1000.0,
                  particle_penalty_constant=1000.0,
                  particle_nitsche=1.0,
-                 particle_sdfList=[]):
-        self.nParticles=nParticles
+                 particle_sdfList=[],
+                 particle_velocityList=[],
+                 granular_sdf_Calc=None,
+                 granular_vel_Calc=None
+		 ):
+
+	self.nParticles=nParticles
         self.particle_nitsche=particle_nitsche
         self.particle_epsFact=particle_epsFact
         self.particle_alpha=particle_alpha
         self.particle_beta=particle_beta
         self.particle_penalty_constant=particle_penalty_constant
         self.particle_sdfList=particle_sdfList
-        self.aDarcy=aDarcy
+        self.particle_velocityList=particle_velocityList
+	self.granular_sdf_Calc=granular_sdf_Calc
+	self.granular_vel_Calc=granular_vel_Calc
+	self.aDarcy=aDarcy
         self.betaForch=betaForch
         self.grain=grain
         self.packFraction=packFraction
@@ -406,12 +414,39 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_centroids = np.zeros((self.nParticles,3),'d')
         self.particle_signed_distances=np.zeros((self.nParticles,)+self.model.q[('u',0)].shape,'d')
         self.particle_signed_distance_normals=np.zeros((self.nParticles,)+self.model.q[('velocity',0)].shape,'d')
-        for i,sdf in zip(range(self.nParticles),
-                         self.particle_sdfList):
-            for eN in range(self.model.q['x'].shape[0]):
-                for k in range(self.model.q['x'].shape[1]):
-                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(0, self.model.q['x'][eN,k])
-            self.model.q[('phis',i)] = self.particle_signed_distances[i]
+        self.particle_velocities=np.zeros((self.nParticles,)+self.model.q[('velocity',0)].shape,'d')
+
+        self.phisField=np.ones(self.model.q[('u',0)].shape,'d')*1e10
+        # This is making a special case for granular material simulations
+        # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
+        # otherwise the sdf are calculated based on the input sdf list for each body
+        if self.granular_sdf_Calc is not None:
+            temp_1=np.zeros(self.model.q[('u',0)].shape,'d')
+            temp_2=np.zeros(self.model.q[('u',0)].shape,'d')
+            temp_3=np.zeros(self.model.q[('u',0)].shape,'d')
+            for i in range(self.nParticles):
+                print ("Attaching particle i=", i)
+                for eN in range(self.model.q['x'].shape[0]):
+                    for k in range(self.model.q['x'].shape[1]):
+                        self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = self.granular_sdf_Calc(self.model.q['x'][eN,k],i)    
+                        self.particle_velocities[i,eN,k] = self.granular_vel_Calc(self.model.q['x'][eN,k],i)           
+                #This is important to write the a field for the sdf in the domain which distinguishes solid particles
+                temp_1=np.minimum(abs(self.particle_signed_distances[i]),abs(self.phisField))
+                temp_2=np.minimum(self.particle_signed_distances[i],temp_1)
+                temp_3=np.minimum(temp_2,self.phisField)
+                self.phisField=temp_3
+                self.model.q[('phis')] = temp_3
+        else:
+            for i,sdf,vel in zip(range(self.nParticles),
+                            self.particle_sdfList, self.particle_velocityList):
+                for eN in range(self.model.q['x'].shape[0]):
+                    for k in range(self.model.q['x'].shape[1]):
+                        self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(0, self.model.q['x'][eN,k])
+                        self.particle_velocities[i,eN,k]=vel(0,self.model.q['x'][eN,k])
+                self.model.q[('phis',i)] = self.particle_signed_distances[i]
+                self.model.q[('phis_vel',i)] = self.particle_velocities[i]
+
+	
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
             self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
@@ -879,12 +914,33 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
-        for i,sdf in zip(range(self.nParticles),
-                         self.particle_sdfList):
-            for eN in range(self.model.q['x'].shape[0]):
-                for k in range(self.model.q['x'].shape[1]):
-                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(t, self.model.q['x'][eN,k])
-        if self.model.comm.isMaster():
+        self.phisField=np.ones(self.model.q[('u',0)].shape,'d')*1e10
+        if self.granular_sdf_Calc is not None:
+            #temp_1=np.zeros(self.model.q[('u',0)].shape,'d')
+            #temp_2=np.zeros(self.model.q[('u',0)].shape,'d')
+            #temp_3=np.zeros(self.model.q[('u',0)].shape,'d')
+            for i in range(self.nParticles):
+                print ("updating particle i=", i)
+                for eN in range(self.model.q['x'].shape[0]):
+                    for k in range(self.model.q['x'].shape[1]):
+                        self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = self.granular_sdf_Calc(self.model.q['x'][eN,k],i)
+                        self.particle_velocities[i,eN,k] = self.granular_vel_Calc(self.model.q['x'][eN,k],i)
+                        if ( abs(self.particle_signed_distances[i,eN,k]) < abs(self.phisField[eN,k]) ):
+                            self.phisField[eN,k]=self.particle_signed_distances[i,eN,k]
+                self.model.q[('phis')] = self.phisField    
+
+        else:
+            for i,sdf,vel in zip(range(self.nParticles),
+                            self.particle_sdfList,self.particle_velocityList
+                            ):
+                for eN in range(self.model.q['x'].shape[0]):
+                    for k in range(self.model.q['x'].shape[1]):
+                        self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(t, self.model.q['x'][eN,k])
+                        self.particle_velocities[i,eN,k]=vel(t,self.model.q['x'][eN,k])
+
+
+         
+	if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
             self.forceHistory_p.flush()
