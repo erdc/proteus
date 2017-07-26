@@ -1102,7 +1102,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
               m->setModelEntity(adj_edges[i],edg_gEnt);
               edgCounter++; 
               //if the owner and entity is shared, share the model classification with other entities
-              if(m->isShared(adj_edges[i])){
+              if(m->isOwned(adj_edges[i]) && m->isShared(adj_edges[i])){
                 apf::Copies remotes;
                 m->getRemotes(ent,remotes);
                 for(apf::Copies::iterator it = remotes.begin(); it != remotes.end(); ++it){
@@ -1135,7 +1135,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
             if(m->getModelType(m->toModel(adj_edges[i]))>m->getModelType(gEnt) || (m->getModelType(m->toModel(adj_edges[i]))==0)){
               m->setModelEntity(adj_edges[i],gEnt);
             //if the owner and entity is shared, share the model classification with other entities
-              if(m->isShared(adj_edges[i])){
+              if(m->isOwned(adj_edges[i]) && m->isShared(adj_edges[i])){
                 apf::Copies remotes;
                 m->getRemotes(ent,remotes);
                 for(apf::Copies::iterator it = remotes.begin(); it != remotes.end(); ++it){
