@@ -1290,6 +1290,7 @@ namespace proteus
 	  if (flowSpeedNormal < 0.0)
             {
               flux_umom+=flowSpeedNormal*(bc_u - u);
+			  velocity[0] = bc_u;
             }
 	}
       if (isDOFBoundary_v != 1)
@@ -1302,6 +1303,7 @@ namespace proteus
 	  if (flowSpeedNormal < 0.0)
             {
               flux_vmom+=flowSpeedNormal*(bc_v - v);
+			  velocity[1] = bc_v;
             }
 	}
       /* if (isDOFBoundary_w != 1) */
@@ -1326,20 +1328,21 @@ namespace proteus
       /*     if (flowSpeedNormal < 0.0) */
       /*       flux_wmom+=bc_speed*(bc_w - w); */
       /*   } */
-      if (isDOFBoundary_p == 1)
-        {
-          flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho);
-          flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho);
-          /* flux_wmom+= n[2]*(bc_p*bc_oneByRho-p*oneByRho); */
-        }
-      if (isFluxBoundary_p == 1)
-        {
-          //correct velocity field to match mass flux BC
-          velocity[0] += (bc_flux_mass - flux_mass)*n[0];
-          velocity[1] += (bc_flux_mass - flux_mass)*n[1];
-          /* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; */
-          flux_mass = bc_flux_mass;
-        }
+      /* if (isDOFBoundary_p == 1) */
+      /*   { */
+      /*     flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho); */
+      /*     flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho); */
+      /*     /\* flux_wmom+= n[2]*(bc_p*bc_oneByRho-p*oneByRho); *\/ */
+      /*   } */
+      /* if (isFluxBoundary_p == 1) */
+      /*   { */
+      /*     //correct velocity field to match mass flux BC */
+      /*     velocity[0] += (bc_flux_mass - flux_mass)*n[0]; */
+      /*     velocity[1] += (bc_flux_mass - flux_mass)*n[1]; */
+      /*     /\* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; *\/ */
+      /*     flux_mass = bc_flux_mass; */
+      /*   } */
+
       if (isFluxBoundary_u == 1)
 	{
 	  flux_umom = bc_flux_umom;
