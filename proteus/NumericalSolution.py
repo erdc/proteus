@@ -1495,6 +1495,31 @@ class NS_base:  # (HasTraits):
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
 
+        #Write bathymetry for Shallow water equations (MQL)
+        try:
+            bathymetry = {}
+            bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   bathymetry,
+                                                                   res_name_base='bathymetry')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
+        #write eta=h+bathymetry for SWEs (MQL)
+        try:
+            eta = {}
+            eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   eta,
+                                                                   res_name_base='eta')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
+
         #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}
@@ -1562,6 +1587,32 @@ class NS_base:  # (HasTraits):
             model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=False,meshChanged=True)
+
+        #Write bathymetry for Shallow water equations (MQL)
+        try:
+            bathymetry = {}
+            bathymetry[0] = model.levelModelList[-1].coefficients.b.dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   bathymetry,
+                                                                   res_name_base='bathymetry')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
+        #write eta=h+bathymetry for SWEs (MQL)
+        try:
+            eta = {}
+            eta[0] = model.levelModelList[-1].coefficients.b.dof+model.levelModelList[-1].u[0].dof
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   eta,
+                                                                   res_name_base='eta')
+            logEvent("Writing bathymetry for = "+model.name,level=3)
+        except:
+            pass
+        
         #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}
