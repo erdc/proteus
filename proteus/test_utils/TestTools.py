@@ -164,8 +164,10 @@ class NumericResults:
                 
                 for innerksp_match in re.finditer(NA_innersolve,new_line):
                     innerksp_match = float(NA_innersolve.search(new_line).groups()[0])
-                    data_dictionary[time_match][level_match][1][newton_it_key][1][outerksp_match_key].append(innerksp_match)
-
+                    try:
+                        data_dictionary[time_match][level_match][1][newton_it_key][1][outerksp_match_key].append(innerksp_match)
+                    except UnboundLocalError:
+                        import pdb ; pdb.set_trace()
         return data_dictionary, data_dictionary_header
 
     def pickle_data(self,filename):
@@ -240,7 +242,7 @@ class NumericResults:
         plt.yscale("log")
         plt.legend(legend_lst)
         plt.title(title_str)
-        if axis!=None:
+        if axis is not None:
             plt.xlim(axis[0],axis[1])
         plt.show() 
 

@@ -30,10 +30,11 @@ int MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   if (!PCU_Comm_Self())
     std::cerr << "Constructing parallel proteus mesh\n"; 
   
-  int numGlobElem = countTotal(m, 3);
+  int dim = m->getDimension();
+  int numGlobElem = countTotal(m, dim);
   mesh.nElements_global = numGlobElem;
 
-  int numLocElem = m->count(3);
+  int numLocElem = m->count(dim);
   mesh.subdomainp->nElements_global = numLocElem;
 
   int numGlobNodes = countTotal(m, 0);
@@ -43,21 +44,31 @@ int MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   mesh.subdomainp->nNodes_global = numLocNodes;
 
   int numGlobFaces = countTotal(m, 2);
-  mesh.nElementBoundaries_global = numGlobFaces;
-
   int numLocFaces = m->count(2);
-  mesh.subdomainp->nElementBoundaries_global = numLocFaces;
 
   int numGlobEdges = countTotal(m, 1);
   mesh.nEdges_global = numGlobEdges;
 
   int numLocEdges = m->count(1);
   mesh.subdomainp->nEdges_global = numLocEdges;
-//nNodes_element for now is constant for the entire mesh, Ask proteus about using mixed meshes
-//therefore currently this code only supports tet meshes
-  mesh.subdomainp->nNodes_element = 4; //hardcode: for tets, number of nodes per element
-  mesh.subdomainp->nNodes_elementBoundary = 3; //hardcode: for tets, looks like number of nodes of a face
-  mesh.subdomainp->nElementBoundaries_element = 4; //hardcode: for tets, looks like number of faces/element
+
+  if(dim==3){ 
+    mesh.nElementBoundaries_global = numGlobFaces;
+    mesh.subdomainp->nElementBoundaries_global = numLocFaces;
+    //nNodes_element for now is constant for the entire mesh, Ask proteus about using mixed meshes
+    //therefore currently this code only supports tet meshes
+    mesh.subdomainp->nNodes_element = 4; //hardcode: for tets, number of nodes per element
+    mesh.subdomainp->nNodes_elementBoundary = 3; //hardcode: for tets, looks like number of nodes of a face
+    mesh.subdomainp->nElementBoundaries_element = 4; //hardcode: for tets, looks like number of faces/element
+  }
+  else if(dim==2){
+    mesh.nElementBoundaries_global = numGlobEdges;
+    mesh.subdomainp->nElementBoundaries_global = numLocEdges;
+    mesh.subdomainp->nNodes_element = 3; //hardcode: for tets, number of nodes per element
+    mesh.subdomainp->nNodes_elementBoundary = 2; //hardcode: for tets, looks like number of nodes of a face
+    mesh.subdomainp->nElementBoundaries_element = 3; //hardcode: for tets, looks like number of faces/element
+  }
+
   
 #ifdef MESH_INFO
   for (int i = 0; i < PCU_Comm_Peers(); ++i) {
@@ -100,6 +111,7 @@ int MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   return 0;
 } 
 
+#include <cstring>
 int MeshAdaptPUMIDrvr::constructGlobalNumbering(Mesh &mesh)
 {
   /* N^2 data structures and algorithms are terrible for scalability.
@@ -109,41 +121,75 @@ int MeshAdaptPUMIDrvr::constructGlobalNumbering(Mesh &mesh)
   mesh.edgeOffsets_subdomain_owned = new int[comm_size+1];
   mesh.nodeOffsets_subdomain_owned = new int[comm_size+1];
 
-  for (int dim = 0; dim <= m->getDimension(); ++dim) {
+  if(m->getDimension()==3){
+    for (int dim = 0; dim <= m->getDimension(); ++dim) {
 
-    int nLocalOwned = apf::countOwned(m, dim);
-    int localOffset = nLocalOwned;
-    PCU_Exscan_Ints(&localOffset, 1);
+      int nLocalOwned = apf::countOwned(m, dim);
+      int localOffset = nLocalOwned;
+      PCU_Exscan_Ints(&localOffset, 1);
 
-    int* allOffsets;
-    if(dim==3){
-      allOffsets = mesh.elementOffsets_subdomain_owned;
-    }
-    if(dim==2){
-      allOffsets = mesh.elementBoundaryOffsets_subdomain_owned;
-    }
-    if(dim==1){
-      allOffsets = mesh.edgeOffsets_subdomain_owned;
-    }
-    if(dim==0){
-      allOffsets = mesh.nodeOffsets_subdomain_owned;
-    }
+      int* allOffsets;
+      if(dim==3){
+        allOffsets = mesh.elementOffsets_subdomain_owned;
+      }
+      if(dim==2){
+        allOffsets = mesh.elementBoundaryOffsets_subdomain_owned;
+      }
+      if(dim==1){
+        allOffsets = mesh.edgeOffsets_subdomain_owned;
+      }
+      if(dim==0){
+        allOffsets = mesh.nodeOffsets_subdomain_owned;
+      }
 
-    /* one of the many reasons N^2 algorithms are bad */
-    MPI_Allgather(&localOffset, 1, MPI_INT,
-                  allOffsets, 1, MPI_INT, MPI_COMM_WORLD);
-    allOffsets[PCU_Comm_Peers()] = countTotal(m, dim);
+      /* one of the many reasons N^2 algorithms are bad */
+      MPI_Allgather(&localOffset, 1, MPI_INT,
+                    allOffsets, 1, MPI_INT, MPI_COMM_WORLD);
+      allOffsets[PCU_Comm_Peers()] = countTotal(m, dim);
+  
+      std::stringstream ss;
+      ss << "proteus_global_";
+      ss << dim;
+      std::string name = ss.str();
+      /* this algorithm does global numbering properly,
+        without O(#procs) runtime */
+      global[dim] = apf::makeGlobal(apf::numberOwnedDimension(m, name.c_str(), dim));
+      apf::synchronize(global[dim]);
+    } //loop on entity dimensions
+  }
+  else if(m->getDimension()==2){
+    for (int dim = 0; dim <= m->getDimension(); ++dim) {
 
-    std::stringstream ss;
-    ss << "proteus_global_";
-    ss << dim;
-    std::string name = ss.str();
-    /* this algorithm does global numbering properly,
-       without O(#procs) runtime */
-    global[dim] = apf::makeGlobal(apf::numberOwnedDimension(m, name.c_str(), dim));
-    apf::synchronize(global[dim]);
-  } //loop on entity dimensions
+      int nLocalOwned = apf::countOwned(m, dim);
+      int localOffset = nLocalOwned;
+      PCU_Exscan_Ints(&localOffset, 1);
 
+      int* allOffsets;
+      if(dim==2){
+        allOffsets = mesh.elementOffsets_subdomain_owned;
+      }
+      if(dim==1){
+        allOffsets = mesh.elementBoundaryOffsets_subdomain_owned;
+      }
+      if(dim==0){
+        allOffsets = mesh.nodeOffsets_subdomain_owned;
+      }
+
+      /* one of the many reasons N^2 algorithms are bad */
+      MPI_Allgather(&localOffset, 1, MPI_INT,
+                    allOffsets, 1, MPI_INT, MPI_COMM_WORLD);
+      allOffsets[PCU_Comm_Peers()] = countTotal(m, dim);
+      std::stringstream ss;
+      ss << "proteus_global_";
+      ss << dim;
+      std::string name = ss.str();
+      /* this algorithm does global numbering properly,
+        without O(#procs) runtime */
+      global[dim] = apf::makeGlobal(apf::numberOwnedDimension(m, name.c_str(), dim));
+      apf::synchronize(global[dim]);
+    } //loop on entity dimensions
+    std::memcpy(mesh.edgeOffsets_subdomain_owned,mesh.elementBoundaryOffsets_subdomain_owned,sizeof(int)*(comm_size+1));
+  }
   return 0; 
 }
 
@@ -154,21 +200,41 @@ int MeshAdaptPUMIDrvr::constructGlobalStructures(Mesh &mesh)
   mesh.nodeNumbering_subdomain2global = new int[mesh.subdomainp->nNodes_global];
   mesh.edgeNumbering_subdomain2global = new int[mesh.subdomainp->nEdges_global];
   
-  for (int d = 0; d <= m->getDimension(); ++d) {
-    int* temp_subdomain2global;
-    if(d==3) temp_subdomain2global = mesh.elementNumbering_subdomain2global;
-    if(d==2) temp_subdomain2global = mesh.elementBoundaryNumbering_subdomain2global;
-    if(d==1) temp_subdomain2global = mesh.edgeNumbering_subdomain2global;
-    if(d==0) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
+  if(m->getDimension()==3){
+    for (int d = 0; d <= m->getDimension(); ++d) {
+     int* temp_subdomain2global;
+     if(d==3) temp_subdomain2global = mesh.elementNumbering_subdomain2global;
+     if(d==2) temp_subdomain2global = mesh.elementBoundaryNumbering_subdomain2global;
+     if(d==1) temp_subdomain2global = mesh.edgeNumbering_subdomain2global;
+     if(d==0) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
 
-    apf::MeshIterator* it = m->begin(d);
-    apf::MeshEntity* e;
-    while ((e = m->iterate(it))) {
-      int i = localNumber(e);
-      temp_subdomain2global[i] = apf::getNumber(global[d], apf::Node(e, 0));
-    }
-    m->end(it);
-    apf::destroyGlobalNumbering(global[d]);
+     apf::MeshIterator* it = m->begin(d);
+     apf::MeshEntity* e;
+     while ((e = m->iterate(it))) {
+       int i = localNumber(e);
+       temp_subdomain2global[i] = apf::getNumber(global[d], apf::Node(e, 0));
+     }
+     m->end(it);
+     apf::destroyGlobalNumbering(global[d]);
+   }
+  }
+  else if(m->getDimension()==2){
+    for (int d = 0; d <= m->getDimension(); ++d) {
+     int* temp_subdomain2global;
+     int* temp_subdomain2global2; //just for the edge and element boundary array overlap
+     if(d==2) temp_subdomain2global = mesh.elementNumbering_subdomain2global;
+     if(d==1) temp_subdomain2global = mesh.elementBoundaryNumbering_subdomain2global;
+     if(d==0) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
+     apf::MeshIterator* it = m->begin(d);
+     apf::MeshEntity* e;
+     while ((e = m->iterate(it))) {
+       int i = localNumber(e);
+       temp_subdomain2global[i] = apf::getNumber(global[d], apf::Node(e, 0));
+     }
+     m->end(it);
+     apf::destroyGlobalNumbering(global[d]);
+   }
+   std::memcpy(mesh.edgeNumbering_subdomain2global,mesh.elementBoundaryNumbering_subdomain2global,sizeof(int)*(mesh.subdomainp->nElementBoundaries_global));
   }
 
   return 0;

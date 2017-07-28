@@ -419,7 +419,7 @@ class RigidBody(AuxiliaryVariables.AV_base, object):
             Period of rotational motion
 	    """     
         self.InputMotion = InputMotion
-        if pivot == None:
+        if pivot is None:
             self.pivot = self.Shape.barycenter
         else:
             self.pivot = np.array(pivot)
@@ -1453,7 +1453,7 @@ class PaddleBody(RigidBody):
             Period of rotational motion
 	    """     
         self.InputMotion = InputMotion
-        if pivot == None:
+        if pivot is None:
             self.pivot = self.Shape.barycenter
         else:
             self.pivot = np.array(pivot)
