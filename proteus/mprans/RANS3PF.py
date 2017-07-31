@@ -411,7 +411,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          self.particle_sdfList):
             for eN in range(self.model.q['x'].shape[0]):
                 for k in range(self.model.q['x'].shape[1]):
-                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(0, self.model.q['x'][eN,k])
+                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(i, self.model.q['x'][eN,k])
             self.model.q[('phis',i)] = self.particle_signed_distances[i]
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
@@ -884,7 +884,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          self.particle_sdfList):
             for eN in range(self.model.q['x'].shape[0]):
                 for k in range(self.model.q['x'].shape[1]):
-                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(t, self.model.q['x'][eN,k])
+                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(i, self.model.q['x'][eN,k])
         if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))

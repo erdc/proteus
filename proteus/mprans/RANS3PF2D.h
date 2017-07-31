@@ -968,6 +968,8 @@ namespace proteus
 
       C = 0.0;
 
+      std::cout << "Number of particles: " << nParticles << std::endl;
+
       for (int i=0;i<nParticles;i++)
       {
 
@@ -998,9 +1000,12 @@ namespace proteus
 	
         C = (D_s*C_surf + (1.0 - H_s)*C_vol);
 	
-        force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
-	force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
+        //force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
+	//force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
 	
+        force_x = dV*D_s;
+        force_y = dV*D_s;
+
         //if (D_s > 0)
         //{
         //  std::cout << "\n\n" << std::endl;
