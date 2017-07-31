@@ -402,6 +402,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #DEM particles
         self.particle_netForces = np.zeros((self.nParticles,3),'d')
         self.particle_netMoments = np.zeros((self.nParticles,3),'d')
+        self.particle_surfaceArea = np.zeros((self.nParticles,),'d')
         self.particle_velocities = np.zeros((self.nParticles,3),'d')
         self.particle_centroids = np.zeros((self.nParticles,3),'d')
         self.particle_signed_distances=np.zeros((self.nParticles,)+self.model.q[('u',0)].shape,'d')
@@ -1821,18 +1822,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.coefficients.netMoments[:, :] = 0.0
         self.coefficients.particle_netForces[:,:]=0.0
         self.coefficients.particle_netMoments[:,:]=0.0
+        self.coefficients.particle_surfaceArea[:]=0.0
 
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[
                         cj].DOFBoundaryConditionsDict.iteritems():
-                    if cj == 0:
-                        self.u[cj].dof[dofN] = g(
-                            self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],
-                            self.timeIntegration.t)
-                    else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
-                                                 dofN], self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                            dofN], self.timeIntegration.t)# + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
             self.coefficients.set_vos(self.ebqe['x'],self.coefficients.ebqe_vos)
@@ -2029,6 +2026,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	    self.coefficients.particle_centroids,
             self.coefficients.particle_netForces,
             self.coefficients.particle_netMoments,
+            self.coefficients.particle_surfaceArea,
             self.coefficients.particle_nitsche)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
@@ -2047,18 +2045,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                     self.coefficients.particle_netForces[i, I])
                 self.coefficients.particle_netMoments[i, I] = globalSum(
                     self.coefficients.particle_netMoments[i, I])
+                self.coefficients.particle_surfaceArea[i] = globalSum(
+                    self.coefficients.particle_surfaceArea[i])
             logEvent("particle i="+`i`+ " force "+`self.coefficients.particle_netForces[i]`)
             logEvent("particle i="+`i`+ " moment "+`self.coefficients.particle_netMoments[i]`)
+            logEvent("particle i="+`i`+ " surfaceArea "+`self.coefficients.particle_surfaceArea[i]`)
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN, g in self.dirichletConditionsForceDOF[
                         cj].DOFBoundaryConditionsDict.iteritems():
-                    if cj == 0:
-                        r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - g(
-                            self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN], self.timeIntegration.t)
-                    else:
-                        r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
-                                                                                               dofN], self.timeIntegration.t) - self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                    r[self.offset[cj] + self.stride[cj] * dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
+                        dofN], self.timeIntegration.t)# - self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
 
         cflMax = globalMax(self.q[('cfl', 0)].max()) * self.timeIntegration.dt
         log("Maximum CFL = " + str(cflMax), level=2)

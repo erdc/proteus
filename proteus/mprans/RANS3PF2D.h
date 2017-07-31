@@ -221,6 +221,7 @@ namespace proteus
 				   double* particle_centroids,
 				   double* particle_netForces,
 				   double* particle_netMoments,
+				   double* particle_surfaceArea,
 				   double particle_nitsche)=0;
 
     virtual void calculateJacobian(//element
@@ -953,18 +954,11 @@ namespace proteus
 				    double& mom_w_ham,
 				    double dmom_w_ham_grad_w[nSpace],
 				    double* particle_netForces,
-				    double* particle_netMoments)
+				    double* particle_netMoments,
+				    double* particle_surfaceArea)
     {
-
-      double C;
-      double rho, mu, nu, H_mu;
-      double uc, duc_du, duc_dv, duc_dw;
-      double viscosity;
-      double H_s, D_s;
-      double u_s, v_s, w_s;
-      double force_x, force_y;
-      double r_x,r_y;
-      double phi_s;
+      
+      double C, rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,H_s,D_s,phi_s,u_s,v_s,w_s,force_x,force_y,r_x,r_y;
       double* phi_s_normal;
 
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -999,20 +993,14 @@ namespace proteus
 				   (vStar-v_s)*(vStar-v_s)+
 				   (wStar-w_s)*(wStar-w_s));
 
-	double C_surf = viscosity*penalty;
-	double C_vol = alpha + beta*rel_vel_norm;
-
-	C += (D_s*C_surf + (1.0 - H_s)*C_vol);
-
-        force_x = dV*D_s*(-p*phi_s_normal[0] + nu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
-        force_y = dV*D_s*(-p*phi_s_normal[1] + nu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
-
-        //force_x = dV*D_s*(-p*phi_s_normal[0]);
-        //force_y = dV*D_s*(-p*phi_s_normal[1]);
-
-        //force_x = dV*D_s;
-        //force_y = dV*D_s;
-
+        double C_surf = nu*penalty;
+        double C_vol = alpha + beta*rel_vel_norm;
+	
+        C = (D_s*C_surf + (1.0 - H_s)*C_vol);
+	
+        force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
+	force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
+	
         //if (D_s > 0)
         //{
         //  std::cout << "\n\n" << std::endl;
@@ -1022,16 +1010,18 @@ namespace proteus
         //  std::cout << "p: " << p << std::endl;
         //  std::cout << "phi_s normal: " << phi_s_normal[0] << ", " << phi_s_normal[1] << std::endl;
         //}
-
-        //std::cout << "\n" << "phi_s normal: " << phi_s_normal[0] << ", " << phi_s_normal[1] << "\n" << std::endl;
-
-	//always 3D for particle forces
+  
+        //always 3D for particle centroids
+	r_x = x - particle_centroids[i*3+0];
+	r_y = y - particle_centroids[i*3+1];
+	  
+        //always 3D for particle forces
+	particle_surfaceArea[i] += dV*D_s;
 	particle_netForces[i*3+0] += force_x;
 	particle_netForces[i*3+1] += force_y;
-	particle_netMoments[i*3+2] += (r_x*force_y - r_y*force_x);
-
+       	particle_netMoments[i*3+2] += (r_x*force_y - r_y*force_x);
       }
-      
+
       mom_u_source += C*(u-u_s);
       mom_v_source += C*(v-v_s);
       
@@ -1039,11 +1029,11 @@ namespace proteus
       dmom_v_source[1] += C;
 
       //Nitsche terms
-      mom_u_ham    -= D_s*porosity*nu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]); 
+      mom_u_ham    -= D_s*porosity*nu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]);
       dmom_u_ham_grad_u[0] -= D_s*porosity*nu*phi_s_normal[0];
       dmom_u_ham_grad_u[1] -= D_s*porosity*nu*phi_s_normal[1];
 
-      mom_v_ham    -= D_s*porosity*nu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]); 
+      mom_v_ham    -= D_s*porosity*nu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]);
       dmom_v_ham_grad_v[0] -= D_s*porosity*nu*phi_s_normal[0];
       dmom_v_ham_grad_v[1] -= D_s*porosity*nu*phi_s_normal[1];
       
@@ -1338,6 +1328,7 @@ namespace proteus
 	  if (flowSpeedNormal < 0.0)
             {
               flux_umom+=flowSpeedNormal*(bc_u - u);
+	      velocity[0] = bc_u;
             }
 	}
       if (isDOFBoundary_v != 1)
@@ -1350,6 +1341,7 @@ namespace proteus
 	  if (flowSpeedNormal < 0.0)
             {
               flux_vmom+=flowSpeedNormal*(bc_v - v);
+	      velocity[1] = bc_v;
             }
 	}
       /* if (isDOFBoundary_w != 1) */
@@ -1374,20 +1366,20 @@ namespace proteus
       /*     if (flowSpeedNormal < 0.0) */
       /*       flux_wmom+=bc_speed*(bc_w - w); */
       /*   } */
-      if (isDOFBoundary_p == 1)
-        {
-          flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho);
-          flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho);
-          /* flux_wmom+= n[2]*(bc_p*bc_oneByRho-p*oneByRho); */
-        }
-      if (isFluxBoundary_p == 1)
-        {
-          //correct velocity field to match mass flux BC
-          velocity[0] += (bc_flux_mass - flux_mass)*n[0];
-          velocity[1] += (bc_flux_mass - flux_mass)*n[1];
-          /* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; */
-          flux_mass = bc_flux_mass;
-        }
+      /* if (isDOFBoundary_p == 1) */
+      /*   { */
+      /*     flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho); */
+      /*     flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho); */
+      /*     /\* flux_wmom+= n[2]*(bc_p*bc_oneByRho-p*oneByRho); *\/ */
+      /*   } */
+      /* if (isFluxBoundary_p == 1) */
+      /*   { */
+      /*     //correct velocity field to match mass flux BC */
+      /*     velocity[0] += (bc_flux_mass - flux_mass)*n[0]; */
+      /*     velocity[1] += (bc_flux_mass - flux_mass)*n[1]; */
+      /*     /\* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; *\/ */
+      /*     flux_mass = bc_flux_mass; */
+      /*   } */
       if (isFluxBoundary_u == 1)
 	{
 	  flux_umom = bc_flux_umom;
@@ -1819,6 +1811,7 @@ namespace proteus
 			   double* particle_centroids,
 			   double* particle_netForces,
 			   double* particle_netMoments,
+			   double* particle_surfaceArea,
 			   double particle_nitsche)
     {
       //
@@ -2204,7 +2197,8 @@ namespace proteus
 					 mom_w_ham,
 					 dmom_w_ham_grad_w,
 					 particle_netForces,
-					 particle_netMoments);
+					 particle_netMoments,
+					 particle_surfaceArea);
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -3537,7 +3531,7 @@ namespace proteus
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
-      std::valarray<double> particle_netForces(nParticles*3), particle_netMoments(nParticles*3);
+      std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3), particle_netMoments(nParticles*3);
       const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
       for(int eN=0;eN<nElements_global;eN++)
 	{
@@ -3939,7 +3933,8 @@ namespace proteus
 					 mom_w_ham,
 					 dmom_w_ham_grad_w,
 					 &particle_netForces[0],
-					 &particle_netMoments[0]);
+					 &particle_netMoments[0],
+					 &particle_surfaceArea[0]);
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
