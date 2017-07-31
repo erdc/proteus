@@ -762,10 +762,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.low_order_hvnp1=None
         self.dH_minus_dL=None
         self.muH_minus_muL=None
-
         # Aux quantity at DOFs to be filled by optimized code (MQL)
         self.quantDOFs = None
-
+        # NORMALS
+        self.COMPUTE_NORMALS=1
+        self.normalx=None
+        self.normaly=None
+        self.boundaryIndex=None
+        self.reflectingBoundaryConditions=False        
+        if 'reflecting_BCs' in dir(options) and options.reflecting_BCs==1:
+            self.reflectingBoundaryConditions=True
+            
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
@@ -1100,6 +1107,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                           self.csrColumnOffsets[(0,0)]/3,
                                                                           self.cterm_transpose[d],
                                                                           self.cterm_global_transpose[d])
+
+        if self.boundaryIndex is None and self.normalx is not None:
+            self.boundaryIndex = []
+            for i in range(self.normalx.size):
+                if self.normalx[i] != 0 or self.normaly[i] != 0:
+                    self.boundaryIndex.append(i)
+            self.boundaryIndex = np.array(self.boundaryIndex)
+        if self.normalx is None:
+            self.normalx = numpy.zeros(self.u[0].dof.shape,'d')
+            self.normaly = numpy.zeros(self.u[0].dof.shape,'d')
+            
         if self.quantDOFs is None:
             self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
@@ -1138,7 +1156,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         self.Ct_sge = 4.0
         self.Cd_sge = 144.0
- 
+
+        if self.reflectingBoundaryConditions and self.boundaryIndex is not None:
+            self.forceStrongConditions=False
+            for dummy, index in enumerate(self.boundaryIndex):
+                vx = self.u[1].dof[index]
+                vy = self.u[2].dof[index]
+                vt = vx*self.normaly[index] - vy*self.normalx[index]
+                self.u[1].dof[index] = vt*self.normaly[index]
+                self.u[2].dof[index] = -vt*self.normalx[index]
+                
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1296,8 +1323,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.dt, 
             self.coefficients.mannings,
             self.quantDOFs, 
-            self.secondCallCalculateResidual)
+            self.secondCallCalculateResidual,
+            self.COMPUTE_NORMALS,
+            self.normalx,
+            self.normaly)
 
+        self.COMPUTE_NORMALS=0        
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
