@@ -9,7 +9,7 @@ opts=Context.Options([
     ("T", 30.0, "Length of simulation in seconds"),
     ("nDTout", 300, "number of time steps to archive"),
     ("refinement",4,"Level of refinement"),
-    ("structured",True,"Use structured mesh"),
+    ("structured",False,"Use structured mesh"),
     ("reflecting_BCs",1,"Use reflecting BCs")
 ])
 
