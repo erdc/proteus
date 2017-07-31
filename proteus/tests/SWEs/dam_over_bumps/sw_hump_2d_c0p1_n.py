@@ -5,6 +5,7 @@ import sw_hump_2d_p
 Context.setFromModule(sw_hump_2d_p)
 ct = Context.get()
 
+reflecting_BCs=ct.opts.reflecting_BCs
 refinement=ct.opts.refinement
 runCFL=0.5
 timeIntegration_sw2d = "SSP33"

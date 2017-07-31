@@ -6,10 +6,11 @@ import numpy as np
 import math
 
 opts=Context.Options([
-    ("T", 10.0, "Length of simulation in seconds"),
-    ("nDTout", 100, "number of time steps to archive"),
+    ("T", 30.0, "Length of simulation in seconds"),
+    ("nDTout", 300, "number of time steps to archive"),
     ("refinement",4,"Level of refinement"),
-    ("structured",False,"Use structured mesh")
+    ("structured",True,"Use structured mesh"),
+    ("reflecting_BCs",1,"Use reflecting BCs")
 ])
 
 nd=2
@@ -32,6 +33,7 @@ else:
 #This is relevant just when use_second_order_NonFlatB_with_EV_stabilization=True
 cE=1
 LUMPED_MASS_MATRIX=0
+#reflecting_BCs=1
 
 bt = domain.boundaryTags
 bt['front'] = bt['bottom']
@@ -81,16 +83,10 @@ def getDBC_h(x,flag):
 
 #note, these are the same for hu and hv so we can cheat and use  this p-file for SW2DCV and SW2D
 def getDBC_u(x,flag):
-   if (x[0] in [0.0,L[0]]) or flag in [bt['left'],bt['right']]:
-       return lambda x,t: 0.0
-   else:
-       return None
+    return None
 
 def getDBC_v(x,flag):
-   if x[1] in [0.0,L[1]] or flag in [bt['front'],bt['back']]:
-       return lambda x,t: 0.0
-   else:
-       return None
+    return None
 
 dirichletConditions = {0:getDBC_h,
                        1:getDBC_u,
