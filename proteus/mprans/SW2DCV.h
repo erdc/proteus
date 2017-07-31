@@ -218,7 +218,12 @@ namespace proteus
 				   double dt,
 				   double mannings,
 				   // Quant of interests
-				   double* quantDOFs
+				   double* quantDOFs,
+				   int SECOND_CALL_CALCULATE_RESIDUAL,				   
+				   // NORMAL COMPONENTS
+                                   int COMPUTE_NORMALS,
+                                   double* normalx,
+                                   double* normaly
 				   )=0;
     virtual void calculateResidual_entropy_viscosity(// last EDGE BASED version
 						     double* mesh_trial_ref,
@@ -367,7 +372,11 @@ namespace proteus
 						     double mannings,
 						     // Quant of interests
 						     double* quantDOFs,
-						     int SECOND_CALL_CALCULATE_RESIDUAL
+						     int SECOND_CALL_CALCULATE_RESIDUAL,
+						     // NORMAL COMPONENTS
+						     int COMPUTE_NORMALS,
+						     double* normalx,
+						     double* normaly
 						     )=0;
     virtual void calculateJacobian_SUPG(//element
 				   double* mesh_trial_ref,
@@ -2074,8 +2083,12 @@ namespace proteus
 			   double dt, 
 			   double mannings, 
 			   // Quant of interests
-			   double* quantDOFs)
-			   
+			   double* quantDOFs,
+			   int SECOND_CALL_CALCULATE_RESIDUAL,
+			   // NORMAL COMPONENTS
+			   int COMPUTE_NORMALS,
+			   double* normalx,
+			   double* normaly)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -3057,7 +3070,12 @@ namespace proteus
 					     double mannings,
 					     // Quant of interests
 					     double* quantDOFs,
-					     int SECOND_CALL_CALCULATE_RESIDUAL)
+					     int SECOND_CALL_CALCULATE_RESIDUAL,
+					     // NORMAL COMPONENTS
+					     int COMPUTE_NORMALS,
+					     double* normalx,
+					     double* normaly
+					     )
     {
       //FOR FRICTION//
       double n2 = std::pow(mannings,2.);
@@ -3501,8 +3519,62 @@ namespace proteus
 		}
 	    }
 	}
+      if (COMPUTE_NORMALS==1)
+        {
+          // This is to identify the normals and create a vector of normal components
+          for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+            {
+              register int ebN = exteriorElementBoundariesArray[ebNE],
+                eN  = elementBoundaryElementsArray[ebN*2+0],
+                ebN_local = elementBoundaryLocalElementBoundariesArray[ebN*2+0];
+              register double normal[3];
+              { // "Loop" in quad points
+                int kb = 0; // NOTE: I need to consider just one quad point 
+                register int ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb;
+                register double
+                  jac_ext[nSpace*nSpace],jacDet_ext,jacInv_ext[nSpace*nSpace],boundaryJac[nSpace*(nSpace-1)],
+                  metricTensor[(nSpace-1)*(nSpace-1)],metricTensorDetSqrt,x_ext,y_ext;
+                /* compute information about mapping from reference element to physical element */
+                ck.calculateMapping_elementBoundary(eN,
+                                                    ebN_local,
+                                                    kb,
+                                                    ebN_local_kb,
+                                                    mesh_dof,
+                                                    mesh_l2g,
+                                                    mesh_trial_trace_ref,
+                                                    mesh_grad_trial_trace_ref,
+                                                    boundaryJac_ref,
+                                                    jac_ext,
+                                                    jacDet_ext,
+                                                    jacInv_ext,
+                                                    boundaryJac,
+                                                    metricTensor,
+                                                    metricTensorDetSqrt,
+                                                    normal_ref,
+                                                    normal,
+                                                    x_ext,y_ext);
+              }
+              // distribute the normal vectors
+              for (int i=0;i<nDOF_test_element;i++)
+                {
+                  int eN_i = eN*nDOF_test_element+i;
+                  int gi = h_l2g[eN_i];
+                  normalx[gi] += 0.5*normal[0]*(i==ebN_local ? 0. : 1.);
+                  normaly[gi] += 0.5*normal[1]*(i==ebN_local ? 0. : 1.);
+                }
+            }
+          // normalize
+          for (int gi=0; gi<numDOFsPerEqn; gi++)
+            {
+              double norm_factor = std::sqrt(std::pow(normalx[gi],2) + std::pow(normaly[gi],2));
+              if (norm_factor != 0)
+                {
+                  normalx[gi] /= norm_factor;
+                  normaly[gi] /= norm_factor;
+                }
+            }
+        }      
     }
-
     
     void calculateJacobian_SUPG(//element
 			   double* mesh_trial_ref,
