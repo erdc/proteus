@@ -1004,11 +1004,11 @@ namespace proteus
 
 	C += (D_s*C_surf + (1.0 - H_s)*C_vol);
 
-        //force_x = dV*D_s*(-p*phi_s_normal[0] + nu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
-	//force_y = dV*D_s*(-p*phi_s_normal[1] + nu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
+        force_x = dV*D_s*(-p*phi_s_normal[0] + nu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
+        force_y = dV*D_s*(-p*phi_s_normal[1] + nu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
 
-        force_x = dV*D_s*(-p*phi_s_normal[0]);
-        force_y = dV*D_s*(-p*phi_s_normal[1]);
+        //force_x = dV*D_s*(-p*phi_s_normal[0]);
+        //force_y = dV*D_s*(-p*phi_s_normal[1]);
 
         //force_x = dV*D_s;
         //force_y = dV*D_s;
