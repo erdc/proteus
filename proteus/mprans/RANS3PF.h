@@ -950,7 +950,7 @@ namespace proteus
 				    double* particle_netForces,
 				    double* particle_netMoments)
     {
-
+  
       double C,rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,D_s,phi_s,u_s,v_s,w_s,uav_s,vav_s,wav_s,force_x,force_y,force_z,r_x,r_y,r_z;
       double* phi_s_normal;
 
@@ -994,7 +994,7 @@ namespace proteus
 	force_y = dV*D_s*(p*phi_s_normal[1] + nu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1] + phi_s_normal[2]*grad_v[2]) + C_surf*(v-v_s)*rho);
 	force_z = dV*D_s*(p*phi_s_normal[2] + nu*(phi_s_normal[0]*grad_w[0] + phi_s_normal[1]*grad_w[1] + phi_s_normal[2]*grad_w[2]) + C_surf*(w-w_s)*rho);
 
-	//always 3D for particle forces
+        //always 3D for particle forces
 	particle_netForces[i*3+0] += force_x;
 	particle_netForces[i*3+1] += force_y;
 	particle_netForces[i*3+2] += force_z;

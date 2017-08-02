@@ -957,7 +957,7 @@ namespace proteus
 				    double* particle_netMoments,
 				    double* particle_surfaceArea)
     {
-      
+
       double C, rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,H_s,D_s,phi_s,u_s,v_s,w_s,force_x,force_y,r_x,r_y;
       double* phi_s_normal;
 
@@ -968,16 +968,14 @@ namespace proteus
 
       C = 0.0;
 
-      std::cout << "Number of particles: " << nParticles << std::endl;
-
       for (int i=0;i<nParticles;i++)
       {
 
 	phi_s = particle_signed_distances[i*sd_offset];
 	phi_s_normal = &particle_signed_distance_normals[i*sd_offset*nSpace];
 
-        phi_s_normal[0] /= sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1]);
-        phi_s_normal[1] /= sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1]);
+        //phi_s_normal[0] /= sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1]);
+        //phi_s_normal[1] /= sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1]);
 
         //always 3D for particle centroids 
         r_x = x - particle_centroids[i*3+0];
@@ -985,8 +983,6 @@ namespace proteus
 
 	u_s = particle_velocities[i*3+0] - r_y*particle_angular_velocities[i*3+2];
 	v_s = particle_velocities[i*3+1] + r_x*particle_angular_velocities[i*3+2];
-
-	//std::cout << "\n" << u_s << ", " << v_s << "\n" << std::endl;
 
 	H_s = smoothedHeaviside(eps_s, phi_s);
 	D_s = smoothedDirac(eps_s, phi_s);
@@ -1000,11 +996,11 @@ namespace proteus
 	
         C = (D_s*C_surf + (1.0 - H_s)*C_vol);
 	
-        //force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
-	//force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
+        force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
+	force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
 	
-        force_x = dV*D_s;
-        force_y = dV*D_s;
+        //force_x = dV*D_s;
+        //force_y = dV*D_s;
 
         //if (D_s > 0)
         //{

@@ -404,14 +404,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.particle_netMoments = np.zeros((self.nParticles,3),'d')
         self.particle_surfaceArea = np.zeros((self.nParticles,),'d')
         self.particle_velocities = np.zeros((self.nParticles,3),'d')
+        self.particle_angular_velocities = np.zeros((self.nParticles,3),'d')
         self.particle_centroids = np.zeros((self.nParticles,3),'d')
         self.particle_signed_distances=np.zeros((self.nParticles,)+self.model.q[('u',0)].shape,'d')
         self.particle_signed_distance_normals=np.zeros((self.nParticles,)+self.model.q[('velocity',0)].shape,'d')
-        for i,sdf in zip(range(self.nParticles),
-                         self.particle_sdfList):
+        for i in range(self.nParticles):
             for eN in range(self.model.q['x'].shape[0]):
                 for k in range(self.model.q['x'].shape[1]):
-                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(i, self.model.q['x'][eN,k])
+                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = self.particle_sdfList[0](i, self.model.q['x'][eN,k])
             self.model.q[('phis',i)] = self.particle_signed_distances[i]
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
@@ -880,11 +880,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self, t, firstStep=False):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
-        for i,sdf in zip(range(self.nParticles),
-                         self.particle_sdfList):
+        for i in range(self.nParticles):
             for eN in range(self.model.q['x'].shape[0]):
                 for k in range(self.model.q['x'].shape[1]):
-                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(i, self.model.q['x'][eN,k])
+                    self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = self.particle_sdfList[0](i, self.model.q['x'][eN,k])
         if self.model.comm.isMaster():
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
@@ -2023,6 +2022,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	    self.coefficients.particle_signed_distances,
 	    self.coefficients.particle_signed_distance_normals,
 	    self.coefficients.particle_velocities,
+            self.coefficients.particle_angular_velocities,
 	    self.coefficients.particle_centroids,
             self.coefficients.particle_netForces,
             self.coefficients.particle_netMoments,
@@ -2295,6 +2295,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	    self.coefficients.particle_signed_distances,
 	    self.coefficients.particle_signed_distance_normals,
 	    self.coefficients.particle_velocities,
+            self.coefficients.particle_angular_velocities,
 	    self.coefficients.particle_centroids,
             self.coefficients.particle_nitsche)
 
