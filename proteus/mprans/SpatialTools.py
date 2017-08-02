@@ -34,6 +34,7 @@ from proteus.mprans import BodyDynamics as bd
 from proteus.SpatialTools import (Shape,
                                   Cuboid,
                                   Sphere,
+                                  Cylinder,
                                   Rectangle,
                                   Circle,
                                   CustomShape,
@@ -317,6 +318,7 @@ class ShapeRANS(Shape):
 Rectangle.__bases__ = (ShapeRANS,)
 Cuboid.__bases__ = (ShapeRANS,)
 Sphere.__bases__ = (ShapeRANS,)
+Cylinder.__bases__ = (ShapeRANS,)
 CustomShape.__bases__ = (ShapeRANS,)
 ShapeSTL.__bases__ = (ShapeRANS,)
 Circle.__bases__ = (ShapeRANS,)  
@@ -633,7 +635,7 @@ class Tank3D(ShapeRANS):
         self.facetFlags = np.array(facetFlags)
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
-        self.volumes = np.array(volumes)
+        self.volumes = volumes
 
 
     def setAbsorptionZones(self, dragAlpha,allSponge=False,
@@ -1182,11 +1184,20 @@ class TankWithObstacles2D(Tank2D):
         Coordinates of the centroid of the shape.
     from_0: Optional[bool]
         If True (default), the tank extends from the origin to positive x, y, z
+    hole: Optional[bool]
+        If True (default), the obstacle of the tank is just an open hole at the 
+        bottom of the tank. If False, a segment at the bottom of the obstacle is
+        created to close the hole.
+    obstacle_regions: Optional[array_like]
+        To use only if hole=False.(x,y) coordinates of a point inside the 
+        obstacle in order to fill the obstacle with what should be inside 
+        (for example a porous material).
+        
     """
     def __init__(self, domain, dim=(0., 0.),
                  obstacles = None, special_boundaries = None,
                  full_circle = False,
-                 coords=None, from_0=True):
+                 coords=None, from_0=True, hole=True, obstacle_regions=None):
         if obstacles:
             self.obstacles = obstacles
         else:
@@ -1206,7 +1217,9 @@ class TankWithObstacles2D(Tank2D):
 
         self.corners = {'x-y-': False, 'x+y-': False,
                         'x+y+': False, 'x-y+': False}
-
+                        
+        self.hole = hole
+        self.obstacle_regions = obstacle_regions
         super(TankWithObstacles2D, self).__init__(domain, dim, coords, from_0)
 
     def _setupBCs(self):
@@ -1216,7 +1229,23 @@ class TankWithObstacles2D(Tank2D):
                 self.boundaryTags[boundary] = len(self.boundaryTags) + 1
                 self.BC[boundary] = self.BC_class(shape=self, name=boundary)
                 self.BC_list += [self.BC[boundary]]
-
+	# add boundaryTags
+        self.obstacle_flags = []
+        max_flag = 0
+        for tag, flag in self.boundaryTags.iteritems():
+            if flag > max_flag:
+                max_flag = flag
+        flag = max_flag+1
+        for i in range(len(self.obstacles)):
+            tag = 'obstacle'+str(i+1)
+            self.boundaryTags[tag] = flag
+            self.obstacle_flags += [flag]
+            self.BC[tag] = self.BC_class(shape=self, name=tag)
+            self.BC_list += [self.BC[tag]]
+            flag += 1
+        if self.hole is False:
+            assert len(self.obstacles) == len(self.obstacle_regions), 'must have same number of regions as obstacles'
+            
     def _resetEdgesFromVertices(self, vertices):
         """
         Resets self.x0, self.x1, self.y0, self.y1 based on the actual shape.
@@ -1380,7 +1409,7 @@ class TankWithObstacles2D(Tank2D):
         former_end = None
         first_start = None
 
-        for obstacle in self.obstacles:
+        for nb, obstacle in enumerate(self.obstacles):
             start = findLocation(obstacle[0])
             end = findLocation(obstacle[-1])
 
@@ -1398,9 +1427,14 @@ class TankWithObstacles2D(Tank2D):
                 vertexFlags += new_flags
 
             # ---- Obstacle ---- #
-            vertices += obstacle
-            vertexFlags += [self.boundaryTags[start]
-                            for i in range(len(obstacle))]
+            if self.hole is True:
+                vertices += obstacle
+                vertexFlags += [self.boundaryTags[start]
+                                for i in range(len(obstacle))]
+            elif self.hole is False:
+                 vertices += obstacle
+                 vertexFlags += [self.boundaryTags['obstacle'+str(nb+1)]
+                                 for i in range(len(obstacle))]
 
             # ---- Paperwork ---- #
             former_end = end
@@ -1499,7 +1533,12 @@ class TankWithObstacles2D(Tank2D):
                 return [self.boundaryTags['sponge'], ]
 
             else:
-                if vertexFlags[start] == self.boundaryTags['x+']:
+                if vertexFlags[start] in self.obstacle_flags:
+		    if vertexFlags[end] == vertexFlags[start]:
+		        return [vertexFlags[start], ]
+		    else:
+		        return [self.boundaryTags['y-'], ]
+                elif vertexFlags[start] == self.boundaryTags['x+']:
                     if vertexFlags[end] == self.boundaryTags['x-']:
                         return [self.boundaryTags['y+'], ]
                     else:
@@ -1555,6 +1594,12 @@ class TankWithObstacles2D(Tank2D):
         segments += [[len(vertices) - 1 - sponge_vertex_count, 0], ]
         segmentFlags += getSegmentFlag(len(vertices) - 1 - sponge_vertex_count,
                                        0)
+        if self.hole is False:
+            start_vertex_obstacle = 0
+            for obstacle in self.obstacles:
+                segments += [[start_vertex_obstacle, start_vertex_obstacle+(len(obstacle)-1)]]
+                segmentFlags += [self.boundaryTags['y-']]
+                start_vertex_obstacle += len(obstacle)
 
         # ---- Build Sponge Segments ---- #
         if self.spongeLayers['x-']:
@@ -1580,14 +1625,27 @@ class TankWithObstacles2D(Tank2D):
         return segments, segmentFlags
 
     def _constructRegions(self, vertices, vertexFlags, segments, segmentFlags):
+    
+        ind_region = 0
+        self.regionIndice = {}
+        regions = []
+        regionFlags = []
+        
+        if self.hole is False:
+            for i, region in enumerate(self.obstacle_regions):
+                regions = [[region[0], region[1]]]
+                ind_region += 1
+                regionFlags = [ind_region,]
+                self.regionIndice['obstacle'+str(i+1)] = ind_region-1
+            
         if True in self.corners.values():
-            regions = self._getCornerRegion()
+            regions += self._getCornerRegion()
         else:
-            regions = self._getRandomRegion(vertices, segments)
+            regions += self._getRandomRegion(vertices, segments)
 
-        ind_region = 1
-        regionFlags = [ind_region,]
-        self.regionIndice = {'tank': ind_region - 1}
+        ind_region += 1
+        regionFlags += [ind_region]
+        self.regionIndice['tank']= ind_region - 1
 
         sponge_half_height_x0 = 0.5 * (self.x0y0[1] + self.x0y1[1])
         sponge_half_height_x1 = 0.5 * (self.x1y0[1] + self.x1y1[1])
