@@ -379,7 +379,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   else
     in = ma::configure(m, size_iso);
   ma::validateInput(in);
-  in->shouldRunPreZoltan = true;
+  in->shouldRunPreZoltan = false;
+  in->shouldRunPreParma = true;
   in->shouldRunMidParma = true;
   in->shouldRunPostParma = true;
   in->maximumImbalance = 1.05;
