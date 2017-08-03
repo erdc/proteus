@@ -192,7 +192,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
                     self.u_dof_stage[ci][self.lstage][:] += 1.0/3.0*self.u_dof_last[ci]
                     #switch  time history back
                     #mwf TODO this needs to be fixed for multipcomponent
-                    self.transport.u[ci].dof = numpy.copy(self.u_dof_stage[ci][self.lstage])
+                    self.transport.u[ci].dof[:] = numpy.copy(self.u_dof_stage[ci][self.lstage])
                     self.m_last[ci] = numpy.copy(self.m_last_save[ci])
                     tmp_dof_stage = self.u_dof_stage[ci][self.lstage].copy()
                     self.u_dof_stage[ci][self.lstage][:] = self.u_dof_last[ci]
