@@ -271,17 +271,13 @@ class BC_RANS(BC_Base):
         self.reset()
 
         wf = wall
-        self.u_dirichlet.uOfXT = lambda x, t: wf.get_u_dirichlet(x, t)
-        self.v_dirichlet.uOfXT = lambda x, t: wf.get_v_dirichlet(x, t)
-        self.w_dirichlet.uOfXT = lambda x, t: wf.get_w_dirichlet(x, t)
-        self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)
         self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t) 
         self.vof_advective.setConstantBC(0.)
         self.p_advective.setConstantBC(0.)
         self.u_diffusive.uOfXT = lambda x, t: wf.get_u_diffusive(x, t)
         self.v_diffusive.uOfXT = lambda x, t: wf.get_v_diffusive(x, t)
         self.w_diffusive.uOfXT = lambda x, t: wf.get_w_diffusive(x, t)
-        #self.k_diffusive.setConstantBC(0.) 
+        self.k_diffusive.setConstantBC(0.) 
 
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
@@ -1312,7 +1308,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         # get nearest node on each processor
         #comm.barrier()
         self.u = self.model.levelModelList[0].u
-        Profiling.logEvent('self.u --> %s ' % self.u)
+        #Profiling.logEvent('self.u --> %s ' % self.u)
         self.femSpace_velocity = self.u[1].femSpace
         #Profiling.logEvent('self.femSpace_velocity --> %s ' % self.femSpace_velocity)
         nodes_kdtree = spatial.cKDTree(self.model.levelModelList[0].mesh.nodeArray)
@@ -1372,14 +1368,17 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         else:
             relax=0.5
             while rank is None:
-                logEvent("Wall Function trying to find element to extrapolate velocity")
+                #logEvent("Wall Function trying to find element to extrapolate velocity")
                 coords_relax = self.setYplusNormalDirection(x,t, relax)
                 xi, element, rank = self.findElementContainingCoords(coords_relax)
                 relax*=0.5
+                #logEvent('coords_relax --> %s' % coords_relax)
             #just use the element containing the boundary quadrature point to interpolate to the y+ point
             u, v, w = self.getFluidVelocityLocalCoords(self.femSpace_velocity.elementMaps.getInverseValue(element, coords),
                                                        element,
                                                        rank)
+        #logEvent('coords --> %s' % coords)
+        #logEvent('uExtract --> %s' % u)
         return u, v, w
         
     def tangentialVelocity(self, x, t, uInit=None):
@@ -1429,7 +1428,10 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
                 if self.Yplus[i]>0. :
                     self.Ubound[i] = self.ut[i] * np.log(E*self.Yplus[i]) / self.K
         self.utAbs = np.sqrt(np.sum(self.ut**2))       
-        self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu)   
+        self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu) 
+        logEvent('ut --> %s' % self.ut)  
+        #logEvent('y+ --> %s' % self.Yplus)
+        #logEvent('cf --> %s' % self.cf)
 
     def get_u_dirichlet(self, x, t):
         if t<0.: uInit = True
@@ -1437,6 +1439,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)    
         U = self.Ubound[0]
+        #logEvent('u --> %s' % U)
         return U 
         
     def get_v_dirichlet(self, x, t):
@@ -1445,6 +1448,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)    
         U = self.Ubound[1]
+        #logEvent('v --> %s' % U)
         return U 
  
     def get_w_dirichlet(self, x, t):
@@ -1453,13 +1457,15 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)    
         U = self.Ubound[2]
+        #logEvent('w --> %s' % U)
         return U 
 
     def get_k_dirichlet(self, x, t):
         if t<0.: uInit = True
         else: uInit = False
         self.tangentialVelocity(x,t,uInit)
-        self.getVariables(x, t)  
+        self.getVariables(x, t) 
+        #logEvent('kappa --> %s' % self.kappa) 
         return self.kappa 
 
     def get_dissipation_dirichlet(self, x, t):
@@ -1470,6 +1476,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         d = 0.
         if self.turbModel == 'ke': d = (self.utAbs**3)/(self.K*self.Y)
         elif self.turbModel == 'kw' and self.kappa>0.: d = (self.utAbs**3)/(self.K*self.Y)/self.kappa
+        #logEvent('dissipation --> %s' % d)
         return d 
 
     def get_u_diffusive(self, x, t):
