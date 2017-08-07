@@ -1914,6 +1914,7 @@ def assembleAuxiliaryVariables(domain):
             wall = shape.auxiliaryVariables['WallFunction']
             for ii in range(len(wall)):
                 aux['twp'] += [wall[ii]]
+                logEvent('WALL ATTACHED TO AUXVAR --> %s' % wall[ii])
         # ----------------------------
         # ABSORPTION/GENERATION ZONES
 
