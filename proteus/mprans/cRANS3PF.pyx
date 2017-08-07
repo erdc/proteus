@@ -196,6 +196,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* particle_centroids,
                                double* particle_netForces,
                                double* particle_netMoments,
+                               double* particle_surfaceArea,
                                double particle_nitsche)
 
         void calculateJacobian(double * mesh_trial_ref,
@@ -649,6 +650,7 @@ cdef class RANS3PF:
                           numpy.ndarray particle_centroids,
                           numpy.ndarray particle_netForces,
                           numpy.ndarray particle_netMoments,
+                          numpy.ndarray particle_surfaceArea,
                           double particle_nitsche):
 
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
@@ -823,6 +825,7 @@ cdef class RANS3PF:
                                         < double* > particle_centroids.data,
                                         < double* > particle_netForces.data,
                                         < double* > particle_netMoments.data,
+                                        < double* > particle_surfaceArea.data,
                                         particle_nitsche)
 
     def calculateJacobian(self,
