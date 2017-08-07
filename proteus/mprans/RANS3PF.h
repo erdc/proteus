@@ -220,6 +220,7 @@ namespace proteus
 				   double* particle_centroids,
 				   double* particle_netForces,
 				   double* particle_netMoments,
+                                   double* particle_surfaceArea,
 				   double particle_nitsche)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
@@ -948,7 +949,8 @@ namespace proteus
 				    double& mom_w_ham,
 				    double dmom_w_ham_grad_w[nSpace],
 				    double* particle_netForces,
-				    double* particle_netMoments)
+				    double* particle_netMoments,
+                                    double* particle_surfaceArea)
     {
   
       double C,rho, mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,D_s,phi_s,u_s,v_s,w_s,uav_s,vav_s,wav_s,force_x,force_y,force_z,r_x,r_y,r_z;
@@ -995,6 +997,7 @@ namespace proteus
 	force_z = dV*D_s*(p*phi_s_normal[2] + nu*(phi_s_normal[0]*grad_w[0] + phi_s_normal[1]*grad_w[1] + phi_s_normal[2]*grad_w[2]) + C_surf*(w-w_s)*rho);
 
         //always 3D for particle forces
+        particle_surfaceArea[i] += dV*D_s;
 	particle_netForces[i*3+0] += force_x;
 	particle_netForces[i*3+1] += force_y;
 	particle_netForces[i*3+2] += force_z;
@@ -1793,6 +1796,7 @@ namespace proteus
 			   double* particle_centroids,
 			   double* particle_netForces,
 			   double* particle_netMoments,
+                           double* particle_surfaceArea,
 			   double particle_nitsche)
     {
       //
@@ -2178,8 +2182,9 @@ namespace proteus
 					 dmom_v_ham_grad_v,
 					 mom_w_ham,
 					 dmom_w_ham_grad_w,
-					 particle_netForces,
-					 particle_netMoments);
+					 particle_netForces,        
+					 particle_netMoments,
+                                         particle_surfaceArea);
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -3512,7 +3517,7 @@ namespace proteus
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
       //
-      std::valarray<double> particle_netForces(nParticles*3), particle_netMoments(nParticles*3);
+      std::valarray<double> particle_surfaceArea(nParticles), particle_netForces(nParticles*3), particle_netMoments(nParticles*3);
       const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
       for(int eN=0;eN<nElements_global;eN++)
 	{
@@ -3916,7 +3921,8 @@ namespace proteus
 					 mom_w_ham,
 					 dmom_w_ham_grad_w,
 					 &particle_netForces[0],
-					 &particle_netMoments[0]);
+					 &particle_netMoments[0],
+                                         &particle_surfaceArea[0]);
 	      
               //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
