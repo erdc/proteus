@@ -302,6 +302,8 @@ class OneLevelTransport(NonlinearEquation):
         #is just for convenience so that the input doesn't have to be
         #complete)
         #
+        self._elementQuadrature = elementQuadrature
+        self._elementBoundaryQuadrature = elementBoundaryQuadrature
         elementQuadratureDict={}
         elemQuadIsDict = isinstance(elementQuadrature,dict)
         if elemQuadIsDict: #set terms manually

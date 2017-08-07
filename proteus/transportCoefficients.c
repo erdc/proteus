@@ -12620,3 +12620,59 @@ void calculateWaveFunction3d_ref(//mesh rep
 /*   *dy = (yv[index+1]-yv[index])/(xv[index+1]-xv[index]);  */
 /*   *start = index; */
 /* } */
+
+void Mass_2D_Evaluate(const int nPoints,
+		      double rho,
+		      double *p,
+		      double *u,
+		      double *v,
+		      double *mom_p_acc,
+		      double *mom_u_acc,
+		      double *mom_v_acc,
+		      double *dmom_p_acc_p,
+		      double *dmom_u_acc_u,
+		      double *dmom_v_acc_v)
+{
+  int k;
+  for (k=0; k<nPoints; k++){
+    mom_p_acc[k] = p[k];
+    dmom_p_acc_p[k] = 1.0;
+
+    mom_u_acc[k] = u[k];
+    dmom_u_acc_u[k] = 1.0;
+
+    mom_v_acc[k] = v[k];
+    dmom_v_acc_v[k] = 1.0;
+  }
+}
+		
+void Mass_3D_Evaluate(const int nPoints,
+		      double rho,
+		      double *p,
+		      double *u,
+		      double *v,
+		      double *w,
+		      double *mom_p_acc,
+		      double *mom_u_acc,
+		      double *mom_v_acc,
+		      double *mom_w_acc,
+		      double *dmom_p_acc_p,
+		      double *dmom_u_acc_u,
+		      double *dmom_v_acc_v,
+		      double *dmom_w_acc_w)
+{
+  int k;
+  for (k=0; k<nPoints; k++){
+    mom_p_acc[k] = p[k];
+    dmom_p_acc_p[k] = 1.0;
+
+    mom_u_acc[k] = u[k];
+    dmom_u_acc_u[k] = 1.0;
+
+    mom_v_acc[k] = v[k];
+    dmom_v_acc_v[k] = 1.0;
+
+    mom_w_acc[k] = w[k];
+    dmom_w_acc_w[k] = 1.0;
+  }
+}
