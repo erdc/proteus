@@ -7,6 +7,7 @@ cdef extern from "MoveMesh2D.h" namespace "proteus":
     cdef cppclass MoveMesh2D_base:
         void calculateResidual(double* detJ_last_view,
                                double* detJ0_view,
+                               double* E_view,
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -56,6 +57,7 @@ cdef extern from "MoveMesh2D.h" namespace "proteus":
 			       
         void calculateJacobian(double* detJ_last_view,
                                double* detJ0_view,
+                               double* E_view,
                                double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -121,8 +123,6 @@ cdef extern from "MoveMesh2D.h" namespace "proteus":
 
 cdef class cMoveMesh2D_base:
     cdef MoveMesh2D_base* thisptr
-    cdef double[:] detJ_last_view
-    cdef double[:] detJ0_view
     def __cinit__(self,
                   int nSpaceIn,
                   int nQuadraturePoints_elementIn,
@@ -143,6 +143,7 @@ cdef class cMoveMesh2D_base:
     def calculateResidual(self,
                           double[:] detJ_last_view,
                           double[:] detJ0_view,
+                          double[:] E_view,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
@@ -191,6 +192,7 @@ cdef class cMoveMesh2D_base:
                           numpy.ndarray ebqe_bc_stressFlux_w_ext):
         self.thisptr.calculateResidual(&detJ_last_view[0],
                                        &detJ0_view[0],
+                                       &E_view[0],
                                         <double*>mesh_trial_ref.data,
                                         <double*>mesh_grad_trial_ref.data,
                                         <double*>mesh_dof.data,
@@ -240,6 +242,7 @@ cdef class cMoveMesh2D_base:
     def calculateJacobian(self,
                           double[:] detJ_last_view,
                           double[:] detJ0_view,
+                          double[:] E_view,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
@@ -298,6 +301,7 @@ cdef class cMoveMesh2D_base:
         (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(&detJ_last_view[0],
                                        &detJ0_view[0],
+                                       &E_view[0],
                                        <double*>mesh_trial_ref.data,
                                         <double*>mesh_grad_trial_ref.data,
                                         <double*>mesh_dof.data,
