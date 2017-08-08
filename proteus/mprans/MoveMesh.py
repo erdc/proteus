@@ -348,7 +348,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe={}
         self.phi_ip={}
         #mesh
+
         self.ebqe['x'] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+        self.q['x'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
         self.q['bodyForce'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.ebqe[('u',0)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebqe[('u',1)] = np.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
@@ -363,7 +365,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
         self.tensors_elementBoundaryQuadrature= set()
-        self.q['E'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.q['E'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         #
         #show quadrature
         #
@@ -528,6 +530,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.detJ0_array = np.zeros(self.mesh.nElements_global)
         self.E_array_notflat = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.E_array = np.zeros(self.mesh.nElements_global*self.nQuadraturePoints_element,'d')
+        self.q['E'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -716,6 +719,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         This function should be called only when the mesh changes.
         """
+        self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
+                                                        self.q['x'])
         self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
@@ -764,6 +769,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stored_detJ0 is False:
             self.detJ0_array = self.detJ_last_array.copy()
             self.stored_detJ0 = True
+        for eN in range(len(self.q['E'])):
+            for k in range(len(self.q['E'][eN])):
+                self.q['E'][eN, k] = self.E_array[eN*self.nQuadraturePoints_element+k]
+
         # print("detJ0", self.detJ0_array)
         # print("detJ", self.detJ_last_array)
         # print("equal", np.array_equal(self.detJ0_array, self.detJ_last_array))
