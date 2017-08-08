@@ -528,9 +528,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         self.detJ_last_array = np.zeros(self.mesh.nElements_global)
         self.detJ0_array = np.zeros(self.mesh.nElements_global)
-        self.E_array_notflat = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.distortion_last_array = np.zeros(self.mesh.nElements_global*self.nQuadraturePoints_element,'d')
+        self.dilation_last_array = np.zeros(self.mesh.nElements_global*self.nQuadraturePoints_element,'d')
+        self.distortion0_array = np.zeros(self.mesh.nElements_global*self.nQuadraturePoints_element,'d')
         self.E_array = np.zeros(self.mesh.nElements_global*self.nQuadraturePoints_element,'d')
         self.q['E'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q['distortion'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q['dilation'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -561,6 +565,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.detJ_last_array,
             self.detJ0_array,
             self.E_array,
+            self.dilation_last_array,
+            self.distortion_last_array,
+            self.distortion0_array,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -639,6 +646,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.detJ_last_array,
             self.detJ0_array,
             self.E_array,
+            self.dilation_last_array,
+            self.distortion_last_array,
+            self.distortion0_array,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -768,10 +778,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def postStep(self):
         if self.stored_detJ0 is False:
             self.detJ0_array = self.detJ_last_array.copy()
+            self.distortion0_array = self.distortion_last_array.copy()
             self.stored_detJ0 = True
-        for eN in range(len(self.q['E'])):
-            for k in range(len(self.q['E'][eN])):
-                self.q['E'][eN, k] = self.E_array[eN*self.nQuadraturePoints_element+k]
 
         # print("detJ0", self.detJ0_array)
         # print("detJ", self.detJ_last_array)
@@ -789,3 +797,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[cj].femSpace.updateInterpolationPoints()
             for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                 self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN] = self.mesh.nodeArray[dofN]
+        for eN in range(len(self.q['x'])):
+            self.q['E'][eN][:] = self.E_array[eN*self.nQuadraturePoints_element:eN*self.nQuadraturePoints_element+self.nQuadraturePoints_element]
+            self.q['distortion'][eN][:] = self.distortion_last_array[eN*self.nQuadraturePoints_element:eN*self.nQuadraturePoints_element+self.nQuadraturePoints_element]
+            self.q['dilation'][eN][:] = self.dilation_last_array[eN*self.nQuadraturePoints_element:eN*self.nQuadraturePoints_element+self.nQuadraturePoints_element]
