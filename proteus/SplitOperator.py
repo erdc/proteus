@@ -846,7 +846,7 @@ class SequentialNotInOrder_MinFLCBDFModelStep(Sequential_MinFLCBDFModelStep):
     #mwf hack set list for testing
     def __init__(self,modelList,modelSequenceList=[1],system=defaultSystem,stepExact=False):
         Sequential_MinFLCBDFModelStep.__init__(self,modelList,system=system,stepExact=stepExact)
-        if modelSequenceList == None:
+        if modelSequenceList is None:
             self.modelSequenceList = [i for i in range(len(modelList))]
         else:
             self.modelSequenceList = modelSequenceList
@@ -902,7 +902,7 @@ class SequentialNotInOrder_MinAdaptiveModelStep(Sequential_MinAdaptiveModelStep)
     #mwf hack set default list for testing
     def __init__(self,modelList,modelSequenceList=[1],system=defaultSystem,stepExact=False):
         Sequential_MinAdaptiveModelStep.__init__(self,modelList,system=system,stepExact=stepExact)
-        if modelSequenceList == None:
+        if modelSequenceList is None:
             self.modelSequenceList = [i for i in range(len(modelList))]
         else:
             self.modelSequenceList = modelSequenceList
