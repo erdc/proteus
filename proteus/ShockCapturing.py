@@ -187,7 +187,7 @@ class ResGradDelayLag_SC(ResGrad_SC):
             if self.lag:
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-            elif self.lag == False and self.nStepsToDelay != None:
+            elif self.lag == False and self.nStepsToDelay is not None:
                 self.cq_numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(cq[('numDiff',ci,ci)])
             else:
@@ -214,7 +214,7 @@ class ResGradDelayLag_SC(ResGrad_SC):
         if self.lag:
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             self.lag = True
             self.numDiff = []
             self.numDiff_last=[]
@@ -236,7 +236,7 @@ class ResGradQuadDelayLag_SC(ResGradQuad_SC):
             if self.lag:
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-            elif self.lag == False and self.nStepsToDelay != None:
+            elif self.lag == False and self.nStepsToDelay is not None:
                 self.numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
             else:
@@ -253,7 +253,7 @@ class ResGradQuadDelayLag_SC(ResGradQuad_SC):
         if self.lag:
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             self.lag = True
             self.numDiff=[]
             for ci in range(self.nc):
@@ -288,7 +288,7 @@ class NavierStokes_SC(ResGradQuad_SC):
             if self.lag:
                 self.numDiff_last[ci]=cq[('numDiff',ci,ci)]
                 self.numDiff[ci]=numpy.zeros(cq[('u',ci)].shape,'d')
-            elif self.lag == False and self.nStepsToDelay != None:
+            elif self.lag == False and self.nStepsToDelay is not None:
                 self.cq_numDiff[ci]=cq[('numDiff',ci,ci)]
                 self.numDiff[ci]=cq[('numDiff',ci,ci)]
             else:
@@ -298,7 +298,7 @@ class NavierStokes_SC(ResGradQuad_SC):
         if self.lag:
             for ci in range(1,self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             self.lag = True
             self.numDiff = []
             self.numDiff_last=[]
@@ -357,7 +357,7 @@ class ResGradFFDarcyDelayLag_SC(ResGradFFDarcy_SC):
             if self.lag:
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-            elif self.lag == False and self.nStepsToDelay != None:
+            elif self.lag == False and self.nStepsToDelay is not None:
                 self.cq_numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(cq[('numDiff',ci,ci)])
             else:
@@ -367,7 +367,7 @@ class ResGradFFDarcyDelayLag_SC(ResGradFFDarcy_SC):
         if self.lag:
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             self.lag = True
             self.numDiff = []
             self.numDiff_last=[]

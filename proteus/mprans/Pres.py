@@ -1,6 +1,5 @@
 import proteus
 import numpy
-cimport numpy
 from proteus import *
 from proteus.Transport import *
 from proteus.Transport import OneLevelTransport
@@ -17,280 +16,19 @@ from proteus.Transport import OneLevelTransport
 from proteus.TransportCoefficients import TC_base
 from proteus.SubgridError import SGE_base
 from proteus.ShockCapturing import ShockCapturing_base
+import cPres
 
-cdef extern from "mprans/Pres.h" namespace "proteus":
-    cdef cppclass cppPres_base:
-        void calculateResidual(double * mesh_trial_ref,
-                               double * mesh_grad_trial_ref,
-                               double * mesh_dof,
-                               int * mesh_l2g,
-                               double * dV_ref,
-                               double * u_trial_ref,
-                               double * u_grad_trial_ref,
-                               double * u_test_ref,
-                               double * u_grad_test_ref,
-                               double * mesh_trial_trace_ref,
-                               double * mesh_grad_trial_trace_ref,
-                               double * dS_ref,
-                               double * u_trial_trace_ref,
-                               double * u_grad_trial_trace_ref,
-                               double * u_test_trace_ref,
-                               double * u_grad_test_trace_ref,
-                               double * normal_ref,
-                               double * boundaryJac_ref,
-                               int nElements_global,
-                               double useMetrics,
-                               double epsFactHeaviside,
-                               double epsFactDirac,
-                               double epsFactDiffusion,
-                               int * u_l2g,
-                               double * elementDiameter,
-                               double * nodeDiametersArray,
-                               double * u_dof,
-                               double * q_phi,
-                               double * q_normal_phi,
-                               double * ebqe_phi,
-                               double * ebqe_normal_phi,
-                               double * q_H,
-                               double * q_u,
-                               double * q_n,
-                               double * ebqe_u,
-                               double * ebqe_n,
-                               double * q_r,
-                               double * q_vos,
-                               int offset_u, int stride_u,
-                               double * globalResidual,
-                               int nExteriorElementBoundaries_global,
-                               int * exteriorElementBoundariesArray,
-                               int * elementBoundaryElementsArray,
-                               int * elementBoundaryLocalElementBoundariesArray)
-        void calculateJacobian(double * mesh_trial_ref,
-                               double * mesh_grad_trial_ref,
-                               double * mesh_dof,
-                               int * mesh_l2g,
-                               double * dV_ref,
-                               double * u_trial_ref,
-                               double * u_grad_trial_ref,
-                               double * u_test_ref,
-                               double * u_grad_test_ref,
-                               double * mesh_trial_trace_ref,
-                               double * mesh_grad_trial_trace_ref,
-                               double * dS_ref,
-                               double * u_trial_trace_ref,
-                               double * u_grad_trial_trace_ref,
-                               double * u_test_trace_ref,
-                               double * u_grad_test_trace_ref,
-                               double * normal_ref,
-                               double * boundaryJac_ref,
-                               int nElements_global,
-                               double useMetrics,
-                               double epsFactHeaviside,
-                               double epsFactDirac,
-                               double epsFactDiffusion,
-                               int * u_l2g,
-                               double * elementDiameter,
-                               double * nodeDiametersArray,
-                               double * u_dof,
-                               double * q_phi,
-                               double * q_normal_phi,
-                               double * q_H,
-                               double * q_vos,
-                               int * csrRowIndeces_u_u, int * csrColumnOffsets_u_u,
-                               double * globalJacobian)
-    cppPres_base * newPres(int nSpaceIn,
-                                 int nQuadraturePoints_elementIn,
-                                 int nDOF_mesh_trial_elementIn,
-                                 int nDOF_trial_elementIn,
-                                 int nDOF_test_elementIn,
-                                 int nQuadraturePoints_elementBoundaryIn,
-                                 int CompKernelFlag)
-
-cdef class Pres:
-    cdef cppPres_base * thisptr
-
-    def __cinit__(self,
-                  int nSpaceIn,
-                  int nQuadraturePoints_elementIn,
-                  int nDOF_mesh_trial_elementIn,
-                  int nDOF_trial_elementIn,
-                  int nDOF_test_elementIn,
-                  int nQuadraturePoints_elementBoundaryIn,
-                  int CompKernelFlag):
-        self.thisptr = newPres(nSpaceIn,
-                                  nQuadraturePoints_elementIn,
-                                  nDOF_mesh_trial_elementIn,
-                                  nDOF_trial_elementIn,
-                                  nDOF_test_elementIn,
-                                  nQuadraturePoints_elementBoundaryIn,
-                                  CompKernelFlag)
-
-    def __dealloc__(self):
-        del self.thisptr
-
-    def calculateResidual(self,
-                          numpy.ndarray mesh_trial_ref,
-                          numpy.ndarray mesh_grad_trial_ref,
-                          numpy.ndarray mesh_dof,
-                          numpy.ndarray mesh_l2g,
-                          numpy.ndarray dV_ref,
-                          numpy.ndarray u_trial_ref,
-                          numpy.ndarray u_grad_trial_ref,
-                          numpy.ndarray u_test_ref,
-                          numpy.ndarray u_grad_test_ref,
-                          numpy.ndarray mesh_trial_trace_ref,
-                          numpy.ndarray mesh_grad_trial_trace_ref,
-                          numpy.ndarray dS_ref,
-                          numpy.ndarray u_trial_trace_ref,
-                          numpy.ndarray u_grad_trial_trace_ref,
-                          numpy.ndarray u_test_trace_ref,
-                          numpy.ndarray u_grad_test_trace_ref,
-                          numpy.ndarray normal_ref,
-                          numpy.ndarray boundaryJac_ref,
-                          int nElements_global,
-                          double useMetrics,
-                          double epsFactHeaviside,
-                          double epsFactDirac,
-                          double epsFactDiffusion,
-                          numpy.ndarray u_l2g,
-                          numpy.ndarray elementDiameter,
-                          numpy.ndarray nodeDiametersArray,
-                          numpy.ndarray u_dof,
-                          numpy.ndarray q_phi,
-                          numpy.ndarray q_normal_phi,
-                          numpy.ndarray ebqe_phi,
-                          numpy.ndarray ebqe_normal_phi,
-                          numpy.ndarray q_H,
-                          numpy.ndarray q_u,
-                          numpy.ndarray q_n,
-                          numpy.ndarray ebqe_u,
-                          numpy.ndarray ebqe_n,
-                          numpy.ndarray q_r,
-                          numpy.ndarray q_vos,
-                          int offset_u,
-                          int stride_u,
-                          numpy.ndarray globalResidual,
-                          int nExteriorElementBoundaries_global,
-                          numpy.ndarray exteriorElementBoundariesArray,
-                          numpy.ndarray elementBoundaryElementsArray,
-                          numpy.ndarray elementBoundaryLocalElementBoundariesArray):
-        self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
-                                       < double * > mesh_grad_trial_ref.data,
-                                       < double * > mesh_dof.data,
-                                       < int * > mesh_l2g.data,
-                                       < double * > dV_ref.data,
-                                       < double * > u_trial_ref.data,
-                                       < double * > u_grad_trial_ref.data,
-                                       < double * > u_test_ref.data,
-                                       < double * > u_grad_test_ref.data,
-                                       < double * > mesh_trial_trace_ref.data,
-                                       < double * > mesh_grad_trial_trace_ref.data,
-                                       < double * > dS_ref.data,
-                                       < double * > u_trial_trace_ref.data,
-                                       < double * > u_grad_trial_trace_ref.data,
-                                       < double * > u_test_trace_ref.data,
-                                       < double * > u_grad_test_trace_ref.data,
-                                       < double * > normal_ref.data,
-                                       < double * > boundaryJac_ref.data,
-                                       nElements_global,
-                                       useMetrics,
-                                       epsFactHeaviside,
-                                       epsFactDirac,
-                                       epsFactDiffusion,
-                                       < int * > u_l2g.data,
-                                       < double * > elementDiameter.data,
-                                       < double * > nodeDiametersArray.data,
-                                       < double * > u_dof.data,
-                                       < double * > q_phi.data,
-                                       < double * > q_normal_phi.data,
-                                       < double * > ebqe_phi.data,
-                                       < double * > ebqe_normal_phi.data,
-                                       < double * > q_H.data,
-                                       < double * > q_u.data,
-                                       < double * > q_n.data,
-                                       < double * > ebqe_u.data,
-                                       < double * > ebqe_n.data,
-                                       < double * > q_r.data,
-                                       < double * > q_vos.data,
-                                       offset_u,
-                                       stride_u,
-                                       < double * > globalResidual.data,
-                                       nExteriorElementBoundaries_global,
-                                       < int * > exteriorElementBoundariesArray.data,
-                                       < int * > elementBoundaryElementsArray.data,
-                                       < int * > elementBoundaryLocalElementBoundariesArray.data)
-
-    def calculateJacobian(self,
-                          numpy.ndarray mesh_trial_ref,
-                          numpy.ndarray mesh_grad_trial_ref,
-                          numpy.ndarray mesh_dof,
-                          numpy.ndarray mesh_l2g,
-                          numpy.ndarray dV_ref,
-                          numpy.ndarray u_trial_ref,
-                          numpy.ndarray u_grad_trial_ref,
-                          numpy.ndarray u_test_ref,
-                          numpy.ndarray u_grad_test_ref,
-                          numpy.ndarray mesh_trial_trace_ref,
-                          numpy.ndarray mesh_grad_trial_trace_ref,
-                          numpy.ndarray dS_ref,
-                          numpy.ndarray u_trial_trace_ref,
-                          numpy.ndarray u_grad_trial_trace_ref,
-                          numpy.ndarray u_test_trace_ref,
-                          numpy.ndarray u_grad_test_trace_ref,
-                          numpy.ndarray normal_ref,
-                          numpy.ndarray boundaryJac_ref,
-                          int nElements_global,
-                          double useMetrics,
-                          double epsFactHeaviside,
-                          double epsFactDirac,
-                          double epsFactDiffusion,
-                          numpy.ndarray u_l2g,
-                          numpy.ndarray elementDiameter,
-                          numpy.ndarray nodeDiametersArray,
-                          numpy.ndarray u_dof,
-                          numpy.ndarray q_phi,
-                          numpy.ndarray q_normal_phi,
-                          numpy.ndarray q_H,
-                          numpy.ndarray q_vos,
-                          numpy.ndarray csrRowIndeces_u_u,
-                          numpy.ndarray csrColumnOffsets_u_u,
-                          globalJacobian):
-        cdef numpy.ndarray rowptr, colind, globalJacobian_a
-        (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
-        self.thisptr.calculateJacobian( < double*> mesh_trial_ref.data,
-                                       < double * > mesh_grad_trial_ref.data,
-                                       < double * > mesh_dof.data,
-                                       < int * > mesh_l2g.data,
-                                       < double * > dV_ref.data,
-                                       < double * > u_trial_ref.data,
-                                       < double * > u_grad_trial_ref.data,
-                                       < double * > u_test_ref.data,
-                                       < double * > u_grad_test_ref.data,
-                                       < double * > mesh_trial_trace_ref.data,
-                                       < double * > mesh_grad_trial_trace_ref.data,
-                                       < double * > dS_ref.data,
-                                       < double * > u_trial_trace_ref.data,
-                                       < double * > u_grad_trial_trace_ref.data,
-                                       < double * > u_test_trace_ref.data,
-                                       < double * > u_grad_test_trace_ref.data,
-                                       < double * > normal_ref.data,
-                                       < double * > boundaryJac_ref.data,
-                                       nElements_global,
-                                       useMetrics,
-                                       epsFactHeaviside,
-                                       epsFactDirac,
-                                       epsFactDiffusion,
-                                       < int * > u_l2g.data,
-                                       < double * > elementDiameter.data,
-                                       < double * > nodeDiametersArray.data,
-                                       < double * > u_dof.data,
-                                       < double * > q_phi.data,
-                                       < double * > q_normal_phi.data,
-                                       < double * > q_H.data,
-                                       < double * > q_vos.data,
-                                       < int * > csrRowIndeces_u_u.data,
-                                       < int * > csrColumnOffsets_u_u.data,
-                                       < double * > globalJacobian_a.data)
-
+class NumericalFlux(proteus.NumericalFlux.ConstantAdvection_exterior):
+    def __init__(self,
+                 vt,
+                 getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions):
+        proteus.NumericalFlux.ConstantAdvection_exterior.__init__(self,
+                                                                  vt,getPointwiseBoundaryConditions,
+                                                                  getAdvectiveFluxBoundaryConditions,
+                                                                  getDiffusiveFluxBoundaryConditions)
+        
 class Coefficients(TC_base):
     r"""
     The coefficients for pressure solution
@@ -355,6 +93,7 @@ class Coefficients(TC_base):
         Give the TC object access to the element quadrature storage
         """
         cq[('u_last',0)] = cq[('u',0)].copy()
+        self.q_massFlux = cq[('grad(u)',0)].copy()
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         """
         Give the TC object access to the element boundary quadrature storage
@@ -366,6 +105,7 @@ class Coefficients(TC_base):
         Give the TC object access to the exterior element boundary quadrature storage
         """
         cebqe[('u_last',0)] = cebqe[('u',0)].copy()
+        self.ebqe_massFlux = cebqe[('grad(u)',0)].copy()
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
         """
         Give the TC object access to the generalized interpolation point storage. These points are used  to project nonlinear potentials (phi).
@@ -375,6 +115,20 @@ class Coefficients(TC_base):
         """
         Give the TC object an opportunity to modify itself before the time step.
         """
+        self.q_massFlux[:] = self.fluidModel.q[('velocity',0)]
+        np.multiply(self.fluidModel.coefficients.q_rho[:,:,np.newaxis],
+                    self.q_massFlux,
+                    out=self.q_massFlux)
+        np.multiply(self.fluidModel.coefficients.q_nu[:,:,np.newaxis],
+                    self.q_massFlux,
+                    out=self.q_massFlux)
+        self.ebqe_massFlux[:] = self.fluidModel.ebqe[('velocity',0)]
+        np.multiply(self.fluidModel.coefficients.ebqe_rho[:,:,np.newaxis],
+                    self.ebqe_massFlux,
+                    out=self.ebqe_massFlux)
+        np.multiply(self.fluidModel.coefficients.ebqe_nu[:,:,np.newaxis],
+                    self.ebqe_massFlux,
+                    out=self.ebqe_massFlux)
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
@@ -450,8 +204,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  name='defaultName',
                  reuse_trial_and_test_quadrature=True,
                  sd=True,
-                 movingDomain=False):  # ,
-        self.useConstantH = coefficients.useConstantH
+                 movingDomain=False):
         from proteus import Comm
         #
         # set the objects describing the method and boundary conditions
@@ -657,8 +410,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 4)
             elif self.nSpace_global == 1:
                 assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 1)
-
-        # pdb.set_trace()
         #
         # simplified allocations for test==trial and also check if space is mixed or not
         #
@@ -669,6 +420,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi_ip = {}
         # mesh
         #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        self.ebqe['x'] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             3),
+            'd')
         self.q[('u', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[
@@ -793,6 +549,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.mesh.elementBoundaryDiametersArray[ebN]**self.numericalFlux.penalty_power
         log(memory("numericalFlux", "OneLevelTransport"), level=4)
         self.elementEffectiveDiametersArray = self.mesh.elementInnerDiametersArray
+        #strong Dirichlet
+        self.dirichletConditionsForceDOF= {0:DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)}
         # use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(
@@ -805,12 +563,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.globalResidualDummy = None
         compKernelFlag = 0
-        if self.coefficients.useConstantH:
-            self.elementDiameter = self.mesh.elementDiametersArray.copy()
-            self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
-        else:
-            self.elementDiameter = self.mesh.elementDiametersArray
-        self.pres = Pres(
+        self.pres = cPres.Pres(
             self.nSpace_global,
             self.nQuadraturePoints_element,
             self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -834,7 +587,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
         r.fill(0.0)
-        # Load the unknowns into the finite element dof
+        #set strong Dirichlet conditions
+        for dofN,g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.iteritems():
+            u[self.offset[0]+self.stride[0]*dofN] = g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN],self.timeIntegration.t)#load the BC valu        # Load the unknowns into the finite element dof
         self.setUnknowns(u)
 
         # no flux boundary conditions
@@ -860,41 +615,26 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             # physics
             self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
             self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
             self.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.ebqe_u_ls,
-            self.coefficients.ebqe_n_ls,
-            self.coefficients.q_H_vof,
             self.q[('u', 0)],
             self.q[('grad(u)', 0)],
+            self.q[('u_last',0)],
+            self.coefficients.pressureIncrementModel.q[('u',0)],
+            self.coefficients.q_massFlux,
+            self.coefficients.ebqe_massFlux,
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
-            self.q[('r', 0)],
-            self.coefficients.q_vos,
             self.offset[0], self.stride[0],
             r,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
+        for dofN,g in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.iteritems():
+            r[self.offset[0]+self.stride[0]*dofN] = self.u[0].dof[dofN] - g(self.dirichletConditionsForceDOF[0].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         log("Global residual", level=9, data=r)
-        self.coefficients.massConservationError = fabs(
-            globalSum(sum(r.flat[:self.mesh.nNodes_owned])))
-        assert self.coefficients.massConservationError == fabs(
-            globalSum(r[:self.mesh.nNodes_owned].sum()))
-        log("   Mass Conservation Error", level=3,
-            data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
-        if self.globalResidualDummy is None:
-            self.globalResidualDummy = numpy.zeros(r.shape, 'd')
 
     def getJacobian(self, jacobian):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian, jacobian)
@@ -919,22 +659,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.elementMaps.boundaryNormals,
             self.u[0].femSpace.elementMaps.boundaryJacobians,
             self.mesh.nElements_global,
-            self.coefficients.useMetrics,
-            self.coefficients.epsFactHeaviside,
-            self.coefficients.epsFactDirac,
-            self.coefficients.epsFactDiffusion,
-            self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,  # self.mesh.elementDiametersArray,
-            self.mesh.nodeDiametersArray,
-            self.u[0].dof,
-            self.coefficients.q_u_ls,
-            self.coefficients.q_n_ls,
-            self.coefficients.q_H_vof,
-            self.coefficients.q_vos,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
             jacobian)
+        for dofN in self.dirichletConditionsForceDOF[0].DOFBoundaryConditionsDict.keys():
+            global_dofN = self.offset[0]+self.stride[0]*dofN
+            self.nzval[numpy.where(self.colind == global_dofN)] = 0.0 #column
+            self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN+1]] = 0.0 #row
+            zeroRow=True
+            for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):#row
+                if (self.colind[i] == global_dofN):
+                    self.nzval[i] = 1.0
+                    zeroRow = False
+            if zeroRow:
+                raise RuntimeError("Jacobian has a zero row because sparse matrix has no diagonal entry at row "+`global_dofN`+". You probably need add diagonal mass or reaction term")
         log("Jacobian ", level=10, data=jacobian)
-        # mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
 
@@ -978,6 +716,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.getBasisGradientValuesTraceRef(
             self.elementBoundaryQuadraturePoints)
+        self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(
+            self.elementBoundaryQuadraturePoints, self.ebqe['x'])
+        # self.fluxBoundaryConditionsObjectsDict = dict([(cj, FluxBoundaryConditions(self.mesh,
+        #                                                                            self.nElementBoundaryQuadraturePoints_elementBoundary,
+        #                                                                            self.ebqe[('x')],
+        #                                                                            self.advectiveFluxBoundaryConditionsSetterDict[cj],
+        #                                                                            self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
+        #                                                for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
+        self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(
+            self.timeIntegration.t, self.ebqe)
 
     def estimate_mt(self):
         pass
