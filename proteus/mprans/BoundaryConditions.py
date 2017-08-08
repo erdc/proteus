@@ -271,9 +271,10 @@ class BC_RANS(BC_Base):
         self.reset()
 
         wf = wall
-        self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t) 
+        self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
         self.vof_advective.setConstantBC(0.)
         self.p_advective.setConstantBC(0.)
+        self.k_advective.setConstantBC(0.)
         self.u_diffusive.uOfXT = lambda x, t: wf.get_u_diffusive(x, t)
         self.v_diffusive.uOfXT = lambda x, t: wf.get_v_diffusive(x, t)
         self.w_diffusive.uOfXT = lambda x, t: wf.get_w_diffusive(x, t)
@@ -397,179 +398,6 @@ class BC_RANS(BC_Base):
         xx[1] = x[1]
         xx[2] = x[2]
         return self.waves.__cpp_calculate_vof(xx, t)
-
-    def setTurbulentCurrent(self, U, waterLevel, smoothing, Y, d, dwind, L=0.0, skinf='turbulent', nu=1.004e-6, nuwind=1.500e-5,
-                                  Cmu=0.09, K=0.41, B=5.2, Uwind=None,
-                                  vert_axis=None, air=1., water=0.,
-                                 kInflow=None, dissipationInflow=None,
-                                 kInflowAir=None, dissipationInflowAir=None):
-        """
-        Imposes a velocity profile lower than the sea level and an open
-        boundary for higher than the sealevel.
-        Parameters
-        ----------
-        U: list.
-            Velocity vector at the global system.
-        Uwind: list.
-            Air velocity vector at the global system.            
-        waterLevel: float.
-            water level at global coordinate system.
-        smoothing: float.
-            range within smoothing function is valid.
-            [3.0 times mesh element size can be a good value].
-        Y: float.
-            nearest point's distance from the wall.
-            set equal to the average mesh size.
-        d: float.
-            characteristic dimension of the problem.
-        L: float.
-            length of the boundaryLayer (usend only in skinf=boundaryLayer).
-        skinf: string.
-            switching between different skin friction formulae.
-        vert_axis: optional. 
-            index of vertical in position vector, must always be
-            aligned with gravity, by default set to 1].      
-        air: optional. 
-            Volume fraction for air (1.0 by default).
-        water: optional.
-            Volume fraction for water (0.0 by default).
-           
-        Below the seawater level, the condition returns the velocity profile
-        of the current, taking into account wall treatment.
-        Above the sea water level, the condition returns the gravity as zero,
-        and sets _dirichlet condition to zero, only if there is a zero inflow
-        velocity component.
-        (!) This condition is best used for boundaries and gravity aligned with
-            one of the main axes.
-        """
-        self.reset()
-        self.BC_type = 'TwoPhaseVelocityInlet'
-        
-        if vert_axis is None:
-            vert_axis = self.nd-1
-        if Uwind is None:
-            Uwind = np.zeros(3)
-            
-        U = np.array(U)
-        Uwind = np.array(Uwind)
-            
-        def get_inlet_ux_dirichlet_wall(i):
-            def ux_dirichlet(x,t):
-                # Skin friction (Pope pages 265,301,307 - Schlichting pag 639)
-                Re0 = U[i]*d/nu
-                Re0wind = Uwind[i]*dwind/nuwind
-                ReL = U[i]*L/nu
-                ReLwind = Uwind[i]*L/nuwind               
-                rangeSkin = ['laminar', 'turbulent'] 
-                if skinf not in rangeSkin:
-                    logEvent("Wrong slip_type given: Valid types are %s" %rangeSkin, level=0)
-                    sys.exit(1)
-                if skinf is 'laminar':
-                    cf = 4./Re0
-                    cfwind = 4./Re0wind
-                elif skinf is 'turbulent':
-                    cf = 0.045*( Re0**(-1./4.) )
-                    cfwind = 0.045*( Re0wind**(-1./4.) )
-                ut = U[i]*np.sqrt(cf/2.)
-                utwind = Uwind[i]*np.sqrt(cfwind/2.)
-                Yplus = Y*ut/nu
-                Ypluswind = Y*utwind/nuwind
-                # the closest point to the wall can be either in viscous or log or outer layer
-                if Yplus > 30. and Y/d<0.3:
-                    E = np.exp(B*K) 
-                    Ulog = ut * np.log(E*Yplus) / K
-                    Ulogwind = utwind * np.log(E*Ypluswind) / K
-                else:
-                    logEvent("Point selected is not in the log law region", level=0)
-                    sys.exit(1)
-                u = min(Ulog,U[i])
-                uwind = min(Ulogwind,Uwind[i])
-                
-                phi = x[vert_axis] - waterLevel
-                if phi <= 0.:
-                    H = 0.0
-                elif 0 < phi <= smoothing:
-                    H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
-                else:
-                    H = 1.0
-                # smoothing of the velocity field
-                Usmoo =  H*uwind + (1-H)*u 
-                return Usmoo
-            return ux_dirichlet
-
-        def get_inlet_ux_dirichlet(i):
-            def ux_dirichlet(x, t):
-                phi = x[vert_axis] - waterLevel
-                if phi <= 0.:
-                    H = 0.0
-                elif 0 < phi <= smoothing:
-                    H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
-                else:
-                    H = 1.0
-                # smoothing of the velocity field
-                u =  H*Uwind[i] + (1-H)*U[i] 
-                return u
-            return ux_dirichlet
-
-        def inlet_vof_dirichlet(x, t):
-            phi = x[vert_axis] - waterLevel
-            if phi >= smoothing:
-                H = 1.
-            elif smoothing > 0 and -smoothing < phi < smoothing:
-                H = smoothedHeaviside(smoothing, phi)
-            elif phi <= -smoothing:
-                H = 0.
-            vof =  H*air + (1-H)*water
-            return vof
-
-        def inlet_p_advective(x, t):
-            b_or = self._b_or
-            phi = x[vert_axis] - waterLevel
-            if phi <= 0.:
-                H = 0.0
-            elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
-            else:
-                H = 1.0
-            u =  H*Uwind + (1-H)*U 
-            # This is the normal velocity, based on the inwards boundary
-            # orientation -b_or
-            u_p = np.sum(u*np.abs(b_or)) 
-            return -u_p
-
-        def inlet_k_dirichlet(x, t):
-            phi = x[vert_axis] - waterLevel
-            if phi <= 0.:
-                H = 0.0
-            elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
-            else:
-                H = 1.0
-            return H*kInflowAir + (1-H)*kInflow        
-
-        def inlet_dissipation_dirichlet(x, t):
-            phi = x[vert_axis] - waterLevel
-            if phi <= 0.:
-                H = 0.0
-            elif 0 < phi <= smoothing:
-                H = smoothedHeaviside(smoothing/2., phi-smoothing/2.)
-            else:
-                H = 1.0
-            return H*dissipationInflowAir + (1-H)*dissipationInflow   
-
-        self.u_dirichlet.uOfXT = get_inlet_ux_dirichlet_wall(0)
-        self.v_dirichlet.uOfXT = get_inlet_ux_dirichlet(1)
-        self.w_dirichlet.uOfXT = get_inlet_ux_dirichlet(2)        
-        self.vof_dirichlet.uOfXT = inlet_vof_dirichlet
-        self.p_advective.uOfXT = inlet_p_advective
-        if kInflow is not None:
-            self.k_dirichlet.uOfXT = inlet_k_dirichlet
-            self.k_advective.resetBC()
-            self.k_diffusive.setConstantBC(0.)
-        if dissipationInflow is not None:
-            self.dissipation_dirichlet.uOfXT = inlet_dissipation_dirichlet
-            self.dissipation_advective.resetBC()
-            self.dissipation_diffusive.setConstantBC(0.)     
 
     def setTwoPhaseVelocityInlet(self, U, waterLevel, smoothing, Uwind=None,
                                  vert_axis=None, air=1., water=0.,
@@ -1140,7 +968,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
     class instance acting as a wall.
     """
 
-    def __init__(self, turbModel, b_or, Y, U0, d, L, skinf, nu, Cmu, K, B, vel):
+    def __init__(self, turbModel, b_or, Y, Yplus, U0, nu, Cmu, K, B):
         """
         Sets turbulent boundaries for wall treatment.        
         Calculation made on nodes outside the viscous sublayer and based
@@ -1155,18 +983,12 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         ----------
         turbModel: string.
             'ke' or 'kw', for switching between k-epsilon or k-omega models.
-        vel: string.
-            'global' or 'local' for switching from using global velocity to local one.
         Y: float.
-            size of the nearest element to the wall.
+            size of the nearest element to the boundary.
+        Yplus: float.
+            size of the nearest element to the boundary in terms of wall unit.
         U0: array_like.
             stream velocity.
-        d: float.
-            characteristic dimension of the problem.
-        L: float.
-            length of the boundaryLayer (usend only in skinf=boundaryLayer).
-        skinf: string.
-            switching between different skin friction formulae.
         nu: float.
             fluid viscosity.
         Cmu: float.
@@ -1177,13 +999,10 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             roughness coefficient for walls.          
         """      
         self.turbModel = turbModel
-        self.vel = vel
         self._b_or = b_or
         self.Y = Y
+        self.Yplus = Yplus
         self.U0 = U0
-        self.d = d
-        self.L = L
-        self.skinf = skinf
         self.nu = nu
         self.Cmu = Cmu
         self.K = K
@@ -1191,6 +1010,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         # initialise variables
         self.Ubound = np.zeros(3)
         self.kappa = 1e-10
+        self.tau_rho = 0.
         self.utAbs = 1e-10
         self.ut = np.zeros(3)
         self.x = np.zeros(3)
@@ -1210,15 +1030,9 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         pass
 
     def calculate_init(self):
-        #x, t = self.x, self.t    
-        #self.tangentialVelocity(x,t,uInit=True)
-        #self.getVariables(x, t)
         pass
 
     def calculate(self):
-        #x, t = self.x, self.t
-        #self.tangentialVelocity(x,t)
-        #self.getVariables(x, t)
         pass
 
     def getLocalNearestNode(self, coords, kdtree):
@@ -1307,7 +1121,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         xi = owning_proc = element = rank = None  # initialised as None
         # get nearest node on each processor
         #comm.barrier()
-        self.u = self.model.levelModelList[0].u
+        self.u = self.model.levelModelList[0].u    
         #Profiling.logEvent('self.u --> %s ' % self.u)
         self.femSpace_velocity = self.u[1].femSpace
         #Profiling.logEvent('self.femSpace_velocity --> %s ' % self.femSpace_velocity)
@@ -1382,91 +1196,36 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         return u, v, w
         
     def tangentialVelocity(self, x, t, uInit=None):
-        if uInit:
+        if uInit is True or self.model is None:
             u0, u1, u2 = self.U0
         else:
-            if self.vel == 'global' or self.model is None:
-                u0, u1, u2 = self.U0
-            elif self.vel == 'local':
-                u0, u1, u2 = self.extractVelocity(x,t) 
-            else:
-                sys.exit(1)
+            u0, u1, u2 = self.extractVelocity(x,t) 
         self.meanV = np.array([u0, u1, u2])  
         b0, b1, b2 = self._b_or
-        # normal unit vector
-        self.nV = self._b_or/np.sqrt(np.sum([b0**2, b1**2, b2**2]))
+        # normal unit vector is positive when points inward the domain
+        #_b_or is positive when points outward the domain
+        self.nV = (-self._b_or)/np.sqrt(np.sum([b0**2, b1**2, b2**2]))
         # projection of u vector over an ortoganal plane to b_or
         self.tanU = self.meanV - self.meanV*(self.nV**2)
         # tangential unit vector
-        self.nT = self.tanU/np.sqrt(np.sum(self.tanU**2))
+        self.tV = self.tanU/np.sqrt(np.sum(self.tanU**2))
         #return self
 
     def getVariables(self, x, t):
-        comm = Comm.get().comm.tompi4py()
-        Re0 = self.tanU*self.d/self.nu
-        ReL = self.tanU*self.L/self.nu
-        rangeSkin = ['laminar', 'turbulent']
-        skinf = self.skinf
-        self.cf, self.Ubound = np.zeros(3, dtype=float), np.zeros(3, dtype=float)
-        for i in [0, 1, 2]:
-            if skinf not in rangeSkin:
-                comm.Abort(1)
-            elif skinf == 'laminar' and Re0[i] > 0.:
-                self.cf[i] = 4./Re0[i]
-            elif skinf == 'turbulent' and Re0[i] > 0.:
-                self.cf[i] = 0.045*( Re0[i]**(-1./4.) )
-        self.ut = self.tanU*np.sqrt(self.cf/2.)
-        self.Yplus = self.Y*self.ut/self.nu       
-        YplusAbs = np.sqrt(np.sum(self.Yplus**2))
-        if YplusAbs < 11.6:
-            Uplus = self.Yplus
-            self.Ubound = Uplus*self.ut
+        comm = Comm.get().comm.tompi4py()   
+        if self.Yplus < 11.6:
+            logEvent('Prescribed near-wall point outside log-law region. Try with a higher one!')
+            sys.exit(1)
         # log-law layer
         else: 
             E = np.exp(self.B*self.K)
-            for i in [0, 1, 2]:
-                if self.Yplus[i]>0. :
-                    self.Ubound[i] = self.ut[i] * np.log(E*self.Yplus[i]) / self.K
-        self.utAbs = np.sqrt(np.sum(self.ut**2))       
+            ulog = np.sqrt(np.sum(self.tanU**2))
+            self.tau_rho = (self.K*ulog/np.log(E*self.Yplus))**2.
+        self.utAbs = np.sqrt(self.tau_rho)
+        self.ut = self.utAbs*self.tV 
         self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu) 
         logEvent('ut --> %s' % self.ut)  
-        #logEvent('y+ --> %s' % self.Yplus)
-        #logEvent('cf --> %s' % self.cf)
-
-    def get_u_dirichlet(self, x, t):
-        if t<0.: uInit = True
-        else: uInit = False
-        self.tangentialVelocity(x,t,uInit)
-        self.getVariables(x, t)    
-        U = self.Ubound[0]
-        #logEvent('u --> %s' % U)
-        return U 
-        
-    def get_v_dirichlet(self, x, t):
-        if t<0.: uInit = True
-        else: uInit = False
-        self.tangentialVelocity(x,t,uInit)
-        self.getVariables(x, t)    
-        U = self.Ubound[1]
-        #logEvent('v --> %s' % U)
-        return U 
- 
-    def get_w_dirichlet(self, x, t):
-        if t<0.: uInit = True
-        else: uInit = False
-        self.tangentialVelocity(x,t,uInit)
-        self.getVariables(x, t)    
-        U = self.Ubound[2]
-        #logEvent('w --> %s' % U)
-        return U 
-
-    def get_k_dirichlet(self, x, t):
-        if t<0.: uInit = True
-        else: uInit = False
-        self.tangentialVelocity(x,t,uInit)
-        self.getVariables(x, t) 
-        #logEvent('kappa --> %s' % self.kappa) 
-        return self.kappa 
+        #logEvent('tau/rho --> %s' % self.tau_rho)
 
     def get_dissipation_dirichlet(self, x, t):
         if t<0.: uInit = True
@@ -1476,7 +1235,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         d = 0.
         if self.turbModel == 'ke': d = (self.utAbs**3)/(self.K*self.Y)
         elif self.turbModel == 'kw' and self.kappa>0.: d = (self.utAbs**3)/(self.K*self.Y)/self.kappa
-        #logEvent('dissipation --> %s' % d)
+        logEvent('dissipation --> %s' % d)
         return d 
 
     def get_u_diffusive(self, x, t):
