@@ -5,6 +5,7 @@
 #include "CompKernel.h"
 #include "ModelFactory.h"
 
+
 namespace proteus
 {
   class MoveMesh2D_base
@@ -14,6 +15,7 @@ namespace proteus
     virtual void calculateResidual(//element
                double* detJ_last_array,
                double* detJ0_array,
+               double* E_array,
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
 			   double* mesh_dof,
@@ -65,6 +67,7 @@ namespace proteus
     virtual void calculateJacobian(//element
                    double* detJ_last_array,
                    double* detJ0_array,
+                   double* E_array,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -185,22 +188,30 @@ namespace proteus
     }
     
     inline void evaluateCoefficients(double det_J,
-                     double* J,
+             double* J,
 				     const double* materialProperties,
 				     double* strain,
 				     double* stress,
 				     double* dstress,
-                     double det_J0)
+             double det_J0,
+             double* E_in_array)
     {
       double dilation;
       if (det_J0 != 0) {
-        dilation = 0.5*(det_J0/det_J+det_J/det_J0);
+          if (det_J > det_J0) {
+              dilation = 1-det_J0/det_J;
+          }
+          else {
+              dilation = 1-det_J/det_J0;
+          }
+        //dilation = 0.5*(det_J0/det_J+det_J/det_J0);
       }
       else {
-        dilation = 0.5;
+        dilation = 0.;
       }
 
-      double JT [4] = {JT[XX],JT[YX],JT[XY],JT[YY]};
+
+      double JT [4] = {J[XX],J[YX],J[XY],J[YY]};
       double JTJ [4];
       // distorsion
       int rA = nSpace;
@@ -220,15 +231,25 @@ namespace proteus
       }
       double trJTJ = JTJ[XX]+JTJ[YY]; // see compkernel.h calculateMapping_element
       /* T = (1./n*(tr(JT*J))**(n/2)/det_J;  // n: number of dimensions */
-      double distorsion = pow((1./nSpace)*trJTJ, nSpace/2.)/det_J;  // in 2D
+      double distorsion = pow((1./nSpace)*fabs(trJTJ), nSpace/2.)/det_J;  // in 2D
+      distorsion = distorsion-1;
 
+      //distorsion = 0.1;
       double alpha = 0.5;
       double Eweight = (1-alpha)*distorsion+alpha*dilation;
 
+    if (det_J0 == 0) {det_J0 = 1;};
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]/* +strain[sZZ] */),
-	E=materialProperties[0]/det_J,//for mesh motion penalize small elements
-	nu=materialProperties[1];
+//E=pow(materialProperties[0]/det_J, Eweight),//for mesh motion penalize small elements
+      E=pow(Eweight,10)/det_J0, nu=materialProperties[1];
+      E_in_array[0] = E;
+      /* std::cout << "E " << E << "\n"; */
+      /* std::cout << "Eweight " << Eweight << "\n"; */
+      /* std::cout << "dilation " << dilation << "\n"; */
+      /* std::cout << "distorsion " << distorsion << "\n"; */
+      /* std::cout << "det_J0 " << det_J0 << "\n"; */
+      /* std::cout << "trJTJ " << trJTJ << "\n"; */
 
       const double shear = E/(1.0+nu);	
       const double bulk  = shear*(nu/(1.0-2.0*nu));	
@@ -424,6 +445,7 @@ namespace proteus
     virtual void calculateResidual(//element
                    double* detJ_last_array,
                    double* detJ0_array,
+                   double* E_array,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -554,12 +576,13 @@ namespace proteus
 	      calculateStrain(D,strain);
           double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet),
-                   jac,
+           jac,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
 				   dstress,
-                   fabs(detJ0));
+           fabs(detJ0),
+           &E_array[eN*nQuadraturePoints_element+k]);
 	      //
 	      //update element residual 
 	      // 
@@ -682,12 +705,13 @@ namespace proteus
 	      calculateStrain(D,strain);
           double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet_ext),
-                   jac_ext,
+           jac_ext,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
 				   dstress,
-                   fabs(detJ0));
+           fabs(detJ0),
+           &E_array[eN*nQuadraturePoints_elementBoundary+kb]);
 	      // 
 	      //calculate the numerical fluxes 
 	      // 
@@ -746,6 +770,7 @@ namespace proteus
     virtual void calculateJacobian(//element
                    double* detJ_last_array,
                    double* detJ0_array,
+                   double* E_array,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -890,12 +915,13 @@ namespace proteus
 	      calculateStrain(D,strain);
           double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet),
-                   jac,
+           jac,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
 				   dstress,
-                   fabs(detJ0));
+           fabs(detJ0),
+           &E_array[eN*nQuadraturePoints_element+k]);
 	      //
 	      //omit for now
 	      //
@@ -1032,12 +1058,13 @@ namespace proteus
 	      calculateStrain(D_ext,strain);
           double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet_ext),
-                   jac_ext,
+           jac_ext,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
 				   dstress,
-                   fabs(detJ0));
+           fabs(detJ0),
+           &E_array[eN*nQuadraturePoints_elementBoundary+kb]);
 	      //
 	      //calculate the flux jacobian
 	      //

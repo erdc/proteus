@@ -363,6 +363,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
         self.tensors_elementBoundaryQuadrature= set()
+        self.q['E'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
         #
         #show quadrature
         #
@@ -479,7 +480,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.ebqe[('stressFlux_bc_flag',ci)][t[0],t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
         if self.mesh.nodeVelocityArray is None:
-            self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
+            self.mesh.nodeVelocityArray = np.zeros(self.mesh.nodeArray.shape,'d')
         compKernelFlag=0
         if self.nSpace_global == 2:
             import copy
@@ -525,6 +526,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         logEvent(memory("velocity postprocessor","OneLevelTransport"),level=4)
         self.detJ_last_array = np.zeros(self.mesh.nElements_global)
         self.detJ0_array = np.zeros(self.mesh.nElements_global)
+        self.E_array_notflat = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.E_array = np.zeros(self.mesh.nElements_global*self.nQuadraturePoints_element,'d')
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -554,6 +557,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.moveMesh.calculateResidual(#element
             self.detJ_last_array,
             self.detJ0_array,
+            self.E_array,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -631,6 +635,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.moveMesh.calculateJacobian(#element
             self.detJ_last_array,
             self.detJ0_array,
+            self.E_array,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -759,9 +764,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.stored_detJ0 is False:
             self.detJ0_array = self.detJ_last_array.copy()
             self.stored_detJ0 = True
-        print("detJ0", self.detJ0_array)
-        print("detJ", self.detJ_last_array)
-        print("equal", np.array_equal(self.detJ0_array, self.detJ_last_array))
+        # print("detJ0", self.detJ0_array)
+        # print("detJ", self.detJ_last_array)
+        # print("equal", np.array_equal(self.detJ0_array, self.detJ_last_array))
+        # print("E_ARRAY", self.E_array)
 
     def updateAfterMeshMotion(self):
         #cek todo: this needs to be cleaned up and generalized for other models under moving conditions

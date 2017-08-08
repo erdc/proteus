@@ -14,6 +14,7 @@ namespace proteus
     virtual void calculateResidual(//element
                double* detJ_last_array,
                double* detJ0_array,
+               double* E_array,
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
 			   double* mesh_dof,
@@ -65,6 +66,7 @@ namespace proteus
     virtual void calculateJacobian(//element
                    double* detJ_last_array,
                    double* detJ0_array,
+                   double* E_array,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -190,7 +192,8 @@ namespace proteus
                                      double* strain,
                                      double* stress,
                                      double* dstress,
-                                     double det_J0)
+                                     double det_J0,
+                                     double* E_in_array)
     {
       // dilation
       double dilation;
@@ -226,10 +229,11 @@ namespace proteus
       double alpha = 0.5;
       double Eweight = (1-alpha)*distorsion+alpha*dilation;
 
+      if (det_J0 == 0) {det_J0 = 1;};
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]+strain[sZZ]),
-	E=materialProperties[0]/det_J,//for mesh motion penalize small elements
-	nu=materialProperties[1];
+        E=pow(Eweight,10)/det_J0, nu=materialProperties[1];
+      E_in_array[0] = E;
 
       const double shear = E/(1.0+nu);	
       const double bulk  = shear*(nu/(1.0-2.0*nu));	
@@ -421,6 +425,7 @@ namespace proteus
     virtual void calculateResidual(//element
                    double* detJ_last_array,
                    double* detJ0_array,
+                   double* E_array,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -551,12 +556,13 @@ namespace proteus
 	      calculateStrain(D,strain);
           double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet),
-                   jac,
+           jac,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
-                   dstress,
-                   fabs(detJ0));
+           dstress,
+           fabs(detJ0),
+           &E_array[eN*nQuadraturePoints_element+k]);
 	      //
 	      //update element residual 
 	      // 
@@ -679,12 +685,13 @@ namespace proteus
 	      calculateStrain(D,strain);
           double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet_ext),
-                   jac_ext,
+           jac_ext,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
-                   dstress,
-                   fabs(detJ0));
+           dstress,
+           fabs(detJ0),
+           &E_array[eN*nQuadraturePoints_elementBoundary+kb]);
 	      // 
 	      //calculate the numerical fluxes 
 	      // 
@@ -743,6 +750,7 @@ namespace proteus
     virtual void calculateJacobian(//element
                    double* detJ_last_array,
                    double* detJ0_array,
+                   double* E_array,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -887,12 +895,13 @@ namespace proteus
 	      calculateStrain(D,strain);
           double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet),
-                   jac,
+           jac,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
-                   dstress,
-                   fabs(detJ0));
+           dstress,
+           fabs(detJ0),
+           &E_array[eN*nQuadraturePoints_element+k]);
 	      //
 	      //omit now
 	      //
@@ -1029,12 +1038,13 @@ namespace proteus
 	      calculateStrain(D_ext,strain);
           double detJ0 = detJ0_array[eN];
 	      evaluateCoefficients(fabs(jacDet_ext),
-                   jac_ext,
+           jac_ext,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
 				   strain,
 				   stress,
-                   dstress,
-                   fabs(detJ0));
+           dstress,
+           fabs(detJ0),
+           &E_array[eN*nQuadraturePoints_elementBoundary+kb]);
 	      //
 	      //calculate the flux jacobian
 	      //
