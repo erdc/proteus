@@ -1876,6 +1876,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.nodeDiametersArray,
             self.stabilization.hFactor,
             self.mesh.nElements_global,
+            self.mesh.nElements_owned,
             self.mesh.nElementBoundaries_owned,
             self.coefficients.useRBLES,
             self.coefficients.useMetrics,
