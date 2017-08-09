@@ -522,6 +522,9 @@ class NS_base:  # (HasTraits):
             try:
                 if (nList[0].MeshAdaptMesh.size_field_config() == 'isotropicProteus'):
                     mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
+                if (nList[0].MeshAdaptMesh.size_field_config() == 'anisotropicProteus'):
+                    mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
+                    mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
             except:
                 pass
         Profiling.memory("Mesh")
@@ -720,6 +723,10 @@ class NS_base:  # (HasTraits):
             self.mlMesh_nList.append(mlMesh)
         if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
             mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
+        if (p0.domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+            mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
+            mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
+
         #may want to trigger garbage collection here
         modelListOld = self.modelList
         logEvent("Allocating models on new mesh")
@@ -940,6 +947,21 @@ class NS_base:  # (HasTraits):
             if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
                 p0.domain.PUMIMesh.transferFieldToPUMI("proteus_size",
                                                        self.modelList[0].levelModelList[0].mesh.size_field)
+            if (p0.domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+                #Insert a function to define the size_scale/size_frame fields here.
+                #For a given vertex, the i-th size_scale is roughly the desired edge length along the i-th direction specified by the size_frame
+                for i in range(len(self.modelList[0].levelModelList[0].mesh.size_scale)):
+                  self.modelList[0].levelModelList[0].mesh.size_scale[i,0] =  1e-1
+                  self.modelList[0].levelModelList[0].mesh.size_scale[i,1] =  (self.modelList[0].levelModelList[0].mesh.nodeArray[i,1]/0.584)*1e-1
+                  for j in range(3):
+                    for k in range(3):
+                      if(j==k):
+                        self.modelList[0].levelModelList[0].mesh.size_frame[i,3*j+k] = 1.0
+                      else:
+                        self.modelList[0].levelModelList[0].mesh.size_frame[i,3*j+k] = 0.0
+                self.modelList[0].levelModelList[0].mesh.size_scale
+                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
+                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
             p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                 self.modelList[0].levelModelList[0].mesh.nodeArray)
             logEvent("Copying DOF and parameters to PUMI")
