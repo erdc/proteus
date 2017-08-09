@@ -1191,8 +1191,8 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             u, v, w = self.getFluidVelocityLocalCoords(self.femSpace_velocity.elementMaps.getInverseValue(element, coords),
                                                        element,
                                                        rank)
-        #logEvent('coords --> %s' % coords)
-        #logEvent('uExtract --> %s' % u)
+        logEvent('coords --> %s' % coords)
+        logEvent('uExtract --> %s' % u)
         return u, v, w
         
     def tangentialVelocity(self, x, t, uInit=None):
@@ -1225,6 +1225,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.ut = self.utAbs*self.tV 
         self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu) 
         logEvent('ut --> %s' % self.ut)  
+        logEvent('ulog --> %s' % ulog)  
         #logEvent('tau/rho --> %s' % self.tau_rho)
 
     def get_dissipation_dirichlet(self, x, t):
