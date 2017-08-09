@@ -1506,8 +1506,6 @@ class StokesASGS_velocity_pressure(SGE_base):
             coefficients.stencil[3].add(3)
     def calculateSubgridError(self,q):
         if self.nd == 2:
-        #    import pdb
-        #    pdb.set_trace()
             if self.coefficients.sd:
                 csubgridError.calculateSubgridErrorStokes_GLS_tau_sd(self.mesh.elementDiametersArray,
                                                                      q[('dH',1,0)],

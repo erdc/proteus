@@ -579,9 +579,8 @@ class KSP_petsc4py(LinearSolver):
             self.pressure_null_space
         except AttributeError:
             self._defineNullSpaceVec(par_b)
-            vecs = self.global_null_space
             self.pressure_null_space = p4pyPETSc.NullSpace().create(constant=False,
-                                                                    vectors=vecs,
+                                                                    vectors=self.global_null_space,
                                                                     comm=p4pyPETSc.COMM_WORLD)
         self.ksp.getOperators()[0].setNullSpace(self.pressure_null_space)
         self.pressure_null_space.remove(par_b)
