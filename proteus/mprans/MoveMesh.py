@@ -365,7 +365,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
         self.tensors_elementBoundaryQuadrature= set()
-        self.q['E'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         #
         #show quadrature
         #
@@ -530,10 +529,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.detJ0_array = np.zeros(self.mesh.nElements_global)
         self.distortion_last_array = np.zeros(self.mesh.nElements_global*self.nQuadraturePoints_element,'d')
         self.dilation_last_array = np.zeros(self.mesh.nElements_global*self.nQuadraturePoints_element,'d')
-        self.distortion0_array = np.zeros(self.mesh.nElements_global*self.nQuadraturePoints_element,'d')
         self.E_array = np.zeros(self.mesh.nElements_global*self.nQuadraturePoints_element,'d')
         self.q['E'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q['distortion'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.distortion0_array = self.q['distortion'].copy()
         self.q['dilation'] = np.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
     def getResidual(self,u,r):
         """
@@ -564,9 +563,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.moveMesh.calculateResidual(#element
             self.detJ_last_array,
             self.detJ0_array,
-            self.E_array,
-            self.dilation_last_array,
-            self.distortion_last_array,
+            self.q['E'],
+            self.q['dilation'],
+            self.q['distortion'],
             self.distortion0_array,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -645,9 +644,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.moveMesh.calculateJacobian(#element
             self.detJ_last_array,
             self.detJ0_array,
-            self.E_array,
-            self.dilation_last_array,
-            self.distortion_last_array,
+            self.q['E'],
+            self.q['dilation'],
+            self.q['distortion'],
             self.distortion0_array,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -778,7 +777,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def postStep(self):
         if self.stored_detJ0 is False:
             self.detJ0_array = self.detJ_last_array.copy()
-            self.distortion0_array = self.distortion_last_array.copy()
+            self.distortion0_array = self.q['distortion'].copy()
             self.stored_detJ0 = True
 
         # print("detJ0", self.detJ0_array)
@@ -797,7 +796,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[cj].femSpace.updateInterpolationPoints()
             for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                 self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN] = self.mesh.nodeArray[dofN]
-        for eN in range(len(self.q['x'])):
-            self.q['E'][eN][:] = self.E_array[eN*self.nQuadraturePoints_element:eN*self.nQuadraturePoints_element+self.nQuadraturePoints_element]
-            self.q['distortion'][eN][:] = self.distortion_last_array[eN*self.nQuadraturePoints_element:eN*self.nQuadraturePoints_element+self.nQuadraturePoints_element]
-            self.q['dilation'][eN][:] = self.dilation_last_array[eN*self.nQuadraturePoints_element:eN*self.nQuadraturePoints_element+self.nQuadraturePoints_element]
+        # for eN in range(len(self.q['x'])):
+        #     self.q['E'][eN][:] = self.E_array[eN*self.nQuadraturePoints_element:eN*self.nQuadraturePoints_element+self.nQuadraturePoints_element]
+        #     self.q['distortion'][eN][:] = self.distortion_last_array[eN*self.nQuadraturePoints_element:eN*self.nQuadraturePoints_element+self.nQuadraturePoints_element]
+        #     self.q['dilation'][eN][:] = self.dilation_last_array[eN*self.nQuadraturePoints_element:eN*self.nQuadraturePoints_element+self.nQuadraturePoints_element]
