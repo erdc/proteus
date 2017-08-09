@@ -974,8 +974,8 @@ namespace proteus
 	phi_s = particle_signed_distances[i*sd_offset];
 	phi_s_normal = &particle_signed_distance_normals[i*sd_offset*nSpace];
 
-        //phi_s_normal[0] /= sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1]);
-        //phi_s_normal[1] /= sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1]);
+        phi_s_normal[0] /= sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1]);
+        phi_s_normal[1] /= sqrt(phi_s_normal[0]*phi_s_normal[0] + phi_s_normal[1]*phi_s_normal[1]);
 
         //always 3D for particle centroids 
         r_x = x - particle_centroids[i*3+0];
@@ -996,11 +996,11 @@ namespace proteus
 	
         C = (D_s*C_surf + (1.0 - H_s)*C_vol);
 	
-        force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
-	force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
+        //force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
+	//force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
 	
-        //force_x = dV*D_s;
-        //force_y = dV*D_s;
+        force_x = dV*D_s*p*phi_s_normal[0];
+        force_y = dV*D_s*p*phi_s_normal[1];
 
         //if (D_s > 0)
         //{
