@@ -354,11 +354,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     calculateSizeField();
   else if (size_field_config == "isotropicProteus")
     size_iso = m->findField("proteus_size");
-  else if (size_field_config == "anisotropicProteus"){
-      size_frame = m->findField("proteus_sizeFrame");
-      size_scale = m->findField("proteus_sizeScale");
-      adapt_type_config = "anisotropic";
-  }
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
@@ -399,6 +394,9 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   ma::adapt(in);
   double t2 = PCU_Time();
 
+  freeField(size_iso);
+  freeField(size_frame);
+  freeField(size_scale);
   m->verify();
   double mass_after = getTotalMass();
   PCU_Add_Doubles(&mass_before,1);
