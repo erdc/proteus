@@ -1157,7 +1157,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
 
         self.setupFieldStrides()
-
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:

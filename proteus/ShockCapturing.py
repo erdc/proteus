@@ -44,6 +44,7 @@ class ShockCapturing_base:
                         cq[('da_sge',ci,ck,cj)]=cq[('da',ci,ck,cj)]
 
     def calculateNumericalDiffusion(self,q):
+        import pdb ; pdb.set_trace()
         for ci in range(self.nc):
             self.numDiff[ci].flat[:] = self.shockCapturingFactor
     def updateShockCapturingHistory(self):

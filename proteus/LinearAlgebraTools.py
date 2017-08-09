@@ -1010,23 +1010,23 @@ class TwoPhase_PCDInv_shell(InvOperatorShell):
         tmp2 = x.copy()
         tmp3 = x.copy()
 
-        self.kspQp_visc = ChebyshevSemiIteration(self.Qp_visc,
-                                                 x,
-                                                 y,
-                                                 10,
-                                                 0.5,
-                                                 2.0)
-        self.kspQp_dens = ChebyshevSemiIteration(self.Qp_dens,
-                                                 x,
-                                                 y,
-                                                 10,
-                                                 0.5,
-                                                 2.0)
+        # self.kspQp_visc = ChebyshevSemiIteration(self.Qp_visc,
+        #                                          x,
+        #                                          y,
+        #                                          10,
+        #                                          0.5,
+        #                                          2.0)
+        # self.kspQp_dens = ChebyshevSemiIteration(self.Qp_dens,
+        #                                          x,
+        #                                          y,
+        #                                          10,
+        #                                          0.5,
+        #                                          2.0)
 
-        self.kspQp_visc.apply()
-        self.kspQp_dens.apply()
-#        self.kspQp_visc.solve(x,y)
-#        self.kspQp_dens.solve(x,tmp1)
+        # self.kspQp_visc.apply()
+        # self.kspQp_dens.apply()
+        self.kspQp_visc.solve(x,y)
+        self.kspQp_dens.solve(x,tmp1)
         
         self.Np_rho.mult(tmp1,tmp2)
 
