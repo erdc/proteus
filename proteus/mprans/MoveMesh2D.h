@@ -208,17 +208,18 @@ namespace proteus
     {
       double dilation;
       if (det_J0 != 0) {
+        /* dilation = 0.5*(det_J0/det_J+det_J/det_J0); */
           if (det_J > det_J0) {
-              dilation = 1-det_J0/det_J;
+              dilation = det_J/det_J0;
           }
           else {
-              dilation = 1-det_J/det_J0;
+              dilation = det_J0/det_J;
           }
-        //dilation = 0.5*(det_J0/det_J+det_J/det_J0);
       }
       else {
-        dilation = 0.;
+        dilation = 1.;
       }
+      dilation = dilation-1;
       dilation_last[0] = dilation;
 
 
@@ -243,21 +244,31 @@ namespace proteus
       double trJTJ = JTJ[XX]+JTJ[YY]; // see compkernel.h calculateMapping_element
       /* T = (1./n*(tr(JT*J))**(n/2)/det_J;  // n: number of dimensions */
       double distortion = pow((1./nSpace)*fabs(trJTJ), nSpace/2.)/det_J;  // in 2D
-      distortion = distortion-1;
-      /* if (distortion0 != 0) { */
-      /* distortion = distortion/distortion0; */
-      /* } */
-      distortion_last[0] = distortion;
+      double distortion_rel; // relative distortion
+      if (distortion0 != 0) {
+        if (distortion > distortion0) {
+          distortion_rel = distortion/distortion0;
+        }
+        else {
+          distortion_rel = 1.;//distortion0/distortion;
+        }
+        distortion_rel = distortion_rel-1.;
+      }
+      else {
+        // this is the first time it does the loop, need to register distortion0
+        distortion_rel = distortion;
+      }
+      distortion_last[0] = distortion_rel;
 
       //distortion = 0.1;
       double alpha = 0.5;
-      double Eweight = (1-alpha)*distortion+alpha*dilation;
+      double Eweight = (1-alpha)*distortion_rel+alpha*dilation;
 
     if (det_J0 == 0) {det_J0 = det_J;};
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]/* +strain[sZZ] */),
 //E=pow(materialProperties[0]/det_J, Eweight),//for mesh motion penalize small elements
-        E=Eweight/det_J0/*pow(Eweight,10)/det_J0*/, nu=materialProperties[1];
+        E=(0.001+Eweight)/det_J0, nu=materialProperties[1];
       E_in_array[0] = E;
       /* std::cout << "E " << E << "\n"; */
       /* std::cout << "Eweight " << Eweight << "\n"; */
