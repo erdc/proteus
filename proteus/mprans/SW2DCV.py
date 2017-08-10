@@ -1355,7 +1355,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.COMPUTE_NORMALS, 
             self.normalx, 
             self.normaly, 
-            self.dLow)
+            self.dLow, 
+            self.timeIntegration.lstage)
 
         self.COMPUTE_NORMALS=0
 	if self.forceStrongConditions:#
