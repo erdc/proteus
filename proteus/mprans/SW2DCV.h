@@ -3495,14 +3495,6 @@ namespace proteus
 		psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
 	    }
 	  // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
-
-
-	  /////
-	  std::cout << "Max edge based cfl" << "\t" << max_edge_based_cfl << "\t"
-		    << "Ideal dt (for low order stability): " << "\t" << 0.5/max_edge_based_cfl << "\t"
-		    << "dt taken: " << "\t" << dt << "\t"
-		    << std::endl;
-	  /////
 	  
 	  ////////////////////////////////////////
 	  // ********** Loop on DOFs ********** // to compute flux and dissipative terms
