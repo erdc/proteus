@@ -84,9 +84,9 @@ class RKEV(proteus.TimeIntegration.SSP33):
     """
     def __init__(self, transport, timeOrder=1, runCFL=0.1, integrateInterpolationPoints=False):
         BackwardEuler.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
+        self.trasport = transport
         self.runCFL=runCFL
         self.dtLast=None
-        self.dtRatioMax = 2.
         self.isAdaptive=True
         # About the cfl 
         assert hasattr(transport,'edge_based_cfl'), "No edge based cfl defined"
@@ -122,14 +122,41 @@ class RKEV(proteus.TimeIntegration.SSP33):
     #    self.dt = DTSET #  don't update t
     def choose_dt(self):
         maxCFL = 1.0e-6
+        # COMPUTE edge_based_cfl
+        
+        rowptr_cMatrix, colind_cMatrix, Cx = self.transport.cterm_global[0].getCSRrepresentation()
+        rowptr_cMatrix, colind_cMatrix, Cy = self.transport.cterm_global[1].getCSRrepresentation()        
+        rowptr_cMatrix, colind_cMatrix, CTx = self.transport.cterm_global_transpose[0].getCSRrepresentation()
+        rowptr_cMatrix, colind_cMatrix, CTy = self.transport.cterm_global_transpose[1].getCSRrepresentation()
+        numDOFsPerEqn = self.transport.u[0].dof.size
+        
+        self.transport.sw2d.calculateEdgeBasedCFL(
+            self.transport.coefficients.g, 
+            numDOFsPerEqn,
+            self.transport.ML,
+            self.transport.u[0].dof, 
+            self.transport.u[1].dof, 
+            self.transport.u[2].dof,
+            self.transport.coefficients.b.dof, 
+            rowptr_cMatrix, 
+            colind_cMatrix, 
+            self.transport.hEps, 
+            self.transport.hReg, 
+            Cx, 
+            Cy, 
+            CTx, 
+            CTy, 
+            self.transport.alpha, 
+            self.transport.global_entropy_residual, 
+            self.transport.dLow, 
+            self.transport.edge_based_cfl)
+                
         maxCFL = max(maxCFL,globalMax(self.edge_based_cfl.max()))
         # maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max()))
         self.dt = self.runCFL/maxCFL            
 
         if self.dtLast == None:
             self.dtLast = self.dt
-        if self.dt/self.dtLast  > self.dtRatioMax:
-            self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
         # mwf debug
         #print "RKEv max cfl component ci dt dtLast {0} {1} {2} {3}".format(maxCFL,ci,self.dt,self.dtLast)
@@ -613,7 +640,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global={}
         self.ebqe={}
         self.phi_ip={}
-        self.edge_based_cfl = numpy.zeros(self.u[0].dof.shape)
+        #self.edge_based_cfl 
+        # To compute edge_based_cfl from withing choose_dt of RKEV
+        self.alpha=numpy.zeros(self.u[0].dof.shape)
+        self.global_entropy_residual=numpy.zeros(self.u[0].dof.shape)
+        self.edge_based_cfl= numpy.zeros(self.u[0].dof.shape)
+        self.dLow=None
         #Old DOFs
         #NOTE (Mql): It is important to link h_dof_old by reference with u[0].dof (and so on).
         # This is because  I need the initial condition to be passed to them as well (before calling calculateResidual). 
@@ -926,6 +958,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
+
         #COMPUTE hEps
         if self.hEps is None: 
             eps=1E-14
@@ -1132,6 +1165,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.low_order_hnp1 = numpy.zeros(self.u[0].dof.shape,'d')
         self.low_order_hunp1 = numpy.zeros(self.u[1].dof.shape,'d')
         self.low_order_hvnp1 = numpy.zeros(self.u[2].dof.shape,'d')
+
+        # CREATE VECTORS TO COMPUTE edge_based_cfl from choose_dt within RKEV
+        # Note: it is important to have this after Cx is defined
+        if self.dLow is None:
+            self.dLow = np.zeros(Cx.size,'d')
         
         numDOFsPerEqn = self.u[0].dof.size #(mql): I am assuming all variables live on the same FE space
         numNonZeroEntries = len(Cx)
