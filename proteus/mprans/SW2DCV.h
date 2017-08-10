@@ -89,6 +89,7 @@ namespace proteus
 					 double* Cy,
 					 double* CTx,
 					 double* CTy,
+					 double* dLow,
 					 double* edge_based_cfl
 					 )=0;
     virtual void calculateResidual_SUPG(//element
@@ -237,7 +238,10 @@ namespace proteus
 				   // NORMAL COMPONENTS 
 				   int COMPUTE_NORMALS,
 				   double* normalx, 
-				   double* normaly
+				   double* normaly, 
+				   // DISSIPATIVE LOW ORDER MATRIX 
+				   double* dLow, 
+				   int lstage
 				   )=0;
     virtual void calculateResidual_entropy_viscosity(// last EDGE BASED version
 				   double* mesh_trial_ref,
@@ -386,7 +390,9 @@ namespace proteus
 				   // NORMAL COMPONENTS 
 				   int COMPUTE_NORMALS,
 				   double* normalx, 
-				   double* normaly
+				   double* normaly, 
+				   double* dLow,
+				   int lstage
 				   )=0;
     virtual void calculateJacobian_SUPG(//element
 				   double* mesh_trial_ref,
@@ -1973,6 +1979,7 @@ namespace proteus
 			       double* Cy,
 			       double* CTx,
 			       double* CTy,
+			       double* dLow,
 			       double* edge_based_cfl)
     {
       int ij=0;
@@ -1999,16 +2006,18 @@ namespace proteus
 		  double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
 		  double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
 		  double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
-		  double dLowij = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
-								     hi,hui,hvi,
-								     hj,huj,hvj,
-								     hEps,hEps,false)*cij_norm, //hEps
-				       maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
-								     hj,huj,hvj,
-								     hi,hui,hvi,
-								     hEps,hEps,false)*cji_norm); //hEps
-		  dLowii -= dLowij; 
+		  dLow[ij] = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+								hi,hui,hvi,
+								hj,huj,hvj,
+								hEps,hEps,false)*cij_norm, //hEps
+				  maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+								hj,huj,hvj,
+								hi,hui,hvi,
+								hEps,hEps,false)*cji_norm); //hEps
+		  dLowii -= dLow[ij]; 
 		}
+	      else
+		dLow[ij] = 0.;
 	      //update ij
 	      ij+=1;
 	    }
@@ -2167,7 +2176,9 @@ namespace proteus
 			   // NORMAL COMPONENTS 
 			   int COMPUTE_NORMALS,
 			   double* normalx, 
-			   double* normaly)
+			   double* normaly, 
+			   double* dLow, 
+			   int lstage)
 			   
     {
       //
@@ -3150,7 +3161,9 @@ namespace proteus
 			   // NORMAL COMPONENTS 
 			   int COMPUTE_NORMALS,
 			   double* normalx, 
-			   double* normaly)
+			   double* normaly, 
+			   double* dLow, 
+			   int lstage)
     {
       //FOR FRICTION//
       double n2 = std::pow(mannings,2.);
@@ -3451,19 +3464,23 @@ namespace proteus
 		      ////////////////////////
 		      // DISSIPATIVE MATRIX //
 		      ////////////////////////
-		      double cij_norm = sqrt(Cx[ij]*Cx[ij] + Cy[ij]*Cy[ij]);
-		      double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
-		      double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
-		      double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
-		      dLowij = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
-								  hi,hui,hvi,
-								  hj,huj,hvj,
-								  hEps,hEps,false)*cij_norm, //hEps
-				    maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
-		      						  hj,huj,hvj,
-								  hi,hui,hvi,
-								  hEps,hEps,false)*cji_norm); //hEps
-		      //dLowij = dLow[ij];
+		      if (lstage == 0) 
+			dLowij = dLow[ij];
+		      else
+			{
+			  double cij_norm = sqrt(Cx[ij]*Cx[ij] + Cy[ij]*Cy[ij]);
+			  double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
+			  double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
+			  double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
+			  dLowij = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+								      hi,hui,hvi,
+								      hj,huj,hvj,
+								      hEps,hEps,false)*cij_norm, //hEps
+					maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+								      hj,huj,hvj,
+								      hi,hui,hvi,
+								      hEps,hEps,false)*cji_norm); //hEps
+			}
 		      dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
 		      
 		      ///////////////////////////////////////

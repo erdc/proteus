@@ -46,6 +46,7 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 		     double* Cy,
 		     double* CTx,
 		     double* CTy,
+		     double* dLow,
 		     double* edge_based_cfl)
         void calculateResidual_SUPG(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -183,7 +184,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       int SECOND_CALL_CALCULATE_RESIDUAL,
 			       int COMPUTE_NORMALS,
 			       double* normalx, 
-			       double* normaly)
+			       double* normaly, 
+			       double* dLow, 
+			       int lstage)
         void calculateResidual_entropy_viscosity(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -320,7 +323,9 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       int SECOND_CALL_CALCULATE_RESIDUAL,
 			       int COMPUTE_NORMALS,
 			       double* normalx, 
-			       double* normaly)
+			       double* normaly, 
+			       double* dLow, 
+			       int lstage)
         void calculateJacobian_SUPG(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -744,6 +749,7 @@ cdef class cSW2DCV_base:
 	       numpy.ndarray Cy,
 	       numpy.ndarray CTx,
 	       numpy.ndarray CTy,
+	       numpy.ndarray dLow,	       
 	       numpy.ndarray edge_based_cfl):
        self.thisptr.calculateEdgeBasedCFL(
 			    g, 
@@ -760,6 +766,7 @@ cdef class cSW2DCV_base:
 			    <double*> Cy.data,
 			    <double*> CTx.data,
 			    <double*> CTy.data,
+			    <double*> dLow.data,
 			    <double*> edge_based_cfl.data)
    def calculateResidual_SUPG(self,
 			 numpy.ndarray mesh_trial_ref,
@@ -898,7 +905,9 @@ cdef class cSW2DCV_base:
 			 int SECOND_CALL_CALCULATE_RESIDUAL, 
 			 int COMPUTE_NORMALS,
 			 numpy.ndarray normalx,
-			 numpy.ndarray normaly):
+			 numpy.ndarray normaly,
+			 numpy.ndarray dLow, 
+			 int lstage):
        self.thisptr.calculateResidual_SUPG(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1038,7 +1047,9 @@ cdef class cSW2DCV_base:
 	    SECOND_CALL_CALCULATE_RESIDUAL,
 	    COMPUTE_NORMALS,
 	    <double*> normalx.data,
-	    <double*> normaly.data)
+	    <double*> normaly.data,
+	    <double*> dLow.data, 
+	    lstage)
    def calculateResidual_entropy_viscosity(self,
 			 numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -1176,7 +1187,9 @@ cdef class cSW2DCV_base:
 			 int SECOND_CALL_CALCULATE_RESIDUAL,
 			 int COMPUTE_NORMALS,
 			 numpy.ndarray normalx,
-			 numpy.ndarray normaly):
+			 numpy.ndarray normaly, 
+			 numpy.ndarray dLow, 
+			 int lstage):
        self.thisptr.calculateResidual_entropy_viscosity(#element
            <double*> mesh_trial_ref.data,
             <double*> mesh_grad_trial_ref.data,
@@ -1316,7 +1329,9 @@ cdef class cSW2DCV_base:
 	    SECOND_CALL_CALCULATE_RESIDUAL,
 	    COMPUTE_NORMALS,
 	    <double*> normalx.data,
-	    <double*> normaly.data)
+	    <double*> normaly.data, 
+	    <double*> dLow.data, 
+	    lstage)
    def calculateJacobian_SUPG(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
