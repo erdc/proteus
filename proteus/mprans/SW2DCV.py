@@ -19,7 +19,7 @@ class SubgridError(proteus.SubgridError.SGE_base):
         self.nSteps += 1
         if self.lag:
             self.v_last[:] = self.cq[('velocity',0)]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             logEvent("SW2D.SubgridError: switched to lagged subgrid error")
             self.lag = True
             self.v_last = self.cq[('velocity',0)].copy()
@@ -66,7 +66,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         if self.lag:
             for ci in range(3):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
-        if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
+        if self.lag == False and self.nStepsToDelay is not None and self.nSteps > self.nStepsToDelay:
             logEvent("SW2DCV.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
             for ci in range(3):
@@ -144,13 +144,14 @@ class RKEV(proteus.TimeIntegration.SSP33):
             Cy, 
             CTx, 
             CTy, 
+            self.transport.dLow,
             self.transport.edge_based_cfl)
                 
         maxCFL = max(maxCFL,globalMax(self.edge_based_cfl.max()))
         # maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max()))
         self.dt = self.runCFL/maxCFL            
 
-        if self.dtLast == None:
+        if self.dtLast is None:
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
         # mwf debug
@@ -386,6 +387,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.b.dof = mesh.nodeArray[:,2].copy()
         else:
             self.b.dof = self.bathymetry[0]([x,y])
+        #self.b.dof[:] = 0. #TMP
     def initializeElementQuadrature(self,t,cq):
         pass
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
@@ -489,7 +491,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization != None:
+	if self.stabilization is not None:
 	    for ci in range(self.nc):
 		if coefficients.mass.has_key(ci):
 		    for flag in coefficients.mass[ci].values():
@@ -519,8 +521,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux is not None) or 
+                                                 (numericalFluxType is not None) or 
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -553,7 +555,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
             for I in self.coefficients.elementIntegralKeys:
                 elementQuadratureDict[I] = elementQuadrature
-        if self.stabilization != None:
+        if self.stabilization is not None:
             for I in self.coefficients.elementIntegralKeys:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(I):
@@ -562,7 +564,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature['default']
                 else:
                     elementQuadratureDict[('stab',)+I[1:]] = elementQuadrature
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             for ci in self.shockCapturing.components:
                 if elemQuadIsDict:
                     if elementQuadrature.has_key(('numDiff',ci,ci)):
@@ -637,6 +639,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.phi_ip={}
         # To compute edge_based_cfl from withing choose_dt of RKEV
         self.edge_based_cfl= numpy.zeros(self.u[0].dof.shape)
+        self.dLow=None
         #Old DOFs
         #NOTE (Mql): It is important to link h_dof_old by reference with u[0].dof (and so on).
         # This is because  I need the initial condition to be passed to them as well (before calling calculateResidual). 
@@ -759,7 +762,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else:
              self.timeIntegration = TimeIntegrationClass(self)
            
-        if options != None:
+        if options is not None:
             self.timeIntegration.setFromOptions(options)
         logEvent(memory("TimeIntegration","OneLevelTransport"),level=4)
         logEvent("Calculating numerical quadrature formulas",2)
@@ -795,11 +798,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
-            assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
+            assert numericalFluxType is not None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
         logEvent(memory("stride+offset","OneLevelTransport"),level=4)
-        if numericalFluxType != None:
-            if options == None or options.periodicDirichletConditions == None:
+        if numericalFluxType is not None:
+            if options is None or options.periodicDirichletConditions is None:
                 self.numericalFlux = numericalFluxType(self,
                                                        dofBoundaryConditionsSetterDict,
                                                        advectiveFluxBoundaryConditionsSetterDict,
@@ -866,7 +869,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #cek hack
         self.movingDomain=False
         self.MOVING_DOMAIN=0.0
-        if self.mesh.nodeVelocityArray==None:
+        if self.mesh.nodeVelocityArray is None:
             self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
         #cek/ido todo replace python loops in modules with optimized code if possible/necessary
         self.forceStrongConditions=True
@@ -1143,7 +1146,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.normalx = numpy.zeros(self.u[0].dof.shape,'d')
             self.normaly = numpy.zeros(self.u[0].dof.shape,'d')
 
-        if self.quantDOFs == None:
+        if self.quantDOFs is None:
             self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
 
         rowptr_cMatrix, colind_cMatrix, Cx = self.cterm_global[0].getCSRrepresentation()
@@ -1156,6 +1159,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.low_order_hnp1 = numpy.zeros(self.u[0].dof.shape,'d')
         self.low_order_hunp1 = numpy.zeros(self.u[1].dof.shape,'d')
         self.low_order_hvnp1 = numpy.zeros(self.u[2].dof.shape,'d')
+
+        #Allocate space for dLow (for the first stage in the SSP method)        
+        if self.dLow is None: 
+            self.dLow = numpy.zeros(Cx.shape,'d')            
 
         numDOFsPerEqn = self.u[0].dof.size #(mql): I am assuming all variables live on the same FE space
         numNonZeroEntries = len(Cx)
@@ -1347,7 +1354,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.secondCallCalculateResidual, 
             self.COMPUTE_NORMALS, 
             self.normalx, 
-            self.normaly)
+            self.normaly, 
+            self.dLow)
 
         self.COMPUTE_NORMALS=0
 	if self.forceStrongConditions:#
@@ -1515,10 +1523,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[1].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[1].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
-        if self.stabilization != None:
+        if self.stabilization is not None:
             self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing != None:
+        if self.shockCapturing is not None:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
     def calculateElementBoundaryQuadrature(self):
         """
