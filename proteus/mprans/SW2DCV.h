@@ -75,14 +75,12 @@ namespace proteus
 			    double* hReg,
 			    int LUMPED_MASS_MATRIX
 			    )=0;
-      virtual void calculateEdgeBasedCFL(
-					 double g,
+      virtual void calculateEdgeBasedCFL(double g, 
 					 int numDOFsPerEqn, //number of DOFs
 					 double* lumped_mass_matrix, //lumped mass matrix (as vector)
 					 double* h_lstage, //DOFs of solution at last stage
 					 double* hu_lstage, 
 					 double* hv_lstage, 
-					 double* b_dof,
 					 int* csrRowIndeces_DofLoops, //csr row indeces 
 					 int* csrColumnOffsets_DofLoops, //csr column offsets 
 					 double hEps,
@@ -91,9 +89,6 @@ namespace proteus
 					 double* Cy,
 					 double* CTx,
 					 double* CTy,
-					 double* alpha,
-					 double* global_entropy_residual,
-					 double* dLow, 
 					 double* edge_based_cfl
 					 )=0;
     virtual void calculateResidual_SUPG(//element
@@ -219,7 +214,6 @@ namespace proteus
 				   int* csrColumnOffsets_DofLoops,
 				   // FOR EDGE BASED METHODS
 				   double* lumped_mass_matrix,  
-				   double* edge_based_cfl, 
 				   double cfl_run,
 				   double hEps,
 				   double* hReg,
@@ -368,7 +362,6 @@ namespace proteus
 				   int* csrColumnOffsets_DofLoops,
 				   // LUMPED MASS MATRIX
 				   double* lumped_mass_matrix,
-				   double* edge_based_cfl, 
 				   double cfl_run,
 				   double hEps,
 				   double* hReg,
@@ -1966,14 +1959,12 @@ namespace proteus
 	}
     }
 
-    void calculateEdgeBasedCFL(
-			       double g,
+    void calculateEdgeBasedCFL(double g, 
 			       int numDOFsPerEqn, //number of DOFs
 			       double* lumped_mass_matrix, //lumped mass matrix (as vector))
 			       double* h_dof_lstage, //DOFs of solution at last stage
 			       double* hu_dof_lstage, 
 			       double* hv_dof_lstage,
-			       double* b_dof,
 			       int* csrRowIndeces_DofLoops, //csr row indeces 
 			       int* csrColumnOffsets_DofLoops, //csr column offsets 
 			       double hEps, 
@@ -1982,75 +1973,23 @@ namespace proteus
 			       double* Cy,
 			       double* CTx,
 			       double* CTy,
-			       double* alpha,
-			       double* global_entropy_residual,
-			       double* dLow, 
 			       double* edge_based_cfl)
     {
-      ///////////////////////////////////////////
-      // ********** COMPUTE ENTROPY ********** //
-      ///////////////////////////////////////////
-      // compute entropy (defined as eta) corresponding to ith node
-      
-      register double eta[numDOFsPerEqn];
-      for (int i=0; i<numDOFsPerEqn; i++)
-	{
-	  // COMPUTE ENTROPY BASED ON OLD STAGE
-	  double hni = h_dof_lstage[i]; 
-	  double one_over_hniReg = 2*hni/(hni*hni+std::pow(fmax(hni,hEps),2)); //hEps
-	  eta[i] = ENTROPY(g,hni,hu_dof_lstage[i],hv_dof_lstage[i],0*b_dof[i],one_over_hniReg);
-	}
-      // ********** END OF COMPUTING ENTROPY ********** //
-      
-      ////////////////////////////////////////////////////////////////////////////////////////
-      // ********** COMPUTE SMOOTHNESS INDICATOR, GLOBAL ENTROPY RESIDUAL and dL ********** //
-      ////////////////////////////////////////////////////////////////////////////////////////      
       int ij=0;
-      register double etaMax[numDOFsPerEqn], etaMin[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  double alphai; // smoothness indicator of solution
 	  double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
 	  double hui = hu_dof_lstage[i]; 
 	  double hvi = hv_dof_lstage[i]; 
-	  double Zi = b_dof[i];
-	  double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); //hEps
 	  double dLowii = 0.;
 
-	  // For eta min and max
-	  etaMax[i] = fabs(eta[i]);
-	  etaMin[i] = fabs(eta[i]);
-	  
-	  // FOR ENTROPY RESIDUAL
-	  double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
-	  double entropy_flux=0.;
-	  double eta_prime1 = DENTROPY_DH(g,hi,hui,hvi,0*Zi,one_over_hiReg); 
-	  double eta_prime2 = DENTROPY_DHU(g,hi,hui,hvi,0*Zi,one_over_hiReg); 
-	  double eta_prime3 = DENTROPY_DHV(g,hi,hui,hvi,0*Zi,one_over_hiReg); 
-	  
-	  // FOR SMOOTHNESS INDICATOR //
-	  double alpha_numerator = 0;
-	  double alpha_denominator = 0;
-	  
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    { //loop in j (sparsity pattern)
 	      int j = csrColumnOffsets_DofLoops[offset];
 	      double hj = h_dof_lstage[j]; // solution at time tn for the jth DOF
 	      double huj = hu_dof_lstage[j];
 	      double hvj = hv_dof_lstage[j];
-	      double Zj = b_dof[j];
-	      
-	      // FOR ENTROPY RESIDUAL //
-	      double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
-	      ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
-	      ith_flux_term2 += ( huj*huj*one_over_hjReg*Cx[ij] + huj*hvj*one_over_hjReg*Cy[ij] 
-				  + g*hi*(hj+Zj)*Cx[ij] ); //f2*C
-	      ith_flux_term3 += ( huj*hvj*one_over_hjReg*Cx[ij] + hvj*hvj*one_over_hjReg*Cy[ij] 
-				  + g*hi*(hj+Zj)*Cy[ij] ); //f3*C     
-	      
-	      entropy_flux += ( Cx[ij]*ENTROPY_FLUX1(g,hj,huj,hvj,0*Zj,one_over_hjReg) + 
-				Cy[ij]*ENTROPY_FLUX2(g,hj,huj,hvj,0*Zj,one_over_hjReg) );
-	      
+
 	      if (i != j) 
 		{
 		  ////////////////////////
@@ -2060,27 +1999,16 @@ namespace proteus
 		  double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
 		  double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
 		  double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
-		  dLow[ij] = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
-								hi,hui,hvi,
-								hj,huj,hvj,
-								hEps,hEps,false)*cij_norm, //hEps
-				  maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
-								hj,huj,hvj,
-								hi,hui,hvi,
-								hEps,hEps,false)*cji_norm); //hEps
-		  dLowii -= dLow[ij]; 
-		  /////////////////////////////////
-		  // COMPUTE ETA MIN AND ETA MAX // 
-		  /////////////////////////////////
-		  etaMax[i] = fmax(etaMax[i],fabs(eta[j]));
-		  etaMin[i] = fmin(etaMin[i],fabs(eta[j]));
-		  
-		  // FOR SMOOTHNESS INDICATOR //
-		  alpha_numerator += hj - hi;
-		  alpha_denominator += fabs(hj - hi);	    		  
+		  double dLowij = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+								     hi,hui,hvi,
+								     hj,huj,hvj,
+								     hEps,hEps,false)*cij_norm, //hEps
+				       maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+								     hj,huj,hvj,
+								     hi,hui,hvi,
+								     hEps,hEps,false)*cji_norm); //hEps
+		  dLowii -= dLowij; 
 		}
-	      else // i == j 
-		dLow[ij] = 0.; // Not quite true but it doesn't matter
 	      //update ij
 	      ij+=1;
 	    }
@@ -2089,29 +2017,6 @@ namespace proteus
 	  //////////////////////////////
 	  double mi = lumped_mass_matrix[i];
 	  edge_based_cfl[i] = 2*fabs(dLowii)/mi;
-	  
-	  /////////////////////////////////////
-	  // COMPUTE GLOBAL ENTROPY RESIDUAL //
-	  /////////////////////////////////////
-	  double one_over_entNormFactori = 2./(etaMax[i]-etaMin[i]+1E-15);
-	  global_entropy_residual[i] = one_over_entNormFactori*
-	    fabs(entropy_flux -(ith_flux_term1*eta_prime1 + ith_flux_term2*eta_prime2 + ith_flux_term3*eta_prime3));
-	  
-	  //////////////////////////////////
-	  // COMPUTE SMOOTHNESS INDICATOR //
-	  //////////////////////////////////
-	  if (hi <= hReg[i]) //hEps, hReg makes the method more robust
-	    { // The idea is to force all methods to go to 1st order near dry states
-	      alphai = 1.; 
-	      global_entropy_residual[i] = 1E10;
-	    }
-	  else
-	    {
-	      if (fabs(alpha_numerator) <= hEps) //hEps. Force alphai=0 in constant states. For well-balancing wrt friciton
-		alphai = 0.;
-	      else 
-		alphai = fabs(alpha_numerator)/(alpha_denominator+1E-15);
-	    }
 	}
     }
 
@@ -2238,7 +2143,6 @@ namespace proteus
 			   int* csrColumnOffsets_DofLoops,
 			   // LUMPED MASS MATRIX
 			   double* lumped_mass_matrix,
-			   double* edge_based_cfl,
 			   double cfl_run,
 			   double hEps,
 			   double* hReg,
@@ -3222,7 +3126,6 @@ namespace proteus
 			   int* csrColumnOffsets_DofLoops,
 			   // LUMPED MASS MATRIX
 			   double* lumped_mass_matrix,
-			   double* edge_based_cfl,
 			   double cfl_run,
 			   double hEps,
 			   double* hReg,
@@ -3377,7 +3280,6 @@ namespace proteus
 	  register double global_entropy_residual[numDOFsPerEqn]; 
 	  register double psi[numDOFsPerEqn], etaMax[numDOFsPerEqn], etaMin[numDOFsPerEqn];
 	  register double dLow[NNZ];
-	  double max_edge_based_cfl = 0.;
 	  for (int i=0; i<numDOFsPerEqn; i++)
 	    {
 	      double alphai; // smoothness indicator of solution
@@ -3458,13 +3360,6 @@ namespace proteus
 		  //update ij
 		  ij+=1;
 		}
-	      //////////////////////////////
-	      // CALCULATE EDGE BASED CFL //
-	      //////////////////////////////
-	      double mi = lumped_mass_matrix[i];
-	      edge_based_cfl[i] = 2*fabs(dLowii)/mi;
-	      max_edge_based_cfl = fmax(max_edge_based_cfl,edge_based_cfl[i]);
-
 	      /////////////////////////////////////
 	      // COMPUTE GLOBAL ENTROPY RESIDUAL //
 	      /////////////////////////////////////
