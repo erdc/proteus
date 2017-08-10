@@ -13,7 +13,7 @@
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define POWER_SMOOTHNESS_INDICATOR 2
-#define LINEAR_FRICTION 0
+#define LINEAR_FRICTION 1
 #define VEL_FIX_POWER 4.
 
 // FOR CELL BASED ENTROPY VISCOSITY 
@@ -48,7 +48,8 @@ namespace proteus
   {
   public:
     virtual ~SW2DCV_base(){}
-    virtual void FCTStep(double dt, 
+      virtual void FCTStep(
+			 double dt, 
 			    int NNZ, //number on non-zero entries on sparsity pattern
 			    int numDOFs, //number of DOFs
 			    double* lumped_mass_matrix, //lumped mass matrix (as vector)
@@ -1156,10 +1157,9 @@ namespace proteus
       double velR = 2*hR/(hR*hR+std::pow(fmax(hR,hEpsR),2))*hVelR;
 
       if (debugging)
-	std::cout << "hL, hR, hRegL/R, hVelL, hVelR, velL, velR: "
+	std::cout << "hL, hR, hVelL, hVelR, velL, velR: "
 		  << hL << "\t"
 		  << hR << "\t"
-		  << hEpsL << ", " << hEpsR << "\t"
 		  << hVelL <<  "\t"
 		  << hVelR <<  "\t"
 		  << velL <<  "\t"
@@ -1205,7 +1205,10 @@ namespace proteus
 	  if (0 <= fMin)
 	    {
 	      hStar = std::pow(fmax(0.,velL-velR+2*sqrt(g)*(sqrt(hL)+sqrt(hR))),2)/16./g;
-	      if (debugging && false)
+	      if (debugging) 
+		std::cout << "**********... THIS IS A RAREFACTION" 
+			  << std::endl;
+	      if (debugging)
 		{
 		  std::cout << "h* = " << hStar << std::endl;
 		  lambda1 = nu1(g,hStar,hL,velL);
@@ -1221,7 +1224,7 @@ namespace proteus
 	  lambda1 = nu1(g,hStar,hL,velL);
 	  lambda3 = nu3(g,hStar,hR,velR);
 	}
-      if (debugging) 
+      if (debugging && false) 
 	std::cout << "lambda1, lambda3: " << lambda1 << ", " << lambda3 << std::endl;
       //return fmax(fmax(0.,-lambda1), fmax(0,lambda3));
       return fmax(lambda1, lambda3);
@@ -3195,14 +3198,16 @@ namespace proteus
 	    }
 	  // ********** END OF COMPUTING ENTROPY ********** //
 	  
-	  /////////////////////////////////////////////////////////////////////////////////////
-	  // ********** COMPUTE SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
-	  /////////////////////////////////////////////////////////////////////////////////////
+	  ////////////////////////////////////////////////////////////////////////////////////////
+	  // ********** COMPUTE SMOOTHNESS INDICATOR, GLOBAL ENTROPY RESIDUAL and dL ********** //
+	  ////////////////////////////////////////////////////////////////////////////////////////
 	  // Smoothness indicator is based on the solution. psi_i = psi_i(alpha_i); 
 	  // alpha_i = |sum(uj-ui)|/sum|uj-ui|
 	  int ij = 0;
 	  register double global_entropy_residual[numDOFsPerEqn]; 
 	  register double psi[numDOFsPerEqn], etaMax[numDOFsPerEqn], etaMin[numDOFsPerEqn];
+	  register double dLow[NNZ];
+	  double max_edge_based_cfl = 0.;
 	  for (int i=0; i<numDOFsPerEqn; i++)
 	    {
 	      double alphai; // smoothness indicator of solution
@@ -3212,7 +3217,8 @@ namespace proteus
 	      double hvi = hv_dof_lstage[i]; 
 	      double Zi = b_dof[i];
 	      double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); //hEps
-	      
+	      double dLowii = 0.;
+
 	      // For eta min and max
 	      etaMax[i] = fabs(eta[i]);
 	      etaMin[i] = fabs(eta[i]);
@@ -3246,20 +3252,49 @@ namespace proteus
 		  
 		  entropy_flux += ( Cx[ij]*ENTROPY_FLUX1(g,hj,huj,hvj,0*Zj,one_over_hjReg) + 
 				    Cy[ij]*ENTROPY_FLUX2(g,hj,huj,hvj,0*Zj,one_over_hjReg) );
-		  
-		  /////////////////////////////////
-		  // COMPUTE ETA MIN AND ETA MAX // 
-		  /////////////////////////////////
-		  etaMax[i] = fmax(etaMax[i],fabs(eta[j]));
-		  etaMin[i] = fmin(etaMin[i],fabs(eta[j]));
-		  
-		  // FOR SMOOTHNESS INDICATOR //
-		  alpha_numerator += hj - hi;
-		  alpha_denominator += fabs(hj - hi);	      
-		  
+
+		  if (i != j) 
+		    {
+		      ////////////////////////
+		      // DISSIPATIVE MATRIX //
+		      ////////////////////////
+		      double cij_norm = sqrt(Cx[ij]*Cx[ij] + Cy[ij]*Cy[ij]);
+		      double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
+		      double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
+		      double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
+		      dLow[ij] = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+								    hi,hui,hvi,
+								    hj,huj,hvj,
+								    hEps,hEps,false)*cij_norm, //hEps
+				      maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+								    hj,huj,hvj,
+								    hi,hui,hvi,
+								    hEps,hEps,false)*cji_norm); //hEps
+		      dLowii -= dLow[ij]; 
+		      /////////////////////////////////
+		      // COMPUTE ETA MIN AND ETA MAX // 
+		      /////////////////////////////////
+		      etaMax[i] = fmax(etaMax[i],fabs(eta[j]));
+		      etaMin[i] = fmin(etaMin[i],fabs(eta[j]));
+		      
+		      // FOR SMOOTHNESS INDICATOR //
+		      alpha_numerator += hj - hi;
+		      alpha_denominator += fabs(hj - hi);	    		  
+		    }
+		  else // i == j 
+		    { 
+		      dLow[ij] = 0.; // Not quite true but it doesn't matter
+		    }
 		  //update ij
 		  ij+=1;
 		}
+	      //////////////////////////////
+	      // CALCULATE EDGE BASED CFL //
+	      //////////////////////////////
+	      double mi = lumped_mass_matrix[i];
+	      edge_based_cfl[i] = 2*fabs(dLowii)/mi;
+	      max_edge_based_cfl = fmax(max_edge_based_cfl,edge_based_cfl[i]);
+
 	      /////////////////////////////////////
 	      // COMPUTE GLOBAL ENTROPY RESIDUAL //
 	      /////////////////////////////////////
@@ -3290,6 +3325,14 @@ namespace proteus
 		psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
 	    }
 	  // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
+
+
+	  /////
+	  std::cout << "Max edge based cfl" << "\t" << max_edge_based_cfl << "\t"
+		    << "Ideal dt (for low order stability): " << "\t" << 0.5/max_edge_based_cfl << "\t"
+		    << "dt taken: " << "\t" << dt << "\t"
+		    << std::endl;
+	  /////
 	  
 	  ////////////////////////////////////////
 	  // ********** Loop on DOFs ********** // to compute flux and dissipative terms
@@ -3377,19 +3420,19 @@ namespace proteus
 		      ////////////////////////
 		      // DISSIPATIVE MATRIX //
 		      ////////////////////////
-		      double cij_norm = sqrt(Cx[ij]*Cx[ij] + Cy[ij]*Cy[ij]);
-		      double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
-		      double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
-		      double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
-		      dLowij = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
-								  hi,hui,hvi,
-								  hj,huj,hvj,
-								  hEps,hEps,false)*cij_norm, //hEps
-				    maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
-								  hj,huj,hvj,
-								  hi,hui,hvi,
-								  hEps,hEps,false)*cji_norm); //hEps
-
+		      //double cij_norm = sqrt(Cx[ij]*Cx[ij] + Cy[ij]*Cy[ij]);
+		      //double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
+		      //double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
+		      //double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
+		      //dLowij = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+		      //					  hi,hui,hvi,
+		      //					  hj,huj,hvj,
+		      //					  hEps,hEps,false)*cij_norm, //hEps
+		      //	    maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+		      //						  hj,huj,hvj,/
+		      //					  hi,hui,hvi,
+		      //					  hEps,hEps,false)*cji_norm); //hEps
+		      dLowij = dLow[ij];
 		      dLowii -= dLowij; // To compute cfl
 		      dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
 		      
@@ -3445,11 +3488,6 @@ namespace proteus
 		  // update ij
 		  ij+=1;
 		}
-	      //////////////////////////////
-	      // CALCULATE EDGE BASED CFL //
-	      //////////////////////////////
-	      edge_based_cfl[i] = 2*fabs(dLowii)/mi;
-	      
 	      ////////////////////////
 	      // LOW ORDER SOLUTION //: lumped mass matrix and low order dissipative matrix
 	      ////////////////////////
@@ -3584,7 +3622,7 @@ namespace proteus
 	  // normalize 
 	  for (int gi=0; gi<numDOFsPerEqn; gi++)
 	    {
-	      double norm_factor = std::sqrt(std::pow(normalx[gi],2) + std::pow(normaly[gi],2));
+	      double norm_factor = sqrt(std::pow(normalx[gi],2) + std::pow(normaly[gi],2));
 	      if (norm_factor != 0)
 		{
 		  normalx[gi] /= norm_factor;
