@@ -3279,7 +3279,6 @@ namespace proteus
 	  int ij = 0;
 	  register double global_entropy_residual[numDOFsPerEqn]; 
 	  register double psi[numDOFsPerEqn], etaMax[numDOFsPerEqn], etaMin[numDOFsPerEqn];
-	  register double dLow[NNZ];
 	  for (int i=0; i<numDOFsPerEqn; i++)
 	    {
 	      double alphai; // smoothness indicator of solution
@@ -3289,7 +3288,6 @@ namespace proteus
 	      double hvi = hv_dof_lstage[i]; 
 	      double Zi = b_dof[i];
 	      double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); //hEps
-	      double dLowii = 0.;
 
 	      // For eta min and max
 	      etaMax[i] = fabs(eta[i]);
@@ -3324,39 +3322,16 @@ namespace proteus
 		  
 		  entropy_flux += ( Cx[ij]*ENTROPY_FLUX1(g,hj,huj,hvj,0*Zj,one_over_hjReg) + 
 				    Cy[ij]*ENTROPY_FLUX2(g,hj,huj,hvj,0*Zj,one_over_hjReg) );
-
-		  if (i != j) 
-		    {
-		      ////////////////////////
-		      // DISSIPATIVE MATRIX //
-		      ////////////////////////
-		      double cij_norm = sqrt(Cx[ij]*Cx[ij] + Cy[ij]*Cy[ij]);
-		      double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
-		      double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
-		      double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
-		      dLow[ij] = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
-								    hi,hui,hvi,
-								    hj,huj,hvj,
-								    hEps,hEps,false)*cij_norm, //hEps
-				      maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
-								    hj,huj,hvj,
-								    hi,hui,hvi,
-								    hEps,hEps,false)*cji_norm); //hEps
-		      dLowii -= dLow[ij]; 
-		      /////////////////////////////////
-		      // COMPUTE ETA MIN AND ETA MAX // 
-		      /////////////////////////////////
-		      etaMax[i] = fmax(etaMax[i],fabs(eta[j]));
-		      etaMin[i] = fmin(etaMin[i],fabs(eta[j]));
-		      
-		      // FOR SMOOTHNESS INDICATOR //
-		      alpha_numerator += hj - hi;
-		      alpha_denominator += fabs(hj - hi);	    		  
-		    }
-		  else // i == j 
-		    { 
-		      dLow[ij] = 0.; // Not quite true but it doesn't matter
-		    }
+		  
+		  /////////////////////////////////
+		  // COMPUTE ETA MIN AND ETA MAX // 
+		  /////////////////////////////////
+		  etaMax[i] = fmax(etaMax[i],fabs(eta[j]));
+		  etaMin[i] = fmin(etaMin[i],fabs(eta[j]));
+		  
+		  // FOR SMOOTHNESS INDICATOR //
+		  alpha_numerator += hj - hi;
+		  alpha_denominator += fabs(hj - hi);	    		  
 		  //update ij
 		  ij+=1;
 		}
@@ -3377,7 +3352,7 @@ namespace proteus
 		}
 	      else
 		{
-		  if (fabs(alpha_numerator) <= hEps) //hEps. Force alphai=0 in constant states. This is to assure well balancing with friction
+		  if (fabs(alpha_numerator) <= hEps) //hEps. Force alphai=0 in constant states. This for well balancing wrt friction
 		    alphai = 0.;
 		  else 
 		    alphai = fabs(alpha_numerator)/(alpha_denominator+1E-15);
@@ -3405,7 +3380,6 @@ namespace proteus
 	      double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); // hEps
 	      double ui = hui*one_over_hiReg;
 	      double vi = hvi*one_over_hiReg;
-	      double dLowii = 0.;
 	      
 	      double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
 	      // LOW ORDER DISSIPATIVE TERMS
@@ -3477,20 +3451,19 @@ namespace proteus
 		      ////////////////////////
 		      // DISSIPATIVE MATRIX //
 		      ////////////////////////
-		      //double cij_norm = sqrt(Cx[ij]*Cx[ij] + Cy[ij]*Cy[ij]);
-		      //double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
-		      //double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
-		      //double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
-		      //dLowij = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
-		      //					  hi,hui,hvi,
-		      //					  hj,huj,hvj,
-		      //					  hEps,hEps,false)*cij_norm, //hEps
-		      //	    maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
-		      //						  hj,huj,hvj,/
-		      //					  hi,hui,hvi,
-		      //					  hEps,hEps,false)*cji_norm); //hEps
-		      dLowij = dLow[ij];
-		      dLowii -= dLowij; // To compute cfl
+		      double cij_norm = sqrt(Cx[ij]*Cx[ij] + Cy[ij]*Cy[ij]);
+		      double cji_norm = sqrt(CTx[ij]*CTx[ij] + CTy[ij]*CTy[ij]);
+		      double nxij = Cx[ij]/cij_norm, nyij = Cy[ij]/cij_norm;
+		      double nxji = CTx[ij]/cji_norm, nyji = CTy[ij]/cji_norm;
+		      dLowij = fmax(maxWaveSpeedSharpInitialGuess(g,nxij,nyij, 
+								  hi,hui,hvi,
+								  hj,huj,hvj,
+								  hEps,hEps,false)*cij_norm, //hEps
+				    maxWaveSpeedSharpInitialGuess(g,nxji,nyji, 
+		      						  hj,huj,hvj,
+								  hi,hui,hvi,
+								  hEps,hEps,false)*cji_norm); //hEps
+		      //dLowij = dLow[ij];
 		      dLij = dLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
 		      
 		      ///////////////////////////////////////
