@@ -122,8 +122,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
     #    self.dt = DTSET #  don't update t
     def choose_dt(self):
         maxCFL = 1.0e-6
-        # COMPUTE edge_based_cfl
-        
+        # COMPUTE edge_based_cfl        
         rowptr_cMatrix, colind_cMatrix, Cx = self.transport.cterm_global[0].getCSRrepresentation()
         rowptr_cMatrix, colind_cMatrix, Cy = self.transport.cterm_global[1].getCSRrepresentation()        
         rowptr_cMatrix, colind_cMatrix, CTx = self.transport.cterm_global_transpose[0].getCSRrepresentation()
@@ -137,7 +136,6 @@ class RKEV(proteus.TimeIntegration.SSP33):
             self.transport.u[0].dof, 
             self.transport.u[1].dof, 
             self.transport.u[2].dof,
-            self.transport.coefficients.b.dof, 
             rowptr_cMatrix, 
             colind_cMatrix, 
             self.transport.hEps, 
@@ -146,9 +144,6 @@ class RKEV(proteus.TimeIntegration.SSP33):
             Cy, 
             CTx, 
             CTy, 
-            self.transport.alpha, 
-            self.transport.global_entropy_residual, 
-            self.transport.dLow, 
             self.transport.edge_based_cfl)
                 
         maxCFL = max(maxCFL,globalMax(self.edge_based_cfl.max()))
@@ -640,12 +635,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global={}
         self.ebqe={}
         self.phi_ip={}
-        #self.edge_based_cfl 
         # To compute edge_based_cfl from withing choose_dt of RKEV
-        self.alpha=numpy.zeros(self.u[0].dof.shape)
-        self.global_entropy_residual=numpy.zeros(self.u[0].dof.shape)
         self.edge_based_cfl= numpy.zeros(self.u[0].dof.shape)
-        self.dLow=None
         #Old DOFs
         #NOTE (Mql): It is important to link h_dof_old by reference with u[0].dof (and so on).
         # This is because  I need the initial condition to be passed to them as well (before calling calculateResidual). 
@@ -1166,11 +1157,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.low_order_hunp1 = numpy.zeros(self.u[1].dof.shape,'d')
         self.low_order_hvnp1 = numpy.zeros(self.u[2].dof.shape,'d')
 
-        # CREATE VECTORS TO COMPUTE edge_based_cfl from choose_dt within RKEV
-        # Note: it is important to have this after Cx is defined
-        if self.dLow is None:
-            self.dLow = np.zeros(Cx.size,'d')
-        
         numDOFsPerEqn = self.u[0].dof.size #(mql): I am assuming all variables live on the same FE space
         numNonZeroEntries = len(Cx)
         #Load the unknowns into the finite element dof
@@ -1342,7 +1328,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             rowptr_cMatrix,
             colind_cMatrix, 
             self.ML, 
-            self.edge_based_cfl, 
             self.timeIntegration.runCFL,
             self.hEps,
             self.hReg,
@@ -1369,9 +1354,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj]+self.stride[cj]*dofN] = 0. #g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-
-        #self.timeIntegration.dt=self.timeIntegration.runCFL/globalMax(self.edge_based_cfl.max())
-        #logEvent("...   Time step = " + str(self.timeIntegration.dt),level=2)
 
         if (self.secondCallCalculateResidual==0):
             edge_based_cflMax=globalMax(self.edge_based_cfl.max())*self.timeIntegration.dt
