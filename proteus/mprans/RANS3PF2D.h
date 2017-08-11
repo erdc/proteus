@@ -67,6 +67,7 @@ namespace proteus
 				   double* nodeDiametersArray,
 				   double hFactor,
 				   int nElements_global,
+				   int nElements_owned,
 				   int nElementBoundaries_owned,
 				   double useRBLES,
 			           double useMetrics, 
@@ -260,6 +261,7 @@ namespace proteus
 				   double* nodeDiametersArray,
 				   double hFactor,
 				   int nElements_global,
+				   int nElements_owned,
 				   double useRBLES,
 			           double useMetrics, 
 				   double alphaBDF,
@@ -890,7 +892,8 @@ namespace proteus
     }
     
     inline
-      void updateSolidParticleTerms(const double particle_nitsche,
+      void updateSolidParticleTerms(bool element_owned,
+				    const double particle_nitsche,
 				    const double dV,
 				    const int nParticles,
 				    const int sd_offset,
@@ -970,18 +973,30 @@ namespace proteus
 				   (wStar-w_s)*(wStar-w_s));
       double C_surf = nu*penalty;
 	  double C_vol = alpha + beta*rel_vel_norm;
-	  C = (D_s*C_surf + (1.0 - H_s)*C_vol);
+		// if (D_s>10)
+		// printf("RANS3PF2D i=%d, D_s=%f, H_s=%f,C_surf=%f,viscosity=%f,C_vol=%f,alpha=%f, beta=%f,rel_vel_norm=%f\n pos=%f,%f,%f\t V=%f,%f,%f\t V_s=%f,%f,%f\t\n",
+		// 				  i, D_s, H_s, C_surf,nu, C_vol,alpha,beta,rel_vel_norm,
+		// 				  x,y,z, u,v,w, u_s,v_s,w_s);
+
+	  C += (D_s*C_surf + (1.0 - H_s)*C_vol);
 	  force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
 	  force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
 
 	  //always 3D for particle centroids
 	  r_x = x - particle_centroids[i*3+0];
 	  r_y = y - particle_centroids[i*3+1];
-	  particle_surfaceArea[i] += dV*D_s;
-	  //always 3D for particle forces
-	  particle_netForces[i*3+0] += force_x;
-	  particle_netForces[i*3+1] += force_y;
-	  particle_netMoments[i*3+2] += (r_x*force_y - r_y*force_x);
+
+	if (element_owned)
+	  {
+
+	    particle_surfaceArea[i] += dV*D_s;
+	    particle_netForces[i*3+0] += force_x;
+	    particle_netForces[i*3+1] += force_y;
+	    particle_netMoments[i*3+2] += (r_x*force_y - r_y*force_x);
+	  }
+
+
+
 	}
       mom_u_source += C*(u-u_s);
       mom_v_source += C*(v-v_s);
@@ -1640,6 +1655,7 @@ namespace proteus
 			   double* nodeDiametersArray,
 			   double hFactor,
 			   int nElements_global,
+			   int nElements_owned,
 			   int nElementBoundaries_owned,
 			   double useRBLES,
 			   double useMetrics, 
@@ -2102,7 +2118,8 @@ namespace proteus
 						dmom_v_source,
 						dmom_w_source);
 	      double C_particles=0.0;
-	      updateSolidParticleTerms(particle_nitsche,
+		updateSolidParticleTerms(eN < nElements_owned,
+					   particle_nitsche,
 				       dV,
 				       nParticles,
 				       nQuadraturePoints_global,
@@ -3348,6 +3365,7 @@ namespace proteus
 			   double* nodeDiametersArray,
 			   double hFactor,
 			   int nElements_global,
+			   int nElements_owned,
 			   double useRBLES,
 			   double useMetrics, 
 			   double alphaBDF,
@@ -3834,7 +3852,8 @@ namespace proteus
 						dmom_v_source,
 						dmom_w_source);
 	      double C_particles=0.0;
-	      updateSolidParticleTerms(particle_nitsche,
+		updateSolidParticleTerms(eN < nElements_owned,
+					   particle_nitsche,
 				       dV,
 				       nParticles,
 				       nQuadraturePoints_global,
