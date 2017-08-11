@@ -685,12 +685,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
         if self.comm.isMaster():
-            logEvent("wettedAreas\n"+
-                     `self.wettedAreas[:]` +
-                     "\nForces_p\n" +
-                     `self.netForces_p[:,:]` +
-                     "\nForces_v\n" +
-                     `self.netForces_v[:,:]`)
             self.wettedAreaHistory.write("%21.16e\n" % (self.wettedAreas[-1],))
             self.forceHistory_p.write("%21.16e %21.16e %21.16e\n" %tuple(self.netForces_p[-1,:]))
             self.forceHistory_p.flush()

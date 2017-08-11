@@ -91,8 +91,10 @@ class BC_RANS(BC_Base):
         self.v_diffusive.setConstantBC(0.)
         self.w_diffusive.setConstantBC(0.)
 
-    def setTank(self):
-        b_or = self._b_or
+    def setTank(self, b_or=None):
+        if b_or is None:
+            assert self._b_or is not None, 'Boundary orientation must be defined!'
+            b_or = self._b_or
         self.u_stress.uOfXT = 0.
         self.v_stress.uOfXT = 0.
         self.w_stress.uOfXT = 0.
@@ -116,9 +118,9 @@ class BC_RANS(BC_Base):
         self.hx_dirichlet.setConstantBC(0.)
         self.hy_dirichlet.setConstantBC(0.)
         self.hz_dirichlet.setConstantBC(0.)
-        self.u_stress.uOfXT = 0
-        self.v_stress.uOfXT = 0
-        self.w_stress.uOfXT = 0
+        self.u_stress.uOfXT = 0.
+        self.v_stress.uOfXT = 0.
+        self.w_stress.uOfXT = 0.
 
     def setNoSlip(self):
         """
@@ -564,7 +566,7 @@ class BC_RANS(BC_Base):
         self.k_diffusive.setConstantBC(0.0) 
         self.dissipation_diffusive.setConstantBC(0.0)
 
-        if U != None:            
+        if U is not None:            
             def get_inlet_ux_dirichlet(i):
                 def ux_dirichlet(x, t):
                     phi = x[vert_axis] - seaLevel
