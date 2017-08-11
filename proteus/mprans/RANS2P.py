@@ -5,6 +5,7 @@ import proteus
 from proteus.mprans.cRANS2P import *
 from proteus.mprans.cRANS2P2D import *
 from proteus import Profiling
+from proteus import LinearAlgebraTools as LAT
 class SubgridError(proteus.SubgridError.SGE_base):
     """
     Create a SubgridError  object for two-phase incompressible flow
@@ -760,6 +761,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 assert self.u[ci].femSpace.__class__.__name__ == self.u[0].femSpace.__class__.__name__, "to reuse_test_trial_quad all femSpaces must be the same!"
         ## Simplicial Mesh
         self.mesh = self.u[0].femSpace.mesh #assume the same mesh for  all components for now
+        self.par_info = LinearAlgebraTools.ParInfo_petsc4py()
         self.testSpace = testSpaceDict
         self.dirichletConditions = dofBoundaryConditionsDict
         self.dirichletNodeSetList=None #explicit Dirichlet  conditions for now, no Dirichlet BC constraints
