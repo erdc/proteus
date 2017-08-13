@@ -730,7 +730,7 @@ class SchurOperatorConstructor:
         output_matrix : bool 
             Determines whether matrix should be exported.
         recalculate : bool
-            Flag indicating whther matrix should be rebuilt every time it's used
+            Flag indicating whether matrix should be rebuilt every iteration
 
         Returns
         -------
