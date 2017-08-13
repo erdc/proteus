@@ -75,9 +75,9 @@ def csr_2_petsc(size,csr):
     Parameters:
     ----------
     size : tuple
-        Two entires: (num_rows, num_cols)
+        A 2-tuple with the number of matrix rows and columns.
     csr : tuple
-        (row_idx, col_idx, vals)
+        A 3-tuple with the sparse matrix csr information.
 
     Returns:
     --------
@@ -626,7 +626,20 @@ class LSCInv_shell(InvOperatorShell):
         self.kspBQinvBt.setUp()
 
     def apply(self,A,x,y):
-        """ Apply the LSC inverse operator """
+        """ Apply the LSC inverse operator 
+        
+        Parameters
+        ----------
+        A : NULL
+            A necessary PETSc4py placeholder for internal function operations.
+        x : PETSc4py vector
+            The incoming residual vector which the operator is applied to.
+
+        Returns
+        --------
+        y : PETSc4py vector
+            The result of the preconditioners action on x.
+        """
         # create temporary vectors
         B_sizes = self.B.getSizes()
         x_tmp = p4pyPETSc.Vec().create()
