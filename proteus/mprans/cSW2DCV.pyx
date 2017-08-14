@@ -31,13 +31,14 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 		     double hEps,
 		     double* hReg, 
 		     int LUMPED_MASS_MATRIX)
-        void calculateEdgeBasedCFL(
+        double calculateEdgeBasedCFL(
 		     double g,
 		     int numDOFsPerEqn,
 		     double* lumped_mass_matrix, 
 		     double* h_lstage,
 		     double* hu_lstage,
 		     double* hv_lstage, 
+		     double* b_dof,
 		     int* csrRowIndeces_DofLoops, 
 		     int* csrColumnOffsets_DofLoops, 
 		     double hEps,
@@ -47,6 +48,7 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 		     double* CTx,
 		     double* CTy,
 		     double* dLow,
+		     double run_cfl,
 		     double* edge_based_cfl)
         void calculateResidual_SUPG(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -185,7 +187,7 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       int COMPUTE_NORMALS,
 			       double* normalx, 
 			       double* normaly, 
-			       double* dLow, 
+			       double* dLow,
 			       int lstage)
         void calculateResidual_entropy_viscosity(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -324,7 +326,7 @@ cdef extern from "SW2DCV.h" namespace "proteus":
 			       int COMPUTE_NORMALS,
 			       double* normalx, 
 			       double* normaly, 
-			       double* dLow, 
+			       double* dLow,
 			       int lstage)
         void calculateJacobian_SUPG(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
@@ -741,6 +743,7 @@ cdef class cSW2DCV_base:
 	       numpy.ndarray h_lstage, 
 	       numpy.ndarray hu_lstage, 
 	       numpy.ndarray hv_lstage, 
+	       numpy.ndarray b_dof, 
 	       numpy.ndarray csrRowIndeces_DofLoops, 
 	       numpy.ndarray csrColumnOffsets_DofLoops, 
 	       double hEps, 
@@ -749,15 +752,17 @@ cdef class cSW2DCV_base:
 	       numpy.ndarray Cy,
 	       numpy.ndarray CTx,
 	       numpy.ndarray CTy,
-	       numpy.ndarray dLow,	       
+	       numpy.ndarray dLow,
+	       double run_cfl,	       
 	       numpy.ndarray edge_based_cfl):
-       self.thisptr.calculateEdgeBasedCFL(
+       return self.thisptr.calculateEdgeBasedCFL(
 			    g, 
 			    numDOFsPerEqn,
 			    <double*> lumped_mass_matrix.data, 
 			    <double*> h_lstage.data, 
 			    <double*> hu_lstage.data, 
 			    <double*> hv_lstage.data, 
+			    <double*> b_dof.data,   
 			    <int*> csrRowIndeces_DofLoops.data,
 			    <int*> csrColumnOffsets_DofLoops.data,
 			    hEps,
@@ -767,6 +772,7 @@ cdef class cSW2DCV_base:
 			    <double*> CTx.data,
 			    <double*> CTy.data,
 			    <double*> dLow.data,
+			    run_cfl,
 			    <double*> edge_based_cfl.data)
    def calculateResidual_SUPG(self,
 			 numpy.ndarray mesh_trial_ref,
