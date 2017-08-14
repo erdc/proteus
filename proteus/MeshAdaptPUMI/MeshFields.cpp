@@ -58,10 +58,12 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArr
     assert(f);
   }
   if (!f) {
-    assert(nVar == 1 || nVar == 3);
+    assert(nVar == 1 || nVar == 3 || nVar == 9);
     int valueType;
     if (nVar == 1)
       valueType = apf::SCALAR;
+    else if(nVar == 9)
+      valueType = apf::MATRIX;
     else
       valueType = apf::VECTOR;
     f = apf::createFieldOn(m, name, valueType);

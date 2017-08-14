@@ -15,13 +15,19 @@ static void SmoothField(apf::Field* f);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
    thickness of refinement near the interface */
-static double isotropicFormula(double phi, double hmin, double hmax)
+static double isotropicFormula(double phi, double dphi, double verr, double hmin, double hmax)
 {
   double size;
+  double dphi_size_factor;
+  double v_size_factor;
   if (fabs(phi) < 5.0*hmin)
-    size = hmin;
+    {
+      dphi_size_factor = fmax(hmin/10.0,fmin(1.0,pow(((hmin/1000.0)/fabs(dphi+1.0e-8)),1.0/2.0)));
+      size = hmin*dphi_size_factor;
+    }
   else
     size = hmax;
+  size = fmax(hmin/100.0,fmin(size,0.001/(verr+1.0e-8))); 
   return size;
 }
 
@@ -33,9 +39,15 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   apf::MeshEntity* v;
   apf::Field* phif = m->findField("phi");
   assert(phif);
+  apf::Field* phiCorr = m->findField("phiCorr");
+  assert(phiCorr);
+  apf::Field* velocityError = m->findField("velocityError");
+  assert(phiCorr);
   while ((v = m->iterate(it))) {
     double phi = apf::getScalar(phif, v, 0);
-    double size = isotropicFormula(phi, hmin, hmax);
+    double dphi = apf::getScalar(phiCorr, v, 0);
+    double verr = apf::getScalar(velocityError, v, 0);
+    double size = isotropicFormula(phi, dphi, verr, hmin, hmax);
     apf::setScalar(size_iso, v, 0, size);
   }
   m->end(it);
@@ -56,8 +68,10 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
       it = m->begin(0);
       while ((v = m->iterate(it))) {
 	double phi = apf::getScalar(phif, v, 0);
+	double dphi = apf::getScalar(phiCorr, v, 0);
+	double verr = apf::getScalar(velocityError, v, 0);
 	double size_current = apf::getScalar(size_iso, v, 0);
-	double size = fmin(size_current,isotropicFormula(phi, hmin, hmax));
+	double size = fmin(size_current,isotropicFormula(phi, dphi, verr, hmin, hmax));
 	err_h_max = fmax(err_h_max,fabs(size_current-size));
 	apf::setScalar(size_iso, v, 0, size);
       }

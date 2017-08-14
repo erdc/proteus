@@ -163,7 +163,9 @@ namespace proteus
 				   double* wettedAreas,
 				   double* netForces_p,
 				   double* netForces_v,
-				   double* netMoments)=0;
+				   double* netMoments,
+				   double* velocityError,
+				   double* velocityErrorNodal)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -1739,7 +1741,9 @@ namespace proteus
 			   double* wettedAreas,
 			   double* netForces_p,
 			   double* netForces_v,
-			   double* netMoments)
+			   double* netMoments,
+			   double* velocityError,
+			   double* velocityErrorNodal)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual

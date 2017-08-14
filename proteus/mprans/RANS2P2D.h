@@ -163,7 +163,9 @@ namespace proteus
 				   double* wettedAreas,
 				   double* netForces_p,
 				   double* netForces_v,
-				   double* netMoments)=0;
+				   double* netMoments,
+				   double* velocityError,
+				   double* velocityErrorNodal)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -1732,7 +1734,9 @@ namespace proteus
 			   double* wettedAreas,
 			   double* netForces_p,
 			   double* netForces_v,
-			   double* netMoments)
+			   double* netMoments,
+			   double* velocityError,
+			   double* velocityErrorNodal)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -1748,6 +1752,7 @@ namespace proteus
 	  register double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
 	    elementResidual_u[nDOF_test_element],
 	    elementResidual_v[nDOF_test_element],
+	    velocityErrorElement[nDOF_test_element],
 	    //elementResidual_w[nDOF_test_element],
 	    eps_rho,eps_mu;
 	  const double* elementResidual_w(NULL);
@@ -1761,6 +1766,7 @@ namespace proteus
 	      elementResidual_p[i]=0.0;
 	      elementResidual_u[i]=0.0;
 	      elementResidual_v[i]=0.0;
+	      velocityErrorElement[i]=0.0;
 	      /* elementResidual_w[i]=0.0; */
 	    }//i
 	  //
@@ -2258,6 +2264,9 @@ namespace proteus
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  register int i_nSpace=i*nSpace;
+		  velocityErrorElement[i]+=sqrt(velocityError[eN_k_nSpace+0]*velocityError[eN_k_nSpace+0]+
+						velocityError[eN_k_nSpace+1]*velocityError[eN_k_nSpace+1])*
+		    p_test_dV[i];
                   /* std::cout<<"elemRes_mesh "<<mesh_vel[0]<<'\t'<<mesh_vel[2]<<'\t'<<p_test_dV[i]<<'\t'<<(q_dV_last[eN_k]/dV)<<'\t'<<dV<<std::endl; */
 		  elementResidual_mesh[i] += ck.Reaction_weak(1.0,p_test_dV[i]) -
                     ck.Reaction_weak(1.0,p_test_dV[i]*q_dV_last[eN_k]/dV) -
@@ -2314,7 +2323,7 @@ namespace proteus
 	  for(int i=0;i<nDOF_test_element;i++) 
 	    { 
 	      register int eN_i=eN*nDOF_test_element+i;
-
+	      velocityErrorNodal[p_l2g[eN_i]]+= velocityErrorElement[i];
 	      elementResidual_p_save[eN_i] +=  elementResidual_p[i];
               mesh_volume_conservation_element_weak += elementResidual_mesh[i];
 	      globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i];
