@@ -437,6 +437,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             if self.dragBetaTypes is not None:
                 for eN in range(self.q_dragBeta.shape[0]):
                     self.q_dragBeta[eN,:] = self.dragBetaTypes[self.elementMaterialTypes[eN]]
+        cq['velocityError'] = cq[('velocity',0)].copy()
         #
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         #VRANS
@@ -1276,7 +1277,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                        self.testSpace[0].referenceFiniteElement.localFunctionSpace.dim,
                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
                                        compKernelFlag)
-
+        self.velocityErrorNodal=self.u[0].dof.copy()
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -1477,7 +1478,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.wettedAreas,
             self.coefficients.netForces_p,
             self.coefficients.netForces_v,
-            self.coefficients.netMoments)
+            self.coefficients.netMoments,
+            self.q['velocityError'],
+            self.velocityErrorNodal)
 	from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(self.coefficients.wettedAreas[i])
@@ -1856,8 +1859,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.velocityPostProcessor.vpp_algorithms[ci].updateWeights()
                         self.velocityPostProcessor.vpp_algorithms[ci].computeGeometricInfo()
                         self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian[cj] = True
+        self.q['velocityError'][:]=self.q[('velocity',0)]
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
-
+        self.q['velocityError']-=self.q[('velocity',0)]
+        
     def updateAfterMeshMotion(self):
         pass
 
