@@ -641,29 +641,31 @@ class ExplicitLumpedMassMatrixShallowWaterEquationsSolver(Newton):
     """
 
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        ###########
-        # STAGE 1 # 
-        ###########
-        # y_stage1 = yn + dt*L(yn,t) 
+        ######################
+        # CALCULATE SOLUTION #
+        ######################
+        self.F.secondCallCalculateResidual = 0
         self.computeResidual(u,r,b)
         u[:] = r
+        
+        ############################
         # FCT STEP ON WATER HEIGHT #
+        ############################
         logEvent("   FCT Step", level=1)
         self.F.FCTStep()
 
         #############################################
         # UPDATE SOLUTION THROUGH calculateResidual #
         #############################################
-        self.F.auxiliaryCallCalculateResidual = True
+        self.F.secondCallCalculateResidual = 1
         self.computeResidual(u,r,b)
-        self.F.auxiliaryCallCalculateResidual = False
+
+        self.F.check_positivity_water_height=True
 
         # Compute infinity norm of vel-x. This is for 1D well balancing test
         #exact_hu = 2 + 0.*self.F.u[1].dof
         #error = numpy.abs(exact_hu - self.F.u[1].dof).max()
         #self.F.inf_norm_hu.append(error)
-
-        self.F.check_positivity_water_height=True
 
 class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
     """
@@ -673,11 +675,10 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
     """
 
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        FIX_ROUNDOFF_ERROR = False
-        
-        ##############################
-        # ENTROPY VISCOSITY SOLUTION #
-        ##############################
+        ######################
+        # CALCULATE SOLUTION #
+        ######################
+        self.F.secondCallCalculateResidual = 0
         logEvent("   Entropy viscosity solution with consistent mass matrix", level=1)
         self.computeResidual(u,r,b)
         if self.updateJacobian or self.fullNewton:
@@ -701,15 +702,8 @@ class ExplicitConsistentMassMatrixShallowWaterEquationsSolver(Newton):
         self.F.FCTStep()
 
         # DISTRIBUTE SOLUTION FROM u to u[ci].dof
-        self.F.auxiliaryCallCalculateResidual = True
+        self.F.secondCallCalculateResidual = 1
         self.computeResidual(u,r,b)
-        self.F.auxiliaryCallCalculateResidual = False
-
-        #self.F.setUnknowns(u)        
-        # Get values at quad points (in case there is a need to do convergence tests)
-        #for ci in range(self.F.nc):
-        #    self.F.u[ci].getValues(self.F.q[('w',0)],self.F.q[('u',ci)])
-
         self.F.check_positivity_water_height=True
 
 import deim_utils
