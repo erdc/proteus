@@ -206,6 +206,8 @@ namespace proteus
              double distortion0
                                      )
     {
+      double dist_last = distortion_last[0];
+      double dil_last = dilation_last[0];
       double dilation;
       if (det_J0 != 0) {
         /* dilation = 0.5*(det_J0/det_J+det_J/det_J0); */
@@ -268,7 +270,7 @@ namespace proteus
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]/* +strain[sZZ] */),
 //E=pow(materialProperties[0]/det_J, Eweight),//for mesh motion penalize small elements
-        E=(0.001+Eweight)/det_J0, nu=materialProperties[1];
+        E=materialProperties[0]*Eweight/det_J0+0.000001, nu=materialProperties[1];
       E_in_array[0] = E;
       /* std::cout << "E " << E << "\n"; */
       /* std::cout << "Eweight " << Eweight << "\n"; */
