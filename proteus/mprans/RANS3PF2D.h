@@ -551,6 +551,7 @@ namespace proteus
     inline
     void evaluateCoefficients(const double eps_rho,
 			      const double eps_mu,
+				  const double eps_s,
 			      const double sigma,
 			      const double rho_0,
 			      double nu_0,
@@ -564,6 +565,9 @@ namespace proteus
 			      const double& vf,
 			      const double& phi,
 			      const double n[nSpace],
+				  const int nParticles,
+				  const int sd_offset,
+				  const	double* particle_signed_distances,
 			      const double& kappa,
 			      const double porosity,//VRANS specific
 			      const double& p,
@@ -671,30 +675,36 @@ namespace proteus
       eddy_viscosity = nu_t;
       // mass (volume accumulation)
       //..hardwired
-      
+
+ 	double phi_s,H_s;	 
+	for (int i=0;i<nParticles;i++){
+		phi_s = particle_signed_distances[i*sd_offset];
+	}
+
+	  double phi_s_effect=(phi_s>0.0)?1.0:0.0;
       //u momentum accumulation
-      mom_u_acc=u;//trick for non-conservative form
-      dmom_u_acc_u=porosity;
+      mom_u_acc=phi_s_effect*u;//trick for non-conservative form
+      dmom_u_acc_u=phi_s_effect*porosity;
   
       //v momentum accumulation
-      mom_v_acc=v;
-      dmom_v_acc_v=porosity;
+      mom_v_acc=phi_s_effect*v;
+      dmom_v_acc_v=phi_s_effect*porosity;
   
       /* //w momentum accumulation */
       /* mom_w_acc=w; */
       /* dmom_w_acc_w=porosity; */
 
       //mass advective flux
-      mass_adv[0]=porosity*u;
-      mass_adv[1]=porosity*v;
+      mass_adv[0]=phi_s_effect*porosity*u;
+      mass_adv[1]=phi_s_effect*porosity*v;
       /* mass_adv[2]=porosity*w; */
   
-      dmass_adv_u[0]=porosity;
+      dmass_adv_u[0]=phi_s_effect*porosity;
       dmass_adv_u[1]=0.0;
       /* dmass_adv_u[2]=0.0; */
 
       dmass_adv_v[0]=0.0;
-      dmass_adv_v[1]=porosity;
+      dmass_adv_v[1]=phi_s_effect*porosity;
       /* dmass_adv_v[2]=0.0; */
 
       /* dmass_adv_w[0]=0.0; */
@@ -754,20 +764,20 @@ namespace proteus
       /* dmom_w_adv_w[2]=0.0; */
 
       //u momentum diffusion tensor
-      mom_uu_diff_ten[0] = porosity*2.0*nu;
-      mom_uu_diff_ten[1] = porosity*nu;
+      mom_uu_diff_ten[0] = phi_s_effect*porosity*2.0*nu;
+      mom_uu_diff_ten[1] = phi_s_effect*porosity*nu;
       /* mom_uu_diff_ten[2] = porosity*nu; */
   
-      mom_uv_diff_ten[0]=porosity*nu;
+      mom_uv_diff_ten[0]= phi_s_effect*porosity*nu;
   
       /* mom_uw_diff_ten[0]=porosity*nu; */
   
       //v momentum diffusion tensor
-      mom_vv_diff_ten[0] = porosity*nu;
-      mom_vv_diff_ten[1] = porosity*2.0*nu;
+      mom_vv_diff_ten[0] = phi_s_effect*porosity*nu;
+      mom_vv_diff_ten[1] = phi_s_effect*porosity*2.0*nu;
       /* mom_vv_diff_ten[2] = porosity*nu; */
   
-      mom_vu_diff_ten[0]=porosity*nu;
+      mom_vu_diff_ten[0]=phi_s_effect*porosity*nu;
   
       /* mom_vw_diff_ten[0]=porosity*nu; */
   
@@ -782,8 +792,8 @@ namespace proteus
   
       //momentum sources
       norm_n = sqrt(n[0]*n[0]+n[1]*n[1]);//+n[2]*n[2]);
-      mom_u_source = -porosity*g[0];// - porosity*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
-      mom_v_source = -porosity*g[1];// - porosity*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
+      mom_u_source = -phi_s_effect*porosity*g[0];// - porosity*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
+      mom_v_source = -phi_s_effect*porosity*g[1];// - porosity*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
       /* mom_w_source = -porosity*g[2];// - porosity*d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8)); */
    
       //u momentum Hamiltonian (pressure)
@@ -805,15 +815,15 @@ namespace proteus
       /* dmom_w_ham_grad_p[2]=porosity/rho; */
 
       //u momentum Hamiltonian (advection)
-      mom_u_ham += porosity*(uStar*grad_u[0]+vStar*grad_u[1]);
-      dmom_u_ham_grad_u[0]=porosity*uStar;
-      dmom_u_ham_grad_u[1]=porosity*vStar;
+      mom_u_ham += phi_s_effect*porosity*(uStar*grad_u[0]+vStar*grad_u[1]);
+      dmom_u_ham_grad_u[0]=phi_s_effect*porosity*uStar;
+      dmom_u_ham_grad_u[1]=phi_s_effect*porosity*vStar;
       /* dmom_u_ham_grad_u[2]=porosity*wStar; */
   
       //v momentum Hamiltonian (advection)
-      mom_v_ham += porosity*(uStar*grad_v[0]+vStar*grad_v[1]);
-      dmom_v_ham_grad_v[0]=porosity*uStar;
-      dmom_v_ham_grad_v[1]=porosity*vStar;
+      mom_v_ham += phi_s_effect*porosity*(uStar*grad_v[0]+vStar*grad_v[1]);
+      dmom_v_ham_grad_v[0]=phi_s_effect*porosity*uStar;
+      dmom_v_ham_grad_v[1]=phi_s_effect*porosity*vStar;
       /* dmom_v_ham_grad_v[2]=porosity*wStar; */
      
       /* //w momentum Hamiltonian (advection) */
@@ -873,6 +883,7 @@ namespace proteus
                                           fluid_velocity,
                                           solid_velocity,
                                           viscosity);
+
       new_beta/=rho;
       mom_u_source += (1.0 - phi_s)*new_beta*(u-u_s);
       mom_v_source += (1.0 - phi_s)*new_beta*(v-v_s);
@@ -971,24 +982,22 @@ namespace proteus
 	  double rel_vel_norm=sqrt((uStar-u_s)*(uStar-u_s)+
 				   (vStar-v_s)*(vStar-v_s)+
 				   (wStar-w_s)*(wStar-w_s));
-      double C_surf = nu*penalty;
-	  double C_vol = alpha + beta*rel_vel_norm;
-		// if (D_s>10)
-		// printf("RANS3PF2D i=%d, D_s=%f, H_s=%f,C_surf=%f,viscosity=%f,C_vol=%f,alpha=%f, beta=%f,rel_vel_norm=%f\n pos=%f,%f,%f\t V=%f,%f,%f\t V_s=%f,%f,%f\t\n",
-		// 				  i, D_s, H_s, C_surf,nu, C_vol,alpha,beta,rel_vel_norm,
-		// 				  x,y,z, u,v,w, u_s,v_s,w_s);
+
+      double C_surf = (phi_s>0.0)?0.0:nu*penalty;
+	  double C_vol = (phi_s>0.0)?0.0:(alpha + beta*rel_vel_norm);
+
 
 	  C += (D_s*C_surf + (1.0 - H_s)*C_vol);
-	  force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho);
-	  force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho);
+	// The surface penalty term may need to be C_surf*rel_vel_norm*(u-u_s)*rho  instead of C_surf*(u-u_s)*rho ?
+	  force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*rel_vel_norm*(u-u_s)*rho) ;//+ dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
+	  force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*rel_vel_norm*(v-v_s)*rho) ;//+ dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
+
 
 	  //always 3D for particle centroids
 	  r_x = x - particle_centroids[i*3+0];
 	  r_y = y - particle_centroids[i*3+1];
 
-	if (element_owned)
-	  {
-
+	if (element_owned){
 	    particle_surfaceArea[i] += dV*D_s;
 	    particle_netForces[i*3+0] += force_x;
 	    particle_netForces[i*3+1] += force_y;
@@ -1001,9 +1010,13 @@ namespace proteus
       mom_u_source += C*(u-u_s);
       mom_v_source += C*(v-v_s);
       
+
+	
       dmom_u_source[0] += C;
       dmom_v_source[1] += C;
 
+  	// if(phi_s<=0.0 && C==0.0)
+	//   printf("dmom_u_source[0]=%f,dmom_v_source[1]=%f in updateSolidParticleTerms\n",dmom_u_source[0],dmom_v_source[1]);
       //Nitsche terms
       mom_u_ham    -= D_s*porosity*nu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]);
 	  dmom_u_ham_grad_u[0] -= D_s*porosity*nu*phi_s_normal[0];
@@ -2008,6 +2021,7 @@ namespace proteus
 	      //
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
+				   particle_eps,
 				   sigma,
 				   rho_0,
 				   nu_0,
@@ -2021,6 +2035,9 @@ namespace proteus
 				   vf[eN_k],
 				   phi[eN_k],
 				   &normal_phi[eN_k_nSpace],
+				   nParticles,
+				   nQuadraturePoints_global,
+				   &particle_signed_distances[eN_k],
 				   kappa_phi[eN_k],
 				   //VRANS
 				   porosity,
@@ -2118,6 +2135,8 @@ namespace proteus
 						dmom_v_source,
 						dmom_w_source);
 	      double C_particles=0.0;
+
+
 		updateSolidParticleTerms(eN < nElements_owned,
 					   particle_nitsche,
 				       dV,
@@ -2403,6 +2422,17 @@ namespace proteus
 		  /*   ck.SubgridError(subgridError_v,Lstar_v_p[i]);// +  */
 		  /*   /\* ck.SubgridError(subgridError_w,Lstar_w_p[i]); *\/ */
 
+		// if (dmom_u_acc_u!=dmom_u_acc_u)
+		// 	printf("dmom_u_acc_u in nan\n");
+		// if (mom_u_adv!=mom_u_adv)
+		// 	printf("mom_u_adv in nan\n");
+		// if (mom_u_source!=mom_u_source)
+		// 	printf("mom_u_source in nan\n");
+		// if (mom_u_ham!=mom_u_ham)
+		// 	printf("mom_u_ham in nan\n");
+
+				
+
 		  elementResidual_u[i] += ck.Mass_weak(dmom_u_acc_u*mom_u_acc_t,vel_test_dV[i]) + 
 		    ck.Advection_weak(mom_u_adv,&vel_grad_test_dV[i_nSpace]) +
 		    ck.Diffusion_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) + 
@@ -2414,6 +2444,16 @@ namespace proteus
 		    ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); 
 		 
+
+		// if (dmom_v_acc_v!=dmom_v_acc_v)
+		// 	printf("dmom_v_acc_v in nan\n");
+		// if (mom_v_adv!=mom_v_adv)
+		// 	printf("mom_v_adv in nan\n");
+		// if (mom_v_source!=mom_v_source)
+		// 	printf("mom_v_source in nan\n");
+		// if (mom_v_ham!=mom_v_ham)
+		// 	printf("mom_v_ham in nan\n");	
+
 		  elementResidual_v[i] += ck.Mass_weak(dmom_v_acc_v*mom_v_acc_t,vel_test_dV[i]) + 
 		    ck.Advection_weak(mom_v_adv,&vel_grad_test_dV[i_nSpace]) +
 		    ck.Diffusion_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) + 
@@ -2664,7 +2704,8 @@ namespace proteus
 	      
 	      eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 	      eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-	      
+	      double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+
 	      //compute shape and solution information
 	      //shape
 	      /* ck.gradTrialFromRef(&p_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,p_grad_trial_trace); */
@@ -2703,6 +2744,7 @@ namespace proteus
 	      double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.); //not interested in saving boundary eddy viscosity for now
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
+				   particle_eps,
 				   sigma,
 				   rho_0,
 				   nu_0,
@@ -2716,6 +2758,9 @@ namespace proteus
 				   ebqe_vf_ext[ebNE_kb],
 				   ebqe_phi_ext[ebNE_kb],
 				   &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+				   nParticles,
+				   nQuadraturePoints_global,
+				   &particle_signed_distances[ebNE_kb],
 				   ebqe_kappa_phi_ext[ebNE_kb],
 				   //VRANS
 				   porosity_ext,
@@ -2779,6 +2824,7 @@ namespace proteus
                                    ebqe_nu[ebNE_kb]);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
+				   particle_eps,
 				   sigma,
 				   rho_0,
 				   nu_0,
@@ -2792,6 +2838,9 @@ namespace proteus
 				   bc_ebqe_vf_ext[ebNE_kb],
 				   bc_ebqe_phi_ext[ebNE_kb],
 				   &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+				   nParticles,
+				   nQuadraturePoints_global,
+				   &particle_signed_distances[ebNE_kb],
 				   ebqe_kappa_phi_ext[ebNE_kb],
 				   //VRANS
 				   porosity_ext,
@@ -3742,6 +3791,7 @@ namespace proteus
 	      double eddy_viscosity(0.),rhoSave,nuSave;//not really interested in saving eddy_viscosity in jacobian
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
+				   particle_eps,
 				   sigma,
 				   rho_0,
 				   nu_0,
@@ -3755,6 +3805,9 @@ namespace proteus
 				   vf[eN_k],
 				   phi[eN_k],
 				   &normal_phi[eN_k_nSpace],
+				   nParticles,
+				   nQuadraturePoints_global,
+				   &particle_signed_distances[eN_k],
 				   kappa_phi[eN_k],
 				   //VRANS
 				   porosity,
@@ -4179,12 +4232,20 @@ namespace proteus
 			ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
 			ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) + 
 			ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
+
 		      elementJacobian_u_v[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 			ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
 			ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
 			//
 			ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]);
+			
+
+			// if (i==j && (elementJacobian_u_u[i][j]==0. || elementJacobian_u_v[i][j]==0.))
+			// {					
+			// 	printf("i=j=%d, dmom_u_source[0]=%f, dmom_u_source[1]=%f, dmom_u_ham_grad_u[0]=%f,dmom_u_ham_grad_u[1]=%f\n", 
+			// 	i, dmom_u_source[0], dmom_u_source[1], dmom_u_ham_grad_u[0],dmom_u_ham_grad_u[1]);
+			// }
 		      /* elementJacobian_u_w[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +  */
 		      /* 	ck.SimpleDiffusionJacobian_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +  */
 		      /* 	//VRANS */
@@ -4210,6 +4271,16 @@ namespace proteus
 			ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
 			ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) + 
 			ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
+
+
+
+			// if (i==j && (elementJacobian_v_u[i][j]==0. || elementJacobian_v_v[i][j]==0.))
+			// {					
+			// 	printf("i=j=%d, dmom_v_source[0]=%f, dmom_v_source[1]=%f, dmom_v_ham_grad_v[0]=%f,dmom_v_ham_grad_v[1]=%f\n", 
+			// 	i, dmom_v_source[0], dmom_v_source[1], dmom_v_ham_grad_v[0],dmom_v_ham_grad_v[1]);
+			// }
+
+
 		      /* elementJacobian_v_w[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +   */
 		      /*   ck.SimpleDiffusionJacobian_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +  */
 		      /*   //VRANS */
@@ -4479,6 +4550,7 @@ namespace proteus
 
 	      eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 	      eps_mu  = epsFact_mu *(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	      const double particle_eps  = particle_epsFact*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 
 	      //compute shape and solution information
 	      //shape
@@ -4520,6 +4592,7 @@ namespace proteus
 	      double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.),rhoSave, nuSave;//not interested in saving boundary eddy viscosity for now
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
+				   particle_eps,
 				   sigma,
 				   rho_0,
 				   nu_0,
@@ -4533,6 +4606,9 @@ namespace proteus
 				   ebqe_vf_ext[ebNE_kb],
 				   ebqe_phi_ext[ebNE_kb],
 				   &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+				   nParticles,
+				   nQuadraturePoints_global,
+				   &particle_signed_distances[ebNE_kb],
 				   ebqe_kappa_phi_ext[ebNE_kb],
 				   //VRANS
 				   porosity_ext,
@@ -4596,6 +4672,7 @@ namespace proteus
                                    nuSave);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
+				   particle_eps,
 				   sigma,
 				   rho_0,
 				   nu_0,
@@ -4609,6 +4686,9 @@ namespace proteus
 				   bc_ebqe_vf_ext[ebNE_kb],
 				   bc_ebqe_phi_ext[ebNE_kb],
 				   &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+				   nParticles,
+				   nQuadraturePoints_global,
+				   &particle_signed_distances[ebNE_kb],
 				   ebqe_kappa_phi_ext[ebNE_kb],
 				   //VRANS
 				   porosity_ext,
