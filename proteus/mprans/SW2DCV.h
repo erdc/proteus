@@ -15,15 +15,16 @@
 #define POWER_SMOOTHNESS_INDICATOR 2
 #define LINEAR_FRICTION 1
 #define VEL_FIX_POWER 4.
+#define REESTIMATE_MAX_EDGE_BASED_CFL 0
 
 // FOR CELL BASED ENTROPY VISCOSITY 
-#define ENTROPY(g,h,hu,hv,z,one_over_hReg) 0.5*(g*h*h+hu*hu*one_over_hReg+hv*hv*one_over_hReg + 2.*g*h*z)
+#define ENTROPY(g,h,hu,hv,z,one_over_hReg) 0.5*(g*h*h + one_over_hReg*(hu*hu+hv*hv) + 2.*g*h*z)
 #define DENTROPY_DH(g,h,hu,hv,z,one_over_hReg) g*h - 0.5*(hu*hu+hv*hv)*std::pow(one_over_hReg,2) + g*z 
 #define DENTROPY_DHU(g,h,hu,hv,z,one_over_hReg) hu*one_over_hReg
 #define DENTROPY_DHV(g,h,hu,hv,z,one_over_hReg) hv*one_over_hReg
 
-#define ENTROPY_FLUX1(g,h,hu,hv,z,one_over_hReg) (ENTROPY(g,h,hu,hv,z,one_over_hReg)+0.5*g*h*h+g*h*z)*hu*one_over_hReg
-#define ENTROPY_FLUX2(g,h,hu,hv,z,one_over_hReg) (ENTROPY(g,h,hu,hv,z,one_over_hReg)+0.5*g*h*h+g*h*z)*hv*one_over_hReg
+#define ENTROPY_FLUX1(g,h,hu,hv,z,one_over_hReg) (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hu*one_over_hReg
+#define ENTROPY_FLUX2(g,h,hu,hv,z,one_over_hReg) (ENTROPY(g,h,hu,hv,z,one_over_hReg) + 0.5*g*h*h + g*h*z)*hv*one_over_hReg
 
 // FOR ESTIMATING MAX WAVE SPEEDS
 #define f(g,h,hZ) ( (h <= hZ) ? 2.*(sqrt(g*h)-sqrt(g*hZ)) : (h-hZ)*sqrt(0.5*g*(h+hZ)/h/hZ) )
@@ -75,23 +76,25 @@ namespace proteus
 			    double* hReg,
 			    int LUMPED_MASS_MATRIX
 			    )=0;
-      virtual void calculateEdgeBasedCFL(double g, 
-					 int numDOFsPerEqn, //number of DOFs
-					 double* lumped_mass_matrix, //lumped mass matrix (as vector)
-					 double* h_lstage, //DOFs of solution at last stage
-					 double* hu_lstage, 
-					 double* hv_lstage, 
-					 int* csrRowIndeces_DofLoops, //csr row indeces 
-					 int* csrColumnOffsets_DofLoops, //csr column offsets 
-					 double hEps,
-					 double* hReg,
-					 double* Cx, 
-					 double* Cy,
-					 double* CTx,
-					 double* CTy,
-					 double* dLow,
-					 double* edge_based_cfl
-					 )=0;
+      virtual double calculateEdgeBasedCFL(double g, 
+					   int numDOFsPerEqn, //number of DOFs
+					   double* lumped_mass_matrix, //lumped mass matrix (as vector)
+					   double* h_lstage, //DOFs of solution at last stage
+					   double* hu_lstage, 
+					   double* hv_lstage, 
+					   double* b_dof,
+					   int* csrRowIndeces_DofLoops, //csr row indeces 
+					   int* csrColumnOffsets_DofLoops, //csr column offsets 
+					   double hEps,
+					   double* hReg,
+					   double* Cx, 
+					   double* Cy,
+					   double* CTx,
+					   double* CTy,
+					   double* dLow,
+					   double run_cfl,
+					   double* edge_based_cfl
+					   )=0;
     virtual void calculateResidual_SUPG(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -240,7 +243,7 @@ namespace proteus
 				   double* normalx, 
 				   double* normaly, 
 				   // DISSIPATIVE LOW ORDER MATRIX 
-				   double* dLow, 
+				   double* dLow,
 				   int lstage
 				   )=0;
     virtual void calculateResidual_entropy_viscosity(// last EDGE BASED version
@@ -1965,23 +1968,27 @@ namespace proteus
 	}
     }
 
-    void calculateEdgeBasedCFL(double g, 
-			       int numDOFsPerEqn, //number of DOFs
-			       double* lumped_mass_matrix, //lumped mass matrix (as vector))
-			       double* h_dof_lstage, //DOFs of solution at last stage
-			       double* hu_dof_lstage, 
-			       double* hv_dof_lstage,
-			       int* csrRowIndeces_DofLoops, //csr row indeces 
-			       int* csrColumnOffsets_DofLoops, //csr column offsets 
-			       double hEps, 
-			       double* hReg,
-			       double* Cx, 
-			       double* Cy,
-			       double* CTx,
-			       double* CTy,
-			       double* dLow,
-			       double* edge_based_cfl)
+    double calculateEdgeBasedCFL(double g, 
+				 int numDOFsPerEqn, //number of DOFs
+				 double* lumped_mass_matrix, //lumped mass matrix (as vector))
+				 double* h_dof_lstage, //DOFs of solution at last stage
+				 double* hu_dof_lstage, 
+				 double* hv_dof_lstage,
+				 double* b_dof,
+				 int* csrRowIndeces_DofLoops, //csr row indeces 
+				 int* csrColumnOffsets_DofLoops, //csr column offsets 
+				 double hEps, 
+				 double* hReg,
+				 double* Cx, 
+				 double* Cy,
+				 double* CTx,
+				 double* CTy,
+				 double* dLow,
+				 double run_cfl,
+				 double* edge_based_cfl)
     {
+      register double psi[numDOFsPerEqn];
+      double max_edge_based_cfl = 0.;
       int ij=0;
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
@@ -1990,6 +1997,9 @@ namespace proteus
 	  double hvi = hv_dof_lstage[i]; 
 	  double dLowii = 0.;
 
+	  double alphai;
+	  double alpha_numerator = 0.;
+	  double alpha_denominator = 0.;
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    { //loop in j (sparsity pattern)
 	      int j = csrColumnOffsets_DofLoops[offset];
@@ -2014,10 +2024,14 @@ namespace proteus
 								hj,huj,hvj,
 								hi,hui,hvi,
 								hEps,hEps,false)*cji_norm); //hEps
-		  dLowii -= dLow[ij]; 
+		  dLowii -= dLow[ij]; 		 
+
+		  // FOR SMOOTHNESS INDICATOR //
+		  alpha_numerator += hj - hi;
+		  alpha_denominator += fabs(hj - hi);
 		}
 	      else
-		dLow[ij] = 0.;
+		dLow[ij] = 0.;	     
 	      //update ij
 	      ij+=1;
 	    }
@@ -2026,7 +2040,94 @@ namespace proteus
 	  //////////////////////////////
 	  double mi = lumped_mass_matrix[i];
 	  edge_based_cfl[i] = 2*fabs(dLowii)/mi;
+	  max_edge_based_cfl = fmax(max_edge_based_cfl,edge_based_cfl[i]);
+
+	  //////////////////////////////////
+	  // COMPUTE SMOOTHNESS INDICATOR //
+	  //////////////////////////////////	  
+	  if (hi <= hReg[i]) //hEps, hReg makes the method more robust
+	    alphai = 1.; 
+	  else
+	    {
+	      if (fabs(alpha_numerator) <= hEps) //hEps. Force alphai=0 in constant states. This for well balancing wrt friction
+		alphai = 0.;
+	      else 
+		alphai = fabs(alpha_numerator)/(alpha_denominator+1E-15);
+	    }
+	  if (POWER_SMOOTHNESS_INDICATOR==0)
+	    psi[i] = 1.0;
+	  else
+	    psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
 	}
+
+      if (REESTIMATE_MAX_EDGE_BASED_CFL==1)
+	{
+	  // CALCULATE FIRST GUESS dt //
+	  double dt = run_cfl/max_edge_based_cfl;
+	  ij=0;
+	  for (int i=0; i<numDOFsPerEqn; i++)
+	    {
+	      double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
+	      double hui = hu_dof_lstage[i]; 
+	      double hvi = hv_dof_lstage[i]; 
+	      double Zi = b_dof[i];
+	      double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); // hEps
+	      double ui = hui*one_over_hiReg;
+	      double vi = hvi*one_over_hiReg;
+	      // flux and stabilization variables to compute low order solution
+	      double ith_flux_term1 = 0.;
+	      double ith_dLij_minus_muLij_times_hStarStates = 0.;
+	      double ith_muLij_times_hStates = 0.;
+	      
+	      for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+		{
+		  int j = csrColumnOffsets_DofLoops[offset];
+		  double hj = h_dof_lstage[j]; // solution at time tn for the jth DOF
+		  double huj = hu_dof_lstage[j];
+		  double hvj = hv_dof_lstage[j];
+		  double Zj = b_dof[j];	      
+		  double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
+		  double uj = huj*one_over_hjReg;
+		  double vj = hvj*one_over_hjReg;
+		  
+		  // Star states for water height 
+		  double dLij, muLij, muLowij;
+		  double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
+		  double hStarji  = fmax(0., hj + Zj - fmax(Zi,Zj));
+		  
+		  // compute flux term
+		  ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
+		  if (i != j)
+		    {
+		      dLij = dLow[ij]*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
+
+		      muLowij = fmax(fmax(0.,-(ui*Cx[ij] + vi*Cy[ij])),fmax(0,(uj*Cx[ij] + vj*Cy[ij])));
+		      muLij = muLowij*fmax(psi[i],psi[j]); // enhance the order to 2nd order. No EV
+		      // compute dissipative terms
+		      ith_dLij_minus_muLij_times_hStarStates  += (dLij - muLij)*(hStarji-hStarij); 
+		      ith_muLij_times_hStates  += muLij*(hj-hi);	      
+		    }
+		  // update ij 
+		  ij += 1;
+		}
+	      
+	      double mi = lumped_mass_matrix[i];
+	      double low_order_hnp1 = hi - dt/mi*(ith_flux_term1
+						  - ith_dLij_minus_muLij_times_hStarStates
+						  - ith_muLij_times_hStates);
+	      while (low_order_hnp1 < -1E-14 && dt < 1.0)
+		{ // Water height is negative. Recalculate dt
+		  std::cout << "********** ... Reducing dt from original estimate to achieve positivity... **********" << std::endl;
+		  dt /= 2.;
+		  low_order_hnp1 = hi - dt/mi*(ith_flux_term1
+					       - ith_dLij_minus_muLij_times_hStarStates
+					       - ith_muLij_times_hStates);
+		}	  
+	    }
+	  // new max_edge_based_cfl
+	  max_edge_based_cfl = run_cfl/dt;
+	}
+      return max_edge_based_cfl;
     }
 
     void calculateResidual_SUPG(//element
@@ -2177,7 +2278,7 @@ namespace proteus
 			   int COMPUTE_NORMALS,
 			   double* normalx, 
 			   double* normaly, 
-			   double* dLow, 
+			   double* dLow,
 			   int lstage)
 			   
     {
@@ -3162,7 +3263,7 @@ namespace proteus
 			   int COMPUTE_NORMALS,
 			   double* normalx, 
 			   double* normaly, 
-			   double* dLow, 
+			   double* dLow,
 			   int lstage)
     {
       //FOR FRICTION//
@@ -3293,9 +3394,7 @@ namespace proteus
 	  register double global_entropy_residual[numDOFsPerEqn]; 
 	  register double psi[numDOFsPerEqn], etaMax[numDOFsPerEqn], etaMin[numDOFsPerEqn];
 	  for (int i=0; i<numDOFsPerEqn; i++)
-	    {
-	      double alphai; // smoothness indicator of solution
-	      
+	    {	      
 	      double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
 	      double hui = hu_dof_lstage[i]; 
 	      double hvi = hv_dof_lstage[i]; 
@@ -3314,9 +3413,9 @@ namespace proteus
 	      double eta_prime3 = DENTROPY_DHV(g,hi,hui,hvi,0*Zi,one_over_hiReg); 
 	      
 	      // FOR SMOOTHNESS INDICATOR //
+	      double alphai; // smoothness indicator of solution
 	      double alpha_numerator = 0;
 	      double alpha_denominator = 0;
-	      
 	      for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 		{ //loop in j (sparsity pattern)
 		  int j = csrColumnOffsets_DofLoops[offset];
@@ -3329,9 +3428,9 @@ namespace proteus
 		  double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
 		  ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
 		  ith_flux_term2 += ( huj*huj*one_over_hjReg*Cx[ij] + huj*hvj*one_over_hjReg*Cy[ij] 
-				      + g*hi*(hj+Zj)*Cx[ij] ); //f2*C
+				      + g*hi*(hj+0*Zj)*Cx[ij] ); //f2*C
 		  ith_flux_term3 += ( huj*hvj*one_over_hjReg*Cx[ij] + hvj*hvj*one_over_hjReg*Cy[ij] 
-				      + g*hi*(hj+Zj)*Cy[ij] ); //f3*C     
+				      + g*hi*(hj+0*Zj)*Cy[ij] ); //f3*C     
 		  
 		  entropy_flux += ( Cx[ij]*ENTROPY_FLUX1(g,hj,huj,hvj,0*Zj,one_over_hjReg) + 
 				    Cy[ij]*ENTROPY_FLUX2(g,hj,huj,hvj,0*Zj,one_over_hjReg) );
@@ -3354,12 +3453,12 @@ namespace proteus
 	      double one_over_entNormFactori = 2./(etaMax[i]-etaMin[i]+1E-15);
 	      global_entropy_residual[i] = one_over_entNormFactori*
 		fabs(entropy_flux -(ith_flux_term1*eta_prime1 + ith_flux_term2*eta_prime2 + ith_flux_term3*eta_prime3));
-	      
+	    
 	      //////////////////////////////////
 	      // COMPUTE SMOOTHNESS INDICATOR //
 	      //////////////////////////////////
 	      if (hi <= hReg[i]) //hEps, hReg makes the method more robust
-		{ // The idea is to force all methods to go to 1st order near dry states
+		{
 		  alphai = 1.; 
 		  global_entropy_residual[i] = 1E10;
 		}
@@ -3370,12 +3469,11 @@ namespace proteus
 		  else 
 		    alphai = fabs(alpha_numerator)/(alpha_denominator+1E-15);
 		}
-	      
-	      quantDOFs[i] = global_entropy_residual[i];
 	      if (POWER_SMOOTHNESS_INDICATOR==0)
 		psi[i] = 1.0;
 	      else
 		psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+		
 	    }
 	  // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
 	  
@@ -3393,7 +3491,7 @@ namespace proteus
 	      double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); // hEps
 	      double ui = hui*one_over_hiReg;
 	      double vi = hvi*one_over_hiReg;
-	      
+
 	      double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
 	      // LOW ORDER DISSIPATIVE TERMS
 	      double 
@@ -3552,6 +3650,8 @@ namespace proteus
 	      // FIX LOW ORDER SOLUTION //
 	      if (low_order_hnp1[i] < -1E-14 && dt < 1.0)
 		{
+		  std::cout << "dt taken: " << dt
+			    << std::endl;
 		  std::cout << "********.... "
 			    << "Low order water height is negative: " 
 			    << low_order_hnp1[i] 

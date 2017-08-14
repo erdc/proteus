@@ -129,13 +129,14 @@ class RKEV(proteus.TimeIntegration.SSP33):
         rowptr_cMatrix, colind_cMatrix, CTy = self.transport.cterm_global_transpose[1].getCSRrepresentation()
         numDOFsPerEqn = self.transport.u[0].dof.size
         
-        self.transport.sw2d.calculateEdgeBasedCFL(
+        adjusted_maxCFL = self.transport.sw2d.calculateEdgeBasedCFL(
             self.transport.coefficients.g, 
             numDOFsPerEqn,
             self.transport.ML,
             self.transport.u[0].dof, 
             self.transport.u[1].dof, 
             self.transport.u[2].dof,
+            self.transport.coefficients.b.dof,
             rowptr_cMatrix, 
             colind_cMatrix, 
             self.transport.hEps, 
@@ -145,12 +146,12 @@ class RKEV(proteus.TimeIntegration.SSP33):
             CTx, 
             CTy, 
             self.transport.dLow,
+            self.runCFL,
             self.transport.edge_based_cfl)
-                
-        maxCFL = max(maxCFL,globalMax(self.edge_based_cfl.max()))
+
+        maxCFL = max(maxCFL,max(adjusted_maxCFL, globalMax(self.edge_based_cfl.max())))
         # maxCFL = max(maxCFL,globalMax(self.cell_based_cfl.max()))
         self.dt = self.runCFL/maxCFL            
-
         if self.dtLast is None:
             self.dtLast = self.dt
         self.t = self.tLast + self.dt
@@ -162,8 +163,7 @@ class RKEV(proteus.TimeIntegration.SSP33):
         Modify self.dt
         """
         self.tLast=t0
-        self.dt = 1E-6
-        #self.choose_dt()
+        self.choose_dt()
         self.t = t0+self.dt
 
     def setCoefficients(self):
@@ -1079,7 +1079,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.hReg = np.zeros((self.nFreeDOF_global[0],),'d')
             for i in range(self.nFreeDOF_global[0]):
                 self.ML[i] = self.MC_a[rowptr_cMatrix[i]:rowptr_cMatrix[i+1]].sum()
-                self.hReg[i] = 1*self.ML[i]/diamD2*self.u[0].dof.max()
+                self.hReg[i] = self.ML[i]/diamD2*self.u[0].dof.max()
             #np.testing.assert_almost_equal(self.ML.sum(), self.mesh.volume, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
             #np.testing.assert_almost_equal(self.ML.sum(), diamD2, err_msg="Trace of lumped mass matrix should be the domain volume",verbose=True)
 
