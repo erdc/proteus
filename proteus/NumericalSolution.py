@@ -493,8 +493,6 @@ class NS_base:  # (HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
-
-
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 logEvent("Attempting to visualize mesh")
@@ -521,6 +519,14 @@ class NS_base:  # (HasTraits):
                         logEvent("NumericalSolution ViewMesh failed for mesh level %s" % l)
         if so.useOneMesh:
             for p in pList[1:]: mlMesh_nList.append(mlMesh)
+            try:
+                if (nList[0].MeshAdaptMesh.size_field_config() == 'isotropicProteus'):
+                    mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
+                if (nList[0].MeshAdaptMesh.size_field_config() == 'anisotropicProteus'):
+                    mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
+                    mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
+            except:
+                pass
         Profiling.memory("Mesh")
         from collections import OrderedDict
         self.modelSpinUp = OrderedDict()
@@ -727,6 +733,12 @@ class NS_base:  # (HasTraits):
         self.mlMesh_nList=[]
         for p in self.pList:
             self.mlMesh_nList.append(mlMesh)
+        if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
+            mlMesh.meshList[0].subdomainMesh.size_field = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,1),'d')*1.0e-1
+        if (p0.domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+            mlMesh.meshList[0].subdomainMesh.size_scale = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,3),'d')
+            mlMesh.meshList[0].subdomainMesh.size_frame = numpy.ones((mlMesh.meshList[0].subdomainMesh.nNodes_global,9),'d')
+
         #may want to trigger garbage collection here
         modelListOld = self.modelList
         logEvent("Allocating models on new mesh")
@@ -944,6 +956,26 @@ class NS_base:  # (HasTraits):
             logEvent("Copying coordinates to PUMI")
             p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                 self.modelList[0].levelModelList[0].mesh.nodeArray)
+            if (p0.domain.PUMIMesh.size_field_config() == "isotropicProteus"):
+                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_size",
+                                                       self.modelList[0].levelModelList[0].mesh.size_field)
+            if (p0.domain.PUMIMesh.size_field_config() == 'anisotropicProteus'):
+                #Insert a function to define the size_scale/size_frame fields here.
+                #For a given vertex, the i-th size_scale is roughly the desired edge length along the i-th direction specified by the size_frame
+                for i in range(len(self.modelList[0].levelModelList[0].mesh.size_scale)):
+                  self.modelList[0].levelModelList[0].mesh.size_scale[i,0] =  1e-1
+                  self.modelList[0].levelModelList[0].mesh.size_scale[i,1] =  (self.modelList[0].levelModelList[0].mesh.nodeArray[i,1]/0.584)*1e-1
+                  for j in range(3):
+                    for k in range(3):
+                      if(j==k):
+                        self.modelList[0].levelModelList[0].mesh.size_frame[i,3*j+k] = 1.0
+                      else:
+                        self.modelList[0].levelModelList[0].mesh.size_frame[i,3*j+k] = 0.0
+                self.modelList[0].levelModelList[0].mesh.size_scale
+                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
+                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
+            p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
+                self.modelList[0].levelModelList[0].mesh.nodeArray)
             logEvent("Copying DOF and parameters to PUMI")
             for m in self.modelList:
               for lm in m.levelModelList:
@@ -963,6 +995,12 @@ class NS_base:  # (HasTraits):
                     p0.domain.PUMIMesh.transferFieldToPUMI(
                         coef.variableNames[ci], scalar)
                     del scalar
+
+            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+            scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal[:]
+            p0.domain.PUMIMesh.transferFieldToPUMI(
+                'velocityError', scalar)
+            del scalar
             #Get Physical Parameters
             #Can we do this in a problem-independent  way?
             rho = numpy.array([self.pList[0].rho_0,
