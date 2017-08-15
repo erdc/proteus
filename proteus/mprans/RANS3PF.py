@@ -2574,9 +2574,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.velocityPostProcessor.vpp_algorithms[
                             ci].updateConservationJacobian[cj] = True
 
-        self.q['phisError'][:]=self.q[('phis')]                    
-        OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
-        self.q['phisError']-=self.q[('phis')]
+
+        if self.coefficients.granular_sdf_Calc is not None:
+            self.q['phisError'][:]=self.q[('phis')]                    
+            OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+            self.q['phisError']-=self.q[('phis')]
+        else:#this needs to be fixed for the case that multiple bodies are present
+            self.q['phisError'][:]=self.q[('phis',0)]                    
+            OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+            self.q['phisError']-=self.q[('phis',0)]  
 
     def updateAfterMeshMotion(self):
         pass
