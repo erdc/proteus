@@ -221,7 +221,9 @@ namespace proteus
 				   double* particle_netForces,
 				   double* particle_netMoments,
 				   double* particle_surfaceArea,
-				   double particle_nitsche)=0;
+				   double particle_nitsche,				   
+				   double* phisError,
+				   double* phisErrorNodal)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -1786,7 +1788,9 @@ namespace proteus
 			   double* particle_netForces,
 			   double* particle_netMoments,
 			   double* particle_surfaceArea,
-			   double particle_nitsche)
+			   double particle_nitsche,			   
+			   double* phisError,
+			   double* phisErrorNodal)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual

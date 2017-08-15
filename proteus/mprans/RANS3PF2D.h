@@ -218,7 +218,12 @@ namespace proteus
 				   double* particle_netForces,
 				   double* particle_netMoments,
 				   double* particle_surfaceArea,
-				   double particle_nitsche)=0;
+				   double particle_nitsche,
+				   double* phisError,
+				   double* phisErrorNodal)=0;
+
+
+
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -676,9 +681,11 @@ namespace proteus
       // mass (volume accumulation)
       //..hardwired
 
- 	double phi_s,H_s;	 
+ 	double phi_s=1.0,H_s;	 
 	for (int i=0;i<nParticles;i++){
-		phi_s = particle_signed_distances[i*sd_offset];
+		double temp_phi_s = particle_signed_distances[i*sd_offset];
+		if (temp_phi_s<phi_s)
+			phi_s=temp_phi_s;
 	}
 
 	  double phi_s_effect=(phi_s>0.0)?1.0:0.0;
@@ -797,15 +804,15 @@ namespace proteus
       /* mom_w_source = -porosity*g[2];// - porosity*d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8)); */
    
       //u momentum Hamiltonian (pressure)
-      mom_u_ham = porosity*grad_p[0]/rho;
-      dmom_u_ham_grad_p[0]=porosity/rho;
+      mom_u_ham = phi_s_effect*porosity*grad_p[0]/rho;
+      dmom_u_ham_grad_p[0]=phi_s_effect*porosity/rho;
       dmom_u_ham_grad_p[1]=0.0;
       /* dmom_u_ham_grad_p[2]=0.0; */
   
       //v momentum Hamiltonian (pressure)
-      mom_v_ham = porosity*grad_p[1]/rho;
+      mom_v_ham = phi_s_effect*porosity*grad_p[1]/rho;
       dmom_v_ham_grad_p[0]=0.0;
-      dmom_v_ham_grad_p[1]=porosity/rho;
+      dmom_v_ham_grad_p[1]=phi_s_effect*porosity/rho;
       /* dmom_v_ham_grad_p[2]=0.0; */
   
       /* //w momentum Hamiltonian (pressure) */
@@ -989,8 +996,8 @@ namespace proteus
 
 	  C += (D_s*C_surf + (1.0 - H_s)*C_vol);
 	// The surface penalty term may need to be C_surf*rel_vel_norm*(u-u_s)*rho  instead of C_surf*(u-u_s)*rho ?
-	  force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*rel_vel_norm*(u-u_s)*rho) ;//+ dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
-	  force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*rel_vel_norm*(v-v_s)*rho) ;//+ dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
+	  force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
+	  force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
 
 
 	  //always 3D for particle centroids
@@ -1802,8 +1809,10 @@ namespace proteus
 			   double* particle_netForces,
 			   double* particle_netMoments,
 			   double* particle_surfaceArea,
-			   double particle_nitsche)
-    {
+			   double particle_nitsche,
+			   double* phisError,
+			   double* phisErrorNodal)
+	{
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -1819,6 +1828,8 @@ namespace proteus
 	  register double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
 	    elementResidual_u[nDOF_test_element],
 	    elementResidual_v[nDOF_test_element],
+		phisErrorElement[nDOF_test_element],
+
 	    //elementResidual_w[nDOF_test_element],
 	    eps_rho,eps_mu;
 	  const double* elementResidual_w(NULL);
@@ -1832,6 +1843,8 @@ namespace proteus
 	      elementResidual_p[i]=0.0;
 	      elementResidual_u[i]=0.0;
 	      elementResidual_v[i]=0.0;
+		  phisErrorElement[i]=0.0;
+
 	      /* elementResidual_w[i]=0.0; */
 	    }//i
 	  //
@@ -1989,7 +2002,7 @@ namespace proteus
 	      //precalculate test function products with integration weights
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
-		  /* p_test_dV[j] = p_test_ref[k*nDOF_trial_element+j]*dV; */
+		p_test_dV[j] = p_test_ref[k*nDOF_trial_element+j]*dV;
 		  vel_test_dV[j] = vel_test_ref[k*nDOF_trial_element+j]*dV;
 		  for (int I=0;I<nSpace;I++)
 		    {
@@ -2405,6 +2418,9 @@ namespace proteus
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  register int i_nSpace=i*nSpace;
+
+		  phisErrorElement[i]+=std::abs(phisError[eN_k_nSpace+0])*p_test_dV[i];
+
                   /* std::cout<<"elemRes_mesh "<<mesh_vel[0]<<'\t'<<mesh_vel[2]<<'\t'<<p_test_dV[i]<<'\t'<<(q_dV_last[eN_k]/dV)<<'\t'<<dV<<std::endl; */
 		  /* elementResidual_mesh[i] += ck.Reaction_weak(1.0,p_test_dV[i]) - */
                   /*   ck.Reaction_weak(1.0,p_test_dV[i]*q_dV_last[eN_k]/dV) - */
@@ -2440,7 +2456,7 @@ namespace proteus
 		    /* ck.Diffusion_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
 		    ck.Reaction_weak(mom_u_source,vel_test_dV[i]) + 
 		    ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) + 
-		    ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
+		    // ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
 		    ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); 
 		 
@@ -2461,7 +2477,7 @@ namespace proteus
 		    /* ck.Diffusion_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) +  */
 		    ck.Reaction_weak(mom_v_source,vel_test_dV[i]) + 
 		    ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) + 
-		    ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
+		    // ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
 		    ck.SubgridError(subgridError_v,Lstar_v_v[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]); 
 
@@ -2483,6 +2499,7 @@ namespace proteus
 	  for(int i=0;i<nDOF_test_element;i++) 
 	    { 
 	      register int eN_i=eN*nDOF_test_element+i;
+	      phisErrorNodal[vel_l2g[eN_i]]+= phisErrorElement[i];
 
 	      /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
               /* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
@@ -4229,16 +4246,16 @@ namespace proteus
 			//VRANS
 			ck.ReactionJacobian_weak(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
 			//
-			ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
+			// ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
 			ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) + 
 			ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
 
 		      elementJacobian_u_v[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 			ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
-			ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
+			ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);//+
 			//
-			ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]);
+			// ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]);
 			
 
 			// if (i==j && (elementJacobian_u_u[i][j]==0. || elementJacobian_u_v[i][j]==0.))
@@ -4258,9 +4275,9 @@ namespace proteus
 		      elementJacobian_v_u[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 			ck.SimpleDiffusionJacobian_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
-			ck.ReactionJacobian_weak(dmom_v_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
+			ck.ReactionJacobian_weak(dmom_v_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);// +
 			//
-			ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
+			// ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
 		      elementJacobian_v_v[i][j] += ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
                         ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
 			ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
@@ -4268,7 +4285,7 @@ namespace proteus
 			//VRANS
 			ck.ReactionJacobian_weak(dmom_v_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
 			//
-			ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
+			// ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
 			ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) + 
 			ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
 

@@ -39,12 +39,17 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   apf::MeshEntity* v;
   apf::Field* phif = m->findField("phi");
   assert(phif);
+////////////////////////////////////////
+  apf::Field* phis = m->findField("phi_s");
+  assert(phis);
+/////////////////////////////////////////
   apf::Field* phiCorr = m->findField("phiCorr");
   assert(phiCorr);
   apf::Field* velocityError = m->findField("velocityError");
   assert(phiCorr);
   while ((v = m->iterate(it))) {
     double phi = apf::getScalar(phif, v, 0);
+    double phi_s = apf::getScalar(phis, v, 0);
     double dphi = apf::getScalar(phiCorr, v, 0);
     double verr = apf::getScalar(velocityError, v, 0);
     double size = isotropicFormula(phi, dphi, verr, hmin, hmax);
@@ -68,6 +73,7 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
       it = m->begin(0);
       while ((v = m->iterate(it))) {
 	double phi = apf::getScalar(phif, v, 0);
+  double phi_s = apf::getScalar(phis, v, 0);
 	double dphi = apf::getScalar(phiCorr, v, 0);
 	double verr = apf::getScalar(velocityError, v, 0);
 	double size_current = apf::getScalar(size_iso, v, 0);
