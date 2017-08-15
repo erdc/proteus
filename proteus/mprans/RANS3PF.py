@@ -45,6 +45,7 @@ class SubgridError(proteus.SubgridError.SGE_base):
         self.cq = cq
         self.v_last = self.cq[('velocity', 0)]
 
+
     def updateSubgridErrorHistory(self, initializationPhase=False):
         self.nSteps += 1
         if self.lag:
@@ -620,6 +621,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         eN, :] = self.dragBetaTypes[
                         self.elementMaterialTypes[eN]]
         #
+        cq['phisError'] = cq[('u',0)].copy()
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
         # VRANS
@@ -1817,6 +1819,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.coefficients.mContact,
                 self.coefficients.nContact,
                 self.coefficients.angFriction)
+        
+        self.phisErrorNodal=self.u[0].dof.copy()
 
     def getResidual(self, u, r):
         """
@@ -2082,7 +2086,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_netForces,
             self.coefficients.particle_netMoments,
             self.coefficients.particle_surfaceArea,
-            self.coefficients.particle_nitsche)
+            self.coefficients.particle_nitsche,
+            self.q['phisError'],
+            self.phisErrorNodal)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
@@ -2567,7 +2573,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             ci].computeGeometricInfo()
                         self.velocityPostProcessor.vpp_algorithms[
                             ci].updateConservationJacobian[cj] = True
+
+        self.q['phisError'][:]=self.q[('phis',0)]                    
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+        self.q['phisError']-=self.q[('phis',0)]
 
     def updateAfterMeshMotion(self):
         pass
