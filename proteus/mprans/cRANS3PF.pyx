@@ -197,7 +197,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double* particle_netForces,
                                double* particle_netMoments,
                                double* particle_surfacArea,
-                               double particle_nitsche)
+                               double particle_nitsche,
+                   double* phisError,
+			       double* phisErrorNodal)
 
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
@@ -375,7 +377,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* particle_signed_distance_normals,
 			       double* particle_velocities,
 			       double* particle_centroids,
-                               double particle_nitsche)
+                   double particle_nitsche)
 
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
@@ -651,7 +653,9 @@ cdef class RANS3PF:
                           numpy.ndarray particle_netForces,
                           numpy.ndarray particle_netMoments,
                           numpy.ndarray particle_surfaceArea,
-                          double particle_nitsche):
+                          double particle_nitsche,                         
+                          numpy.ndarray phisError,
+                          numpy.ndarray phisErrorNodal):
 
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
@@ -826,7 +830,9 @@ cdef class RANS3PF:
                                         < double* > particle_netForces.data,
                                         < double* > particle_netMoments.data,
                                         < double* > particle_surfaceArea.data,
-                                        particle_nitsche)
+                                        particle_nitsche,
+                                        <double*> phisError.data,
+                                        <double*> phisErrorNodal.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -1408,7 +1414,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double* particle_netForces,
                                double* particle_netMoments,
                                double* particle_surfacArea,
-                               double particle_nitsche)
+                               double particle_nitsche,
+                   double* phisError,
+			       double* phisErrorNodal)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1585,7 +1593,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double* particle_signed_distance_normals,
 			       double* particle_velocities,
 			       double* particle_centroids,
-                               double particle_nitsche)
+                               double particle_nitsche,
+                               )
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -1858,7 +1867,9 @@ cdef class RANS3PF2D:
 			  numpy.ndarray particle_netForces,
                           numpy.ndarray particle_netMoments,
                           numpy.ndarray particle_surfaceArea,
-                          double particle_nitsche):
+                          double particle_nitsche,                         
+                          numpy.ndarray phisError,
+                          numpy.ndarray phisErrorNodal):
         self.thisptr.calculateResidual(< double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -2032,7 +2043,10 @@ cdef class RANS3PF2D:
 			               < double* > particle_netForces.data,
 			               < double* > particle_netMoments.data,
                            < double* > particle_surfaceArea.data,
-                                       particle_nitsche)
+                                       particle_nitsche,
+                            <double*> phisError.data,
+                            <double*> phisErrorNodal.data)
+                                
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
