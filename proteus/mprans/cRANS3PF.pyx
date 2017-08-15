@@ -42,6 +42,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * nodeDiametersArray,
                                double hFactor,
                                int nElements_global,
+                               int nElements_owned,
                                int nElementBoundaries_owned,
                                double useRBLES,
                                double useMetrics,
@@ -192,11 +193,10 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double* particle_signed_distances,
                                double* particle_signed_distance_normals,
 			       double* particle_velocities,
-                               double* particle_angular_velocities,
 			       double* particle_centroids,
                                double* particle_netForces,
                                double* particle_netMoments,
-                               double* particle_surfaceArea,
+                               double* particle_surfacArea,
                                double particle_nitsche)
 
         void calculateJacobian(double * mesh_trial_ref,
@@ -238,6 +238,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * nodeDiametersArray,
                                double hFactor,
                                int nElements_global,
+                               int nElements_owned,
                                double useRBLES,
                                double useMetrics,
                                double alphaBDF,
@@ -373,7 +374,6 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* particle_signed_distances,
 			       double* particle_signed_distance_normals,
 			       double* particle_velocities,
-                               double* particle_angular_velocities,
 			       double* particle_centroids,
                                double particle_nitsche)
 
@@ -517,6 +517,7 @@ cdef class RANS3PF:
                           numpy.ndarray nodeDiametersArray,
                           double hFactor,
                           int nElements_global,
+                          int nElements_owned,
                           int nElementBoundaries_owned,
                           double useRBLES,
                           double useMetrics,
@@ -646,7 +647,6 @@ cdef class RANS3PF:
                           numpy.ndarray particle_signed_distances,
                           numpy.ndarray particle_signed_distance_normals,
                           numpy.ndarray particle_velocities,
-                          numpy.ndarray particle_angular_velocities,
                           numpy.ndarray particle_centroids,
                           numpy.ndarray particle_netForces,
                           numpy.ndarray particle_netMoments,
@@ -692,6 +692,7 @@ cdef class RANS3PF:
                                        < double * > nodeDiametersArray.data,
                                        hFactor,
                                        nElements_global,
+                                       nElements_owned,
                                        nElementBoundaries_owned,
                                        useRBLES,
                                        useMetrics,
@@ -821,7 +822,6 @@ cdef class RANS3PF:
                                         < double* > particle_signed_distances.data,
                                         < double* > particle_signed_distance_normals.data,
                                         < double* > particle_velocities.data,
-                                        < double* > particle_angular_velocities.data,
                                         < double* > particle_centroids.data,
                                         < double* > particle_netForces.data,
                                         < double* > particle_netMoments.data,
@@ -868,6 +868,7 @@ cdef class RANS3PF:
                           numpy.ndarray nodeDiametersArray,
                           double hFactor,
                           int nElements_global,
+                          int nElements_owned,
                           double useRBLES,
                           double useMetrics,
                           double alphaBDF,
@@ -1002,7 +1003,6 @@ cdef class RANS3PF:
 			  numpy.ndarray particle_signed_distances,
 			  numpy.ndarray particle_signed_distance_normals,
 			  numpy.ndarray particle_velocities,
-                          numpy.ndarray particle_angular_velocities,
 			  numpy.ndarray particle_centroids,
                           double particle_nitsche):
 
@@ -1047,6 +1047,7 @@ cdef class RANS3PF:
                                        < double * > nodeDiametersArray.data,
                                        hFactor,
                                        nElements_global,
+                                       nElements_owned,
                                        useRBLES,
                                        useMetrics,
                                        alphaBDF,
@@ -1181,7 +1182,6 @@ cdef class RANS3PF:
 				        < double* > particle_signed_distances.data,
 				        < double* > particle_signed_distance_normals.data,
 				        < double* > particle_velocities.data,
-                                        < double* > particle_angular_velocities.data,
 				        < double* > particle_centroids.data,
                                         particle_nitsche)
 
@@ -1404,7 +1404,6 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double* particle_signed_distances,
                                double* particle_signed_distance_normals,
 			       double* particle_velocities,
-                               double* particle_angular_velocities,
 			       double* particle_centroids,
                                double* particle_netForces,
                                double* particle_netMoments,
@@ -1449,6 +1448,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * nodeDiametersArray,
                                double hFactor,
                                int nElements_global,
+                               int nElements_owned,
                                double useRBLES,
                                double useMetrics,
                                double alphaBDF,
@@ -1584,7 +1584,6 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double* particle_signed_distances,
 			       double* particle_signed_distance_normals,
 			       double* particle_velocities,
-                               double* particle_angular_velocities,
 			       double* particle_centroids,
                                double particle_nitsche)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
@@ -1855,7 +1854,6 @@ cdef class RANS3PF2D:
 			  numpy.ndarray particle_signed_distances,
                           numpy.ndarray particle_signed_distance_normals,
                           numpy.ndarray particle_velocities,
-                          numpy.ndarray particle_angular_velocities,
                           numpy.ndarray particle_centroids,
 			  numpy.ndarray particle_netForces,
                           numpy.ndarray particle_netMoments,
@@ -2030,11 +2028,10 @@ cdef class RANS3PF2D:
 			               < double* > particle_signed_distances.data,
 			               < double* > particle_signed_distance_normals.data,
 			               < double* > particle_velocities.data,
-                                       < double* > particle_angular_velocities.data,
 			               < double* > particle_centroids.data,
 			               < double* > particle_netForces.data,
 			               < double* > particle_netMoments.data,
-			               < double* > particle_surfaceArea.data,
+                           < double* > particle_surfaceArea.data,
                                        particle_nitsche)
 
     def calculateJacobian(self,
@@ -2077,6 +2074,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray nodeDiametersArray,
                           double hFactor,
                           int nElements_global,
+                          int nElements_owned,
                           double useRBLES,
                           double useMetrics,
                           double alphaBDF,
@@ -2211,7 +2209,6 @@ cdef class RANS3PF2D:
 			  numpy.ndarray particle_signed_distances,
 			  numpy.ndarray particle_signed_distance_normals,
 			  numpy.ndarray particle_velocities,
-                          numpy.ndarray particle_angular_velocities,
 			  numpy.ndarray particle_centroids,
                           double particle_nitsche):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
@@ -2255,6 +2252,7 @@ cdef class RANS3PF2D:
                                        < double * > nodeDiametersArray.data,
                                        hFactor,
                                        nElements_global,
+                                       nElements_owned,
                                        useRBLES,
                                        useMetrics,
                                        alphaBDF,
@@ -2389,7 +2387,6 @@ cdef class RANS3PF2D:
 			               < double* > particle_signed_distances.data,
                                        < double* > particle_signed_distance_normals.data,
                                        < double* > particle_velocities.data,
-                                       < double* > particle_angular_velocities.data,
 			               < double* > particle_centroids.data,
                                        particle_nitsche)
 
