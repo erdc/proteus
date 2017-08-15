@@ -271,6 +271,7 @@ class BC_RANS(BC_Base):
         self.reset()
 
         wf = wall
+        #self.k_dirichlet.uOfXT = lambda x, t: wf.get_k_dirichlet(x, t)       
         self.dissipation_dirichlet.uOfXT = lambda x, t: wf.get_dissipation_dirichlet(x, t)
         self.vof_advective.setConstantBC(0.)
         self.p_advective.setConstantBC(0.)
@@ -278,7 +279,7 @@ class BC_RANS(BC_Base):
         self.u_diffusive.uOfXT = lambda x, t: wf.get_u_diffusive(x, t)
         self.v_diffusive.uOfXT = lambda x, t: wf.get_v_diffusive(x, t)
         self.w_diffusive.uOfXT = lambda x, t: wf.get_w_diffusive(x, t)
-        self.k_diffusive.setConstantBC(0.) 
+        self.k_diffusive.setConstantBC(0.)
 
     def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
@@ -968,7 +969,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
     class instance acting as a wall.
     """
 
-    def __init__(self, turbModel, b_or, Y, Yplus, U0, nu, Cmu, K, B):
+    def __init__(self, turbModel, kWall, b_or, Y, Yplus, U0, nu, Cmu, K, B):
         """
         Sets turbulent boundaries for wall treatment.        
         Calculation made on nodes outside the viscous sublayer and based
@@ -983,6 +984,8 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         ----------
         turbModel: string.
             'ke' or 'kw', for switching between k-epsilon or k-omega models.
+        kWall: object.
+            Class kWall object for extracting kappa from the model.
         Y: float.
             size of the nearest element to the boundary.
         Yplus: float.
@@ -1016,7 +1019,9 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.x = np.zeros(3)
         self.t = 0.
         self.model = None
-        
+        self.xi, self.element, self.rank = None, None, None
+        self.kWall = kWall
+
     def attachModel(self, model, ar):
         """
         Attaches model to auxiliary variable
@@ -1024,6 +1029,9 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.model = model
         self.ar = ar
         self.nd = model.levelModelList[0].nSpace_global
+        self.Closure_0_model = model.levelModelList[0].coefficients.Closure_0_model
+        self.Closure_1_model = model.levelModelList[0].coefficients.Closure_1_model
+        #import pdb; pdb.set_trace()
         return self
 
     def attachAuxiliaryVariables(self,avDict):
@@ -1119,9 +1127,19 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         """
         comm = Comm.get().comm.tompi4py()
         xi = owning_proc = element = rank = None  # initialised as None
+        self.xi, self.element, self.rank = xi, element, rank
         # get nearest node on each processor
         #comm.barrier()
         self.u = self.model.levelModelList[0].u    
+        #self.eddyViscosity = self.model.levelModelList[0].q['eddy_viscosity']
+        #import pdb; pdb.set_trace()
+        #self.q_turb_var = self.modelList[self.Closure_0_model].q[('u',0)]
+        #self.k_turb_var = self.modelList[self.Closure_0_model].u[0]
+        #logEvent('self.Closure_0_model --> %s' % self.Closure_0_model)
+        #logEvent('self.Closure_1_model --> %s' % self.Closure_1_model)
+        #logEvent('self.eddyViscosity --> %s' % self.eddyViscosity)
+        #logEvent('self.q_turb_var --> %s' % self.q_turb_var)
+        #logEvent('self.k_turb_var --> %s' % self.k_turb_var)
         #Profiling.logEvent('self.u --> %s ' % self.u)
         self.femSpace_velocity = self.u[1].femSpace
         #Profiling.logEvent('self.femSpace_velocity --> %s ' % self.femSpace_velocity)
@@ -1191,8 +1209,15 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             u, v, w = self.getFluidVelocityLocalCoords(self.femSpace_velocity.elementMaps.getInverseValue(element, coords),
                                                        element,
                                                        rank)
-        #logEvent('coords --> %s' % coords)
-        #logEvent('uExtract --> %s' % u)
+        logEvent('coords --> %s' % coords)
+        logEvent('uExtract --> %s' % u)
+        self.xi, self.element, self.rank = xi, element, rank
+        logEvent('xi --> %s ' % xi)
+        logEvent('element --> %s ' % element)
+        logEvent('rank %s ' % rank)
+        logEvent('self.xi --> %s ' % self.xi)
+        logEvent('self.element --> %s ' % self.element)
+        logEvent('self.rank %s ' % self.rank)
         return u, v, w
         
     def tangentialVelocity(self, x, t, uInit=None):
@@ -1212,53 +1237,147 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         #return self
 
     def getVariables(self, x, t):
-        comm = Comm.get().comm.tompi4py()   
+        comm = Comm.get().comm.tompi4py() 
+        self.kappa = self.kWall.getKappa(x, t, self.xi, self.element, self.rank)
         if self.Yplus < 11.6:
             logEvent('Prescribed near-wall point outside log-law region. Try with a higher one!')
             sys.exit(1)
         # log-law layer
         else: 
+            # Wall function theory from S.B. Pope, page 442-443
             E = np.exp(self.B*self.K)
-            ulog = np.sqrt(np.sum(self.tanU**2))
-            self.tau_rho = (self.K*ulog/np.log(E*self.Yplus))**2.
-        self.utAbs = np.sqrt(self.tau_rho)
-        self.ut = self.utAbs*self.tV 
-        self.kappa = (self.utAbs**2)/np.sqrt(self.Cmu) 
-        logEvent('ut --> %s' % self.ut)  
-        #logEvent('tau/rho --> %s' % self.tau_rho)
+            Up = np.sqrt(np.sum(self.tanU**2))
+            self.utStar = (self.kappa**0.5) * (self.Cmu**0.25)
+            self.Ystar = self.Y * self.utStar / self.nu
+            self.Ustar = self.utStar * np.log(E*self.Ystar) / self.K
+            self.tau_rho = (self.utStar**2.) * (Up/self.Ustar)
+            self.utAbs = np.sqrt(self.tau_rho)
+            self.nu_t = self.utStar * self.K * self.Y
+            # Velocity gradient multiplied by the tangential vector unit
+            self.gradU = ( self.utAbs / (self.Y*self.K) ) * self.tV  #(self.tau_rho/self.nu_t) * self.tV
+        logEvent('ut* --> %s' % self.utStar)  
+        logEvent('Up --> %s' % Up)
+        logEvent('Up* --> %s' % self.Ustar)
+        logEvent('self.tanU --> %s' % self.tanU)
+        logEvent('kappa --> %s' % self.kappa) 
+
+    def get_k_dirichlet(self, x, t):
+        if t>0.: uInit = False
+        else: uInit = True
+        self.tangentialVelocity(x,t,uInit)
+        self.getVariables(x, t) 
+        return self.kappa
 
     def get_dissipation_dirichlet(self, x, t):
-        if t<0.: uInit = True
-        else: uInit = False
+        if t>0.: uInit = False
+        else: uInit = True
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)  
         d = 0.
-        if self.turbModel == 'ke': d = (self.utAbs**3)/(self.K*self.Y)
-        elif self.turbModel == 'kw' and self.kappa>0.: d = (self.utAbs**3)/(self.K*self.Y)/self.kappa
+        if self.turbModel == 'ke': d = (self.utStar**3)/(self.K*self.Y)
+        elif self.turbModel == 'kw' and self.kappa>0.: d = (self.utStar**3)/(self.K*self.Y)/self.kappa
         logEvent('dissipation --> %s' % d)
         return d 
 
     def get_u_diffusive(self, x, t):
-        if t<0.: uInit = True
-        else: uInit = False
+        if t>0.: uInit = False
+        else: uInit = True
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)    
-        gradU = self.ut[0]/(self.K*self.Y)
+        gradU = self.gradU[0]
         return gradU 
 
     def get_v_diffusive(self, x, t):
-        if t<0.: uInit = True
-        else: uInit = False
+        if t>0.: uInit = False
+        else: uInit = True
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)
-        gradU = self.ut[1]/(self.K*self.Y)
+        gradU = self.gradU[1]
         return gradU 
 
     def get_w_diffusive(self, x, t):
-        if t<0.: uInit = True
-        else: uInit = False
+        if t>0.: uInit = False
+        else: uInit = True
         self.tangentialVelocity(x,t,uInit)
         self.getVariables(x, t)      
-        gradU = self.ut[2]/(self.K*self.Y)
+        gradU = self.gradU[2]
         return gradU
 
+
+class kWall(AuxiliaryVariables.AV_base, object):
+    """
+    Auxiliary variable used to calculate attributes of an associated shape
+    class instance acting as a wall for the k variable.
+    """
+
+    def __init__(self, Y, Yplus, b_or, nu=1.004e-6):
+        """
+        Sets turbulent boundaries for wall treatment.
+        """      
+        self.kappa = 1e-10
+        self.Y = Y
+        self.Yplus = Yplus
+        self._b_or = b_or
+        self.nu = nu
+        self.model = None
+        
+    def attachModel(self, model, ar):
+        """
+        Attaches model to auxiliary variable
+        """
+        self.model = model
+        self.ar = ar
+        self.nd = model.levelModelList[0].nSpace_global
+        return self
+
+    def attachAuxiliaryVariables(self,avDict):
+        pass
+
+    def calculate_init(self):
+        pass
+
+    def calculate(self):
+        pass
+
+    def getFluidKappaLocalCoords(self, xi, element, rank):
+        """
+        Parameters
+        ----------
+        xi: 
+            local coords in element
+        element: int
+            element number (local to processor 'rank')
+        rank: int
+            rank of processor owning the element
+        """
+        comm = Comm.get().comm.tompi4py()
+        # solution of the selected model
+        self.u = self.model.levelModelList[0].u    
+        #import pdb; pdb.set_trace()
+        logEvent('self.u --> %s ' % self.u)
+        logEvent('self.u[0] --> %s ' % self.u[0])
+        logEvent('xi --> %s ' % xi)
+        logEvent('element --> %s ' % element)
+        logEvent('rank %s ' % rank)
+        #self.femSpace_kappa = self.u[0].femSpace
+        if comm.rank == rank:
+            kappa = self.u[0].getValue(element, xi)
+        else:
+            kappa = None
+        return kappa
+
+    def kappaNearWall(self, xi, element, rank, kInit=None):
+        if kInit is True or self.model is None:
+            self.kappa = self.Yplus * self.nu / self.Y
+        else:
+            self.kappa = self.getFluidKappaLocalCoords(xi, element, rank)
+        logEvent('kInit --> %s' % kInit) 
+        logEvent('self.model --> %s' % self.model) 
+
+    def getKappa(self, x, t, xi, element, rank):
+        if t>0.: kInit = False
+        else: kInit = True
+        self.kappaNearWall(xi, element, rank, kInit)
+        logEvent('kappa --> %s' % self.kappa) 
+        logEvent('t --> %s' % t) 
+        return abs(self.kappa)
