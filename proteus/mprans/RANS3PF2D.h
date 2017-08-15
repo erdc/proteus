@@ -681,7 +681,7 @@ namespace proteus
       // mass (volume accumulation)
       //..hardwired
 
- 	double phi_s=1.0,H_s;	 
+ 	double phi_s=1.0;	 
 	for (int i=0;i<nParticles;i++){
 		double temp_phi_s = particle_signed_distances[i*sd_offset];
 		if (temp_phi_s<phi_s)
@@ -996,8 +996,8 @@ namespace proteus
 
 	  C += (D_s*C_surf + (1.0 - H_s)*C_vol);
 	// The surface penalty term may need to be C_surf*rel_vel_norm*(u-u_s)*rho  instead of C_surf*(u-u_s)*rho ?
-	  force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
-	  force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
+	  force_x = dV*D_s*(p*phi_s_normal[0] - porosity*mu*(phi_s_normal[0]*grad_u[0] + phi_s_normal[1]*grad_u[1]) + C_surf*rel_vel_norm*(u-u_s)*rho) + dV*(1.0 - H_s)*C_vol*(u-u_s)*rho;
+	  force_y = dV*D_s*(p*phi_s_normal[1] - porosity*mu*(phi_s_normal[0]*grad_v[0] + phi_s_normal[1]*grad_v[1]) + C_surf*rel_vel_norm*(v-v_s)*rho) + dV*(1.0 - H_s)*C_vol*(v-v_s)*rho;
 
 
 	  //always 3D for particle centroids
