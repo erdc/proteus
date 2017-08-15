@@ -2574,9 +2574,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.velocityPostProcessor.vpp_algorithms[
                             ci].updateConservationJacobian[cj] = True
 
-        self.q['phisError'][:]=self.q[('phis',0)]                    
+        self.q['phisError'][:]=self.q[('phis')]                    
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
-        self.q['phisError']-=self.q[('phis',0)]
+        self.q['phisError']-=self.q[('phis')]
 
     def updateAfterMeshMotion(self):
         pass
