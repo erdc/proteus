@@ -1160,7 +1160,10 @@ namespace proteus
       for(int I=0;I<nSpace;I++)
 	nrm_df+=df[I]*df[I];
       nrm_df = sqrt(nrm_df);
-      cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
+      if (density > 1.0e-8)
+	cfl = nrm_df/(h*density);//this is really cfl/dt, but that's what we want to know, the step controller expect this
+      else
+	cfl = nrm_df/h;
       oneByAbsdt =  fabs(dmt);
       tau_v = 1.0/(4.0*viscosity/(h*h) + 2.0*nrm_df/h + oneByAbsdt);
       tau_p = (4.0*viscosity + 2.0*nrm_df*h + oneByAbsdt*h*h)/pfac;
