@@ -421,6 +421,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # This is making a special case for granular material simulations
         # if the user inputs a list of position/velocities then the sdf are calculated based on the "spherical" particles
         # otherwise the sdf are calculated based on the input sdf list for each body
+        print "SHAPE!", self.particle_velocities.shape
         if self.granular_sdf_Calc is not None:
             temp_1=np.zeros(self.model.q[('u',0)].shape,'d')
             temp_2=np.zeros(self.model.q[('u',0)].shape,'d')
@@ -914,6 +915,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def postStep(self, t, firstStep=False):
+        print self.particle_velocities.shape
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
         self.phisField=np.ones(self.model.q[('u',0)].shape,'d')*1e10
