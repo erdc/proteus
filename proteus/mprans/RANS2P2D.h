@@ -1100,7 +1100,7 @@ namespace proteus
       duc_du = 0.0;
       duc_dv = 0.0;
       /* duc_dw = w/(uc+1.0e-12); */
-      /*
+
       mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s);
       mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s);
       /* mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_s); */
