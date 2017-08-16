@@ -990,7 +990,7 @@ class cppRANS3PF2D : public cppRANS3PF2D_base
 			double C_surf = (phi_s > 0.0) ? 0.0 : nu * penalty;
 			double C_vol = (phi_s > 0.0) ? 0.0 : (alpha + beta * rel_vel_norm);
 
-			C += (D_s * C_surf + (1.0 - H_s) * C_vol);
+			C = (D_s * C_surf + (1.0 - H_s) * C_vol);
 			force_x = dV * D_s * (p * phi_s_normal[0] - porosity * mu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]) + C_surf * (u - u_s) * rho) +
 					  dV * (1.0 - H_s) * C_vol * (u - u_s) * rho;
 
@@ -1008,31 +1008,33 @@ class cppRANS3PF2D : public cppRANS3PF2D_base
 				particle_netForces[i * 3 + 1] += force_y;
 				particle_netMoments[i * 3 + 2] += (r_x * force_y - r_y * force_x);
 			}
+
+			// These should be done inside to make sure the correct velocity of different particles are used
+			mom_u_source += C * (u - u_s);
+			mom_v_source += C * (v - v_s);
+
+			dmom_u_source[0] += C;
+			dmom_v_source[1] += C;
+
+			//Nitsche terms
+			mom_u_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]);
+			dmom_u_ham_grad_u[0] -= D_s * porosity * nu * phi_s_normal[0];
+			dmom_u_ham_grad_u[1] -= D_s * porosity * nu * phi_s_normal[1];
+
+			mom_v_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]);
+			dmom_v_ham_grad_v[0] -= D_s * porosity * nu * phi_s_normal[0];
+			dmom_v_ham_grad_v[1] -= D_s * porosity * nu * phi_s_normal[1];
+
+			mom_u_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (u - u_s);
+			mom_u_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (u - u_s);
+			dmom_u_adv_u[0] += D_s * porosity * nu * phi_s_normal[0];
+			dmom_u_adv_u[1] += D_s * porosity * nu * phi_s_normal[1];
+
+			mom_v_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (v - v_s);
+			mom_v_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (v - v_s);
+			dmom_v_adv_v[0] += D_s * porosity * nu * phi_s_normal[0];
+			dmom_v_adv_v[1] += D_s * porosity * nu * phi_s_normal[1];
 		}
-		mom_u_source += C * (u - u_s);
-		mom_v_source += C * (v - v_s);
-
-		dmom_u_source[0] += C;
-		dmom_v_source[1] += C;
-
-		//Nitsche terms
-		mom_u_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1]);
-		dmom_u_ham_grad_u[0] -= D_s * porosity * nu * phi_s_normal[0];
-		dmom_u_ham_grad_u[1] -= D_s * porosity * nu * phi_s_normal[1];
-
-		mom_v_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1]);
-		dmom_v_ham_grad_v[0] -= D_s * porosity * nu * phi_s_normal[0];
-		dmom_v_ham_grad_v[1] -= D_s * porosity * nu * phi_s_normal[1];
-
-		mom_u_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (u - u_s);
-		mom_u_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (u - u_s);
-		dmom_u_adv_u[0] += D_s * porosity * nu * phi_s_normal[0];
-		dmom_u_adv_u[1] += D_s * porosity * nu * phi_s_normal[1];
-
-		mom_v_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (v - v_s);
-		mom_v_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (v - v_s);
-		dmom_v_adv_v[0] += D_s * porosity * nu * phi_s_normal[0];
-		dmom_v_adv_v[1] += D_s * porosity * nu * phi_s_normal[1];
 	}
 
 	inline void updateTurbulenceClosure(const int turbulenceClosureModel,
@@ -3343,10 +3345,10 @@ class cppRANS3PF2D : public cppRANS3PF2D_base
 				/* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
 			} //i
 		}	 //ebNE
-			  /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
-			  /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
-			  /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
-			  /* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
+		/* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
+		/* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
+		/* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
+		/* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
 	}
 
 	void calculateJacobian( //element
