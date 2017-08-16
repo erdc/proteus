@@ -733,7 +733,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
 
 int MeshAdaptPUMIDrvr::testIsotropicSizeField()
 //Function that tests MeshAdapt by generating an isotropic sizefield based on hmin
-{
+{ 
+    freeField(size_iso);
     size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
     apf::MeshIterator* it = m->begin(0);
     apf::MeshEntity* v;
