@@ -392,6 +392,26 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.epsFact_solid is None:
             self.epsFact_solid = numpy.ones(self.model.mesh.elementMaterialTypes.max()+1)
         assert len(self.epsFact_solid) > self.model.mesh.elementMaterialTypes.max(), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
+        arbTest = True
+        if arbTest is True:
+            from proteus.ctransportCoefficients import smoothedHeaviside
+            epsFact_conserv_heaviside = 1.5
+#            he = 0.1
+            he = 2. / float(4 * 1 - 1)
+            def signedDistance(x):
+                x1 = abs(x[0] - 0.5) ; x2 = abs(x[0] + 0.5)
+                y1 = abs(x[1] - 0.5) ; y2 = abs(x[1] + 0.5)
+                if (x1+x2 == 1) and (y1 + y2 == 1):
+                    return 100
+                else:
+                    return -100
+            for i, quad_pts in enumerate(self.model.q['x']):
+                for j, pt in enumerate(quad_pts):
+#                    print smoothedHeaviside(epsFact_consrv_heaviside*he,signedDistance(pt))
+                    self.q_vf[i][j] = smoothedHeaviside(epsFact_conserv_heaviside*he,signedDistance(pt))
+            for i, quad_pts in enumerate(self.model.ebqe['x']):
+                for j, pt in enumerate(quad_pts):
+                    self.ebqe_vf[i][j] = smoothedHeaviside(epsFact_conserv_heaviside*he,signedDistance(pt))
 
     def initializeMesh(self,mesh):
         #cek we eventually need to use the local element diameter
