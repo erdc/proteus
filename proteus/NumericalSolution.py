@@ -735,6 +735,7 @@ class NS_base:  # (HasTraits):
         #(cut and pasted from init, need to cleanup)
         self.simOutputList = []
         self.auxiliaryVariables = {}
+        self.newAuxiliaryVariables = {}
         if self.simFlagsList is not None:
             for p, n, simFlags, model, index in zip(
                     self.pList,
@@ -750,7 +751,44 @@ class NS_base:  # (HasTraits):
                         nFile=n,
                         analyticalSolution=p.analyticalSolution))
                 model.simTools = self.simOutputList[-1]
-                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
+                #import pdb;pdb.set_trace()
+                #for av in n.auxiliaryVariables:
+                #  #get previous gauge info
+                #  fields = av.fields
+                #  activeTime=av.activeTime
+                #  sampleRate=av.sampleRate  
+                #  fileName=av.fileName
+                #  points=av.points
+                #  lines=av.lines
+                #  integrate=av.isLineIntegralGauge
+                  #if(av.isPointGauge):
+                  #  newGauge = Gauges.PointGauges(activeTime,sampleRate,fileName,points)
+                #purge gauge locations as partition may be different
+                if(self.comm.rank()==0):
+                  print "The Gauge is %s before" % n.auxiliaryVariables
+                for av in n.auxiliaryVariables:
+                  av.adapted=True
+                  for pointIdx in range(len(av.points.items())):
+                    av.points.items()[pointIdx][1].pop('nearest_node')
+                  if(av.isGaugeOwner):
+                    for ptGaugeIdx,ptGaugeItem in enumerate(av.pointGaugeVecs):
+                      av.pointGaugeVecs[ptGaugeIdx].destroy();  
+                      av.pointGaugeMats[ptGaugeIdx].destroy();  
+                      av.dofsVecs[ptGaugeIdx].destroy();
+                    av.pointGaugeVecs = []
+                    av.pointGaugeMats = []
+                    av.dofsVecs = []
+                  #print "What is model? " + model.name 
+                  self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index])]
+                #reinitialize gauges
+                try:
+                  self.auxiliaryVariables[model.name]
+                except KeyError:
+                  self.auxiliaryVariables[model.name] = []
+                #print "What is model? " + model.name 
+                #self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
+                if(self.comm.rank()==0):
+                  print "The Gauge is %s after" % n.auxiliaryVariables
         else:
             for p,n,s,model,index in zip(
                     self.pList,
@@ -960,8 +998,8 @@ class NS_base:  # (HasTraits):
                       else:
                         self.modelList[0].levelModelList[0].mesh.size_frame[i,3*j+k] = 0.0
                 self.modelList[0].levelModelList[0].mesh.size_scale
-                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
-                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
+                #p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
+                #p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
             p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                 self.modelList[0].levelModelList[0].mesh.nodeArray)
             logEvent("Copying DOF and parameters to PUMI")
@@ -984,11 +1022,11 @@ class NS_base:  # (HasTraits):
                         coef.variableNames[ci], scalar)
                     del scalar
 
-            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-            scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal[:]
-            p0.domain.PUMIMesh.transferFieldToPUMI(
-                'velocityError', scalar)
-            del scalar
+            #scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+            #scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal[:]
+            #p0.domain.PUMIMesh.transferFieldToPUMI(
+            #    'velocityError', scalar)
+            #del scalar
             #Get Physical Parameters
             #Can we do this in a problem-independent  way?
             rho = numpy.array([self.pList[0].rho_0,
