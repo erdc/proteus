@@ -1382,6 +1382,9 @@ class NS_base:  # (HasTraits):
                     else:
                         self.firstStep=False
                         systemStepFailed=False
+                        logEvent("Step Taken, Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
+                                                                                              model.stepController.dt_model,
+                                                                                              model.name))
                         self.systemStepController.sequenceTaken()
                         for index,model in enumerate(self.modelList):
                             self.viewSolution(model,index)
@@ -1404,14 +1407,13 @@ class NS_base:  # (HasTraits):
                     break
                 else:
                     self.systemStepController.updateTimeHistory()
-                    self.systemStepController.choose_dt_system()
                     logEvent("Step Taken, System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
-                                                                              self.systemStepController.dt_system))
+                                                                                   self.systemStepController.dt_system))
+                    self.systemStepController.choose_dt_system()
                     if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                         self.systemStepController.stepExact_system(self.tn)
-                    logEvent("Step Taken, Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
-                                                                                     model.stepController.dt_model,
-                                                                                     model.name))
+                    logEvent("Potential System time step t=%12.5e, dt=%12.5e for next time step" % (self.systemStepController.t_system,
+                                                                                                    self.systemStepController.dt_system))
                 for model in self.modelList:
                     for av in self.auxiliaryVariables[model.name]:
                         av.calculate()
