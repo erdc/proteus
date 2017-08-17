@@ -992,8 +992,8 @@ class NS_base:  # (HasTraits):
                       else:
                         self.modelList[0].levelModelList[0].mesh.size_frame[i,3*j+k] = 0.0
                 self.modelList[0].levelModelList[0].mesh.size_scale
-                #p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
-                #p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
+                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeScale", self.modelList[0].levelModelList[0].mesh.size_scale)
+                p0.domain.PUMIMesh.transferFieldToPUMI("proteus_sizeFrame", self.modelList[0].levelModelList[0].mesh.size_frame)
             p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
                 self.modelList[0].levelModelList[0].mesh.nodeArray)
             logEvent("Copying DOF and parameters to PUMI")
@@ -1016,11 +1016,11 @@ class NS_base:  # (HasTraits):
                         coef.variableNames[ci], scalar)
                     del scalar
 
-            #scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-            #scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal[:]
-            #p0.domain.PUMIMesh.transferFieldToPUMI(
-            #    'velocityError', scalar)
-            #del scalar
+            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+            scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal[:]
+            p0.domain.PUMIMesh.transferFieldToPUMI(
+                'velocityError', scalar)
+            del scalar
             #Get Physical Parameters
             #Can we do this in a problem-independent  way?
             rho = numpy.array([self.pList[0].rho_0,
