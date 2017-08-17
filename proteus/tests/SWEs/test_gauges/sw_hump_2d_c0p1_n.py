@@ -83,8 +83,7 @@ levelLinearSolver = LU
 #conservativeFlux = {0:'pwl'}
 tnList=[0.,1E-6]+[float(n)*ct.T/float(ct.nDTout) for n in range(1,ct.nDTout+1)]
 
-p = PointGauges(gauges=((('h'), (((30, 15, 0)),
-                             )),),
+p = PointGauges(gauges=(( ('h'), ((30, 15, 0), (60,15,0)) ),),
                 activeTime=(0, 10),
                 sampleRate=0.1,
                 fileName='gauges.csv')
