@@ -6,14 +6,23 @@ from proteus.Domain import RectangularDomain
 import numpy as np
 import math
 
+opts=Context.Options([
+    ("T", 3000, "Length of simulation in seconds"),
+    ("nDTout", 3000, "number of time steps to archive"),
+    ("refinement",4,"Level of refinement"),
+    ("reflecting_BCs",1,"Use reflecting BCs")
+])
+
 nd=2
 
-T=1800.0#2*math.pi/omega
-nDTout=1000
+T=opts.T
+nDTout=opts.nDTout
 
 g = 9.81
 # PARAMETERS #
-mannings=0.025#m^{-1/3} after Ying etal 2009
+mannings=0.033 #0.025 #0.025#m^{-1/3} after Ying etal 2009
+cE=5
+LUMPED_MASS_MATRIX=1
 
 domain = None#RectangularDomain(L=L)
 meshfile = "mal_50sec"
@@ -30,10 +39,6 @@ meshfile = "mal_50sec"
 #end debug
 #
 
-#This is relevant just when use_second_order_NonFlatB_with_EV_stabilization=True
-cE=1
-LUMPED_MASS_MATRIX=0
-
 ######################
 ##### BATHYMETRY #####
 ######################
@@ -47,10 +52,27 @@ LUMPED_MASS_MATRIX=0
 class water_height_at_t0:
     """set the water level to 100m behind the dam and dry elsewhere"""
     def uOfXT(self,X,t):
-        if (X[0] <= 4800.0):#cek hack, need to find actual dam coordinates
-            return 100.0-X[2]
+        x = X[0]
+        #LINE 1
+        x1 = 4701.18
+        y1 = 4143.41
+        x2 = 4655.5
+        y2 = 4392.1
+        m = (y2-y1)/(x2-x1)
+        dam1 = m*(x-x1)+y1
+
+        #LINE 2
+        x1 = 4655.5
+        y1 = 4392.1
+        x2 = 4000.0
+        y2 = 5500.0
+        m = (y2-y1)/(x2-x1)
+        dam2 = m*(x-x1)+y1        
+
+        if (X[1] <= dam1 and X[1] <= dam2): 
+            return np.maximum(100.0-X[2],0.)
         else:
-            return 0.0
+            return 0.
 
 class Zero:
     """still water conditions"""
