@@ -1,3 +1,11 @@
+dist/
+.cache
+scripts/
+*.geo
+*.c
+*.cpp
+*.m
+*.txt
 *.idea
 *.so
 *.csv
