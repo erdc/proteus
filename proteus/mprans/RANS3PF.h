@@ -1013,51 +1013,52 @@ class cppRANS3PF : public cppRANS3PF_base
 				particle_netMoments[i * 3 + 1] += (r_z * force_x - r_x * force_z);
 				particle_netMoments[i * 3 + 2] += (r_x * force_y - r_y * force_x);
 			}
+
+			mom_u_source += C * (u - u_s);
+			mom_v_source += C * (v - v_s);
+			mom_w_source += C * (w - w_s);
+
+			dmom_u_source[0] += C;
+			dmom_v_source[1] += C;
+			dmom_w_source[2] += C;
+
+			//Nitsche terms
+			mom_u_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1] + phi_s_normal[2] * grad_u[2]);
+			dmom_u_ham_grad_u[0] -= D_s * porosity * nu * phi_s_normal[0];
+			dmom_u_ham_grad_u[1] -= D_s * porosity * nu * phi_s_normal[1];
+			dmom_u_ham_grad_u[2] -= D_s * porosity * nu * phi_s_normal[2];
+
+			mom_v_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1] + phi_s_normal[2] * grad_v[2]);
+			dmom_v_ham_grad_v[0] -= D_s * porosity * nu * phi_s_normal[0];
+			dmom_v_ham_grad_v[1] -= D_s * porosity * nu * phi_s_normal[1];
+			dmom_v_ham_grad_v[2] -= D_s * porosity * nu * phi_s_normal[2];
+
+			mom_w_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_w[0] + phi_s_normal[1] * grad_w[1] + phi_s_normal[2] * grad_w[2]);
+			dmom_w_ham_grad_w[0] -= D_s * porosity * nu * phi_s_normal[0];
+			dmom_w_ham_grad_w[1] -= D_s * porosity * nu * phi_s_normal[1];
+			dmom_w_ham_grad_w[2] -= D_s * porosity * nu * phi_s_normal[2];
+
+			mom_u_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (u - u_s);
+			mom_u_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (u - u_s);
+			mom_u_adv[2] += D_s * porosity * nu * phi_s_normal[2] * (u - u_s);
+			dmom_u_adv_u[0] += D_s * porosity * nu * phi_s_normal[0];
+			dmom_u_adv_u[1] += D_s * porosity * nu * phi_s_normal[1];
+			dmom_u_adv_u[2] += D_s * porosity * nu * phi_s_normal[2];
+
+			mom_v_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (v - v_s);
+			mom_v_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (v - v_s);
+			mom_v_adv[2] += D_s * porosity * nu * phi_s_normal[2] * (v - v_s);
+			dmom_v_adv_v[0] += D_s * porosity * nu * phi_s_normal[0];
+			dmom_v_adv_v[1] += D_s * porosity * nu * phi_s_normal[1];
+			dmom_v_adv_v[2] += D_s * porosity * nu * phi_s_normal[2];
+
+			mom_w_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (w - w_s);
+			mom_w_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (w - w_s);
+			mom_w_adv[2] += D_s * porosity * nu * phi_s_normal[2] * (w - w_s);
+			dmom_w_adv_w[0] += D_s * porosity * nu * phi_s_normal[0];
+			dmom_w_adv_w[1] += D_s * porosity * nu * phi_s_normal[1];
+			dmom_w_adv_w[2] += D_s * porosity * nu * phi_s_normal[2];
 		}
-		mom_u_source += C * (u - u_s);
-		mom_v_source += C * (v - v_s);
-		mom_w_source += C * (w - w_s);
-
-		dmom_u_source[0] += C;
-		dmom_v_source[1] += C;
-		dmom_w_source[2] += C;
-
-		//Nitsche terms
-		mom_u_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_u[0] + phi_s_normal[1] * grad_u[1] + phi_s_normal[2] * grad_u[2]);
-		dmom_u_ham_grad_u[0] -= D_s * porosity * nu * phi_s_normal[0];
-		dmom_u_ham_grad_u[1] -= D_s * porosity * nu * phi_s_normal[1];
-		dmom_u_ham_grad_u[2] -= D_s * porosity * nu * phi_s_normal[2];
-
-		mom_v_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_v[0] + phi_s_normal[1] * grad_v[1] + phi_s_normal[2] * grad_v[2]);
-		dmom_v_ham_grad_v[0] -= D_s * porosity * nu * phi_s_normal[0];
-		dmom_v_ham_grad_v[1] -= D_s * porosity * nu * phi_s_normal[1];
-		dmom_v_ham_grad_v[2] -= D_s * porosity * nu * phi_s_normal[2];
-
-		mom_w_ham -= D_s * porosity * nu * (phi_s_normal[0] * grad_w[0] + phi_s_normal[1] * grad_w[1] + phi_s_normal[2] * grad_w[2]);
-		dmom_w_ham_grad_w[0] -= D_s * porosity * nu * phi_s_normal[0];
-		dmom_w_ham_grad_w[1] -= D_s * porosity * nu * phi_s_normal[1];
-		dmom_w_ham_grad_w[2] -= D_s * porosity * nu * phi_s_normal[2];
-
-		mom_u_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (u - u_s);
-		mom_u_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (u - u_s);
-		mom_u_adv[2] += D_s * porosity * nu * phi_s_normal[2] * (u - u_s);
-		dmom_u_adv_u[0] += D_s * porosity * nu * phi_s_normal[0];
-		dmom_u_adv_u[1] += D_s * porosity * nu * phi_s_normal[1];
-		dmom_u_adv_u[2] += D_s * porosity * nu * phi_s_normal[2];
-
-		mom_v_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (v - v_s);
-		mom_v_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (v - v_s);
-		mom_v_adv[2] += D_s * porosity * nu * phi_s_normal[2] * (v - v_s);
-		dmom_v_adv_v[0] += D_s * porosity * nu * phi_s_normal[0];
-		dmom_v_adv_v[1] += D_s * porosity * nu * phi_s_normal[1];
-		dmom_v_adv_v[2] += D_s * porosity * nu * phi_s_normal[2];
-
-		mom_w_adv[0] += D_s * porosity * nu * phi_s_normal[0] * (w - w_s);
-		mom_w_adv[1] += D_s * porosity * nu * phi_s_normal[1] * (w - w_s);
-		mom_w_adv[2] += D_s * porosity * nu * phi_s_normal[2] * (w - w_s);
-		dmom_w_adv_w[0] += D_s * porosity * nu * phi_s_normal[0];
-		dmom_w_adv_w[1] += D_s * porosity * nu * phi_s_normal[1];
-		dmom_w_adv_w[2] += D_s * porosity * nu * phi_s_normal[2];
 	}
 
 	inline void updateTurbulenceClosure(const int turbulenceClosureModel,
@@ -3336,10 +3337,10 @@ class cppRANS3PF : public cppRANS3PF_base
 				globalResidual[offset_w + stride_w * vel_l2g[eN_i]] += elementResidual_w[i];
 			} //i
 		}	 //ebNE
-		/* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
-		/* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
-		/* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
-		/* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
+			  /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
+			  /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
+			  /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
+			  /* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
 	}
 
 	void calculateJacobian( //element
