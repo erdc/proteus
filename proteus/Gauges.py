@@ -315,12 +315,8 @@ class Gauges(AV_base):
             self.globalQuantitiesBuf = None
             self.globalQuantitiesCounts = None
         else:
-            print "What is the fileName? " + self.fileName 
-            print "What is the rank? %i " % self.gaugeComm.rank
-            print "Is output ready? %s" % self.outputWriterReady
-            
             if self.adapted:
-              if not self.outputWriterReady:
+              if(Profiling.logDir not in self.fileName):
                 self.fileName = os.path.join(Profiling.logDir, self.fileName)                
               self.file = open(self.fileName, 'a')
             else:
@@ -677,7 +673,6 @@ class Gauges(AV_base):
         self.buildGaugeComm()
 
         if self.isGaugeOwner:
-            print "The Gauge is %s" % self
             self.initOutputWriter()
             self.buildPointGaugeOperators()
             self.buildLineIntegralGaugeOperators(self.lines, linesSegments)

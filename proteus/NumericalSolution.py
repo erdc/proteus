@@ -751,44 +751,38 @@ class NS_base:  # (HasTraits):
                         nFile=n,
                         analyticalSolution=p.analyticalSolution))
                 model.simTools = self.simOutputList[-1]
-                #import pdb;pdb.set_trace()
-                #for av in n.auxiliaryVariables:
-                #  #get previous gauge info
-                #  fields = av.fields
-                #  activeTime=av.activeTime
-                #  sampleRate=av.sampleRate  
-                #  fileName=av.fileName
-                #  points=av.points
-                #  lines=av.lines
-                #  integrate=av.isLineIntegralGauge
-                  #if(av.isPointGauge):
-                  #  newGauge = Gauges.PointGauges(activeTime,sampleRate,fileName,points)
-                #purge gauge locations as partition may be different
-                if(self.comm.rank()==0):
-                  print "The Gauge is %s before" % n.auxiliaryVariables
+                
+                #Code to refresh attached gauges. The goal is to first purge 
+                #existing point gauge node associations as that may have changed
+                #If there is a line gauge, then all the points must be deleted
+                #and remade.
+                from collections import OrderedDict
                 for av in n.auxiliaryVariables:
-                  av.adapted=True
-                  for pointIdx in range(len(av.points.items())):
-                    av.points.items()[pointIdx][1].pop('nearest_node')
-                  if(av.isGaugeOwner):
-                    for ptGaugeIdx,ptGaugeItem in enumerate(av.pointGaugeVecs):
-                      av.pointGaugeVecs[ptGaugeIdx].destroy();  
-                      av.pointGaugeMats[ptGaugeIdx].destroy();  
-                      av.dofsVecs[ptGaugeIdx].destroy();
-                    av.pointGaugeVecs = []
-                    av.pointGaugeMats = []
-                    av.dofsVecs = []
-                  #print "What is model? " + model.name 
+                  try:
+                    av.adapted=True
+                    for point, l_d in av.points.iteritems():
+                      if 'nearest_node' in l_d:
+                        l_d.pop('nearest_node')
+                    if(av.isLineGauge or av.isLineIntegralGauge): #if line gauges, need to remove all points
+                      av.points = OrderedDict()
+                    if(av.isGaugeOwner):
+                      for ptGaugeIdx,ptGaugeItem in enumerate(av.pointGaugeVecs):
+                        av.pointGaugeVecs[ptGaugeIdx].destroy();  
+                        av.pointGaugeMats[ptGaugeIdx].destroy();  
+                        av.dofsVecs[ptGaugeIdx].destroy();
+                      av.pointGaugeVecs = []
+                      av.pointGaugeMats = []
+                      av.dofsVecs = []
+                      av.field_ids=[]
+                      av.isGaugeOwner=False
+                  except AttributeError:
+                    pass
                   self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index])]
-                #reinitialize gauges
+                #reinitialize empty auxiliary entries
                 try:
                   self.auxiliaryVariables[model.name]
                 except KeyError:
                   self.auxiliaryVariables[model.name] = []
-                #print "What is model? " + model.name 
-                #self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
-                if(self.comm.rank()==0):
-                  print "The Gauge is %s after" % n.auxiliaryVariables
         else:
             for p,n,s,model,index in zip(
                     self.pList,

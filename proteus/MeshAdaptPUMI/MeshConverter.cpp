@@ -1061,7 +1061,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
         //get to the next item in the exterior array
         if(m->isShared(ent) && mesh.elementBoundaryMaterialTypes[mesh.exteriorElementBoundariesArray[edgCounter]]==0) 
           edgCounter++; 
-        assert(mesh.elementBoundaryMaterialTypes[edgID]==0);
+        //assert(mesh.elementBoundaryMaterialTypes[edgID]==0 && "If working with multi-region cases, turn this assertion off");
         //There are always two entities adjacent to an element boundary
         //Pick one and take that as the material type for classification
         matTag = mesh.elementMaterialTypes[mesh.elementBoundaryElementsArray[2*edgID]];
