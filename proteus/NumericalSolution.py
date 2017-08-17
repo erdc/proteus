@@ -985,9 +985,14 @@ class NS_base:  # (HasTraits):
                     del scalar
 
             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-            scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal[:]
+            # scalar[:,0] = self.modelList[0].levelModelList[0].velocityErrorNodal           
+            # p0.domain.PUMIMesh.transferFieldToPUMI(
+            #     'velocityError', scalar)
+
+            scalar[:,0] = self.modelList[4].levelModelList[0].phisErrorNodal[:]
             p0.domain.PUMIMesh.transferFieldToPUMI(
-                'velocityError', scalar)
+                'phisError', scalar)
+
             del scalar
             #Get Physical Parameters
             #Can we do this in a problem-independent  way?
