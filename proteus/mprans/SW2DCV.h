@@ -13,9 +13,9 @@
 //5. Try other choices of variables h,hu,hv, Bova-Carey symmetrization?
 
 #define POWER_SMOOTHNESS_INDICATOR 2
-#define LINEAR_FRICTION 1
-#define VEL_FIX_POWER 4.
-#define REESTIMATE_MAX_EDGE_BASED_CFL 0
+#define LINEAR_FRICTION 0
+#define VEL_FIX_POWER 2.
+#define REESTIMATE_MAX_EDGE_BASED_CFL 1
 
 // FOR CELL BASED ENTROPY VISCOSITY 
 #define ENTROPY(g,h,hu,hv,z,one_over_hReg) 0.5*(g*h*h + one_over_hReg*(hu*hu+hv*hv) + 2.*g*h*z)
@@ -2039,7 +2039,7 @@ namespace proteus
 	  // CALCULATE EDGE BASED CFL //
 	  //////////////////////////////
 	  double mi = lumped_mass_matrix[i];
-	  edge_based_cfl[i] = 2*fabs(dLowii)/mi;
+	  edge_based_cfl[i] = fabs(dLowii)/mi;
 	  max_edge_based_cfl = fmax(max_edge_based_cfl,edge_based_cfl[i]);
 
 	  //////////////////////////////////
@@ -3378,10 +3378,10 @@ namespace proteus
 	  register double eta[numDOFsPerEqn];
 	  for (int i=0; i<numDOFsPerEqn; i++)
 	    {
-	      // COMPUTE ENTROPY BASED ON OLD STAGE
+	      // COMPUTE ENTROPY. NOTE: WE CONSIDER A FLAT BOTTOM 
 	      double hni = h_dof_lstage[i]; 
 	      double one_over_hniReg = 2*hni/(hni*hni+std::pow(fmax(hni,hEps),2)); //hEps
-	      eta[i] = ENTROPY(g,hni,hu_dof_lstage[i],hv_dof_lstage[i],0*b_dof[i],one_over_hniReg);
+	      eta[i] = ENTROPY(g,hni,hu_dof_lstage[i],hv_dof_lstage[i],0.,one_over_hniReg);
 	    }
 	  // ********** END OF COMPUTING ENTROPY ********** //
 	  
@@ -3398,7 +3398,6 @@ namespace proteus
 	      double hi = h_dof_lstage[i]; // solution at time tn for the ith DOF
 	      double hui = hu_dof_lstage[i]; 
 	      double hvi = hv_dof_lstage[i]; 
-	      double Zi = b_dof[i];
 	      double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); //hEps
 
 	      // For eta min and max
@@ -3408,9 +3407,9 @@ namespace proteus
 	      // FOR ENTROPY RESIDUAL
 	      double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
 	      double entropy_flux=0.;
-	      double eta_prime1 = DENTROPY_DH(g,hi,hui,hvi,0*Zi,one_over_hiReg); 
-	      double eta_prime2 = DENTROPY_DHU(g,hi,hui,hvi,0*Zi,one_over_hiReg); 
-	      double eta_prime3 = DENTROPY_DHV(g,hi,hui,hvi,0*Zi,one_over_hiReg); 
+	      double eta_prime1 = DENTROPY_DH(g,hi,hui,hvi,0.,one_over_hiReg); // NOTE: WE CONSIDER A FLAT BOTTOM
+	      double eta_prime2 = DENTROPY_DHU(g,hi,hui,hvi,0.,one_over_hiReg); 
+	      double eta_prime3 = DENTROPY_DHV(g,hi,hui,hvi,0.,one_over_hiReg); 
 	      
 	      // FOR SMOOTHNESS INDICATOR //
 	      double alphai; // smoothness indicator of solution
@@ -3422,18 +3421,20 @@ namespace proteus
 		  double hj = h_dof_lstage[j]; // solution at time tn for the jth DOF
 		  double huj = hu_dof_lstage[j];
 		  double hvj = hv_dof_lstage[j];
-		  double Zj = b_dof[j];
-		  
-		  // FOR ENTROPY RESIDUAL //
 		  double one_over_hjReg = 2*hj/(hj*hj+std::pow(fmax(hj,hEps),2)); //hEps
-		  ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
-		  ith_flux_term2 += ( huj*huj*one_over_hjReg*Cx[ij] + huj*hvj*one_over_hjReg*Cy[ij] 
-				      + g*hi*(hj+0*Zj)*Cx[ij] ); //f2*C
-		  ith_flux_term3 += ( huj*hvj*one_over_hjReg*Cx[ij] + hvj*hvj*one_over_hjReg*Cy[ij] 
-				      + g*hi*(hj+0*Zj)*Cy[ij] ); //f3*C     
+		  double uj = huj*one_over_hjReg;
+		  double vj = hvj*one_over_hjReg;
+		  // NOTE: WE CONSIDER FLAT BOTTOM. i.e., Zj=0
+		  double Zj = 0.;
 		  
-		  entropy_flux += ( Cx[ij]*ENTROPY_FLUX1(g,hj,huj,hvj,0*Zj,one_over_hjReg) + 
-				    Cy[ij]*ENTROPY_FLUX2(g,hj,huj,hvj,0*Zj,one_over_hjReg) );
+		  // FOR ENTROPY RESIDUAL //		  
+		  ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
+		  ith_flux_term2 += uj*huj*Cx[ij] + uj*hvj*Cy[ij] + g*hi*(hj+Zj)*Cx[ij]; 
+		  ith_flux_term3 += vj*huj*Cx[ij] + vj*hvj*Cy[ij] + g*hi*(hj+Zj)*Cy[ij];
+		  
+		  // NOTE: WE CONSIDER FLAT BOTTOM
+		  entropy_flux += ( Cx[ij]*ENTROPY_FLUX1(g,hj,huj,hvj,0.,one_over_hjReg) + 
+				    Cy[ij]*ENTROPY_FLUX2(g,hj,huj,hvj,0.,one_over_hjReg) );
 		  
 		  /////////////////////////////////
 		  // COMPUTE ETA MIN AND ETA MAX // 
@@ -3477,6 +3478,13 @@ namespace proteus
 	    }
 	  // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
 	  
+	  //double max_ui = 0.; //TMP
+	  //double max_vi = 0.;
+	  //double max_hui = 0.; //TMP
+	  //double max_hvi = 0.;
+	  //double max_hxui = 0.;
+	  //double max_hxvi = 0.;
+
 	  ////////////////////////////////////////
 	  // ********** Loop on DOFs ********** // to compute flux and dissipative terms
 	  ////////////////////////////////////////
@@ -3491,6 +3499,13 @@ namespace proteus
 	      double one_over_hiReg = 2*hi/(hi*hi+std::pow(fmax(hi,hEps),2)); // hEps
 	      double ui = hui*one_over_hiReg;
 	      double vi = hvi*one_over_hiReg;
+
+	      //max_ui = fmax(max_ui,fabs(ui));
+	      //max_vi = fmax(max_vi,fabs(vi));
+	      //max_hui = fmax(max_hui,fabs(hui));
+	      //max_hvi = fmax(max_hvi,fabs(hvi));
+	      //max_hxui = fmax(max_hxui,fabs(hi*ui));
+	      //max_hxvi = fmax(max_hxvi,fabs(hi*vi));
 
 	      double ith_flux_term1=0., ith_flux_term2=0., ith_flux_term3=0.;
 	      // LOW ORDER DISSIPATIVE TERMS
@@ -3515,10 +3530,15 @@ namespace proteus
 	      ///////////////////
 	      double veli_norm = std::sqrt(ui*ui+vi*vi);
 	      double hi_to_the_gamma = std::pow(hi,gamma);
-	      double ith_friction_term2 =  
-		veli_norm==0 ? 0. : 2*g*n2*hui*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
-	      double ith_friction_term3 =  
-		veli_norm==0 ? 0. : 2*g*n2*hvi*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
+	      double friction_aux = 
+		veli_norm == 0. ? 0. : 2*g*n2*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,10*xi*g*n2*dt*veli_norm));
+	      double ith_friction_term2 = friction_aux*hui;
+	      double ith_friction_term3 = friction_aux*hvi;
+
+	      //double ith_friction_term2 =  
+	      //veli_norm==0. ? 0. : 2*g*n2*hui*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
+	      //double ith_friction_term3 =  
+	      //veli_norm==0. ? 0. : 2*g*n2*hvi*veli_norm*mi/(hi_to_the_gamma+fmax(hi_to_the_gamma,xi*g*n2*dt*veli_norm));
 	      
 	      if (LINEAR_FRICTION==1)
 		{
@@ -3540,10 +3560,9 @@ namespace proteus
 		  
 		  // Nodal projection of fluxes
 		  ith_flux_term1 += huj*Cx[ij] + hvj*Cy[ij]; // f1*C
-		  ith_flux_term2 += ( huj*huj*one_over_hjReg*Cx[ij] + huj*hvj*one_over_hjReg*Cy[ij] 
-				      + g*hi*(hj+Zj)*Cx[ij] );
-		  ith_flux_term3 += ( huj*hvj*one_over_hjReg*Cx[ij] + hvj*hvj*one_over_hjReg*Cy[ij] 
-				      + g*hi*(hj+Zj)*Cy[ij] );
+		  //ith_flux_term1 += hj*(uj*Cx[ij] + vj*Cy[ij]); // f1*C
+		  ith_flux_term2 += uj*huj*Cx[ij] + uj*hvj*Cy[ij] + g*hi*(hj+Zj)*Cx[ij]; 
+		  ith_flux_term3 += vj*huj*Cx[ij] + vj*hvj*Cy[ij] + g*hi*(hj+Zj)*Cy[ij];
 		  
 		  // COMPUTE STAR SOLUTION // hStar, huStar and hvStar
 		  double hStarij  = fmax(0., hi + Zi - fmax(Zi,Zj));
@@ -3716,6 +3735,16 @@ namespace proteus
 		    }
 		}
 	    }
+	  //std::cout << "Max of vel: "
+	  //	    << max_ui << "\t"
+	  //	    << max_vi << std::endl;
+	  //std::cout << "Max of hu: "
+	  //	    << max_hui << "\t"
+	  //	    << max_hvi << std::endl;
+	  //std::cout << "Max of hxu: "
+	  //	    << max_hxui << "\t"
+	  //	    << max_hxvi << std::endl;
+
 	  // ********** END OF LOOP IN DOFs ********** //
 	}
 
