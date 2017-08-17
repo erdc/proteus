@@ -622,6 +622,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         self.elementMaterialTypes[eN]]
         #
         cq['phisError'] = cq[('u',0)].copy()
+        cq['velocityError'] = cq[('velocity',0)].copy()
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
         # VRANS
@@ -1011,6 +1012,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ua = {}  # analytical solutions
         self.phi = phiDict
         self.dphi = {}
+        self.phi_s = phiDict
         self.matType = matType
         # mwf try to reuse test and trial information across components if
         # spaces are the same
@@ -1820,7 +1822,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.coefficients.nContact,
                 self.coefficients.angFriction)
         
+
         self.phisErrorNodal=self.u[0].dof.copy()
+        self.velocityErrorNodal=self.u[0].dof.copy()
+
 
     def getResidual(self, u, r):
         """
@@ -2575,14 +2580,20 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                             ci].updateConservationJacobian[cj] = True
 
 
-        if self.coefficients.granular_sdf_Calc is not None:
-            self.q['phisError'][:]=self.q[('phis')]                    
-            OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
-            self.q['phisError']-=self.q[('phis')]
-        else:#this needs to be fixed for the case that multiple bodies are present
-            self.q['phisError'][:]=self.q[('phis',0)]                    
-            OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
-            self.q['phisError']-=self.q[('phis',0)]  
+
+        # if self.coefficients.granular_sdf_Calc is not None:
+        #     self.q['phisError'][:]=self.q[('phis')]   
+        #     self.q['velocityError'][:]=self.q[('velocity',0)]                 
+        #     OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+        #     self.q['phisError']-=self.q[('phis')]
+        #     self.q['velocityError']-=self.q[('velocity',0)]
+        # else:#this needs to be fixed for the case that multiple bodies are present
+        self.q['phisError'][:]=self.q[('phis',0)]
+        self.q['velocityError'][:]=self.q[('velocity',0)]
+        OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+        self.q['phisError']-=self.q[('phis',0)]
+        self.q['velocityError']-=self.q[('velocity',0)]
+
 
     def updateAfterMeshMotion(self):
         pass
