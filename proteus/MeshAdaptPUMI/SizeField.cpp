@@ -21,20 +21,27 @@ static double isotropicFormula(double phi, double dphi, double verr, double hmin
   double dphi_size_factor;
   double v_size_factor;
   //This is just a hack for now. This disable the refinement over phi and does it over phi_s
-  if (phi_s != 0)
-  {
-    phi = phi_s;
-    dphi = 0.0;
-  }
-  if (fabs(phi) < 5.0 * hmin)
-  {
-    dphi_size_factor = fmax(hmin / 10.0, fmin(1.0, pow(((hmin / 1000.0) / fabs(dphi + 1.0e-8)), 1.0 / 2.0)));
-    size = hmin * dphi_size_factor;
-  }
+  // if (phi_s != 0.0)
+  // {
+  if (fabs(phi_s) < 5.0 * hmin)
+    return hmin;
   else
-    size = hmax;
-  size = fmax(hmin / 100.0, fmin(size, 0.001 / (verr + 1.0e-8)));
-  return size;
+    return hmax;
+  // }
+  // else
+  // {
+  //   if (fabs(phi) < 5.0 * hmin)
+  //   {
+  //     dphi_size_factor = fmax(hmin / 10.0, fmin(1.0, pow(((hmin / 1000.0) / fabs(dphi + 1.0e-8)), 1.0 / 2.0)));
+  //     size = hmin * dphi_size_factor;
+  //   }
+  //   else
+  //     size = hmax;
+
+  //   size = fmax(hmin / 100.0, fmin(size, 0.001 / (verr + 1.0e-8)));
+
+  //   return size;
+  // }
 }
 
 int MeshAdaptPUMIDrvr::calculateSizeField()
@@ -59,8 +66,7 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
     double phi_s = apf::getScalar(phisError, v, 0);
     // double dphi = apf::getScalar(phiCorr, v, 0);
     // double verr = apf::getScalar(velocityError, v, 0);
-
-    double size = isotropicFormula(phi, 0.0, 0.0, hmin, hmax, phi_s);
+    double size = isotropicFormula(0.0, 0.0, 0.0, hmin, hmax, phi_s);
     apf::setScalar(size_iso, v, 0, size);
   }
   m->end(it);
@@ -86,7 +92,7 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
       // double dphi = apf::getScalar(phiCorr, v, 0);
       // double verr = apf::getScalar(velocityError, v, 0);
       double size_current = apf::getScalar(size_iso, v, 0);
-      double size = fmin(size_current, isotropicFormula(phi, 0, 0.0, hmin, hmax, phi_s));
+      double size = fmin(size_current, isotropicFormula(0.0, 0, 0.0, hmin, hmax, phi_s));
       err_h_max = fmax(err_h_max, fabs(size_current - size));
       apf::setScalar(size_iso, v, 0, size);
     }
