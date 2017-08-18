@@ -221,9 +221,7 @@ class cppRANS3PF2D_base
 								   double *particle_netForces,
 								   double *particle_netMoments,
 								   double *particle_surfaceArea,
-								   double particle_nitsche,
-								   double *phisError,
-								   double *phisErrorNodal) = 0;
+								   double particle_nitsche) = 0;
 
 	virtual void calculateJacobian( //element
 		double *mesh_trial_ref,
@@ -1793,9 +1791,7 @@ class cppRANS3PF2D : public cppRANS3PF2D_base
 		double *particle_netForces,
 		double *particle_netMoments,
 		double *particle_surfaceArea,
-		double particle_nitsche,
-		double *phisError,
-		double *phisErrorNodal)
+		double particle_nitsche)
 	{
 		//
 		//loop over elements to compute volume integrals and load them into element and global residual
@@ -1812,7 +1808,6 @@ class cppRANS3PF2D : public cppRANS3PF2D_base
 			register double elementResidual_p[nDOF_test_element], elementResidual_mesh[nDOF_test_element],
 				elementResidual_u[nDOF_test_element],
 				elementResidual_v[nDOF_test_element],
-				phisErrorElement[nDOF_test_element],
 
 				//elementResidual_w[nDOF_test_element],
 				eps_rho, eps_mu;
@@ -1827,7 +1822,6 @@ class cppRANS3PF2D : public cppRANS3PF2D_base
 				elementResidual_p[i] = 0.0;
 				elementResidual_u[i] = 0.0;
 				elementResidual_v[i] = 0.0;
-				phisErrorElement[i] = 0.0;
 
 				/* elementResidual_w[i]=0.0; */
 			} //i
@@ -2401,8 +2395,6 @@ class cppRANS3PF2D : public cppRANS3PF2D_base
 				{
 					register int i_nSpace = i * nSpace;
 
-					phisErrorElement[i] += std::abs(phisError[eN_k_nSpace + 0]) * p_test_dV[i];
-
 					/* std::cout<<"elemRes_mesh "<<mesh_vel[0]<<'\t'<<mesh_vel[2]<<'\t'<<p_test_dV[i]<<'\t'<<(q_dV_last[eN_k]/dV)<<'\t'<<dV<<std::endl; */
 					/* elementResidual_mesh[i] += ck.Reaction_weak(1.0,p_test_dV[i]) - */
 					/*   ck.Reaction_weak(1.0,p_test_dV[i]*q_dV_last[eN_k]/dV) - */
@@ -2460,7 +2452,6 @@ class cppRANS3PF2D : public cppRANS3PF2D_base
 			for (int i = 0; i < nDOF_test_element; i++)
 			{
 				register int eN_i = eN * nDOF_test_element + i;
-				phisErrorNodal[vel_l2g[eN_i]] += phisErrorElement[i];
 
 				/* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
 				/* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
@@ -3345,10 +3336,10 @@ class cppRANS3PF2D : public cppRANS3PF2D_base
 				/* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
 			} //i
 		}	 //ebNE
-		/* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
-		/* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
-		/* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
-		/* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
+			  /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
+			  /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
+			  /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
+			  /* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
 	}
 
 	void calculateJacobian( //element
