@@ -817,10 +817,11 @@ class NS_base:  # (HasTraits):
             m.stepController.t_model = mOld.stepController.t_model
             m.stepController.t_model_last = mOld.stepController.t_model_last
             m.stepController.substeps = mOld.stepController.substeps
-        logEvent("Evaluating residuals and time integration")
         for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             logEvent("Attaching models to model "+ptmp.name)
             m.attachModels(self.modelList)
+        logEvent("Evaluating residuals and time integration")
+        for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
             for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                 lm.timeTerm=True
                 lm.getResidual(lu,lr)
@@ -828,9 +829,11 @@ class NS_base:  # (HasTraits):
                 lm.initializeTimeHistory()
                 lm.timeIntegration.initializeSpaceHistory()
                 lm.getResidual(lu,lr)
-                assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
-                assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
-                assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
+                #import pdb
+                #pdb.set_trace()
+                #assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+                #assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+                #assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
                 #lm.coefficients.evaluate(self.t_stepSequence,lm.q)
                 #lm.coefficients.evaluate(self.t_stepSequence,lm.ebqe)
                 #lm.timeIntegration.calculateElementCoefficients(lm.q)
@@ -849,14 +852,14 @@ class NS_base:  # (HasTraits):
                 self.systemStepController.controllerList.append(model)
                 self.systemStepController.maxFailures = model.stepController.maxSolverFailures
         self.systemStepController.choose_dt_system()
-        for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
-            for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
-                assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
-                assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
-                assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
-            assert(m.stepController.dt_model == mOld.stepController.dt_model)
-            assert(m.stepController.t_model == mOld.stepController.t_model)
-            assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
+        # for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
+        #     for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+        #         assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+        #         assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+        #         assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
+        #     assert(m.stepController.dt_model == mOld.stepController.dt_model)
+        #     assert(m.stepController.t_model == mOld.stepController.t_model)
+        #     assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
         if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
             #hack for archiving initial solution on adapted mesh
             self.tCount+=1

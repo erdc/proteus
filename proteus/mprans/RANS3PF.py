@@ -1896,6 +1896,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
             self.coefficients.set_vos(self.ebqe['x'],self.coefficients.ebqe_vos)
+        self.pressureModel.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.rans3pf.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
