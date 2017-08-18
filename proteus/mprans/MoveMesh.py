@@ -146,6 +146,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
 class LevelModel(proteus.Transport.OneLevelTransport):
     nCalls=0
+    ProtChBody=None
     def __init__(self,
                  uDict,
                  phiDict,
@@ -172,6 +173,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
                  movingDomain=False):
+        # self.ProtChBody = None
         self.stored_detJ0 = False
         #
         #set the objects describing the method and boundary conditions
@@ -560,6 +562,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for cj in range(self.nc):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        if self.ProtChBody:
+            body_pos = self.ProtChBody.position
+            checkDistance = 1
+        else:
+            body_pos = np.zeros(3)
+            checkDistance = 0
         self.moveMesh.calculateResidual(#element
             self.detJ_last_array,
             self.detJ0_array,
@@ -567,6 +575,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dilation'],
             self.q['distortion'],
             self.distortion0_array,
+            body_pos,
+            checkDistance,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -641,6 +651,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2,0)] = self.csrColumnOffsets[(0,1)]
             self.csrColumnOffsets_eb[(2,1)] = self.csrColumnOffsets[(0,1)]
             self.csrColumnOffsets_eb[(2,2)] = self.csrColumnOffsets[(0,1)]
+        if self.ProtChBody:
+            body_pos = self.ProtChBody.position
+            checkDistance = 1
+        else:
+            body_pos = np.zeros(3)
+            checkDistance = 0
         self.moveMesh.calculateJacobian(#element
             self.detJ_last_array,
             self.detJ0_array,
@@ -648,6 +664,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dilation'],
             self.q['distortion'],
             self.distortion0_array,
+            body_pos,
+            checkDistance,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,

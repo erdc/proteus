@@ -264,7 +264,7 @@ namespace proteus
       if (det_J0 == 0) {det_J0 = 1;};
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]+strain[sZZ]),
-        E=materialProperties[0]*Eweight/det_J0+0.000001, nu=materialProperties[1];
+        E=pow(materialProperties[0]*Eweight/det_J0,2)+0.000001, nu=materialProperties[1];
       E_in_array[0] = E;
 
       const double shear = E/(1.0+nu);	

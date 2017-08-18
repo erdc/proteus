@@ -16,9 +16,11 @@ namespace proteus
                double* detJ_last_array,
                double* detJ0_array,
                double* E_array,
-               double* dilatioN_last_array,
+               double* dilation_last_array,
                double* distortion_last_array,
                double* distortion0_array,
+               double* body_pos,
+               int checkDistance,
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
 			   double* mesh_dof,
@@ -74,6 +76,8 @@ namespace proteus
                    double* dilation_last_array,
                    double* distortion_last_view,
                    double* distortion0_view,
+                   double* body_pos,
+                   int checkDistance,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -203,7 +207,8 @@ namespace proteus
              double* E_in_array,
              double* dilation_last,
              double* distortion_last,
-             double distortion0
+             double distortion0,
+             double distance
                                      )
     {
       double dist_last = distortion_last[0];
@@ -220,6 +225,9 @@ namespace proteus
       }
       else {
         dilation = 1.;
+      }
+      if (dilation < dilation_last[0]) {
+        dilation =1.;
       }
       dilation = dilation-1;
       dilation_last[0] = dilation;
@@ -260,9 +268,9 @@ namespace proteus
         // this is the first time it does the loop, need to register distortion0
         distortion_rel = distortion;
       }
+      distortion_rel = distortion-1;  // delete this
       distortion_last[0] = distortion_rel;
 
-      //distortion = 0.1;
       double alpha = 0.5;
       double Eweight = (1-alpha)*distortion_rel+alpha*dilation;
 
@@ -270,7 +278,7 @@ namespace proteus
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]/* +strain[sZZ] */),
 //E=pow(materialProperties[0]/det_J, Eweight),//for mesh motion penalize small elements
-        E=materialProperties[0]*Eweight/det_J0+0.000001, nu=materialProperties[1];
+        E=materialProperties[0]*Eweight/(det_J0*distance*distance)+0.000001, nu=materialProperties[1];
       E_in_array[0] = E;
       /* std::cout << "E " << E << "\n"; */
       /* std::cout << "Eweight " << Eweight << "\n"; */
@@ -477,6 +485,8 @@ namespace proteus
                    double* dilation_last_array,
                    double* distortion_last_array,
                    double* distortion0_array,
+                   double* body_pos,
+                   int checkDistance,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -606,6 +616,13 @@ namespace proteus
 
 	      calculateStrain(D,strain);
           double detJ0 = detJ0_array[eN];
+          double dist;
+          if (checkDistance == 1) {
+            dist = sqrt(pow(body_pos[0]-x,2)+pow(body_pos[1]-y,2)+pow(body_pos[2]-z,2));
+          }
+          else {
+            dist = 1.;
+              }
 	      evaluateCoefficients(fabs(jacDet),
            jac,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
@@ -616,7 +633,8 @@ namespace proteus
            &E_array[eN*nQuadraturePoints_element+k],
            &dilation_last_array[eN*nQuadraturePoints_element+k],
            &distortion_last_array[eN*nQuadraturePoints_element+k],
-           distortion0_array[eN*nQuadraturePoints_element+k]);
+           distortion0_array[eN*nQuadraturePoints_element+k],
+           dist);
 	      //
 	      //update element residual 
 	      // 
@@ -739,6 +757,8 @@ namespace proteus
 	      calculateStrain(D,strain);
           double detJ0 = detJ0_array[eN];
           double nn [1] = {0};
+          /* double dist = sqrt(pow(body_pos[0]-x,2)+pow(body_pos[1]-y,2)+pow(body_pos[2]-z,2)); */
+          double dist = 1;
 	      evaluateCoefficients(fabs(jacDet_ext),
            jac_ext,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
@@ -749,7 +769,8 @@ namespace proteus
            nn,
            nn,
            nn,
-           distortion0_array[eN*nQuadraturePoints_element+kb]);
+           distortion0_array[eN*nQuadraturePoints_element+kb],
+           dist);
 	      // 
 	      //calculate the numerical fluxes 
 	      // 
@@ -812,6 +833,8 @@ namespace proteus
                    double* dilation_last_array,
                    double* distortion_last_array,
                    double* distortion0_array,
+                   double* body_pos,
+                   int checkDistance,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -955,6 +978,13 @@ namespace proteus
 		}
 	      calculateStrain(D,strain);
           double detJ0 = detJ0_array[eN];
+          double dist;
+          if (checkDistance == 1) {
+            dist = sqrt(pow(body_pos[0]-x,2)+pow(body_pos[1]-y,2)+pow(body_pos[2]-z,2));
+          }
+          else {
+            dist = 1.;
+          }
 	      evaluateCoefficients(fabs(jacDet),
            jac,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
@@ -965,7 +995,8 @@ namespace proteus
            &E_array[eN*nQuadraturePoints_element+k],
            &dilation_last_array[eN*nQuadraturePoints_element+k],
            &distortion_last_array[eN*nQuadraturePoints_element+k],
-           distortion0_array[eN*nQuadraturePoints_element+k]);
+           distortion0_array[eN*nQuadraturePoints_element+k],
+           dist);
 	      //
 	      //omit for now
 	      //
@@ -1102,6 +1133,8 @@ namespace proteus
 	      calculateStrain(D_ext,strain);
           double detJ0 = detJ0_array[eN];
           double nn [1] = {0};
+          /* double dist = sqrt(pow(body_pos[0]-x,2)+pow(body_pos[1]-y,2)+pow(body_pos[2]-z,2); */
+          double dist = 1;
 	      evaluateCoefficients(fabs(jacDet_ext),
            jac_ext,
 				   &materialProperties[materialTypes[eN]*nMaterialProperties],
@@ -1112,7 +1145,8 @@ namespace proteus
            nn,
            nn,
            nn,
-           distortion0_array[eN*nQuadraturePoints_element+kb]);
+           distortion0_array[eN*nQuadraturePoints_element+kb],
+           dist);
 	      //
 	      //calculate the flux jacobian
 	      //
