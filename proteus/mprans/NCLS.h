@@ -52,6 +52,25 @@ namespace proteus
 					  double* Cy, 
 					  double* ML 
 						 )=0;
+    virtual double calculateRhsSmoothing(
+					 double* mesh_trial_ref,
+					 double* mesh_grad_trial_ref,
+					 double* mesh_dof,
+					 int* mesh_l2g,
+					 double* dV_ref,
+					 double* u_trial_ref,
+					 double* u_grad_trial_ref,
+					 double* u_test_ref,
+					 //physics
+					 int nElements_global,
+					 int* u_l2g, 
+					 double* elementDiameter,
+					 double* nodeDiametersArray,
+					 double* u_dof,
+					 double* u_dof_old,	
+					 int offset_u, int stride_u, 
+					 double* globalResidual
+					 )=0;
     virtual void calculateResidual(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -587,6 +606,78 @@ namespace proteus
 	  globalResidual[i] += dt*(ith_flux_term - ith_dissipative_term); 
 	}
       return L2_norm;
+    }
+
+    double calculateRhsSmoothing(
+				 double* mesh_trial_ref,
+				 double* mesh_grad_trial_ref,
+				 double* mesh_dof,
+				 int* mesh_l2g,
+				 double* dV_ref,
+				 double* u_trial_ref,
+				 double* u_grad_trial_ref,
+				 double* u_test_ref,
+				 //physics
+				 int nElements_global,
+				 int* u_l2g, 
+				 double* elementDiameter,
+				 double* nodeDiametersArray,
+				 double* u_dof,
+				 double* u_dof_old,	
+				 int offset_u, int stride_u, 
+				 double* globalResidual)
+    {
+      //////////////////////////////////////////////
+      // ** LOOP IN CELLS FOR CELL BASED TERMS ** //
+      //////////////////////////////////////////////
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  //declare local storage for local contributions and initialize
+	  register double 
+	    elementResidual_u[nDOF_test_element];
+	  for (int i=0;i<nDOF_test_element;i++)
+	    elementResidual_u[i]=0.0;
+	  
+	  //loop over quadrature points and compute integrands
+	  for  (int k=0;k<nQuadraturePoints_element;k++)
+	    {
+	      //compute indeces and declare local storage
+	      register int eN_k = eN*nQuadraturePoints_element+k,
+		eN_k_nSpace = eN_k*nSpace,
+		eN_nDOF_trial_element = eN*nDOF_trial_element;
+	      register double 
+		un=0.0, u_test_dV[nDOF_trial_element], u_grad_trial[nDOF_trial_element*nSpace],
+		//for general use
+		jac[nSpace*nSpace], jacDet, jacInv[nSpace*nSpace],
+		dV,x,y,z;
+	      //get the physical integration weight
+	      ck.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
+	      dV = fabs(jacDet)*dV_ref[k];
+	      //get the solution at quad point at tn 
+	      ck.valFromDOF(u_dof_old,&u_l2g[eN_nDOF_trial_element],&u_trial_ref[k*nDOF_trial_element],un);
+	      //precalculate test function products with integration weights for mass matrix terms
+	      for (int j=0;j<nDOF_trial_element;j++)
+		u_test_dV[j] = u_test_ref[k*nDOF_trial_element+j]*dV;
+
+	      //////////////
+	      // ith-LOOP //
+	      //////////////
+	      for(int i=0;i<nDOF_test_element;i++) 
+		elementResidual_u[i] += un*u_test_dV[i];
+	    }
+	  
+	  /////////////////
+	  // DISTRIBUTE // load cell based element into global residual
+	  ////////////////
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      int eN_i=eN*nDOF_test_element+i;
+	      int gi = offset_u+stride_u*u_l2g[eN_i]; //global i-th index
+	      
+	      // distribute global residual
+	      globalResidual[gi] += elementResidual_u[i];
+	    }//i
+	}//elements
     }
 
     void calculateResidual(//element
