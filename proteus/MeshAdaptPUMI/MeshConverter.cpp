@@ -941,6 +941,18 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   numModelTotals[2] = numModelBoundaries;
   numModelTotals[3] = 0;
 
+  //Get Region starting material
+  entIter = m->begin(numDim);
+  int regStartMaterial = 100;
+  int rID = 0;
+  while(ent = m->iterate(entIter)){
+    if(mesh.elementMaterialTypes[rID] < regStartMaterial)
+      regStartMaterial = mesh.elementMaterialTypes[rID];
+    rID++;
+  }
+  m->end(entIter);
+
+
   //get all offsets at the same time
   PCU_Exscan_Ints(&numModelOffsets[0],4);
   PCU_Add_Ints(&numModelTotals[0],4); 
@@ -985,7 +997,7 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
       e = agm_add_ent(gMod_base->topo, AGM_REGION);
 
     //assumes material types are enumerated starting from 1
-    gmi_set_lookup(gMod_base->lookup, e, i+1); 
+    gmi_set_lookup(gMod_base->lookup, e, i+regStartMaterial); 
     if(hasModel){
       b = agm_add_bdry(gMod_base->topo, e);
       for(int k=0;k<numSegments;k++){
@@ -1164,14 +1176,14 @@ int MeshAdaptPUMIDrvr::reconstructFromProteus(Mesh& mesh, Mesh& globalMesh,int h
   m->end(entIter);
 
   //Iterate over regions
-  entIter = m->begin(numDim);
 
   //Populate the region materials
   //Assumes that the regions are numbered sequentially from 1 onward
   for(int i=0;i<numModelRegions;i++)
-    modelRegionMaterial[i] = i+1;
+    modelRegionMaterial[i] = i+regStartMaterial;
   
-  int rID = 0;
+  rID=0;
+  entIter = m->begin(numDim);
   while(ent = m->iterate(entIter)){
     gEnt = m->findModelEntity(numDim,mesh.elementMaterialTypes[rID]);
     m->setModelEntity(ent,gEnt);
