@@ -59,8 +59,9 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
     changes in the smoothed size are less than 50% of hmin.
    */
   double err_h_max=hmax;
-  int its=0;
-  while (err_h_max > 0.5*hmin && its < 200)
+  //int its=0;
+  //while (err_h_max > 0.5*hmin && its < 200)
+  for(int its=0;its<200;its++)
     {
       its++;
       SmoothField(size_iso);
@@ -76,7 +77,8 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
 	apf::setScalar(size_iso, v, 0, size);
       }
       m->end(it);
-    }    
+    }
+  PCU_Barrier();    
   return 0;
 }
 
