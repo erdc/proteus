@@ -1,8 +1,7 @@
 from math import *
 from proteus import *
 from proteus.default_p import *
-from dambreak import *
-
+from NS_convergence import *
 
 #domain = ctx.domain
 #nd = ctx.nd
@@ -16,10 +15,10 @@ name = "pressureincrement"
 #                               fluidModelIndex=V_model)
 from proteus.mprans import PresInc
 coefficients=PresInc.Coefficients(rho_f_min = (1.0-1.0e-8)*rho_1,
-                                 rho_s_min = (1.0-1.0e-8)*rho_s,
-                                 nd = nd,
-                                 modelIndex=PINC_model,
-                                 fluidModelIndex=V_model)
+                                  rho_s_min = (1.0-1.0e-8)*rho_s,
+                                  nd = nd,
+                                  modelIndex=PINC_model,
+                                  fluidModelIndex=V_model)
 
 #LevelModelType = PresInc.LevelModel
 
