@@ -222,7 +222,10 @@ namespace proteus
 				   double* particle_surfaceArea,
 				   double particle_nitsche, 
 				   double cMax, 
-				   double cE)=0;
+				   double cE, 
+				   double* forcex, 
+				   double* forcey, 
+				   double* forcez)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -592,7 +595,10 @@ namespace proteus
 				   double* particle_surfaceArea,
 				   double particle_nitsche, 
 				   double cMax, 
-				   double cE)=0;
+				   double cE, 
+				   double* forcex, 
+				   double* forcey, 
+				   double* forcez)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -2166,7 +2172,10 @@ namespace proteus
 			   double* particle_surfaceArea,
 			   double particle_nitsche, 
 			   double cMax, 
-			   double cE)
+			   double cE, 
+			   double* forcex, 
+			   double* forcey, 
+			   double* forcez)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -5633,7 +5642,10 @@ namespace proteus
 			   double* particle_surfaceArea,
 			   double particle_nitsche, 
 			   double cMax, 
-			   double cE)
+			   double cE, 
+			   double* forcex, 
+			   double* forcey,
+			   double* forcez)
     {
       /*
       double dt = 1./alphaBDF;

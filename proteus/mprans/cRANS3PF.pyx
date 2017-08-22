@@ -197,7 +197,10 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double* particle_netMoments,
                                double particle_nitsche, 
 			       double cMax,
-			       double cE)
+			       double cE, 
+			       double* forcex, 
+			       double* forcey, 
+			       double* forcez)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -568,7 +571,10 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double* particle_netMoments,
                                double particle_nitsche, 
 			       double cMax, 
-			       double cE)
+			       double cE, 
+			       double* forcex, 
+			       double* forcey, 
+			       double* forcez)
         void calculateJacobian_entropy_viscosity(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1016,7 +1022,10 @@ cdef class RANS3PF:
                           numpy.ndarray particle_netMoments,
                           double particle_nitsche, 
 			  double cMax, 
-			  double cE):
+			  double cE, 
+			  numpy.ndarray forcex,   
+			  numpy.ndarray forcey,
+			  numpy.ndarray forcez):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1190,7 +1199,10 @@ cdef class RANS3PF:
                                         < double* > particle_netMoments.data,
                                         particle_nitsche, 
 					cMax, 
-					cE)
+					cE, 
+					< double* > forcex.data,
+					< double* > forcey.data,
+					< double* > forcez.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -1719,7 +1731,10 @@ cdef class RANS3PF:
                           numpy.ndarray particle_netMoments,
                           double particle_nitsche, 
 			  double cMax, 
-			  double cE):
+			  double cE, 
+			  numpy.ndarray forcex,   
+			  numpy.ndarray forcey,   
+			  numpy.ndarray forcez):
         self.thisptr.calculateResidual_entropy_viscosity( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1893,8 +1908,10 @@ cdef class RANS3PF:
                                         < double* > particle_netMoments.data,
                                         particle_nitsche, 
 					cMax, 
-					cE)
-
+					cE, 
+					< double* > forcex.data,
+					< double* > forcey.data,
+					< double* > forcez.data)
     def calculateJacobian_entropy_viscosity(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -2473,7 +2490,10 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double* particle_surfacArea,
                                double particle_nitsche, 
 			       double cMax, 
-			       double cE)
+			       double cE, 
+			       double* forcex,   
+			       double* forcey,   
+			       double* forcez)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -2826,7 +2846,10 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double* particle_surfacArea,
                                double particle_nitsche, 
 			       double cMax, 
-			       double cE)
+			       double cE, 
+			       double* forcex,
+			       double* forcey,
+			       double* forcez)
         void calculateJacobian_entropy_viscosity(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -3276,7 +3299,10 @@ cdef class RANS3PF2D:
                           numpy.ndarray particle_surfaceArea,
                           double particle_nitsche, 
 			  double cMax, 
-			  double cE):
+			  double cE, 
+			  numpy.ndarray forcex,  
+			  numpy.ndarray forcey,  
+			  numpy.ndarray forcez):
         self.thisptr.calculateResidual(< double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -3452,8 +3478,10 @@ cdef class RANS3PF2D:
 			               < double* > particle_surfaceArea.data,
                                        particle_nitsche, 
 				       cMax, 
-				       cE)
-
+				       cE,
+				       < double* > forcex.data,
+				       < double* > forcey.data,
+				       < double* > forcez.data)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -3983,7 +4011,10 @@ cdef class RANS3PF2D:
                           numpy.ndarray particle_surfaceArea,
                           double particle_nitsche, 
 			  double cMax, 
-			  double cE):
+			  double cE, 
+			  numpy.ndarray forcex,
+			  numpy.ndarray forcey,
+			  numpy.ndarray forcez):
         self.thisptr.calculateResidual_entropy_viscosity(< double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -4159,7 +4190,10 @@ cdef class RANS3PF2D:
 			               < double* > particle_surfaceArea.data,
                                        particle_nitsche, 
 				       cMax, 
-				       cE)
+				       cE,
+				       < double* > forcex.data,
+				       < double* > forcey.data,
+				       < double* > forcez.data)
 
     def calculateJacobian_entropy_viscosity(self,
                           numpy.ndarray mesh_trial_ref,
