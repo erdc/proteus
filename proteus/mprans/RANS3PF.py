@@ -1844,11 +1844,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
             self.coefficients.set_vos(self.ebqe['x'],self.coefficients.ebqe_vos)
 
-        # mql: select between calculateResidual and calculateResidual_entropy_viscosity
+        # mql: select appropiate functions to compute residual and jacobian
         if (self.use_entropy_viscosity == True):
             self.calculateResidual = self.rans3pf.calculateResidual_entropy_viscosity
+            self.calculateJacobian = self.rans3pf.calculateJacobian_entropy_viscosity
         else: 
             self.calculateResidual = self.rans3pf.calculateResidual
+            self.calculateJacobian = self.rans3pf.calculateJacobian
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2110,7 +2112,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 1)] = self.csrColumnOffsets[(0, 1)]
             self.csrColumnOffsets_eb[(2, 2)] = self.csrColumnOffsets[(0, 1)]
 
-        self.rans3pf.calculateJacobian(  # element
+        self.calculateJacobian(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
