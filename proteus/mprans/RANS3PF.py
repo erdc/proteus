@@ -880,6 +880,21 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
+        if hasattr(self.model,'forceTerms'):
+            x = self.model.q[('x')][:,:,0]
+            y = self.model.q[('x')][:,:,1]
+            z = self.model.q[('x')][:,:,2]
+            X = {0:x,
+                 1:y,
+                 2:z}
+            t = self.model.timeIntegration.t
+            self.model.q[('force', 0)][:] = self.model.forceTerms[0](X,t)
+            self.model.q[('force', 1)][:] = self.model.forceTerms[1](X,t)
+            try: 
+                self.model.q[('force', 2)][:] = self.model.forceTerms[2](X,t)
+            except: 
+                pass
+        # END OF COMPUTING FORCES
         self.model.dt_last = self.model.timeIntegration.dt
         pass
 
@@ -947,7 +962,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.use_entropy_viscosity = False
         if ('use_entropy_viscosity') in dir(options):
             self.use_entropy_viscosity = options.use_entropy_viscosity
-        #
+        # (mql) Check if forceTerms are declared
+        if ('forceTerms') in dir(options):
+            self.forceTerms = options.forceTerms
         # cek todo clean up these flags in the optimized version
         self.bcsTimeDependent = options.bcsTimeDependent
         self.bcsSet = False
@@ -1162,6 +1179,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
+        # mql: force terms
+        self.q[('force', 0)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('force', 1)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('force', 2)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        # 
         self.q[('u', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 1)] = numpy.zeros(
