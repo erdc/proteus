@@ -399,13 +399,40 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 #            he = 0.1
             he = 2. / float(4 * 1 - 1)
             def signedDistance(x):
-                x1 = abs(x[0] - 0.5) ; x2 = abs(x[0] + 0.5)
-                y1 = abs(x[1] - 0.5) ; y2 = abs(x[1] + 0.5)
-                r_ne = sqrt((x[0]-0.5)**2 + (x[1]-0.5)**2)
-                r_se = sqrt((x[0]-0.5)**2 + (x[1]+0.5)**2)
-                r_sw = sqrt((x[0]+0.5)**2 + (x[1]+0.5)**2)
-                r_nw = sqrt((x[0]+0.5)**2 + (x[1]-0.5)**2)
-                return min(x1,x2,r_ne,r_se,r_sw,r_nw)
+                if x[0] >= 0.5:
+                    if x[1] >= 0.5:
+                        sd = r_ne = sqrt((x[0]-0.5)**2 + (x[1]-0.5)**2)
+                    elif x[1] <= -0.5:
+                        sd = r_se = sqrt((x[0]-0.5)**2 + (x[1]+0.5)**2)
+                    else:
+                        sd = x[0] - 0.5
+                elif x[0] <= -0.5:
+                    if x[1] >= 0.5:
+                        sd = r_nw = sqrt((x[0]+0.5)**2 + (x[1]-0.5)**2)
+                    elif x[1] <= -0.5:
+                        sd = r_sw = sqrt((x[0]+0.5)**2 + (x[1]+0.5)**2)
+                    else:
+                        sd = -0.5 - x[0]
+                elif x[1] >= 0.5:
+                    if x[0] >= 0.5:
+                        sd = r_ne = sqrt((x[0]-0.5)**2 + (x[1]-0.5)**2)
+                    elif x[0] <= -0.5:
+                        sd = r_se = sqrt((x[0]+0.5)**2 + (x[1]-0.5)**2)
+                    else:
+                        sd = x[1] - 0.5
+                elif x[1] <= -0.5:
+                    if x[0] >= 0.5:
+                        sd = r_nw = sqrt((x[0]-0.5)**2 + (x[1]+0.5)**2)
+                    elif x[0] <= -0.5:
+                        sd = r_sw = sqrt((x[0]+0.5)**2 + (x[1]+0.5)**2)
+                    else:
+                        sd = -0.5 - x[1]
+                else:
+                    sd = max(x[0]-0.5,
+                             -0.5 - x[0],
+                             x[1]-0.5,
+                             -0.5 - x[1])
+                return sd
             for i, quad_pts in enumerate(self.model.q['x']):
                 for j, pt in enumerate(quad_pts):
 #                    print smoothedHeaviside(epsFact_consrv_heaviside*he,signedDistance(pt))
