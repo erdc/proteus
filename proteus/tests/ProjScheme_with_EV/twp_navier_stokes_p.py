@@ -1,22 +1,12 @@
 from proteus import *
 from proteus.default_p import *
-from dambreak import *
+from NS_convergence import *
 from proteus.mprans import RANS3PF
 
 LevelModelType = RANS3PF.LevelModel
-if useOnlyVF:
-    LS_model = None
-else:
-    LS_model = 2
-if useRANS >= 1:
-    Closure_0_model = 5; Closure_1_model=6
-    if useOnlyVF:
-        Closure_0_model=2; Closure_1_model=3
-    if movingDomain:
-        Closure_0_model += 1; Closure_1_model += 1
-else:
-    Closure_0_model = None
-    Closure_1_model = None
+LS_model = None
+Closure_0_model = None
+Closure_1_model = None
 
 coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     sigma=0.0,
@@ -30,7 +20,6 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     PRESSURE_model=PRESSURE_model,
                                     SED_model=SED_model,
                                     VOF_model=VOF_model,
-                                    VOS_model=VOS_model,
                                     LS_model=LS_model,
                                     Closure_0_model=Closure_0_model,
                                     Closure_1_model=Closure_1_model,
@@ -48,23 +37,19 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     PSTAB=1.0)
 
 def getDBC_u(x,flag):
-    if flag == boundaryTags['top'] and openTop:
-        return lambda x,t: 0.0
+    return lambda x,t: np.sin(x[0])*np.sin(x[1]+t)
 
 def getDBC_v(x,flag):
-    if flag == boundaryTags['top'] and openTop:
-        return lambda x,t: 0.0
+    return lambda x,t: np.cos(x[0])*np.cos(x[1]+t)
 
 dirichletConditions = {0:getDBC_u,
                        1:getDBC_v}
 
 def getAFBC_u(x,flag):
-    if flag != boundaryTags['top'] or not openTop:
-        return lambda x,t: 0.0
+    return None
 
 def getAFBC_v(x,flag):
-    if flag != boundaryTags['top'] or not openTop:
-        return lambda x,t: 0.0
+    return None
 
 def getDFBC_u(x,flag):
     return lambda x,t: 0.0
@@ -84,5 +69,18 @@ class AtRest:
     def uOfXT(self,x,t):
         return 0.0
 
-initialConditions = {0:AtRest(),
-                     1:AtRest()}
+# EXACT SOLUTION #
+class velx_at_t0:
+    def __init__(self):
+        pass
+    def uOfXT(self,x,t):
+        return np.sin(x[0])*np.sin(x[1])
+
+class vely_at_t0:
+    def __init__(self):
+        pass
+    def uOfXT(self,x,t):
+        return np.cos(x[0])*np.cos(x[1])
+
+initialConditions = {0:velx_at_t0(),
+                     1:velx_at_t0()}

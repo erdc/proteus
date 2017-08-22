@@ -1,6 +1,6 @@
 from proteus import *
 from twp_navier_stokes_p import *
-from dambreak import *
+from NS_convergence import *
 
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
