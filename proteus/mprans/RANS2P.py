@@ -401,17 +401,20 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             def signedDistance(x):
                 x1 = abs(x[0] - 0.5) ; x2 = abs(x[0] + 0.5)
                 y1 = abs(x[1] - 0.5) ; y2 = abs(x[1] + 0.5)
-                if (x1+x2 == 1) and (y1 + y2 == 1):
-                    return 100
-                else:
-                    return -100
+                r_ne = sqrt((x[0]-0.5)**2 + (x[1]-0.5)**2)
+                r_se = sqrt((x[0]-0.5)**2 + (x[1]+0.5)**2)
+                r_sw = sqrt((x[0]+0.5)**2 + (x[1]+0.5)**2)
+                r_nw = sqrt((x[0]+0.5)**2 + (x[1]-0.5)**2)
+                return min(x1,x2,r_ne,r_se,r_sw,r_nw)
             for i, quad_pts in enumerate(self.model.q['x']):
                 for j, pt in enumerate(quad_pts):
 #                    print smoothedHeaviside(epsFact_consrv_heaviside*he,signedDistance(pt))
-                    self.q_vf[i][j] = smoothedHeaviside(epsFact_conserv_heaviside*he,signedDistance(pt))
+                    self.q_phi[i, j] = signedDistance(pt)
+                    self.q_vf[i, j] = smoothedHeaviside(epsFact_conserv_heaviside*he,signedDistance(pt))
             for i, quad_pts in enumerate(self.model.ebqe['x']):
                 for j, pt in enumerate(quad_pts):
-                    self.ebqe_vf[i][j] = smoothedHeaviside(epsFact_conserv_heaviside*he,signedDistance(pt))
+                    self.ebqe_phi[i, j] = signedDistance(pt)
+                    self.ebqe_vf[i, j] = smoothedHeaviside(epsFact_conserv_heaviside*he,signedDistance(pt))
 
     def initializeMesh(self,mesh):
         #cek we eventually need to use the local element diameter
