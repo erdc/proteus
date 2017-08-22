@@ -6345,7 +6345,7 @@ namespace proteus
 		    ck.Diffusion_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) + 
 		    ck.Diffusion_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) + 
 		    ck.Reaction_weak(mom_u_source,vel_test_dV[i]) + // Force term
-		    ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) + // Non-linearity
+		    ck.Hamiltonian_weak(mom_u_ham,vel_test_dV[i]) + // Press + Non-linearity
 		    //ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
 		    //ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); // Numerical diffusion
@@ -6357,7 +6357,7 @@ namespace proteus
 		    ck.Diffusion_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) + 
 		    ck.Diffusion_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) + 
 		    ck.Reaction_weak(mom_v_source,vel_test_dV[i]) + // Force term
-		    ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) + // Non-linearity
+		    ck.Hamiltonian_weak(mom_v_ham,vel_test_dV[i]) + // Press + Non-linearity
 		    //ck.SubgridError(subgridError_p,Lstar_p_v[i]) +
 		    //ck.SubgridError(subgridError_v,Lstar_v_v[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]); // Numerical diffusion
@@ -6369,7 +6369,7 @@ namespace proteus
 		    ck.Diffusion_weak(sdInfo_w_v_rowptr,sdInfo_w_v_colind,mom_wv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) + 
 		    ck.Diffusion_weak(sdInfo_w_w_rowptr,sdInfo_w_w_colind,mom_ww_diff_ten,grad_w,&vel_grad_test_dV[i_nSpace]) + 
 		    ck.Reaction_weak(mom_w_source,vel_test_dV[i]) + // Force term
-		    ck.Hamiltonian_weak(mom_w_ham,vel_test_dV[i]) + // Non-linearity
+		    ck.Hamiltonian_weak(mom_w_ham,vel_test_dV[i]) + // Press + Non-linearity
 		    //ck.SubgridError(subgridError_p,Lstar_p_w[i]) + 
 		    //ck.SubgridError(subgridError_w,Lstar_w_w[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_w_last[eN_k],grad_w,&vel_grad_test_dV[i_nSpace]); // Numerical diffusion 

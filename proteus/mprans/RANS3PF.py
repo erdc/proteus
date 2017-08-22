@@ -943,6 +943,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         self.movingDomain = coefficients.movingDomain
         self.tLast_mesh = None
+        # (mql) Use entropy viscosity?
+        self.use_entropy_viscosity = False
+        if ('use_entropy_viscosity') in dir(options):
+            self.use_entropy_viscosity = options.use_entropy_viscosity
         #
         # cek todo clean up these flags in the optimized version
         self.bcsTimeDependent = options.bcsTimeDependent
@@ -1839,7 +1843,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
             self.coefficients.set_vos(self.ebqe['x'],self.coefficients.ebqe_vos)
-        self.rans3pf.calculateResidual(  # element
+
+        # mql: select between calculateResidual and calculateResidual_entropy_viscosity
+        if (self.use_entropy_viscosity == True):
+            self.calculateResidual = self.rans3pf.calculateResidual_entropy_viscosity
+        else: 
+            self.calculateResidual = self.rans3pf.calculateResidual
+        self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
