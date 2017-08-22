@@ -7,6 +7,8 @@
 #include "ModelFactory.h"
 #include "SedClosure.h"
 
+#define KILL_PRESSURE_TERM 0 // mql: For debugging and convergence of momentum equations
+
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
 const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
@@ -1156,22 +1158,22 @@ namespace proteus
       mom_w_source = -porosity*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
    
       //u momentum Hamiltonian (pressure)
-      mom_u_ham = porosity*grad_p[0]/rho;
-      dmom_u_ham_grad_p[0]=porosity/rho;
+      mom_u_ham = porosity*grad_p[0]/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
+      dmom_u_ham_grad_p[0]=porosity/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_u_ham_grad_p[1]=0.0;
       dmom_u_ham_grad_p[2]=0.0;
   
       //v momentum Hamiltonian (pressure)
-      mom_v_ham = porosity*grad_p[1]/rho;
+      mom_v_ham = porosity*grad_p[1]/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_v_ham_grad_p[0]=0.0;
-      dmom_v_ham_grad_p[1]=porosity/rho;
+      dmom_v_ham_grad_p[1]=porosity/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_v_ham_grad_p[2]=0.0;
   
       //w momentum Hamiltonian (pressure)
-      mom_w_ham = porosity*grad_p[2]/rho;
+      mom_w_ham = porosity*grad_p[2]/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_w_ham_grad_p[0]=0.0;
       dmom_w_ham_grad_p[1]=0.0;
-      dmom_w_ham_grad_p[2]=porosity/rho;
+      dmom_w_ham_grad_p[2]=porosity/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
 
       //u momentum Hamiltonian (advection)
       mom_u_ham += porosity*(uStar*grad_u[0]+vStar*grad_u[1]+wStar*grad_u[2]);
@@ -2448,7 +2450,7 @@ namespace proteus
 				   dmom_w_ham_grad_p,          
 				   dmom_w_ham_grad_w,
                                    q_rho[eN_k],
-                                   q_nu[eN_k]);          
+                                   q_nu[eN_k]);
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
