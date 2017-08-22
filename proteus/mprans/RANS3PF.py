@@ -134,6 +134,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     from proteus.ctransportCoefficients import calculateWaveFunction3d_ref
 
     def __init__(self,
+                 cMax=1.0, # For entropy viscosity (mql) 
+                 cE=1.0, # For entropy viscosity (mql)
                  epsFact=1.5,
                  sigma=72.8,
                  rho_0=998.2, nu_0=1.004e-6,
@@ -270,6 +272,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.nu_1 = nu_1
         self.g = numpy.array(g)
         self.nd = nd
+        #
+        # mql: for entropy viscosity 
+        self.cMax=cMax
+        self.cE=cE
         #
         self.dragAlpha = dragAlpha
         self.dragBeta = dragBeta
@@ -2028,7 +2034,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_netForces,
             self.coefficients.particle_netMoments,
             self.coefficients.particle_surfaceArea,
-            self.coefficients.particle_nitsche)
+            self.coefficients.particle_nitsche, 
+            self.coefficients.cMax, 
+            self.coefficients.cE)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
