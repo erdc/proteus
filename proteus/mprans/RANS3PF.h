@@ -1157,7 +1157,7 @@ namespace proteus
       mom_v_source = -porosity*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
       mom_w_source = -porosity*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
    
-      //u momentum Hamiltonian (pressure)
+      //u momentum Hamiltonian (pressure)      
       mom_u_ham = porosity*grad_p[0]/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_u_ham_grad_p[0]=porosity/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_u_ham_grad_p[1]=0.0;
@@ -6218,7 +6218,8 @@ namespace proteus
 	      //ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) +
 	      //ck.Reaction_strong(mom_w_source) -
 	      //ck.Reaction_strong(w*div_mesh_velocity);
-	
+
+	      // COMPUTE CFL // 	
 	      calculateCFL(hFactor,
 			   elementDiameter[eN],
 			   dmom_u_acc_u,
@@ -6238,7 +6239,7 @@ namespace proteus
 	      //			tau_v0,
 	      //			tau_p0,
 	      //			q_cfl[eN_k]);
-	      // COMPUTE CFL // 
+
 	      //calculateSubgridError_tau(Ct_sge,Cd_sge,
 	      //	                G,G_dd_G,tr_G,
 	      //			tmpR,//dmom_u_acc_u_t,
