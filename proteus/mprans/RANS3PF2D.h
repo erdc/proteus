@@ -1004,7 +1004,10 @@ namespace proteus
                               double dmom_w_ham_grad_w[nSpace],
                               double& rhoSave,
                               double& nuSave, 
-			      int KILL_PRESSURE_TERM)
+			      int KILL_PRESSURE_TERM, 
+			      double forcex, 
+			      double forcey,
+			      double forcez)
     {
       double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
       H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -1051,6 +1054,7 @@ namespace proteus
       rhoSave = rho;
       nuSave = nu;
       eddy_viscosity = nu_t;
+
       // mass (volume accumulation)
       //..hardwired
       
@@ -1167,7 +1171,12 @@ namespace proteus
       mom_u_source = -porosity*g[0];// - porosity*d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
       mom_v_source = -porosity*g[1];// - porosity*d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
       /* mom_w_source = -porosity*g[2];// - porosity*d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8)); */
-   
+
+      // mql: add general force term
+      mom_u_source -= forcex;
+      mom_v_source -= forcey;
+      /* mom_w_source += forcez; */
+      
       //u momentum Hamiltonian (pressure)
       mom_u_ham = porosity*grad_p[0]/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_u_ham_grad_p[0]=porosity/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
@@ -2472,7 +2481,10 @@ namespace proteus
 				   dmom_w_ham_grad_w,
                                    q_rho[eN_k],
                                    q_nu[eN_k], 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   forcex[eN_k],
+				   forcey[eN_k],
+				   forcez[eN_k]);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
@@ -3169,7 +3181,10 @@ namespace proteus
 				   dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
                                    ebqe_nu[ebNE_kb], 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: zero force term at boundary  
+				   0., 
+				   0.);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -3246,7 +3261,10 @@ namespace proteus
 				   bc_dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
                                    ebqe_nu[ebNE_kb], 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: zero force term at boundary  
+				   0., 
+				   0.);          
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -4210,7 +4228,10 @@ namespace proteus
 				   dmom_w_ham_grad_w,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: the force term doesn't play a role in the Jacobian
+				   0.,
+				   0.);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not
@@ -4990,7 +5011,10 @@ namespace proteus
 				   dmom_w_ham_grad_w_ext,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: zero force term at boundary 
+				   0., 
+				   0.);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -5067,7 +5091,10 @@ namespace proteus
 				   bc_dmom_w_ham_grad_w_ext,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: zero force term at boundary  
+				   0., 
+				   0.);          
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{
@@ -6036,7 +6063,10 @@ namespace proteus
 				   dmom_w_ham_grad_w,
                                    q_rho[eN_k],
                                    q_nu[eN_k], 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   forcex[eN_k], 
+				   forcey[eN_k], 
+				   forcez[eN_k]);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
@@ -6389,7 +6419,7 @@ namespace proteus
 		    //ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
 		    //ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); // Numerical diffusion
-		 
+		  // TMP: kill most terms
 		  elementResidual_v[i] += 
 		    ck.Mass_weak(dmom_v_acc_v*mom_v_acc_t,vel_test_dV[i]) + // time derivative
 		    ck.Advection_weak(mom_v_adv,&vel_grad_test_dV[i_nSpace]) + // due to moving mesh
@@ -6755,7 +6785,10 @@ namespace proteus
 				   dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
                                    ebqe_nu[ebNE_kb], 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: zero force term at boundary  
+				   0., 
+				   0.);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -6832,7 +6865,10 @@ namespace proteus
 				   bc_dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
                                    ebqe_nu[ebNE_kb], 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: zero force term at boundary  
+				   0., 
+				   0.);          
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -7797,7 +7833,10 @@ namespace proteus
 				   dmom_w_ham_grad_w,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: the force term doesn't play a role in the Jacobian
+				   0.,	
+				   0.);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not
@@ -8151,22 +8190,23 @@ namespace proteus
 
 		      /* elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) +  */
 		      /*   ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]);  */
+		      // TMP: kill most terms
 		      elementJacobian_u_u[i][j] += 
-			ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
-                        ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
-			ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
+			ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + // time derivative 
+                        ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + // Pres + Non-linearity
+			ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + // due to moving mesh
 			ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
-			ck.ReactionJacobian_weak(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
+			ck.ReactionJacobian_weak(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + // force
 			//
 			//ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
 			//ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) + 
-			ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
+			ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); // num diffusion
 		      elementJacobian_u_v[i][j] += 
-			ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
+			ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + // moving mesh
 			ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
-			ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]); // force
 			//
 			//ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]);
 		      /* elementJacobian_u_w[i][j] += 
@@ -8181,23 +8221,23 @@ namespace proteus
 			 ck.HamiltonianJacobian_weak(dmom_v_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) +  */
 		      /*   ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_v[i]);  */
 		      elementJacobian_v_u[i][j] += 
-			ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
+			ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + // moving mesh
 			ck.SimpleDiffusionJacobian_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
-			ck.ReactionJacobian_weak(dmom_v_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);
+			ck.ReactionJacobian_weak(dmom_v_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]); // force
 			//
 			//ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
 		      elementJacobian_v_v[i][j] += 
-			ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
-                        ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
-			ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
+			ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + // time derivative
+                        ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + // Pres + non-linearity
+			ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + // moving mesh
 			ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
-			ck.ReactionJacobian_weak(dmom_v_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
+			ck.ReactionJacobian_weak(dmom_v_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + // force
 			//
 			//ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
 			//ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) + 
-			ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
+			ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); // num diffusion
 		      /* elementJacobian_v_w[i][j] += 
 			 ck.AdvectionJacobian_weak(dmom_v_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +   */
 		      /*   ck.SimpleDiffusionJacobian_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +  */
@@ -8587,7 +8627,10 @@ namespace proteus
 				   dmom_w_ham_grad_w_ext,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: zero force term at boundary  
+				   0., 
+				   0.);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -8664,7 +8707,10 @@ namespace proteus
 				   bc_dmom_w_ham_grad_w_ext,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: zero force term at boundary  
+				   0., 
+				   0.);          
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{

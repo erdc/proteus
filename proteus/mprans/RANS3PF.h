@@ -1002,7 +1002,10 @@ namespace proteus
                               double dmom_w_ham_grad_w[nSpace],
                               double& rhoSave,
                               double& nuSave, 
-			      int KILL_PRESSURE_TERM)
+			      int KILL_PRESSURE_TERM, 
+			      double forcex, 
+			      double forcey, 
+			      double forcez)
     {
       double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
       H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -1166,6 +1169,11 @@ namespace proteus
       mom_v_source = -porosity*g[1];// - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
       mom_w_source = -porosity*g[2];// - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
    
+      // mql: add general force term 
+      mom_u_source -= forcex; 
+      mom_v_source -= forcey; 
+      mom_w_source -= forcez; 
+
       //u momentum Hamiltonian (pressure)      
       mom_u_ham = porosity*grad_p[0]/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_u_ham_grad_p[0]=porosity/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
@@ -2464,7 +2472,10 @@ namespace proteus
 				   dmom_w_ham_grad_w,
                                    q_rho[eN_k],
                                    q_nu[eN_k], 
-				   KILL_PRESSURE_TERM);
+				   KILL_PRESSURE_TERM, 
+				   forcex[eN_k], 
+				   forcey[eN_k], 
+				   forcez[eN_k]);
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
@@ -3159,7 +3170,10 @@ namespace proteus
 				   dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
                                    ebqe_nu[ebNE_kb], 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: zero force term at boundary 
+				   0.,
+				   0.);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -3236,7 +3250,10 @@ namespace proteus
 				   bc_dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
                                    ebqe_nu[ebNE_kb], 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM, 
+				   0., // mql: zero force term at boundary 
+				   0.,
+				   0.);          
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -4202,7 +4219,10 @@ namespace proteus
 				   dmom_w_ham_grad_w,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM,
+				   0., // mql: the force term doesn't play a role in the Jacobian
+				   0.,
+				   0.);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not
@@ -4980,7 +5000,10 @@ namespace proteus
 				   dmom_w_ham_grad_w_ext,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM,
+				   0., // mql: zero force term at boundary 
+				   0.,
+				   0.);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -5057,7 +5080,10 @@ namespace proteus
 				   bc_dmom_w_ham_grad_w_ext,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM,
+				   0., // mql: zero force term at boundary 
+				   0.,
+				   0.);          
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{
@@ -6025,7 +6051,10 @@ namespace proteus
 				   dmom_w_ham_grad_w,
                                    q_rho[eN_k],
                                    q_nu[eN_k], 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM,
+				   forcex[eN_k],
+				   forcey[eN_k],
+				   forcez[eN_k]);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
@@ -6742,7 +6771,10 @@ namespace proteus
 				   dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
                                    ebqe_nu[ebNE_kb], 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM,
+				   0., // mql: zero force term at boundary 
+				   0.,
+				   0.);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -6819,7 +6851,10 @@ namespace proteus
 				   bc_dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
                                    ebqe_nu[ebNE_kb], 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM,
+				   0., // mql: zero force term at boundary 
+				   0.,
+				   0.);          
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -7786,7 +7821,10 @@ namespace proteus
 				   dmom_w_ham_grad_w,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM,
+				   0., // mql: the force term doesn't play a role in the Jacobian
+				   0.,
+				   0.);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not
@@ -8572,7 +8610,10 @@ namespace proteus
 				   dmom_w_ham_grad_w_ext,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM,
+				   0., // mql: zero force term at boundary 
+				   0.,
+				   0.);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -8649,7 +8690,10 @@ namespace proteus
 				   bc_dmom_w_ham_grad_w_ext,
                                    rhoSave,
                                    nuSave, 
-				   KILL_PRESSURE_TERM);          
+				   KILL_PRESSURE_TERM,
+				   0., // mql: zero force term at boundary 
+				   0.,
+				   0.);          
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{
