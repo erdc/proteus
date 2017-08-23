@@ -958,6 +958,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         self.movingDomain = coefficients.movingDomain
         self.tLast_mesh = None
+        # (mql) Kill_pressure_term? This is for debugging and for convergence of momentum equations
+        if ('KILL_PRESSURE_TERM') in dir(options):
+            self.KILL_PRESSURE_TERM = options.KILL_PRESSURE_TERM
+        else: 
+            self.KILL_PRESSURE_TERM = 0
         # (mql) Use entropy viscosity?
         self.use_entropy_viscosity = False
         if ('use_entropy_viscosity') in dir(options):
@@ -2073,7 +2078,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_surfaceArea,
             self.coefficients.particle_nitsche, 
             self.coefficients.cMax, 
-            self.coefficients.cE)
+            self.coefficients.cE, 
+            self.q[('force', 0)],
+            self.q[('force', 1)],
+            self.q[('force', 2)], 
+            self.KILL_PRESSURE_TERM)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
@@ -2342,7 +2351,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	    self.coefficients.particle_signed_distance_normals,
 	    self.coefficients.particle_velocities,
 	    self.coefficients.particle_centroids,
-            self.coefficients.particle_nitsche)
+            self.coefficients.particle_nitsche, 
+            self.KILL_PRESSURE_TERM)
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(
