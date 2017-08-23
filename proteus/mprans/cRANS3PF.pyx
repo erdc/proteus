@@ -200,7 +200,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double cE, 
 			       double* forcex, 
 			       double* forcey, 
-			       double* forcez)
+			       double* forcez, 
+			       int KILL_PRESSURE_TERM)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -376,7 +377,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* particle_signed_distance_normals,
 			       double* particle_velocities,
 			       double* particle_centroids,
-                               double particle_nitsche)
+                               double particle_nitsche, 
+			       int KILL_PRESSURE_TERM)
         void calculateResidual_entropy_viscosity(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -574,7 +576,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double cE, 
 			       double* forcex, 
 			       double* forcey, 
-			       double* forcez)
+			       double* forcez, 
+			       int KILL_PRESSURE_TERM)
         void calculateJacobian_entropy_viscosity(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -750,7 +753,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* particle_signed_distance_normals,
 			       double* particle_velocities,
 			       double* particle_centroids,
-                               double particle_nitsche)
+                               double particle_nitsche, 
+			       int KILL_PRESSURE_TERM)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -1025,7 +1029,8 @@ cdef class RANS3PF:
 			  double cE, 
 			  numpy.ndarray forcex,   
 			  numpy.ndarray forcey,
-			  numpy.ndarray forcez):
+			  numpy.ndarray forcez,
+			  int KILL_PRESSURE_TERM):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1202,7 +1207,8 @@ cdef class RANS3PF:
 					cE, 
 					< double* > forcex.data,
 					< double* > forcey.data,
-					< double* > forcez.data)
+					< double* > forcez.data, 
+					KILL_PRESSURE_TERM)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -1379,7 +1385,8 @@ cdef class RANS3PF:
 			  numpy.ndarray particle_signed_distance_normals,
 			  numpy.ndarray particle_velocities,
 			  numpy.ndarray particle_centroids,
-                          double particle_nitsche):
+                          double particle_nitsche, 
+			  int KILL_PRESSURE_TERM):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian( < double*> mesh_trial_ref.data,
@@ -1556,7 +1563,8 @@ cdef class RANS3PF:
 				        < double* > particle_signed_distance_normals.data,
 				        < double* > particle_velocities.data,
 				        < double* > particle_centroids.data,
-                                        particle_nitsche)
+                                        particle_nitsche, 
+					KILL_PRESSURE_TERM)
     def calculateResidual_entropy_viscosity(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -1734,7 +1742,8 @@ cdef class RANS3PF:
 			  double cE, 
 			  numpy.ndarray forcex,   
 			  numpy.ndarray forcey,   
-			  numpy.ndarray forcez):
+			  numpy.ndarray forcez, 
+			  int KILL_PRESSURE_TERM):
         self.thisptr.calculateResidual_entropy_viscosity( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1911,7 +1920,8 @@ cdef class RANS3PF:
 					cE, 
 					< double* > forcex.data,
 					< double* > forcey.data,
-					< double* > forcez.data)
+					< double* > forcez.data, 
+					KILL_PRESSURE_TERM)
     def calculateJacobian_entropy_viscosity(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -2087,7 +2097,8 @@ cdef class RANS3PF:
 			  numpy.ndarray particle_signed_distance_normals,
 			  numpy.ndarray particle_velocities,
 			  numpy.ndarray particle_centroids,
-                          double particle_nitsche):
+                          double particle_nitsche, 
+			  int KILL_PRESSURE_TERM):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian_entropy_viscosity( < double*> mesh_trial_ref.data,
@@ -2264,7 +2275,8 @@ cdef class RANS3PF:
 				        < double* > particle_signed_distance_normals.data,
 				        < double* > particle_velocities.data,
 				        < double* > particle_centroids.data,
-                                        particle_nitsche)
+                                        particle_nitsche, 
+					KILL_PRESSURE_TERM)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
@@ -2493,7 +2505,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double cE, 
 			       double* forcex,   
 			       double* forcey,   
-			       double* forcez)
+			       double* forcez, 
+			       int KILL_PRESSURE_TERM)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -2669,7 +2682,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double* particle_signed_distance_normals,
 			       double* particle_velocities,
 			       double* particle_centroids,
-                               double particle_nitsche)
+                               double particle_nitsche, 
+			       int KILL_PRESSURE_TERM)
         void calculateResidual_entropy_viscosity(double * mesh_trial_ref,
 	     		       double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -2849,7 +2863,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double cE, 
 			       double* forcex,
 			       double* forcey,
-			       double* forcez)
+			       double* forcez, 
+			       int KILL_PRESSURE_TERM)
         void calculateJacobian_entropy_viscosity(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -3025,7 +3040,8 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double* particle_signed_distance_normals,
 			       double* particle_velocities,
 			       double* particle_centroids,
-                               double particle_nitsche)
+                               double particle_nitsche, 
+			       int KILL_PRESSURE_TERM)
         void calculateVelocityAverage(int nExteriorElementBoundaries_global,
                                       int * exteriorElementBoundariesArray,
                                       int nInteriorElementBoundaries_global,
@@ -3302,7 +3318,8 @@ cdef class RANS3PF2D:
 			  double cE, 
 			  numpy.ndarray forcex,  
 			  numpy.ndarray forcey,  
-			  numpy.ndarray forcez):
+			  numpy.ndarray forcez, 
+			  int KILL_PRESSURE_TERM):
         self.thisptr.calculateResidual(< double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -3481,7 +3498,8 @@ cdef class RANS3PF2D:
 				       cE,
 				       < double* > forcex.data,
 				       < double* > forcey.data,
-				       < double* > forcez.data)
+				       < double* > forcez.data, 
+				       KILL_PRESSURE_TERM)
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -3657,7 +3675,8 @@ cdef class RANS3PF2D:
 			  numpy.ndarray particle_signed_distance_normals,
 			  numpy.ndarray particle_velocities,
 			  numpy.ndarray particle_centroids,
-                          double particle_nitsche):
+                          double particle_nitsche, 
+			  int KILL_PRESSURE_TERM):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian(< double*> mesh_trial_ref.data,
@@ -3834,7 +3853,8 @@ cdef class RANS3PF2D:
                                        < double* > particle_signed_distance_normals.data,
                                        < double* > particle_velocities.data,
 			               < double* > particle_centroids.data,
-                                       particle_nitsche)
+                                       particle_nitsche, 
+				       KILL_PRESSURE_TERM)
     def calculateResidual_entropy_viscosity(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -4014,7 +4034,8 @@ cdef class RANS3PF2D:
 			  double cE, 
 			  numpy.ndarray forcex,
 			  numpy.ndarray forcey,
-			  numpy.ndarray forcez):
+			  numpy.ndarray forcez, 
+			  int KILL_PRESSURE_TERM):
         self.thisptr.calculateResidual_entropy_viscosity(< double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -4193,7 +4214,8 @@ cdef class RANS3PF2D:
 				       cE,
 				       < double* > forcex.data,
 				       < double* > forcey.data,
-				       < double* > forcez.data)
+				       < double* > forcez.data, 
+				       KILL_PRESSURE_TERM)
 
     def calculateJacobian_entropy_viscosity(self,
                           numpy.ndarray mesh_trial_ref,
@@ -4370,7 +4392,8 @@ cdef class RANS3PF2D:
 			  numpy.ndarray particle_signed_distance_normals,
 			  numpy.ndarray particle_velocities,
 			  numpy.ndarray particle_centroids,
-                          double particle_nitsche):
+                          double particle_nitsche, 
+			  int KILL_PRESSURE_TERM):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
         self.thisptr.calculateJacobian_entropy_viscosity(< double*> mesh_trial_ref.data,
@@ -4547,7 +4570,8 @@ cdef class RANS3PF2D:
                                        < double* > particle_signed_distance_normals.data,
                                        < double* > particle_velocities.data,
 			               < double* > particle_centroids.data,
-                                       particle_nitsche)
+                                       particle_nitsche, 
+				       KILL_PRESSURE_TERM)
 
     def calculateVelocityAverage(self,
                                  int nExteriorElementBoundaries_global,
