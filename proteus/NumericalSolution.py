@@ -758,7 +758,7 @@ class NS_base:  # (HasTraits):
                 #and remade.
                 from collections import OrderedDict
                 for av in n.auxiliaryVariables:
-                  try:
+                  if hasattr(av,'adapted'):
                     av.adapted=True
                     for point, l_d in av.points.iteritems():
                       if 'nearest_node' in l_d:
@@ -766,23 +766,22 @@ class NS_base:  # (HasTraits):
                     if(av.isLineGauge or av.isLineIntegralGauge): #if line gauges, need to remove all points
                       av.points = OrderedDict()
                     if(av.isGaugeOwner):
-                      for ptGaugeIdx,ptGaugeItem in enumerate(av.pointGaugeVecs):
-                        av.pointGaugeVecs[ptGaugeIdx].destroy();  
-                        av.pointGaugeMats[ptGaugeIdx].destroy();  
-                        av.dofsVecs[ptGaugeIdx].destroy();
+                      if(self.comm.rank()==0 and not av.file.closed):
+                        av.file.close()
+                      for item in av.pointGaugeVecs:
+                        item.destroy()
+                      for item in av.pointGaugeMats:
+                        item.destroy()
+                      for item in av.dofsVecs:
+                        item.destroy()
+
                       av.pointGaugeVecs = []
                       av.pointGaugeMats = []
                       av.dofsVecs = []
                       av.field_ids=[]
                       av.isGaugeOwner=False
-                  except AttributeError:
-                    pass
-                  self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index])]
-                #reinitialize empty auxiliary entries
-                try:
-                  self.auxiliaryVariables[model.name]
-                except KeyError:
-                  self.auxiliaryVariables[model.name] = []
+                ##reinitialize auxiliaryVariables
+                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
         else:
             for p,n,s,model,index in zip(
                     self.pList,
