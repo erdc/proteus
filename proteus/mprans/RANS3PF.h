@@ -7,8 +7,6 @@
 #include "ModelFactory.h"
 #include "SedClosure.h"
 
-#define KILL_PRESSURE_TERM 0 // mql: For debugging and convergence of momentum equations
-
 const  double DM=0.0;//1-mesh conservation and divergence, 0 - weak div(v) only
 const  double DM2=0.0;//1-point-wise mesh volume strong-residual, 0 - div(v) only
 const  double DM3=1.0;//1-point-wise divergence, 0-point-wise rate of volume change
@@ -226,7 +224,8 @@ namespace proteus
 				   double cE, 
 				   double* forcex, 
 				   double* forcey, 
-				   double* forcez)=0;
+				   double* forcez, 
+				   int KILL_PRESSURE_TERM)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -403,7 +402,8 @@ namespace proteus
 				   double* particle_signed_distance_normals,
 				   double* particle_velocities,
 				   double* particle_centroids,
-				   double particle_nitsche)=0;
+				   double particle_nitsche, 
+				   int KILL_PRESSURE_TERM)=0;
     virtual void calculateResidual_entropy_viscosity(double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -597,7 +597,8 @@ namespace proteus
 				   double cE, 
 				   double* forcex, 
 				   double* forcey, 
-				   double* forcez)=0;
+				   double* forcez, 
+				   int KILL_PRESSURE_TERM)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -774,7 +775,8 @@ namespace proteus
 				   double* particle_signed_distance_normals,
 				   double* particle_velocities,
 				   double* particle_centroids,
-				   double particle_nitsche)=0;
+				   double particle_nitsche, 
+				   int KILL_PRESSURE_TERM)=0;
     virtual void calculateVelocityAverage(int nExteriorElementBoundaries_global,
     					  int* exteriorElementBoundariesArray,
     					  int nInteriorElementBoundaries_global,
@@ -999,7 +1001,8 @@ namespace proteus
 			      double dmom_w_ham_grad_p[nSpace],
                               double dmom_w_ham_grad_w[nSpace],
                               double& rhoSave,
-                              double& nuSave)
+                              double& nuSave, 
+			      int KILL_PRESSURE_TERM)
     {
       double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
       H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -2166,7 +2169,8 @@ namespace proteus
 			   double cE, 
 			   double* forcex, 
 			   double* forcey, 
-			   double* forcez)
+			   double* forcez, 
+			   int KILL_PRESSURE_TERM)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -2459,7 +2463,8 @@ namespace proteus
 				   dmom_w_ham_grad_p,          
 				   dmom_w_ham_grad_w,
                                    q_rho[eN_k],
-                                   q_nu[eN_k]);
+                                   q_nu[eN_k], 
+				   KILL_PRESSURE_TERM);
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
@@ -3153,7 +3158,8 @@ namespace proteus
 				   dmom_w_ham_grad_p_ext,          
 				   dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
-                                   ebqe_nu[ebNE_kb]);          
+                                   ebqe_nu[ebNE_kb], 
+				   KILL_PRESSURE_TERM);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -3229,7 +3235,8 @@ namespace proteus
 				   bc_dmom_w_ham_grad_p_ext,          
 				   bc_dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
-                                   ebqe_nu[ebNE_kb]);          
+                                   ebqe_nu[ebNE_kb], 
+				   KILL_PRESSURE_TERM);          
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -3877,7 +3884,8 @@ namespace proteus
 			   double* particle_signed_distance_normals,
 			   double* particle_velocities,
 			   double* particle_centroids,
-			   double particle_nitsche)
+			   double particle_nitsche, 
+			   int KILL_PRESSURE_TERM)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -4193,7 +4201,8 @@ namespace proteus
 				   dmom_w_ham_grad_p,          
 				   dmom_w_ham_grad_w,
                                    rhoSave,
-                                   nuSave);          
+                                   nuSave, 
+				   KILL_PRESSURE_TERM);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not
@@ -4970,7 +4979,8 @@ namespace proteus
 				   dmom_w_ham_grad_p_ext,          
 				   dmom_w_ham_grad_w_ext,
                                    rhoSave,
-                                   nuSave);          
+                                   nuSave, 
+				   KILL_PRESSURE_TERM);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -5046,7 +5056,8 @@ namespace proteus
 				   bc_dmom_w_ham_grad_p_ext,          
 				   bc_dmom_w_ham_grad_w_ext,
                                    rhoSave,
-                                   nuSave);          
+                                   nuSave, 
+				   KILL_PRESSURE_TERM);          
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{
@@ -5633,7 +5644,8 @@ namespace proteus
 			   double cE, 
 			   double* forcex, 
 			   double* forcey, 
-			   double* forcez)
+			   double* forcez, 
+			   int KILL_PRESSURE_TERM)
     {
       /*
       double dt = 1./alphaBDF;
@@ -6012,7 +6024,8 @@ namespace proteus
 				   dmom_w_ham_grad_p,          
 				   dmom_w_ham_grad_w,
                                    q_rho[eN_k],
-                                   q_nu[eN_k]);          
+                                   q_nu[eN_k], 
+				   KILL_PRESSURE_TERM);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
@@ -6728,7 +6741,8 @@ namespace proteus
 				   dmom_w_ham_grad_p_ext,          
 				   dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
-                                   ebqe_nu[ebNE_kb]);          
+                                   ebqe_nu[ebNE_kb], 
+				   KILL_PRESSURE_TERM);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -6804,7 +6818,8 @@ namespace proteus
 				   bc_dmom_w_ham_grad_p_ext,          
 				   bc_dmom_w_ham_grad_w_ext,
                                    ebqe_rho[ebNE_kb],
-                                   ebqe_nu[ebNE_kb]);          
+                                   ebqe_nu[ebNE_kb], 
+				   KILL_PRESSURE_TERM);          
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -7453,7 +7468,8 @@ namespace proteus
 			   double* particle_signed_distance_normals,
 			   double* particle_velocities,
 			   double* particle_centroids,
-			   double particle_nitsche)
+			   double particle_nitsche, 
+			   int KILL_PRESSURE_TERM)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -7769,7 +7785,8 @@ namespace proteus
 				   dmom_w_ham_grad_p,          
 				   dmom_w_ham_grad_w,
                                    rhoSave,
-                                   nuSave);          
+                                   nuSave, 
+				   KILL_PRESSURE_TERM);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not
@@ -8554,7 +8571,8 @@ namespace proteus
 				   dmom_w_ham_grad_p_ext,          
 				   dmom_w_ham_grad_w_ext,
                                    rhoSave,
-                                   nuSave);          
+                                   nuSave, 
+				   KILL_PRESSURE_TERM);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -8630,7 +8648,8 @@ namespace proteus
 				   bc_dmom_w_ham_grad_p_ext,          
 				   bc_dmom_w_ham_grad_w_ext,
                                    rhoSave,
-                                   nuSave);          
+                                   nuSave, 
+				   KILL_PRESSURE_TERM);          
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{
