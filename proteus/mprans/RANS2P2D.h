@@ -649,17 +649,17 @@ namespace proteus
 	mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
 
 	eddy_viscosity = nu_t;
-	if (COMPRESSIBLE_FORM)
+	if (COMPRESSIBLE_FORM > 0.0)
 	  {
 	    eddy_viscosity = nu_t*rho;
 
 	    //u momentum accumulation
-	    mom_u_acc=porosity*rho*u;
-	    dmom_u_acc_u=porosity*rho;
+	    mom_u_acc=porosity*u;//trick for non-conservative form
+	    dmom_u_acc_u=rho*porosity;
   
 	    //v momentum accumulation
-	    mom_v_acc=porosity*rho*v;
-	    dmom_v_acc_v=porosity*rho;
+	    mom_v_acc=porosity*v;
+	    dmom_v_acc_v=rho*porosity;
   
 	    /* //w momentum accumulation */
 	    /* mom_w_acc=porosity*rho*w; */
@@ -1135,7 +1135,7 @@ namespace proteus
 	H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
 	nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
 	mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-	if (COMPRESSIBLE_FORM)
+	if (COMPRESSIBLE_FORM > 0.0)
 	  {
 	    viscosity = mu;
 	  }
@@ -1248,7 +1248,7 @@ namespace proteus
 	nu_t = fmax(nu_t,1.0e-4*nu); //limit according to Lew, Buscaglia etal 01
 	//mwf hack
 	nu_t     = fmin(nu_t,1.0e6*nu);
-	if (COMPRESSIBLE_FORM)
+	if (COMPRESSIBLE_FORM > 0.0)
 	  {
 	    eddy_viscosity = nu_t*rho;
 	    //u momentum diffusion tensor
@@ -1421,7 +1421,8 @@ namespace proteus
       }
 
       inline
-	void exteriorNumericalAdvectiveFlux(const int& isDOFBoundary_p,
+	void exteriorNumericalAdvectiveFlux(const double COMPRESSIBLE_FORM,
+					    const int& isDOFBoundary_p,
 					    const int& isDOFBoundary_u,
 					    const int& isDOFBoundary_v,
 					    const int& isDOFBoundary_w,
@@ -1433,6 +1434,8 @@ namespace proteus
 					    const double& bc_oneByRho,
 					    const double n[nSpace],
 					    const double& bc_p,
+					    const double& bc_u,
+					    const double& bc_v,
 					    const double bc_f_mass[nSpace],
 					    const double bc_f_umom[nSpace],
 					    const double bc_f_vmom[nSpace],
@@ -1442,6 +1445,8 @@ namespace proteus
 					    const double& bc_flux_vmom,
 					    const double& bc_flux_wmom,
 					    const double& p,
+					    const double& u,
+					    const double& v,
 					    const double f_mass[nSpace],
 					    const double f_umom[nSpace],
 					    const double f_vmom[nSpace],
@@ -1450,6 +1455,7 @@ namespace proteus
 					    const double df_mass_dv[nSpace],
 					    const double df_mass_dw[nSpace],
 					    const double df_umom_dp[nSpace],
+					    const double dham_grad[nSpace],
 					    const double df_umom_du[nSpace],
 					    const double df_umom_dv[nSpace],
 					    const double df_umom_dw[nSpace],
@@ -1467,17 +1473,23 @@ namespace proteus
 					    double& flux_wmom,
 					    double* velocity)
       {
-	double flowDirection;
+	double flowSpeedNormal;
 	flux_mass = 0.0;
 	flux_umom = 0.0;
 	flux_vmom = 0.0;
 	/* flux_wmom = 0.0; */
-	flowDirection=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for  moving and fixed domains
+	if (COMPRESSIBLE_FORM > 0.0)
+	  {
+	    flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for  moving and fixed domains
+	    flowSpeedNormal+=n[0]*dham_grad[0]+n[1]*dham_grad[1];
+	  }
+	else
+	  flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for  moving and fixed domains
 	if (isDOFBoundary_u != 1)
 	  {
 	    flux_mass += n[0]*f_mass[0];
 	    velocity[0] = f_mass[0];
-	    if (flowDirection >= 0.0)
+	    if (flowSpeedNormal >= 0.0)
 	      {
 		flux_umom += n[0]*f_umom[0];
 		flux_vmom += n[0]*f_vmom[0];
@@ -1488,7 +1500,7 @@ namespace proteus
 	  {
 	    flux_mass += n[0]*f_mass[0];
 	    velocity[0] = f_mass[0];
-	    if (flowDirection >= 0.0)
+	    if (flowSpeedNormal >= 0.0)
 	      {
 		flux_umom += n[0]*f_umom[0];
 		flux_vmom += n[0]*f_vmom[0];
@@ -1505,7 +1517,7 @@ namespace proteus
 	  {
 	    flux_mass+=n[1]*f_mass[1];
 	    velocity[1] = f_mass[1];
-	    if (flowDirection >= 0.0)
+	    if (flowSpeedNormal >= 0.0)
 	      {
 		flux_umom+=n[1]*f_umom[1];
 		flux_vmom+=n[1]*f_vmom[1];
@@ -1516,7 +1528,7 @@ namespace proteus
 	  {
 	    flux_mass+=n[1]*f_mass[1];
 	    velocity[1] = f_mass[1];
-	    if (flowDirection >= 0.0)
+	    if (flowSpeedNormal >= 0.0)
 	      {
 		flux_umom+=n[1]*f_umom[1];
 		flux_vmom+=n[1]*f_vmom[1];
@@ -1559,8 +1571,16 @@ namespace proteus
 	/* 	} */
 	if (isDOFBoundary_p == 1)
 	  {
-	    flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho);
-	    flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho);
+	    if (COMPRESSIBLE_FORM > 0.0)
+	      {
+		flux_umom+= n[0]*(bc_p - p);
+		flux_vmom+= n[1]*(bc_p - p);
+	      }
+	    else
+	      {
+		flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho);
+		flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho);
+	      }
 	    /* flux_wmom+= n[2]*(bc_p*bc_oneByRho-p*oneByRho); */
 	  }
 	if (isFluxBoundary_p == 1)
@@ -1593,7 +1613,8 @@ namespace proteus
       }
 
       inline
-	void exteriorNumericalAdvectiveFluxDerivatives(const int& isDOFBoundary_p,
+	void exteriorNumericalAdvectiveFluxDerivatives(const double COMPRESSIBLE_FORM,
+						       const int& isDOFBoundary_p,
 						       const int& isDOFBoundary_u,
 						       const int& isDOFBoundary_v,
 						       const int& isDOFBoundary_w,
@@ -1621,6 +1642,7 @@ namespace proteus
 						       const double df_mass_dv[nSpace],
 						       const double df_mass_dw[nSpace],
 						       const double df_umom_dp[nSpace],
+						       const double dham_grad[nSpace],
 						       const double df_umom_du[nSpace],
 						       const double df_umom_dv[nSpace],
 						       const double df_umom_dw[nSpace],
@@ -1648,7 +1670,7 @@ namespace proteus
 						       double& dflux_wmom_dv,
 						       double& dflux_wmom_dw)
       {
-	double flowDirection;
+	double flowSpeedNormal;
 	dflux_mass_du = 0.0;
 	dflux_mass_dv = 0.0;
 	/* dflux_mass_dw = 0.0; */
@@ -1667,11 +1689,12 @@ namespace proteus
 	dflux_wmom_du = 0.0;
 	dflux_wmom_dv = 0.0;
 	/* dflux_wmom_dw = 0.0; */
-	flowDirection=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for moving and fixed  domains
+	flowSpeedNormal=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for moving and fixed  domains
+	flowSpeedNormal+=COMPRESSIBLE_FORM*(n[0]*dham_grad[0]+n[1]*dham_grad[1]);//tricky, works for moving and fixed  domains
 	if (isDOFBoundary_u != 1)
 	  {
 	    dflux_mass_du += n[0]*df_mass_du[0];
-	    if (flowDirection >= 0.0)
+	    if (flowSpeedNormal >= 0.0)
 	      {
 		dflux_umom_du += n[0]*df_umom_du[0];
 		dflux_vmom_du += n[0]*df_vmom_du[0];
@@ -1684,7 +1707,7 @@ namespace proteus
 	  {
 	    //cek still upwind the advection for Dirichlet?
 	    dflux_mass_du += n[0]*df_mass_du[0];
-	    if (flowDirection >= 0.0)
+	    if (flowSpeedNormal >= 0.0)
 	      {
 		dflux_umom_du += n[0]*df_umom_du[0];
 		dflux_vmom_du += n[0]*df_vmom_du[0];
@@ -1703,7 +1726,7 @@ namespace proteus
 	if (isDOFBoundary_v != 1)
 	  {
 	    dflux_mass_dv += n[1]*df_mass_dv[1];
-	    if (flowDirection >= 0.0)
+	    if (flowSpeedNormal >= 0.0)
 	      {
 		dflux_umom_du += n[1]*df_umom_du[1];
 		dflux_umom_dv += n[1]*df_umom_dv[1];
@@ -1716,7 +1739,7 @@ namespace proteus
 	  {
 	    //cek still upwind the advection for Dirichlet?
 	    dflux_mass_dv += n[1]*df_mass_dv[1];
-	    if (flowDirection >= 0.0)
+	    if (flowSpeedNormal >= 0.0)
 	      {
 		dflux_umom_du += n[1]*df_umom_du[1];
 		dflux_umom_dv += n[1]*df_umom_dv[1];
@@ -1766,8 +1789,16 @@ namespace proteus
 	/* } */
 	if (isDOFBoundary_p == 1)
 	  {
-	    dflux_umom_dp= -n[0]*oneByRho;
-	    dflux_vmom_dp= -n[1]*oneByRho;
+	    if (COMPRESSIBLE_FORM > 0.0)
+	      {
+		dflux_umom_dp= -n[0];
+		dflux_vmom_dp= -n[1];
+	      }
+	    else
+	      {
+		dflux_umom_dp= -n[0]*oneByRho;
+		dflux_vmom_dp= -n[1]*oneByRho;
+	      }
 	    /* dflux_wmom_dp= -n[2]*oneByRho; */
 	  }
 	if (isFluxBoundary_p == 1)
@@ -2477,7 +2508,7 @@ namespace proteus
 		  //VRANS
 		  ck.Reaction_strong(mass_source);
 		//
-		if (COMPRESSIBLE_FORM)
+		if (COMPRESSIBLE_FORM > 0.0)
 		  {
 		    dmom_adv_sge[0] =  - dmom_u_acc_u*MOVING_DOMAIN*xt;
 		    dmom_adv_sge[1] =  - dmom_u_acc_u*MOVING_DOMAIN*yt;
@@ -2495,14 +2526,14 @@ namespace proteus
 		mv_tau[0] = dmom_adv_sge[0] + dmom_ham_grad_sge[0];
 		mv_tau[1] = dmom_adv_sge[1] + dmom_ham_grad_sge[1];
 		/* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
-		pdeResidual_u = ck.Mass_strong(mom_u_acc_t) +
+		pdeResidual_u = ck.Mass_strong(dmom_u_acc_u*mom_u_acc_t) +
 		  ck.Advection_strong(dmom_adv_sge,grad_u) +
 		  ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_u) +
 		  ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
 		  ck.Reaction_strong(mom_u_source) -
 		  ck.Reaction_strong(u*div_mesh_velocity);
 	  
-		pdeResidual_v = ck.Mass_strong(mom_v_acc_t) +
+		pdeResidual_v = ck.Mass_strong(dmom_v_acc_v*mom_v_acc_t) +
 		  ck.Advection_strong(dmom_adv_sge,grad_v) +
 		  ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_v) + 
 		  ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) + 
@@ -2577,8 +2608,8 @@ namespace proteus
 		    Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]);
 		    /* Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]); */
 		    //use the same advection adjoint for all three since we're approximating the linearized adjoint
-		    Lstar_u_u[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
-		    Lstar_v_v[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);
+		    Lstar_u_u[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);//cek COMP/INCOMP form have same adjoint
+		    Lstar_v_v[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]);//ditto
 		    /* Lstar_w_w[i]=ck.Advection_adjoint(dmom_adv_star,&vel_grad_test_dV[i_nSpace]); */
 		    Lstar_p_u[i]=ck.Hamiltonian_adjoint(dmom_u_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
 		    Lstar_p_v[i]=ck.Hamiltonian_adjoint(dmom_v_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
@@ -2621,7 +2652,7 @@ namespace proteus
 		      ck.SubgridError(subgridError_v,Lstar_v_p[i]);// + 
 		    /* ck.SubgridError(subgridError_w,Lstar_w_p[i]); */
 
-		    elementResidual_u[i] += ck.Mass_weak(mom_u_acc_t,vel_test_dV[i]) + 
+		    elementResidual_u[i] += ck.Mass_weak(dmom_u_acc_u*mom_u_acc_t,vel_test_dV[i]) + 
 		      ck.Advection_weak(mom_u_adv,&vel_grad_test_dV[i_nSpace]) +
 		      ck.Diffusion_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) + 
 		      ck.Diffusion_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) + 
@@ -2632,7 +2663,7 @@ namespace proteus
 		      MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
 		      ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); 
 		 
-		    elementResidual_v[i] += ck.Mass_weak(mom_v_acc_t,vel_test_dV[i]) + 
+		    elementResidual_v[i] += ck.Mass_weak(dmom_v_acc_v*mom_v_acc_t,vel_test_dV[i]) + 
 		      ck.Advection_weak(mom_v_adv,&vel_grad_test_dV[i_nSpace]) +
 		      ck.Diffusion_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) + 
 		      ck.Diffusion_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) + 
@@ -3207,7 +3238,8 @@ namespace proteus
 		// 
 		ck.calculateGScale(G,normal,h_penalty);
 		penalty = useMetrics*C_b*h_penalty + (1.0-useMetrics)*ebqe_penalty_ext[ebNE_kb];
-		exteriorNumericalAdvectiveFlux(isDOFBoundary_p[ebNE_kb],
+		exteriorNumericalAdvectiveFlux(COMPRESSIBLE_FORM,
+					       isDOFBoundary_p[ebNE_kb],
 					       isDOFBoundary_u[ebNE_kb],
 					       isDOFBoundary_v[ebNE_kb],
 					       isDOFBoundary_w[ebNE_kb],
@@ -3219,6 +3251,8 @@ namespace proteus
 					       bc_dmom_u_ham_grad_p_ext[0],//=1/bc_rho,
 					       normal,
 					       bc_p_ext,
+					       bc_u_ext,
+					       bc_v_ext,
 					       bc_mass_adv_ext,
 					       bc_mom_u_adv_ext,
 					       bc_mom_v_adv_ext,
@@ -3228,6 +3262,8 @@ namespace proteus
 					       ebqe_bc_flux_mom_v_adv_ext[ebNE_kb],
 					       ebqe_bc_flux_mom_w_adv_ext[ebNE_kb],
 					       p_ext,
+					       u_ext,
+					       v_ext,
 					       mass_adv_ext,
 					       mom_u_adv_ext,
 					       mom_v_adv_ext,
@@ -3236,6 +3272,7 @@ namespace proteus
 					       dmass_adv_v_ext,
 					       dmass_adv_w_ext,
 					       dmom_u_adv_p_ext,
+					       dmom_u_ham_grad_u_ext,
 					       dmom_u_adv_u_ext,
 					       dmom_u_adv_v_ext,
 					       dmom_u_adv_w_ext,
@@ -4163,7 +4200,7 @@ namespace proteus
 		//
 		//calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
 		//
-		if (COMPRESSIBLE_FORM)
+		if (COMPRESSIBLE_FORM > 0.0)
 		  {
 		    dmom_adv_sge[0] =  - dmom_u_acc_u*MOVING_DOMAIN*xt;
 		    dmom_adv_sge[1] =  - dmom_u_acc_u*MOVING_DOMAIN*yt;
@@ -4192,14 +4229,14 @@ namespace proteus
 		  ck.Reaction_strong(mass_source);
 		//
 	      
-		pdeResidual_u = ck.Mass_strong(mom_u_acc_t) +
+		pdeResidual_u = ck.Mass_strong(dmom_u_acc_u*mom_u_acc_t) +
 		  ck.Advection_strong(dmom_adv_sge,grad_u) +
 		  ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_u) +
 		  ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
 		  ck.Reaction_strong(mom_u_source) -
 		  ck.Reaction_strong(u*div_mesh_velocity);
 	  
-		pdeResidual_v = ck.Mass_strong(mom_v_acc_t) +
+		pdeResidual_v = ck.Mass_strong(dmom_v_acc_v*mom_v_acc_t) +
 		  ck.Advection_strong(dmom_adv_sge,grad_v) +
 		  ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_v) + 
 		  ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) + 
@@ -4989,7 +5026,8 @@ namespace proteus
 		// 
 		//calculate the numerical fluxes 
 		// 
-		exteriorNumericalAdvectiveFluxDerivatives(isDOFBoundary_p[ebNE_kb],
+		exteriorNumericalAdvectiveFluxDerivatives(COMPRESSIBLE_FORM,
+							  isDOFBoundary_p[ebNE_kb],
 							  isDOFBoundary_u[ebNE_kb],
 							  isDOFBoundary_v[ebNE_kb],
 							  isDOFBoundary_w[ebNE_kb],
@@ -5017,6 +5055,7 @@ namespace proteus
 							  dmass_adv_v_ext,
 							  dmass_adv_w_ext,
 							  dmom_u_adv_p_ext,
+							  dmom_u_ham_grad_u_ext,
 							  dmom_u_adv_u_ext,
 							  dmom_u_adv_v_ext,
 							  dmom_u_adv_w_ext,
