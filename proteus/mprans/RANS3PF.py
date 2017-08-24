@@ -1446,6 +1446,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 (self.mesh.nElements_global,
                  self.nQuadraturePoints_element),
                 'd')
+            self.q['abs(det(J))'] = numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nQuadraturePoints_element),
+                'd')
             self.q['inverse(J)'] = numpy.zeros(
                 (self.mesh.nElements_global,
                  self.nQuadraturePoints_element,
@@ -1870,6 +1874,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         cj].DOFBoundaryConditionsDict.iteritems():
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                             dofN], self.timeIntegration.t)# + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
+                        
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
             self.coefficients.set_vos(self.ebqe['x'],self.coefficients.ebqe_vos)
@@ -2397,6 +2402,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.q['J'],
                 self.q['inverse(J)'],
                 self.q['det(J)'])
+            self.q['abs(det(J))'][:] = numpy.abs(self.q['det(J)'])
             self.u[0].femSpace.getBasisValues(
                 self.elementQuadraturePoints, self.q[('v', 0)])
         self.u[0].femSpace.elementMaps.getBasisValuesRef(
