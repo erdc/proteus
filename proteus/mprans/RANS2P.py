@@ -160,7 +160,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  forceStrongDirichlet=False,
                  turbulenceClosureModel=0, #0=No Model, 1=Smagorinksy, 2=Dynamic Smagorinsky, 3=K-Epsilon, 4=K-Omega
                  smagorinskyConstant=0.1,
-                 barycenters=None):
+                 barycenters=None,
+                 COMPRESSIBLE_FORM=0.0,
+                 MOMENTUM_SGE=1.0,
+                 PRESSURE_SGE=1.0,
+                 VELOCITY_SGE=1.0):
+        self.COMPRESSIBLE_FORM=COMPRESSIBLE_FORM
+        self.MOMENTUM_SGE=MOMENTUM_SGE
+        self.PRESSURE_SGE=PRESSURE_SGE
+        self.VELOCITY_SGE=VELOCITY_SGE
         self.barycenters=barycenters
         self.smagorinskyConstant = smagorinskyConstant
         self.turbulenceClosureModel=turbulenceClosureModel
@@ -468,6 +476,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     #initialize so it can run as single phase
     def initializeElementQuadrature(self,t,cq):
         #VRANS
+        self.numerical_viscosity = numpy.zeros(cq[('u',1)].shape,'d')
         self.q_phi_solid = numpy.ones(cq[('u',1)].shape,'d')
         self.q_velocity_solid = numpy.zeros(cq[('velocity',0)].shape,'d')
         self.q_porosity = numpy.ones(cq[('u',1)].shape,'d')
@@ -1372,7 +1381,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
                     else:
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t) + self.MOVING_DOMAIN*self.mesh.nodeVelocityArray[dofN,cj-1]
-        self.rans2p.calculateResidual(#element
+        
+        self.rans2p.calculateResidual(self.coefficients.COMPRESSIBLE_FORM,
+                                      self.coefficients.MOMENTUM_SGE,
+                                      self.coefficients.PRESSURE_SGE,
+                                      self.coefficients.VELOCITY_SGE,
+                                      self.coefficients.numerical_viscosity,
+                                      #element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
@@ -1578,7 +1593,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(3,2)] = self.csrColumnOffsets[(0,2)]
             self.csrColumnOffsets_eb[(3,3)] = self.csrColumnOffsets[(0,2)]
 
-        self.rans2p.calculateJacobian(#element
+        self.rans2p.calculateJacobian(self.coefficients.COMPRESSIBLE_FORM,
+                                      self.coefficients.MOMENTUM_SGE,
+                                      self.coefficients.PRESSURE_SGE,
+                                      self.coefficients.VELOCITY_SGE,
+                                      #element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
