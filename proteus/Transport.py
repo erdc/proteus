@@ -6354,6 +6354,7 @@ class MultilevelTransport:
             logEvent(memory("boundary conditions","MultilevelTransport"),level=4)
             logEvent("Initializing OneLevelTransport",level=2)
             uDict[0].femSpace.mesh.nLayersOfOverlap = mesh.nLayersOfOverlap
+            uDict[0].femSpace.mesh.parallelPartitioningType = mesh.parallelPartitioningType
             transport=self.OneLevelTransportType(uDict,
                                             phiDict,
                                             testSpaceDict,
