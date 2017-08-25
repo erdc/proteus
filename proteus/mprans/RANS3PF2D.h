@@ -193,6 +193,12 @@ namespace proteus
 				   double* q_x,
 				   double* q_velocity,
 				   double* ebqe_velocity,
+				   double* q_grad_u, 
+				   double* q_grad_v, 
+				   double* q_grad_w,
+				   double* ebqe_grad_u, 
+				   double* ebqe_grad_v, 
+				   double* ebqe_grad_w, 
 				   double* flux,
 				   double* elementResidual_p,
 				   int* elementFlags,
@@ -568,6 +574,12 @@ namespace proteus
 				   double* q_x,
 				   double* q_velocity,
 				   double* ebqe_velocity,
+				   double* q_grad_u, 
+				   double* q_grad_v, 
+				   double* q_grad_w,
+				   double* ebqe_grad_u, 
+				   double* ebqe_grad_v, 
+				   double* ebqe_grad_w, 
 				   double* flux,
 				   double* elementResidual_p,
 				   int* elementFlags,
@@ -2157,6 +2169,12 @@ namespace proteus
 			   double* q_x,
 			   double* q_velocity,
 			   double* ebqe_velocity,
+			   double* q_grad_u, 
+			   double* q_grad_v, 
+			   double* q_grad_w,
+			   double* ebqe_grad_u, 
+			   double* ebqe_grad_v, 
+			   double* ebqe_grad_w, 
 			   double* flux,
 			   double* elementResidual_p_save,
 			   int* elementFlags,
@@ -2784,9 +2802,17 @@ namespace proteus
               double mesh_vel[2];
               mesh_vel[0] = xt;
               mesh_vel[1] = yt;
+	      // Save velocity and its gradient (to be used in other models and to compute errors)
 	      q_velocity[eN_k_nSpace+0]=u;
 	      q_velocity[eN_k_nSpace+1]=v;
-	      /* q_velocity[eN_k_nSpace+2]=w;*/
+	      /* q_velocity[eN_k_nSpace+2]=w; */
+              for (int I=0;I<nSpace;I++)
+		{
+		  q_grad_u[eN_k_nSpace+I] = grad_u[I];
+		  q_grad_v[eN_k_nSpace+I] = grad_v[I];
+		  /* q_grad_w[eN_k_nSpace+I] = grad_w[I]; */
+		}
+	      
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  register int i_nSpace=i*nSpace;
@@ -3425,6 +3451,13 @@ namespace proteus
 					     flux_mom_w_adv_ext,
 					     &ebqe_velocity_star[ebNE_kb_nSpace],
                                              &ebqe_velocity[ebNE_kb_nSpace]);
+	      // mql: save gradient of solution for other models and to compute errors
+              for (int I=0;I<nSpace;I++)
+		{
+		  ebqe_grad_u[ebNE_kb_nSpace+I] = grad_u_ext[I];
+		  ebqe_grad_v[ebNE_kb_nSpace+I] = grad_v_ext[I];
+		  /* ebqe_grad_w[ebNE_kb_nSpace+I] = grad_w_ext[I]; */
+		}
 	      exteriorNumericalDiffusiveFlux(eps_rho,
 					     ebqe_phi_ext[ebNE_kb],
 					     sdInfo_u_u_rowptr,
@@ -5653,6 +5686,12 @@ namespace proteus
 			   double* q_x,
 			   double* q_velocity,
 			   double* ebqe_velocity,
+			   double* q_grad_u, 
+			   double* q_grad_v, 
+			   double* q_grad_w,
+			   double* ebqe_grad_u, 
+			   double* ebqe_grad_v, 
+			   double* ebqe_grad_w, 
 			   double* flux,
 			   double* elementResidual_p_save,
 			   int* elementFlags,
@@ -6385,9 +6424,16 @@ namespace proteus
               double mesh_vel[2];
               mesh_vel[0] = xt;
               mesh_vel[1] = yt;
+	      // Save velocity (to be used in other models)
 	      q_velocity[eN_k_nSpace+0]=u;
 	      q_velocity[eN_k_nSpace+1]=v;
 	      /* q_velocity[eN_k_nSpace+2]=w;*/
+              for (int I=0;I<nSpace;I++)
+		{
+		  q_grad_u[eN_k_nSpace+I] = grad_u[I];
+		  q_grad_v[eN_k_nSpace+I] = grad_v[I];
+		  /* q_grad_w[eN_k_nSpace+I] = grad_w[I]; */
+		}
 
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
@@ -7030,6 +7076,13 @@ namespace proteus
 					     flux_mom_w_adv_ext,
 					     &ebqe_velocity_star[ebNE_kb_nSpace],
                                              &ebqe_velocity[ebNE_kb_nSpace]);
+	      // mql: save gradient of solution for other models and to compute errors
+              for (int I=0;I<nSpace;I++)
+		{
+		  ebqe_grad_u[ebNE_kb_nSpace+I] = grad_u_ext[I];
+		  ebqe_grad_v[ebNE_kb_nSpace+I] = grad_v_ext[I];
+		  /* ebqe_grad_w[ebNE_kb_nSpace+I] = grad_w_ext[I]; */
+		}
 	      exteriorNumericalDiffusiveFlux(eps_rho,
 					     ebqe_phi_ext[ebNE_kb],
 					     sdInfo_u_u_rowptr,
