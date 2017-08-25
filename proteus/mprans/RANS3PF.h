@@ -7315,9 +7315,9 @@ namespace proteus
 	      /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
               /* mesh_volume_conservation_weak += elementResidual_mesh[i];		   */
 	      /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
-	      globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=elementResidual_u[i];
-	      globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
-	      globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i];
+	      globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=elementResidual_u[i]*0; //TMP
+	      globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i]*0;
+	      globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]*0;
 	    }//i
 	}//ebNE
       /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */

@@ -53,7 +53,6 @@ class SubgridError(proteus.SubgridError.SGE_base):
             log("RANS3PF.SubgridError: switched to lagged subgrid error")
             self.lag = True
             self.v_last = self.cq[('velocity', 0)].copy()
-
     def calculateSubgridError(self, q):
         pass
 
@@ -899,6 +898,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def postStep(self, t, firstStep=False):
+        #TMP
+        #print "POSTSTEP"
+        #import pdb; pdb.set_trace()
+        #for dim in range(self.model.nSpace_global):
+        #    self.model.q[('u',dim)][:] = 100000 #self.model.q[('velocity',0)][:,:,dim]
+        
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
         for i,sdf in zip(range(self.nParticles),
@@ -1191,7 +1196,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('force', 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        # 
+
         self.q[('u', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 1)] = numpy.zeros(
@@ -1886,6 +1891,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else: 
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
+
+        #TMP
+        #self.u[0].dof[:]=0
+        #self.u[1].dof[:]=0
+        #self.u[2].dof[:]=0
+        self.q[('m',0)][:]=10000
+
+        print self.q[('force', 0)].max()
+        print self.q[('velocity', 0)].max()
+        import pdb; pdb.set_trace()
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2088,6 +2103,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('force', 1)],
             self.q[('force', 2)], 
             self.KILL_PRESSURE_TERM)
+
+        self.q[('m',0)][:]=0
+        #for dim in range(self.nSpace_global):
+        #    self.q[('u',dim)][:] = self.q[('velocity',0)][:,:,dim]
+
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
