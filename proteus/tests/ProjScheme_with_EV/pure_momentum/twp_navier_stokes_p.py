@@ -19,6 +19,7 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     ME_model=V_model,
                                     PRESSURE_model=PRESSURE_model,
                                     SED_model=SED_model,
+                                    VOS_model=VOS_model,
                                     VOF_model=VOF_model,
                                     LS_model=LS_model,
                                     Closure_0_model=Closure_0_model,
@@ -36,40 +37,58 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     dragAlpha=dragAlpha,
                                     PSTAB=1.0)
 
+#######################
+# BOUNDARY CONDITIONS #
+#######################
 def getDBC_u(x,flag):
-    return lambda x,t: np.sin(x[0])*np.sin(x[1]+t)
+    return None
 
 def getDBC_v(x,flag):
-    return lambda x,t: np.cos(x[0])*np.cos(x[1]+t)
+    return None
+
+def getAFBC_u(x,flag):
+    return lambda x,t: 0.
+
+def getAFBC_v(x,flag):
+    return lambda x,t: 0.
+
+def getDFBC_u(x,flag):
+    # Set grad(u).n
+    if (flag==1): # left boundary 
+        return lambda x,t: -2*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+    elif (flag==2): # right boundary 
+        return lambda x,t: -2*np.cos(x[0])*np.sin(x[1]+t)*(1.)
+    elif (flag==3): # bottom boundary 
+        return lambda x,t: 0. 
+    else: # top boundary 
+        return lambda x,t: 0. 
+
+def getDFBC_v(x,flag):
+    if (flag==1): # left boundary 
+        return lambda x,t: 0.
+    elif (flag==2): # right boundary 
+        return lambda x,t: 0.
+    elif (flag==3): # bottom boundary 
+        return lambda x,t: 2*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+    else: # top boundary 
+        return lambda x,t: 2*np.cos(x[0])*np.sin(x[1]+t)*(1.)
 
 dirichletConditions = {0:getDBC_u,
                        1:getDBC_v}
-
-def getAFBC_u(x,flag):
-    return None
-
-def getAFBC_v(x,flag):
-    return None
-
-def getDFBC_u(x,flag):
-    return lambda x,t: 0.0
-
-def getDFBC_v(x,flag):
-    return lambda x,t: 0.0
-
 advectiveFluxBoundaryConditions =  {0:getAFBC_u,
                                     1:getAFBC_v}
-
 diffusiveFluxBoundaryConditions = {0:{0:getDFBC_u},
                                    1:{1:getDFBC_v}}
 
+######################
+# INITIAL CONDITIONS #
+######################
 class AtRest:
     def __init__(self):
         pass
     def uOfXT(self,x,t):
         return 0.0
 
-# EXACT SOLUTION #
 class velx_at_t0:
     def __init__(self):
         pass
@@ -83,4 +102,49 @@ class vely_at_t0:
         return np.cos(x[0])*np.cos(x[1])
 
 initialConditions = {0:velx_at_t0(),
-                     1:velx_at_t0()}
+                     1:vely_at_t0()}
+
+###############
+# FORCE TERMS #
+###############
+def forcex(X,t):
+    x = X[0]
+    y = X[1]
+    return (np.sin(x)*np.cos(y+t) # Time derivative
+            + np.sin(x)*np.cos(x) # Non-linearity
+            + 2*mu*np.sin(x)*np.sin(y+t)) # Diffusion
+
+def forcey(X,t):
+    x = X[0]
+    y = X[1]
+    return (-np.cos(x)*np.sin(y+t) # Time derivative
+            - np.sin(y+t)*np.cos(y+t) #Non-linearity
+            + 2*mu*np.cos(x)*np.cos(y+t)) # Diffusion
+
+forceTerms = {0:forcex,
+              1:forcey}
+
+##################
+# EXACT SOLUTION #
+##################
+class velx:
+    def __init__(self):
+        pass
+    def uOfXT(self,x,t):
+        return np.sin(x[0])*np.sin(x[1]+t)
+    def duOfXT(self,x,t):
+        return [np.cos(x[0])*np.sin(x[1]+t),
+                np.sin(x[0])*np.cos(x[1]+t)]
+
+class vely:
+    def __init__(self):
+        pass
+    def uOfXT(self,x,t):
+        return np.cos(x[0])*np.cos(x[1]+t)
+    def duOfXT(self,x,t):
+        return [-np.sin(x[0])*np.cos(x[1]+t),
+                -np.cos(x[0])*np.sin(x[1]+t)]
+
+analyticalSolution = {0:velx(), 
+                      1:vely()}
+
