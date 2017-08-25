@@ -5383,6 +5383,7 @@ namespace proteus
 	      double dmass_adv_p[nSpace], dmom_u_adv_u[nSpace], dmom_v_adv_v[nSpace];
 	      double p_grad_trial[nDOF_trial_element*nSpace],
 		vel_grad_trial[nDOF_trial_element*nSpace];
+	      double p_test_dV[nDOF_test_element], vel_test_dV[nDOF_test_element];
 	      double p_grad_test_dV[nDOF_test_element*nSpace],
 		vel_grad_test_dV[nDOF_test_element*nSpace];
 	      double jacDet, x, y, z, dV, h_phi;
@@ -5417,11 +5418,15 @@ namespace proteus
 	      ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
 
 	      for (int j=0; j<nDOF_trial_element;++j)
-		for (int i=0; i<nSpace; ++i)
-		  {
-		    p_grad_test_dV[j*nSpace+i] = p_grad_trial[j*nSpace+i]*dV;
-		    vel_grad_test_dV[j*nSpace+i] = vel_grad_trial[j*nSpace+i]*dV;
-		  }
+		{
+		  p_test_dV[j] = p_trial_ref[k*nDOF_trial_element+j]*dV;
+		  vel_test_dV[j] = vel_trial_ref[k*nDOF_trial_element+j]*dV;
+		  for (int i=0; i<nSpace; ++i)
+		    {
+		      p_grad_test_dV[j*nSpace+i] = p_grad_trial[j*nSpace+i]*dV;
+		      vel_grad_test_dV[j*nSpace+i] = vel_grad_trial[j*nSpace+i]*dV;
+		    }
+		}
 	    
 	    
 	      evaluateTPAdvectionCoefficients(eps_rho,
@@ -5446,9 +5451,12 @@ namespace proteus
 		for(int j=0; j<nDOF_trial_element;++j){
 	      
 		  int j_nSpace = j*nSpace;
-		  local_matrix_p_p[i][j] += ck.AdvectionJacobian_weak(dmass_adv_p,p_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]);
-		  local_matrix_u_u[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);
-		  local_matrix_v_v[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);      
+		  /* local_matrix_p_p[i][j] += ck.AdvectionJacobian_weak(dmass_adv_p,p_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]); */
+		  /* local_matrix_u_u[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]); */
+		  /* local_matrix_v_v[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);       */
+		  local_matrix_p_p[i][j] += ck.HamiltonianJacobian_weak(dmass_adv_p,&p_grad_trial[j_nSpace],p_test_dV[i]);
+		  local_matrix_u_u[i][j] += ck.HamiltonianJacobian_weak(dmom_u_adv_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]);
+		  local_matrix_v_v[i][j] += ck.HamiltonianJacobian_weak(dmom_v_adv_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]);      
 		}
 	      }
 
