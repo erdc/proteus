@@ -1176,7 +1176,7 @@ namespace proteus
       mom_u_source -= forcex;
       mom_v_source -= forcey;
       /* mom_w_source += forcez; */
-      
+            
       //u momentum Hamiltonian (pressure)
       mom_u_ham = porosity*grad_p[0]/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
       dmom_u_ham_grad_p[0]=porosity/rho*(KILL_PRESSURE_TERM == 1 ? 0. : 1.);
@@ -1260,10 +1260,10 @@ namespace proteus
       duc_dw = w/(uc+1.0e-12);
       double fluid_velocity[3]={uStar,vStar,wStar}, solid_velocity[3]={u_s,v_s,w_s};
       double new_beta = closure.betaCoeff(1.0-phi_s,
-                                          rho,
-                                          fluid_velocity,
-                                          solid_velocity,
-                                          viscosity);
+					  rho,
+					  fluid_velocity,
+					  solid_velocity,
+					  viscosity);
       new_beta/=rho;
       mom_u_source += (1.0 - phi_s)*new_beta*(u-u_s);
       mom_v_source += (1.0 - phi_s)*new_beta*(v-v_s);
@@ -6067,6 +6067,7 @@ namespace proteus
 				   forcex[eN_k], 
 				   forcey[eN_k], 
 				   forcez[eN_k]);          
+
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
@@ -6193,7 +6194,6 @@ namespace proteus
 					  mom_u_source,
 					  mom_v_source,
 					  mom_w_source);					  
-
 		}
 	      //
 	      //save momentum for time history and velocity for subgrid error
@@ -6388,6 +6388,7 @@ namespace proteus
 	      q_velocity[eN_k_nSpace+0]=u;
 	      q_velocity[eN_k_nSpace+1]=v;
 	      /* q_velocity[eN_k_nSpace+2]=w;*/
+
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  register int i_nSpace=i*nSpace;
@@ -6419,7 +6420,7 @@ namespace proteus
 		    //ck.SubgridError(subgridError_p,Lstar_p_u[i]) +
 		    //ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); // Numerical diffusion
-		  // TMP: kill most terms
+
 		  elementResidual_v[i] += 
 		    ck.Mass_weak(dmom_v_acc_v*mom_v_acc_t,vel_test_dV[i]) + // time derivative
 		    ck.Advection_weak(mom_v_adv,&vel_grad_test_dV[i_nSpace]) + // due to moving mesh
@@ -6455,8 +6456,8 @@ namespace proteus
 	      /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
               /* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
 	      /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
-	      globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=elementResidual_u[i];
-	      globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
+	      globalResidual[offset_u+stride_u*vel_l2g[eN_i]] += elementResidual_u[i];
+	      globalResidual[offset_v+stride_v*vel_l2g[eN_i]] += elementResidual_v[i];
 	      /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
 	    }//i
           /* mesh_volume_conservation += mesh_volume_conservation_element; */
@@ -7329,8 +7330,8 @@ namespace proteus
 	      /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
               /* mesh_volume_conservation_weak += elementResidual_mesh[i];		   */
 	      /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
-	      globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=elementResidual_u[i];
-	      globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
+	      globalResidual[offset_u+stride_u*vel_l2g[eN_i]] += elementResidual_u[i]; 
+	      globalResidual[offset_v+stride_v*vel_l2g[eN_i]] += elementResidual_v[i];
 	      /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
 	    }//i
 	}//ebNE
@@ -8190,7 +8191,7 @@ namespace proteus
 
 		      /* elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) +  */
 		      /*   ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]);  */
-		      // TMP: kill most terms
+
 		      elementJacobian_u_u[i][j] += 
 			ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + // time derivative 
                         ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + // Pres + Non-linearity
@@ -9018,7 +9019,8 @@ namespace proteus
 		      /* globalJacobian[csrRowIndeces_p_w[eN_i] + csrColumnOffsets_eb_p_w[ebN_i_j]] += fluxJacobian_p_w[j]*p_test_dS[i]; */
 		   
 		      /* globalJacobian[csrRowIndeces_u_p[eN_i] + csrColumnOffsets_eb_u_p[ebN_i_j]] += fluxJacobian_u_p[j]*vel_test_dS[i]; */
-		      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*vel_test_dS[i]+
+		      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += 
+			fluxJacobian_u_u[j]*vel_test_dS[i]+
 			ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u[ebNE_kb],
 									   isDiffusiveFluxBoundary_u[ebNE_kb],
 									   eb_adjoint_sigma,
@@ -9028,7 +9030,8 @@ namespace proteus
 									   sdInfo_u_u_colind,
 									   mom_uu_diff_ten_ext,
 									   &vel_grad_test_dS[i*nSpace]);
-		      globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] += fluxJacobian_u_v[j]*vel_test_dS[i]+
+		      globalJacobian[csrRowIndeces_u_v[eN_i] + csrColumnOffsets_eb_u_v[ebN_i_j]] += 
+			fluxJacobian_u_v[j]*vel_test_dS[i]+
 			ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v[ebNE_kb],
 									   isDiffusiveFluxBoundary_u[ebNE_kb],
 									   eb_adjoint_sigma,
@@ -9050,7 +9053,8 @@ namespace proteus
 		      /* 							   &vel_grad_test_dS[i*nSpace]); */
 		   
 		      /* globalJacobian[csrRowIndeces_v_p[eN_i] + csrColumnOffsets_eb_v_p[ebN_i_j]] += fluxJacobian_v_p[j]*vel_test_dS[i]; */
-		      globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] += fluxJacobian_v_u[j]*vel_test_dS[i]+
+		      globalJacobian[csrRowIndeces_v_u[eN_i] + csrColumnOffsets_eb_v_u[ebN_i_j]] += 
+			fluxJacobian_v_u[j]*vel_test_dS[i]+
 			ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u[ebNE_kb],
 									   isDiffusiveFluxBoundary_v[ebNE_kb],
 									   eb_adjoint_sigma,
@@ -9060,7 +9064,8 @@ namespace proteus
 									   sdInfo_v_u_colind,
 									   mom_vu_diff_ten_ext,
 									   &vel_grad_test_dS[i*nSpace]);
-		      globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += fluxJacobian_v_v[j]*vel_test_dS[i]+
+		      globalJacobian[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_eb_v_v[ebN_i_j]] += 
+			fluxJacobian_v_v[j]*vel_test_dS[i]+
 			ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_v[ebNE_kb],
 									   isDiffusiveFluxBoundary_v[ebNE_kb],
 									   eb_adjoint_sigma,

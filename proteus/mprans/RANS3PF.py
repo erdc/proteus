@@ -425,17 +425,27 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.q_grad_p_fluid = modelList[self.PRESSURE_model].q[('grad(u)',0)]
             self.model.ebqe_grad_p_fluid = modelList[self.PRESSURE_model].ebqe[('grad(u)',0)]
         if self.VOS_model is not None:
-           self.vos_dof = modelList[self.VOS_model].u[0].dof
-           self.q_vos = modelList[self.VOS_model].q[('u',0)]
-           self.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
-           self.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
+            self.vos_dof = modelList[self.VOS_model].u[0].dof
+            self.q_vos = modelList[self.VOS_model].q[('u',0)]
+            self.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
+            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
         else:
-           self.vos_dof = modelList[self.VOF_model].u[0].dof.copy()
-           self.vos_dof[:] = 0.0
-           self.q_vos = modelList[self.VOF_model].coefficients.q_vos
-           self.q_dvos_dt = self.q_vos.copy()
-           self.q_dvos_dt[:] = 0.0
-           self.ebqe_vos = modelList[self.VOF_model].coefficients.ebqe_vos
+            if self.VOF_model is None:
+                self.vos_dof = modelList[self.ME_model].u[0].dof.copy()
+                self.vos_dof[:] = 0.0
+                self.q_vos = modelList[self.ME_model].q[('u',0)].copy()
+                self.q_vos[:] = 0.0
+                self.q_dvos_dt = self.q_vos.copy()
+                self.q_dvos_dt[:] = 0.0
+                self.ebqe_vos = modelList[self.ME_model].ebqe[('u',0)].copy() 
+                self.ebqe_vos[:] = 0.0
+            else:
+                self.vos_dof = modelList[self.VOF_model].u[0].dof.copy()
+                self.vos_dof[:] = 0.0
+                self.q_vos = modelList[self.VOF_model].coefficients.q_vos
+                self.q_dvos_dt = self.q_vos.copy()
+                self.q_dvos_dt[:] = 0.0
+                self.ebqe_vos = modelList[self.VOF_model].coefficients.ebqe_vos
         if self.SED_model is not None:
             self.rho_s = modelList[self.SED_model].coefficients.rho_0
             self.q_velocity_solid = modelList[self.SED_model].q[('velocity',0)]
@@ -898,12 +908,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def postStep(self, t, firstStep=False):
-        #TMP
-        #print "POSTSTEP"
-        #import pdb; pdb.set_trace()
-        #for dim in range(self.model.nSpace_global):
-        #    self.model.q[('u',dim)][:] = 100000 #self.model.q[('velocity',0)][:,:,dim]
-        
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
         for i,sdf in zip(range(self.nParticles),
@@ -963,16 +967,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #
         self.movingDomain = coefficients.movingDomain
         self.tLast_mesh = None
-        # (mql) Kill_pressure_term? This is for debugging and for convergence of momentum equations
+        # mql: Kill_pressure_term? This is for debugging and for convergence of momentum equations
         if ('KILL_PRESSURE_TERM') in dir(options):
             self.KILL_PRESSURE_TERM = options.KILL_PRESSURE_TERM
         else: 
             self.KILL_PRESSURE_TERM = 0
-        # (mql) Use entropy viscosity?
+        # mql: Use entropy viscosity?
         self.use_entropy_viscosity = False
         if ('use_entropy_viscosity') in dir(options):
             self.use_entropy_viscosity = options.use_entropy_viscosity
-        # (mql) Check if forceTerms are declared
+        # mql: Check if forceTerms are declared
         if ('forceTerms') in dir(options):
             self.forceTerms = options.forceTerms
         # cek todo clean up these flags in the optimized version
@@ -1818,7 +1822,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the element residuals and add in to the global residual
         """
-
         # Load the unknowns into the finite element dof
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
@@ -1892,15 +1895,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
 
-        #TMP
-        #self.u[0].dof[:]=0
-        #self.u[1].dof[:]=0
-        #self.u[2].dof[:]=0
-        self.q[('m',0)][:]=10000
-
-        print self.q[('force', 0)].max()
-        print self.q[('velocity', 0)].max()
-        import pdb; pdb.set_trace()
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2104,9 +2098,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('force', 2)], 
             self.KILL_PRESSURE_TERM)
 
-        self.q[('m',0)][:]=0
-        #for dim in range(self.nSpace_global):
-        #    self.q[('u',dim)][:] = self.q[('velocity',0)][:,:,dim]
+        # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
+        for dim in range(self.nSpace_global):
+            self.q[('u',dim)][:] = self.q[('velocity',0)][:,:,dim]
 
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
