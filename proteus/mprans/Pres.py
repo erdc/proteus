@@ -141,10 +141,16 @@ class Coefficients(TC_base):
         """
         self.model.q[('u_last',0)][:] = self.model.q[('u',0)]
         self.model.ebqe[('u_last',0)][:] = self.model.ebqe[('u',0)]
-        self.model.q_p_sharp[:] = self.model.q[('u',0)] + self.pressureIncrementModel.q[('u',0)]
-        self.model.ebqe_p_sharp[:] = self.model.ebqe[('u',0)] + self.pressureIncrementModel.ebqe[('u',0)]
-        self.model.q_grad_p_sharp[:] = self.model.q[('grad(u)',0)] + self.pressureIncrementModel.q[('grad(u)',0)]
-        self.model.ebqe_grad_p_sharp[:] = self.model.ebqe[('grad(u)',0)] + self.pressureIncrementModel.ebqe[('grad(u)',0)]
+        if self.pressureIncrementModelIndex is None: 
+            self.model.q_p_sharp[:] = self.model.q[('u',0)] 
+            self.model.ebqe_p_sharp[:] = self.model.ebqe[('u',0)] 
+            self.model.q_grad_p_sharp[:] = self.model.q[('grad(u)',0)] 
+            self.model.ebqe_grad_p_sharp[:] = self.model.ebqe[('grad(u)',0)] 
+        else:
+            self.model.q_p_sharp[:] = self.model.q[('u',0)] + self.pressureIncrementModel.q[('u',0)]
+            self.model.ebqe_p_sharp[:] = self.model.ebqe[('u',0)] + self.pressureIncrementModel.ebqe[('u',0)]
+            self.model.q_grad_p_sharp[:] = self.model.q[('grad(u)',0)] + self.pressureIncrementModel.q[('grad(u)',0)]
+            self.model.ebqe_grad_p_sharp[:] = self.model.ebqe[('grad(u)',0)] + self.pressureIncrementModel.ebqe[('grad(u)',0)]
         copyInstructions = {}
         return copyInstructions
     def evaluate(self,t,c):
