@@ -647,18 +647,18 @@ namespace proteus
 	nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
 	nu += nu_t;
 	mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-
+	//mu = rho*nu;
 	eddy_viscosity = nu_t;
 	if (COMPRESSIBLE_FORM > 0.0)
 	  {
 	    eddy_viscosity = nu_t*rho;
 
 	    //u momentum accumulation
-	    mom_u_acc=porosity*u;//trick for non-conservative form
+	    mom_u_acc=u;//trick for non-conservative form
 	    dmom_u_acc_u=rho*porosity;
   
 	    //v momentum accumulation
-	    mom_v_acc=porosity*v;
+	    mom_v_acc=v;
 	    dmom_v_acc_v=rho*porosity;
   
 	    /* //w momentum accumulation */
@@ -970,8 +970,7 @@ namespace proteus
 					     double dmom_u_adv_u[nSpace],
 					     double dmom_v_adv_v[nSpace])
       {
-	// This should be split off into a seperate function
-	double H_rho, H_mu, rho;
+	double H_rho, rho;
 	H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
     
 	rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
@@ -1014,6 +1013,7 @@ namespace proteus
 	rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
 	nu = nu_0*(1.0-H_mu) + nu_1*H_mu;
 	mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu + numerical_viscosity;
+	//mu = rho*nu;
 	// Up to here.
 
 	mom_p_acc = p / mu;
@@ -1045,15 +1045,10 @@ namespace proteus
 					       double& mom_v_acc,
 					       double& dmom_v_acc_v)
       {
-	// This should be split off into a seperate function
-	double H_rho, H_mu, rho, nu, mu;
+	double H_rho, rho;
 	H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-	H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-
+	
 	rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
-	nu = nu_0*(1.0-H_mu) + nu_1*H_mu;
-	mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu;
-	// Up to here.
 
 	mom_p_acc = p * rho;
 	dmom_p_acc_p = rho;
@@ -1131,10 +1126,12 @@ namespace proteus
 					       double dmom_v_source[nSpace],
 					       double dmom_w_source[nSpace])
       {
-	double mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,H_s1,H_s2,H_s3;
+	double rho,mu,nu,H_mu,uc,duc_du,duc_dv,duc_dw,viscosity,H_s,H_s1,H_s2,H_s3;
 	H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi)+useVF*fmin(1.0,fmax(0.0,vf));
 	nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
+	rho  = rho_0*(1.0-H_mu)+rho_1*H_mu;
 	mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
+	//mu = rho*nu;
 	if (COMPRESSIBLE_FORM > 0.0)
 	  {
 	    viscosity = mu;
@@ -2453,15 +2450,31 @@ namespace proteus
 		//
 		//moving mesh
 		//
-		mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
-		mom_u_adv[1] -= MOVING_DOMAIN*mom_u_acc*yt;
+		if (COMPRESSIBLE_FORM)
+		  {
+		    mom_u_adv[0] -= MOVING_DOMAIN*dmom_u_acc_u*u*xt;
+		    mom_u_adv[1] -= MOVING_DOMAIN*dmom_u_acc_u*u*yt;
+		  }
+		else
+		  {
+		    mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
+		    mom_u_adv[1] -= MOVING_DOMAIN*mom_u_acc*yt;
+		  }
 		/* mom_u_adv[2] -= MOVING_DOMAIN*mom_u_acc*zt; */
 		dmom_u_adv_u[0] -= MOVING_DOMAIN*dmom_u_acc_u*xt;
 		dmom_u_adv_u[1] -= MOVING_DOMAIN*dmom_u_acc_u*yt;
 		/* dmom_u_adv_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt; */
 
-		mom_v_adv[0] -= MOVING_DOMAIN*mom_v_acc*xt;
-		mom_v_adv[1] -= MOVING_DOMAIN*mom_v_acc*yt;
+		if (COMPRESSIBLE_FORM)
+		  {
+		    mom_v_adv[0] -= MOVING_DOMAIN*dmom_v_acc_v*v*xt;
+		    mom_v_adv[1] -= MOVING_DOMAIN*dmom_v_acc_v*v*yt;
+		  }
+		else
+		  {
+		    mom_v_adv[0] -= MOVING_DOMAIN*mom_v_acc*xt;
+		    mom_v_adv[1] -= MOVING_DOMAIN*mom_v_acc*yt;
+		  }
 		/* mom_v_adv[2] -= MOVING_DOMAIN*mom_v_acc*zt; */
 		dmom_v_adv_v[0] -= MOVING_DOMAIN*dmom_v_acc_v*xt;
 		dmom_v_adv_v[1] -= MOVING_DOMAIN*dmom_v_acc_v*yt;
@@ -2491,6 +2504,11 @@ namespace proteus
 		       dmom_v_acc_v,
 		       mom_v_acc_t,
 		       dmom_v_acc_v_t);
+		if (COMPRESSIBLE_FORM)
+		  {
+		    mom_u_acc_t *= dmom_u_acc_u;
+		    mom_v_acc_t *= dmom_v_acc_v;
+		  }
 		/* ck.bdf(alphaBDF, */
 		/* 	     q_mom_w_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV, */
 		/* 	     mom_w_acc, */
@@ -2526,14 +2544,14 @@ namespace proteus
 		mv_tau[0] = dmom_adv_sge[0] + dmom_ham_grad_sge[0];
 		mv_tau[1] = dmom_adv_sge[1] + dmom_ham_grad_sge[1];
 		/* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
-		pdeResidual_u = ck.Mass_strong(dmom_u_acc_u*mom_u_acc_t) +
+		pdeResidual_u = ck.Mass_strong(mom_u_acc_t) +
 		  ck.Advection_strong(dmom_adv_sge,grad_u) +
 		  ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_u) +
 		  ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
 		  ck.Reaction_strong(mom_u_source) -
 		  ck.Reaction_strong(u*div_mesh_velocity);
 	  
-		pdeResidual_v = ck.Mass_strong(dmom_v_acc_v*mom_v_acc_t) +
+		pdeResidual_v = ck.Mass_strong(mom_v_acc_t) +
 		  ck.Advection_strong(dmom_adv_sge,grad_v) +
 		  ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_v) + 
 		  ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) + 
@@ -2652,7 +2670,7 @@ namespace proteus
 		      ck.SubgridError(subgridError_v,Lstar_v_p[i]);// + 
 		    /* ck.SubgridError(subgridError_w,Lstar_w_p[i]); */
 
-		    elementResidual_u[i] += ck.Mass_weak(dmom_u_acc_u*mom_u_acc_t,vel_test_dV[i]) + 
+		    elementResidual_u[i] += ck.Mass_weak(mom_u_acc_t,vel_test_dV[i]) + 
 		      ck.Advection_weak(mom_u_adv,&vel_grad_test_dV[i_nSpace]) +
 		      ck.Diffusion_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) + 
 		      ck.Diffusion_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) + 
@@ -2663,7 +2681,7 @@ namespace proteus
 		      MOMENTUM_SGE*VELOCITY_SGE*ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
 		      ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); 
 		 
-		    elementResidual_v[i] += ck.Mass_weak(dmom_v_acc_v*mom_v_acc_t,vel_test_dV[i]) + 
+		    elementResidual_v[i] += ck.Mass_weak(mom_v_acc_t,vel_test_dV[i]) + 
 		      ck.Advection_weak(mom_v_adv,&vel_grad_test_dV[i_nSpace]) +
 		      ck.Diffusion_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) + 
 		      ck.Diffusion_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) + 
@@ -3200,15 +3218,31 @@ namespace proteus
 		//
 		//moving domain
 		//
-		mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
-		mom_u_adv_ext[1] -= MOVING_DOMAIN*mom_u_acc_ext*yt_ext;
+		if (COMPRESSIBLE_FORM)
+		  {
+		    mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*xt_ext;
+		    mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*yt_ext;
+		  }
+		else
+		  {
+		    mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
+		    mom_u_adv_ext[1] -= MOVING_DOMAIN*mom_u_acc_ext*yt_ext;
+		  }
 		/* mom_u_adv_ext[2] -= MOVING_DOMAIN*mom_u_acc_ext*zt_ext; */
 		dmom_u_adv_u_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*xt_ext;
 		dmom_u_adv_u_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*yt_ext;
 		/* dmom_u_adv_u_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*zt_ext; */
 
-		mom_v_adv_ext[0] -= MOVING_DOMAIN*mom_v_acc_ext*xt_ext;
-		mom_v_adv_ext[1] -= MOVING_DOMAIN*mom_v_acc_ext*yt_ext;
+		if (COMPRESSIBLE_FORM)
+		  {
+		    mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*xt_ext;
+		    mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*yt_ext;
+		  }
+		else
+		  {
+		    mom_v_adv_ext[0] -= MOVING_DOMAIN*mom_v_acc_ext*xt_ext;
+		    mom_v_adv_ext[1] -= MOVING_DOMAIN*mom_v_acc_ext*yt_ext;
+		  }
 		/* mom_v_adv_ext[2] -= MOVING_DOMAIN*mom_v_acc_ext*zt_ext; */
 		dmom_v_adv_v_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*xt_ext;
 		dmom_v_adv_v_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*yt_ext;
@@ -3222,12 +3256,28 @@ namespace proteus
 		/* dmom_w_adv_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext; */
 
 		//bc's
-		bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_mom_u_acc_ext*xt_ext;
-		bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_mom_u_acc_ext*yt_ext;
+		if (COMPRESSIBLE_FORM)
+		  {
+		    bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_u_ext*xt_ext;
+		    bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*bc_u_ext*yt_ext;
+		  }
+		else
+		  {
+		    bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_mom_u_acc_ext*xt_ext;
+		    bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_mom_u_acc_ext*yt_ext;
+		  }
 		/* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_mom_u_acc_ext*zt_ext; */
 
-		bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_mom_v_acc_ext*xt_ext;
-		bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_mom_v_acc_ext*yt_ext;
+		if (COMPRESSIBLE_FORM)
+		  {
+		    bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_v_ext*xt_ext;
+		    bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*bc_v_ext*yt_ext;
+		  }
+		else
+		  {
+		    bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_mom_v_acc_ext*xt_ext;
+		    bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_mom_v_acc_ext*yt_ext;
+		  }
 		/* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_mom_v_acc_ext*zt_ext; */
 
 		/* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_mom_w_acc_ext*xt_ext; */
@@ -4156,15 +4206,31 @@ namespace proteus
 		//
 		//moving mesh
 		//
-		mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
-		mom_u_adv[1] -= MOVING_DOMAIN*mom_u_acc*yt;
+		if (COMPRESSIBLE_FORM)
+		  {
+		    mom_u_adv[0] -= MOVING_DOMAIN*dmom_u_acc_u*u*xt;
+		    mom_u_adv[1] -= MOVING_DOMAIN*dmom_u_acc_u*u*yt;
+		  }
+		else
+		  {
+		    mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
+		    mom_u_adv[1] -= MOVING_DOMAIN*mom_u_acc*yt;
+		  }
 		/* mom_u_adv[2] -= MOVING_DOMAIN*mom_u_acc*zt; */
 		dmom_u_adv_u[0] -= MOVING_DOMAIN*dmom_u_acc_u*xt;
 		dmom_u_adv_u[1] -= MOVING_DOMAIN*dmom_u_acc_u*yt;
 		/* dmom_u_adv_u[2] -= MOVING_DOMAIN*dmom_u_acc_u*zt; */
 
-		mom_v_adv[0] -= MOVING_DOMAIN*mom_v_acc*xt;
-		mom_v_adv[1] -= MOVING_DOMAIN*mom_v_acc*yt;
+		if (COMPRESSIBLE_FORM)
+		  {
+		    mom_v_adv[0] -= MOVING_DOMAIN*dmom_v_acc_v*v*xt;
+		    mom_v_adv[1] -= MOVING_DOMAIN*dmom_v_acc_v*v*yt;
+		  }
+		else
+		  {
+		    mom_v_adv[0] -= MOVING_DOMAIN*mom_v_acc*xt;
+		    mom_v_adv[1] -= MOVING_DOMAIN*mom_v_acc*yt;
+		  }
 		/* mom_v_adv[2] -= MOVING_DOMAIN*mom_v_acc*zt; */
 		dmom_v_adv_v[0] -= MOVING_DOMAIN*dmom_v_acc_v*xt;
 		dmom_v_adv_v[1] -= MOVING_DOMAIN*dmom_v_acc_v*yt;
@@ -4191,6 +4257,11 @@ namespace proteus
 		       dmom_v_acc_v,
 		       mom_v_acc_t,
 		       dmom_v_acc_v_t);
+		if (COMPRESSIBLE_FORM)
+		  {
+		    mom_u_acc_t *= dmom_u_acc_u;
+		    mom_v_acc_t *= dmom_v_acc_v;
+		  }
 		/* ck.bdf(alphaBDF, */
 		/* 	     q_mom_w_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV, */
 		/* 	     mom_w_acc, */
@@ -4229,14 +4300,14 @@ namespace proteus
 		  ck.Reaction_strong(mass_source);
 		//
 	      
-		pdeResidual_u = ck.Mass_strong(dmom_u_acc_u*mom_u_acc_t) +
+		pdeResidual_u = ck.Mass_strong(mom_u_acc_t) +
 		  ck.Advection_strong(dmom_adv_sge,grad_u) +
 		  ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_u) +
 		  ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
 		  ck.Reaction_strong(mom_u_source) -
 		  ck.Reaction_strong(u*div_mesh_velocity);
 	  
-		pdeResidual_v = ck.Mass_strong(dmom_v_acc_v*mom_v_acc_t) +
+		pdeResidual_v = ck.Mass_strong(mom_v_acc_t) +
 		  ck.Advection_strong(dmom_adv_sge,grad_v) +
 		  ck.Hamiltonian_strong(dmom_ham_grad_sge,grad_v) + 
 		  ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) + 
@@ -4990,15 +5061,31 @@ namespace proteus
 		//
 		//moving domain
 		//
-		mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
-		mom_u_adv_ext[1] -= MOVING_DOMAIN*mom_u_acc_ext*yt_ext;
+		if (COMPRESSIBLE_FORM)
+		  {
+		    mom_u_adv_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*xt_ext;
+		    mom_u_adv_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*u_ext*yt_ext;
+		  }
+		else
+		  {
+		    mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
+		    mom_u_adv_ext[1] -= MOVING_DOMAIN*mom_u_acc_ext*yt_ext;
+		  }
 		/* mom_u_adv_ext[2] -= MOVING_DOMAIN*mom_u_acc_ext*zt_ext; */
 		dmom_u_adv_u_ext[0] -= MOVING_DOMAIN*dmom_u_acc_u_ext*xt_ext;
 		dmom_u_adv_u_ext[1] -= MOVING_DOMAIN*dmom_u_acc_u_ext*yt_ext;
 		/* dmom_u_adv_u_ext[2] -= MOVING_DOMAIN*dmom_u_acc_u_ext*zt_ext; */
-	      
-		mom_v_adv_ext[0] -= MOVING_DOMAIN*mom_v_acc_ext*xt_ext;
-		mom_v_adv_ext[1] -= MOVING_DOMAIN*mom_v_acc_ext*yt_ext;
+
+		if (COMPRESSIBLE_FORM)
+		  {
+		    mom_v_adv_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*xt_ext;
+		    mom_v_adv_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*v_ext*yt_ext;
+		  }
+		else
+		  {
+		    mom_v_adv_ext[0] -= MOVING_DOMAIN*mom_v_acc_ext*xt_ext;
+		    mom_v_adv_ext[1] -= MOVING_DOMAIN*mom_v_acc_ext*yt_ext;
+		  }
 		/* mom_v_adv_ext[2] -= MOVING_DOMAIN*mom_v_acc_ext*zt_ext; */
 		dmom_v_adv_v_ext[0] -= MOVING_DOMAIN*dmom_v_acc_v_ext*xt_ext;
 		dmom_v_adv_v_ext[1] -= MOVING_DOMAIN*dmom_v_acc_v_ext*yt_ext;
@@ -5012,12 +5099,28 @@ namespace proteus
 		/* dmom_w_adv_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext; */
 	      
 		//moving domain bc's
-		bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_mom_u_acc_ext*xt_ext;
-		bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_mom_u_acc_ext*yt_ext;
+		if (COMPRESSIBLE_FORM)
+		  {
+		    bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*u_ext*xt_ext;
+		    bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_u_acc_u_ext*u_ext*yt_ext;
+		  }
+		else
+		  {
+		    bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_mom_u_acc_ext*xt_ext;
+		    bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_mom_u_acc_ext*yt_ext;
+		  }
 		/* bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_mom_u_acc_ext*zt_ext; */
-	      
-		bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_mom_v_acc_ext*xt_ext;
-		bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_mom_v_acc_ext*yt_ext;
+
+		if (COMPRESSIBLE_FORM)
+		  {
+		    bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*v_ext*xt_ext;
+		    bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_dmom_v_acc_v_ext*v_ext*yt_ext;
+		  }
+		else
+		  {
+		    bc_mom_v_adv_ext[0] -= MOVING_DOMAIN*bc_mom_v_acc_ext*xt_ext;
+		    bc_mom_v_adv_ext[1] -= MOVING_DOMAIN*bc_mom_v_acc_ext*yt_ext;
+		  }
 		/* bc_mom_v_adv_ext[2] -= MOVING_DOMAIN*bc_mom_v_acc_ext*zt_ext; */
 
 		/* bc_mom_w_adv_ext[0] -= MOVING_DOMAIN*bc_mom_w_acc_ext*xt_ext; */
