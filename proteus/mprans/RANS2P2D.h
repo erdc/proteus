@@ -5749,7 +5749,7 @@ namespace proteus
 					 double* vel_test_ref,
 					 double* elementDiameter,
 					 double* nodeDiametersArray,
-					 double* numDiff,
+					 double* numerical_viscosity,
 					 int nElements_global,
 					 double useMetrics,
 					 double epsFact_rho,
@@ -5838,7 +5838,7 @@ namespace proteus
 
 	    // Step 1.2.2 Evaluate coefficients
 	    if (scale_type==0){
-	      evaluateTPInvViscosityMassCoefficients(numDiff[eN_k],
+	      evaluateTPInvViscosityMassCoefficients(numerical_viscosity[eN_k],
 						     eps_rho,
 						     eps_mu,
 						     rho_0,
@@ -5899,15 +5899,30 @@ namespace proteus
 	  } // k
 
 	  // Step 1.3 - Write local matrix information into global system
+	  bool lump;
+	  if (scale_type == 0)
+	    lump=true;
+	  if (scale_type == 1)
+	    lump=true;
 	  for (int i=0 ; i<nDOF_test_element; ++i)
 	    {
 	      int eN_i = eN*nDOF_test_element+i;
+	      int eN_i_i = eN_i*nDOF_trial_element + i;
 	      for (int j=0 ; j < nDOF_trial_element; ++j)
 		{
 		  int eN_i_j = eN_i*nDOF_trial_element + j;
-		  mass_matrix[csrRowIndeces_p_p[eN_i] + csrColumnOffsets_p_p[eN_i_j]] += local_matrix_p_p[i][j] ;
-		  mass_matrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += local_matrix_u_u[i][j] ;
-		  mass_matrix[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += local_matrix_v_v[i][j] ;
+		  if (lump)
+		    {
+		      mass_matrix[csrRowIndeces_p_p[eN_i] + csrColumnOffsets_p_p[eN_i_i]] += local_matrix_p_p[i][j] ;
+		      mass_matrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_i]] += local_matrix_u_u[i][j] ;
+		      mass_matrix[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_i]] += local_matrix_v_v[i][j] ;
+		    }
+		  else
+		    {
+		      mass_matrix[csrRowIndeces_p_p[eN_i] + csrColumnOffsets_p_p[eN_i_j]] += local_matrix_p_p[i][j] ;
+		      mass_matrix[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_u_u[eN_i_j]] += local_matrix_u_u[i][j] ;
+		      mass_matrix[csrRowIndeces_v_v[eN_i] + csrColumnOffsets_v_v[eN_i_j]] += local_matrix_v_v[i][j] ;
+		    }
 		}
 	    }
       
