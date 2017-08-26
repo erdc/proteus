@@ -889,6 +889,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
+        # Compute 2nd order extrapolation on velocity
+        if (firstStep):
+            self.model.q[('velocityStar',0)][:] = self.model.q[('velocity',0)]
+        else:
+            dt_old = self.model.timeIntegration.dt_history[0] 
+            dt = self.model.timeIntegration.dt
+            self.model.q[('velocityStar',0)][:] = ((dt+dt_old)/dt_old*self.model.q[('velocity',0)] 
+                                                   - dt/dt_old*self.model.q[('velocityOld',0)])
+        self.model.q[('velocityOld',0)][:] = self.model.q[('velocity',0)]  
         if hasattr(self.model,'forceTerms'):
             x = self.model.q[('x')][:,:,0]
             y = self.model.q[('x')][:,:,1]
@@ -1240,15 +1249,30 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[
             ('velocity',
              0)] = numpy.zeros(
-            (self.mesh.nElements_global,
-             self.nQuadraturePoints_element,
-             self.nSpace_global),
-            'd')
+                 (self.mesh.nElements_global,
+                  self.nQuadraturePoints_element,
+                  self.nSpace_global),
+                 'd')
         self.q['velocity_solid'] = numpy.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nSpace_global),
             'd')
+        # mql: create vectors to compute uStar = 2*un-unm1
+        self.q[
+            ('velocityOld',
+            0)] = numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nQuadraturePoints_element,
+                 self.nSpace_global),
+                'd')
+        self.q[
+            ('velocityStar',
+             0)] = numpy.zeros(
+                 (self.mesh.nElements_global,
+                  self.nQuadraturePoints_element,
+                  self.nSpace_global),
+                 'd')
         self.q['phi_solid'] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['x'] = numpy.zeros(
@@ -1990,7 +2014,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[2],
             self.q['dV'],
             self.q['dV_last'],
-            self.stabilization.v_last,
+            self.q[('velocityStar',0)], #mql: use uStar=2*un-unm1 to achieve 2nd order accuracy 
+            #self.stabilization.v_last,
             self.coefficients.ebqe_velocity_last,
             self.q[('cfl', 0)],
             self.q[('numDiff', 0, 0)],
