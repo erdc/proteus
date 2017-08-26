@@ -956,11 +956,8 @@ namespace proteus
       //VRANS specific
       inline
 	void evaluateTPAdvectionCoefficients(const double eps_rho,
-					     const double eps_mu,
 					     const double rho_0,
-					     double nu_0,
 					     const double rho_1,
-					     double nu_1,
 					     const double useVF,
 					     const double& vf,
 					     const double& phi,
@@ -971,8 +968,9 @@ namespace proteus
 					     double dmom_v_adv_v[nSpace])
       {
 	double H_rho, rho;
+	
 	H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-    
+	
 	rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
 
 	dmass_adv_p[0] = rho*u;
@@ -1007,6 +1005,7 @@ namespace proteus
       {
 	// This should be split off into a seperate function
 	double H_rho, H_mu, rho, nu, mu;
+	
 	H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
 	H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
 
@@ -1014,7 +1013,6 @@ namespace proteus
 	nu = nu_0*(1.0-H_mu) + nu_1*H_mu;
 	mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu + numerical_viscosity;
 	//mu = rho*nu;
-	// Up to here.
 
 	mom_p_acc = p / mu;
 	dmom_p_acc_p = 1. / mu;
@@ -1027,11 +1025,8 @@ namespace proteus
       }
       inline
 	void evaluateTPDensityMassCoefficients(const double eps_rho,
-					       const double eps_mu,
 					       const double rho_0,
-					       double nu_0,
 					       const double rho_1,
-					       double nu_1,
 					       const double useVF,
 					       const double& vf,
 					       const double& phi,
@@ -1046,6 +1041,7 @@ namespace proteus
 					       double& dmom_v_acc_v)
       {
 	double H_rho, rho;
+	
 	H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
 	
 	rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
@@ -1061,11 +1057,8 @@ namespace proteus
       } 
       inline
 	void evaluateTPInvDensityLaplaceCoefficients(const double eps_rho,
-						     const double eps_mu,
 						     const double rho_0,
-						     double nu_0,
 						     const double rho_1,
-						     double nu_1,
 						     const double useVF,
 						     const double& vf,
 						     const double& phi,
@@ -1073,13 +1066,11 @@ namespace proteus
 						     double mom_u_diff_ten[nSpace],
 						     double mom_v_diff_ten[nSpace])
       {
-	double H_rho, H_mu, rho, nu, mu;
+	double H_rho, rho;
+
 	H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
-	H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
 
 	rho = rho_0*(1.0 - H_rho) + rho_1*H_rho;
-	//    nu = nu_0*(1.0-H_mu) + nu_1*H_mu;
-	//    mu = rho_0*nu_0*(1.-H_mu) + rho_1*nu_1*H_mu;
     
 	mom_p_diff_ten[0] = 1.0 / rho ;
 	mom_p_diff_ten[1] = 1.0 / rho ;
@@ -5461,7 +5452,7 @@ namespace proteus
 	for (int eN=0 ; eN < nElements_global ; ++eN)
 	  {
 	    // local matrix allocations
-	    double eps_rho, eps_mu;
+	    double eps_rho;
 
 	    double local_matrix_p_p[nDOF_test_element][nDOF_trial_element];
 	    double local_matrix_u_u[nDOF_test_element][nDOF_trial_element];
@@ -5512,7 +5503,6 @@ namespace proteus
 	      dV = fabs(jacDet)*dV_ref[k];
 
 	      eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
-	      eps_mu = epsFact_mu * (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 
 	      ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial);
 	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
@@ -5533,11 +5523,8 @@ namespace proteus
 	    
 	    
 	      evaluateTPAdvectionCoefficients(eps_rho,
-					      eps_mu,
 					      rho_0,
-					      nu_0,
 					      rho_1,
-					      nu_1,
 					      useVF,
 					      vf[eN_k],
 					      phi[eN_k],
@@ -5554,9 +5541,7 @@ namespace proteus
 		for(int j=0; j<nDOF_trial_element;++j){
 	      
 		  int j_nSpace = j*nSpace;
-		  /* local_matrix_p_p[i][j] += ck.AdvectionJacobian_weak(dmass_adv_p,p_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]); */
-		  /* local_matrix_u_u[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]); */
-		  /* local_matrix_v_v[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]);       */
+
 		  local_matrix_p_p[i][j] += ck.HamiltonianJacobian_weak(dmass_adv_p,&p_grad_trial[j_nSpace],p_test_dV[i]);
 		  local_matrix_u_u[i][j] += ck.HamiltonianJacobian_weak(dmom_u_adv_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]);
 		  local_matrix_v_v[i][j] += ck.HamiltonianJacobian_weak(dmom_v_adv_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]);      
@@ -5669,8 +5654,8 @@ namespace proteus
 
 	      dV = fabs(jacDet)*dV_ref[k];
 
-	      eps_rho = epsFact_rho*(useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 	      eps_mu = epsFact_mu * (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
+	      eps_rho = epsFact_rho * (useMetrics*h_phi+(1.0-useMetrics)*elementDiameter[eN]);
 
 	      ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial);
 	      ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
@@ -5687,11 +5672,8 @@ namespace proteus
 		  }
 
 	      evaluateTPInvDensityLaplaceCoefficients(eps_rho,
-						      eps_mu,
 						      rho_0,
-						      nu_0,
 						      rho_1,
-						      nu_1,
 						      useVF,
 						      vf[eN_k],
 						      phi[eN_k],
@@ -5705,23 +5687,34 @@ namespace proteus
 		  int i_nSpace = i*nSpace ;
 		  for (int j=0; j < nDOF_trial_element ; ++j){
 		    int j_nSpace = j*nSpace ;
-		    local_matrix_p_p[i][j] += ck.SimpleDiffusionJacobian_weak(sdInfo_p_p_rowptr,
-									      sdInfo_p_p_colind,
-									      mom_pp_diff_ten,
-									      &p_grad_trial[j_nSpace],
-									      &p_grad_test_dV[i_nSpace]);
+		    /* local_matrix_p_p[i][j] += ck.SimpleDiffusionJacobian_weak(sdInfo_p_p_rowptr, */
+		    /* 							      sdInfo_p_p_colind, */
+		    /* 							      mom_pp_diff_ten, */
+		    /* 							      &p_grad_trial[j_nSpace], */
+		    /* 							      &p_grad_test_dV[i_nSpace]); */
 	      
-		    local_matrix_u_u[i][j] += ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr,
-									      sdInfo_u_u_colind,
-									      mom_uu_diff_ten,
-									      &vel_grad_trial[j_nSpace],
-									      &vel_grad_test_dV[i_nSpace]);
+		    /* local_matrix_u_u[i][j] += ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr, */
+		    /* 							      sdInfo_u_u_colind, */
+		    /* 							      mom_uu_diff_ten, */
+		    /* 							      &vel_grad_trial[j_nSpace], */
+		    /* 							      &vel_grad_test_dV[i_nSpace]); */
 	      
-		    local_matrix_v_v[i][j] += ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr,
-									      sdInfo_v_v_colind,
-									      mom_vv_diff_ten,
-									      &vel_grad_trial[j_nSpace],
-									      &vel_grad_test_dV[i_nSpace]);
+		    /* local_matrix_v_v[i][j] += ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr, */
+		    /* 							      sdInfo_v_v_colind, */
+		    /* 							      mom_vv_diff_ten, */
+		    /* 							      &vel_grad_trial[j_nSpace], */
+		    /* 							      &vel_grad_test_dV[i_nSpace]); */
+		    local_matrix_p_p[i][j] += ck.NumericalDiffusionJacobian(mom_pp_diff_ten[0],
+									    &p_grad_trial[j_nSpace],
+									    &p_grad_test_dV[i_nSpace]);
+	      
+		    local_matrix_u_u[i][j] += ck.NumericalDiffusionJacobian(mom_uu_diff_ten[0],
+									    &vel_grad_trial[j_nSpace],
+									    &vel_grad_test_dV[i_nSpace]);
+	      
+		    local_matrix_v_v[i][j] += ck.NumericalDiffusionJacobian(mom_vv_diff_ten[0],
+									    &vel_grad_trial[j_nSpace],
+									    &vel_grad_test_dV[i_nSpace]);
 								       
 		  } // j
 		} // i
@@ -5866,11 +5859,8 @@ namespace proteus
 						     dmom_v_acc_v) ; }
 	    else if(scale_type==1){
 	      evaluateTPDensityMassCoefficients(eps_rho,
-						eps_mu,
 						rho_0,
-						nu_0,
 						rho_1,
-						nu_1,
 						useVF,
 						vf[eN_k],
 						phi[eN_k],
