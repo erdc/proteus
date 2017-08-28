@@ -47,7 +47,7 @@ define howto
 	@echo "${PROTEUS_PREFIX}/bin/python"
 	@echo ""
 	@echo "You should now verify that the install succeeded by running:"
-	@echo "make check"
+	@echo "make test"
 	@echo ""
 endef
 
@@ -92,7 +92,7 @@ clean:
 distclean: clean
 	-rm -f stack.done
 	-rm -rf ${PROTEUS_PREFIX}
-	-rm -rf build proteus/*.pyc proteus/*.so proteus/*.a
+	-rm -rf build proteus/*.pyc proteus/*.so proteus/*.a proteus/MeshAdaptPUMI/*.so
 	-rm -rf build proteus/mprans/*.pyc proteus/mprans/*.so proteus/mprans/*.a
 
 update:
@@ -168,7 +168,7 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find 
 
 	$(call show_info)
 
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -f -k error default.yaml ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
 
 	@echo "************************"
 	@echo "Dependency build complete"
@@ -230,6 +230,7 @@ install: profile $(shell find proteus -type f) $(wildcard *.py) proteus
 	$(call howto)
 
 develop: proteus profile 
+	-ln -sf ${PROTEUS}/${PROTEUS_ARCH}/lib64/* ${PROTEUS}/${PROTEUS_ARCH}/lib
 	@echo "************************"
 	@echo "Installing development version"
 	@echo "************************"
@@ -271,6 +272,21 @@ check:
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
+check_simmetrix:
+	@echo "SCOREC-Serial Simmetrix Error-Estimator and Adapt Test"
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_errorAndSerialAdapt/errorCheck.py
+	@echo "************************"
+
+	@echo "SCOREC-Parallel Simmetrix Error Estimator and Adapt Test"
+	${PROTEUS_ENV} mpirun -np 2 ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_parallelAdapt/parallelAdaptCheck.py
+	@echo "************************"
+
+	@echo "SCOREC Simmetrix Isotropic Uniform Adapt Test"
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} proteus/MeshAdaptPUMI/test/test_MeshAdaptPUMI/test_isotropicAdapt/isotropicCheck.py
+	@echo "************************"
+
+
+#doc: install
 doc:
 	@echo "************************************"
 	@echo "Generating documentation with Sphinx"
@@ -279,6 +295,7 @@ doc:
 	@echo "or"
 	@echo "make install"
 	@echo "************************************"
+
 	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
 	@echo "**********************************"
 	@echo "Trying to open the html at"
@@ -286,7 +303,7 @@ doc:
 	@echo "**********************************"
 	-sensible-browser ../proteus-website/index.html &
 
-test:
+test: check
 	@echo "************************************"
 	@echo "Running test suite"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; py.test --boxed -v proteus/tests --ignore proteus/tests/POD
@@ -297,13 +314,18 @@ jupyter:
 	@echo "************************************"
 	@echo "Enabling jupyter notebook/lab/widgets"
 	source ${PROTEUS_PREFIX}/bin/proteus_env.sh
-	pip install jupyter jupyterlab  ipywidgets ipyleaflet jupyter_dashboards pythreejs RISE cesiumpy bqplot mayavi
+	pip install configparser
+	pip install ipyparallel==6.0.2 ipython==5.3.0 terminado==0.6 jupyter==1.0.0 jupyterlab==0.18.1  ipywidgets==6.0.0 ipyleaflet==0.3.0 jupyter_dashboards==0.7.0 pythreejs==0.3.0 rise==4.0.0b1 cesiumpy==0.3.3 bqplot==0.9.0 hide_code==0.4.0 matplotlib ipympl ipymesh
+	ipcluster nbextension enable --user
 	jupyter serverextension enable --py jupyterlab --sys-prefix
 	jupyter nbextension enable --py --sys-prefix widgetsnbextension
-	jupyter nbextension install --py --sys-prefix mayavi
 	jupyter nbextension enable --py --sys-prefix bqplot
 	jupyter nbextension enable --py --sys-prefix pythreejs
+	jupyter nbextension enable --py --sys-prefix ipympl
+	jupyter nbextension enable --py --sys-prefix ipymesh
 	jupyter nbextension enable --py --sys-prefix ipyleaflet
+	jupyter nbextension install --py --sys-prefix hide_code
+	jupyter nbextension enable --py --sys-prefix hide_code
 	jupyter nbextension install --py --sys-prefix rise
 	jupyter nbextension enable --py --sys-prefix rise
 	jupyter dashboards quick-setup --sys-prefix
@@ -311,4 +333,24 @@ jupyter:
 	jupyter nbextension enable --sys-prefix --py ipyparallel
 	jupyter serverextension enable --sys-prefix --py ipyparallel
 	ipython profile create mpi --parallel
-	echo "c.IPClusterEngines.engine_launcher_class = 'MPI'" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	printf "\nc.NotebookApp.server_extensions.append('ipyparallel.nbextension')\n" >> ${HOME}/.jupyter/jupyter_notebook_config.py
+	printf "\nc.IPClusterEngines.engine_launcher_class = 'MPI'\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	printf "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	printf "c.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+	printf "c.MPIEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" >> ${HOME}/.ipython/profile_mpi/ipcluster_config.py
+
+lfs:
+	pip install pyliblzma
+	wget https://github.com/git-lfs/git-lfs/releases/download/v1.5.5/git-lfs-linux-amd64-1.5.5.tar.gz
+	tar xzvf git-lfs-linux-amd64-1.5.5.tar.gz
+	cd git-lfs-1.5.5 && PREFIX=${HOME} ./install.sh
+	export PATH=${HOME}/bin:${PATH}
+
+hashdist_package:
+	cp stack/default.yaml stack/proteus_stack.yaml
+	echo "  proteus:" >> stack/proteus_stack.yaml
+	sed -i '/sources:/c\#sources:' stack/pkgs/proteus.yaml
+	sed -i '/- key:/c\# -key:' stack/pkgs/proteus.yaml
+	sed -i '/  url:/c\#  url:' stack/pkgs/proteus.yaml
+	./hashdist/bin/hit fetch https://github.com/erdc-cm/proteus/archive/${PROTEUS_VERSION}.zip >> stack/pkgs/proteus.yaml
+	cd stack && ${PROTEUS}/hashdist/bin/hit build -v proteus_stack.yaml

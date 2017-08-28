@@ -263,7 +263,7 @@ class Gauges(AV_base):
                                                                     owning_proc), 3)
         else:
             # gauge isn't on any of the elements, just use nearest node
-            global_min_distance, owning_proc = comm.allreduce(nearest_node_distance, op=MPI.MINLOC)
+            global_min_distance, owning_proc = comm.allreduce((nearest_node_distance,comm.rank), op=MPI.MINLOC)
             logEvent("Off-element gauge location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
                                                                  owning_proc), 3)
         if comm.rank != owning_proc:
@@ -723,7 +723,7 @@ class Gauges(AV_base):
             globalLineIntegralGaugeBuf = []
 
         if self.gaugeComm.rank == 0:
-            self.file.write("%10.4e" % time)
+            self.file.write("%25.15e" % time)
             if self.isPointGauge or self.isLineGauge:
                 for id in self.globalQuantitiesMap:
                     self.file.write(", %43.18e" % (self.globalQuantitiesBuf[id],))

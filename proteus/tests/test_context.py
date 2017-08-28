@@ -28,12 +28,30 @@ def test_setFromModule():
     os.remove("context_module.py")
     Context.setFromModule(context_module)
     check_eq(Context.context)
+    
+def test_setMutableFromModule():
+    import os
+    from proteus import Context
+    with open("context_module.py","w") as f:
+        f.write("nnx=11; T=10.0; g=9.8\n")
+    sys.path.append(os.getcwd())
+    import context_module
+    os.remove("context_module.py")
+    Context.setFromModule(context_module, mutable=True)
+    check_eq(Context.context)
+    ct = Context.get()
+    ct.T=11.0
+    eq(ct.T,11.0)
 
 def test_get():
     from proteus import Context
     Context.set(ContextObject())
     ct = Context.get()
     check_eq(ct)
+    try:
+        ct.T=11.0
+    except Exception as e:
+        assert(type(e) is AttributeError)
 
 def test_Options():
     import os

@@ -23,7 +23,7 @@ def VelocityPostProcessingChooser(transport):
     """
     tryNew = True
     velocityPostProcessor = None
-    if transport.conservativeFlux != None:
+    if transport.conservativeFlux is not None:
         ppcomps = []
         pptypes = {}
         for ci in transport.conservativeFlux.keys():
@@ -66,19 +66,43 @@ def VelocityPostProcessingChooser(transport):
 #####################################################################################################
 
 class VelocityPostProcessingAlgorithmBase:
-    """Base class for velocity post processing algorithms
-
+    """ Base class for velocity post processing algorithms
+    
     Applies same algorithm to all components in vtComponents
+
+    TODO
+    make velocity representation type an enum
+
+    Attributes
+    ----------
+    q[('velocity',ci)] : array type
+        Stores the velocity values on element quadrature points.
+    ebq[('velocity',ci)] : array type
+        Stores the velocity values on element boundary quadrature points.  
+        Designed to reference the element number first.
+    ebq_global[('velocity',ci)] : array
+        Stores the velocity values on the boundary.  Designed to
+        reference the global edge number first.    
     """
-#    TODO
-#      make velocity representation type an enum
     def __init__(self,postProcessingType=None,vectorTransport=None,vtComponents=[0]):
+        """ VelocityPostProcessingAlgorithmBase Base Class Constructor
+
+        Parameters
+        ----------
+        postProcessingType : str
+            String value of the post-processing type to be applied
+        vectorTransport : :class:`proteus.Transport.OneLevelTransport`
+            Vector Transport class object describing the problem.
+        vtComponents : list
+            List of indices for different vector transport components.
+        """
+
         self.postProcessingType=postProcessingType
         self.vt = vectorTransport
         self.vtComponents = vtComponents
         self.q = None
         self.ebq_global = None
-        assert self.vt != None, "vt==None not allowed for %s " %  self.postProcessingType
+        assert self.vt is not None, "vt is None not allowed for %s " %  self.postProcessingType
 
         #quadrature arrays
         self.q = self.vt.q
@@ -146,7 +170,7 @@ class VelocityPostProcessingAlgorithmBase:
 
 
             ##determine flux boundary information as before to start?
-            if self.vt.numericalFlux != None and self.vt.numericalFlux.useWeakDirichletConditions:
+            if self.vt.numericalFlux is not None and self.vt.numericalFlux.useWeakDirichletConditions:
                 self.fluxElementBoundaries[ci] = numpy.ones((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
             else:
                 self.fluxElementBoundaries[ci] = numpy.zeros((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
@@ -194,7 +218,7 @@ class VelocityPostProcessingAlgorithmBase:
 #        TODO:
 #         get rid of temporary creation, just add a scalar argument like daxpy
         flux = -1.0*self.vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(self.vt.mesh.exteriorElementBoundariesArray,
                                                             self.vt.mesh.elementBoundaryElementsArray,
                                                             self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -214,7 +238,7 @@ class VelocityPostProcessingAlgorithmBase:
 #        TODO
 #           add scalar multiple for call like remove boundary fluxes
         flux = self.vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(self.vt.mesh.exteriorElementBoundariesArray,
                                                             self.vt.mesh.elementBoundaryElementsArray,
                                                             self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -250,6 +274,37 @@ class VelocityPostProcessingAlgorithmBase:
         for ci in self.vtComponents:
             velocity= self.evaluateElementVelocityField(dgnodes,ci)
             self.velocityWriter.writeVectorFunctionXdmf_LowestOrderMixed(archive,velocity,tCount,init=initialPhase,name="velocity_vpp"+"_%s" % ci)
+
+    def getElementwiseFlux(self,ci):
+        """ 
+        Calculates elementwise fluxes given the boundary velocities.
+        
+        Arguments
+        ---------
+        ci : int
+            The component number
+        
+        Notes
+        -----
+        This function has not been extensively tested and it does not account for the 
+        source terms.
+        """
+        num_elements        = self.vt.mesh.nElements_global
+        num_edges           = self.vt.mesh.nElementBoundaries_element
+        num_edge_qdpts      = self.ebq[('velocity',ci)][0][0].shape[0]
+        self.element_flux   = numpy.zeros(shape = (num_elements,1))
+        
+        for element in range(num_elements):
+            for edge in range(num_edges):
+                edge_values = self.ebq[('velocity',ci)][element][edge]
+                norm_values = self.ebq['n'][element][edge]
+                int_weights = self.ebq[('dS_u',0)][element][edge]
+                for k in range(num_edge_qdpts):
+                    for t in range(len(edge_values[k])):
+                        self.element_flux[element] +=  (edge_values[k][t] *
+                                                        norm_values[k][t] *
+                                                        int_weights[k])
+
 
 class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
     """
@@ -555,6 +610,375 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                                       self.nodeStarElementsArray,
                                                                       self.nodeStarElementNeighborsArray)
 
+        self.nDOFs_element = {}
+        self.updateConservationJacobian = {}
+        for ci in self.vtComponents:
+            ##Start with original approach to "fix" local node star problems around boundaries
+            #when one or more faces may be omitted because of direct enforcement of Neumann boundary
+            #conditions
+            #start with no nodes to be "fixed" for Neumann boundaries
+            self.fluxBoundaryNodes[ci] = numpy.zeros((self.vt.mesh.nNodes_global,),'i')
+            if self.omitFluxBoundaryNodes == True:
+                #find
+                # 1) boundary nodes,
+                # 2) boundary nodes that have an adjoining boundary face w/o
+                #      flux boundary conditions specified
+                # 3) boundary nodes that are "free" ie not strong Dirichlet nodes
+                boundaryNodes = set()
+                nodesWithDirichletBoundaryFace = set()
+                freeBoundaryNodes = set()
+
+                for ebNE in range(self.vt.mesh.nExteriorElementBoundaries_global):
+                    ebN = self.vt.mesh.exteriorElementBoundariesArray[ebNE]
+                    for nN_ebN in range(self.vt.mesh.nNodes_elementBoundary):
+                        nN = self.vt.mesh.elementBoundaryNodesArray[ebN,nN_ebN]
+                        boundaryNodes.add(nN)
+                        if not self.fluxElementBoundaries[ci][ebNE]:
+                            nodesWithDirichletBoundaryFace.add(nN) #Dirichlet Node connected to at least one Dirichlet face
+                        #
+                    #local elementBoundary nodes
+                    eN  = self.vt.mesh.elementBoundaryElementsArray[ebN,0]
+                    for i in range(self.vt.l2g[ci]['nFreeDOF'][eN]):
+                        j = self.vt.l2g[ci]['freeLocal'][eN,i]
+                        if j < self.vt.mesh.nNodes_element:
+                            J = self.vt.mesh.elementNodesArray[eN,j]
+                            freeBoundaryNodes.add(J)
+                    #i
+                #ebNE
+                boundaryNodesNoDirichletFace = set.difference(boundaryNodes,nodesWithDirichletBoundaryFace)
+                dirichletNodesNoDirichletFace= set.difference(boundaryNodesNoDirichletFace,freeBoundaryNodes)
+                fluxNodesNoDirichletFace     = set.intersection(boundaryNodesNoDirichletFace,freeBoundaryNodes)
+                fluxElementBoundariesRemoved = set()
+                for ebNE in range(self.vt.mesh.nExteriorElementBoundaries_global):
+                    ebN = self.vt.mesh.exteriorElementBoundariesArray[ebNE]
+                    if self.fluxElementBoundaries[ci][ebNE] == 1:
+                        for nN in self.vt.mesh.elementBoundaryNodesArray[ebN]:
+                            if nN in dirichletNodesNoDirichletFace:
+                                self.fluxElementBoundaries[ci][ebNE] = 0
+                                fluxElementBoundariesRemoved.add(ebNE)
+
+                #update "free" nodes without a "Dirichlet" boundary collection
+                for ebNE in fluxElementBoundariesRemoved:
+                    ebN = self.vt.mesh.exteriorElementBoundariesArray[ebNE]
+                    for nN_ebN in range(self.vt.mesh.nNodes_elementBoundary):#nodes on elementBoundary
+                        nN = self.vt.mesh.elementBoundaryNodesArray[ebN,nN_ebN]
+                        fluxNodesNoDirichletFace.discard(nN)
+                #
+                ##\todo need to make this only be size of number exterior boundary nodes
+                #now done above self.fluxBoundaryNodes[ci] = numpy.zeros((self.vt.mesh.nNodes_global,),'i')
+                for nN in fluxNodesNoDirichletFace:
+                    #these  nodes are "overconstrained" for correction equation like interior nodes
+                    self.fluxBoundaryNodes[ci][nN] = 1
+                #
+            #end omitting flux boundary nodes
+            if not isinstance(self.vt.u[ci].femSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis):
+                self.solutionTestSpaceIsNotPWL[ci] = True
+                logEvent("pwl post-processing for finite element space"+str(self.vt.u[ci].femSpace))
+                #need to set up w and w*dS_f and weights to build residuals for linears out of R_{e,i}
+                #Point1
+                if self.testSpace is None:
+                    self.testSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
+                assert isinstance(self.testSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis)
+                self.alpha[ci] = numpy.zeros((self.testSpace.referenceFiniteElement.localFunctionSpace.dim,
+                                          self.vt.u[ci].femSpace.referenceFiniteElement.localFunctionSpace.dim),'d')
+                for j,w in enumerate(self.testSpace.referenceFiniteElement.localFunctionSpace.basis):
+                    for i,f in enumerate(self.vt.u[ci].femSpace.referenceFiniteElement.interpolationConditions.functionals):
+                        self.alpha[ci][j,i] = f(w)
+                self.elementResidual[ci] = numpy.zeros((self.vt.mesh.nElements_global,
+                                                        self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
+                                                       'd')
+                self.qv[ci] = numpy.zeros(
+                    (self.vt.mesh.nElements_global,
+                     self.vt.nQuadraturePoints_element,
+                     self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
+                    'd')
+                self.w[ci] = numpy.zeros(
+                    (self.vt.mesh.nElements_global,
+                     self.vt.mesh.nElementBoundaries_element,
+                     self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
+                     self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
+                    'd')
+                self.w_dS[ci] = numpy.zeros(
+                    (self.vt.mesh.nElements_global,
+                     self.vt.mesh.nElementBoundaries_element,
+                     self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
+                     self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
+                    'd')
+                self.testSpace.getBasisValues(self.vt.elementQuadraturePoints,
+                                              self.qv[ci])
+                self.testSpace.getBasisValuesTrace(self.vt.u[0].femSpace.elementMaps.permutations,
+                                                   self.vt.ebq['hat(x)'],
+                                                   self.w[ci])
+                cfemIntegrals.calculateWeightedShapeTrace(self.vt.elementBoundaryQuadratureWeights[('u',ci)],
+                                                          self.vt.ebq['sqrt(det(g))'],
+                                                          self.w[ci],
+                                                          self.w_dS[ci])
+            else:
+                #local element residuals
+                self.elementResidual[ci] = self.vt.elementResidual[ci]
+            #solution space not P^1
+            self.updateConservationJacobian[ci] = True
+            #RT0 specific information
+            self.nDOFs_element[ci] = self.vt.nSpace_global+1
+            self.q[('velocity_dofs',ci)] = numpy.zeros((self.vt.mesh.nElements_global,
+                                                        self.nDOFs_element[ci]),'d')
+            if self.q.has_key(('velocity_l2g',self.vtComponents[0])):
+                self.q[('velocity_l2g',ci)]  = self.q[('velocity_l2g',self.vtComponents[0])]
+            else:
+                self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.vt.mesh.nElementBoundaries_element),dtype='i').reshape((self.vt.mesh.nElements_global,self.vt.mesh.nElementBoundaries_element))
+        #ci
+        if self.testSpace is None:
+            #all the solution spaces must be C0P1
+            self.testSpace = self.vt.u[self.vtComponents[0]].femSpace
+    #init
+    def postprocess_component(self,ci,verbose=0):
+        """compute mass conservative velocity field following Larson and
+        Niklasson assuming a :math:`P^k C_0` Galerkin solution has already been
+        found
+
+        """
+        #must zero first time for average velocity
+        self.nodeStarFactors[ci].setU(0.0)
+        #correct first time through, in case there are Flux boundaries that
+        #are not enforced directly in postprocessed flux
+        #self.fluxElementBoundaries[ci] determines which boundaries have fluxes
+        #enforced directly
+        if self.solutionTestSpaceIsNotPWL:
+            useC=True
+            if useC:
+                cpostprocessing.calculateElementResidualPWL(self.alpha[ci],self.vt.elementResidual[ci],self.elementResidual[ci])
+            else:
+                self.elementResidual[ci].fill(0.0)
+                for eN in range(self.vt.mesh.nElements_global):
+                    for i in range(self.testSpace.referenceFiniteElement.localFunctionSpace.dim):
+                        for j in range(self.vt.u[ci].femSpace.referenceFiniteElement.localFunctionSpace.dim):
+                            self.elementResidual[ci][eN,i] += self.alpha[ci][i,j]*self.vt.elementResidual[ci][eN,j]
+        self.getConservationResidualPWL(ci,correctFlux=True)
+        if verbose > 0:
+            logEvent("""velpp Max local conservation (average velocity) = %12.5e""" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.subdomainMesh.nElements_owned])))
+
+        if self.updateConservationJacobian[ci]:
+            self.getConservationJacobianPWL(ci)
+            self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
+        cpostprocessing.calculateConservationFluxPWL(self.nElements_node,
+                                                     self.vt.internalNodesArray,
+                                                     self.fluxBoundaryNodes[ci],
+                                                     self.nodeStarFactors[ci])
+        #
+
+        self.getConservationResidualPWL(ci,correctFlux=False)
+
+        #add back fluxes for elementBoundaries that were Neumann but
+        #not enforced directly
+        self.addBoundaryFluxesBackToResidual(ci,self.fluxElementBoundaries[ci])
+
+        if verbose > 0:
+            logEvent("Max local conservation (dgp1 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.nElements_owned])))
+
+
+    def getConservationResidualPWL(self,ci,correctFlux=False):
+        """
+        compute conservation resiudal using current guess for element boundary flux
+        """
+        if correctFlux == True:
+            self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
+        cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
+                                                         self.vt.mesh.exteriorElementBoundariesArray,
+                                                         self.vt.mesh.elementBoundaryElementsArray,
+                                                         self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                         self.vt.mesh.elementNodesArray,
+                                                         self.vt.u[0].femSpace.dofMap.l2g,
+                                                         self.nodeStarElementsArray,
+                                                         self.nodeStarElementNeighborsArray,
+                                                         self.nElements_node,
+                                                         self.fluxElementBoundaries[ci],
+                                                         self.elementResidual[ci],
+                                                         self.vt.ebq_global[('velocityAverage',ci)],
+                                                         self.vt.ebq[('dS_u',ci)],
+                                                         self.w[ci],
+                                                         self.vt.ebq_global['n'],
+                                                         self.nodeStarFactors[ci],
+                                                         self.q[('conservationResidual',ci)], # output
+                                                         self.ebq_global[('velocity',ci)],    # output
+                                                         self.ebq[('velocity',ci)])           # output
+        #set boundary flux
+        updateCoef = 0.0 #overwrite first
+        cfemIntegrals.loadBoundaryFluxIntoGlobalElementBoundaryVelocity(self.vt.mesh.exteriorElementBoundariesArray,
+                                                                        self.fluxElementBoundaries[ci],
+                                                                        self.vt.ebq_global['n'],
+                                                                        self.vt.ebq_global[('totalFlux',ci)],
+                                                                        updateCoef,
+                                                                        self.vt.ebq_global[('velocity',ci)])
+
+        cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
+                                                                         self.vt.mesh.exteriorElementBoundariesArray,
+                                                                         self.vt.mesh.elementBoundaryElementsArray,
+                                                                         self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                         self.vt.ebq_global[('velocity',ci)],
+                                                                         self.vt.ebq[('velocity',ci)])
+
+        cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
+                                                                                       self.vt.mesh.elementBoundaryElementsArray,
+                                                                                       self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                       self.vt.ebq_global[('velocity',ci)],
+                                                                                       self.vt.ebqe[('velocity',ci)])
+
+        #end set boundary flux
+        #go from boundary flux to local element boundary representation
+        self.evaluateLocalVelocityRepresentation(ci)
+        self.getElementwiseFlux(ci)
+
+    #
+    def getConservationJacobianPWL(self,ci):
+        """
+        Build local systems for post-processing solve
+        """
+        cpostprocessing.calculateConservationJacobianPWL(self.vt.mesh.interiorElementBoundariesArray,
+                                                         self.vt.mesh.exteriorElementBoundariesArray,
+                                                         self.vt.mesh.elementBoundaryElementsArray,
+                                                         self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                         self.vt.mesh.elementNodesArray,
+                                                         self.vt.u[0].femSpace.dofMap.l2g,
+                                                         self.nodeStarElementsArray,
+                                                         self.nodeStarElementNeighborsArray,
+                                                         self.nElements_node,
+                                                         self.vt.internalNodesArray,
+                                                         self.fluxElementBoundaries[ci],
+                                                         self.fluxBoundaryNodes[ci],
+                                                         self.w_dS[ci],
+                                                         self.vt.ebq_global['n'],
+                                                         self.nodeStarFactors[ci])
+
+    def evaluateLocalVelocityRepresentation(self,ci):
+        """
+        project to :math:`RT_0` velocity from element boundary fluxes
+        """
+        cpostprocessing.projectElementBoundaryVelocityToRT0fluxRep(self.vt.ebq[('dS_u',ci)],
+                                                                   self.vt.ebq['n'],
+                                                                   self.ebq[('velocity',ci)],
+                                                                   self.q[('velocity_dofs',ci)])
+        cpostprocessing.getElementRT0velocityValuesFluxRep(self.vt.mesh.nodeArray,
+                                                           self.vt.mesh.elementNodesArray,
+                                                           self.vt.q['abs(det(J))'],
+                                                           self.vt.q['x'],
+                                                           self.q[('velocity_dofs',ci)],
+                                                           self.q[('velocity',ci)])
+    def evaluateElementVelocityField(self,x,ci):
+        """
+        evaluate velocity field assuming velocity_dofs already calculated
+        for now assumes x shaped like nE x nq x 3
+        """
+        assert len(x.shape) == 3, "wrong shape for x= %s " % x.shape
+        nE = x.shape[0]; nq = x.shape[1]; nd = self.vt.nSpace_global
+        vx = numpy.zeros((nE,nq,nd),'d')
+        cpostprocessing.getElementRT0velocityValuesFluxRep(self.vt.mesh.nodeArray,
+                                                           self.vt.mesh.elementNodesArray,
+                                                           self.vt.q['abs(det(J))'],
+                                                           x,
+                                                           self.q[('velocity_dofs',ci)],
+                                                           vx)
+        return vx
+class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
+    """Base class for higher order RT elements.
+
+    Attributes
+    ----------
+    globalDOF2globalElementList : list of lists
+        Lists the global element numbers associated with each degree of 
+        freedom.
+    globalDOFGlobalElement2StarElement : list of dicts
+        Dictionaries of maps of local element numbers to global element
+        numbers for each degree of freedom.
+    dofStarElementsArray : list of lists
+        For every element DOF, this array lists the element's local
+        mapping number.
+    dofStarElementsNeighborsArray : list of lists of lists
+        Provides local neighboring elements for each DOF on an element.
+    """
+    def __init__(self,vectorTransport=None,vtComponents=[0],omitFluxBoundaryNodes=True):
+        VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='pwl',
+                                                     vectorTransport=vectorTransport,
+                                                     vtComponents=vtComponents)
+        #how is the local velocity represented
+        #  2 -- RT0, local rep is \sum^d_{i=0}V^i\vec N_{T,i},
+        #           \vec N_{T,i} = \frac{1}{d|E|}(\vec x - p_i), i=0,...,d
+        self.localVelocityRepresentationFlag = 2
+
+        self.omitFluxBoundaryNodes=omitFluxBoundaryNodes
+
+        #to handle some spaces being P^k k > 1
+        self.alpha = {}
+        self.solutionTestSpaceIsNotPWL = {}
+        self.elementResidual = {}
+        self.testSpace = None
+        #mesh information needed
+        #building mesh infrastructure
+        self.globalDOF2globalElementList = [[] for nN in range(self.vt.mesh.nNodes_global + self.vt.mesh.nEdges_global)]
+        
+        for eN in range(self.vt.mesh.nElements_global):
+            for nN in range(self.vt.mesh.nNodes_element):
+                nN_global = self.vt.mesh.elementNodesArray[eN,nN]
+                self.globalDOF2globalElementList[nN_global].append(eN)
+            for nN in range(self.vt.mesh.nElementBoundaries_element):
+                e_global = self.vt.mesh.elementBoundariesArray[eN,nN]
+                self.globalDOF2globalElementList[e_global+len(self.vt.mesh.nodeArray)].append(eN)
+
+        self.globalDOFGlobalElement2StarElement = []
+        self.nElements_DOF = numpy.zeros((self.vt.mesh.nNodes_global + self.vt.mesh.nElementBoundaries_global,),'i')
+        self.dofStarElementsArray = numpy.ones((self.vt.mesh.nElements_global,
+                                                 self.vt.mesh.nNodes_element + self.vt.mesh.nElementBoundaries_element),'i')
+        self.dofStarElementsArray[:] = -1
+        self.dofStarElementNeighborsArray = numpy.zeros((self.vt.mesh.nElements_global,
+                                                         self.vt.mesh.nNodes_element + self.vt.mesh.nElementBoundaries_element,
+                                                         self.vt.mesh.nElementBoundaries_element),
+                                                        'i')
+
+        for I in range(self.vt.mesh.nNodes_global + self.vt.mesh.nElementBoundaries_global):
+            self.globalDOF2globalElementList[I].sort()
+            self.nElements_DOF[I] = len(self.globalDOF2globalElementList[I])
+            self.globalDOFGlobalElement2StarElement.append(dict([(eN_global,eN_node) for eN_node,eN_global in enumerate(self.globalDOF2globalElementList[I])]))
+        for ebNI in range(self.vt.mesh.nInteriorElementBoundaries_global):
+            ebN = self.vt.mesh.interiorElementBoundariesArray[ebNI]
+            left_eN_global  = self.vt.mesh.elementBoundaryElementsArray[ebN,0]
+            right_eN_global = self.vt.mesh.elementBoundaryElementsArray[ebN,1]
+            left_ebN_element  = self.vt.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
+            right_ebN_element = self.vt.mesh.elementBoundaryLocalElementBoundariesArray[ebN,1]
+            # start by storing the interior edge
+            self.dofStarElementsArray[left_eN_global,left_ebN_element+self.vt.mesh.nNodes_element] = self.globalDOFGlobalElement2StarElement[ebN+self.vt.mesh.nNodes_global][left_eN_global]
+            self.dofStarElementsArray[right_eN_global,right_ebN_element+self.vt.mesh.nNodes_element] = self.globalDOFGlobalElement2StarElement[ebN+self.vt.mesh.nNodes_global][right_eN_global]
+            self.dofStarElementNeighborsArray[left_eN_global,left_ebN_element+self.vt.mesh.nNodes_element,left_ebN_element] = self.globalDOFGlobalElement2StarElement[ebN+self.vt.mesh.nNodes_global][right_eN_global]
+            self.dofStarElementNeighborsArray[right_eN_global,right_ebN_element+self.vt.mesh.nNodes_element,right_ebN_element] = self.globalDOFGlobalElement2StarElement[ebN+self.vt.mesh.nNodes_global][left_eN_global]
+            # next populate the nodes
+            for i in range(self.vt.mesh.nNodes_element):
+                left_I = self.vt.mesh.elementNodesArray[left_eN_global,i]
+                self.dofStarElementsArray[left_eN_global,i] = self.globalDOFGlobalElement2StarElement[left_I][left_eN_global]
+                if i != left_ebN_element:
+                    self.dofStarElementNeighborsArray[left_eN_global,i,left_ebN_element] = self.globalDOFGlobalElement2StarElement[left_I][right_eN_global]
+                 #if
+                right_I=self.vt.mesh.elementNodesArray[right_eN_global,i]
+                self.dofStarElementsArray[right_eN_global,i] = self.globalDOFGlobalElement2StarElement[right_I][right_eN_global]
+                if i != right_ebN_element:
+                    self.dofStarElementNeighborsArray[right_eN_global,i,right_ebN_element] = self.globalDOFGlobalElement2StarElement[right_I][left_eN_global]
+
+        for ebNE in range(self.vt.mesh.nExteriorElementBoundaries_global):
+            ebN = self.vt.mesh.exteriorElementBoundariesArray[ebNE]
+            eN_global   = self.vt.mesh.elementBoundaryElementsArray[ebN,0]
+            ebN_element  = self.vt.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
+            self.dofStarElementsArray[eN_global, ebN_element+self.vt.mesh.nNodes_element] = self.globalDOFGlobalElement2StarElement[ebN+self.vt.mesh.nNodes_global][eN_global]
+            for i in range(self.vt.mesh.nNodes_element):
+                I = self.vt.mesh.elementNodesArray[eN_global,i]
+                self.dofStarElementsArray[eN_global,i] = self.globalDOFGlobalElement2StarElement[I][eN_global]
+
+#        pdb.set_trace()
+            #i
+        #ebNE
+        self.nodeStarFactors = {}
+        for ci in self.vtComponents:
+            import pdb
+#            pdb.set_trace()
+            self.nodeStarFactors[ci] = cpostprocessing.NodeStarFactor(self.nElements_DOF,
+                                                                      self.dofStarElementsArray,
+                                                                      self.dofStarElementNeighborsArray)
 
         #
         self.nDOFs_element = {}
@@ -622,9 +1046,9 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                 self.solutionTestSpaceIsNotPWL[ci] = True
                 logEvent("pwl post-processing for finite element space"+str(self.vt.u[ci].femSpace))
                 #need to set up w and w*dS_f and weights to build residuals for linears out of R_{e,i}
-                if self.testSpace == None:
-                    self.testSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
-                assert isinstance(self.testSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis)
+                if self.testSpace is None:
+                    self.testSpace = FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
+                assert isinstance(self.testSpace,FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis)
                 self.alpha[ci] = numpy.zeros((self.testSpace.referenceFiniteElement.localFunctionSpace.dim,
                                           self.vt.u[ci].femSpace.referenceFiniteElement.localFunctionSpace.dim),'d')
                 for j,w in enumerate(self.testSpace.referenceFiniteElement.localFunctionSpace.basis):
@@ -655,6 +1079,8 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                 self.testSpace.getBasisValuesTrace(self.vt.u[0].femSpace.elementMaps.permutations,
                                                    self.vt.ebq['hat(x)'],
                                                    self.w[ci])
+                import pdb
+#                pdb.set_trace()
                 cfemIntegrals.calculateWeightedShapeTrace(self.vt.elementBoundaryQuadratureWeights[('u',ci)],
                                                           self.vt.ebq['sqrt(det(g))'],
                                                           self.w[ci],
@@ -676,16 +1102,17 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
             else:
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.vt.mesh.nElementBoundaries_element),dtype='i').reshape((self.vt.mesh.nElements_global,self.vt.mesh.nElementBoundaries_element))
         #ci
-        if self.testSpace == None:
+        if self.testSpace is None:
             #all the solution spaces must be C0P1
             self.testSpace = self.vt.u[self.vtComponents[0]].femSpace
     #init
     def postprocess_component(self,ci,verbose=0):
-        """compute mass conservative velocity field following Larson and
-        Niklasson assuming a :math:`P^k C_0` Galerkin solution has already been
-        found
-
         """
+        compute mass conservative velocity field following Larson and Niklasson assuming a P^k C0
+        Galerkin solution has already been found
+        """
+        self.getElementwiseFlux(0)
+
         #must zero first time for average velocity
         self.nodeStarFactors[ci].setU(0.0)
         #correct first time through, in case there are Flux boundaries that
@@ -693,7 +1120,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         #self.fluxElementBoundaries[ci] determines which boundaries have fluxes
         #enforced directly
         if self.solutionTestSpaceIsNotPWL:
-            useC=True
+            useC=False
             if useC:
                 cpostprocessing.calculateElementResidualPWL(self.alpha[ci],self.vt.elementResidual[ci],self.elementResidual[ci])
             else:
@@ -702,6 +1129,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                     for i in range(self.testSpace.referenceFiniteElement.localFunctionSpace.dim):
                         for j in range(self.vt.u[ci].femSpace.referenceFiniteElement.localFunctionSpace.dim):
                             self.elementResidual[ci][eN,i] += self.alpha[ci][i,j]*self.vt.elementResidual[ci][eN,j]
+                            
         self.getConservationResidualPWL(ci,correctFlux=True)
         if verbose > 0:
             logEvent("""velpp Max local conservation (average velocity) = %12.5e""" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.subdomainMesh.nElements_owned])))
@@ -709,37 +1137,44 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         if self.updateConservationJacobian[ci]:
             self.getConservationJacobianPWL(ci)
             self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
-
-        cpostprocessing.calculateConservationFluxPWL(self.nElements_node,
+        
+        cpostprocessing.calculateConservationFluxPWL(self.nElements_DOF,
                                                      self.vt.internalNodesArray,
                                                      self.fluxBoundaryNodes[ci],
                                                      self.nodeStarFactors[ci])
         #
         self.getConservationResidualPWL(ci,correctFlux=False)
-
         #add back fluxes for elementBoundaries that were Neumann but
         #not enforced directly
         self.addBoundaryFluxesBackToResidual(ci,self.fluxElementBoundaries[ci])
 
+        # developmental
+#        self.conservativeVelocityCalculation()
+        # end developmental
+
         if verbose > 0:
             logEvent("Max local conservation (dgp1 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.nElements_owned])))
-
+        
     def getConservationResidualPWL(self,ci,correctFlux=False):
         """
         compute conservation resiudal using current guess for element boundary flux
         """
         if correctFlux == True:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
-
+        
+        self.getElementwiseFlux(ci)
+ #        import pdb
+ #        pdb.set_trace()
 
         cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
                                                          self.vt.mesh.exteriorElementBoundariesArray,
                                                          self.vt.mesh.elementBoundaryElementsArray,
                                                          self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
                                                          self.vt.mesh.elementNodesArray,
-                                                         self.nodeStarElementsArray,
-                                                         self.nodeStarElementNeighborsArray,
-                                                         self.nElements_node,
+                                                         self.vt.u[0].femSpace.dofMap.l2g,
+                                                         self.dofStarElementsArray,
+                                                         self.dofStarElementNeighborsArray,
+                                                         self.nElements_DOF,
                                                          self.fluxElementBoundaries[ci],
                                                          self.elementResidual[ci],
                                                          self.vt.ebq_global[('velocityAverage',ci)],
@@ -749,8 +1184,9 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                          self.nodeStarFactors[ci],
                                                          self.q[('conservationResidual',ci)],
                                                          self.ebq_global[('velocity',ci)],
-                                                         self.ebq[('velocity',ci)])
-        #set boundary flux
+                                                         self.ebq[('velocity',ci)])   # i'm not crazy about the nodeStarFactors term here...should it be dofStarFactors?
+         #set boundary flux
+
         updateCoef = 0.0 #overwrite first
         cfemIntegrals.loadBoundaryFluxIntoGlobalElementBoundaryVelocity(self.vt.mesh.exteriorElementBoundariesArray,
                                                                         self.fluxElementBoundaries[ci],
@@ -758,7 +1194,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                                         self.vt.ebq_global[('totalFlux',ci)],
                                                                         updateCoef,
                                                                         self.vt.ebq_global[('velocity',ci)])
-
 
         cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
                                                                          self.vt.mesh.exteriorElementBoundariesArray,
@@ -778,6 +1213,9 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         #end set boundary flux
         #go from boundary flux to local element boundary representation
         self.evaluateLocalVelocityRepresentation(ci)
+        self.getElementwiseFlux(ci)
+
+
     #
     def getConservationJacobianPWL(self,ci):
         """
@@ -788,19 +1226,20 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                          self.vt.mesh.elementBoundaryElementsArray,
                                                          self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
                                                          self.vt.mesh.elementNodesArray,
-                                                         self.nodeStarElementsArray,
-                                                         self.nodeStarElementNeighborsArray,
-                                                         self.nElements_node,
+                                                         self.vt.u[0].femSpace.dofMap.l2g,
+                                                         self.dofStarElementsArray,
+                                                         self.dofStarElementNeighborsArray,
+                                                         self.nElements_DOF,
                                                          self.vt.internalNodesArray,
                                                          self.fluxElementBoundaries[ci],
                                                          self.fluxBoundaryNodes[ci],
                                                          self.w_dS[ci],
                                                          self.vt.ebq_global['n'],
-                                                         self.nodeStarFactors[ci])
+                                                         self.nodeStarFactors[ci])  # i'm not crazy about the nodeStarFactors term here...should it be dofStarFactors?
 
     def evaluateLocalVelocityRepresentation(self,ci):
         """
-        project to :math:`RT_0` velocity from element boundary fluxes
+        project to RT_0 velocity from element boundary fluxes
         """
         cpostprocessing.projectElementBoundaryVelocityToRT0fluxRep(self.vt.ebq[('dS_u',ci)],
                                                                    self.vt.ebq['n'],
@@ -827,6 +1266,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                            self.q[('velocity_dofs',ci)],
                                                            vx)
         return vx
+
 
 class VPP_PWL_BDM(VPP_PWL_RT0):
     """Local Larson-Niklasson method with BDM1 representation for element
@@ -893,7 +1333,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
         cpostprocessing.factorLocalBDM1projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
     def computeGeometricInfo(self):
-        if self.BDMcomponent != None:
+        if self.BDMcomponent is not None:
             self.computeBDM1projectionMatrices()
 
     def evaluateLocalVelocityRepresentation(self,ci):
@@ -942,6 +1382,438 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
                                                                 vx)
 
         return vx
+
+class VPP_PWL_BDM2(VPP_PWL_RT0):
+    """
+    This class is intended to implement BDM2 elements in proteus
+
+    """
+    from cpostprocessing import buildLocalBDM2projectionMatrices,factorLocalBDM2projectionMatrices 
+    from cpostprocessing import solveLocalBDM2projection,getElementBDM2velocityValuesLagrangeRep,buildBDM2rhs
+    def __init__(self,vectorTransport=None,vtComponents=[0]):
+        VPP_PWL_RT0.__init__(self,vectorTransport=vectorTransport,vtComponents=vtComponents)
+        self.postProcessingType = 'pwl-bdm2'
+        self.localVelocityRepresentationFlag = 0
+        self.degree = 2
+        self.set_BDM_dimensions(self.degree)
+
+        # Question - the space is set indepenedently for the interior test functions.  Should this be the case for the trial functions as well?
+        # at a minimum there should be an assert preventing the user from using Linear functions in the BDM2 projection.
+        
+        for ci in self.vtComponents:
+            self.nDOFs_element[ci] = self.dim  # BDM2 requires quadratic elements
+            self.q[('velocity_dofs',ci)] = numpy.zeros((self.vt.mesh.nElements_global,self.nDOFs_element[ci]),'d')
+            if ci != self.vtComponents[0] and self.q.has_key(('velocity_l2g',self.vtComponents[0])):
+                self.q[('velocity_l2g',ci)]  = self.q[('velocity_l2g',self.vtComponents[0])]
+            else:
+                self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.nDOFs_element[ci]),dtype='i').reshape((self.vt.mesh.nElements_global,self.nDOFs_element[ci]))
+
+        self.BDMcomponent=self.vtComponents[0]
+        self.BDMprojectionMat_element = numpy.zeros((self.vt.mesh.nElements_global,
+                                                     self.nDOFs_element[self.BDMcomponent],
+                                                     self.nDOFs_element[self.BDMcomponent]),
+                                                    'd')
+        self.BDMprojectionMatPivots_element = numpy.zeros((self.vt.mesh.nElements_global,
+                                                           self.nDOFs_element[self.BDMcomponent]),
+                                                          'i')
+
+        self.interiorTestSpace = None
+        self.setInteriorTestSpace(self.degree)        
+        self.getInteriorTestGradients()
+        self.getInteriorDivFreeElement()
+        self.setEdgeFlags()
+        self.computeBDM2projectionMatrices()
+        
+
+    def setInteriorVelocityValues(self,ci):
+        """ This function sets the interior velocity values based on the solution to the vt-problem. """
+        if self.vt.q.has_key(('a',ci,ci)):
+            assert self.vt.q.has_key(('grad(phi)',ci))
+            updateCoef = 0.0 #overwrite first time
+            if self.vt.sd:
+                cpostprocessing.updateDiffusiveVelocityPointEval_sd(updateCoef,
+                                                                    self.vt.coefficients.sdInfo[(ci,ci)][0],
+                                                                    self.vt.coefficients.sdInfo[(ci,ci)][1],
+                                                                    self.vt.q[('a',ci,ci)],
+                                                                    self.vt.q[('grad(phi)',ci)],
+                                                                    self.q[('velocity',ci)])
+            else:
+                cpostprocessing.updateDiffusiveVelocityPointEval(updateCoef,
+                                                              self.vt.q[('a',ci,ci)],
+                                                              self.vt.q[('grad(phi)',ci)],
+                                                                 self.q[('velocity',ci)])
+        if self.vt.q.has_key(('f',ci)):
+            updateCoef = 1.0
+            cpostprocessing.updateAdvectiveVelocityPointEval(updateCoef,
+                                                             self.vt.q[('f',ci)],
+                                                             self.q[('velocity',ci)])
+
+    def set_BDM_dimensions(self,degree):
+        ''' Calculate and set the BDM polynomial dimension
+            input - degree
+        '''
+        if self.vt.nSpace_global == 2:
+            self.dim = (degree+1)*(degree+2)
+            self.boundary_dim_per_edge = degree+1
+            self.boundary_dim = 3*self.boundary_dim_per_edge
+            self.interior_dim = self.dim - self.boundary_dim
+
+        elif self.vt.nSpace_global == 3:
+            self.dim = (degree+1)*(degree+2)*(degree+3) / 2
+            self.boundary_dim_per_edge = degree*(degree+1)
+            self.boundary_dim = 4 * self.boundary_dim_per_edge
+            self.interior_dim = self.dim - self.boundary_dim
+            
+        else:
+            # Need to raise exception here.
+            pass
+
+    def get_num_sigmaBasisElements(self):
+        if self.vt.nSpace_global==2:
+            return 1
+        if self.vt.nSpace_global==3:
+            return 3
+
+    def setInteriorTestSpace(self,degree):
+        ''' This function sets the interior test space corresponding to the dimension
+        of the BDM space        
+        '''
+        if degree==2:
+            self.interiorTestSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
+        else:
+            pass
+
+    def setEdgeFlags(self):
+        """This function sets the edge flags for the bdm2 loops """
+        if self.vt.nSpace_global == 2:
+            self.edgeFlags = numpy.array([1,2,4,0,2,5,0,1,3])
+        elif self.vt.nSpace_global == 3:
+            self.edgeFlags = numpy.array([1,2,3,5,6,8, 0,2,3,6,7,9, 0,1,3,4,8,9, 0,1,2,4,5,7])
+            # Note - the numbers above should be correct but have not been tested.
+        else:
+            pass # This should be an assert.
+
+    def getInteriorTestGradients(self):
+        '''
+        Calculate and return the gradient values for polynomials of degree 1
+        '''
+        # Initialze some arrays to store the results...
+        self.interiorTestGradients = numpy.zeros((self.vt.mesh.nElements_global,
+                                              self.vt.nQuadraturePoints_element,
+                                              self.interiorTestSpace.referenceFiniteElement.localFunctionSpace.dim,
+                                              self.interiorTestSpace.referenceFiniteElement.referenceElement.dim),
+                                              'd')
+        self.weightedInteriorTestGradients = numpy.zeros((self.vt.mesh.nElements_global,
+                                              self.vt.nQuadraturePoints_element,
+                                              self.interiorTestSpace.referenceFiniteElement.localFunctionSpace.dim,
+                                              self.interiorTestSpace.referenceFiniteElement.referenceElement.dim),
+                                              'd') 
+        self.interiorTestSpace.getBasisGradientValues(self.vt.elementQuadraturePoints,
+                                                      self.vt.q['inverse(J)'],
+                                                      self.interiorTestGradients)
+        # TODO - remove weighted shape PIOLa
+        cfemIntegrals.calculateWeightedShapeGradients(self.vt.elementQuadratureWeights[('f',0)],
+                                                      self.vt.q['abs(det(J))'],
+                                                      self.interiorTestGradients,
+                                                      self.weightedInteriorTestGradients)
+
+    def sigmaBasisElement(self,dim,component,point,i=0):
+        if dim == 2:
+            if component == 0:
+                return point[0] - point[0]**2 - 2*point[0]*point[1]
+            if component == 1:
+                return -point[1] + point[1]**2 + 2*point[0]*point[1]
+        if dim == 3:
+            if i == 0:
+                if component == 0:
+                    # -xy + xz
+                    return point[0]*(1. - point[0] - 2.*point[1] - point[2])
+                if component == 1:
+                    # xy - yz
+                    return point[1]*(-1. + 2.*point[0] + point[1] + point[2])
+                if component == 2:
+                    # -xz + yz
+                    return 0.
+            if i == 1:
+                if component == 0:
+                    # 2xy - 2xz
+                    return 2*point[0]*(point[1] - point[2])
+                if component == 1:
+                    # y - 3xy - y*y
+                    return point[1]*(1 - 3*point[0] - point[1])
+                if component == 2:
+                    # -z + 3xz + z*z
+                    return point[2]*(3*point[0] - 1)
+            if i == 2:
+                if component == 0:
+                    # x - x*x - 2xy - xz
+                    return point[0]*(1 - point[0] - point[1] )
+                if component == 1:
+                    # -y + 2xy + y*y + y*z
+                    return point[1]*(-1. + 3*point[0] + point[1])
+                if component == 2:
+                    return -point[0]*point[2]
+
+    def getInteriorDivFreeElement(self):
+        '''
+        Calculate and return the values of the divergence free interior test function.
+        Note - calculating this integral requires the use of the Piola transformation.
+        '''
+
+        n_xi = self.vt.nQuadraturePoints_element
+        psi = numpy.zeros((n_xi, self.vt.nSpace_global, self.get_num_sigmaBasisElements() ), 'd')
+        
+        # start by calculating the interior DivFreeElements
+        self.interiorDivFreeElement = numpy.zeros((self.vt.mesh.nElements_global,
+                                                   self.vt.nQuadraturePoints_element,
+                                                   self.vt.nSpace_global,
+                                                   self.get_num_sigmaBasisElements() ),'d')
+        
+        self.weightedInteriorDivFreeElement = numpy.zeros((self.vt.mesh.nElements_global,
+                                                           self.vt.nQuadraturePoints_element,
+                                                           self.vt.nSpace_global,
+                                                           self.get_num_sigmaBasisElements() ),'d')
+        
+        for k in range(n_xi):
+            for j in range(self.vt.nSpace_global):
+                for i in range(self.get_num_sigmaBasisElements() ):
+                    psi[k,j,i] = self.sigmaBasisElement(self.vt.nSpace_global,
+                                                        j,
+                                                        self.vt.elementQuadraturePoints[k],
+                                                        i)
+        # TODO - add C routines for the following functions (see FemTools.py getBasisValues for an example)
+
+        # Populate interiorDivFreeElement 
+        for eN in range(self.vt.mesh.nElements_global):
+            for k in range(n_xi):
+                for j in range(self.vt.nSpace_global):
+                    for i in range(self.get_num_sigmaBasisElements()):
+                        self.interiorDivFreeElement[eN,k,j,i] = psi[k,j,i]
+        
+        # Next, populate weightedInteriorDivFreeElement
+        for eN in range(self.vt.mesh.nElements_global):
+            for k in range(n_xi):
+                for j in range(self.vt.nSpace_global):
+                    # Apply Jacobian matrix
+                    for i in range(self.get_num_sigmaBasisElements()):
+                        for h in range(self.vt.nSpace_global):
+                            self.weightedInteriorDivFreeElement[eN,k,j,i] += self.interiorDivFreeElement[eN,k,h,i]*self.q['J'][eN][k][j][h]
+                    for i in range(self.get_num_sigmaBasisElements()):
+                        # scale by Jacobian
+                        self.weightedInteriorDivFreeElement[eN,k,j,i] *= 1./self.vt.q['abs(det(J))'][eN][k]
+                        # scale with quadrature weight
+                        self.weightedInteriorDivFreeElement[eN,k,j,i] *= self.vt.q['dV'][eN][k]
+
+
+        self.piola_trial_function = numpy.zeros((self.vt.mesh.nElements_global,
+                                                  self.vt.nQuadraturePoints_element,
+                                                  self.dim,
+                                                  self.vt.nSpace_global),'d')
+
+        for eN in range(self.vt.mesh.nElements_global):
+            for k in range(self.vt.nQuadraturePoints_element):
+                for i in range(self.dim / self.vt.nSpace_global):
+                    for j in range(self.vt.nSpace_global):
+                        self.piola_trial_function[eN,k,i*self.vt.nSpace_global+j,j] = self.q[('w',self.BDMcomponent)][eN][k][i]
+
+    def computeBDM2projectionMatrices(self):
+
+        cpostprocessing.buildLocalBDM2projectionMatrices(self.degree,
+                                                         self.vt.ebq[('w*dS_u',self.BDMcomponent)],
+#                                                         self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
+                                                         self.vt.ebq['n'],
+                                                         self.vt.ebq[('v',self.BDMcomponent)],#self.w[self.BDMcomponent]
+                                                         self.vt.q[('w',self.BDMcomponent)],          # interior integrals - gradient part
+                                                         self.weightedInteriorTestGradients,       # interior integrals - gradient part
+                                                         self.weightedInteriorDivFreeElement,      # interior integrals - divFree part
+                                                         self.piola_trial_function,                # interior integrals - divFree part
+                                                         self.edgeFlags,
+                                                         self.BDMprojectionMat_element)            # projection matrix
+
+        cpostprocessing.factorLocalBDM2projectionMatrices(self.BDMprojectionMat_element,
+                                                          self.BDMprojectionMatPivots_element)
+
+
+
+    def flagNeumannBoundaryEdges(self):
+        ''' This function flags neumann boundaries.
+
+        TODO - WIP - part of some experimental functions
+        designed for LN approximations.
+        NOTE - Currently this function is not operational and
+        it returns a dictionary which suggests all edges
+        are Dirichlet.
+        '''
+        self.neumann_edge_dict = {}
+        for edge in self.vt.mesh.exteriorElementBoundariesArray:
+            self.neumann_edge_dict[edge] = False
+
+    def conservativeVelocityCalculation(self):
+        '''Serial implimentation of LN algorithm.
+
+        TODO - This function is experimental and should be
+        refactor once completed.
+        '''
+        # Initialize the matrix - serial LN requires a system
+        # the size of the number of elements in the mesh.
+        import pdb
+#        pdb.set_trace()
+        num_elements = self.vt.mesh.nElements_global
+        num_element_quadpts = self.vt.q['dV'].shape[1]
+        num_bdy_quadpts = self.vt.ebq_global['n'][0].shape[0]
+        num_edges = self.vt.mesh.nElementBoundaries_global
+        dim = self.vt.ebq_global['n'][0].shape[1]
+        h = self.vt.mesh.h
+
+        # Flag Neumann terms
+        self.flagNeumannBoundaryEdges()
+        self.getAverageFlux()
+
+        # Allocate space for matrices
+        A = numpy.zeros(shape=(num_elements,num_elements))
+        b = numpy.zeros(shape=(num_elements,1))
+        flux_approx = numpy.zeros(shape=(num_edges,1))
+
+        # loop over all elements in the mesh
+        for k in range(num_elements):
+            # Need to calculate the source term integral
+            # Eg. - int_{K} (f, 1)_{K}
+            for pt in range(num_element_quadpts):
+                # Q for ck - is q[('r',0)][k][pt] effectively f 
+                b[k] += (self.vt.q[('r',0)][k][pt] *  
+                         self.vt.q['dV'][k][pt])
+#            pdb.set_trace()
+            # Need to loop over edges
+            # Need to find Neumann edges and Dirichlet edges
+            for local_edge_num , global_edge_num in enumerate(self.vt.mesh.elementBoundariesArray[k]):
+                print 'element : ' + `k`
+                # Diagonal element
+                A[k][k] += 1/h * ( sum(self.vt.ebq[('dS_u',0)][k][local_edge_num]) )
+                # Calculate A's off-diagonal terms
+                if global_edge_num in self.vt.mesh.interiorElementBoundariesArray:
+                    elements = self.vt.mesh.elementBoundaryElementsArray[global_edge_num]
+                    if k == elements[0]:
+                        j = elements[1]
+                    else:
+                        j = elements[0]
+                    # off diagonal elements
+                    A[k][j] += ( sum(self.vt.ebq[('dS_u',0)][k][local_edge_num]) )
+                # Calculate Flux Inner Products
+                for pt in range(num_bdy_quadpts):
+                    for comp in range(dim):
+                        b[k] += ( self.flux_average[global_edge_num] *
+                                  self.vt.ebq[('dS_u',0)][k][local_edge_num][pt] )
+        print 'loop done'
+        V = numpy.linalg.solve(A,b)
+        pdb.set_trace()
+#       self.CorrectedFlux = self.flux_average - V
+
+    def getAverageFlux(self,ci):
+        '''Helper function to cacluate the average flux along the mesh boundaries. '''
+        # Step 1 : calculate the normal component of all velocities
+
+        num_elements = self.vt.mesh.nElements_global
+        num_edges = self.vt.mesh.nElementBoundaries_global
+        num_bdy_quadpts = self.vt.ebq_global['n'][0].shape[0]
+        dim = self.vt.ebq_global['n'][0].shape[1]
+
+        flux_array = numpy.zeros(shape=(num_edges,2))
+        self.flux_average = numpy.zeros(shape=(num_edges,1))
+
+        for element in range(num_elements):
+            for local_edge_num , global_edge_num in enumerate(self.vt.mesh.elementBoundariesArray[element]):
+                elements = self.vt.mesh.elementBoundaryElementsArray[global_edge_num]
+                j = 0
+                if element == elements[1]:
+                    j = 1
+                for pt in range(num_bdy_quadpts):
+                    for comp in range(dim):
+                        flux_array[global_edge_num][j] += (self.vt.ebq['n'][element][local_edge_num][pt][comp] *
+                                                           self.vt.ebq[('velocity',ci)][element][local_edge_num][pt][comp] )
+        for edge in range(num_edges):
+            if edge in self.vt.mesh.interiorElementBoundariesArray:
+                self.flux_average[edge] = (flux_array[edge][0] + flux_array[edge][1]) / 2.0
+            else:
+                self.flux_average[edge] = flux_array[edge][0]
+
+    def computeGeometricInfo(self):
+        if self.BDMcomponent is not None:
+            self.computeBDM2projectionMatrices()
+
+    def evaluateLocalVelocityRepresentation(self,ci,velocity_field_set=False):
+        """
+        This function projects the solution of the vt transport problem into the
+        BDM2 space.
+
+        Parameters
+        ----------
+        ci : int
+            The solution component being projected.
+        velocity_field_set: boolean
+            Set to true when the quadrature values for the velocity function are 
+            already defined (this is typically used for testing).
+        """
+        assert self.nDOFs_element[ci] == self.dim , "wrong size for BDM"
+            
+        if self.degree >= 2 and velocity_field_set==False:
+            for ci in self.vtComponents:
+                self.setInteriorVelocityValues(ci)
+
+        self.buildBDM2rhs(self.BDMprojectionMat_element,
+                          self.BDMprojectionMatPivots_element,
+                          self.ebq[('w*dS_u',self.BDMcomponent)],
+#                          self.w_dS[ci],
+                          self.vt.ebq['n'],
+                          self.weightedInteriorTestGradients,
+                          self.weightedInteriorDivFreeElement,
+                          self.ebq[('velocity',ci)],
+                          self.q[('velocity',ci)],
+                          self.q[('velocity_dofs',ci)],
+                          self.edgeFlags)
+        
+        self.solveLocalBDM2projection(self.BDMprojectionMat_element,
+                                      self.BDMprojectionMatPivots_element,
+#                                      self.w_dS[ci],
+                                      self.ebq[('w*dS_u',self.BDMcomponent)],
+                                      self.vt.ebq['n'],
+                                      self.weightedInteriorTestGradients,
+                                      self.ebq[('velocity',ci)],
+                                      self.q[('velocity',ci)],
+                                      self.q[('velocity_dofs',ci)])
+
+        cpostprocessing.getElementBDM2velocityValuesLagrangeRep(self.vt.q[('w',ci)],
+                                                                self.q[('velocity_dofs',ci)],
+                                                                self.vt.q[('velocity',ci)])
+
+
+    def evaluateElementVelocityField(self,x,ci):
+        """
+        evaluate velocity field assuming velocity_dofs already calculated
+        for now assumes x shaped like nE x nq x 3
+        TODO:
+           put python loops in c
+        """
+        assert len(x.shape) == 3, "wrong shape for x= %s " % x.shape
+        nE = x.shape[0]; nq = x.shape[1]; nd = self.vt.nSpace_global
+        vx = numpy.zeros((nE,nq,nd),'d')
+        xiArray = numpy.zeros(x.shape,'d')
+        vArray  = numpy.zeros((nE,nq,self.testSpace.max_nDOF_element),'d')
+        invJ    = numpy.zeros((nE,nq,self.vt.q['inverse(J)'].shape[2],self.vt.q['inverse(J)'].shape[3]),
+                                'd')
+        for ie in range(nE):
+            for iq in range(nq):
+                invJ[ie,iq,:,:] = self.vt.q['inverse(J)'][ie,0,:,:] #assume affine
+            #iq
+        #iq
+        self.testSpace.elementMaps.getInverseValues(invJ,x,xiArray)
+        self.testSpace.getBasisValuesAtArray(xiArray,vArray)
+
+        cpostprocessing.getElementBDM2velocityValuesLagrangeRep(vArray,
+                                                                self.q[('velocity_dofs',ci)],
+                                                                vx)
+
+        return vx
+
 
 class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
     """
@@ -1200,7 +2072,7 @@ class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
                                                               self.ebq[('w',ci)],
                                                               self.w_dS[ci])
     def computeGeometricInfo(self):
-        if self.BDMcomponent != None:
+        if self.BDMcomponent is not None:
             self.computeBDM1projectionMatrices()
 
     def evaluateLocalVelocityRepresentation(self,ci):
@@ -1811,7 +2683,7 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
         self.ebq_global[('velocity',ci)].flat[:]=self.vt.ebq_global[('velocityAverage',ci)].flat
 
         #need to add back in after solves, now skip Neumann boundaries since enforcing them explicitly
-        if self.vt.numericalFlux != None:#In general need numericalFlux since exterior boundary velocity assumed correct
+        if self.vt.numericalFlux is not None:#In general need numericalFlux since exterior boundary velocity assumed correct
             #have to set boundary flux into velocity data structure from advective and diffusive flux arrays
             #in case transport didn't to this?
             for ebNE in range(self.vt.mesh.nExteriorElementBoundaries_global):
@@ -2032,7 +2904,7 @@ class VPP_DG_BDM(VPP_DG_RT0):
             #build linear test space for BMD projection if test space isn't P1
 
             if not isinstance(self.vt.u[ci].femSpace,FemTools.DG_AffineLinearOnSimplexWithNodalBasis):
-                if self.testSpace == None:
+                if self.testSpace is None:
                     self.testSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
                 assert isinstance(self.testSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis)
                 self.qv[ci] = numpy.zeros(
@@ -2063,7 +2935,7 @@ class VPP_DG_BDM(VPP_DG_RT0):
                                                           self.w[ci],
                                                           self.w_dS[ci])
 
-        if self.testSpace == None:
+        if self.testSpace is None:
             #all the solution spaces must be C0P1
             self.testSpace = self.vt.u[self.vtComponents[0]].femSpace
         self.BDMcomponent=self.vtComponents[0]
@@ -2085,7 +2957,7 @@ class VPP_DG_BDM(VPP_DG_RT0):
         cpostprocessing.factorLocalBDM1projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
     def computeGeometricInfo(self):
-        if self.BDMcomponent != None:
+        if self.BDMcomponent is not None:
             self.computeBDM1projectionMatrices()
 
     def evaluateLocalVelocityRepresentation(self,ci):
@@ -2408,7 +3280,7 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                 self.solutionTestSpaceIsNotPWL[ci] = True
                 logEvent("pwl post-processing for finite element space"+str(self.vt.u[ci].femSpace))
                 #need to set up w and w*dS_f and weights to build residuals for linears out of R_{e,i}
-                if self.testSpace == None:
+                if self.testSpace is None:
                     self.testSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
                 assert isinstance(self.testSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis)
                 self.alpha[ci] = numpy.zeros((self.testSpace.referenceFiniteElement.localFunctionSpace.dim,
@@ -2462,7 +3334,7 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
             else:
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.vt.mesh.nElementBoundaries_element),dtype='i').reshape((self.vt.mesh.nElements_global,self.vt.mesh.nElementBoundaries_element))
         #ci
-        if self.testSpace == None:
+        if self.testSpace is None:
             #all the solution spaces must be C0P1
             self.testSpace = self.vt.u[self.vtComponents[0]].femSpace
 
@@ -2698,6 +3570,7 @@ class AggregateVelocityPostProcessor:
                  'pwc':VPP_PWC_RT0,       #Larson Niklasson (global) piecewise constant correction, RT_0 velocity repres.
                  'pwl':VPP_PWL_RT0,       #Larson Niklasson (local) piecewise linear correction, RT_0 velocity repres.
                  'pwl-bdm':VPP_PWL_BDM,   #Larson Niklasson (local) piecewise linear correction, Brezzi Douglas Marini linear velocity repres.
+                 'pwl-bdm2':VPP_PWL_BDM2,        # Initial changes to adding BDM2 projection capabilities
                  'pwl-opt':VPP_PWL_RT0_OPT,      #Larson Niklasson (local) piecewise linear correction, RT_0 velocity repres. optimized code
                  'pwl-bdm-opt':VPP_PWL_BDM_OPT,  #Larson Niklasson (local) piecewise linear correction, Brezzi Douglas Marini linear velocity repres. optimized code
                  'sun-rt0':VPP_SUN_RT0,          #Sun and Wheeler global correction, RT_0 velocity repres.
@@ -2709,20 +3582,21 @@ class AggregateVelocityPostProcessor:
                  'dg-bdm':VPP_DG_BDM,        #dg scheme,  Brezzi Douglas Marini linear velocity repres
                  'pwl-ib-fix-0':VPP_LOW_K_IB_PWL_RT0} #hack to enforce zero flux manually around low perm regions
     def __init__(self,postProcessingTypes=None,transport=None):
+     #   import pdb
+     #   pdb.set_trace()
         self.postProcessingTypes = postProcessingTypes
         self.vpp_algorithms = []
         self.vt = transport
         self.vpp_components = {}
-        if self.postProcessingTypes != None:
-            assert self.vt != None, "must pass in vectorTransport if doing velocity postprocessing"
+        if self.postProcessingTypes is not None:
+            assert self.vt is not None, "must pass in vectorTransport if doing velocity postprocessing"
             #collect components that share an algorithm
             for ci in transport.conservativeFlux.keys():
-                assert transport.conservativeFlux[ci] in self.vpp_types.keys()
+                assert transport.conservativeFlux[ci] in self.vpp_types.keys(), "invalid postprocessing string"
                 if self.vpp_components.has_key(transport.conservativeFlux[ci]):
                     self.vpp_components[transport.conservativeFlux[ci]].append(ci)
                 else:
                     self.vpp_components[transport.conservativeFlux[ci]] = [ci]
-            #
             for algs in self.vpp_components.keys():
                 self.vpp_algorithms.append(self.vpp_types[algs](transport,self.vpp_components[algs]))
 
@@ -2733,7 +3607,7 @@ class AggregateVelocityPostProcessor:
         VectorTransport object and store them in local dictionaries
 
         """
-        if self.postProcessingTypes == None:
+        if self.postProcessingTypes is None:
             return
         for vpp in self.vpp_algorithms:
             vpp.postprocess(verbose=verbose)
@@ -2742,7 +3616,7 @@ class AggregateVelocityPostProcessor:
         evaluate velocity field assuming velocity_dofs already calculated
         for now assumes x shaped like nE x nq x 3
         """
-        if self.postProcessingTypes == None:
+        if self.postProcessingTypes is None:
             return None
         for vpp in self.vpp_algorithms:
             return vpp.evaluateElementVelocityField(x,ci)
@@ -2750,7 +3624,7 @@ class AggregateVelocityPostProcessor:
         """
         write out post processed velocity values as a finite element space
         """
-        if self.postProcessingTypes == None:
+        if self.postProcessingTypes is None:
             return None
         for vpp in self.vpp_algorithms:
             return vpp.archiveVelocityValues(archive,t,tCount,initialPhase=initialPhase,meshChanged=meshChanged)
@@ -2798,15 +3672,15 @@ class VelocityPostProcessor_Original:
         self.postProcessingTypes = postProcessingTypes
         self.vt = vectorTransport
         self.vtComponents = vtComponents
-        if self.postProcessingTypes != None:
-            assert self.vt != None, "postProcessTypes not None vt==None"
+        if self.postProcessingTypes is not None:
+            assert self.vt is not None, "postProcessTypes not None vt is None"
         self.q = None
         self.ebq_global = None
         self.BDMcomponent = None
         #for skipping Neumann boundaries
         self.fluxElementBoundaries = {}
         self.fluxBoundaryNodes     = {}
-        if self.postProcessingTypes != None and self.vt !=None:
+        if self.postProcessingTypes is not None and self.vt  is not None:
             #cek begin adding stuff for post-processing higher-order
             self.qv={}
             self.w={}
@@ -2836,8 +3710,8 @@ class VelocityPostProcessor_Original:
             #use opt is for pwl also affects dg
             self.useOpt=True #parallel with weak BC's, assumes correct external boundary velocity and total flux
             for ci in self.vtComponents:
-                if self.postProcessingTypes[ci] != None:
-                    if self.vt.numericalFlux != None and self.vt.numericalFlux.useWeakDirichletConditions:
+                if self.postProcessingTypes[ci] is not None:
+                    if self.vt.numericalFlux is not None and self.vt.numericalFlux.useWeakDirichletConditions:
                         self.fluxElementBoundaries[ci] = numpy.ones((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
                     else:
                         self.fluxElementBoundaries[ci] = numpy.zeros((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
@@ -3320,7 +4194,7 @@ class VelocityPostProcessor_Original:
 
                 for ci in self.vtComponents:
                     if ((self.postProcessingTypes[ci] == 'pwl' or self.postProcessingTypes[ci] == 'pwl-bdm') and
-                        (self.useBDMpwlBasis[ci] == True and self.BDMcomponent == None)):
+                        (self.useBDMpwlBasis[ci] == True and self.BDMcomponent is None)):
                         self.BDMcomponent=ci
                         self.BDMprojectionMat_element = numpy.zeros((self.vt.mesh.nElements_global,
                                                                        self.nDOFs_element[ci],
@@ -3573,7 +4447,7 @@ class VelocityPostProcessor_Original:
         cpostprocessing.factorLocalBDM1projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
     def computeGeometricInfo(self):
-        if self.BDMcomponent != None:
+        if self.BDMcomponent is not None:
             self.computeBDM1projectionMatrices()
     def postprocess(self,verbose=0):
         """
@@ -3584,8 +4458,8 @@ class VelocityPostProcessor_Original:
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        if self.postProcessingTypes != None:
-            assert self.vt != None, "postprocess types not None vt==None"
+        if self.postProcessingTypes is not None:
+            assert self.vt is not None, "postprocess types not None vt is None"
         for ci in self.vtComponents:
             if self.postProcessingTypes[ci] in ['dg','dg-bdm']:
                 self.postprocessDG(ci,verbose=verbose)
@@ -4385,7 +5259,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
         self.ebq_global[('velocity',ci)].flat[:]=self.vt.ebq_global[('velocityAverage',ci)].flat[:]
 
         needToAddBackBoundaryFluxes = False
-        if self.vt.numericalFlux == None:
+        if self.vt.numericalFlux is None:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
             needToAddBackBoundaryFluxes = True
         else:
@@ -4574,7 +5448,7 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
         """
         vt = self.vt
         flux = -1.0*vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(vt.mesh.exteriorElementBoundariesArray,
                                                             vt.mesh.elementBoundaryElementsArray,
                                                             vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -4598,7 +5472,7 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
         """
         vt = self.vt
         flux = vt.ebq_global[('totalFlux',ci)]
-        if flag_elementBoundaries == None:
+        if flag_elementBoundaries is None:
             cfemIntegrals.updateExteriorElementBoundaryFlux(vt.mesh.exteriorElementBoundariesArray,
                                                             vt.mesh.elementBoundaryElementsArray,
                                                             vt.mesh.elementBoundaryLocalElementBoundariesArray,
