@@ -282,6 +282,7 @@ class TestAuxFunctions(unittest.TestCase):
             rec[:]+=dec[1][ii]*np.cos(dec[0][ii]*time[:]+dec[2][ii])
         rec[:]+=dec[3]
         self.assertTrue( rec.all() == eta.all())
+
          
 class TestWaveParameters(unittest.TestCase):
 #Checking dispersion calculation for a predicted wavelenght of 5.00m
@@ -381,7 +382,111 @@ class TestWaveParameters(unittest.TestCase):
         S_PM2 =  mitsuyasu(thetas,f,f0,s)
         self.assertTrue(np.array_equal(S_PM,S_PM2))
 
+class VerifySteadyCurrent(unittest.TestCase):
+    def testCurrent(self):
+        from proteus.WaveTools import SteadyCurrent
+        U = np.array([2.5,2.,1.])
+        mwl = 0.5
+        xx = np.array([2.,0.,0.,])
+        t = 0.1
 
+        # no ramptime
+        WW = SteadyCurrent(U,mwl)
+        self.assertAlmostEqual(U.all(), WW.u(xx,t).all())
+        self.assertAlmostEqual(mwl, WW.eta(xx,t))
+
+        # with ramp
+        Up = 0.5*U
+        WW = SteadyCurrent(U,mwl,0.2)
+        self.assertAlmostEqual(Up.all(), WW.u(xx,t).all())
+        self.assertAlmostEqual(mwl, WW.eta(xx,t))
+
+        
+        
+class VerifySolitaryWave(unittest.TestCase):
+    def testSolitary(self):
+        from proteus.WaveTools import SolitaryWave
+        HH = 0.1
+        mwl = 0.
+        dd = 1.5
+        g = np.array([0,-9.81,0])
+        waveDir = np.array([5.,0.,0.])
+        trans = np.array([1. ,0., 0.])
+
+        #No translation        
+        aa = SolitaryWave(HH,mwl,dd,g,waveDir)
+        
+        x = 2.5
+        t = 5.
+
+        cc = np.sqrt(9.81*(dd+HH))
+        eta_Ref = HH / np.cosh( np.sqrt(3.*HH/4./dd**3)*(x - cc*t))**2
+        xx = x*waveDir/5. 
+        self.assertAlmostEqual(eta_Ref, aa.eta(xx,t))
+        
+        def pow(a,b):
+            return a**b
+        h_ = dd
+        G_ = 9.81
+        H_ = HH
+        Z = -0.1
+
+        xx[1] = -0.2
+        Z = xx[1] - mwl
+        sqrt = np.sqrt
+        cosh = np.cosh
+
+# Formula taken from waves2Foam
+        Uhorz = 1.0/(4.0*pow(h_, 4.0) )*sqrt(G_*h_)*H_ *( 
+             2.*pow(h_, 3.0) + pow(h_, 2.0)*H_ 
+           + 12.0*h_*H_*Z + 6.0*H_*pow(Z, 2.0)
+           + (
+                 2*pow(h_, 3.0) - pow(h_, 2.0)*H_ 
+               - 6.0*h_*H_*Z - 3.0*H_*pow(Z, 2.0)
+             ) 
+             *cosh( 
+                 sqrt( 3*H_/pow(h_, 3.0))
+                *(
+                     sqrt( G_*(h_ + H_))*t
+                    - ( x )
+                 )
+             )
+        )/pow(
+            cosh(   sqrt( 3*H_/( 4.0*pow(h_, 3.0)))
+           *(
+                sqrt( G_*(h_ + H_))*t
+              - ((x)))
+            ), 4.0
+        )
+
+        Uvert = 1.0/( 4.0*sqrt( G_*h_) )*sqrt(3.0)*G_ *pow( H_/pow(h_,3.0), 1.5 )*(h_ + Z)*(
+             2*pow(h_, 3.0) - 7.0*pow(h_, 2.0)*H_
+           + 10.0*h_*H_*Z + 5.0*H_*pow(Z, 2.0)
+           +(
+                2*pow(h_, 3.0) + pow(h_, 2.0)*H_
+              - 2.0*h_*H_*Z - H_*pow(Z, 2.0)
+            )
+           *cosh
+            (
+                sqrt( 3*H_/pow(h_, 3.0))*
+                (
+                    sqrt( G_*(h_ + H_))*t
+                  - ((x ) )
+                )
+            )
+        )/pow(
+            cosh(sqrt( 3*H_/( 4.0*pow(h_, 3.0)))
+          *(
+               sqrt( G_*(h_ + H_))*t
+              - ((x ))
+           )
+        ), 4.0 )*tanh( sqrt( 3*H_/( 4.0*pow(h_, 3.0)))*(
+             sqrt( G_*(h_ + H_))*t
+           - ((x ))
+         ));
+        self.assertAlmostEqual(Uhorz, aa.u(xx,t)[0])
+        self.assertAlmostEqual(-Uvert, aa.u(xx,t)[1])
+        
 
 class CheckMonochromaticWavesFailures(unittest.TestCase):
     def testFailureModes(self):
@@ -416,7 +521,7 @@ class CheckMonochromaticWavesFailures(unittest.TestCase):
         self.assertEqual(cm7.exception.code, 1)
   # Success!: Give all parameters in correct form!
         a = MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1.,1.]), Bcoeff =np.array([1.,1.,1.]), Nf = 3, meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)
-        self.assertTrue(None == None)
+        self.assertTrue(None is None)
 
 class VerifyMonoChromaticLinearWaves(unittest.TestCase):
     def testLinear(self):
@@ -577,7 +682,7 @@ class CheckRandomWavesFailures(unittest.TestCase):
         RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params=None )
         RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.} )
         RandomWaves(2.,1.,0.,1.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.}, phi = np.zeros(100, float) )
-        self.assertTrue(None == None)
+        self.assertTrue(None is None)
 
 class VerifyRandomWaves(unittest.TestCase):
 #    @pytest.mark.skip(reason="nosetests vs pytest issue")
@@ -820,7 +925,7 @@ class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
             phi = [phi,phi]
     )
 
-        self.assertTrue(None == None)
+        self.assertTrue(None is None)
 
 
 
@@ -1646,7 +1751,7 @@ class VerifyRandomWavesFast(unittest.TestCase):
 class CheckFailureRandomNLWaves(unittest.TestCase):
     def testFailures(self):
         waveDir = np.array([0.,0.,1.])
-        Vgen = np.array([0.,0.,-1])
+        Lgen = np.array([0.,0.,-1])
         from proteus.WaveTools import RandomNLWaves
         RR = RandomNLWaves(0,100,1.,1.,0.,10.,waveDir,np.array([0,-9.81,0]),100,2.,"JONSWAP", spectral_params= None )
         xi = np.array([0.,0.,0.])
@@ -1665,7 +1770,7 @@ class CheckFailureRandomNLWaves(unittest.TestCase):
             f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","blah")
         self.assertEqual(cm3.exception.code, 1 )
         with self.assertRaises(SystemExit) as cm4:
-            f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","long",False,Vgen)
+            f = RR.writeEtaSeries(0.,100,1,xi,"aa.txt","long",False,Lgen)
         self.assertEqual(cm4.exception.code, 1 )
 
 

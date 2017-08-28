@@ -231,3 +231,12 @@ linearSolverConvergenceTest = 'r' #r,its,r-true for true residual
 
 bcsTimeDependent = True
 """Allow optimizations if boundary conditions are not time dependent"""
+
+adaptMesh = False
+"""Adaptively refine the mesh in space"""
+
+adaptMesh_nSteps = 10
+"""Adapt the mesh every nSteps"""
+
+adaptMesh_numIter = 2
+"""If the mesh adaption  algorithm is iterative, do this many iterates"""
