@@ -2127,7 +2127,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('force', 0)],
             self.q[('force', 1)],
             self.q[('force', 2)], 
-            self.KILL_PRESSURE_TERM)
+            self.KILL_PRESSURE_TERM,
+            self.timeIntegration.dt)
 
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
