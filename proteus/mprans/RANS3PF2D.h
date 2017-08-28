@@ -103,6 +103,9 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
+				   double* u_dof_old, 
+				   double* v_dof_old, 
+				   double* w_dof_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -230,7 +233,9 @@ namespace proteus
 				   double* forcex, 
 				   double* forcey, 
 				   double* forcez, 
-				   int KILL_PRESSURE_TERM)=0;
+				   int KILL_PRESSURE_TERM, 
+				   double dt, 
+				   double* quantDOFs)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -484,6 +489,9 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
+				   double* u_dof_old, 
+				   double* v_dof_old, 
+				   double* w_dof_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -611,7 +619,9 @@ namespace proteus
 				   double* forcex, 
 				   double* forcey, 
 				   double* forcez, 
-				   int KILL_PRESSURE_TERM)=0;
+				   int KILL_PRESSURE_TERM, 
+				   double dt, 
+				   double* quantDOFs)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -2098,6 +2108,9 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
+			   double* u_dof_old, 
+			   double* v_dof_old, 
+			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -2206,7 +2219,9 @@ namespace proteus
 			   double* forcex, 
 			   double* forcey, 
 			   double* forcez, 
-			   int KILL_PRESSURE_TERM)
+			   int KILL_PRESSURE_TERM, 
+			   double dt, 
+			   double* quantDOFs)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -5615,6 +5630,9 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
+			   double* u_dof_old, 
+			   double* v_dof_old, 
+			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -5723,7 +5741,9 @@ namespace proteus
 			   double* forcex, 
 			   double* forcey,
 			   double* forcez, 
-			   int KILL_PRESSURE_TERM)
+			   int KILL_PRESSURE_TERM, 
+			   double dt, 
+			   double* quantDOFs)
     {
       /*
       double dt = 1./alphaBDF;
