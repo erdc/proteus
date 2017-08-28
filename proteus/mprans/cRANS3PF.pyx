@@ -79,6 +79,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * u_dof,
                                double * v_dof,
                                double * w_dof,
+			       double* u_dof_old, 
+			       double* v_dof_old, 
+			       double* w_dof_old,
                                double * g,
                                double useVF,
                                double * vf,
@@ -207,7 +210,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double * forcex, 
 			       double * forcey, 
 			       double * forcez, 
-			       int KILL_PRESSURE_TERM)
+			       int KILL_PRESSURE_TERM,
+			       double dt, 
+			       double* quantDOFs)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -461,6 +466,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * u_dof,
                                double * v_dof,
                                double * w_dof,
+			       double* u_dof_old, 
+			       double* v_dof_old, 
+			       double* w_dof_old,
                                double * g,
                                double useVF,
                                double * vf,
@@ -589,7 +597,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double * forcex, 
 			       double * forcey, 
 			       double * forcez, 
-			       int KILL_PRESSURE_TERM)
+			       int KILL_PRESSURE_TERM,
+			       double dt,
+			       double* quantDOFs)
         void calculateJacobian_entropy_viscosity(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -941,6 +951,9 @@ cdef class RANS3PF:
                           numpy.ndarray u_dof,
                           numpy.ndarray v_dof,
                           numpy.ndarray w_dof,
+                          numpy.ndarray u_dof_old,
+                          numpy.ndarray v_dof_old,
+                          numpy.ndarray w_dof_old,
                           numpy.ndarray g,
                           double useVF,
                           numpy.ndarray vf,
@@ -1048,7 +1061,9 @@ cdef class RANS3PF:
 			  numpy.ndarray forcex,   
 			  numpy.ndarray forcey,
 			  numpy.ndarray forcez,
-			  int KILL_PRESSURE_TERM):
+			  int KILL_PRESSURE_TERM, 
+			  double dt, 
+			  numpy.ndarray quantDOFs):
         self.thisptr.calculateResidual( < double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1125,6 +1140,9 @@ cdef class RANS3PF:
                                         < double * > u_dof.data,
                                         < double * > v_dof.data,
                                         < double * > w_dof.data,
+                                        < double * > u_dof_old.data,
+                                        < double * > v_dof_old.data,
+                                        < double * > w_dof_old.data,
                                         < double * > g.data,
                                         useVF,
                                         < double * > vf.data,
@@ -1232,7 +1250,9 @@ cdef class RANS3PF:
 					< double * > forcex.data,
 					< double * > forcey.data,
 					< double * > forcez.data, 
-					KILL_PRESSURE_TERM)
+					KILL_PRESSURE_TERM,
+					dt, 
+					< double * > quantDOFs.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -1666,6 +1686,9 @@ cdef class RANS3PF:
                           numpy.ndarray u_dof,
                           numpy.ndarray v_dof,
                           numpy.ndarray w_dof,
+                          numpy.ndarray u_dof_old,
+                          numpy.ndarray v_dof_old,
+                          numpy.ndarray w_dof_old,
                           numpy.ndarray g,
                           double useVF,
                           numpy.ndarray vf,
@@ -1773,7 +1796,9 @@ cdef class RANS3PF:
 			  numpy.ndarray forcex,   
 			  numpy.ndarray forcey,   
 			  numpy.ndarray forcez, 
-			  int KILL_PRESSURE_TERM):
+			  int KILL_PRESSURE_TERM, 
+			  double dt,
+			  numpy.ndarray quantDOFs):
         self.thisptr.calculateResidual_entropy_viscosity( < double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1850,6 +1875,9 @@ cdef class RANS3PF:
                                         < double * > u_dof.data,
                                         < double * > v_dof.data,
                                         < double * > w_dof.data,
+                                        < double * > u_dof_old.data,
+                                        < double * > v_dof_old.data,
+                                        < double * > w_dof_old.data,
                                         < double * > g.data,
                                         useVF,
                                         < double * > vf.data,
@@ -1957,7 +1985,9 @@ cdef class RANS3PF:
 					< double * > forcex.data,
 					< double * > forcey.data,
 					< double * > forcez.data, 
-					KILL_PRESSURE_TERM)
+					KILL_PRESSURE_TERM, 
+					dt,
+					< double * > quantDOFs.data)
     def calculateJacobian_entropy_viscosity(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -2439,6 +2469,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * u_dof,
                                double * v_dof,
                                double * w_dof,
+			       double* u_dof_old, 
+			       double* v_dof_old, 
+			       double* w_dof_old,
                                double * g,
                                double useVF,
                                double * vf,
@@ -2548,7 +2581,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double * forcex,   
 			       double * forcey,   
 			       double * forcez, 
-			       int KILL_PRESSURE_TERM)
+			       int KILL_PRESSURE_TERM,
+			       double dt,
+			       double* quantDOFs)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -2803,6 +2838,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * u_dof,
                                double * v_dof,
                                double * w_dof,
+			       double* u_dof_old, 
+			       double* v_dof_old, 
+			       double* w_dof_old,
                                double * g,
                                double useVF,
                                double * vf,
@@ -2912,7 +2950,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double * forcex,
 			       double * forcey,
 			       double * forcez, 
-			       int KILL_PRESSURE_TERM)
+			       int KILL_PRESSURE_TERM, 
+			       double dt,
+			       double* quantDOFs)
         void calculateJacobian_entropy_viscosity(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -3265,6 +3305,9 @@ cdef class RANS3PF2D:
                           numpy.ndarray u_dof,
                           numpy.ndarray v_dof,
                           numpy.ndarray w_dof,
+                          numpy.ndarray u_dof_old,
+                          numpy.ndarray v_dof_old,
+                          numpy.ndarray w_dof_old,
                           numpy.ndarray g,
                           double useVF,
                           numpy.ndarray vf,
@@ -3373,7 +3416,9 @@ cdef class RANS3PF2D:
 			  numpy.ndarray forcex,  
 			  numpy.ndarray forcey,  
 			  numpy.ndarray forcez, 
-			  int KILL_PRESSURE_TERM):
+			  int KILL_PRESSURE_TERM, 
+			  double dt,
+			  numpy.ndarray quantDOFs):
         self.thisptr.calculateResidual(< double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -3451,6 +3496,9 @@ cdef class RANS3PF2D:
                                        < double * > u_dof.data,
                                        < double * > v_dof.data,
                                        < double * > w_dof.data,
+                                       < double * > u_dof_old.data,
+                                       < double * > v_dof_old.data,
+                                       < double * > w_dof_old.data,
                                        < double * > g.data,
                                        useVF,
                                        < double * > vf.data,
@@ -3559,7 +3607,9 @@ cdef class RANS3PF2D:
 				       < double * > forcex.data,
 				       < double * > forcey.data,
 				       < double * > forcez.data, 
-				       KILL_PRESSURE_TERM)
+				       KILL_PRESSURE_TERM, 
+				       dt,
+				       < double * > quantDOFs.data)	
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
@@ -3993,6 +4043,9 @@ cdef class RANS3PF2D:
                           numpy.ndarray u_dof,
                           numpy.ndarray v_dof,
                           numpy.ndarray w_dof,
+                          numpy.ndarray u_dof_old,
+                          numpy.ndarray v_dof_old,
+                          numpy.ndarray w_dof_old,
                           numpy.ndarray g,
                           double useVF,
                           numpy.ndarray vf,
@@ -4101,7 +4154,9 @@ cdef class RANS3PF2D:
 			  numpy.ndarray forcex,
 			  numpy.ndarray forcey,
 			  numpy.ndarray forcez, 
-			  int KILL_PRESSURE_TERM):
+			  int KILL_PRESSURE_TERM, 
+			  double dt,
+			  numpy.ndarray quantDOFs):
         self.thisptr.calculateResidual_entropy_viscosity(< double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -4179,6 +4234,9 @@ cdef class RANS3PF2D:
                                        < double * > u_dof.data,
                                        < double * > v_dof.data,
                                        < double * > w_dof.data,
+                                       < double * > u_dof_old.data,
+                                       < double * > v_dof_old.data,
+                                       < double * > w_dof_old.data,
                                        < double * > g.data,
                                        useVF,
                                        < double * > vf.data,
@@ -4287,7 +4345,9 @@ cdef class RANS3PF2D:
 				       < double * > forcex.data,
 				       < double * > forcey.data,
 				       < double * > forcez.data, 
-				       KILL_PRESSURE_TERM)
+				       KILL_PRESSURE_TERM, 
+				       dt,
+				       < double * > quantDOFs.data)
 
     def calculateJacobian_entropy_viscosity(self,
                           numpy.ndarray mesh_trial_ref,

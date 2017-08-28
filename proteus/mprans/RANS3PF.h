@@ -105,6 +105,9 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
+				   double* u_dof_old, 
+				   double* v_dof_old, 
+				   double* w_dof_old,				   
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -231,7 +234,9 @@ namespace proteus
 				   double* forcex, 
 				   double* forcey, 
 				   double* forcez, 
-				   int KILL_PRESSURE_TERM)=0;
+				   int KILL_PRESSURE_TERM, 
+				   double dt, 
+				   double* quantDOFs)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -484,6 +489,9 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
+				   double* u_dof_old, 
+				   double* v_dof_old, 
+				   double* w_dof_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -610,7 +618,9 @@ namespace proteus
 				   double* forcex, 
 				   double* forcey, 
 				   double* forcez, 
-				   int KILL_PRESSURE_TERM)=0;
+				   int KILL_PRESSURE_TERM, 
+				   double dt, 
+				   double* quantDOFs)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -2088,6 +2098,9 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
+			   double* u_dof_old, 
+			   double* v_dof_old, 
+			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -2196,7 +2209,9 @@ namespace proteus
 			   double* forcex, 
 			   double* forcey, 
 			   double* forcez, 
-			   int KILL_PRESSURE_TERM)
+			   int KILL_PRESSURE_TERM, 
+			   double dt, 
+			   double* quantDOFs)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -5602,6 +5617,9 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
+			   double* u_dof_old, 
+			   double* v_dof_old, 
+			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -5709,10 +5727,11 @@ namespace proteus
 			   double* forcex, 
 			   double* forcey, 
 			   double* forcez, 
-			   int KILL_PRESSURE_TERM)
+			   int KILL_PRESSURE_TERM, 
+			   double dt, 
+			   double* quantDOFs)
     {
       /*
-      double dt = 1./alphaBDF;
       double cell_vel_max, cell_vel2_max, cell_entropy_residual_max, vel_max_in_omega=0.0, vel2_max_in_omega=0.0;
       register double vel_max[nElements_global], vel2_max[nElements_global], entropy_residual[nElements_global];
       
@@ -6483,7 +6502,7 @@ namespace proteus
 	  for(int i=0;i<nDOF_test_element;i++) 
 	    { 
 	      register int eN_i=eN*nDOF_test_element+i;
-
+	      
 	      /* elementResidual_p_save[eN_i] +=  elementResidual_p[i]; */
               /* mesh_volume_conservation_element_weak += elementResidual_mesh[i]; */
 	      /* globalResidual[offset_p+stride_p*p_l2g[eN_i]]+=elementResidual_p[i]; */
