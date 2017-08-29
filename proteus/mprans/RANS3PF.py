@@ -889,6 +889,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         pass
 
     def preStep(self, t, firstStep=False):
+        self.model.u_dof_old[:] = self.model.u[0].dof
+        self.model.v_dof_old[:] = self.model.u[1].dof
+        if (self.model.nSpace_global == 3):
+            self.model.w_dof_old[:] = self.model.u[2].dof
         # Compute 2nd order extrapolation on velocity
         if (firstStep):
             self.model.q[('velocityStar',0)][:] = self.model.q[('velocity',0)]
@@ -1183,6 +1187,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebq_global = {}
         self.ebqe = {}
         self.phi_ip = {}
+        # mql. Some structures needed for stabilization operators
+        self.u_dof_old = numpy.zeros(self.u[0].dof.shape,'d')
+        self.v_dof_old = numpy.zeros(self.u[0].dof.shape,'d')
+        self.w_dof_old = numpy.zeros(self.u[0].dof.shape,'d')
+        self.cterm_global=None
         # mesh
         self.ebqe['x'] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
@@ -1915,6 +1924,113 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
             self.coefficients.set_vos(self.ebqe['x'],self.coefficients.ebqe_vos)
 
+        # mql: get sparsity pattern corresponding to a 1D system. This is to loop on DOFs
+        if self.cterm_global is None:
+            self.cterm={}
+            self.cterm_a={}
+            self.cterm_global={}
+            rowptr, colind, nzval = self.jacobian.getCSRrepresentation()
+            nnz = nzval.shape[-1] #number of non-zero entries in sparse matrix
+            nnz_cMatrix = nnz/self.nc/self.nc
+            nzval_cMatrix = numpy.zeros(nnz_cMatrix)
+            rowptr_cMatrix = numpy.zeros(self.nFreeDOF_global[0]+1,'i')
+            colind_cMatrix = numpy.zeros(nnz_cMatrix,'i')
+            #fill vector rowptr_cMatrix
+            for i in range(1,rowptr_cMatrix.size):
+                rowptr_cMatrix[i] = rowptr_cMatrix[i-1]+(rowptr[self.nc*(i-1)+1]-rowptr[self.nc*(i-1)])/self.nc 
+
+            #fill vector colind_cMatrix
+            i_cMatrix=0 #ith row of cMatrix
+            for i in range(rowptr.size-1): #0 to total num of DOFs (i.e. num of rows of jacobian)
+                if (i%self.nc == 0): # Just consider the rows related to the 1st variable
+                    for j,offset in enumerate(range(rowptr[i],rowptr[i+1])):
+                        offset_cMatrix = range(rowptr_cMatrix[i_cMatrix],rowptr_cMatrix[i_cMatrix+1])
+                        if (j%self.nc == 0):
+                            colind_cMatrix[offset_cMatrix[j/self.nc]] = colind[offset]/self.nc
+                    i_cMatrix+=1
+            # END OF SPARSITY PATTERN FOR C MATRICES 
+            di = numpy.zeros((self.mesh.nElements_global,
+                              self.nQuadraturePoints_element,
+                              self.nSpace_global),
+                             'd') #direction of derivative
+            # JACOBIANS (FOR ELEMENT TRANSFORMATION)
+            self.q[('J')] = numpy.zeros((self.mesh.nElements_global,
+                                         self.nQuadraturePoints_element,
+                                         self.nSpace_global,
+                                         self.nSpace_global),
+                                        'd')
+            self.q[('inverse(J)')] = numpy.zeros((self.mesh.nElements_global,
+                                                  self.nQuadraturePoints_element,
+                                                  self.nSpace_global,
+                                                  self.nSpace_global),
+                                                 'd')
+            self.q[('det(J)')] = numpy.zeros((self.mesh.nElements_global,
+                                              self.nQuadraturePoints_element),
+                                             'd')
+            self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
+                                                             self.q['J'],
+                                                             self.q['inverse(J)'],
+                                                             self.q['det(J)'])
+            self.q['abs(det(J))'] = numpy.abs(self.q['det(J)'])
+            # SHAPE FUNCTIONS
+            self.q[('w',0)] = numpy.zeros((self.mesh.nElements_global,
+                                           self.nQuadraturePoints_element,
+                                           self.nDOF_test_element[0]),
+                                          'd')
+            self.q[('w*dV_m',0)] = self.q[('w',0)].copy()
+            self.u[0].femSpace.getBasisValues(self.elementQuadraturePoints, self.q[('w',0)])
+            cfemIntegrals.calculateWeightedShape(self.elementQuadratureWeights[('u',0)],
+                                                 self.q['abs(det(J))'],
+                                                 self.q[('w',0)],
+                                                 self.q[('w*dV_m',0)])
+            #### GRADIENT OF TEST FUNCTIONS 
+            self.q[('grad(w)',0)] = numpy.zeros((self.mesh.nElements_global,
+                                                 self.nQuadraturePoints_element,
+                                                 self.nDOF_test_element[0],
+                                                 self.nSpace_global),
+                                                'd')
+            self.u[0].femSpace.getBasisGradientValues(self.elementQuadraturePoints,
+                                                      self.q['inverse(J)'],
+                                                      self.q[('grad(w)',0)])
+            self.q[('grad(w)*dV_f',0)] = numpy.zeros((self.mesh.nElements_global,
+                                                      self.nQuadraturePoints_element,
+                                                      self.nDOF_test_element[0],
+                                                      self.nSpace_global),
+                                                     'd')
+            cfemIntegrals.calculateWeightedShapeGradients(self.elementQuadratureWeights[('u',0)],
+                                                          self.q['abs(det(J))'],
+                                                          self.q[('grad(w)',0)],
+                                                          self.q[('grad(w)*dV_f',0)])
+            for d in range(self.nSpace_global): #spatial dimensions
+                #C matrices
+                self.cterm[d] = numpy.zeros((self.mesh.nElements_global,
+                                             self.nDOF_test_element[0],
+                                             self.nDOF_trial_element[0]),'d')
+                self.cterm_a[d] = nzval_cMatrix.copy()
+                self.cterm_global[d] = LinearAlgebraTools.SparseMat(self.nFreeDOF_global[0],
+                                                                    self.nFreeDOF_global[0],
+                                                                    nnz_cMatrix,
+                                                                    self.cterm_a[d],
+                                                                    colind_cMatrix,
+                                                                    rowptr_cMatrix)
+                cfemIntegrals.zeroJacobian_CSR(nnz_cMatrix, self.cterm_global[d])
+                di[:] = 0.0
+                di[...,d] = 1.0
+                cfemIntegrals.updateHamiltonianJacobian_weak_lowmem(di,
+                                                                    self.q[('grad(w)*dV_f',0)],
+                                                                    self.q[('w',0)],
+                                                                    self.cterm[d]) # int[(di*grad(wj))*wi*dV]
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[0]['nFreeDOF'],
+                                                                          self.l2g[0]['freeLocal'],
+                                                                          self.l2g[0]['nFreeDOF'],
+                                                                          self.l2g[0]['freeLocal'],
+                                                                          self.csrRowIndeces[(0,0)]/self.nc/self.nc,
+                                                                          self.csrColumnOffsets[(0,0)]/self.nc,
+                                                                          self.cterm[d],
+                                                                          self.cterm_global[d])
+
+
+        rowptr_cMatrix, colind_cMatrix, Cx = self.cterm_global[0].getCSRrepresentation()
         # mql: select appropiate functions to compute residual and jacobian
         if (self.use_entropy_viscosity == True):
             self.calculateResidual = self.rans3pf.calculateResidual_entropy_viscosity
@@ -2004,6 +2120,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].dof,
             self.u[1].dof,
             self.u[2].dof,
+            self.u_dof_old,
+            self.v_dof_old,
+            self.w_dof_old,
             self.coefficients.g,
             self.coefficients.useVF,
             self.coefficients.q_vf,
@@ -2137,7 +2256,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.entropyResidualAtCell,
             self.maxSpeed2AtCell,
             self.maxSpeed2AtCell.max(),
-            self.quantDOFs)
+            self.quantDOFs, 
+            self.nFreeDOF_global[0],
+            rowptr_cMatrix,
+            colind_cMatrix)            
 
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):
@@ -2634,7 +2756,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
 
 def getErgunDrag(porosity, meanGrainSize, viscosity):
-    # cek hack, this doesn't seem right
+    # cek hack, this d0oesn't seem right
     # cek todo look up correct Ergun model for alpha and beta
     voidFrac = 1.0 - porosity
     if voidFrac > 1.0e-6:

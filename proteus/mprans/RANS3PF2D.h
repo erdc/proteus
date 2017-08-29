@@ -104,6 +104,9 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
+				   double* u_dof_old, 
+				   double* v_dof_old, 
+				   double* w_dof_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -236,7 +239,10 @@ namespace proteus
 				   double* entropyResidualAtCell,
 				   double* maxSpeed2AtCell,
 				   double maxSpeed2AtOmega,
-				   double* quantDOFs
+				   double* quantDOFs, 
+				   int numDOFsPerEqn,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops
 				   )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
@@ -491,6 +497,9 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
+				   double* u_dof_old, 
+				   double* v_dof_old, 
+				   double* w_dof_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -623,7 +632,10 @@ namespace proteus
 				   double* entropyResidualAtCell,
 				   double* maxSpeed2AtCell,
 				   double maxSpeed2AtOmega,
-				   double* quantDOFs)=0;
+				   double* quantDOFs,
+				   int numDOFsPerEqn,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -2111,6 +2123,9 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
+			   double* u_dof_old, 
+			   double* v_dof_old, 
+			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -2224,7 +2239,10 @@ namespace proteus
 			   double* entropyResidualAtCell,
 			   double* maxSpeed2AtCell,
 			   double maxSpeed2AtOmega,
-			   double* quantDOFs)
+			   double* quantDOFs,
+			   int numDOFsPerEqn,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -5640,6 +5658,9 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
+			   double* u_dof_old, 
+			   double* v_dof_old, 
+			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -5753,7 +5774,10 @@ namespace proteus
 			   double* entropyResidualAtCell,
 			   double* maxSpeed2AtCell,
 			   double maxSpeed2AtOmega,
-			   double* quantDOFs)
+			   double* quantDOFs,
+			   int numDOFsPerEqn,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops)
     {
       /*
       double dt = 1./alphaBDF;
@@ -5844,40 +5868,67 @@ namespace proteus
       //////////////////////////////////
       // COMPUTE SMOOTHNESS INDICATOR // 
       //////////////////////////////////
-      register double psi[numDOFsPerEqn];
+      register double u_psi[numDOFsPerEqn], v_psi[numDOFsPerEqn], entropyResidual[numDOFsPerEqn];
       for (int i=0; i<numDOFsPerEqn; i++)
 	{
-	  double alphai; // smoothness indicator of solution	      
+	  // initialize entropyResidual
+	  entropyResidual[i] = 0.0;
+	  
+	  double u_alphai, v_alphai; // smoothness indicator of solution	      
 	  double ui = u_dof_old[i]; // solution at time tn for the ith DOF
 	  double vi = v_dof_old[i];
-	  double u2i = ui*ui + vi*vi;
 	      
 	  // FOR SMOOTHNESS INDICATOR //
-	  double alpha_numerator = 0;
-	  double alpha_denominator = 0;
-	      
+	  double u_alpha_numerator = 0, u_alpha_denominator = 0;
+	  double v_alpha_numerator = 0, v_alpha_denominator = 0;
+	  
 	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
 	    { //loop in j (sparsity pattern)
 	      int j = csrColumnOffsets_DofLoops[offset];
 	      double uj = u_dof_old[j];
-	      double vj = u_dof_old[j];
-	      double u2j = uj*uj + vj*vj;
-
+	      double vj = v_dof_old[j];
 	      // FOR SMOOTHNESS INDICATOR //
-	      alpha_numerator += u2j - u2i;
-	      alpha_denominator += fabs(u2j - u2i);	      
+	      u_alpha_numerator += uj - ui;
+	      u_alpha_denominator += fabs(uj - ui);	      
+	      v_alpha_numerator += vj - vi;
+	      v_alpha_denominator += fabs(vj - vi);	 
 	    }
 	  //////////////////////////////////
 	  // COMPUTE SMOOTHNESS INDICATOR //
 	  //////////////////////////////////
-	  alphai = fabs(alpha_numerator)/(alpha_denominator+1E-15);
+	  u_alphai = fabs(u_alpha_numerator)/(u_alpha_denominator+1E-15);
+	  v_alphai = fabs(v_alpha_numerator)/(v_alpha_denominator+1E-15);
+
 	  if (POWER_SMOOTHNESS_INDICATOR==0)
-	    psi[i] = 1.0;
+	    {
+	      u_psi[i] = 1.0;
+	      v_psi[i] = 1.0;
+	    }
 	  else
-	    psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+	    {
+	      u_psi[i] = std::pow(u_alphai,POWER_SMOOTHNESS_INDICATOR);
+	      v_psi[i] = std::pow(v_alphai,POWER_SMOOTHNESS_INDICATOR);
+	    }
+	  quantDOFs[i] = u_psi[i];
 	}
       // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
-      
+      // compute linear artificial viscosity scaling factor per cell //
+      register double u_smoothnessIndicatorAtCell[nElements_global], v_smoothnessIndicatorAtCell[nElements_global];
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  double u_smoothnessIndicatorAtCurrentCell = 0.;
+	  double v_smoothnessIndicatorAtCurrentCell = 0.;
+	  // loop on quad points
+	  for (int i=0;i<nDOF_test_element;i++)	
+	    {
+	      int eN_i = eN*nDOF_test_element+i;
+	      int gi = vel_l2g[eN_i];
+	      u_smoothnessIndicatorAtCurrentCell = fmax(u_smoothnessIndicatorAtCurrentCell, u_psi[gi]);
+	      v_smoothnessIndicatorAtCurrentCell = fmax(v_smoothnessIndicatorAtCurrentCell, v_psi[gi]);
+	    }  
+	  u_smoothnessIndicatorAtCell[eN] = u_smoothnessIndicatorAtCurrentCell;
+	  v_smoothnessIndicatorAtCell[eN] = v_smoothnessIndicatorAtCurrentCell;
+	}
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -6490,9 +6541,14 @@ namespace proteus
 	      //double entropy_viscosity = cE*entropyResidualAtCell[eN]/(maxSpeed2AtOmega+1E-10);
 	      double entropy_viscosity = cE*entropyResidualAtCell[eN]/(maxSpeed2AtCell[eN]+1E-10);	      
 	      //q_numDiff_u[eN_k] = fmin(linear_viscosity,entropy_viscosity);
-	      q_numDiff_u[eN_k] = linear_viscosity;
-	      q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
-	      q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+	      //q_numDiff_u[eN_k] = linear_viscosity;
+	      //q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
+	      //q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+
+
+	      q_numDiff_u[eN_k] = linear_viscosity*u_smoothnessIndicatorAtCell[eN];
+	      q_numDiff_v[eN_k] = linear_viscosity*v_smoothnessIndicatorAtCell[eN];
+	      /* q_numDiff_w[eN_k] = linear_viscosity*w_smoothnessIndicatorAtCell[eN]; */
 	      // END OF COMPUTING NUMERICAL DISSIPATION //
 
 	      // 
@@ -6606,7 +6662,7 @@ namespace proteus
 	      /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
 
 	      // DISTRIBUTE ENTROPY RESIDUAL //
-	      quantDOFs[vel_l2g[eN_i]] += elementEntropyResidual[i];
+	      entropyResidual[vel_l2g[eN_i]] += elementEntropyResidual[i];
 	    }//i
           /* mesh_volume_conservation += mesh_volume_conservation_element; */
           /* mesh_volume_conservation_weak += mesh_volume_conservation_element_weak; */
@@ -7504,7 +7560,7 @@ namespace proteus
 	      /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
 
 	      // ENTROPY RESIDUAL AT BOUNDARY //
-	      quantDOFs[vel_l2g[eN_i]] += elementEntropyResidual[i]; //TMP
+	      entropyResidual[vel_l2g[eN_i]] += elementEntropyResidual[i]; //TMP
 	    }//i
 	}//ebNE
       /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
@@ -7522,7 +7578,7 @@ namespace proteus
 	    {
 	      int eN_i = eN*nDOF_test_element+i;
 	      int gi = vel_l2g[eN_i];
-	      entropyResidualAtCurrentCell = fmax(entropyResidualAtCurrentCell, fabs(quantDOFs[gi]));
+	      entropyResidualAtCurrentCell = fmax(entropyResidualAtCurrentCell, fabs(entropyResidual[gi]));
 	    }  
 	  entropyResidualAtCell[eN] = entropyResidualAtCurrentCell;
 	}
