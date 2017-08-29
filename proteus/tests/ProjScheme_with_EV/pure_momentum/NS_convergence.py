@@ -6,8 +6,11 @@ from proteus.Profiling import logEvent
 
 #  Discretization -- input options
 #Refinement = 20#45min on a single core for spaceOrder=1, useHex=False
-mu = 1.0 #Just to compute force terms for convergence test
+mu = 0.01 #Just to compute force terms for convergence test
 KILL_PRESSURE_TERM = 1
+use_entropy_viscosity = 1
+cE = 0.0
+cMax = 1.0
 Refinement = 2
 sedimentDynamics=False
 genMesh = True
@@ -160,7 +163,7 @@ else:
 T=1.0
 dt_fixed = 0.1#0.03
 dt_init = min(0.1*dt_fixed,0.001)
-runCFL=0.33
+runCFL=0.1
 nDTout = int(round(T/dt_fixed))
 
 # Numerical parameters
@@ -250,11 +253,11 @@ elif useRANS == 2:
     ns_closure == 4
 # Water
 rho_0 = 1.0
-nu_0 = 1.0
+nu_0 = mu #Hack: This works for this single phase problem
 
 # Air
 rho_1 = 1.0
-nu_1 = 1.0
+nu_1 = mu 
 
 # Sediment
 rho_s = rho_0
