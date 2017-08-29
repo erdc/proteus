@@ -2,7 +2,7 @@ from proteus import *
 from twp_navier_stokes_p import *
 from NS_convergence import *
 
-use_entropy_viscosity = True
+use_entropy_viscosity = use_entropy_viscosity
 if timeDiscretization=='vbdf':
     timeIntegration = VBDF
     timeOrder=2

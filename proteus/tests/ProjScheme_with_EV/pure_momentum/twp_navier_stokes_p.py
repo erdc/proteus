@@ -35,7 +35,9 @@ coefficients = RANS3PF.Coefficients(epsFact=epsFact_viscosity,
                                     turbulenceClosureModel=ns_closure,
                                     movingDomain=movingDomain,
                                     dragAlpha=dragAlpha,
-                                    PSTAB=1.0)
+                                    PSTAB=1.0, 
+                                    cE=cE,
+                                    cMax=cMax)
 
 #######################
 # BOUNDARY CONDITIONS #
@@ -55,9 +57,9 @@ def getAFBC_v(x,flag):
 def getDFBC_u(x,flag):
     # Set grad(u).n
     if (flag==1): # left boundary 
-        return lambda x,t: -2*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+        return lambda x,t: -2*mu*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
     elif (flag==2): # right boundary 
-        return lambda x,t: -2*np.cos(x[0])*np.sin(x[1]+t)*(1.)
+        return lambda x,t: -2*mu*np.cos(x[0])*np.sin(x[1]+t)*(1.)
     elif (flag==3): # bottom boundary 
         return lambda x,t: 0. 
     else: # top boundary 
@@ -69,9 +71,9 @@ def getDFBC_v(x,flag):
     elif (flag==2): # right boundary 
         return lambda x,t: 0.
     elif (flag==3): # bottom boundary 
-        return lambda x,t: 2*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
+        return lambda x,t: 2*mu*np.cos(x[0])*np.sin(x[1]+t)*(-1.)
     else: # top boundary 
-        return lambda x,t: 2*np.cos(x[0])*np.sin(x[1]+t)*(1.)
+        return lambda x,t: 2*mu*np.cos(x[0])*np.sin(x[1]+t)*(1.)
 
 dirichletConditions = {0:getDBC_u,
                        1:getDBC_v}
