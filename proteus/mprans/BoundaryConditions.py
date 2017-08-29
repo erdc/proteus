@@ -1010,6 +1010,10 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.Cmu = Cmu
         self.K = K
         self.B = B
+        #_b_or is positive when points outward the domain
+        b0, b1, b2 = self._b_or
+        # normal unit vector is positive when points inward the domain
+        self.nV = (-self._b_or)/np.sqrt(np.sum([b0**2, b1**2, b2**2]))
         # initialise variables
         self.Ubound = np.zeros(3)
         self.kappa = 1e-10
@@ -1185,8 +1189,8 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         Return the point at y+ distance in normal
         direction from the boundary.
         """
-        # we do need normal direction vector to the boundary and pointing the domain, -self._b_or
-        nP = ( relax*self.Y*(-self._b_or) ) + x
+        # near wall point
+        nP = ( relax*self.Y*(self.nV) ) + x
         return nP
 
     def extractVelocity(self, x, t):
@@ -1209,15 +1213,15 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             u, v, w = self.getFluidVelocityLocalCoords(self.femSpace_velocity.elementMaps.getInverseValue(element, coords),
                                                        element,
                                                        rank)
-        logEvent('coords --> %s' % coords)
-        logEvent('uExtract --> %s' % u)
+        #logEvent('coords --> %s' % coords)
+        #logEvent('uExtract --> %s' % u)
         self.xi, self.element, self.rank = xi, element, rank
-        logEvent('xi --> %s ' % xi)
-        logEvent('element --> %s ' % element)
-        logEvent('rank %s ' % rank)
-        logEvent('self.xi --> %s ' % self.xi)
-        logEvent('self.element --> %s ' % self.element)
-        logEvent('self.rank %s ' % self.rank)
+        #logEvent('xi --> %s ' % xi)
+        #logEvent('element --> %s ' % element)
+        #logEvent('rank %s ' % rank)
+        #logEvent('self.xi --> %s ' % self.xi)
+        #logEvent('self.element --> %s ' % self.element)
+        #logEvent('self.rank %s ' % self.rank)
         return u, v, w
         
     def tangentialVelocity(self, x, t, uInit=None):
@@ -1225,21 +1229,18 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             u0, u1, u2 = self.U0
         else:
             u0, u1, u2 = self.extractVelocity(x,t) 
-        self.meanV = np.array([u0, u1, u2])  
-        b0, b1, b2 = self._b_or
-        # normal unit vector is positive when points inward the domain
-        #_b_or is positive when points outward the domain
-        self.nV = (-self._b_or)/np.sqrt(np.sum([b0**2, b1**2, b2**2]))
+        self.meanV = np.array([u0, u1, u2]) 
         # projection of u vector over an ortoganal plane to b_or
         self.tanU = self.meanV - self.meanV*(self.nV**2)
         # tangential unit vector
         self.tV = self.tanU/np.sqrt(np.sum(self.tanU**2))
-        #return self
 
     def getVariables(self, x, t):
         comm = Comm.get().comm.tompi4py() 
         self.kappa = self.kWall.getKappa(x, t, self.xi, self.element, self.rank)
-        if self.Yplus < 11.6:
+        self.utStar = (self.kappa**0.5) * (self.Cmu**0.25)
+        self.Ystar = self.Y * self.utStar / self.nu
+        if self.Ystar < 11.225:
             logEvent('Prescribed near-wall point outside log-law region. Try with a higher one!')
             sys.exit(1)
         # log-law layer
@@ -1247,19 +1248,22 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
             # Wall function theory from S.B. Pope, page 442-443
             E = np.exp(self.B*self.K)
             Up = np.sqrt(np.sum(self.tanU**2))
-            self.utStar = (self.kappa**0.5) * (self.Cmu**0.25)
-            self.Ystar = self.Y * self.utStar / self.nu
             self.Ustar = self.utStar * np.log(E*self.Ystar) / self.K
             self.tau_rho = (self.utStar**2.) * (Up/self.Ustar)
             self.utAbs = np.sqrt(self.tau_rho)
             self.nu_t = self.utStar * self.K * self.Y
             # Velocity gradient multiplied by the tangential vector unit
-            self.gradU = ( self.utAbs / (self.Y*self.K) ) * self.tV  #(self.tau_rho/self.nu_t) * self.tV
+            self.gradU = ( self.utAbs / (self.Y*self.K) )* self.tV  # (self.tau_rho/self.nu_t) * self.tV 
+        logEvent('t --> %s' % t)
+        logEvent('self.tanU --> %s' % self.tanU)
+        logEvent('kappa --> %s' % self.kappa)   
+        logEvent('nV --> %s' % self.nV)  
+        logEvent('tV --> %s' % self.tV)  
         logEvent('ut* --> %s' % self.utStar)  
         logEvent('Up --> %s' % Up)
         logEvent('Up* --> %s' % self.Ustar)
-        logEvent('self.tanU --> %s' % self.tanU)
-        logEvent('kappa --> %s' % self.kappa) 
+        logEvent('UtAbs --> %s' % self.utAbs)
+        logEvent('gradU --> %s' % self.gradU)
 
     def get_k_dirichlet(self, x, t):
         if t>0.: uInit = False
@@ -1275,7 +1279,7 @@ class WallFunctions(AuxiliaryVariables.AV_base, object):
         self.getVariables(x, t)  
         d = 0.
         if self.turbModel == 'ke': d = (self.utStar**3)/(self.K*self.Y)
-        elif self.turbModel == 'kw' and self.kappa>0.: d = (self.utStar**3)/(self.K*self.Y)/self.kappa
+        elif self.turbModel == 'kw' and self.kappa>0.: d = np.sqrt(abs(self.kappa)) / (self.K*self.Y*(self.Cmu**0.25))
         logEvent('dissipation --> %s' % d)
         return d 
 
@@ -1310,7 +1314,7 @@ class kWall(AuxiliaryVariables.AV_base, object):
     class instance acting as a wall for the k variable.
     """
 
-    def __init__(self, Y, Yplus, b_or, nu=1.004e-6):
+    def __init__(self, Y, Yplus, b_or, nu=1.004e-6, Cmu=0.09):
         """
         Sets turbulent boundaries for wall treatment.
         """      
@@ -1320,6 +1324,7 @@ class kWall(AuxiliaryVariables.AV_base, object):
         self._b_or = b_or
         self.nu = nu
         self.model = None
+        self.Cmu = Cmu
         
     def attachModel(self, model, ar):
         """
@@ -1354,11 +1359,11 @@ class kWall(AuxiliaryVariables.AV_base, object):
         # solution of the selected model
         self.u = self.model.levelModelList[0].u    
         #import pdb; pdb.set_trace()
-        logEvent('self.u --> %s ' % self.u)
-        logEvent('self.u[0] --> %s ' % self.u[0])
-        logEvent('xi --> %s ' % xi)
-        logEvent('element --> %s ' % element)
-        logEvent('rank %s ' % rank)
+        #logEvent('self.u --> %s ' % self.u)
+        #logEvent('self.u[0] --> %s ' % self.u[0])
+        #logEvent('xi --> %s ' % xi)
+        #logEvent('element --> %s ' % element)
+        #logEvent('rank %s ' % rank)
         #self.femSpace_kappa = self.u[0].femSpace
         if comm.rank == rank:
             kappa = self.u[0].getValue(element, xi)
@@ -1368,16 +1373,17 @@ class kWall(AuxiliaryVariables.AV_base, object):
 
     def kappaNearWall(self, xi, element, rank, kInit=None):
         if kInit is True or self.model is None:
-            self.kappa = self.Yplus * self.nu / self.Y
+            self.ut = self.Yplus * self.nu / self.Y
+            self.kappa = (self.ut**2) / np.sqrt(self.Cmu)
         else:
             self.kappa = self.getFluidKappaLocalCoords(xi, element, rank)
-        logEvent('kInit --> %s' % kInit) 
-        logEvent('self.model --> %s' % self.model) 
+        #logEvent('kInit --> %s' % kInit) 
+        #logEvent('self.model --> %s' % self.model) 
 
     def getKappa(self, x, t, xi, element, rank):
         if t>0.: kInit = False
         else: kInit = True
         self.kappaNearWall(xi, element, rank, kInit)
-        logEvent('kappa --> %s' % self.kappa) 
-        logEvent('t --> %s' % t) 
+        #logEvent('kappa --> %s' % self.kappa) 
+        #logEvent('t --> %s' % t) 
         return abs(self.kappa)
