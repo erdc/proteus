@@ -105,9 +105,6 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
-				   double* u_dof_old, 
-				   double* v_dof_old, 
-				   double* w_dof_old,				   
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -236,6 +233,9 @@ namespace proteus
 				   double* forcez, 
 				   int KILL_PRESSURE_TERM, 
 				   double dt, 
+				   double* entropyResidualAtCell,
+				   double* maxSpeed2AtCell,
+				   double maxSpeed2AtOmega,
 				   double* quantDOFs)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
@@ -489,9 +489,6 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
-				   double* u_dof_old, 
-				   double* v_dof_old, 
-				   double* w_dof_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -620,6 +617,9 @@ namespace proteus
 				   double* forcez, 
 				   int KILL_PRESSURE_TERM, 
 				   double dt, 
+				   double* entropyResidualAtCell,
+				   double* maxSpeed2AtCell,
+				   double maxSpeed2AtOmega,
 				   double* quantDOFs)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
@@ -2098,9 +2098,6 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
-			   double* u_dof_old, 
-			   double* v_dof_old, 
-			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -2211,6 +2208,9 @@ namespace proteus
 			   double* forcez, 
 			   int KILL_PRESSURE_TERM, 
 			   double dt, 
+			   double* entropyResidualAtCell,
+			   double* maxSpeed2AtCell,
+			   double maxSpeed2AtOmega,
 			   double* quantDOFs)
     {
       //
@@ -5617,9 +5617,6 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
-			   double* u_dof_old, 
-			   double* v_dof_old, 
-			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -5729,6 +5726,9 @@ namespace proteus
 			   double* forcez, 
 			   int KILL_PRESSURE_TERM, 
 			   double dt, 
+			   double* entropyResidualAtCell,
+			   double* maxSpeed2AtCell,
+			   double maxSpeed2AtOmega,
 			   double* quantDOFs)
     {
       /*
