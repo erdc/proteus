@@ -1499,6 +1499,19 @@ class NS_base:  # (HasTraits):
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
 
+        #For aux quantity of interest (MQL)        
+        try:
+            quantDOFs = {}
+            quantDOFs[0] = model.levelModelList[-1].quantDOFs
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   quantDOFs,
+                                                                   res_name_base='quantDOFs_for_'+model.name)
+            logEvent("Writing initial quantity of interest at DOFs for = "+model.name,level=3)
+        except:
+            pass
+
         #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}
@@ -1566,6 +1579,19 @@ class NS_base:  # (HasTraits):
             model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=False,meshChanged=True)
+
+        try:
+            quantDOFs = {}
+            quantDOFs[0] = model.levelModelList[-1].quantDOFs
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],
+                                                                   self.tnList[0],
+                                                                   self.tCount,
+                                                                   quantDOFs,
+                                                                   res_name_base='quantDOFs_for_'+model.name)
+            logEvent("Writing initial quantity of interest at DOFs for = "+model.name+" at time t="+str(t),level=3)
+        except:
+            pass
+
         #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}
