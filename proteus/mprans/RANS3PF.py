@@ -1658,6 +1658,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.calculateQuadrature()
 
         self.setupFieldStrides()
+        # Aux quantity at DOFs to be filled by optimized code (MQL)
+        self.quantDOFs = numpy.zeros(self.u[0].dof.shape,'d')
+        self.entropyResidualAtCell = numpy.zeros(self.mesh.nElements_global,'d')
+        self.maxSpeed2AtCell = numpy.zeros(self.mesh.nElements_global,'d')
 
         comm = Comm.get()
         self.comm = comm
@@ -1918,7 +1922,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         else: 
             self.calculateResidual = self.rans3pf.calculateResidual
             self.calculateJacobian = self.rans3pf.calculateJacobian
-
+        
+        self.quantDOFs.fill(0.0) #TMP
         self.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2128,7 +2133,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('force', 1)],
             self.q[('force', 2)], 
             self.KILL_PRESSURE_TERM,
-            self.timeIntegration.dt)
+            self.timeIntegration.dt, 
+            self.entropyResidualAtCell,
+            self.maxSpeed2AtCell,
+            self.maxSpeed2AtCell.max(),
+            self.quantDOFs)
 
         # mql: Save the solution in 'u' to allow SimTools.py to compute the errors
         for dim in range(self.nSpace_global):

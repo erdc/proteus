@@ -7,6 +7,7 @@
 #include "ModelFactory.h"
 #include "SedClosure.h"
 
+#define POWER_SMOOTHNESS_INDICATOR 2
 namespace proteus
 {
   class cppRANS3PF2D_base
@@ -103,9 +104,6 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
-				   double* u_dof_old, 
-				   double* v_dof_old, 
-				   double* w_dof_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -235,7 +233,11 @@ namespace proteus
 				   double* forcez, 
 				   int KILL_PRESSURE_TERM, 
 				   double dt, 
-				   double* quantDOFs)=0;
+				   double* entropyResidualAtCell,
+				   double* maxSpeed2AtCell,
+				   double maxSpeed2AtOmega,
+				   double* quantDOFs
+				   )=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -489,9 +491,6 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
-				   double* u_dof_old, 
-				   double* v_dof_old, 
-				   double* w_dof_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -621,6 +620,9 @@ namespace proteus
 				   double* forcez, 
 				   int KILL_PRESSURE_TERM, 
 				   double dt, 
+				   double* entropyResidualAtCell,
+				   double* maxSpeed2AtCell,
+				   double maxSpeed2AtOmega,
 				   double* quantDOFs)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
@@ -1602,6 +1604,7 @@ namespace proteus
       subgridErrorU = -tau_v*pdeResidualU;
       subgridErrorV = -tau_v*pdeResidualV;
       /* subgridErrorW = -tau_v*pdeResidualW; */
+      
     }
 
     inline
@@ -2108,9 +2111,6 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
-			   double* u_dof_old, 
-			   double* v_dof_old, 
-			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -2221,6 +2221,9 @@ namespace proteus
 			   double* forcez, 
 			   int KILL_PRESSURE_TERM, 
 			   double dt, 
+			   double* entropyResidualAtCell,
+			   double* maxSpeed2AtCell,
+			   double maxSpeed2AtOmega,
 			   double* quantDOFs)
     {
       //
@@ -2763,8 +2766,8 @@ namespace proteus
 					q_cfl[eN_k]);	
 
 	      tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
-	      tau_p = PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);
-
+	      tau_p = KILL_PRESSURE_TERM == 1 ? 0. : PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);
+	      
 	      calculateSubgridError_tauRes(tau_p,
 					   tau_v,
 					   pdeResidual_p,
@@ -2848,7 +2851,8 @@ namespace proteus
 		  /*   ck.SubgridError(subgridError_v,Lstar_v_p[i]);// +  */
 		  /*   /\* ck.SubgridError(subgridError_w,Lstar_w_p[i]); *\/ */
 
-		  elementResidual_u[i] += ck.Mass_weak(dmom_u_acc_u*mom_u_acc_t,vel_test_dV[i]) + 
+		  elementResidual_u[i] += 
+		    ck.Mass_weak(dmom_u_acc_u*mom_u_acc_t,vel_test_dV[i]) + 
 		    ck.Advection_weak(mom_u_adv,&vel_grad_test_dV[i_nSpace]) +
 		    ck.Diffusion_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) + 
 		    ck.Diffusion_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) + 
@@ -2859,7 +2863,8 @@ namespace proteus
 		    ck.SubgridError(subgridError_u,Lstar_u_u[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&vel_grad_test_dV[i_nSpace]); 
 		 
-		  elementResidual_v[i] += ck.Mass_weak(dmom_v_acc_v*mom_v_acc_t,vel_test_dV[i]) + 
+		  elementResidual_v[i] += 
+		    ck.Mass_weak(dmom_v_acc_v*mom_v_acc_t,vel_test_dV[i]) + 
 		    ck.Advection_weak(mom_v_adv,&vel_grad_test_dV[i_nSpace]) +
 		    ck.Diffusion_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) + 
 		    ck.Diffusion_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) + 
@@ -2870,7 +2875,8 @@ namespace proteus
 		    ck.SubgridError(subgridError_v,Lstar_v_v[i]) + 
 		    ck.NumericalDiffusion(q_numDiff_v_last[eN_k],grad_v,&vel_grad_test_dV[i_nSpace]); 
 
-		  /* elementResidual_w[i] +=  ck.Mass_weak(dmom_w_acc_w*mom_w_acc_t,vel_test_dV[i]) + */
+		  /* elementResidual_w[i] += 
+		     ck.Mass_weak(dmom_w_acc_w*mom_w_acc_t,vel_test_dV[i]) + */
 		  /*   ck.Advection_weak(mom_w_adv,&vel_grad_test_dV[i_nSpace]) +  */
 		  /*   ck.Diffusion_weak(sdInfo_w_u_rowptr,sdInfo_w_u_colind,mom_wu_diff_ten,grad_u,&vel_grad_test_dV[i_nSpace]) +  */
 		  /*   ck.Diffusion_weak(sdInfo_w_v_rowptr,sdInfo_w_v_colind,mom_wv_diff_ten,grad_v,&vel_grad_test_dV[i_nSpace]) +  */
@@ -4544,7 +4550,7 @@ namespace proteus
 					
 					
 	      tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
-	      tau_p = PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);
+	      tau_p = KILL_PRESSURE_TERM == 1 ? 0. : PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);
               calculateSubgridError_tauRes(tau_p,
 					   tau_v,
 					   pdeResidual_p,
@@ -4634,7 +4640,8 @@ namespace proteus
 
 		      /* elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) +  */
 		      /*   ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]);  */
-		      elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
+		      elementJacobian_u_u[i][j] += 
+			ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
                         ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
 			ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
 			ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
@@ -4644,12 +4651,13 @@ namespace proteus
 			ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) +
 			ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) + 
 			ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
-		      elementJacobian_u_v[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
+		      elementJacobian_u_v[i][j] += 
+			ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 			ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
-			ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
+			ck.ReactionJacobian_weak(dmom_u_source[1],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);// +
 			//
-			ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]);
+			//ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]);
 		      /* elementJacobian_u_w[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +  */
 		      /* 	ck.SimpleDiffusionJacobian_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) +  */
 		      /* 	//VRANS */
@@ -4659,13 +4667,15 @@ namespace proteus
 
 		      /* elementJacobian_v_p[i][j] += ck.HamiltonianJacobian_weak(dmom_v_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) +  */
 		      /*   ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_v[i]);  */
-		      elementJacobian_v_u[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
+		      elementJacobian_v_u[i][j] += 
+			ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 			ck.SimpleDiffusionJacobian_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
-			ck.ReactionJacobian_weak(dmom_v_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
+			ck.ReactionJacobian_weak(dmom_v_source[0],vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]);// +
 			//
-			ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
-		      elementJacobian_v_v[i][j] += ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
+			//ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
+		      elementJacobian_v_v[i][j] += 
+			ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
                         ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
 			ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
 			ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
@@ -5630,9 +5640,6 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
-			   double* u_dof_old, 
-			   double* v_dof_old, 
-			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -5743,6 +5750,9 @@ namespace proteus
 			   double* forcez, 
 			   int KILL_PRESSURE_TERM, 
 			   double dt, 
+			   double* entropyResidualAtCell,
+			   double* maxSpeed2AtCell,
+			   double maxSpeed2AtOmega,
 			   double* quantDOFs)
     {
       /*
@@ -5831,6 +5841,43 @@ namespace proteus
 	  vel2_max_in_omega = std::max(vel2_max_in_omega,cell_vel2_max);
 	}
       */
+      //////////////////////////////////
+      // COMPUTE SMOOTHNESS INDICATOR // 
+      //////////////////////////////////
+      register double psi[numDOFsPerEqn];
+      for (int i=0; i<numDOFsPerEqn; i++)
+	{
+	  double alphai; // smoothness indicator of solution	      
+	  double ui = u_dof_old[i]; // solution at time tn for the ith DOF
+	  double vi = v_dof_old[i];
+	  double u2i = ui*ui + vi*vi;
+	      
+	  // FOR SMOOTHNESS INDICATOR //
+	  double alpha_numerator = 0;
+	  double alpha_denominator = 0;
+	      
+	  for (int offset=csrRowIndeces_DofLoops[i]; offset<csrRowIndeces_DofLoops[i+1]; offset++)
+	    { //loop in j (sparsity pattern)
+	      int j = csrColumnOffsets_DofLoops[offset];
+	      double uj = u_dof_old[j];
+	      double vj = u_dof_old[j];
+	      double u2j = uj*uj + vj*vj;
+
+	      // FOR SMOOTHNESS INDICATOR //
+	      alpha_numerator += u2j - u2i;
+	      alpha_denominator += fabs(u2j - u2i);	      
+	    }
+	  //////////////////////////////////
+	  // COMPUTE SMOOTHNESS INDICATOR //
+	  //////////////////////////////////
+	  alphai = fabs(alpha_numerator)/(alpha_denominator+1E-15);
+	  if (POWER_SMOOTHNESS_INDICATOR==0)
+	    psi[i] = 1.0;
+	  else
+	    psi[i] = std::pow(alphai,POWER_SMOOTHNESS_INDICATOR); //NOTE: they use alpha^2 in the paper
+	}
+      // ********** END OF COMPUTING SMOOTHNESS INDICATOR, and GLOBAL ENTROPY RESIDUAL ********** //
+      
       //
       //loop over elements to compute volume integrals and load them into element and global residual
       //
@@ -5842,11 +5889,13 @@ namespace proteus
       const int nQuadraturePoints_global(nElements_global*nQuadraturePoints_element);
       for(int eN=0;eN<nElements_global;eN++)
 	{
+	  double maxSpeed2AtCurrentCell = 0.;
 	  //declare local storage for element residual and initialize
 	  register double elementResidual_p[nDOF_test_element],elementResidual_mesh[nDOF_test_element],
 	    elementResidual_u[nDOF_test_element],
 	    elementResidual_v[nDOF_test_element],
 	    //elementResidual_w[nDOF_test_element],
+	    elementEntropyResidual[nDOF_test_element],
 	    eps_rho,eps_mu;
 	  const double* elementResidual_w(NULL);
           double mesh_volume_conservation_element=0.0,
@@ -5858,8 +5907,9 @@ namespace proteus
 	      elementResidual_mesh[i]=0.0;
 	      elementResidual_p[i]=0.0;
 	      elementResidual_u[i]=0.0;
-	      elementResidual_v[i]=0.0;
+	      elementResidual_v[i]=0.0;	      
 	      /* elementResidual_w[i]=0.0; */
+	      elementEntropyResidual[i]=0.0;
 	    }//i
 	  //
 	  //loop over quadrature points and compute integrands
@@ -5949,6 +5999,8 @@ namespace proteus
 		//vel_hess_trial[nDOF_trial_element*nSpace2],
 		p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
 		p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
+		u_times_vel_grad_test_dV[nDOF_test_element*nSpace], // For entropy residual
+		v_times_vel_grad_test_dV[nDOF_test_element*nSpace], // For entropy residual
 		dV,x,y,z,xt,yt,zt,
 		//
 		porosity,
@@ -6022,6 +6074,10 @@ namespace proteus
 		    {
 		      /* p_grad_test_dV[j*nSpace+I]   = p_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin */
 		      vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+		      // mql: for entropy residual. grad(u*phi) and grad(v*phi)
+		      u_times_vel_grad_test_dV[j*nSpace+I] = u*vel_grad_trial[j*nSpace+I]*dV + vel_test_dV[j]*grad_u[I];
+		      v_times_vel_grad_test_dV[j*nSpace+I] = v*vel_grad_trial[j*nSpace+I]*dV + vel_test_dV[j]*grad_v[I];
+		      /* w_times_vel_grad_test_dV[j*nSpace+I] = w*vel_grad_trial[j*nSpace+I]*dV + vel_test_dV[j]*grad_w[I]; */
 		    }
 		}
               //cek hack
@@ -6430,10 +6486,11 @@ namespace proteus
 
 	      // NUMERICAL DIFUSSION VIA ENTROPY VISCOSITY //
 	      double hK=elementDiameter[eN];
-	      double linear_viscosity = 0.;//cMax*hK*vel_max[eN];
-	      //double entropy_viscosity = cE*hK*hK*entropy_residual[eN]/(vel_max_in_omega*mom_max_in_omega+1E-10);
-	      double entropy_viscosity = 0.;//cE*hK*hK*entropy_residual[eN]/(vel2_max[eN]+1E-10);	      
-	      q_numDiff_u[eN_k] = std::min(linear_viscosity,entropy_viscosity);
+	      double linear_viscosity = cMax*hK*std::sqrt(maxSpeed2AtCell[eN]);
+	      //double entropy_viscosity = cE*entropyResidualAtCell[eN]/(maxSpeed2AtOmega+1E-10);
+	      double entropy_viscosity = cE*entropyResidualAtCell[eN]/(maxSpeed2AtCell[eN]+1E-10);	      
+	      //q_numDiff_u[eN_k] = fmin(linear_viscosity,entropy_viscosity);
+	      q_numDiff_u[eN_k] = linear_viscosity;
 	      q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
 	      q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
 	      // END OF COMPUTING NUMERICAL DISSIPATION //
@@ -6510,8 +6567,30 @@ namespace proteus
 		  /*   ck.SubgridError(subgridError_p,Lstar_p_w[i]) +  */
 		  /*   ck.SubgridError(subgridError_w,Lstar_w_w[i]) +  */
 		  /*   ck.NumericalDiffusion(q_numDiff_w_last[eN_k],grad_w,&vel_grad_test_dV[i_nSpace]);  */
+
+		  //////////////////////////////////////////
+		  // ***** COMPUTE ENTROPY RESIDUAL ***** //
+		  //////////////////////////////////////////
+		  elementEntropyResidual[i] +=
+		    // x-component
+		    ck.Mass_weak(dmom_u_acc_u*mom_u_acc_t,u*vel_test_dV[i]) + // time derivative 
+		    ck.Advection_weak(mom_u_adv,&u_times_vel_grad_test_dV[i_nSpace]) + // due to moving mesh
+		    ck.Diffusion_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,grad_u,&u_times_vel_grad_test_dV[i_nSpace]) +
+		    ck.Diffusion_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,grad_v,&u_times_vel_grad_test_dV[i_nSpace]) +
+		    ck.Reaction_weak(mom_u_source,u*vel_test_dV[i]) + // Force term
+		    ck.Hamiltonian_weak(mom_u_ham,u*vel_test_dV[i]) + // Pres + Non-linearity		    
+		    + // y-component
+		    ck.Mass_weak(dmom_v_acc_v*mom_v_acc_t,v*vel_test_dV[i]) + // time derivative
+		    ck.Advection_weak(mom_v_adv,&v_times_vel_grad_test_dV[i_nSpace]) + // due to moving mesh
+		    ck.Diffusion_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,grad_u,&v_times_vel_grad_test_dV[i_nSpace])+
+		    ck.Diffusion_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,grad_v,&v_times_vel_grad_test_dV[i_nSpace])+
+		    ck.Reaction_weak(mom_v_source,v*vel_test_dV[i]) + // force term 
+		    ck.Hamiltonian_weak(mom_v_ham,v*vel_test_dV[i]); // Pres + Non-linearity
 		}//i
+	      // compute max speed2 for entropy viscosity // 
+	      maxSpeed2AtCurrentCell = fmax(maxSpeed2AtCurrentCell, u*u+v*v);
 	    }
+	  maxSpeed2AtCell[eN] = maxSpeed2AtCurrentCell;
 	  //
 	  //load element into global residual and save element residual
 	  //
@@ -6525,6 +6604,9 @@ namespace proteus
 	      globalResidual[offset_u+stride_u*vel_l2g[eN_i]] += elementResidual_u[i];
 	      globalResidual[offset_v+stride_v*vel_l2g[eN_i]] += elementResidual_v[i];
 	      /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
+
+	      // DISTRIBUTE ENTROPY RESIDUAL //
+	      quantDOFs[vel_l2g[eN_i]] += elementEntropyResidual[i];
 	    }//i
           /* mesh_volume_conservation += mesh_volume_conservation_element; */
           /* mesh_volume_conservation_weak += mesh_volume_conservation_element_weak; */
@@ -6548,6 +6630,7 @@ namespace proteus
 	    elementResidual_u[nDOF_test_element],
 	    elementResidual_v[nDOF_test_element],
 	    //elementResidual_w[nDOF_test_element],
+	    elementEntropyResidual[nDOF_test_element], 
 	    eps_rho,eps_mu;
 	  const double* elementResidual_w(NULL);
 	  for (int i=0;i<nDOF_test_element;i++)
@@ -6557,6 +6640,7 @@ namespace proteus
 	      elementResidual_u[i]=0.0;
 	      elementResidual_v[i]=0.0;
 	      /* elementResidual_w[i]=0.0; */
+	      elementEntropyResidual[i]=0.0; 
 	    }
 	  for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++) 
 	    { 
@@ -6631,6 +6715,8 @@ namespace proteus
 		flux_mom_wu_diff_ext=0.0,
 		flux_mom_wv_diff_ext=0.0,
 		flux_mom_ww_diff_ext=0.0,
+		diffusive_flux_dot_solution = 0.0, // for entropy residual at boundary
+		diffusive_symmetric_flux_dot_solution = 0.0, // for entropy residual at boundary
 		bc_p_ext=0.0,
 		bc_u_ext=0.0,
 		bc_v_ext=0.0,
@@ -7278,6 +7364,11 @@ namespace proteus
 		  //netMoments[3*boundaryFlags[ebN]+1] += (r_z*force_x - r_x*force_z)*dS;
 		  netMoments[3*boundaryFlags[ebN]+2] += (r_x*force_y - r_y*force_x)*dS;
 		}
+	      // FOR ENTROPY RESIDUAL AT THE BOUNDARY //
+	      diffusive_flux_dot_solution = -ebqe_nu[ebNE_kb]*(u_ext*(grad_u_ext[0]*normal[0] + grad_u_ext[1]*normal[1]) + 
+							       v_ext*(grad_v_ext[0]*normal[0] + grad_v_ext[1]*normal[1]));
+	      diffusive_symmetric_flux_dot_solution = -ebqe_nu[ebNE_kb]*(u_ext*(grad_u_ext[0]*normal[0] + grad_v_ext[0]*normal[1]) +
+									 v_ext*(grad_u_ext[1]*normal[0] + grad_v_ext[1]*normal[1]));
 	      //
 	      //update residuals
 	      //
@@ -7322,11 +7413,12 @@ namespace proteus
 		    /* 					       sdInfo_u_w_colind, */
 		    /* 					       mom_uw_diff_ten_ext, */
 		    /* 					       &vel_grad_test_dS[i*nSpace]); */
-		  elementResidual_v[i] += ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) +
-		    ck.ExteriorElementBoundaryFlux(flux_mom_vu_diff_ext,vel_test_dS[i])+
+		  elementResidual_v[i] 
+		    += ck.ExteriorElementBoundaryFlux(flux_mom_v_adv_ext,vel_test_dS[i]) + // advective flux
+		    ck.ExteriorElementBoundaryFlux(flux_mom_vu_diff_ext,vel_test_dS[i])+ // diffusive flux
 		    ck.ExteriorElementBoundaryFlux(flux_mom_vv_diff_ext,vel_test_dS[i])+
 		    /* ck.ExteriorElementBoundaryFlux(flux_mom_vw_diff_ext,vel_test_dS[i])+ */
-		    ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
+		    ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb], // Turbulence
 							       isDiffusiveFluxBoundary_v[ebNE_kb],
 							       eb_adjoint_sigma,
 							       u_ext,
@@ -7336,7 +7428,7 @@ namespace proteus
 							       sdInfo_v_u_colind,
 							       mom_vu_diff_ten_ext,
 							       &vel_grad_test_dS[i*nSpace])+
-		    ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_v[ebNE_kb],
+		    ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_v[ebNE_kb], // Turbulence
 							       isDiffusiveFluxBoundary_v[ebNE_kb],
 							       eb_adjoint_sigma,
 							       v_ext,
@@ -7391,6 +7483,10 @@ namespace proteus
 		  /* 					       sdInfo_w_w_colind, */
 		  /* 					       mom_ww_diff_ten_ext, */
 		  /* 					       &vel_grad_test_dS[i*nSpace]);  */
+		  //////////////////////////////////////////////////////
+		  // ***** ADD CONTRIBUTION ON ENTROPY RESIDUAL ***** //
+		  //////////////////////////////////////////////////////
+		  elementEntropyResidual[i] += (diffusive_flux_dot_solution + diffusive_symmetric_flux_dot_solution)*vel_test_dS[i];
 		}//i
 	    }//kb
 	  //
@@ -7406,12 +7502,30 @@ namespace proteus
 	      globalResidual[offset_u+stride_u*vel_l2g[eN_i]] += elementResidual_u[i]; 
 	      globalResidual[offset_v+stride_v*vel_l2g[eN_i]] += elementResidual_v[i];
 	      /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
+
+	      // ENTROPY RESIDUAL AT BOUNDARY //
+	      quantDOFs[vel_l2g[eN_i]] += elementEntropyResidual[i]; //TMP
 	    }//i
 	}//ebNE
       /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
       /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
       /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
       /* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
+      ///////////////////////////////////////
+      // MAX ENTROPY RESIDUAL AT EACH CELL // max_{i\in K} (R_i)
+      ///////////////////////////////////////
+      for(int eN=0;eN<nElements_global;eN++)
+	{
+	  double entropyResidualAtCurrentCell = 0.;
+	  // loop on quad points
+	  for (int i=0;i<nDOF_test_element;i++)	
+	    {
+	      int eN_i = eN*nDOF_test_element+i;
+	      int gi = vel_l2g[eN_i];
+	      entropyResidualAtCurrentCell = fmax(entropyResidualAtCurrentCell, fabs(quantDOFs[gi]));
+	    }  
+	  entropyResidualAtCell[eN] = entropyResidualAtCurrentCell;
+	}
     }
 
     void calculateJacobian_entropy_viscosity(//element
