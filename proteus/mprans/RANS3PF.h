@@ -105,6 +105,9 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
+				   double* u_dof_old, 
+				   double* v_dof_old, 
+				   double* w_dof_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -236,7 +239,10 @@ namespace proteus
 				   double* entropyResidualAtCell,
 				   double* maxSpeed2AtCell,
 				   double maxSpeed2AtOmega,
-				   double* quantDOFs)=0;
+				   double* quantDOFs,
+				   int numDOFsPerEqn,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -489,6 +495,9 @@ namespace proteus
 				   double* u_dof, 
 				   double* v_dof, 
 				   double* w_dof,
+				   double* u_dof_old, 
+				   double* v_dof_old, 
+				   double* w_dof_old,
 				   double* g,
 				   const double useVF,
 				   double* vf,
@@ -620,7 +629,10 @@ namespace proteus
 				   double* entropyResidualAtCell,
 				   double* maxSpeed2AtCell,
 				   double maxSpeed2AtOmega,
-				   double* quantDOFs)=0;
+				   double* quantDOFs,
+				   int numDOFsPerEqn,
+				   int* csrRowIndeces_DofLoops,
+				   int* csrColumnOffsets_DofLoops)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -2098,6 +2110,9 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
+			   double* u_dof_old, 
+			   double* v_dof_old, 
+			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -2211,7 +2226,10 @@ namespace proteus
 			   double* entropyResidualAtCell,
 			   double* maxSpeed2AtCell,
 			   double maxSpeed2AtOmega,
-			   double* quantDOFs)
+			   double* quantDOFs,
+			   int numDOFsPerEqn,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -5617,6 +5635,9 @@ namespace proteus
 			   double* u_dof, 
 			   double* v_dof, 
 			   double* w_dof,
+			   double* u_dof_old, 
+			   double* v_dof_old, 
+			   double* w_dof_old,
 			   double* g,
 			   const double useVF,
 			   double* vf,
@@ -5729,7 +5750,10 @@ namespace proteus
 			   double* entropyResidualAtCell,
 			   double* maxSpeed2AtCell,
 			   double maxSpeed2AtOmega,
-			   double* quantDOFs)
+			   double* quantDOFs,
+			   int numDOFsPerEqn,
+			   int* csrRowIndeces_DofLoops,
+			   int* csrColumnOffsets_DofLoops)
     {
       /*
       double cell_vel_max, cell_vel2_max, cell_entropy_residual_max, vel_max_in_omega=0.0, vel2_max_in_omega=0.0;
