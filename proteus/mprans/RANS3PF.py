@@ -564,6 +564,22 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         ), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
 
     def initializeMesh(self, mesh):
+        self.phi_s = numpy.zeros(mesh.nodeArray.shape[0],'d')
+
+        if self.granular_sdf_Calc is not None:
+            print ("updating",self.nParticles," particles...")
+            for i in range(self.nParticles):
+                for j in range(mesh.nodeArray.shape[0]):
+                    sdf,sdNormals = self.granular_sdf_Calc(mesh.nodeArray[j,:],i)
+                    if ( abs(sdf) < abs(self.phi_s[j]) ):
+                         self.phi_s[j]=sdf
+        else:
+            for i,sdf in zip(range(self.nParticles),
+                            self.particle_sdfList):
+                for j in range(mesh.nodeArray.shape[0]):
+                     self.phi_s[j],sdNormals=sdf(0,mesh.nodeArray[j,:])
+
+
         # cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density * mesh.h
         self.eps_viscosity = self.epsFact * mesh.h
@@ -623,6 +639,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         self.elementMaterialTypes[eN]]
         #
         cq['phisError'] = cq[('u',0)].copy()
+        cq['velocityError'] = cq[('velocity',0)].copy()
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
         # VRANS
@@ -918,10 +935,18 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         print self.particle_velocities.shape
         self.model.dt_last = self.model.timeIntegration.dt
         self.model.q['dV_last'][:] = self.model.q['dV']
+
+        self.phi_s[:]=1e10
         self.phisField=np.ones(self.model.q[('u',0)].shape,'d')*1e10
         if self.granular_sdf_Calc is not None:
             print ("updating",self.nParticles," particles...")
             for i in range(self.nParticles):
+                for j in range(self.mesh.nodeArray.shape[0]):
+                    vel = self.granular_vel_Calc(self.mesh.nodeArray[j,:],i)
+                    sdf,sdNormals = self.granular_sdf_Calc(self.mesh.nodeArray[j,:],i)
+                    sdf+=vel* self.model.dt_last
+                    if ( abs(sdf) < abs(self.phi_s[j]) ):
+                        self.phi_s[j]=sdf
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
                         self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = self.granular_sdf_Calc(self.model.q['x'][eN,k],i)
@@ -935,6 +960,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             for i,sdf,vel in zip(range(self.nParticles),
                             self.particle_sdfList,self.particle_velocityList
                             ):
+                for j in range(self.mesh.nodeArray.shape[0]):
+                    myvel = vel(t,self.mesh.nodeArray[j,:])
+                    mysdf,sdNormals=sdf(t,self.mesh.nodeArray[j,:])
+                    if ( abs(mysdf) < abs(self.phi_s[j])):
+                        self.phi_s[j]=mysdf
                 for eN in range(self.model.q['x'].shape[0]):
                     for k in range(self.model.q['x'].shape[1]):
                         self.particle_signed_distances[i,eN,k],self.particle_signed_distance_normals[i,eN,k] = sdf(t, self.model.q['x'][eN,k])
@@ -1013,6 +1043,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ua = {}  # analytical solutions
         self.phi = phiDict
         self.dphi = {}
+        self.phi_s = phiDict
         self.matType = matType
         # mwf try to reuse test and trial information across components if
         # spaces are the same
@@ -1822,7 +1853,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.coefficients.nContact,
                 self.coefficients.angFriction)
         
+
         self.phisErrorNodal=self.u[0].dof.copy()
+        self.velocityErrorNodal=self.u[0].dof.copy()
+
 
     def getResidual(self, u, r):
         """
@@ -1893,6 +1927,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.coefficients.set_vos:
             self.coefficients.set_vos(self.q['x'],self.coefficients.q_vos)
             self.coefficients.set_vos(self.ebqe['x'],self.coefficients.ebqe_vos)
+        self.pressureModel.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
+        self.pressureModel.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
+
         self.rans3pf.calculateResidual(  # element
             self.pressureModel.u[0].femSpace.elementMaps.psi,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
@@ -2088,9 +2127,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.particle_netForces,
             self.coefficients.particle_netMoments,
             self.coefficients.particle_surfaceArea,
-            self.coefficients.particle_nitsche,
-            self.q['phisError'],
-            self.phisErrorNodal)
+            self.coefficients.particle_nitsche)
+        print(self.phisErrorNodal)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
@@ -2576,14 +2614,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.velocityPostProcessor.vpp_algorithms[
                             ci].updateConservationJacobian[cj] = True
 
-        # if self.coefficients.granular_sdf_Calc is not None:
-        #     self.q['phisError'][:]=self.q[('phis')]                    
-        #     OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
-        #     self.q['phisError']-=self.q[('phis')]
-        # else:#this needs to be fixed for the case that multiple bodies are present
-        #     self.q['phisError'][:]=self.q[('phis',0)]                    
-        #     OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
-        #     self.q['phisError']-=self.q[('phis',0)]  
+
+        self.q['velocityError'][:]=self.q[('velocity',0)]                 
+        OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+        self.q['velocityError']-=self.q[('velocity',0)]
+        if self.coefficients.granular_sdf_Calc is not None:
+            self.q['phisError']=self.q[('phis')]
+        else:#this needs to be fixed for the case that multiple bodies are present
+            self.q['phisError'][:]=self.q[('phis',0)]
+
 
 
     def updateAfterMeshMotion(self):
