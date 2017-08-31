@@ -218,7 +218,11 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* quantDOFs,
 			       int numDOFsPerEqn, 
 			       int* csrRowIndeces_DofLoops,
-			       int* csrColumnOffsets_DofLoops)
+			       int* csrColumnOffsets_DofLoops,
+			       double* ML, 
+			       double* Cx, 
+			       double* Cy, 
+			       double* Cz)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -396,7 +400,8 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double * particle_centroids,
                                double particle_nitsche, 
 			       int KILL_PRESSURE_TERM)
-        void calculateResidual_entropy_viscosity(double * mesh_trial_ref,
+        void calculateResidual_entropy_viscosity(
+	     		       double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
                                double * mesh_velocity_dof,
@@ -611,8 +616,13 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
 			       double* quantDOFs,
 			       int numDOFsPerEqn,
 			       int* csrRowIndeces_DofLoops,
-			       int* csrColumnOffsets_DofLoops)
-        void calculateJacobian_entropy_viscosity(double * mesh_trial_ref,
+			       int* csrColumnOffsets_DofLoops,
+			       double* ML, 
+			       double* Cx, 
+			       double* Cy, 
+			       double* Cz)
+        void calculateJacobian_entropy_viscosity(
+	     		       double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
                                double * mesh_velocity_dof,
@@ -887,7 +897,7 @@ cdef class RANS3PF:
         del self.thisptr
 
     def calculateResidual(self,
-                          numpy.ndarray mesh_trial_ref,
+		          numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_velocity_dof,
@@ -1081,8 +1091,12 @@ cdef class RANS3PF:
 			  numpy.ndarray quantDOFs,
 			  int numDOFsPerEqn,
 			  numpy.ndarray csrRowIndeces_DofLoops,
-			  numpy.ndarray csrColumnOffsets_DofLoops):
-        self.thisptr.calculateResidual( < double *> mesh_trial_ref.data,
+			  numpy.ndarray csrColumnOffsets_DofLoops,
+			  numpy.ndarray ML, 
+			  numpy.ndarray Cx, 
+			  numpy.ndarray Cy, 
+			  numpy.ndarray Cz):
+        self.thisptr.calculateResidual(< double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
                                        < double * > mesh_velocity_dof.data,
@@ -1276,9 +1290,13 @@ cdef class RANS3PF:
 					< double * > quantDOFs.data, 
 					numDOFsPerEqn,
 					< int * > csrRowIndeces_DofLoops.data,
-					< int * > csrColumnOffsets_DofLoops.data)
+					< int * > csrColumnOffsets_DofLoops.data,
+					< double * > ML.data, 
+					< double * > Cx.data, 
+					< double * > Cy.data, 
+					< double * > Cz.data)
     def calculateJacobian(self,
-                          numpy.ndarray mesh_trial_ref,
+			  numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_velocity_dof,
@@ -1456,7 +1474,7 @@ cdef class RANS3PF:
 			  int KILL_PRESSURE_TERM):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
-        self.thisptr.calculateJacobian( < double *> mesh_trial_ref.data,
+        self.thisptr.calculateJacobian(< double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
                                        < double * > mesh_velocity_dof.data,
@@ -1633,7 +1651,7 @@ cdef class RANS3PF:
                                         particle_nitsche, 
 					KILL_PRESSURE_TERM)
     def calculateResidual_entropy_viscosity(self,
-                          numpy.ndarray mesh_trial_ref,
+		          numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_velocity_dof,
@@ -1827,8 +1845,13 @@ cdef class RANS3PF:
 			  numpy.ndarray quantDOFs,
 			  int numDOFsPerEqn,
 			  numpy.ndarray csrRowIndeces_DofLoops,
-			  numpy.ndarray csrColumnOffsets_DofLoops):
-        self.thisptr.calculateResidual_entropy_viscosity( < double *> mesh_trial_ref.data,
+			  numpy.ndarray csrColumnOffsets_DofLoops,
+			  numpy.ndarray ML, 
+			  numpy.ndarray Cx, 
+			  numpy.ndarray Cy, 
+			  numpy.ndarray Cz):
+        self.thisptr.calculateResidual_entropy_viscosity(
+				       < double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
                                        < double * > mesh_velocity_dof.data,
@@ -2022,9 +2045,13 @@ cdef class RANS3PF:
 					< double * > quantDOFs.data, 
 					numDOFsPerEqn,
 					< int * > csrRowIndeces_DofLoops.data,
-			  		< int * > csrColumnOffsets_DofLoops.data)
+			  		< int * > csrColumnOffsets_DofLoops.data,
+					< double * > ML.data, 
+					< double * > Cx.data, 
+					< double * > Cy.data, 
+					< double * > Cz.data)
     def calculateJacobian_entropy_viscosity(self,
-                          numpy.ndarray mesh_trial_ref,
+			  numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_velocity_dof,
@@ -2202,7 +2229,8 @@ cdef class RANS3PF:
 			  int KILL_PRESSURE_TERM):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
-        self.thisptr.calculateJacobian_entropy_viscosity( < double *> mesh_trial_ref.data,
+        self.thisptr.calculateJacobian_entropy_viscosity(
+		                       < double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
                                        < double * > mesh_velocity_dof.data,
@@ -2624,7 +2652,11 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double* quantDOFs, 
 			       int numDOFsPerEqn,
 			       int* csrRowIndeces_DofLoops,
-			       int* csrColumnOffsets_DofLoops)
+			       int* csrColumnOffsets_DofLoops,
+			       double* ML, 
+			       double* Cx, 
+			       double* Cy, 
+			       double* Cz)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -2999,8 +3031,13 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
 			       double* quantDOFs, 
 			       int numDOFsPerEqn,
 			       int* csrRowIndeces_DofLoops,
-			       int* csrColumnOffsets_DofLoops)
-        void calculateJacobian_entropy_viscosity(double * mesh_trial_ref,
+			       int* csrColumnOffsets_DofLoops,
+			       double* ML, 
+			       double* Cx, 
+			       double* Cy, 
+			       double* Cz)
+        void calculateJacobian_entropy_viscosity(
+	                       double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
                                double * mesh_velocity_dof,
@@ -3275,7 +3312,7 @@ cdef class RANS3PF2D:
         del self.thisptr
 
     def calculateResidual(self,
-                          numpy.ndarray mesh_trial_ref,
+			  numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_velocity_dof,
@@ -3471,7 +3508,11 @@ cdef class RANS3PF2D:
 			  numpy.ndarray quantDOFs, 
 			  int numDOFsPerEqn,
 			  numpy.ndarray csrRowIndeces_DofLoops,
-			  numpy.ndarray csrColumnOffsets_DofLoops):
+			  numpy.ndarray csrColumnOffsets_DofLoops,
+			  numpy.ndarray ML, 
+			  numpy.ndarray Cx, 
+			  numpy.ndarray Cy, 
+			  numpy.ndarray Cz):
         self.thisptr.calculateResidual(< double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -3668,9 +3709,13 @@ cdef class RANS3PF2D:
 				       < double * > quantDOFs.data, 
 				       numDOFsPerEqn,
 					< int * > csrRowIndeces_DofLoops.data,
-			  		< int * > csrColumnOffsets_DofLoops.data)	
+			  		< int * > csrColumnOffsets_DofLoops.data,
+					< double * > ML.data, 
+					< double * > Cx.data, 
+					< double * > Cy.data, 
+					< double * > Cz.data)	
     def calculateJacobian(self,
-                          numpy.ndarray mesh_trial_ref,
+			  numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_velocity_dof,
@@ -4025,7 +4070,7 @@ cdef class RANS3PF2D:
                                        particle_nitsche, 
 				       KILL_PRESSURE_TERM)
     def calculateResidual_entropy_viscosity(self,
-                          numpy.ndarray mesh_trial_ref,
+		          numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
                           numpy.ndarray mesh_velocity_dof,
@@ -4221,8 +4266,13 @@ cdef class RANS3PF2D:
 			  numpy.ndarray quantDOFs, 
 			  int numDOFsPerEqn,
 			  numpy.ndarray csrRowIndeces_DofLoops,
-			  numpy.ndarray csrColumnOffsets_DofLoops):
-        self.thisptr.calculateResidual_entropy_viscosity(< double *> mesh_trial_ref.data,
+			  numpy.ndarray csrColumnOffsets_DofLoops,
+			  numpy.ndarray ML, 
+			  numpy.ndarray Cx, 
+			  numpy.ndarray Cy, 
+			  numpy.ndarray Cz):
+        self.thisptr.calculateResidual_entropy_viscosity(
+	                               < double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
                                        < double * > mesh_velocity_dof.data,
@@ -4418,7 +4468,11 @@ cdef class RANS3PF2D:
 				       < double * > quantDOFs.data, 
 				       numDOFsPerEqn,
 					< int * > csrRowIndeces_DofLoops.data,
-			  		< int * > csrColumnOffsets_DofLoops.data)
+			  		< int * > csrColumnOffsets_DofLoops.data,
+					< double * > ML.data, 
+					< double * > Cx.data, 
+					< double * > Cy.data, 
+					< double * > Cz.data)
 
     def calculateJacobian_entropy_viscosity(self,
                           numpy.ndarray mesh_trial_ref,
@@ -4599,7 +4653,8 @@ cdef class RANS3PF2D:
 			  int KILL_PRESSURE_TERM):
         cdef numpy.ndarray rowptr, colind, globalJacobian_a
         (rowptr, colind, globalJacobian_a) = globalJacobian.getCSRrepresentation()
-        self.thisptr.calculateJacobian_entropy_viscosity(< double *> mesh_trial_ref.data,
+        self.thisptr.calculateJacobian_entropy_viscosity(
+			               < double *> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
                                        < double * > mesh_velocity_dof.data,

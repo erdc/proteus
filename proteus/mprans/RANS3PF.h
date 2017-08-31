@@ -242,7 +242,11 @@ namespace proteus
 				   double* quantDOFs,
 				   int numDOFsPerEqn,
 				   int* csrRowIndeces_DofLoops,
-				   int* csrColumnOffsets_DofLoops)=0;
+				   int* csrColumnOffsets_DofLoops, 
+				   double* ML, 
+				   double* Cx, 
+				   double* Cy, 
+				   double* Cz)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -421,7 +425,8 @@ namespace proteus
 				   double* particle_centroids,
 				   double particle_nitsche, 
 				   int KILL_PRESSURE_TERM)=0;
-    virtual void calculateResidual_entropy_viscosity(double* mesh_trial_ref,
+    virtual void calculateResidual_entropy_viscosity(
+				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
 				   double* mesh_velocity_dof,
@@ -632,7 +637,11 @@ namespace proteus
 				   double* quantDOFs,
 				   int numDOFsPerEqn,
 				   int* csrRowIndeces_DofLoops,
-				   int* csrColumnOffsets_DofLoops)=0;
+				   int* csrColumnOffsets_DofLoops,
+				   double* ML, 
+				   double* Cx, 
+				   double* Cy, 
+				   double* Cz)=0;
     virtual void calculateJacobian_entropy_viscosity(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -2229,7 +2238,11 @@ namespace proteus
 			   double* quantDOFs,
 			   int numDOFsPerEqn,
 			   int* csrRowIndeces_DofLoops,
-			   int* csrColumnOffsets_DofLoops)
+			   int* csrColumnOffsets_DofLoops,
+			   double* ML, 
+			   double* Cx, 
+			   double* Cy, 
+			   double* Cz)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -5753,7 +5766,11 @@ namespace proteus
 			   double* quantDOFs,
 			   int numDOFsPerEqn,
 			   int* csrRowIndeces_DofLoops,
-			   int* csrColumnOffsets_DofLoops)
+			   int* csrColumnOffsets_DofLoops,
+			   double* ML, 
+			   double* Cx, 
+			   double* Cy, 
+			   double* Cz)
     {
       /*
       double cell_vel_max, cell_vel2_max, cell_entropy_residual_max, vel_max_in_omega=0.0, vel2_max_in_omega=0.0;
